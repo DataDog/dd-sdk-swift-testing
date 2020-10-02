@@ -6,7 +6,7 @@
         "repositoryURL": "git@github.com:DataDog/dd-opentelemetry-exporter-swift.git",
         "state": {
           "branch": "master",
-          "revision": "57663218e2a224b1986112dc116578228149f2b7",
+          "revision": "67d9547f183fa8cd2b926d5d6f5ccb2a704f986c",
           "version": null
         }
       },

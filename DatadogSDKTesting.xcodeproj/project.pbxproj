@@ -54,6 +54,7 @@
 /* Begin PBXFileReference section */
 		E116D7DA25248C390022779D /* SwiftExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftExtensions.swift; sourceTree = "<group>"; };
 		E160A11125275CC1003121A5 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
+		E160A114252B3A6B003121A5 /* ObjcLoadHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ObjcLoadHandler.h; sourceTree = "<group>"; };
 		E1798CC52524B9BD008DEBB9 /* DDTracer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTracer.swift; sourceTree = "<group>"; };
 		E1798CCB2524C21C008DEBB9 /* NetworkAutoInstrumentation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NetworkAutoInstrumentation.swift; sourceTree = "<group>"; };
 		E1798CD02524C255008DEBB9 /* MethodSwizzler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MethodSwizzler.swift; sourceTree = "<group>"; };
@@ -72,7 +73,6 @@
 		E1ABA07325231F4700ED8AEF /* DDEnvironmentValues.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DDEnvironmentValues.swift; sourceTree = "<group>"; };
 		E1ABA07F25231F8E00ED8AEF /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Platforms/iPhoneOS.platform/Developer/Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
 		E1ABA08A252341EA00ED8AEF /* DDTestMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTestMonitor.swift; sourceTree = "<group>"; };
-		E1D448032526246F00811C4F /* ObjcLoadHandler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ObjcLoadHandler.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -104,6 +104,14 @@
 				E116D7DA25248C390022779D /* SwiftExtensions.swift */,
 			);
 			path = Utils;
+			sourceTree = "<group>";
+		};
+		E160A113252B3A6B003121A5 /* include */ = {
+			isa = PBXGroup;
+			children = (
+				E160A114252B3A6B003121A5 /* ObjcLoadHandler.h */,
+			);
+			path = include;
 			sourceTree = "<group>";
 		};
 		E1798CCA2524C1E2008DEBB9 /* NetworkInstrumentation */ = {
@@ -173,7 +181,7 @@
 		E1ABA06B25231F3200ED8AEF /* objc */ = {
 			isa = PBXGroup;
 			children = (
-				E1D448032526246F00811C4F /* ObjcLoadHandler.h */,
+				E160A113252B3A6B003121A5 /* include */,
 				E1ABA06C25231F3200ED8AEF /* ObjcLoadHandler.m */,
 			);
 			path = objc;

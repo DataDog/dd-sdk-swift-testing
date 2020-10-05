@@ -53,6 +53,7 @@
 
 /* Begin PBXFileReference section */
 		E116D7DA25248C390022779D /* SwiftExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftExtensions.swift; sourceTree = "<group>"; };
+		E160A11125275CC1003121A5 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		E1798CC52524B9BD008DEBB9 /* DDTracer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTracer.swift; sourceTree = "<group>"; };
 		E1798CCB2524C21C008DEBB9 /* NetworkAutoInstrumentation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NetworkAutoInstrumentation.swift; sourceTree = "<group>"; };
 		E1798CD02524C255008DEBB9 /* MethodSwizzler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MethodSwizzler.swift; sourceTree = "<group>"; };
@@ -134,6 +135,7 @@
 		E1ABA04025231E2500ED8AEF = {
 			isa = PBXGroup;
 			children = (
+				E160A11125275CC1003121A5 /* Package.swift */,
 				E1ABA04C25231E2500ED8AEF /* Sources */,
 				E1ABA05725231E2500ED8AEF /* Tests */,
 				E1ABA04B25231E2500ED8AEF /* Products */,

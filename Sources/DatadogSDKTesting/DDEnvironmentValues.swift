@@ -209,7 +209,13 @@ internal struct DDEnvironmentValues {
             isCi = true
             provider = "bitrise"
             repository = DDEnvironmentValues.getEnvVariable("GIT_REPOSITORY_URL")
-            commit = DDEnvironmentValues.getEnvVariable("BITRISE_GIT_COMMIT")
+
+            var tempCommit = DDEnvironmentValues.getEnvVariable("BITRISE_GIT_COMMIT")
+            if tempCommit?.isEmpty ?? true {
+                tempCommit = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_HASH")
+            }
+            commit = tempCommit
+
             sourceRoot = DDEnvironmentValues.getEnvVariable("BITRISE_SOURCE_DIR")
             pipelineId = DDEnvironmentValues.getEnvVariable("BITRISE_TRIGGERED_WORKFLOW_ID")
             pipelineNumber = DDEnvironmentValues.getEnvVariable("BITRISE_BUILD_NUMBER")

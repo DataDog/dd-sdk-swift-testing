@@ -36,5 +36,15 @@ let package = Package(
             name: "DatadogSDKTestingObjc",
             path: "Sources/DatadogSDKTesting/objc"
         ),
+        .testTarget(
+            name: "DatadogSDKTestingTests",
+            dependencies: [
+                "DatadogSDKTesting"
+            ],
+            path: "Tests/DatadogSDKTesting",
+            exclude: [
+                "objc",
+            ]
+        ),
     ]
 )

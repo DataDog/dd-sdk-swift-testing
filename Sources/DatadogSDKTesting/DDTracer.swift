@@ -4,24 +4,24 @@
  * Copyright 2019-2020 Datadog, Inc.
  */
 
-import Foundation
 import DatadogExporter
+import Foundation
 import OpenTelemetryApi
 import OpenTelemetrySdk
+
+enum DDHeaders: String, CaseIterable {
+    case traceIDField = "x-datadog-trace-id"
+    case parentSpanIDField = "x-datadog-parent-id"
+}
 
 internal class DDTracer {
     let tracerSdk: TracerSdk
     let env = DDEnvironmentValues()
-    private var spanProcessor: SpanProcessor
-    private let datadogExporter: DatadogExporter
-
-    private enum DDHeaders: String, CaseIterable {
-        case traceIDField = "x-datadog-trace-id"
-        case parentSpanIDField = "x-datadog-parent-id"
-    }
+    var spanProcessor: SpanProcessor
+    let datadogExporter: DatadogExporter
 
     init() {
-        tracerSdk = OpenTelemetrySDK.instance.tracerProvider.get(instrumentationName: "hq.datatog.testing", instrumentationVersion: "0.1.0") as! TracerSdk
+        tracerSdk = OpenTelemetrySDK.instance.tracerProvider.get(instrumentationName: "hq.datadog.testing", instrumentationVersion: "0.1.0") as! TracerSdk
 
         let exporterConfiguration = ExporterConfiguration(
             serviceName: env.ddService ?? ProcessInfo.processInfo.processName,
@@ -40,12 +40,12 @@ internal class DDTracer {
         OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(spanProcessor)
     }
 
-    func startSpan(name: String, attributes: [String: String]) -> Span {
+    func startSpan(name: String, attributes: [String: String]) -> RecordEventsReadableSpan {
         let spanBuilder = tracerSdk.spanBuilder(spanName: name)
         attributes.forEach {
             spanBuilder.setAttribute(key: $0.key, value: $0.value)
         }
-        let span = spanBuilder.startSpan()
+        let span = spanBuilder.startSpan() as! RecordEventsReadableSpan
         _ = tracerSdk.withSpan(span)
         return span
     }
@@ -53,14 +53,6 @@ internal class DDTracer {
     func flush() {
         spanProcessor.forceFlush()
         spanProcessor.shutdown()
-    }
-
-    func canInjectHeaders(to request: URLRequest) -> Bool {
-        let containsHeaders: Bool
-        containsHeaders = DDHeaders.allCases.contains { headerKey -> Bool in
-            request.value(forHTTPHeaderField: headerKey.rawValue) != nil
-        }
-        return !containsHeaders
     }
 
     func tracePropagationHTTPHeaders() -> [String: String] {

@@ -4,24 +4,21 @@
  * Copyright 2019-2020 Datadog, Inc.
  */
 
-import OpenTelemetryApi
-import OpenTelemetrySdk
 import DatadogExporter
-
 
 internal class DDTestMonitor {
     static var instance: DDTestMonitor?
-
+    
     let tracer: DDTracer
-    private var testObserver: DDTestObserver
-    private var networkInstrumentation: NetworkAutoInstrumentation?
-
+    var testObserver: DDTestObserver
+    var networkInstrumentation: NetworkAutoInstrumentation?
+    
     init() {
         tracer = DDTracer()
         testObserver = DDTestObserver(tracer: tracer)
         startNetworkAutoInstrumentation()
     }
-
+    
     func startNetworkAutoInstrumentation() {
         let urlFilter = URLFilter(excludedURLs: tracer.endpointURLs())
         networkInstrumentation = NetworkAutoInstrumentation(urlFilter: urlFilter)

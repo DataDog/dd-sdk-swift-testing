@@ -30,14 +30,23 @@ internal class NetworkAutoInstrumentation {
     func apply() {
         swizzler.swizzle(using: interceptor)
     }
+
+    static func canInjectHeaders(to request: URLRequest) -> Bool {
+        let containsHeaders: Bool
+        containsHeaders = DDHeaders.allCases.contains { headerKey -> Bool in
+            request.value(forHTTPHeaderField: headerKey.rawValue) != nil
+        }
+        return !containsHeaders
+    }
 }
+
 
 private enum TracingRequestInterceptor {
     static func build(with filter: URLFiltering) -> RequestInterceptor {
         let interceptor: RequestInterceptor = { urlRequest in
             guard let tracer = DDTestMonitor.instance?.tracer,
                 filter.allows(urlRequest.url),
-                tracer.canInjectHeaders(to: urlRequest) else {
+                NetworkAutoInstrumentation.canInjectHeaders(to: urlRequest) else {
                     return nil
             }
             let tracingHeaders = tracer.tracePropagationHTTPHeaders()

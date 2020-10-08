@@ -13,9 +13,9 @@ internal class DDTestObserver: NSObject, XCTestObservation {
 
     var tracer: DDTracer
 
-    private let testNameRegex = try? NSRegularExpression(pattern: "([\\w]+) ([\\w]+)", options: .caseInsensitive)
-    private let supportsSkipping = NSClassFromString("XCTSkippedTestContext") != nil
-    private var currentBundleName = ""
+    let testNameRegex = try? NSRegularExpression(pattern: "([\\w]+) ([\\w]+)", options: .caseInsensitive)
+    let supportsSkipping = NSClassFromString("XCTSkippedTestContext") != nil
+    var currentBundleName = ""
     var activeTestSpan: Span?
 
     init(tracer: DDTracer) {

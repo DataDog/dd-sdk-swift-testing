@@ -31,7 +31,8 @@ internal class DDTracer {
             environment: env.ddEnvironment ?? "ci",
             clientToken: env.ddClientToken ?? "",
             endpoint: Endpoint.us,
-            uploadCondition: { true }
+            uploadCondition: { true },
+            performancePreset: .instantDataDelivery
         )
 
         datadogExporter = try! DatadogExporter(config: exporterConfiguration)

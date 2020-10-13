@@ -34,8 +34,8 @@
 		E1AD07A2252F5B02003705C1 /* SwiftExtensionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1AD07A1252F5B02003705C1 /* SwiftExtensionsTests.swift */; };
 		E1AD07A9252F5CB8003705C1 /* DDError.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1AD07A8252F5CB8003705C1 /* DDError.swift */; };
 		E1AD07AD252F5D86003705C1 /* DDErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1798CE52524D0D5008DEBB9 /* DDErrorTests.swift */; };
-		E1F9C8432530552800D7611D /* DatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E1F9C8422530552800D7611D /* DatadogExporter */; };
-		E1F9C8442530552800D7611D /* DatadogExporter in Embed Frameworks */ = {isa = PBXBuildFile; productRef = E1F9C8422530552800D7611D /* DatadogExporter */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		E1F9C86F2535B3C300D7611D /* DatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E1F9C86E2535B3C300D7611D /* DatadogExporter */; };
+		E1F9C8702535B3C300D7611D /* DatadogExporter in Embed Frameworks */ = {isa = PBXBuildFile; productRef = E1F9C86E2535B3C300D7611D /* DatadogExporter */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -55,7 +55,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				E1F9C8442530552800D7611D /* DatadogExporter in Embed Frameworks */,
+				E1F9C8702535B3C300D7611D /* DatadogExporter in Embed Frameworks */,
 				E1ABA08125231F8E00ED8AEF /* XCTest.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
@@ -105,7 +105,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E1F9C8432530552800D7611D /* DatadogExporter in Frameworks */,
+				E1F9C86F2535B3C300D7611D /* DatadogExporter in Frameworks */,
 				E1ABA08025231F8E00ED8AEF /* XCTest.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -294,7 +294,7 @@
 			);
 			name = DatadogSDKTesting;
 			packageProductDependencies = (
-				E1F9C8422530552800D7611D /* DatadogExporter */,
+				E1F9C86E2535B3C300D7611D /* DatadogExporter */,
 			);
 			productName = DatadogSDKTesting;
 			productReference = E1ABA04A25231E2500ED8AEF /* DatadogSDKTesting.framework */;
@@ -349,7 +349,7 @@
 			);
 			mainGroup = E1ABA04025231E2500ED8AEF;
 			packageReferences = (
-				E1F9C8412530552800D7611D /* XCRemoteSwiftPackageReference "opentelemetry-swift" */,
+				E1F9C86D2535B3C300D7611D /* XCRemoteSwiftPackageReference "opentelemetry-swift" */,
 			);
 			productRefGroup = E1ABA04B25231E2500ED8AEF /* Products */;
 			projectDirPath = "";
@@ -673,7 +673,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		E1F9C8412530552800D7611D /* XCRemoteSwiftPackageReference "opentelemetry-swift" */ = {
+		E1F9C86D2535B3C300D7611D /* XCRemoteSwiftPackageReference "opentelemetry-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/nachoBonafonte/opentelemetry-swift.git";
 			requirement = {
@@ -684,9 +684,9 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		E1F9C8422530552800D7611D /* DatadogExporter */ = {
+		E1F9C86E2535B3C300D7611D /* DatadogExporter */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = E1F9C8412530552800D7611D /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			package = E1F9C86D2535B3C300D7611D /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
 			productName = DatadogExporter;
 		};
 /* End XCSwiftPackageProductDependency section */

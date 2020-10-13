@@ -53,7 +53,6 @@ internal class DDTracer {
 
     func flush() {
         spanProcessor.forceFlush()
-        spanProcessor.shutdown()
     }
 
     func tracePropagationHTTPHeaders() -> [String: String] {

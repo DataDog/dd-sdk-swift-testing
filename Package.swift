@@ -20,13 +20,13 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "git@github.com:DataDog/dd-opentelemetry-exporter-swift.git", .branch("master")),
+        .package(url: "https://github.com/nachoBonafonte/opentelemetry-swift.git", .branch("develop")),
     ],
     targets: [
         .target(
             name: "DatadogSDKTesting",
             dependencies: [
-                .product(name: "DatadogExporter", package: "dd-opentelemetry-exporter-swift"),
+                .product(name: "DatadogExporter", package: "opentelemetry-swift"),
             ],
             exclude: [
                 "objc",

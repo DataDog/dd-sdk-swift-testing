@@ -2,15 +2,6 @@
   "object": {
     "pins": [
       {
-        "package": "dd-opentelemetry-exporter-swift",
-        "repositoryURL": "git@github.com:DataDog/dd-opentelemetry-exporter-swift.git",
-        "state": {
-          "branch": "master",
-          "revision": "67d9547f183fa8cd2b926d5d6f5ccb2a704f986c",
-          "version": null
-        }
-      },
-      {
         "package": "grpc-swift",
         "repositoryURL": "https://github.com/grpc/grpc-swift.git",
         "state": {
@@ -23,8 +14,8 @@
         "package": "opentelemetry-swift",
         "repositoryURL": "https://github.com/open-telemetry/opentelemetry-swift.git",
         "state": {
-          "branch": "master",
-          "revision": "caa94d93cd19430b91ee48b9b1400224e5d6cdbe",
+          "branch": null,
+          "revision": "ca6be73826c4f8e89d376f7132d682375d3290b0",
           "version": null
         }
       },

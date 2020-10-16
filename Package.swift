@@ -20,7 +20,7 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/nachoBonafonte/opentelemetry-swift.git", .branch("develop")),
+        .package(url: "https://github.com/open-telemetry/opentelemetry-swift.git", .revision("ca6be73826c4f8e89d376f7132d682375d3290b0")),
     ],
     targets: [
         .target(

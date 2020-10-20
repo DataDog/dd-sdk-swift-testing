@@ -51,6 +51,53 @@ internal class DDTracer {
         return span
     }
 
+    /// This method is called form the crash reporter if the previous run crashed while running a test.Then it recreates the span with the previous information
+    /// and adds the error status and information
+    @discardableResult func createSpanFromCrash(spanData: SimpleSpanData, crashDate: Date?,crashInfo: String, crashLog: String) -> RecordEventsReadableSpan {
+        let spanName = spanData.name
+        let traceId = TraceId(idHi: spanData.traceIdHi, idLo: spanData.traceIdLo)
+        let spanId = SpanId(id: spanData.spanId)
+        let startTime = spanData.startEpochNanos
+        let spanContext = SpanContext.create(traceId: traceId,
+                                             spanId: spanId,
+                                             traceFlags: TraceFlags().settingIsSampled(true),
+                                             traceState: TraceState())
+        var attributes = AttributesWithCapacity(capacity: tracerSdk.sharedState.activeTraceConfig.maxNumberOfAttributes)
+        spanData.stringAttributes.forEach {
+            attributes.updateValue(value: AttributeValue.string($0.value), forKey: $0.key)
+        }
+
+        attributes.updateValue(value: AttributeValue.string(DDTestingTags.statusFail), forKey: DDTestingTags.testStatus)
+        attributes.updateValue(value: AttributeValue.bool(true), forKey: DDTags.error)
+        attributes.updateValue(value: AttributeValue.string(crashInfo), forKey: DDTags.errorType)
+        attributes.updateValue(value: AttributeValue.string(crashInfo), forKey: DDTags.errorMessage)
+        attributes.updateValue(value: AttributeValue.string(crashLog), forKey: DDTags.errorStack)
+
+
+        let span = RecordEventsReadableSpan.startSpan(context: spanContext,
+                                                      name: spanName,
+                                                      instrumentationLibraryInfo: tracerSdk.instrumentationLibraryInfo,
+                                                      kind: .internal,
+                                                      parentSpanId: nil,
+                                                      hasRemoteParent: false,
+                                                      traceConfig: tracerSdk.sharedState.activeTraceConfig,
+                                                      spanProcessor: tracerSdk.sharedState.activeSpanProcessor,
+                                                      clock: MonotonicClock(clock: tracerSdk.sharedState.clock),
+                                                      resource: Resource(),
+                                                      attributes: attributes,
+                                                      links: [Link](),
+                                                      totalRecordedLinks: 0,
+                                                      startEpochNanos: startTime)
+
+        var crashTimeStamp = spanData.startEpochNanos + 1
+        if let timeInterval = crashDate?.timeIntervalSince1970 {
+            crashTimeStamp = max( crashTimeStamp, UInt64((timeInterval) * 1_000_000_000))
+        }
+        span.end(endOptions: EndSpanOptions(timestamp: crashTimeStamp))
+        self.flush()
+        return span
+    }
+
     func flush() {
         spanProcessor.forceFlush()
     }

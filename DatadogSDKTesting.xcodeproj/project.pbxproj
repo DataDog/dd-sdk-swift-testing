@@ -12,6 +12,7 @@
 		E1798CD22524C256008DEBB9 /* MethodSwizzler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1798CD02524C255008DEBB9 /* MethodSwizzler.swift */; };
 		E1798CD32524C256008DEBB9 /* URLSessionSwizzler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1798CD12524C255008DEBB9 /* URLSessionSwizzler.swift */; };
 		E1798CD92524C31A008DEBB9 /* URLFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1798CD82524C31A008DEBB9 /* URLFilter.swift */; };
+		E17B7AA8253F02580081D7F3 /* SigmaSwiftStatistics in Frameworks */ = {isa = PBXBuildFile; productRef = E17B7AA7253F02580081D7F3 /* SigmaSwiftStatistics */; };
 		E1907D3E253ED28F00D5F05F /* DatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E1907D3D253ED28F00D5F05F /* DatadogExporter */; };
 		E1907D3F253ED28F00D5F05F /* DatadogExporter in Embed Frameworks */ = {isa = PBXBuildFile; productRef = E1907D3D253ED28F00D5F05F /* DatadogExporter */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		E1907D41253ED2DD00D5F05F /* DatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E1907D40253ED2DD00D5F05F /* DatadogExporter */; };
@@ -90,6 +91,7 @@
 		E1798CD12524C255008DEBB9 /* URLSessionSwizzler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = URLSessionSwizzler.swift; sourceTree = "<group>"; };
 		E1798CD82524C31A008DEBB9 /* URLFilter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = URLFilter.swift; sourceTree = "<group>"; };
 		E1798CE52524D0D5008DEBB9 /* DDErrorTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DDErrorTests.swift; sourceTree = "<group>"; };
+		E17B7AA5253F010C0081D7F3 /* LICENSE-3rdparty.csv */ = {isa = PBXFileReference; lastKnownFileType = text; path = "LICENSE-3rdparty.csv"; sourceTree = "<group>"; };
 		E1ABA04A25231E2500ED8AEF /* DatadogSDKTesting.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = DatadogSDKTesting.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E1ABA04D25231E2500ED8AEF /* DatadogSDKTesting.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DatadogSDKTesting.h; sourceTree = "<group>"; };
 		E1ABA04E25231E2500ED8AEF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -127,6 +129,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E1FB483B253891650083B263 /* CrashReporter in Frameworks */,
+				E17B7AA8253F02580081D7F3 /* SigmaSwiftStatistics in Frameworks */,
 				E1ABA08025231F8E00ED8AEF /* XCTest.framework in Frameworks */,
 				E1907D3E253ED28F00D5F05F /* DatadogExporter in Frameworks */,
 			);
@@ -192,6 +195,7 @@
 		E1ABA04025231E2500ED8AEF = {
 			isa = PBXGroup;
 			children = (
+				E17B7AA5253F010C0081D7F3 /* LICENSE-3rdparty.csv */,
 				E160A11125275CC1003121A5 /* Package.swift */,
 				E1ABA04C25231E2500ED8AEF /* Sources */,
 				E1ABA05725231E2500ED8AEF /* Tests */,
@@ -340,6 +344,7 @@
 			packageProductDependencies = (
 				E1FB483A253891650083B263 /* CrashReporter */,
 				E1907D3D253ED28F00D5F05F /* DatadogExporter */,
+				E17B7AA7253F02580081D7F3 /* SigmaSwiftStatistics */,
 			);
 			productName = DatadogSDKTesting;
 			productReference = E1ABA04A25231E2500ED8AEF /* DatadogSDKTesting.framework */;
@@ -398,6 +403,7 @@
 			packageReferences = (
 				E1FB4839253891650083B263 /* XCRemoteSwiftPackageReference "plcrashreporter" */,
 				E1907D3C253ED28F00D5F05F /* XCRemoteSwiftPackageReference "opentelemetry-swift" */,
+				E17B7AA6253F02580081D7F3 /* XCRemoteSwiftPackageReference "SigmaSwiftStatistics" */,
 			);
 			productRefGroup = E1ABA04B25231E2500ED8AEF /* Products */;
 			projectDirPath = "";
@@ -725,6 +731,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		E17B7AA6253F02580081D7F3 /* XCRemoteSwiftPackageReference "SigmaSwiftStatistics" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/evgenyneu/SigmaSwiftStatistics.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.0.2;
+			};
+		};
 		E1907D3C253ED28F00D5F05F /* XCRemoteSwiftPackageReference "opentelemetry-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/nachoBonafonte/opentelemetry-swift.git";
@@ -744,6 +758,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		E17B7AA7253F02580081D7F3 /* SigmaSwiftStatistics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E17B7AA6253F02580081D7F3 /* XCRemoteSwiftPackageReference "SigmaSwiftStatistics" */;
+			productName = SigmaSwiftStatistics;
+		};
 		E1907D3D253ED28F00D5F05F /* DatadogExporter */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = E1907D3C253ED28F00D5F05F /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;

@@ -77,13 +77,17 @@ internal class DDTestObserverTests: XCTestCase {
         let testSpan = testObserver.tracer.tracerSdk.currentSpan as! RecordEventsReadableSpan
         let perfMetric = XCTPerformanceMetric.wallClockTime
         self.setValue([perfMetric], forKey: "_activePerformanceMetricIDs")
-        self.setValue([perfMetric: ["measurements" : [0.5]]], forKey: "_perfMetricsForID")
+        self.setValue([perfMetric: ["measurements" : [1,2,3,4,5]]], forKey: "_perfMetricsForID")
 
         testObserver.testCaseDidFinish(self)
         
         let spanData = testSpan.toSpanData()
         XCTAssertEqual(spanData.attributes[DDTestingTags.testType]?.description, DDTestingTags.typeBenchmark)
-        XCTAssertEqual(spanData.attributes[DDBenchmarkingTags.durationMean]?.description, "500000000.0")
+        XCTAssertEqual(spanData.attributes[DDBenchmarkingTags.durationMean]?.description, "3000000000.0")
+        XCTAssertEqual(spanData.attributes[DDBenchmarkingTags.statisticsN]?.description, "5")
+        XCTAssertEqual(spanData.attributes[DDBenchmarkingTags.statisticsMin]?.description, "1000000000.0")
+        XCTAssertEqual(spanData.attributes[DDBenchmarkingTags.statisticsMax]?.description, "5000000000.0")
+        XCTAssertEqual(spanData.attributes[DDBenchmarkingTags.statisticsMedian]?.description, "3000000000.0")
 
         self.setValue(nil, forKey: "_activePerformanceMetricIDs")
         self.setValue(nil, forKey: "_perfMetricsForID")

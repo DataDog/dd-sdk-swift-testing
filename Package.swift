@@ -22,6 +22,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/nachoBonafonte/opentelemetry-swift.git", .revision("d7b825000396c13c7a3dd79dd96fa0e54612c37c")),
         .package(url: "https://github.com/microsoft/plcrashreporter.git", .revision("af3a0a1248adc690354de07e5e36e8bcc7314e72")),
+        .package(url: "https://github.com/evgenyneu/SigmaSwiftStatistics.git", from: "9.0.2"),
     ],
     targets: [
         .target(
@@ -29,6 +30,7 @@ let package = Package(
             dependencies: [
                 .product(name: "DatadogExporter", package: "opentelemetry-swift"),
                 .product(name: "CrashReporter", package: "PLCrashReporter"),
+                .product(name: "SigmaSwiftStatistics", package: "SigmaSwiftStatistics"),
             ],
             exclude: [
                 "objc",

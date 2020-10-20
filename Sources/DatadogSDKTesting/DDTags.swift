@@ -20,7 +20,7 @@ internal struct DDTags {
     /// Those keys used to encode information received from the user through `OpenTracingLogFields`, `OpenTracingTagKeys` or custom fields.
     /// Supported by Datadog platform.
     static let errorType    = "error.type"
-    static let errorMessage = "error.msg"
+    static let errorMessage = "error.message"
     static let errorStack   = "error.stack"
 
     /// Default span type for spans created without a specifying a type. In general all spans should use this type.

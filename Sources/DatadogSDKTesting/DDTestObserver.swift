@@ -26,6 +26,7 @@ internal class DDTestObserver: NSObject, XCTestObservation {
 
     func testBundleWillStart(_ testBundle: Bundle) {
         currentBundleName = testBundle.bundleURL.deletingPathExtension().lastPathComponent
+        DDCrashes.install()
     }
 
     func testBundleDidFinish(_ testBundle: Bundle) {
@@ -53,6 +54,9 @@ internal class DDTestObserver: NSObject, XCTestObservation {
 
         let testSpan = tracer.startSpan(name: testCase.name, attributes: attributes)
         tracer.env.addTagsToSpan(span: testSpan)
+
+        let simpleSpan = SimpleSpanData(spanData: testSpan.toSpanData())
+        DDCrashes.setCustomData(customData: SimpleSpanSerializer.serializeSpan(simpleSpan: simpleSpan))
         activeTestSpan = testSpan
     }
 
@@ -79,11 +83,8 @@ internal class DDTestObserver: NSObject, XCTestObservation {
     func testCase(_ testCase: XCTestCase, didFailWithDescription description: String, inFile filePath: String?, atLine lineNumber: Int) {
         self.activeTestSpan?.setAttribute(key: DDTags.errorType, value: AttributeValue.string("test_failure: \(filePath ?? ""):\(lineNumber)"))
         self.activeTestSpan?.setAttribute(key: DDTags.errorMessage, value: AttributeValue.string(description))
-        //self.activeTestSpan?.setAttribute(key: DDTags.errorStack, value: AttributeValue.string(Thread.callStackSymbols.description))
-
-        let fullDescription = description + "\n" + "location: \(filePath ?? ""):\(lineNumber)"
+        let fullDescription = "\(description):\n\(filePath ?? ""):\(lineNumber)"
         self.activeTestSpan?.setAttribute(key: DDTags.errorStack, value: AttributeValue.string(fullDescription))
-
     }
 
     private func addBenchmarkTagsIfNeeded(testCase: XCTestCase, activeTest: Span) {

@@ -66,5 +66,26 @@ class DDTracerTests: XCTestCase {
         XCTAssertEqual(headers.count, 0)
         print(headers)
     }
+
+    func testCreateSpanFromCrash() {
+        let simpleSpan = SimpleSpanData(traceIdHi: 1, traceIdLo: 2, spanId: 3, name: "name", startEpochNanos: 33, stringAttributes: [:])
+        let crashDate: Date? = nil
+        let crashInfo = "info"
+        let crashLog = "crashLog"
+
+        let tracer = DDTracer()
+        let span = tracer.createSpanFromCrash(spanData: simpleSpan, crashDate: crashDate,crashInfo: crashInfo, crashLog: crashLog)
+        let spanData = span.toSpanData()
+
+        XCTAssertEqual(spanData.name, "name")
+        XCTAssertEqual(spanData.traceId, TraceId(idHi: 1, idLo: 2))
+        XCTAssertEqual(spanData.spanId, SpanId(id:3))
+        XCTAssertEqual(spanData.attributes[DDTestingTags.testStatus],  AttributeValue.string( DDTestingTags.statusFail))
+        XCTAssertEqual(spanData.attributes[DDTags.error], AttributeValue.bool(true))
+        XCTAssertEqual(spanData.attributes[DDTags.errorType], AttributeValue.string(crashInfo))
+        XCTAssertEqual(spanData.attributes[DDTags.errorMessage], AttributeValue.string(crashInfo))
+        XCTAssertEqual(spanData.attributes[DDTags.errorStack], AttributeValue.string(crashLog))
+        XCTAssertEqual(spanData.endEpochNanos, spanData.startEpochNanos + 1)
+    }
     
 }

@@ -20,13 +20,15 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/open-telemetry/opentelemetry-swift.git", .revision("ca6be73826c4f8e89d376f7132d682375d3290b0")),
+        .package(url: "https://github.com/nachoBonafonte/opentelemetry-swift.git", .revision("d7b825000396c13c7a3dd79dd96fa0e54612c37c")),
+        .package(url: "https://github.com/microsoft/plcrashreporter.git", .revision("af3a0a1248adc690354de07e5e36e8bcc7314e72")),
     ],
     targets: [
         .target(
             name: "DatadogSDKTesting",
             dependencies: [
                 .product(name: "DatadogExporter", package: "opentelemetry-swift"),
+                .product(name: "CrashReporter", package: "PLCrashReporter"),
             ],
             exclude: [
                 "objc",

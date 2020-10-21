@@ -180,8 +180,8 @@
 			children = (
 				E1FB483C253891CE0083B263 /* Crashes */,
 				E1798CCA2524C1E2008DEBB9 /* NetworkInstrumentation */,
+				E1ABA06B25231F3200ED8AEF /* Objc */,
 				E116D7D925248C280022779D /* Utils */,
-				E1ABA06B25231F3200ED8AEF /* objc */,
 				E1ABA07325231F4700ED8AEF /* DDEnvironmentValues.swift */,
 				E1ABA07125231F4700ED8AEF /* DDTags.swift */,
 				E1ABA08A252341EA00ED8AEF /* DDTestMonitor.swift */,
@@ -232,13 +232,13 @@
 			path = Tests;
 			sourceTree = "<group>";
 		};
-		E1ABA06B25231F3200ED8AEF /* objc */ = {
+		E1ABA06B25231F3200ED8AEF /* Objc */ = {
 			isa = PBXGroup;
 			children = (
 				E160A113252B3A6B003121A5 /* include */,
 				E1ABA06C25231F3200ED8AEF /* ObjcLoadHandler.m */,
 			);
-			path = objc;
+			path = Objc;
 			sourceTree = "<group>";
 		};
 		E1ABA07E25231F8E00ED8AEF /* Frameworks */ = {
@@ -257,7 +257,7 @@
 				E1AD0756252F01F0003705C1 /* DDEnvironmentValuesTests.swift */,
 				E1AD075C252F206D003705C1 /* DDTracerTests.swift */,
 				E1AD0757252F01F0003705C1 /* FrameworkLoadHandlerTests.swift */,
-				E1AD0746252E1F63003705C1 /* objc */,
+				E1AD0746252E1F63003705C1 /* Objc */,
 				E1AD0737252E1E1A003705C1 /* NetworkInstrumentation */,
 				E1AD0741252E1EBB003705C1 /* Utils */,
 			);
@@ -284,14 +284,14 @@
 			path = Utils;
 			sourceTree = "<group>";
 		};
-		E1AD0746252E1F63003705C1 /* objc */ = {
+		E1AD0746252E1F63003705C1 /* Objc */ = {
 			isa = PBXGroup;
 			children = (
 				E1AD0749252E1FBC003705C1 /* NSURLSessionBridge.h */,
 				E1AD074A252E1FBC003705C1 /* NSURLSessionBridge.m */,
 				E1AD0747252E1FBC003705C1 /* DatadogSDKTestingTests-Bridging-Header.h */,
 			);
-			path = objc;
+			path = Objc;
 			sourceTree = "<group>";
 		};
 		E1FB483C253891CE0083B263 /* Crashes */ = {

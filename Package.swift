@@ -38,7 +38,7 @@ let package = Package(
         ),
         .target(
             name: "DatadogSDKTestingObjc",
-            path: "Sources/DatadogSDKTesting/objc"
+            path: "Sources/DatadogSDKTesting/Objc"
         ),
         .testTarget(
             name: "DatadogSDKTestingTests",
@@ -47,7 +47,7 @@ let package = Package(
             ],
             path: "Tests/DatadogSDKTesting",
             exclude: [
-                "objc",
+                "Objc",
             ]
         ),
     ]

@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E126DD2D253F366200700A40 /* StdoutCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E126DD2C253F366200700A40 /* StdoutCapture.swift */; };
+		E126DD2F253F367600700A40 /* StderrCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E126DD2E253F367600700A40 /* StderrCapture.swift */; };
 		E1798CC62524B9BD008DEBB9 /* DDTracer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1798CC52524B9BD008DEBB9 /* DDTracer.swift */; };
 		E1798CCC2524C21C008DEBB9 /* NetworkAutoInstrumentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1798CCB2524C21C008DEBB9 /* NetworkAutoInstrumentation.swift */; };
 		E1798CD22524C256008DEBB9 /* MethodSwizzler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1798CD02524C255008DEBB9 /* MethodSwizzler.swift */; };
@@ -38,6 +40,8 @@
 		E1AD07A2252F5B02003705C1 /* SwiftExtensionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1AD07A1252F5B02003705C1 /* SwiftExtensionsTests.swift */; };
 		E1AD07A9252F5CB8003705C1 /* DDError.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1AD07A8252F5CB8003705C1 /* DDError.swift */; };
 		E1AD07AD252F5D86003705C1 /* DDErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1798CE52524D0D5008DEBB9 /* DDErrorTests.swift */; };
+		E1BB54AD25401E85007C2D93 /* StdoutCaptureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1BB54AC25401E85007C2D93 /* StdoutCaptureTests.swift */; };
+		E1BB54C425408E92007C2D93 /* StderrCaptureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1BB54C325408E92007C2D93 /* StderrCaptureTests.swift */; };
 		E1FB48312538909D0083B263 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1ABA04A25231E2500ED8AEF /* DatadogSDKTesting.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 		E1FB483B253891650083B263 /* CrashReporter in Frameworks */ = {isa = PBXBuildFile; productRef = E1FB483A253891650083B263 /* CrashReporter */; };
 		E1FB4840253891CE0083B263 /* SimpleSpanSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FB483D253891CE0083B263 /* SimpleSpanSerializer.swift */; };
@@ -83,6 +87,8 @@
 
 /* Begin PBXFileReference section */
 		E116D7DA25248C390022779D /* SwiftExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftExtensions.swift; sourceTree = "<group>"; };
+		E126DD2C253F366200700A40 /* StdoutCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StdoutCapture.swift; sourceTree = "<group>"; };
+		E126DD2E253F367600700A40 /* StderrCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StderrCapture.swift; sourceTree = "<group>"; };
 		E160A11125275CC1003121A5 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		E160A114252B3A6B003121A5 /* ObjcLoadHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ObjcLoadHandler.h; sourceTree = "<group>"; };
 		E1798CC52524B9BD008DEBB9 /* DDTracer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTracer.swift; sourceTree = "<group>"; };
@@ -117,6 +123,8 @@
 		E1AD0761252F2F7E003705C1 /* DDTestObserverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTestObserverTests.swift; sourceTree = "<group>"; };
 		E1AD07A1252F5B02003705C1 /* SwiftExtensionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftExtensionsTests.swift; sourceTree = "<group>"; };
 		E1AD07A8252F5CB8003705C1 /* DDError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDError.swift; sourceTree = "<group>"; };
+		E1BB54AC25401E85007C2D93 /* StdoutCaptureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StdoutCaptureTests.swift; sourceTree = "<group>"; };
+		E1BB54C325408E92007C2D93 /* StderrCaptureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StderrCaptureTests.swift; sourceTree = "<group>"; };
 		E1FB483D253891CE0083B263 /* SimpleSpanSerializer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleSpanSerializer.swift; sourceTree = "<group>"; };
 		E1FB483E253891CE0083B263 /* DDCrashes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DDCrashes.swift; sourceTree = "<group>"; };
 		E1FB483F253891CE0083B263 /* SimpleSpanData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleSpanData.swift; sourceTree = "<group>"; };
@@ -157,6 +165,15 @@
 			path = Utils;
 			sourceTree = "<group>";
 		};
+		E126DD27253F355F00700A40 /* OutputCapture */ = {
+			isa = PBXGroup;
+			children = (
+				E126DD2C253F366200700A40 /* StdoutCapture.swift */,
+				E126DD2E253F367600700A40 /* StderrCapture.swift */,
+			);
+			path = OutputCapture;
+			sourceTree = "<group>";
+		};
 		E160A113252B3A6B003121A5 /* include */ = {
 			isa = PBXGroup;
 			children = (
@@ -181,6 +198,7 @@
 				E1FB483C253891CE0083B263 /* Crashes */,
 				E1798CCA2524C1E2008DEBB9 /* NetworkInstrumentation */,
 				E1ABA06B25231F3200ED8AEF /* Objc */,
+				E126DD27253F355F00700A40 /* OutputCapture */,
 				E116D7D925248C280022779D /* Utils */,
 				E1ABA07325231F4700ED8AEF /* DDEnvironmentValues.swift */,
 				E1ABA07125231F4700ED8AEF /* DDTags.swift */,
@@ -253,13 +271,14 @@
 			isa = PBXGroup;
 			children = (
 				E1FB4843253891E70083B263 /* Crashes */,
+				E1AD0737252E1E1A003705C1 /* NetworkInstrumentation */,
+				E1AD0746252E1F63003705C1 /* Objc */,
+				E1BB54AB25401E47007C2D93 /* OutputCapture */,
+				E1AD0741252E1EBB003705C1 /* Utils */,
 				E1AD0761252F2F7E003705C1 /* DDTestObserverTests.swift */,
 				E1AD0756252F01F0003705C1 /* DDEnvironmentValuesTests.swift */,
 				E1AD075C252F206D003705C1 /* DDTracerTests.swift */,
 				E1AD0757252F01F0003705C1 /* FrameworkLoadHandlerTests.swift */,
-				E1AD0746252E1F63003705C1 /* Objc */,
-				E1AD0737252E1E1A003705C1 /* NetworkInstrumentation */,
-				E1AD0741252E1EBB003705C1 /* Utils */,
 			);
 			path = DatadogSDKTesting;
 			sourceTree = "<group>";
@@ -292,6 +311,15 @@
 				E1AD0747252E1FBC003705C1 /* DatadogSDKTestingTests-Bridging-Header.h */,
 			);
 			path = Objc;
+			sourceTree = "<group>";
+		};
+		E1BB54AB25401E47007C2D93 /* OutputCapture */ = {
+			isa = PBXGroup;
+			children = (
+				E1BB54AC25401E85007C2D93 /* StdoutCaptureTests.swift */,
+				E1BB54C325408E92007C2D93 /* StderrCaptureTests.swift */,
+			);
+			path = OutputCapture;
 			sourceTree = "<group>";
 		};
 		E1FB483C253891CE0083B263 /* Crashes */ = {
@@ -447,11 +475,13 @@
 				E1ABA07525231F4700ED8AEF /* DDTags.swift in Sources */,
 				E1798CCC2524C21C008DEBB9 /* NetworkAutoInstrumentation.swift in Sources */,
 				E1AD07A9252F5CB8003705C1 /* DDError.swift in Sources */,
+				E126DD2D253F366200700A40 /* StdoutCapture.swift in Sources */,
 				E1FB4840253891CE0083B263 /* SimpleSpanSerializer.swift in Sources */,
 				E1FB4841253891CE0083B263 /* DDCrashes.swift in Sources */,
 				E1ABA07425231F4700ED8AEF /* DDTestObserver.swift in Sources */,
 				E1798CC62524B9BD008DEBB9 /* DDTracer.swift in Sources */,
 				E1798CD22524C256008DEBB9 /* MethodSwizzler.swift in Sources */,
+				E126DD2F253F367600700A40 /* StderrCapture.swift in Sources */,
 				E1798CD92524C31A008DEBB9 /* URLFilter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -464,7 +494,9 @@
 				E1AD073D252E1E20003705C1 /* URLSessionSwizzlerTests.swift in Sources */,
 				E1AD0758252F01F0003705C1 /* DDEnvironmentValuesTests.swift in Sources */,
 				E1FB4845253891E70083B263 /* SimpleSpanSerializerTests.swift in Sources */,
+				E1BB54C425408E92007C2D93 /* StderrCaptureTests.swift in Sources */,
 				E1AD073F252E1E22003705C1 /* URLFilterTests.swift in Sources */,
+				E1BB54AD25401E85007C2D93 /* StdoutCaptureTests.swift in Sources */,
 				E1AD074B252E1FBC003705C1 /* NSURLSessionBridge.m in Sources */,
 				E1AD0762252F2F7E003705C1 /* DDTestObserverTests.swift in Sources */,
 				E1AD07AD252F5D86003705C1 /* DDErrorTests.swift in Sources */,
@@ -744,7 +776,7 @@
 			repositoryURL = "https://github.com/nachoBonafonte/opentelemetry-swift.git";
 			requirement = {
 				kind = revision;
-				revision = d7b825000396c13c7a3dd79dd96fa0e54612c37c;
+				revision = 91c517817b420d6a9ac37f305e0f29bdac7bdb3f;
 			};
 		};
 		E1FB4839253891650083B263 /* XCRemoteSwiftPackageReference "plcrashreporter" */ = {

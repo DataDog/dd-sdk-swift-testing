@@ -24,6 +24,7 @@ public class FrameworkLoadHandler: NSObject {
             environment["XCTestConfigurationFilePath"] != nil
         if isInTestMode {
             DDTestMonitor.instance = DDTestMonitor()
+            DDTestMonitor.instance?.startInstrumenting()
         }
     }
 }

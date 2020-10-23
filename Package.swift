@@ -33,7 +33,7 @@ let package = Package(
                 .product(name: "SigmaSwiftStatistics", package: "SigmaSwiftStatistics"),
             ],
             exclude: [
-                "objc",
+                "Objc",
             ]
         ),
         .target(

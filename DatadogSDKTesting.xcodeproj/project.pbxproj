@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E12442602542E254007D195A /* DatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E124425F2542E254007D195A /* DatadogExporter */; };
+		E12442612542E254007D195A /* DatadogExporter in Embed Frameworks */ = {isa = PBXBuildFile; productRef = E124425F2542E254007D195A /* DatadogExporter */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		E12442632542E261007D195A /* DatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E12442622542E261007D195A /* DatadogExporter */; };
+		E12442642542E261007D195A /* DatadogExporter in Embed Frameworks */ = {isa = PBXBuildFile; productRef = E12442622542E261007D195A /* DatadogExporter */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		E126DD2D253F366200700A40 /* StdoutCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E126DD2C253F366200700A40 /* StdoutCapture.swift */; };
 		E126DD2F253F367600700A40 /* StderrCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E126DD2E253F367600700A40 /* StderrCapture.swift */; };
 		E1798CC62524B9BD008DEBB9 /* DDTracer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1798CC52524B9BD008DEBB9 /* DDTracer.swift */; };
@@ -15,10 +19,6 @@
 		E1798CD32524C256008DEBB9 /* URLSessionSwizzler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1798CD12524C255008DEBB9 /* URLSessionSwizzler.swift */; };
 		E1798CD92524C31A008DEBB9 /* URLFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1798CD82524C31A008DEBB9 /* URLFilter.swift */; };
 		E17B7AA8253F02580081D7F3 /* SigmaSwiftStatistics in Frameworks */ = {isa = PBXBuildFile; productRef = E17B7AA7253F02580081D7F3 /* SigmaSwiftStatistics */; };
-		E1907D3E253ED28F00D5F05F /* DatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E1907D3D253ED28F00D5F05F /* DatadogExporter */; };
-		E1907D3F253ED28F00D5F05F /* DatadogExporter in Embed Frameworks */ = {isa = PBXBuildFile; productRef = E1907D3D253ED28F00D5F05F /* DatadogExporter */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		E1907D41253ED2DD00D5F05F /* DatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E1907D40253ED2DD00D5F05F /* DatadogExporter */; };
-		E1907D42253ED2DD00D5F05F /* DatadogExporter in Embed Frameworks */ = {isa = PBXBuildFile; productRef = E1907D40253ED2DD00D5F05F /* DatadogExporter */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		E1ABA05B25231E2500ED8AEF /* DatadogSDKTesting.h in Headers */ = {isa = PBXBuildFile; fileRef = E1ABA04D25231E2500ED8AEF /* DatadogSDKTesting.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E1ABA06D25231F3200ED8AEF /* ObjcLoadHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA06C25231F3200ED8AEF /* ObjcLoadHandler.m */; };
 		E1ABA07425231F4700ED8AEF /* DDTestObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA07025231F4700ED8AEF /* DDTestObserver.swift */; };
@@ -67,7 +67,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				E1907D3F253ED28F00D5F05F /* DatadogExporter in Embed Frameworks */,
+				E12442612542E254007D195A /* DatadogExporter in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -78,7 +78,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				E1907D42253ED2DD00D5F05F /* DatadogExporter in Embed Frameworks */,
+				E12442642542E261007D195A /* DatadogExporter in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -136,10 +136,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E12442602542E254007D195A /* DatadogExporter in Frameworks */,
 				E1FB483B253891650083B263 /* CrashReporter in Frameworks */,
 				E17B7AA8253F02580081D7F3 /* SigmaSwiftStatistics in Frameworks */,
 				E1ABA08025231F8E00ED8AEF /* XCTest.framework in Frameworks */,
-				E1907D3E253ED28F00D5F05F /* DatadogExporter in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -147,7 +147,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E1907D41253ED2DD00D5F05F /* DatadogExporter in Frameworks */,
+				E12442632542E261007D195A /* DatadogExporter in Frameworks */,
 				E1FB48312538909D0083B263 /* DatadogSDKTesting.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -371,8 +371,8 @@
 			name = DatadogSDKTesting;
 			packageProductDependencies = (
 				E1FB483A253891650083B263 /* CrashReporter */,
-				E1907D3D253ED28F00D5F05F /* DatadogExporter */,
 				E17B7AA7253F02580081D7F3 /* SigmaSwiftStatistics */,
+				E124425F2542E254007D195A /* DatadogExporter */,
 			);
 			productName = DatadogSDKTesting;
 			productReference = E1ABA04A25231E2500ED8AEF /* DatadogSDKTesting.framework */;
@@ -394,7 +394,7 @@
 			);
 			name = DatadogSDKTestingTests;
 			packageProductDependencies = (
-				E1907D40253ED2DD00D5F05F /* DatadogExporter */,
+				E12442622542E261007D195A /* DatadogExporter */,
 			);
 			productName = DatadogSDKTestingTests;
 			productReference = E1ABA05325231E2500ED8AEF /* DatadogSDKTestingTests.xctest */;
@@ -430,8 +430,8 @@
 			mainGroup = E1ABA04025231E2500ED8AEF;
 			packageReferences = (
 				E1FB4839253891650083B263 /* XCRemoteSwiftPackageReference "plcrashreporter" */,
-				E1907D3C253ED28F00D5F05F /* XCRemoteSwiftPackageReference "opentelemetry-swift" */,
 				E17B7AA6253F02580081D7F3 /* XCRemoteSwiftPackageReference "SigmaSwiftStatistics" */,
+				E124425E2542E254007D195A /* XCRemoteSwiftPackageReference "opentelemetry-swift" */,
 			);
 			productRefGroup = E1ABA04B25231E2500ED8AEF /* Products */;
 			projectDirPath = "";
@@ -763,20 +763,20 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		E124425E2542E254007D195A /* XCRemoteSwiftPackageReference "opentelemetry-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/open-telemetry/opentelemetry-swift.git";
+			requirement = {
+				kind = revision;
+				revision = 2c997b66bac34244cec7463e987655017e6901e3;
+			};
+		};
 		E17B7AA6253F02580081D7F3 /* XCRemoteSwiftPackageReference "SigmaSwiftStatistics" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/evgenyneu/SigmaSwiftStatistics.git";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 9.0.2;
-			};
-		};
-		E1907D3C253ED28F00D5F05F /* XCRemoteSwiftPackageReference "opentelemetry-swift" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/nachoBonafonte/opentelemetry-swift.git";
-			requirement = {
-				kind = revision;
-				revision = 91c517817b420d6a9ac37f305e0f29bdac7bdb3f;
 			};
 		};
 		E1FB4839253891650083B263 /* XCRemoteSwiftPackageReference "plcrashreporter" */ = {
@@ -790,20 +790,20 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		E124425F2542E254007D195A /* DatadogExporter */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E124425E2542E254007D195A /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			productName = DatadogExporter;
+		};
+		E12442622542E261007D195A /* DatadogExporter */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E124425E2542E254007D195A /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			productName = DatadogExporter;
+		};
 		E17B7AA7253F02580081D7F3 /* SigmaSwiftStatistics */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = E17B7AA6253F02580081D7F3 /* XCRemoteSwiftPackageReference "SigmaSwiftStatistics" */;
 			productName = SigmaSwiftStatistics;
-		};
-		E1907D3D253ED28F00D5F05F /* DatadogExporter */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E1907D3C253ED28F00D5F05F /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
-			productName = DatadogExporter;
-		};
-		E1907D40253ED2DD00D5F05F /* DatadogExporter */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E1907D3C253ED28F00D5F05F /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
-			productName = DatadogExporter;
 		};
 		E1FB483A253891650083B263 /* CrashReporter */ = {
 			isa = XCSwiftPackageProductDependency;

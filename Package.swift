@@ -20,7 +20,7 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/nachoBonafonte/opentelemetry-swift.git", .revision("91c517817b420d6a9ac37f305e0f29bdac7bdb3f")),
+        .package(url: "https://github.com/open-telemetry/opentelemetry-swift.git", .revision("2c997b66bac34244cec7463e987655017e6901e3")),
         .package(url: "https://github.com/microsoft/plcrashreporter.git", .revision("af3a0a1248adc690354de07e5e36e8bcc7314e72")),
         .package(url: "https://github.com/evgenyneu/SigmaSwiftStatistics.git", from: "9.0.2"),
     ],

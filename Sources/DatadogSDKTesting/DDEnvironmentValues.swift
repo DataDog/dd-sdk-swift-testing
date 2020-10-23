@@ -13,6 +13,11 @@ internal struct DDEnvironmentValues {
     let ddEnvironment: String?
     let ddService: String?
 
+    /// Instrumentation configuration values
+    let disableNetworkInstrumentation: Bool
+    let disableStdoutInstrumentation: Bool
+    let disableStderrInstrumentation: Bool
+
     /// CI  values
     let isCi: Bool
     let provider: String?
@@ -41,6 +46,16 @@ internal struct DDEnvironmentValues {
 
         ddEnvironment = DDEnvironmentValues.getEnvVariable("DD_ENV")
         ddService = DDEnvironmentValues.getEnvVariable("DD_SERVICE")
+
+        /// Instrumentation configuration values
+        let envNetwork = DDEnvironmentValues.getEnvVariable("DD_DISABLE_NETWORK_INSTRUMENTATION") as NSString?
+        disableNetworkInstrumentation = envNetwork?.boolValue ?? false
+
+        let envStdout = DDEnvironmentValues.getEnvVariable("DD_DISABLE_STDOUT_INSTRUMENTATION") as NSString?
+        disableStdoutInstrumentation = envStdout?.boolValue ?? false
+
+        let envStderr = DDEnvironmentValues.getEnvVariable("DD_DISABLE_STDERR_INSTRUMENTATION") as NSString?
+        disableStderrInstrumentation = envStderr?.boolValue ?? false
 
         /// CI  values
         var branchEnv: String?
@@ -256,7 +271,7 @@ internal struct DDEnvironmentValues {
         workspacePath = sourceRoot
     }
 
-    func addTagsToSpan( span: Span ) {
+    func addTagsToSpan(span: Span) {
         guard isCi else {
             return
         }
@@ -274,7 +289,7 @@ internal struct DDEnvironmentValues {
         setAttributeIfExist(toSpan: span, key: DDCITags.gitBranch, value: branch)
         setAttributeIfExist(toSpan: span, key: DDCITags.gitTag, value: tag)
 
-        setAttributeIfExist( toSpan: span, key: DDCITags.buildSourceRoot, value: sourceRoot)
+        setAttributeIfExist(toSpan: span, key: DDCITags.buildSourceRoot, value: sourceRoot)
     }
 
     private func setAttributeIfExist(toSpan span: Span, key: String, value: String?) {

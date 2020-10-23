@@ -18,11 +18,14 @@ internal class DDTestObserver: NSObject, XCTestObservation {
     let testNameRegex = try? NSRegularExpression(pattern: "([\\w]+) ([\\w]+)", options: .caseInsensitive)
     let supportsSkipping = NSClassFromString("XCTSkippedTestContext") != nil
     var currentBundleName = ""
-    var activeTestSpan: Span?
+    var activeTestSpan: RecordEventsReadableSpan?
 
     init(tracer: DDTracer) {
         self.tracer = tracer
         super.init()
+    }
+
+    func startObserving() {
         XCTestObservationCenter.shared.addTestObserver(self)
     }
 

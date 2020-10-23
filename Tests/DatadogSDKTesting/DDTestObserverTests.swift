@@ -15,6 +15,7 @@ internal class DDTestObserverTests: XCTestCase {
     override func setUp() {
         DDEnvironmentValues.environment["DATADOG_CLIENT_TOKEN"] = "fakeToken"
         testObserver = DDTestObserver(tracer: DDTracer())
+        testObserver.startObserving()
     }
 
     override func tearDown() {

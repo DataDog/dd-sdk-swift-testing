@@ -8,17 +8,31 @@ import DatadogExporter
 
 internal class DDTestMonitor {
     static var instance: DDTestMonitor?
-    
+
     let tracer: DDTracer
     var testObserver: DDTestObserver
     var networkInstrumentation: NetworkAutoInstrumentation?
-    
+    var stderrCapturer: StderrCapture
+
     init() {
         tracer = DDTracer()
         testObserver = DDTestObserver(tracer: tracer)
-        startNetworkAutoInstrumentation()
+        stderrCapturer = StderrCapture()
     }
-    
+
+    func startInstrumenting() {
+        testObserver.startObserving()
+        if !tracer.env.disableNetworkInstrumentation {
+            startNetworkAutoInstrumentation()
+        }
+        if !tracer.env.disableStdoutInstrumentation {
+            StdoutCapture.startCapturing(tracer: tracer)
+        }
+        if !tracer.env.disableStderrInstrumentation {
+            stderrCapturer.startCapturing(tracer: tracer)
+        }
+    }
+
     func startNetworkAutoInstrumentation() {
         let urlFilter = URLFilter(excludedURLs: tracer.endpointURLs())
         networkInstrumentation = NetworkAutoInstrumentation(urlFilter: urlFilter)

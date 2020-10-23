@@ -41,10 +41,13 @@ internal class DDTracer {
         OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(spanProcessor)
     }
 
-    func startSpan(name: String, attributes: [String: String]) -> RecordEventsReadableSpan {
+    func startSpan(name: String, attributes: [String: String], date: Date? = nil) -> RecordEventsReadableSpan {
         let spanBuilder = tracerSdk.spanBuilder(spanName: name)
         attributes.forEach {
             spanBuilder.setAttribute(key: $0.key, value: $0.value)
+        }
+        if let startTimestamp = date {
+            spanBuilder.setStartTimestamp(timestamp: startTimestamp)
         }
         let span = spanBuilder.startSpan() as! RecordEventsReadableSpan
         _ = tracerSdk.withSpan(span)
@@ -53,7 +56,7 @@ internal class DDTracer {
 
     /// This method is called form the crash reporter if the previous run crashed while running a test.Then it recreates the span with the previous information
     /// and adds the error status and information
-    @discardableResult func createSpanFromCrash(spanData: SimpleSpanData, crashDate: Date?,crashInfo: String, crashLog: String) -> RecordEventsReadableSpan {
+    @discardableResult func createSpanFromCrash(spanData: SimpleSpanData, crashDate: Date?, crashInfo: String, crashLog: String) -> RecordEventsReadableSpan {
         let spanName = spanData.name
         let traceId = TraceId(idHi: spanData.traceIdHi, idLo: spanData.traceIdLo)
         let spanId = SpanId(id: spanData.spanId)
@@ -73,7 +76,6 @@ internal class DDTracer {
         attributes.updateValue(value: AttributeValue.string(crashInfo), forKey: DDTags.errorMessage)
         attributes.updateValue(value: AttributeValue.string(crashLog), forKey: DDTags.errorStack)
 
-
         let span = RecordEventsReadableSpan.startSpan(context: spanContext,
                                                       name: spanName,
                                                       instrumentationLibraryInfo: tracerSdk.instrumentationLibraryInfo,
@@ -91,11 +93,28 @@ internal class DDTracer {
 
         var crashTimeStamp = spanData.startEpochNanos + 1
         if let timeInterval = crashDate?.timeIntervalSince1970 {
-            crashTimeStamp = max( crashTimeStamp, UInt64((timeInterval) * 1_000_000_000))
+            crashTimeStamp = max(crashTimeStamp, UInt64(timeInterval * 1_000_000_000))
         }
         span.end(endOptions: EndSpanOptions(timestamp: crashTimeStamp))
         self.flush()
         return span
+    }
+
+    func logString(string: String, date: Date? = nil) {
+        let activeSpan = tracerSdk.currentSpan ?? DDTestMonitor.instance?.testObserver.activeTestSpan
+        activeSpan?.addEvent(name: "logString", attributes: ["message": AttributeValue.string(string)], timestamp: date ?? Date())
+    }
+
+    func logString(string: String, timeIntervalSinceSpanStart: Double) {
+        guard let activeSpan = (tracerSdk.currentSpan as? RecordEventsReadableSpan) ??
+                DDTestMonitor.instance?.testObserver.activeTestSpan else {
+            return
+        }
+        let eventNanos = activeSpan.startEpochNanos + UInt64(timeIntervalSinceSpanStart * 1000000000)
+        let timedEvent = TimedEvent(name: "logString",
+                                    epochNanos: eventNanos,
+                                    attributes: ["message": AttributeValue.string(string)])
+        activeSpan.addEvent(event: timedEvent)
     }
 
     func flush() {

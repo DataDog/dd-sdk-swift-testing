@@ -24,11 +24,13 @@ class FrameworkLoadHandlerTests: XCTestCase {
 
     func setEnvVariables() {
         FrameworkLoadHandler.environment = testEnvironment
+        DDEnvironmentValues.environment = testEnvironment
         DDEnvironmentValues.environment["DATADOG_CLIENT_TOKEN"] = "fakeToken"
     }
 
     func testWhenTestRunnerIsConfiguredAndIsInTestingMode_ItIsInitialised() {
         testEnvironment["DD_TEST_RUNNER"] = "1"
+        testEnvironment["DD_DISABLE_STDERR_INSTRUMENTATION"] = "1"
         testEnvironment["XCTestConfigurationFilePath"] = "/Users/user/Library/tmp/xx.xctestconfiguration"
         setEnvVariables()
 
@@ -39,6 +41,7 @@ class FrameworkLoadHandlerTests: XCTestCase {
 
     func testWhenTestRunnerIsConfiguredAndIsInOtherTestingMode_ItIsInitialised() {
         testEnvironment["DD_TEST_RUNNER"] = "1"
+        testEnvironment["DD_DISABLE_STDERR_INSTRUMENTATION"] = "1"
         testEnvironment["XCInjectBundleInto"] = "/Users/user/Library/tmp/xx.xctestconfiguration"
         setEnvVariables()
 

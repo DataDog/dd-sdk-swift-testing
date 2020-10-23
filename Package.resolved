@@ -12,10 +12,10 @@
       },
       {
         "package": "opentelemetry-swift",
-        "repositoryURL": "https://github.com/nachoBonafonte/opentelemetry-swift.git",
+        "repositoryURL": "https://github.com/open-telemetry/opentelemetry-swift.git",
         "state": {
           "branch": null,
-          "revision": "91c517817b420d6a9ac37f305e0f29bdac7bdb3f",
+          "revision": "2c997b66bac34244cec7463e987655017e6901e3",
           "version": null
         }
       },
@@ -78,8 +78,8 @@
         "repositoryURL": "https://github.com/apple/swift-nio-ssl.git",
         "state": {
           "branch": null,
-          "revision": "cc0e80dbccf8c89c1f49c3a11c5929575035076c",
-          "version": "2.9.2"
+          "revision": "eb102ad32add8638410e37a69bc815ea11379813",
+          "version": "2.10.0"
         }
       },
       {

@@ -32,6 +32,9 @@ internal class NetworkAutoInstrumentation {
     }
 
     static func canInjectHeaders(to request: URLRequest) -> Bool {
+        guard DDTestMonitor.instance?.injectHeaders ?? false else {
+            return false
+        }
         let containsHeaders: Bool
         containsHeaders = DDHeaders.allCases.contains { headerKey -> Bool in
             request.value(forHTTPHeaderField: headerKey.rawValue) != nil

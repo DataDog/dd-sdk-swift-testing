@@ -13,6 +13,7 @@ internal class DDTestMonitor {
     var testObserver: DDTestObserver
     var networkInstrumentation: NetworkAutoInstrumentation?
     var stderrCapturer: StderrCapture
+    var injectHeaders: Bool = false
 
     init() {
         tracer = DDTracer()
@@ -24,17 +25,42 @@ internal class DDTestMonitor {
         testObserver.startObserving()
         if !tracer.env.disableNetworkInstrumentation {
             startNetworkAutoInstrumentation()
+            if !tracer.env.disableHeadersInjection {
+                injectHeaders = true
+            }
         }
         if !tracer.env.disableStdoutInstrumentation {
-            StdoutCapture.startCapturing(tracer: tracer)
+            startStdoutCapture()
         }
         if !tracer.env.disableStderrInstrumentation {
-            stderrCapturer.startCapturing(tracer: tracer)
+            startStderrCapture()
         }
     }
 
     func startNetworkAutoInstrumentation() {
         let urlFilter = URLFilter(excludedURLs: tracer.endpointURLs())
         networkInstrumentation = NetworkAutoInstrumentation(urlFilter: urlFilter)
+    }
+
+    func startHeaderInjection() {
+        injectHeaders = true
+    }
+
+    func stopHeaderInjection() {
+        injectHeaders = false
+    }
+
+    func startStdoutCapture() {
+        StdoutCapture.startCapturing(tracer: tracer)
+    }
+    func stopStdoutCapture() {
+        StdoutCapture.stopCapturing()
+    }
+
+    func startStderrCapture() {
+        stderrCapturer.startCapturing(tracer: tracer)
+    }
+    func stopStderrCapture() {
+        stderrCapturer.stopCapturing()
     }
 }

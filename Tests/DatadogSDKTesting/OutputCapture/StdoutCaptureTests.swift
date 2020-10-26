@@ -24,7 +24,7 @@ class StdoutCaptureTests: XCTestCase {
         print(stringToCapture)
         span.end()
         let spanData = span.toSpanData()
-        StdoutCapture.stopCapturing()
+        DDInstrumentationControl.stopStdoutCapture()
 
         XCTAssertTrue(StdoutCapture.stdoutBuffer.isEmpty)
         XCTAssertEqual(spanData.timedEvents.count, 1)
@@ -35,8 +35,8 @@ class StdoutCaptureTests: XCTestCase {
         let tracer = DDTracer()
         let stringToCapture = "This should be captured"
 
-        StdoutCapture.startCapturing(tracer: tracer)
-        StdoutCapture.stopCapturing()
+        DDInstrumentationControl.startStdoutCapture()
+        DDInstrumentationControl.stopStdoutCapture()
         let span = tracer.startSpan(name: "Unnamed", attributes: [:])
         print(stringToCapture)
         span.end()
@@ -55,7 +55,7 @@ class StdoutCaptureTests: XCTestCase {
         fputs(stringToCapture, stdout)
         let spanData = span.toSpanData()
         span.end()
-        StdoutCapture.stopCapturing()
+        DDInstrumentationControl.stopStdoutCapture()
 
         XCTAssertFalse(StdoutCapture.stdoutBuffer.isEmpty)
         XCTAssertEqual(StdoutCapture.stdoutBuffer, stringToCapture)

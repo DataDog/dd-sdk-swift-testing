@@ -55,20 +55,4 @@ class StderrCaptureTests: XCTestCase {
         let timeToCheck = date.addingTimeInterval(0.1).timeIntervalSince1970
         XCTAssertEqual(spanData.timedEvents.first?.epochNanos,  UInt64(timeToCheck * 1_000_000_000))
     }
-
-//    func testWhenSomeCharactersAreWittenToStdoutWithoutNewLines_charactersAreCapturedButNotConvertedToEvents () {
-//        let tracer = DDTracer()
-//        let stringToCapture = "This should  not be captured"
-//
-//        StdoutCapture.startCapturing(tracer: tracer)
-//        let span = tracer.startSpan(name: "Unnamed", attributes: [:])
-//        fputs(stringToCapture, stdout)
-//        let spanData = span.toSpanData()
-//        span.end()
-//        StdoutCapture.stopCapturing()
-//
-//        XCTAssertFalse(StdoutCapture.stdoutBuffer.isEmpty)
-//        XCTAssertEqual(StdoutCapture.stdoutBuffer, stringToCapture)
-//        XCTAssertEqual(spanData.timedEvents.count, 0)
-//    }
 }

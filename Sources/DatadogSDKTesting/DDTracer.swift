@@ -21,7 +21,7 @@ internal class DDTracer {
     let datadogExporter: DatadogExporter
 
     init() {
-        tracerSdk = OpenTelemetrySDK.instance.tracerProvider.get(instrumentationName: "hq.datadog.testing", instrumentationVersion: "0.1.0") as! TracerSdk
+        tracerSdk = OpenTelemetrySDK.instance.tracerProvider.get(instrumentationName: "hq.datadog.testing", instrumentationVersion: "0.2.0") as! TracerSdk
 
         let exporterConfiguration = ExporterConfiguration(
             serviceName: env.ddService ?? ProcessInfo.processInfo.processName,

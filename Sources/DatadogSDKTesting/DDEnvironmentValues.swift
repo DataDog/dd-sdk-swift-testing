@@ -15,6 +15,7 @@ internal struct DDEnvironmentValues {
 
     /// Instrumentation configuration values
     let disableNetworkInstrumentation: Bool
+    let disableHeadersInjection: Bool
     let disableStdoutInstrumentation: Bool
     let disableStderrInstrumentation: Bool
 
@@ -50,6 +51,9 @@ internal struct DDEnvironmentValues {
         /// Instrumentation configuration values
         let envNetwork = DDEnvironmentValues.getEnvVariable("DD_DISABLE_NETWORK_INSTRUMENTATION") as NSString?
         disableNetworkInstrumentation = envNetwork?.boolValue ?? false
+
+        let envHeaders = DDEnvironmentValues.getEnvVariable("DD_DISABLE_HEADERS_INJECTION") as NSString?
+        disableHeadersInjection = envHeaders?.boolValue ?? false
 
         let envStdout = DDEnvironmentValues.getEnvVariable("DD_DISABLE_STDOUT_INSTRUMENTATION") as NSString?
         disableStdoutInstrumentation = envStdout?.boolValue ?? false

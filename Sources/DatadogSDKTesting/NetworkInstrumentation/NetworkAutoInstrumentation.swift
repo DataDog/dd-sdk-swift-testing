@@ -93,7 +93,7 @@ private enum TracingRequestInterceptor {
                 if let statusCode = (response as? HTTPURLResponse)?.statusCode {
                     completedSpan.setAttribute(key: DDTags.httpStatusCode, value: statusCode)
                     if (400..<500).contains(statusCode) {
-                        completedSpan.setAttribute(key: DDTags.error, value: true)
+                        completedSpan.status = .internalError
                     }
                     if statusCode == 404 {
                         completedSpan.setAttribute(key: DDTags.resource, value: "404")
@@ -108,8 +108,7 @@ private enum TracingRequestInterceptor {
 
 private extension Span {
     func setError(_ error: Error) {
-        setAttribute(key: DDTags.error, value: true)
-
+        self.status = .internalError
         let dderror = DDError(error: error)
         setAttribute(key: DDTags.errorType, value: dderror.title)
         setAttribute(key: DDTags.errorMessage, value: dderror.message)

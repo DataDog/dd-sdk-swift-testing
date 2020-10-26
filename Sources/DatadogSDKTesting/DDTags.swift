@@ -11,8 +11,6 @@ internal struct DDTags {
     /// in traces explorer on [app.datadoghq.com](https://app.datadoghq.com/)
     /// Can be used to customize the resource names grouped under the same operation name.
     ///
-    /// Expected value: `Bool`
-    static let error = "error"
     
     /// Expects `String` value set for a tag.
     static let resource = "resource.name"

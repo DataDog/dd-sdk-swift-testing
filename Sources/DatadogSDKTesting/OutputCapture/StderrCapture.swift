@@ -45,6 +45,10 @@ class StderrCapture {
     }
 
     func stderrMessage(tracer: DDTracer, string: String) {
+        guard (tracer.tracerSdk.currentSpan ?? DDTestMonitor.instance?.testObserver.activeTestSpan) != nil else {
+            return
+        }
+
         string.enumerateLines { line, _ in
             if line.prefix(8) == "    t = " {
                 self.logUIStep(tracer: tracer, string: line)

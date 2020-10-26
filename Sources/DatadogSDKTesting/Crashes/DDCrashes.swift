@@ -45,17 +45,20 @@ internal class DDCrashes {
             // This code needs our PR for PLCrashReporter
             if let customData = crashReport.customData {
                 if let spanData = SimpleSpanSerializer.deserializeSpan(data: customData) {
-                    var crashInfo = ""
+                    var errorType = ""
+                    var errorMessage = ""
                     if let name = crashReport.signalInfo.name {
-                        crashInfo += "Exception Type: \(name)"
+                        errorType += "Exception Type: \(name)"
+                        errorMessage = SignalUtils.descriptionForSignalName(signalName: name)
                     }
                     if let code = crashReport.signalInfo.code {
-                        crashInfo += "\nException Code: \(code)"
+                        errorType += "\nException Code: \(code)"
                     }
                     DDTestMonitor.instance?.tracer.createSpanFromCrash(spanData: spanData,
                                                                        crashDate: crashReport.systemInfo.timestamp,
-                                                                       crashInfo: crashInfo,
-                                                                       crashLog: crashLog)
+                                                                       errorType: errorType,
+                                                                       errorMessage: errorMessage,
+                                                                       errorStack: crashLog)
                 }
             }
         }

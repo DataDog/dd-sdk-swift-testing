@@ -56,7 +56,7 @@ internal class DDTracer {
 
     /// This method is called form the crash reporter if the previous run crashed while running a test.Then it recreates the span with the previous information
     /// and adds the error status and information
-    @discardableResult func createSpanFromCrash(spanData: SimpleSpanData, crashDate: Date?, crashInfo: String, crashLog: String) -> RecordEventsReadableSpan {
+    @discardableResult func createSpanFromCrash(spanData: SimpleSpanData, crashDate: Date?, errorType: String, errorMessage: String, errorStack: String) -> RecordEventsReadableSpan {
         let spanName = spanData.name
         let traceId = TraceId(idHi: spanData.traceIdHi, idLo: spanData.traceIdLo)
         let spanId = SpanId(id: spanData.spanId)
@@ -71,10 +71,9 @@ internal class DDTracer {
         }
 
         attributes.updateValue(value: AttributeValue.string(DDTestingTags.statusFail), forKey: DDTestingTags.testStatus)
-        attributes.updateValue(value: AttributeValue.bool(true), forKey: DDTags.error)
-        attributes.updateValue(value: AttributeValue.string(crashInfo), forKey: DDTags.errorType)
-        attributes.updateValue(value: AttributeValue.string(crashInfo), forKey: DDTags.errorMessage)
-        attributes.updateValue(value: AttributeValue.string(crashLog), forKey: DDTags.errorStack)
+        attributes.updateValue(value: AttributeValue.string(errorType), forKey: DDTags.errorType)
+        attributes.updateValue(value: AttributeValue.string(errorMessage), forKey: DDTags.errorMessage)
+        attributes.updateValue(value: AttributeValue.string(errorStack), forKey: DDTags.errorStack)
 
         let span = RecordEventsReadableSpan.startSpan(context: spanContext,
                                                       name: spanName,
@@ -95,6 +94,7 @@ internal class DDTracer {
         if let timeInterval = crashDate?.timeIntervalSince1970 {
             crashTimeStamp = max(crashTimeStamp, UInt64(timeInterval * 1_000_000_000))
         }
+        span.status = .internalError
         span.end(endOptions: EndSpanOptions(timestamp: crashTimeStamp))
         self.flush()
         return span

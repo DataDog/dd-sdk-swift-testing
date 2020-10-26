@@ -76,7 +76,7 @@ internal class DDTestObserver: NSObject, XCTestObservation {
             status = DDTestingTags.statusPass
         } else {
             status = DDTestingTags.statusFail
-            activeTestSpan?.setAttribute(key: DDTags.error, value: true)
+            activeTestSpan?.status = .internalError
         }
 
         activeTest.setAttribute(key: DDTestingTags.testStatus, value: status)
@@ -86,8 +86,8 @@ internal class DDTestObserver: NSObject, XCTestObservation {
     }
 
     func testCase(_ testCase: XCTestCase, didFailWithDescription description: String, inFile filePath: String?, atLine lineNumber: Int) {
-        self.activeTestSpan?.setAttribute(key: DDTags.errorType, value: AttributeValue.string("test_failure: \(filePath ?? ""):\(lineNumber)"))
-        self.activeTestSpan?.setAttribute(key: DDTags.errorMessage, value: AttributeValue.string(description))
+        self.activeTestSpan?.setAttribute(key: DDTags.errorType, value: AttributeValue.string(description))
+        self.activeTestSpan?.setAttribute(key: DDTags.errorMessage, value: AttributeValue.string("test_failure: \(filePath ?? ""):\(lineNumber)"))
         let fullDescription = "\(description):\n\(filePath ?? ""):\(lineNumber)"
         self.activeTestSpan?.setAttribute(key: DDTags.errorStack, value: AttributeValue.string(fullDescription))
     }

@@ -17,7 +17,6 @@ internal class DDTestObserver: NSObject, XCTestObservation {
     let testNameRegex = try? NSRegularExpression(pattern: "([\\w]+) ([\\w]+)", options: .caseInsensitive)
     let supportsSkipping = NSClassFromString("XCTSkippedTestContext") != nil
     var currentBundleName = ""
-    var activeTestSpan: RecordEventsReadableSpan?
 
     init(tracer: DDTracer) {
         self.tracer = tracer
@@ -61,11 +60,11 @@ internal class DDTestObserver: NSObject, XCTestObservation {
 
         let simpleSpan = SimpleSpanData(spanData: testSpan.toSpanData())
         DDCrashes.setCustomData(customData: SimpleSpanSerializer.serializeSpan(simpleSpan: simpleSpan))
-        activeTestSpan = testSpan
+        tracer.activeTestSpan = testSpan
     }
 
     func testCaseDidFinish(_ testCase: XCTestCase) {
-        guard let activeTest = activeTestSpan else {
+        guard let activeTest = tracer.activeTestSpan else {
             return
         }
         var status: String
@@ -75,20 +74,23 @@ internal class DDTestObserver: NSObject, XCTestObservation {
             status = DDTestingTags.statusPass
         } else {
             status = DDTestingTags.statusFail
-            activeTestSpan?.status = .internalError
+            activeTest.status = .internalError
         }
 
         activeTest.setAttribute(key: DDTestingTags.testStatus, value: status)
         addBenchmarkTagsIfNeeded(testCase: testCase, activeTest: activeTest)
         activeTest.end()
-        activeTestSpan = nil
+        tracer.activeTestSpan = nil
     }
 
     func testCase(_ testCase: XCTestCase, didFailWithDescription description: String, inFile filePath: String?, atLine lineNumber: Int) {
-        self.activeTestSpan?.setAttribute(key: DDTags.errorType, value: AttributeValue.string(description))
-        self.activeTestSpan?.setAttribute(key: DDTags.errorMessage, value: AttributeValue.string("test_failure: \(filePath ?? ""):\(lineNumber)"))
+        guard let activeTest = tracer.activeTestSpan else {
+            return
+        }
+        activeTest.setAttribute(key: DDTags.errorType, value: AttributeValue.string(description))
+        activeTest.setAttribute(key: DDTags.errorMessage, value: AttributeValue.string("test_failure: \(filePath ?? ""):\(lineNumber)"))
         let fullDescription = "\(description):\n\(filePath ?? ""):\(lineNumber)"
-        self.activeTestSpan?.setAttribute(key: DDTags.errorStack, value: AttributeValue.string(fullDescription))
+        activeTest.setAttribute(key: DDTags.errorStack, value: AttributeValue.string(fullDescription))
     }
 
     private func addBenchmarkTagsIfNeeded(testCase: XCTestCase, activeTest: Span) {

@@ -44,7 +44,7 @@ class StderrCapture {
     }
 
     func stderrMessage(tracer: DDTracer, string: String) {
-        guard (tracer.tracerSdk.currentSpan ?? DDTestMonitor.instance?.testObserver.activeTestSpan) != nil else {
+        guard (tracer.tracerSdk.currentSpan ?? tracer.activeTestSpan) != nil else {
             return
         }
 

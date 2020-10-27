@@ -20,6 +20,21 @@ internal class DDTracer {
     var spanProcessor: SpanProcessor
     let datadogExporter: DatadogExporter
 
+    private let activeTestSpanLock = NSRecursiveLock()
+    private var activeTestSpanPrivate: RecordEventsReadableSpan?
+    var activeTestSpan: RecordEventsReadableSpan? {
+        get {
+            activeTestSpanLock.lock()
+            defer { activeTestSpanLock.unlock() }
+            return activeTestSpanPrivate
+        }
+        set(newSpan) {
+            activeTestSpanLock.lock()
+            defer { activeTestSpanLock.unlock() }
+            activeTestSpanPrivate = newSpan
+        }
+    }
+
     init() {
         tracerSdk = OpenTelemetrySDK.instance.tracerProvider.get(instrumentationName: "hq.datadog.testing", instrumentationVersion: "0.2.0") as! TracerSdk
 
@@ -101,13 +116,12 @@ internal class DDTracer {
     }
 
     func logString(string: String, date: Date? = nil) {
-        let activeSpan = tracerSdk.currentSpan ?? DDTestMonitor.instance?.testObserver.activeTestSpan
+        let activeSpan = tracerSdk.currentSpan ?? activeTestSpan
         activeSpan?.addEvent(name: "logString", attributes: ["message": AttributeValue.string(string)], timestamp: date ?? Date())
     }
 
     func logString(string: String, timeIntervalSinceSpanStart: Double) {
-        guard let activeSpan = (tracerSdk.currentSpan as? RecordEventsReadableSpan) ??
-                DDTestMonitor.instance?.testObserver.activeTestSpan else {
+        guard let activeSpan = (tracerSdk.currentSpan as? RecordEventsReadableSpan) ?? activeTestSpan else {
             return
         }
         let eventNanos = activeSpan.startEpochNanos + UInt64(timeIntervalSinceSpanStart * 1000000000)

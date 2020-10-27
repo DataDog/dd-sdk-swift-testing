@@ -12,7 +12,6 @@ import SigmaSwiftStatistics
 @_implementationOnly import XCTest
 
 internal class DDTestObserver: NSObject, XCTestObservation {
-
     var tracer: DDTracer
 
     let testNameRegex = try? NSRegularExpression(pattern: "([\\w]+) ([\\w]+)", options: .caseInsensitive)
@@ -43,7 +42,7 @@ internal class DDTestObserver: NSObject, XCTestObservation {
         guard let namematch = testNameRegex?.firstMatch(in: testCase.name, range: NSRange(location: 0, length: testCase.name.count)),
             let suiteRange = Range(namematch.range(at: 1), in: testCase.name),
             let nameRange = Range(namematch.range(at: 2), in: testCase.name) else {
-                return
+            return
         }
         let testSuite = String(testCase.name[suiteRange])
         let testName = String(testCase.name[nameRange])
@@ -70,7 +69,7 @@ internal class DDTestObserver: NSObject, XCTestObservation {
             return
         }
         var status: String
-        if supportsSkipping && testCase.testRun?.hasBeenSkipped == true {
+        if supportsSkipping, testCase.testRun?.hasBeenSkipped == true {
             status = DDTestingTags.statusSkip
         } else if testCase.testRun?.hasSucceeded ?? false {
             status = DDTestingTags.statusPass
@@ -93,60 +92,56 @@ internal class DDTestObserver: NSObject, XCTestObservation {
     }
 
     private func addBenchmarkTagsIfNeeded(testCase: XCTestCase, activeTest: Span) {
-        guard let activeMetrics = testCase.value(forKey: "_activePerformanceMetricIDs") as? [XCTPerformanceMetric],
-              let metricsForId = testCase.value(forKey: "_perfMetricsForID") as? [XCTPerformanceMetric: AnyObject] else {
+        guard let metricsForId = testCase.value(forKey: "_perfMetricsForID") as? [XCTPerformanceMetric: AnyObject],
+            let metric = metricsForId.first(where: {
+                let measurements = $0.value.value(forKey: "measurements") as? [Double]
+                return (measurements?.count ?? 0) > 0
+            }) else {
             return
         }
-        activeTest.setAttribute(key: DDTestingTags.testType, value: DDTestingTags.typeBenchmark)
 
-        for metric in activeMetrics {
-            guard let measurements = metricsForId[metric]?.value(forKey: "measurements") as? [Double]  else {
-                return
-            }
-            let values = measurements.map{ $0 * 1_000_000_000 } // Convert to nanoseconds 
-            switch metric {
-                case XCTPerformanceMetric.wallClockTime:
-                    activeTest.setAttribute(key: DDBenchmarkingTags.statisticsN, value: values.count)
-                    if let average = Sigma.average(values) {
-                        activeTest.setAttribute(key: DDBenchmarkingTags.durationMean, value: average)
-                    }
-                    if let max = Sigma.max(values) {
-                        activeTest.setAttribute(key: DDBenchmarkingTags.statisticsMax, value: max)
-                    }
-                    if let min = Sigma.min(values) {
-                        activeTest.setAttribute(key: DDBenchmarkingTags.statisticsMin, value: min)
-                    }
-                    if let mean = Sigma.average(values) {
-                        activeTest.setAttribute(key: DDBenchmarkingTags.statisticsMean, value: mean)
-                    }
-                    if let median = Sigma.median(values) {
-                        activeTest.setAttribute(key: DDBenchmarkingTags.statisticsMedian, value: median)
-                    }
-                    if let stdDev = Sigma.standardDeviationSample(values) {
-                        activeTest.setAttribute(key: DDBenchmarkingTags.statisticsStdDev, value: stdDev)
-                    }
-                    if let stdErr = Sigma.standardErrorOfTheMean(values) {
-                        activeTest.setAttribute(key: DDBenchmarkingTags.statisticsStdErr, value: stdErr)
-                    }
-                    if let kurtosis = Sigma.kurtosisA(values) {
-                        activeTest.setAttribute(key: DDBenchmarkingTags.statisticsKurtosis, value: kurtosis)
-                    }
-                    if let skewness = Sigma.skewnessA(values) {
-                        activeTest.setAttribute(key: DDBenchmarkingTags.statisticsSkewness, value: skewness)
-                    }
-                    if let percentile99 = Sigma.percentile(values, percentile: 0.99) {
-                        activeTest.setAttribute(key: DDBenchmarkingTags.statisticsP99, value: percentile99 )
-                    }
-                    if let percentile95 = Sigma.percentile(values, percentile: 0.95) {
-                        activeTest.setAttribute(key: DDBenchmarkingTags.statisticsP99, value: percentile95 )
-                    }
-                    if let percentile90 = Sigma.percentile(values, percentile: 0.90) {
-                        activeTest.setAttribute(key: DDBenchmarkingTags.statisticsP99, value: percentile90 )
-                    }
-                default:
-                    print("Unknown metric")
-            }
+        guard let measurements = metric.value.value(forKey: "measurements") as? [Double] else {
+            return
+        }
+
+        activeTest.setAttribute(key: DDTestingTags.testType, value: DDTestingTags.typeBenchmark)
+        let values = measurements.map { $0 * 1_000_000_000 } // Convert to nanoseconds
+        activeTest.setAttribute(key: DDBenchmarkingTags.statisticsN, value: values.count)
+        if let average = Sigma.average(values) {
+            activeTest.setAttribute(key: DDBenchmarkingTags.durationMean, value: average)
+        }
+        if let max = Sigma.max(values) {
+            activeTest.setAttribute(key: DDBenchmarkingTags.statisticsMax, value: max)
+        }
+        if let min = Sigma.min(values) {
+            activeTest.setAttribute(key: DDBenchmarkingTags.statisticsMin, value: min)
+        }
+        if let mean = Sigma.average(values) {
+            activeTest.setAttribute(key: DDBenchmarkingTags.statisticsMean, value: mean)
+        }
+        if let median = Sigma.median(values) {
+            activeTest.setAttribute(key: DDBenchmarkingTags.statisticsMedian, value: median)
+        }
+        if let stdDev = Sigma.standardDeviationSample(values) {
+            activeTest.setAttribute(key: DDBenchmarkingTags.statisticsStdDev, value: stdDev)
+        }
+        if let stdErr = Sigma.standardErrorOfTheMean(values) {
+            activeTest.setAttribute(key: DDBenchmarkingTags.statisticsStdErr, value: stdErr)
+        }
+        if let kurtosis = Sigma.kurtosisA(values) {
+            activeTest.setAttribute(key: DDBenchmarkingTags.statisticsKurtosis, value: kurtosis)
+        }
+        if let skewness = Sigma.skewnessA(values) {
+            activeTest.setAttribute(key: DDBenchmarkingTags.statisticsSkewness, value: skewness)
+        }
+        if let percentile99 = Sigma.percentile(values, percentile: 0.99) {
+            activeTest.setAttribute(key: DDBenchmarkingTags.statisticsP99, value: percentile99)
+        }
+        if let percentile95 = Sigma.percentile(values, percentile: 0.95) {
+            activeTest.setAttribute(key: DDBenchmarkingTags.statisticsP99, value: percentile95)
+        }
+        if let percentile90 = Sigma.percentile(values, percentile: 0.90) {
+            activeTest.setAttribute(key: DDBenchmarkingTags.statisticsP99, value: percentile90)
         }
     }
 }
-

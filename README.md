@@ -19,18 +19,6 @@ DD_ENV=<The environment you want to report>
 DD_SERVICE=<The name of the service you want to report>
 ```
 
-You can disable some of the autoinstrumentation for all the tests, by setting the following environment variables
-
-```shell
-DD_DISABLE_NETWORK_INSTRUMENTATION
-DD_DISABLE_HEADERS_INJECTION
-DD_DISABLE_STDOUT_INSTRUMENTATION
-DD_DISABLE_STDERR_INSTRUMENTATION
-```
-
-You can also disable specific autoinstrumentation in some of the tests by using exported class: `DDInstrumentationControl` usable noth from Swift or Objective-C
-
-
 Depending on your CI service, you must also set the environment variables to be read from the test executions. See `DDEnvironmentValues.swift` for details of your specific CI.
 
 For example for Bitrise, they should be:
@@ -48,6 +36,19 @@ BITRISEIO_GIT_BRANCH_DEST=$(BITRISEIO_GIT_BRANCH_DEST)
 BITRISE_GIT_TAG=$(BITRISE_GIT_TAG)
 GIT_CLONE_COMMIT_HASH=$(GIT_CLONE_COMMIT_HASH)
 ```
+## Disabling Auto Instrumentation
+
+The framework automatically tries to capture the maximum information, but for some situations or tests it can be counter-productive. You can disable some of the autoinstrumentation for all the tests, by setting the following environment variables
+
+```shell
+DD_DISABLE_NETWORK_INSTRUMENTATION
+DD_DISABLE_HEADERS_INJECTION
+DD_DISABLE_STDOUT_INSTRUMENTATION
+DD_DISABLE_STDERR_INSTRUMENTATION
+```
+
+You can also disable or enable specific autoinstrumentation in some of the tests from Swift or Objective-C by importing the module `DatadogSDKTesting` and using the class: `DDInstrumentationControl`.
+
 
 ## Contributing
 

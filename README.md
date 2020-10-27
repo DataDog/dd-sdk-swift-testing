@@ -19,6 +19,17 @@ DD_ENV=<The environment you want to report>
 DD_SERVICE=<The name of the service you want to report>
 ```
 
+You can disable some of the autoinstrumentation for all the tests, by setting the following environment variables
+
+```shell
+DD_DISABLE_NETWORK_INSTRUMENTATION
+DD_DISABLE_HEADERS_INJECTION
+DD_DISABLE_STDOUT_INSTRUMENTATION
+DD_DISABLE_STDERR_INSTRUMENTATION
+```
+
+You can also disable specific autoinstrumentation in some of the tests by using exported class: `DDInstrumentationControl` usable noth from Swift or Objective-C
+
 
 Depending on your CI service, you must also set the environment variables to be read from the test executions. See `DDEnvironmentValues.swift` for details of your specific CI.
 

@@ -37,11 +37,10 @@ class StderrCapture {
 
         // Intercept STDERR with inputPipe
         dup2(inputPipe.fileHandleForWriting.fileDescriptor, FileHandle.standardError.fileDescriptor)
-        close(inputPipe.fileHandleForWriting.fileDescriptor) // Close unused file handle.
     }
 
     func stopCapturing() {
-        dup2(originalDescriptor, FileHandle.standardError.fileDescriptor)
+        freopen("/dev/stderr", "a", stderr)
     }
 
     func stderrMessage(tracer: DDTracer, string: String) {

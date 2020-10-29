@@ -22,7 +22,7 @@ class StderrCaptureTests: XCTestCase {
         let capturer = StderrCapture()
 
         let span = tracer.startSpan(name: "Unnamed", attributes: [:])
-        DDTestMonitor.instance?.testObserver.activeTestSpan = span
+        tracer.activeTestSpan = span
         capturer.stderrMessage(tracer: tracer, string: stringToCapture)
         Thread.sleep(forTimeInterval: 0.5)
         span.end()
@@ -43,7 +43,7 @@ class StderrCaptureTests: XCTestCase {
 
         let date = Date()
         let span = tracer.startSpan(name: "Unnamed", attributes: [:], date:date)
-        DDTestMonitor.instance?.testObserver.activeTestSpan = span
+        tracer.activeTestSpan = span
         capturer.stderrMessage(tracer: tracer, string: stringToCapture)
         Thread.sleep(forTimeInterval: 0.5)
         span.end()

@@ -19,6 +19,7 @@ internal class DDTracer {
     let env = DDEnvironmentValues()
     var spanProcessor: SpanProcessor
     let datadogExporter: DatadogExporter
+    var launchSpanContext: SpanContext?
 
     private let activeTestSpanLock = NSRecursiveLock()
     private var activeTestSpanPrivate: RecordEventsReadableSpan?
@@ -36,6 +37,16 @@ internal class DDTracer {
     }
 
     init() {
+        if let envTraceId = ProcessInfo.processInfo.environment["ENVIRONMENT_TRACER_TRACEID"],
+           let envSpanId = ProcessInfo.processInfo.environment["ENVIRONMENT_TRACER_SPANID"] {
+            let launchTraceId = TraceId(fromHexString: envTraceId)
+            let launchSpanId = SpanId(fromHexString: envSpanId)
+            launchSpanContext = SpanContext.create(traceId: launchTraceId,
+                                                   spanId: launchSpanId,
+                                                   traceFlags: TraceFlags().settingIsSampled(false),
+                                                   traceState: TraceState())
+        }
+
         tracerSdk = OpenTelemetrySDK.instance.tracerProvider.get(instrumentationName: "hq.datadog.testing", instrumentationVersion: "0.2.0") as! TracerSdk
 
         let exporterConfiguration = ExporterConfiguration(
@@ -47,11 +58,17 @@ internal class DDTracer {
             clientToken: env.ddClientToken ?? "",
             endpoint: Endpoint.us,
             uploadCondition: { true },
-            performancePreset: .instantDataDelivery
+            performancePreset: .instantDataDelivery,
+            exportUnsampledSpans: false,
+            exportUnsampledLogs: true
         )
 
         datadogExporter = try! DatadogExporter(config: exporterConfiguration)
-        spanProcessor = SimpleSpanProcessor(spanExporter: datadogExporter)
+        if launchSpanContext != nil {
+            spanProcessor = SimpleSpanProcessor(spanExporter: datadogExporter).reportingOnlySampled(sampled: false)
+        } else {
+            spanProcessor = SimpleSpanProcessor(spanExporter: datadogExporter)
+        }
 
         OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(spanProcessor)
     }
@@ -64,6 +81,13 @@ internal class DDTracer {
         if let startTimestamp = date {
             spanBuilder.setStartTimestamp(timestamp: startTimestamp)
         }
+
+        /// launchSpanContext will only be available when running in the app launched from UITest, so assign this as the parent
+        /// when there is no one
+        if let launchContext = launchSpanContext, tracerSdk.currentSpan == nil {
+            spanBuilder.setParent(launchContext)
+        }
+
         let span = spanBuilder.startSpan() as! RecordEventsReadableSpan
         _ = tracerSdk.withSpan(span)
         return span
@@ -115,20 +139,56 @@ internal class DDTracer {
         return span
     }
 
+    @discardableResult func createSpanFromContext(spanContext: SpanContext) -> RecordEventsReadableSpan {
+        let attributes = AttributesWithCapacity(capacity: tracerSdk.sharedState.activeTraceConfig.maxNumberOfAttributes)
+        let span = RecordEventsReadableSpan.startSpan(context: spanContext,
+                                                      name: "proxySpan",
+                                                      instrumentationLibraryInfo: tracerSdk.instrumentationLibraryInfo,
+                                                      kind: .internal,
+                                                      parentSpanId: nil,
+                                                      hasRemoteParent: false,
+                                                      traceConfig: tracerSdk.sharedState.activeTraceConfig,
+                                                      spanProcessor: tracerSdk.sharedState.activeSpanProcessor,
+                                                      clock: MonotonicClock(clock: tracerSdk.sharedState.clock),
+                                                      resource: Resource(),
+                                                      attributes: attributes,
+                                                      links: [Link](),
+                                                      totalRecordedLinks: 0,
+                                                      startEpochNanos: 0)
+
+        return span
+    }
+
     func logString(string: String, date: Date? = nil) {
+        if let launchContext = launchSpanContext, tracerSdk.currentSpan == nil  {
+            //This is a special case when an app executed trough a UITest, logs without a span
+            return logStringAppUITested(context: launchContext, string: string, date: date)
+        }
+
         let activeSpan = tracerSdk.currentSpan ?? activeTestSpan
         activeSpan?.addEvent(name: "logString", attributes: ["message": AttributeValue.string(string)], timestamp: date ?? Date())
     }
 
+    /// This method is only currently used for loggign the steps when runnning UITest
     func logString(string: String, timeIntervalSinceSpanStart: Double) {
         guard let activeSpan = (tracerSdk.currentSpan as? RecordEventsReadableSpan) ?? activeTestSpan else {
             return
         }
-        let eventNanos = activeSpan.startEpochNanos + UInt64(timeIntervalSinceSpanStart * 1000000000)
+        let eventNanos = activeSpan.startEpochNanos + UInt64(timeIntervalSinceSpanStart * 1_000_000_000)
         let timedEvent = TimedEvent(name: "logString",
                                     epochNanos: eventNanos,
                                     attributes: ["message": AttributeValue.string(string)])
         activeSpan.addEvent(event: timedEvent)
+    }
+
+    /// This method is only currently used when logging with an app being launched from a UITest, and no span has been created in the App.
+    /// It creates a "non-sampled" instantaneous span that wont be serialized but where we can add the log using the SpanId and TraceId of the
+    /// test Span that lunched the app.
+    func logStringAppUITested(context: SpanContext, string: String, date: Date? = nil) {
+        let auxSpan  = createSpanFromContext(spanContext: context)
+        auxSpan.addEvent(name: "logString", attributes: ["message": AttributeValue.string(string)], timestamp: date ?? Date())
+        auxSpan.end()
+        flush()
     }
 
     func flush() {

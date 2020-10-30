@@ -11,10 +11,10 @@
 		E126DD2D253F366200700A40 /* StdoutCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E126DD2C253F366200700A40 /* StdoutCapture.swift */; };
 		E126DD2F253F367600700A40 /* StderrCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E126DD2E253F367600700A40 /* StderrCapture.swift */; };
 		E13D0BCA2546E29C00C37D56 /* SignalUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E13D0BC92546E29C00C37D56 /* SignalUtils.swift */; };
-		E153AD45254ADD5C005C706E /* DatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E153AD44254ADD5C005C706E /* DatadogExporter */; };
-		E153AD46254ADD5C005C706E /* DatadogExporter in Embed Frameworks */ = {isa = PBXBuildFile; productRef = E153AD44254ADD5C005C706E /* DatadogExporter */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		E153AD48254ADD6B005C706E /* DatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E153AD47254ADD6B005C706E /* DatadogExporter */; };
-		E153AD49254ADD6B005C706E /* DatadogExporter in Embed Frameworks */ = {isa = PBXBuildFile; productRef = E153AD47254ADD6B005C706E /* DatadogExporter */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		E153AE97254C3AE4005C706E /* DatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E153AE96254C3AE4005C706E /* DatadogExporter */; };
+		E153AE98254C3AE4005C706E /* DatadogExporter in Embed Frameworks */ = {isa = PBXBuildFile; productRef = E153AE96254C3AE4005C706E /* DatadogExporter */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		E153AE9A254C3CB1005C706E /* DatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E153AE99254C3CB1005C706E /* DatadogExporter */; };
+		E153AE9B254C3CB1005C706E /* DatadogExporter in Embed Frameworks */ = {isa = PBXBuildFile; productRef = E153AE99254C3CB1005C706E /* DatadogExporter */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		E158E2DC25471DA000DBCD6C /* DDInstrumentationControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = E158E2DB25471DA000DBCD6C /* DDInstrumentationControl.swift */; };
 		E1798CC62524B9BD008DEBB9 /* DDTracer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1798CC52524B9BD008DEBB9 /* DDTracer.swift */; };
 		E1798CCC2524C21C008DEBB9 /* NetworkAutoInstrumentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1798CCB2524C21C008DEBB9 /* NetworkAutoInstrumentation.swift */; };
@@ -70,7 +70,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				E153AD46254ADD5C005C706E /* DatadogExporter in Embed Frameworks */,
+				E153AE98254C3AE4005C706E /* DatadogExporter in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -81,7 +81,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				E153AD49254ADD6B005C706E /* DatadogExporter in Embed Frameworks */,
+				E153AE9B254C3CB1005C706E /* DatadogExporter in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -142,7 +142,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E153AD45254ADD5C005C706E /* DatadogExporter in Frameworks */,
+				E153AE97254C3AE4005C706E /* DatadogExporter in Frameworks */,
 				E1FB483B253891650083B263 /* CrashReporter in Frameworks */,
 				E17B7AA8253F02580081D7F3 /* SigmaSwiftStatistics in Frameworks */,
 				E1ABA08025231F8E00ED8AEF /* XCTest.framework in Frameworks */,
@@ -153,7 +153,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E153AD48254ADD6B005C706E /* DatadogExporter in Frameworks */,
+				E153AE9A254C3CB1005C706E /* DatadogExporter in Frameworks */,
 				E1FB48312538909D0083B263 /* DatadogSDKTesting.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -381,7 +381,7 @@
 			packageProductDependencies = (
 				E1FB483A253891650083B263 /* CrashReporter */,
 				E17B7AA7253F02580081D7F3 /* SigmaSwiftStatistics */,
-				E153AD44254ADD5C005C706E /* DatadogExporter */,
+				E153AE96254C3AE4005C706E /* DatadogExporter */,
 			);
 			productName = DatadogSDKTesting;
 			productReference = E1ABA04A25231E2500ED8AEF /* DatadogSDKTesting.framework */;
@@ -403,7 +403,7 @@
 			);
 			name = DatadogSDKTestingTests;
 			packageProductDependencies = (
-				E153AD47254ADD6B005C706E /* DatadogExporter */,
+				E153AE99254C3CB1005C706E /* DatadogExporter */,
 			);
 			productName = DatadogSDKTestingTests;
 			productReference = E1ABA05325231E2500ED8AEF /* DatadogSDKTestingTests.xctest */;
@@ -440,7 +440,7 @@
 			packageReferences = (
 				E1FB4839253891650083B263 /* XCRemoteSwiftPackageReference "plcrashreporter" */,
 				E17B7AA6253F02580081D7F3 /* XCRemoteSwiftPackageReference "SigmaSwiftStatistics" */,
-				E153AD43254ADD5C005C706E /* XCRemoteSwiftPackageReference "opentelemetry-swift" */,
+				E153AE95254C3AE4005C706E /* XCRemoteSwiftPackageReference "opentelemetry-swift" */,
 			);
 			productRefGroup = E1ABA04B25231E2500ED8AEF /* Products */;
 			projectDirPath = "";
@@ -777,12 +777,12 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		E153AD43254ADD5C005C706E /* XCRemoteSwiftPackageReference "opentelemetry-swift" */ = {
+		E153AE95254C3AE4005C706E /* XCRemoteSwiftPackageReference "opentelemetry-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/nachoBonafonte/opentelemetry-swift.git";
+			repositoryURL = "https://github.com/open-telemetry/opentelemetry-swift.git";
 			requirement = {
 				kind = revision;
-				revision = 5ad8106a4c170ded5defbd439c1eaad4f6e992c9;
+				revision = 4529996dcec4da2bc500c2ba1eeb52f83aaaa3b9;
 			};
 		};
 		E17B7AA6253F02580081D7F3 /* XCRemoteSwiftPackageReference "SigmaSwiftStatistics" */ = {
@@ -804,14 +804,14 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		E153AD44254ADD5C005C706E /* DatadogExporter */ = {
+		E153AE96254C3AE4005C706E /* DatadogExporter */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = E153AD43254ADD5C005C706E /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			package = E153AE95254C3AE4005C706E /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
 			productName = DatadogExporter;
 		};
-		E153AD47254ADD6B005C706E /* DatadogExporter */ = {
+		E153AE99254C3CB1005C706E /* DatadogExporter */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = E153AD43254ADD5C005C706E /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			package = E153AE95254C3AE4005C706E /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
 			productName = DatadogExporter;
 		};
 		E17B7AA7253F02580081D7F3 /* SigmaSwiftStatistics */ = {

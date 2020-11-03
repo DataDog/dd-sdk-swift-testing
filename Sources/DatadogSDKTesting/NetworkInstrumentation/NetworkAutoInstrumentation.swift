@@ -94,7 +94,7 @@ private enum TracingRequestInterceptor {
                     completedSpan.setError(error)
                 }
                 if let statusCode = (response as? HTTPURLResponse)?.statusCode {
-                    completedSpan.setAttribute(key: DDTags.httpStatusCode, value: statusCode)
+                    completedSpan.setAttribute(key: DDTags.httpStatusCode, value: String(statusCode))
                     if (400..<500).contains(statusCode) {
                         completedSpan.status = .internalError
                     }

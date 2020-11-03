@@ -17,8 +17,12 @@ internal class DDTestObserver: NSObject, XCTestObservation {
     let testNameRegex = try? NSRegularExpression(pattern: "([\\w]+) ([\\w]+)", options: .caseInsensitive)
     let supportsSkipping = NSClassFromString("XCTSkippedTestContext") != nil
     var currentBundleName = ""
+    let isUIApplication = Bundle.main.bundleIdentifier?.hasSuffix("xctrunner") ?? false
 
     init(tracer: DDTracer) {
+        if isUIApplication {
+            XCUIApplication.swizzleMethods
+        }
         self.tracer = tracer
         super.init()
     }
@@ -79,6 +83,8 @@ internal class DDTestObserver: NSObject, XCTestObservation {
 
         activeTest.setAttribute(key: DDTestingTags.testStatus, value: status)
         addBenchmarkTagsIfNeeded(testCase: testCase, activeTest: activeTest)
+        /// Need to wait for stderr to be written, stdout is synchronous
+        DDTestMonitor.instance?.stderrCapturer.synchronize()
         activeTest.end()
         tracer.activeTestSpan = nil
     }

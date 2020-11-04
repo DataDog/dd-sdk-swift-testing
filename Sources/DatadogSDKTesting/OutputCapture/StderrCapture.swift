@@ -7,11 +7,12 @@
 import Foundation
 
 class StderrCapture {
-    let inputPipe = Pipe()
-    let outputPipe = Pipe()
-    var originalDescriptor = FileHandle.standardError.fileDescriptor
+    var isCapturing = false
+    private let inputPipe = Pipe()
+    private let outputPipe = Pipe()
+    private var originalDescriptor = FileHandle.standardError.fileDescriptor
     private let syncCondition = NSCondition()
-    
+
     static var logDateFormatter: DateFormatter {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
@@ -38,9 +39,12 @@ class StderrCapture {
 
         // Intercept STDERR with inputPipe
         dup2(inputPipe.fileHandleForWriting.fileDescriptor, FileHandle.standardError.fileDescriptor)
+
+        isCapturing = true
     }
 
     func stopCapturing() {
+        isCapturing = false
         freopen("/dev/stderr", "a", stderr)
     }
 
@@ -69,8 +73,8 @@ class StderrCapture {
         scanner.scanUpToCharacters(from: space, into: &dateNSString)
         scanner.scanUpToCharacters(from: space, into: &timeNSString)
         guard let dateString = dateNSString as String?,
-            let timeString = timeNSString as String?,
-            let date = StderrCapture.logDateFormatter.date(from: dateString + " " + timeString) else {
+              let timeString = timeNSString as String?,
+              let date = StderrCapture.logDateFormatter.date(from: dateString + " " + timeString) else {
             return
         }
 
@@ -110,6 +114,8 @@ class StderrCapture {
     }
 
     func synchronize() {
+        guard isCapturing else { return }
+
         NSLog("")
         syncCondition.wait(until: Date().addingTimeInterval(1))
     }

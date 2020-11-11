@@ -38,7 +38,7 @@ internal struct DDTestingTags {
     static let testSuite       = "test.suite"
     static let testName        = "test.name"
     static let testFramework   = "test.framework"
-    static let testTraits      = "test.traits"
+    static let testBundle      = "test.bundle"
     static let testCode        = "test.code"
 
     static let testType        = "test.type"

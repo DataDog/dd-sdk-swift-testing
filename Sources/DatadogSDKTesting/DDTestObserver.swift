@@ -55,7 +55,7 @@ internal class DDTestObserver: NSObject, XCTestObservation {
             DDTestingTags.testName: testName,
             DDTestingTags.testSuite: testSuite,
             DDTestingTags.testFramework: "XCTest",
-            DDTestingTags.testTraits: currentBundleName,
+            DDTestingTags.testBundle: currentBundleName,
             DDTestingTags.testType: DDTestingTags.typeTest
         ]
 

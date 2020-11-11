@@ -32,6 +32,9 @@ extension XCUIApplication {
                 "DD_SERVICE",
                 "DD_DISABLE_NETWORK_INSTRUMENTATION",
                 "DD_DISABLE_HEADERS_INJECTION",
+                "DD_INSTRUMENTATION_EXTRA_HEADERS",
+                "DD_EXCLUDED_URLS",
+                "DD_ENABLE_RECORD_PAYLOAD",
                 "DD_DISABLE_STDOUT_INSTRUMENTATION",
                 "DD_DISABLE_STDERR_INSTRUMENTATION"
             ].forEach( addProcessEnvironmentToLaunch )

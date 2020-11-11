@@ -21,8 +21,6 @@ class DDNetworkActivityLogger {
         return headers
     }()
 
-    internal let filteredHeaders: Set = ["AUTHORIZATION", "COOKIE", "SET-COOKIE"]
-
     private static func filterHeaders( _ headers: [String: String] ) -> [String: String] {
         return Dictionary(uniqueKeysWithValues: headers.map {
             if acceptableHeaders.contains($0.uppercased()) {

@@ -41,10 +41,20 @@ GIT_CLONE_COMMIT_HASH=$(GIT_CLONE_COMMIT_HASH)
 The framework automatically tries to capture the maximum information, but for some situations or tests it can be counter-productive. You can disable some of the autoinstrumentation for all the tests, by setting the following environment variables
 
 ```shell
-DD_DISABLE_NETWORK_INSTRUMENTATION
-DD_DISABLE_HEADERS_INJECTION
-DD_DISABLE_STDOUT_INSTRUMENTATION
-DD_DISABLE_STDERR_INSTRUMENTATION
+DD_DISABLE_NETWORK_INSTRUMENTATION # Disables all network instrumentation
+DD_DISABLE_STDOUT_INSTRUMENTATION # Disables all stdout instrumentation
+DD_DISABLE_STDERR_INSTRUMENTATION # Disables all stderr instrumentation
+```
+
+### Network Auto Instrumentation
+
+For Network autoinstrumentation there are other settings that you can configure
+
+```shell
+DD_DISABLE_HEADERS_INJECTION # Disables all injection of tracing headers
+DD_INSTRUMENTATION_EXTRA_HEADERS # Specific extra headers that you want the tool to log
+DD_EXCLUDED_URLS # Urls that you dont want to log or inject headers into
+DD_ENABLE_RECORD_PAYLOAD # It enables reporting a subset (512 bytes) of the payloads in requests and responses
 ```
 
 You can also disable or enable specific autoinstrumentation in some of the tests from Swift or Objective-C by importing the module `DatadogSDKTesting` and using the class: `DDInstrumentationControl`.

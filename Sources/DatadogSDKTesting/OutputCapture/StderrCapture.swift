@@ -49,8 +49,7 @@ class StderrCapture {
     }
 
     func stderrMessage(tracer: DDTracer, string: String) {
-        guard tracer.activeTestSpan != nil ||
-                tracer.tracerSdk.currentSpan != nil ||
+        guard tracer.activeSpan != nil ||
                 tracer.launchSpanContext != nil else {
             return
         }

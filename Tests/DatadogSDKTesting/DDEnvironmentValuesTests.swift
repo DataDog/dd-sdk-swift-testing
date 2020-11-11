@@ -38,6 +38,38 @@ class DDEnvironmentValuesTests: XCTestCase {
         XCTAssertEqual(env.ddService, "testService")
     }
 
+    func testWhenNoConfigurationEnvironmentAreSet_DefaultValuesAreUsed() {
+        let env = DDEnvironmentValues()
+        XCTAssertEqual(env.disableNetworkInstrumentation, false)
+        XCTAssertEqual(env.disableStdoutInstrumentation, false)
+        XCTAssertEqual(env.disableStderrInstrumentation, false)
+        XCTAssertEqual(env.disableHeadersInjection, false)
+        XCTAssertEqual(env.extraHTTPHeaders, nil)
+        XCTAssertEqual(env.excludedURLS, nil)
+        XCTAssertEqual(env.enableRecordPayload, false)
+    }
+
+    func testWhenConfigurationEnvironmentAreSet_TheyAreStoredCorrectly() {
+        testEnvironment["DD_DISABLE_NETWORK_INSTRUMENTATION"] = "1"
+        testEnvironment["DD_DISABLE_STDOUT_INSTRUMENTATION"] = "yes"
+        testEnvironment["DD_DISABLE_STDERR_INSTRUMENTATION"] = "true"
+        testEnvironment["DD_DISABLE_HEADERS_INJECTION"] = "YES"
+        testEnvironment["DD_INSTRUMENTATION_EXTRA_HEADERS"] = "header1,header2;header3 header4"
+        testEnvironment["DD_EXCLUDED_URLS"] = "http://www.google"
+        testEnvironment["DD_ENABLE_RECORD_PAYLOAD"] = "true"
+
+        setEnvVariables()
+
+        let env = DDEnvironmentValues()
+        XCTAssertEqual(env.disableNetworkInstrumentation, true)
+        XCTAssertEqual(env.disableStdoutInstrumentation, true)
+        XCTAssertEqual(env.disableStderrInstrumentation, true)
+        XCTAssertEqual(env.disableHeadersInjection, true)
+        XCTAssertEqual(env.extraHTTPHeaders?.count, 4)
+        XCTAssertEqual(env.excludedURLS?.count, 1)
+        XCTAssertEqual(env.enableRecordPayload, true)
+    }
+
     func testTravisEnvironment() {
         testEnvironment["TRAVIS"] = "1"
         testEnvironment["TRAVIS_REPO_SLUG"] = "/test/repo"
@@ -344,7 +376,7 @@ class DDEnvironmentValuesTests: XCTestCase {
 
         XCTAssertEqual(spanData.attributes["ci.provider.name"]?.description, "jenkins")
         XCTAssertEqual(spanData.attributes["git.repository_url"]?.description, "/test/repo")
-        XCTAssertEqual(spanData.attributes["git.commit_sha"]?.description, "37e376448b0ac9b7f54404")
+        XCTAssertEqual(spanData.attributes["git.commit.sha"]?.description, "37e376448b0ac9b7f54404")
         XCTAssertEqual(spanData.attributes["build.source_root"]?.description, "/build")
         XCTAssertEqual(spanData.attributes["ci.pipeline.id"]?.description, "pipeline1")
         XCTAssertEqual(spanData.attributes["ci.pipeline.number"]?.description, "45")

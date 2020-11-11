@@ -35,7 +35,7 @@ class DDNetworkActivityLogger {
 
     static func log(request: URLRequest, sessionTaskId: String) {
         guard let tracer = DDTestMonitor.instance?.tracer,
-              let _ = tracer.activeSpan,
+              tracer.activeSpan != nil || tracer.launchSpanContext != nil,
               !( DDTestMonitor.instance?.networkInstrumentation?.excludes(request.url) ?? false) else {
             return
         }

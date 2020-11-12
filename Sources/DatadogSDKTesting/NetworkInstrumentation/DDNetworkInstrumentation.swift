@@ -342,7 +342,7 @@ class DDNetworkInstrumentation {
         }
         var originalIMP: IMP?
         let block: @convention(block) (Any, Selector) -> Bool = { object, respondsTo in
-            if selector == #selector(URLSessionDataDelegate.urlSession(_:dataTask:didReceive:completionHandler:)) {
+            if respondsTo == #selector(URLSessionDataDelegate.urlSession(_:dataTask:didReceive:completionHandler:)) {
                 return true
             }
             let castedIMP = unsafeBitCast(originalIMP, to: (@convention(c) (Any, Selector, Selector) -> Bool).self)

@@ -20,10 +20,10 @@ class DDNetworkActivityLogger {
         return headers
     }()
     
-    let requestHeadersKey = "http.request.headers"
-    let responseHeadersKey = "http.response.headers"
-    let requestPayloadKey = "http.request.payload"
-    let responsePayloadKey = "http.response.payload"
+    static let requestHeadersKey = "http.request.headers"
+    static let responseHeadersKey = "http.response.headers"
+    static let requestPayloadKey = "http.request.payload"
+    static let responsePayloadKey = "http.response.payload"
     
     private static func redactHeaders(_ headers: [String: String]) -> [String: String] {
         return Dictionary(uniqueKeysWithValues: headers.map {

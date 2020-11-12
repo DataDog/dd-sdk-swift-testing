@@ -5,25 +5,47 @@
  */
 
 import DatadogExporter
+#if canImport(Cocoa)
+import Cocoa
+let launchNotificationName = NSApplication.didFinishLaunchingNotification
+#elseif canImport(UIKit)
+import UIKit
+let launchNotificationName = UIApplication.didFinishLaunchingNotification
+#endif
 
 internal class DDTestMonitor {
     static var instance: DDTestMonitor?
 
     let tracer: DDTracer
-    var testObserver: DDTestObserver
+    var testObserver: DDTestObserver?
     var networkInstrumentation: DDNetworkInstrumentation?
     var stderrCapturer: StderrCapture
     var injectHeaders: Bool = false
     var recordPayload: Bool = false
+    var notificationObserver: NSObjectProtocol?
 
     init() {
         tracer = DDTracer()
-        testObserver = DDTestObserver(tracer: tracer)
         stderrCapturer = StderrCapture()
+        ///If the library is being loaded in a binary launched from a UITest, dont start test observing
+        if !tracer.isBinaryUnderUITesting {
+            testObserver = DDTestObserver(tracer: tracer)
+        }  else {
+            notificationObserver = NotificationCenter.default.addObserver(
+                forName: launchNotificationName,
+                object: nil, queue: nil) { _ in
+                /// As crash reporter is initialized in testBundleWillStart() method, we initialize it here
+                /// because dont have test observer
+                DDCrashes.install()
+                let launchedSpan = self.tracer.createSpanFromContext(spanContext: self.tracer.launchSpanContext!)
+                let simpleSpan = SimpleSpanData(spanData: launchedSpan.toSpanData())
+                DDCrashes.setCustomData(customData: SimpleSpanSerializer.serializeSpan(simpleSpan: simpleSpan))
+            }
+        }
     }
 
     func startInstrumenting() {
-        testObserver.startObserving()
+        testObserver?.startObserving()
         if !tracer.env.disableNetworkInstrumentation {
             startNetworkAutoInstrumentation()
             if !tracer.env.disableHeadersInjection {

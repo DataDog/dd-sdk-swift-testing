@@ -25,9 +25,13 @@ internal class DDTracer {
         return tracerSdk.currentSpan as? RecordEventsReadableSpan ?? DDTestMonitor.instance?.testObserver.currentTestSpan
     }
 
+    var isBinaryUnderUITesting: Bool {
+        return launchSpanContext != nil
+    }
+
     init() {
         if let envTraceId = ProcessInfo.processInfo.environment["ENVIRONMENT_TRACER_TRACEID"],
-           let envSpanId = ProcessInfo.processInfo.environment["ENVIRONMENT_TRACER_SPANID"] {
+            let envSpanId = ProcessInfo.processInfo.environment["ENVIRONMENT_TRACER_SPANID"] {
             let launchTraceId = TraceId(fromHexString: envTraceId)
             let launchSpanId = SpanId(fromHexString: envSpanId)
             launchSpanContext = SpanContext.create(traceId: launchTraceId,
@@ -82,12 +86,23 @@ internal class DDTracer {
         return span
     }
 
-    /// This method is called form the crash reporter if the previous run crashed while running a test.Then it recreates the span with the previous information
+    /// This method is called form the crash reporter if the previous run crashed while running a test. Then it recreates the span with the previous information
     /// and adds the error status and information
     @discardableResult func createSpanFromCrash(spanData: SimpleSpanData, crashDate: Date?, errorType: String, errorMessage: String, errorStack: String) -> RecordEventsReadableSpan {
+        var spanId: SpanId
+        var parent: SpanId?
+        if isBinaryUnderUITesting {
+            /// We create an independent span with the test as parent
+            spanId = SpanId.random()
+            parent = SpanId(id: spanData.spanId)
+        } else {
+            /// We recreate the test span that crashed
+            spanId = SpanId(id: spanData.spanId)
+            parent = nil
+        }
+
         let spanName = spanData.name
         let traceId = TraceId(idHi: spanData.traceIdHi, idLo: spanData.traceIdLo)
-        let spanId = SpanId(id: spanData.spanId)
         let startTime = spanData.startEpochNanos
         let spanContext = SpanContext.create(traceId: traceId,
                                              spanId: spanId,
@@ -107,7 +122,7 @@ internal class DDTracer {
                                                       name: spanName,
                                                       instrumentationLibraryInfo: tracerSdk.instrumentationLibraryInfo,
                                                       kind: .internal,
-                                                      parentSpanId: nil,
+                                                      parentSpanId: parent,
                                                       hasRemoteParent: false,
                                                       traceConfig: tracerSdk.sharedState.activeTraceConfig,
                                                       spanProcessor: tracerSdk.sharedState.activeSpanProcessor,
@@ -118,7 +133,7 @@ internal class DDTracer {
                                                       totalRecordedLinks: 0,
                                                       startEpochNanos: startTime)
 
-        var crashTimeStamp = spanData.startEpochNanos + 1
+        var crashTimeStamp = spanData.startEpochNanos + 100
         if let timeInterval = crashDate?.timeIntervalSince1970 {
             crashTimeStamp = max(crashTimeStamp, UInt64(timeInterval * 1_000_000_000))
         }
@@ -131,7 +146,7 @@ internal class DDTracer {
     @discardableResult func createSpanFromContext(spanContext: SpanContext) -> RecordEventsReadableSpan {
         let attributes = AttributesWithCapacity(capacity: tracerSdk.sharedState.activeTraceConfig.maxNumberOfAttributes)
         let span = RecordEventsReadableSpan.startSpan(context: spanContext,
-                                                      name: "proxySpan",
+                                                      name: "ApplicationSpan",
                                                       instrumentationLibraryInfo: tracerSdk.instrumentationLibraryInfo,
                                                       kind: .internal,
                                                       parentSpanId: nil,
@@ -173,7 +188,7 @@ internal class DDTracer {
     /// It creates a "non-sampled" instantaneous span that wont be serialized but where we can add the log using the SpanId and TraceId of the
     /// test Span that lunched the app.
     func logStringAppUITested(context: SpanContext, string: String, date: Date? = nil) {
-        let auxSpan  = createSpanFromContext(spanContext: context)
+        let auxSpan = createSpanFromContext(spanContext: context)
         auxSpan.addEvent(name: "logString", attributes: ["message": AttributeValue.string(string)], timestamp: date ?? Date())
         auxSpan.end()
         flush()

@@ -17,11 +17,11 @@ internal class DDTestObserver: NSObject, XCTestObservation {
     let testNameRegex = try? NSRegularExpression(pattern: "([\\w]+) ([\\w]+)", options: .caseInsensitive)
     let supportsSkipping = NSClassFromString("XCTSkippedTestContext") != nil
     var currentBundleName = ""
-    let isUIApplication = Bundle.main.bundleIdentifier?.hasSuffix("xctrunner") ?? false
+    let isUITestRunner = Bundle.main.bundleIdentifier?.hasSuffix("xctrunner") ?? false
     var currentTestSpan: RecordEventsReadableSpan?
 
     init(tracer: DDTracer) {
-        if isUIApplication {
+        if isUITestRunner {
             XCUIApplication.swizzleMethods
         }
         self.tracer = tracer
@@ -56,7 +56,7 @@ internal class DDTestObserver: NSObject, XCTestObservation {
             DDTestingTags.testName: testName,
             DDTestingTags.testSuite: testSuite,
             DDTestingTags.testFramework: "XCTest",
-            DDTestingTags.testTraits: currentBundleName,
+            DDTestingTags.testBundle: currentBundleName,
             DDTestingTags.testType: DDTestingTags.typeTest
         ]
 

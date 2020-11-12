@@ -9,19 +9,23 @@ import OpenTelemetryApi
 import OpenTelemetrySdk
 
 class DDNetworkActivityLogger {
-
-    static var spanDict = [String : RecordEventsReadableSpan]()
+    static var spanDict = [String: RecordEventsReadableSpan]()
     static var spanDictQueue = DispatchQueue(label: "com.datadoghq.ddnetworkactivityLogger")
-
+    
     internal static let acceptableHeaders: Set<String> = {
-        let headers: Set =  ["CONTENT-TYPE", "CONTENT-LENGTH", "CONTENT-ENCODING", "CONTENT-LANGUAGE", "USER-AGENT", "REFERER", "ACCEPT", "ORIGIN", "ACCESS-CONTROL-ALLOW-ORIGIN", "ACCESS-CONTROL-ALLOW-CREDENTIALS", "ACCESS-CONTROL-ALLOW-HEADERS", "ACCESS-CONTROL-ALLOW-METHODS", "ACCESS-CONTROL-EXPOSE-HEADERS", "ACCESS-CONTROL-MAX-AGE", "ACCESS-CONTROL-REQUEST-HEADERS", "ACCESS-CONTROL-REQUEST-METHOD", "DATE", "EXPIRES", "CACHE-CONTROL", "ALLOW", "SERVER", "CONNECTION"]
+        let headers: Set = ["CONTENT-TYPE", "CONTENT-LENGTH", "CONTENT-ENCODING", "CONTENT-LANGUAGE", "USER-AGENT", "REFERER", "ACCEPT", "ORIGIN", "ACCESS-CONTROL-ALLOW-ORIGIN", "ACCESS-CONTROL-ALLOW-CREDENTIALS", "ACCESS-CONTROL-ALLOW-HEADERS", "ACCESS-CONTROL-ALLOW-METHODS", "ACCESS-CONTROL-EXPOSE-HEADERS", "ACCESS-CONTROL-MAX-AGE", "ACCESS-CONTROL-REQUEST-HEADERS", "ACCESS-CONTROL-REQUEST-METHOD", "DATE", "EXPIRES", "CACHE-CONTROL", "ALLOW", "SERVER", "CONNECTION"]
         if let extraHeaders = DDTestMonitor.instance?.tracer.env.extraHTTPHeaders {
             return headers.union(extraHeaders)
         }
         return headers
     }()
-
-    private static func filterHeaders( _ headers: [String: String] ) -> [String: String] {
+    
+    let requestHeadersKey = "http.request.headers"
+    let responseHeadersKey = "http.response.headers"
+    let requestPayloadKey = "http.request.payload"
+    let responsePayloadKey = "http.response.payload"
+    
+    private static func redactHeaders(_ headers: [String: String]) -> [String: String] {
         return Dictionary(uniqueKeysWithValues: headers.map {
             if acceptableHeaders.contains($0.uppercased()) {
                 return ($0, $1)
@@ -30,57 +34,57 @@ class DDNetworkActivityLogger {
             }
         })
     }
-
+    
     static func log(request: URLRequest, sessionTaskId: String) {
         guard let tracer = DDTestMonitor.instance?.tracer,
               tracer.activeSpan != nil || tracer.launchSpanContext != nil,
-              !( DDTestMonitor.instance?.networkInstrumentation?.excludes(request.url) ?? false) else {
+              !(DDTestMonitor.instance?.networkInstrumentation?.excludes(request.url) ?? false) else {
             return
         }
-
+        
         var headersString = ""
         if let headers = request.allHTTPHeaderFields {
-            headersString = DDNetworkActivityLogger.filterHeaders(headers)
+            headersString = DDNetworkActivityLogger.redactHeaders(headers)
                 .map { $0.0 + "=" + $0.1 }
                 .joined(separator: "\n")
         }
-
+        
         var attributes: [String: String]
-
-         attributes = [
+        
+        attributes = [
             SemanticAttributes.httpMethod.rawValue: request.httpMethod ?? "unknown_method",
             SemanticAttributes.httpURL.rawValue: request.url?.absoluteString ?? "unknown_url",
             SemanticAttributes.httpScheme.rawValue: request.url?.scheme ?? "unknown_scheme",
-            "http.request.headers": headersString
+            requestHeadersKey: headersString
         ]
-
+        
         if let host = request.url?.host {
             attributes[SemanticAttributes.netPeerName.rawValue] = host
         }
-
+        
         if let port = request.url?.port {
             attributes[SemanticAttributes.netPeerPort.rawValue] = String(port)
         }
-
+        
         if DDTestMonitor.instance?.networkInstrumentation?.recordPayload ?? false {
             if let data = request.httpBody, data.count > 0 {
                 let dataSample = data.subdata(in: 0..<min(data.count, 512))
                 let payload = String(data: dataSample, encoding: .ascii) ?? "<unknown>"
-                attributes["http.request.payload"] = payload
+                attributes[requestPayloadKey] = payload
             } else {
-                attributes["http.request.payload"] = "<empty>"
+                attributes[requestPayloadKey] = "<empty>"
             }
         } else {
-            attributes["http.request.payload"] = "<disabled>"
+            attributes[requestPayloadKey] = "<disabled>"
         }
-
+        
         let spanName = "HTTP " + (request.httpMethod ?? "")
         let span = tracer.startSpan(name: spanName, attributes: attributes)
         spanDictQueue.sync {
             spanDict[sessionTaskId] = span
         }
     }
-
+    
     static func log(response: URLResponse, dataOrFile: Any?, sessionTaskId: String) {
         var span: RecordEventsReadableSpan!
         spanDictQueue.sync {
@@ -90,37 +94,36 @@ class DDNetworkActivityLogger {
               let httpResponse = response as? HTTPURLResponse else {
             return
         }
-
+        
         let statusCode = httpResponse.statusCode
         span.setAttribute(key: SemanticAttributes.httpStatusCode.rawValue, value: AttributeValue.string(String(statusCode)))
-
+        
         if let headers = httpResponse.allHeaderFields as? [String: String] {
-            let headersString = DDNetworkActivityLogger.filterHeaders( headers)
+            let headersString = DDNetworkActivityLogger.redactHeaders(headers)
                 .map { $0.0 + "=" + $0.1 }
                 .joined(separator: "\n")
-            span.setAttribute(key: "http.response.headers", value: AttributeValue.string(headersString))
+            span.setAttribute(key: responseHeadersKey, value: AttributeValue.string(headersString))
         }
         span.status = statusForStatusCode(code: statusCode)
-
+        
         if DDTestMonitor.instance?.networkInstrumentation?.recordPayload ?? false {
             if let data = dataOrFile as? Data, data.count > 0 {
                 let dataSample = data.subdata(in: 0..<min(data.count, 512))
                 let payload = String(data: dataSample, encoding: .ascii) ?? "<unknown>"
-                span.setAttribute(key: "http.response.payload", value: payload)
+                span.setAttribute(key: responsePayloadKey, value: payload)
             } else if let fileUrl = dataOrFile as? URL {
-                span.setAttribute(key: "http.response.payload", value: fileUrl.path)
+                span.setAttribute(key: responsePayloadKey, value: fileUrl.path)
             } else {
-                span.setAttribute(key: "http.response.payload", value: "<empty>")
+                span.setAttribute(key: responsePayloadKey, value: "<empty>")
             }
         } else {
-            span.setAttribute(key: "http.response.payload", value: "<disabled>")
+            span.setAttribute(key: responsePayloadKey, value: "<disabled>")
         }
-
+        
         span.end()
     }
-
-
-    static func log(error: Error, dataOrFile:Any?, statusCode: Int, sessionTaskId: String) {
+    
+    static func log(error: Error, dataOrFile: Any?, statusCode: Int, sessionTaskId: String) {
         var span: RecordEventsReadableSpan!
         spanDictQueue.sync {
             span = spanDict.removeValue(forKey: sessionTaskId)
@@ -130,25 +133,25 @@ class DDNetworkActivityLogger {
         }
         span.setAttribute(key: SemanticAttributes.httpStatusCode.rawValue, value: AttributeValue.string(String(statusCode)))
         span.status = statusForStatusCode(code: statusCode)
-
-        if DDTestMonitor.instance?.networkInstrumentation?.recordPayload ?? false  {
+        
+        if DDTestMonitor.instance?.networkInstrumentation?.recordPayload ?? false {
             if let data = dataOrFile as? Data, data.count > 0 {
                 let dataSample = data.subdata(in: 0..<min(data.count, 512))
                 let payload = String(data: dataSample, encoding: .ascii) ?? "<unknown>"
-                span.setAttribute(key: "http.response.payload", value: payload)
+                span.setAttribute(key: responsePayloadKey, value: payload)
             } else if let fileUrl = dataOrFile as? URL {
-                span.setAttribute(key: "http.response.payload", value: fileUrl.path)
+                span.setAttribute(key: responsePayloadKey, value: fileUrl.path)
             } else {
-                span.setAttribute(key: "http.response.payload", value: "<empty>")
+                span.setAttribute(key: responsePayloadKey, value: "<empty>")
             }
         } else {
-            span.setAttribute(key: "http.response.payload", value: "<disabled>")
+            span.setAttribute(key: responsePayloadKey, value: "<disabled>")
         }
-
+        
         span.end()
     }
-
-    static func statusForStatusCode( code: Int) -> Status {
+    
+    static func statusForStatusCode(code: Int) -> Status {
         switch code {
             case 200...399:
                 return Status.ok

@@ -18,6 +18,7 @@ internal class DDTestObserver: NSObject, XCTestObservation {
     let supportsSkipping = NSClassFromString("XCTSkippedTestContext") != nil
     var currentBundleName = ""
     let isUITestRunner = Bundle.main.bundleIdentifier?.hasSuffix("xctrunner") ?? false
+    var currentTestSpan: RecordEventsReadableSpan?
 
     init(tracer: DDTracer) {
         if isUITestRunner {
@@ -64,11 +65,11 @@ internal class DDTestObserver: NSObject, XCTestObservation {
 
         let simpleSpan = SimpleSpanData(spanData: testSpan.toSpanData())
         DDCrashes.setCustomData(customData: SimpleSpanSerializer.serializeSpan(simpleSpan: simpleSpan))
-        tracer.activeTestSpan = testSpan
+        currentTestSpan = testSpan
     }
 
     func testCaseDidFinish(_ testCase: XCTestCase) {
-        guard let activeTest = tracer.activeTestSpan else {
+        guard let activeTest = currentTestSpan else {
             return
         }
         var status: String
@@ -86,11 +87,11 @@ internal class DDTestObserver: NSObject, XCTestObservation {
         /// Need to wait for stderr to be written, stdout is synchronous
         DDTestMonitor.instance?.stderrCapturer.synchronize()
         activeTest.end()
-        tracer.activeTestSpan = nil
+        currentTestSpan = nil
     }
 
     func testCase(_ testCase: XCTestCase, didFailWithDescription description: String, inFile filePath: String?, atLine lineNumber: Int) {
-        guard let activeTest = tracer.activeTestSpan else {
+        guard let activeTest = currentTestSpan else {
             return
         }
         activeTest.setAttribute(key: DDTags.errorType, value: AttributeValue.string(description))

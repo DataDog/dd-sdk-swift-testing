@@ -21,19 +21,8 @@ internal class DDTracer {
     let datadogExporter: DatadogExporter
     var launchSpanContext: SpanContext?
 
-    private let activeTestSpanLock = NSRecursiveLock()
-    private var activeTestSpanPrivate: RecordEventsReadableSpan?
-    var activeTestSpan: RecordEventsReadableSpan? {
-        get {
-            activeTestSpanLock.lock()
-            defer { activeTestSpanLock.unlock() }
-            return activeTestSpanPrivate
-        }
-        set(newSpan) {
-            activeTestSpanLock.lock()
-            defer { activeTestSpanLock.unlock() }
-            activeTestSpanPrivate = newSpan
-        }
+    var activeSpan: RecordEventsReadableSpan? {
+        return tracerSdk.currentSpan as? RecordEventsReadableSpan ?? DDTestMonitor.instance?.testObserver.currentTestSpan
     }
 
     var isBinaryUnderUITesting: Bool {
@@ -51,7 +40,7 @@ internal class DDTracer {
                                                    traceState: TraceState())
         }
 
-        tracerSdk = OpenTelemetrySDK.instance.tracerProvider.get(instrumentationName: "hq.datadog.testing", instrumentationVersion: "0.2.0") as! TracerSdk
+        tracerSdk = OpenTelemetrySDK.instance.tracerProvider.get(instrumentationName: "com.datadoghq.testing", instrumentationVersion: "0.2.0") as! TracerSdk
 
         let exporterConfiguration = ExporterConfiguration(
             serviceName: env.ddService ?? ProcessInfo.processInfo.processName,
@@ -175,18 +164,17 @@ internal class DDTracer {
     }
 
     func logString(string: String, date: Date? = nil) {
-        if let launchContext = launchSpanContext, tracerSdk.currentSpan == nil {
-            // This is a special case when an app executed trough a UITest, logs without a span
+        if let launchContext = launchSpanContext, activeSpan == nil  {
+            //This is a special case when an app executed trough a UITest, logs without a span
             return logStringAppUITested(context: launchContext, string: string, date: date)
         }
 
-        let activeSpan = tracerSdk.currentSpan ?? activeTestSpan
         activeSpan?.addEvent(name: "logString", attributes: ["message": AttributeValue.string(string)], timestamp: date ?? Date())
     }
 
     /// This method is only currently used for loggign the steps when runnning UITest
     func logString(string: String, timeIntervalSinceSpanStart: Double) {
-        guard let activeSpan = (tracerSdk.currentSpan as? RecordEventsReadableSpan) ?? activeTestSpan else {
+        guard let activeSpan = activeSpan else {
             return
         }
         let eventNanos = activeSpan.startEpochNanos + UInt64(timeIntervalSinceSpanStart * 1_000_000_000)
@@ -219,7 +207,7 @@ internal class DDTracer {
             }
         }
 
-        guard let currentSpan = tracerSdk.currentSpan else {
+        guard let currentSpan = activeSpan else {
             return headers
         }
         tracerSdk.textFormat.inject(spanContext: currentSpan.context, carrier: &headers, setter: HeaderSetter())

@@ -21,17 +21,20 @@ extension XCUIApplication {
 
     @objc
     func swizzled_launch() {
-        if let testSpanContext = DDTestMonitor.instance?.tracer.activeTestSpan?.context {
-            self.launchEnvironment["DD_TEST_RUNNER"] = "1"
+        if let testSpanContext = DDTestMonitor.instance?.tracer.activeSpan?.context {
             self.launchEnvironment["ENVIRONMENT_TRACER_SPANID"] = testSpanContext.spanId.hexString
             self.launchEnvironment["ENVIRONMENT_TRACER_TRACEID"] = testSpanContext.traceId.hexString
             [
+                "DD_TEST_RUNNER",
                 "DATADOG_CLIENT_TOKEN",
                 "XCTestConfigurationFilePath",
                 "DD_ENV",
                 "DD_SERVICE",
                 "DD_DISABLE_NETWORK_INSTRUMENTATION",
                 "DD_DISABLE_HEADERS_INJECTION",
+                "DD_INSTRUMENTATION_EXTRA_HEADERS",
+                "DD_EXCLUDED_URLS",
+                "DD_ENABLE_RECORD_PAYLOAD",
                 "DD_DISABLE_STDOUT_INSTRUMENTATION",
                 "DD_DISABLE_STDERR_INSTRUMENTATION"
             ].forEach( addProcessEnvironmentToLaunch )

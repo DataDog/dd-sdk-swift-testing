@@ -15,6 +15,14 @@ import Foundation
         DDTestMonitor.instance?.injectHeaders = false
     }
 
+    @objc public static func startPayloadCapture() {
+        DDTestMonitor.instance?.recordPayload = true
+    }
+
+    @objc public static func stopPayloadCapture() {
+        DDTestMonitor.instance?.recordPayload = false
+    }
+
     @objc public static func startStdoutCapture() {
         DDTestMonitor.instance?.startStdoutCapture()
     }

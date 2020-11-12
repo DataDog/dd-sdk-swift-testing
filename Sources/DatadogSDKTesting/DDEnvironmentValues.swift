@@ -16,8 +16,11 @@ internal struct DDEnvironmentValues {
     /// Instrumentation configuration values
     let disableNetworkInstrumentation: Bool
     let disableHeadersInjection: Bool
+    let enableRecordPayload: Bool
     let disableStdoutInstrumentation: Bool
     let disableStderrInstrumentation: Bool
+    let extraHTTPHeaders: Set<String>?
+    let excludedURLS: Set<String>?
 
     /// CI  values
     let isCi: Bool
@@ -54,6 +57,21 @@ internal struct DDEnvironmentValues {
 
         let envHeaders = DDEnvironmentValues.getEnvVariable("DD_DISABLE_HEADERS_INJECTION") as NSString?
         disableHeadersInjection = envHeaders?.boolValue ?? false
+
+        if let envExtraHTTPHeaders = DDEnvironmentValues.getEnvVariable("DD_INSTRUMENTATION_EXTRA_HEADERS") as String? {
+            extraHTTPHeaders = Set(envExtraHTTPHeaders.components(separatedBy: CharacterSet(charactersIn: ",; ")))
+        } else {
+            extraHTTPHeaders = nil
+        }
+
+        if let envExcludedURLs = DDEnvironmentValues.getEnvVariable("DD_EXCLUDED_URLS") as String? {
+            excludedURLS = Set(envExcludedURLs.components(separatedBy: CharacterSet(charactersIn: ",; ")))
+        } else {
+            excludedURLS = nil
+        }
+
+        let envRecordPayload = DDEnvironmentValues.getEnvVariable("DD_ENABLE_RECORD_PAYLOAD") as NSString?
+        enableRecordPayload = envRecordPayload?.boolValue ?? false
 
         let envStdout = DDEnvironmentValues.getEnvVariable("DD_DISABLE_STDOUT_INSTRUMENTATION") as NSString?
         disableStdoutInstrumentation = envStdout?.boolValue ?? false

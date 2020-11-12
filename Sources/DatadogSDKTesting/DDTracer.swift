@@ -22,7 +22,8 @@ internal class DDTracer {
     var launchSpanContext: SpanContext?
 
     var activeSpan: RecordEventsReadableSpan? {
-        return tracerSdk.currentSpan as? RecordEventsReadableSpan ?? DDTestMonitor.instance?.testObserver.currentTestSpan
+        return tracerSdk.currentSpan as? RecordEventsReadableSpan ??
+            DDTestMonitor.instance?.testObserver?.currentTestSpan
     }
 
     var isBinaryUnderUITesting: Bool {

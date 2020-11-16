@@ -7,7 +7,6 @@
 import Foundation
 
 class StdoutCapture {
-    static let stdoutQueue = DispatchQueue(label: "com.datadoghq.stdoutQueue")
     static var originalStdoutWriter: ((UnsafeMutableRawPointer?, UnsafePointer<Int8>?, Int32) -> Int32)?
     static var stdoutBuffer = ""
     weak static var tracer: DDTracer?
@@ -26,16 +25,14 @@ class StdoutCapture {
 
     ///This is the logging code, we are buffering the output because sometimes single characters can appear
     static func logStdOutMessage(_ string: String) {
-        stdoutQueue.sync {
-            self.stdoutBuffer += string
-            let newlineChar = CharacterSet.newlines
-            if let lastCharacter = self.stdoutBuffer.unicodeScalars.last,
-                newlineChar.contains(lastCharacter) {
-                if self.stdoutBuffer.trimmingCharacters(in: newlineChar).count > 0 {
-                    tracer?.logString(string: self.stdoutBuffer)
-                }
-                self.stdoutBuffer = ""
+        stdoutBuffer += string
+        let newlineChar = CharacterSet.newlines
+        if let lastCharacter = self.stdoutBuffer.unicodeScalars.last,
+           newlineChar.contains(lastCharacter) {
+            if self.stdoutBuffer.trimmingCharacters(in: newlineChar).count > 0 {
+                tracer?.logString(string: self.stdoutBuffer)
             }
+            self.stdoutBuffer = ""
         }
     }
 }

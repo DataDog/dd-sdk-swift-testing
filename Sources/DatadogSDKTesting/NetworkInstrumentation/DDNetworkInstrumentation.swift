@@ -337,9 +337,11 @@ class DDNetworkInstrumentation {
     
     func injectRespondsToSelectorIntoDelegateClass(cls: AnyClass) {
         let selector = #selector(NSObject.responds(to:))
-        guard let original = class_getInstanceMethod(cls, selector) else {
+        guard let original = class_getInstanceMethod(cls, selector),
+              DDNetworkInstrumentation.instanceRespondsAndImplements(cls: cls, selector: selector) else {
             return
         }
+
         var originalIMP: IMP?
         let block: @convention(block) (Any, Selector) -> Bool = { object, respondsTo in
             if respondsTo == #selector(URLSessionDataDelegate.urlSession(_:dataTask:didReceive:completionHandler:)) {
@@ -481,5 +483,34 @@ class DDNetworkInstrumentation {
         }
         allClasses.deallocate()
         return classes
+    }
+
+    static func instanceRespondsAndImplements(cls: AnyClass, selector: Selector) -> Bool {
+        var implements = false
+        if cls.instancesRespond(to: selector) {
+            var methodCount: UInt32 = 0
+            let methodList = class_copyMethodList(cls, &methodCount)
+            defer {
+                free(methodList)
+            }
+            if let methodList = methodList, methodCount > 0 {
+                enumerateCArray(array: methodList, count: methodCount) { _, m in
+                    let sel = method_getName(m)
+                    if sel == selector {
+                        implements = true
+                        return
+                    }
+                }
+            }
+        }
+        return implements
+    }
+
+    private static func enumerateCArray<T>(array: UnsafePointer<T>, count: UInt32, f: (UInt32, T) -> ()) {
+        var ptr = array
+        for i in 0..<count {
+            f(i, ptr.pointee)
+            ptr = ptr.successor()
+        }
     }
 }

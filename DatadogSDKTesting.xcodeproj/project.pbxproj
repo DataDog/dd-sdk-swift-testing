@@ -29,7 +29,7 @@
 		E1ABA07525231F4700ED8AEF /* DDTags.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA07125231F4700ED8AEF /* DDTags.swift */; };
 		E1ABA07625231F4700ED8AEF /* FrameworkLoadHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA07225231F4700ED8AEF /* FrameworkLoadHandler.swift */; };
 		E1ABA07725231F4700ED8AEF /* DDEnvironmentValues.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA07325231F4700ED8AEF /* DDEnvironmentValues.swift */; };
-		E1ABA08025231F8E00ED8AEF /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1ABA07F25231F8E00ED8AEF /* XCTest.framework */; };
+		E1ABA08025231F8E00ED8AEF /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1ABA07F25231F8E00ED8AEF /* XCTest.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		E1ABA08B252341EA00ED8AEF /* DDTestMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA08A252341EA00ED8AEF /* DDTestMonitor.swift */; };
 		E1AD0743252E1F16003705C1 /* MethodSwizzlerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1AD0742252E1F16003705C1 /* MethodSwizzlerTests.swift */; };
 		E1AD074B252E1FBC003705C1 /* NSURLSessionBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = E1AD074A252E1FBC003705C1 /* NSURLSessionBridge.m */; };

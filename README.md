@@ -36,6 +36,11 @@ BITRISEIO_GIT_BRANCH_DEST=$(BITRISEIO_GIT_BRANCH_DEST)
 BITRISE_GIT_TAG=$(BITRISE_GIT_TAG)
 GIT_CLONE_COMMIT_HASH=$(GIT_CLONE_COMMIT_HASH)
 ```
+
+## UITests
+
+For UITests, both the test target and the application running from the UITests must link with the framework, environment variables only need to be set in the test target, since the framework automatically injects these values to the application.
+
 ## Disabling Auto Instrumentation
 
 The framework automatically tries to capture the maximum information, but for some situations or tests it can be counter-productive. You can disable some of the autoinstrumentation for all the tests, by setting the following environment variables. 

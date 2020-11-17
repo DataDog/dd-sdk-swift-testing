@@ -191,13 +191,10 @@ internal class DDTracer {
     func logStringAppUITested(context: SpanContext, string: String, date: Date? = nil) {
         let auxSpan = createSpanFromContext(spanContext: context)
         auxSpan.addEvent(name: "logString", attributes: ["message": AttributeValue.string(string)], timestamp: date ?? Date())
-        let semaphore = DispatchSemaphore(value: 0)
         DispatchQueue.global().async {
             auxSpan.end()
             self.flush()
-            semaphore.signal()
         }
-        semaphore.wait()
     }
 
     func flush() {

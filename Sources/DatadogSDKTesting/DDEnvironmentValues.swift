@@ -308,6 +308,7 @@ internal struct DDEnvironmentValues {
 
         setAttributeIfExist(toSpan: span, key: DDCITags.gitRepository, value: repository)
         setAttributeIfExist(toSpan: span, key: DDCITags.gitCommit, value: commit)
+        setAttributeIfExist(toSpan: span, key: DDCITags.gitCommitOld, value: commit)
         setAttributeIfExist(toSpan: span, key: DDCITags.gitBranch, value: branch)
         setAttributeIfExist(toSpan: span, key: DDCITags.gitTag, value: tag)
 

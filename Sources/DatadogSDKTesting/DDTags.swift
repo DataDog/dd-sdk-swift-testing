@@ -57,6 +57,7 @@ internal struct DDTestingTags {
 
 internal struct DDCITags {
     static let gitRepository    = "git.repository_url"
+    static let gitCommitOld     = "git.commit_sha"
     static let gitCommit        = "git.commit.sha"
     static let gitBranch        = "git.branch"
     static let gitTag           = "git.tag"

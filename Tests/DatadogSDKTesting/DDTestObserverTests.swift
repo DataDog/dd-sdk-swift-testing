@@ -41,7 +41,7 @@ internal class DDTestObserverTests: XCTestCase {
         XCTAssertEqual(spanData.attributes[DDTestingTags.testName]?.description, "testWhenTestCaseWillStartIsCalled_testSpanIsCreated")
         XCTAssertEqual(spanData.attributes[DDTestingTags.testSuite]?.description, "DDTestObserverTests")
         XCTAssertEqual(spanData.attributes[DDTestingTags.testFramework]?.description, "XCTest")
-        XCTAssertEqual(spanData.attributes[DDTestingTags.testTraits]?.description, testObserver.currentBundleName)
+        XCTAssertEqual(spanData.attributes[DDTestingTags.testBundle]?.description, testObserver.currentBundleName)
         XCTAssertEqual(spanData.attributes[DDTestingTags.testType]?.description, DDTestingTags.typeTest)
 
         testObserver.testCaseDidFinish(self)

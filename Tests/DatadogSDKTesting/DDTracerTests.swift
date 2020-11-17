@@ -90,7 +90,7 @@ class DDTracerTests: XCTestCase {
         XCTAssertEqual(spanData.attributes[DDTags.errorType], AttributeValue.string(errorType))
         XCTAssertEqual(spanData.attributes[DDTags.errorMessage], AttributeValue.string(errorMessage))
         XCTAssertEqual(spanData.attributes[DDTags.errorStack], AttributeValue.string(errorStack))
-        XCTAssertEqual(spanData.endEpochNanos, spanData.startEpochNanos + 1)
+        XCTAssertEqual(spanData.endEpochNanos, spanData.startEpochNanos + 100)
     }
     
 }

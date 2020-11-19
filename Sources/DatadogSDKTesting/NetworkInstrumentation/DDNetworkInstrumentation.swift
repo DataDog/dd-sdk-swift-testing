@@ -103,7 +103,8 @@ class DDNetworkInstrumentation {
             let sessionTaskId = UUID().uuidString
             
             let block: @convention(block) (URLSession, AnyObject) -> URLSessionTask = { session, argument in
-                if let url = argument as? URL {
+                if let url = argument as? URL,
+                   self.injectHeaders == true {
                     let request = URLRequest(url: url)
                     if selector == #selector(URLSession.dataTask(with:) as (URLSession) -> (URL) -> URLSessionDataTask) {
                         return session.dataTask(with: request)
@@ -179,7 +180,8 @@ class DDNetworkInstrumentation {
             let sessionTaskId = UUID().uuidString
             
             let block: @convention(block) (URLSession, AnyObject, @escaping (Any?, URLResponse?, Error?) -> Void) -> URLSessionTask = { session, argument, completion in
-                if let url = argument as? URL {
+                if let url = argument as? URL,
+                   self.injectHeaders == true {
                     let request = URLRequest(url: url)
                     
                     if selector == #selector(URLSession.dataTask(with:completionHandler:) as (URLSession) -> (URL, @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask) {

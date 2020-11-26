@@ -30,19 +30,34 @@ internal class DDTestObserverTests: XCTestCase {
     }
 
     func testWhenTestCaseWillStartIsCalled_testSpanIsCreated() {
+
+        let testName = "testWhenTestCaseWillStartIsCalled_testSpanIsCreated"
+        let testSuite = "DDTestObserverTests"
+        let testBundle = testObserver.currentBundleName
+        let deviceModel = PlatformUtils.getDeviceModel()
+        let deviceVersion = PlatformUtils.getDeviceVersion()
+
         testObserver.testCaseWillStart(self)
+
+        let fingerprint = String((testBundle + testSuite + testName + deviceModel + deviceVersion).hash)
 
         let span = testObserver.tracer.tracerSdk.currentSpan as! RecordEventsReadableSpan
         let spanData = span.toSpanData()
 
         XCTAssertEqual(spanData.name, "-[DDTestObserverTests testWhenTestCaseWillStartIsCalled_testSpanIsCreated]")
-        XCTAssertEqual(spanData.attributes.count, 6)
-        XCTAssertEqual(spanData.attributes[DDTestTags.type]?.description, DDTestTags.typeTest)
-        XCTAssertEqual(spanData.attributes[DDTestTags.testName]?.description, "testWhenTestCaseWillStartIsCalled_testSpanIsCreated")
-        XCTAssertEqual(spanData.attributes[DDTestTags.testSuite]?.description, "DDTestObserverTests")
+        XCTAssertEqual(spanData.attributes.count, 12)
+        XCTAssertEqual(spanData.attributes[DDGenericTags.type]?.description, DDTestTags.typeTest)
+        XCTAssertEqual(spanData.attributes[DDTestTags.testName]?.description, testName)
+        XCTAssertEqual(spanData.attributes[DDTestTags.testSuite]?.description, testSuite)
         XCTAssertEqual(spanData.attributes[DDTestTags.testFramework]?.description, "XCTest")
-        XCTAssertEqual(spanData.attributes[DDTestTags.testBundle]?.description, testObserver.currentBundleName)
+        XCTAssertEqual(spanData.attributes[DDTestTags.testBundle]?.description, testBundle)
         XCTAssertEqual(spanData.attributes[DDTestTags.testType]?.description, DDTestTags.typeTest)
+        XCTAssertEqual(spanData.attributes[DDTestTags.testFingerprint]?.description, fingerprint)
+        XCTAssertEqual(spanData.attributes[DDPlatformTags.platformArchitecture]?.description, PlatformUtils.getPlatformArchitecture())
+        XCTAssertEqual(spanData.attributes[DDPlatformTags.platformName]?.description, PlatformUtils.getRunningPlatform())
+        XCTAssertEqual(spanData.attributes[DDDeviceTags.deviceModel]?.description, deviceModel)
+        XCTAssertEqual(spanData.attributes[DDDeviceTags.deviceName]?.description, PlatformUtils.getDeviceName())
+        XCTAssertEqual(spanData.attributes[DDDeviceTags.deviceVersion]?.description, deviceVersion)
 
         testObserver.testCaseDidFinish(self)
     }

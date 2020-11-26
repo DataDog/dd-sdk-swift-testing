@@ -8,7 +8,7 @@ import Foundation
 #if os(iOS) || os(tvOS) || os(watchOS)
     import UIKit
 #else
-
+    import SystemConfiguration
 #endif
 struct PlatformUtils {
     static func getRunningPlatform() -> String {
@@ -49,7 +49,7 @@ struct PlatformUtils {
         #if os(iOS) || os(tvOS) || os(watchOS)
             return UIDevice.current.name
         #else
-            return SCDynamicStoreCopyComputerName()
+            return (SCDynamicStoreCopyComputerName(nil,nil) as String?) ?? "Mac"
         #endif
     }
 

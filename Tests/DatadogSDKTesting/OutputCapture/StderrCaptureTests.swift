@@ -38,21 +38,21 @@ class StderrCaptureTests: XCTestCase {
     func testWhenWhenUIStepHappens_messageIsCapturedAndConvertedToEvents() {
         DDTestMonitor.instance = DDTestMonitor()
         let tracer = DDTestMonitor.instance!.tracer
-        let stringToCapture = "    t =     0.10s Open com.datadoghq.DemoSwift"
+        let stringToCapture = "    t =     0.50s Open com.datadoghq.DemoSwift"
         let capturer = StderrCapture()
 
         let date = Date()
         let span = tracer.startSpan(name: "Unnamed", attributes: [:], date:date)
         DDTestMonitor.instance?.testObserver?.currentTestSpan = span
         capturer.stderrMessage(tracer: tracer, string: stringToCapture)
-        Thread.sleep(forTimeInterval: 0.5)
+        Thread.sleep(forTimeInterval: 0.6)
         span.end()
         let spanData = span.toSpanData()
 
         XCTAssertEqual(spanData.timedEvents.count, 1)
         XCTAssertEqual(spanData.timedEvents.first?.attributes["message"]?.description, "Open com.datadoghq.DemoSwift" )
 
-        let timeToCheck = date.addingTimeInterval(0.1).timeIntervalSince1970
+        let timeToCheck = date.addingTimeInterval(0.5).timeIntervalSince1970
         XCTAssertEqual(spanData.timedEvents.first?.epochNanos,  UInt64(timeToCheck * 1_000_000_000))
     }
 }

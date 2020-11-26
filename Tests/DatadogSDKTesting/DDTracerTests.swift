@@ -85,7 +85,7 @@ class DDTracerTests: XCTestCase {
         XCTAssertEqual(spanData.name, "name")
         XCTAssertEqual(spanData.traceId, TraceId(idHi: 1, idLo: 2))
         XCTAssertEqual(spanData.spanId, SpanId(id:3))
-        XCTAssertEqual(spanData.attributes[DDTestingTags.testStatus],  AttributeValue.string( DDTestingTags.statusFail))
+        XCTAssertEqual(spanData.attributes[DDTestTags.testStatus],  AttributeValue.string( DDTestTags.statusFail))
         XCTAssertEqual(spanData.status, Status.internalError)
         XCTAssertEqual(spanData.attributes[DDTags.errorType], AttributeValue.string(errorType))
         XCTAssertEqual(spanData.attributes[DDTags.errorMessage], AttributeValue.string(errorMessage))

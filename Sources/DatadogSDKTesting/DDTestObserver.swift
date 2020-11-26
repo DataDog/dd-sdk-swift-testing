@@ -49,13 +49,21 @@ internal class DDTestObserver: NSObject, XCTestObservation {
         let testSuite = String(testCase.name[suiteRange])
         let testName = String(testCase.name[nameRange])
 
+        let fingerprint = (currentBundleName + testSuite + testName + tracer.env.deviceModel + tracer.env.deviceVersion).hash
+
         let attributes: [String: String] = [
-            DDTestingTags.type: DDTestingTags.typeTest,
-            DDTestingTags.testName: testName,
-            DDTestingTags.testSuite: testSuite,
-            DDTestingTags.testFramework: "XCTest",
-            DDTestingTags.testBundle: currentBundleName,
-            DDTestingTags.testType: DDTestingTags.typeTest
+            DDGenericTags.type: DDTestTags.typeTest,
+            DDTestTags.testName: testName,
+            DDTestTags.testSuite: testSuite,
+            DDTestTags.testFramework: "XCTest",
+            DDTestTags.testBundle: currentBundleName,
+            DDTestTags.testType: DDTestTags.typeTest,
+            DDTestTags.testFingerprint: String(fingerprint),
+            DDPlatformTags.platformName: tracer.env.platformName,
+            DDPlatformTags.platformArchitecture: tracer.env.platformArchitecture,
+            DDDeviceTags.deviceName: tracer.env.deviceName,
+            DDDeviceTags.deviceModel: tracer.env.deviceModel,
+            DDDeviceTags.deviceVersion: tracer.env.deviceVersion
         ]
 
         let testSpan = tracer.startSpan(name: testCase.name, attributes: attributes)
@@ -72,15 +80,15 @@ internal class DDTestObserver: NSObject, XCTestObservation {
         }
         var status: String
         if supportsSkipping, testCase.testRun?.hasBeenSkipped == true {
-            status = DDTestingTags.statusSkip
+            status = DDTestTags.statusSkip
         } else if testCase.testRun?.hasSucceeded ?? false {
-            status = DDTestingTags.statusPass
+            status = DDTestTags.statusPass
         } else {
-            status = DDTestingTags.statusFail
+            status = DDTestTags.statusFail
             activeTest.status = .internalError
         }
 
-        activeTest.setAttribute(key: DDTestingTags.testStatus, value: status)
+        activeTest.setAttribute(key: DDTestTags.testStatus, value: status)
         addBenchmarkTagsIfNeeded(testCase: testCase, activeTest: activeTest)
         /// Need to wait for stderr to be written, stdout is synchronous
         DDTestMonitor.instance?.stderrCapturer.synchronize()
@@ -111,44 +119,44 @@ internal class DDTestObserver: NSObject, XCTestObservation {
             return
         }
 
-        activeTest.setAttribute(key: DDTestingTags.testType, value: DDTestingTags.typeBenchmark)
+        activeTest.setAttribute(key: DDTestTags.testType, value: DDTestTags.typeBenchmark)
         let values = measurements.map { $0 * 1_000_000_000 } // Convert to nanoseconds
-        activeTest.setAttribute(key: DDBenchmarkingTags.statisticsN, value: values.count)
+        activeTest.setAttribute(key: DDBenchmarkTags.statisticsN, value: values.count)
         if let average = Sigma.average(values) {
-            activeTest.setAttribute(key: DDBenchmarkingTags.durationMean, value: average)
+            activeTest.setAttribute(key: DDBenchmarkTags.durationMean, value: average)
         }
         if let max = Sigma.max(values) {
-            activeTest.setAttribute(key: DDBenchmarkingTags.statisticsMax, value: max)
+            activeTest.setAttribute(key: DDBenchmarkTags.statisticsMax, value: max)
         }
         if let min = Sigma.min(values) {
-            activeTest.setAttribute(key: DDBenchmarkingTags.statisticsMin, value: min)
+            activeTest.setAttribute(key: DDBenchmarkTags.statisticsMin, value: min)
         }
         if let mean = Sigma.average(values) {
-            activeTest.setAttribute(key: DDBenchmarkingTags.statisticsMean, value: mean)
+            activeTest.setAttribute(key: DDBenchmarkTags.statisticsMean, value: mean)
         }
         if let median = Sigma.median(values) {
-            activeTest.setAttribute(key: DDBenchmarkingTags.statisticsMedian, value: median)
+            activeTest.setAttribute(key: DDBenchmarkTags.statisticsMedian, value: median)
         }
         if let stdDev = Sigma.standardDeviationSample(values) {
-            activeTest.setAttribute(key: DDBenchmarkingTags.statisticsStdDev, value: stdDev)
+            activeTest.setAttribute(key: DDBenchmarkTags.statisticsStdDev, value: stdDev)
         }
         if let stdErr = Sigma.standardErrorOfTheMean(values) {
-            activeTest.setAttribute(key: DDBenchmarkingTags.statisticsStdErr, value: stdErr)
+            activeTest.setAttribute(key: DDBenchmarkTags.statisticsStdErr, value: stdErr)
         }
         if let kurtosis = Sigma.kurtosisA(values) {
-            activeTest.setAttribute(key: DDBenchmarkingTags.statisticsKurtosis, value: kurtosis)
+            activeTest.setAttribute(key: DDBenchmarkTags.statisticsKurtosis, value: kurtosis)
         }
         if let skewness = Sigma.skewnessA(values) {
-            activeTest.setAttribute(key: DDBenchmarkingTags.statisticsSkewness, value: skewness)
+            activeTest.setAttribute(key: DDBenchmarkTags.statisticsSkewness, value: skewness)
         }
         if let percentile99 = Sigma.percentile(values, percentile: 0.99) {
-            activeTest.setAttribute(key: DDBenchmarkingTags.statisticsP99, value: percentile99)
+            activeTest.setAttribute(key: DDBenchmarkTags.statisticsP99, value: percentile99)
         }
         if let percentile95 = Sigma.percentile(values, percentile: 0.95) {
-            activeTest.setAttribute(key: DDBenchmarkingTags.statisticsP99, value: percentile95)
+            activeTest.setAttribute(key: DDBenchmarkTags.statisticsP99, value: percentile95)
         }
         if let percentile90 = Sigma.percentile(values, percentile: 0.90) {
-            activeTest.setAttribute(key: DDBenchmarkingTags.statisticsP99, value: percentile90)
+            activeTest.setAttribute(key: DDBenchmarkTags.statisticsP99, value: percentile90)
         }
     }
 }

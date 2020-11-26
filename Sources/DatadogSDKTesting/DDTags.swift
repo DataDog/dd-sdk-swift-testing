@@ -33,49 +33,61 @@ internal struct DDTags {
     public static let httpUrl = "http.url"
 }
 
-
-internal struct DDTestingTags {
-    static let testSuite       = "test.suite"
-    static let testName        = "test.name"
-    static let testFramework   = "test.framework"
-    static let testBundle      = "test.bundle"
-    static let testCode        = "test.code"
-
-    static let testType        = "test.type"
-    static let typeTest        = "test"
-    static let typeBenchmark   = "benchmark"
-
-    static let testStatus      = "test.status"
-    static let statusPass      = "pass"
-    static let statusFail      = "fail"
-    static let statusSkip      = "skip"
-
-    static let type            = "type"
-
-    static let logSource       = "source"
+internal struct DDGenericTags {
+    static let type             = "type"
 }
 
-internal struct DDCITags {
+
+internal struct DDTestTags {
+    static let testName         = "test.name"
+    static let testSuite        = "test.suite"
+    static let testBundle       = "test.bundle"
+    static let testFramework    = "test.framework"
+
+    static let testStatus       = "test.status"
+    static let statusPass       = "pass"
+    static let statusFail       = "fail"
+    static let statusSkip       = "skip"
+
+    static let testType         = "test.type"
+    static let typeBenchmark    = "benchmark"
+    static let typeTest         = "test"
+
+    static let testFingerprint  = "test.fingerprint"
+}
+
+internal struct DDPlatformTags {
+    static let platformName         = "platform.name"
+    static let platformArchitecture = "platform.architecture"
+}
+
+internal struct DDDeviceTags {
+    static let deviceName       = "device.name"
+    static let deviceModel      = "device.model"
+    static let deviceVersion    = "device.version"
+}
+
+internal struct DDGitTags {
     static let gitRepository    = "git.repository_url"
     static let gitCommitOld     = "git.commit_sha"
     static let gitCommit        = "git.commit.sha"
     static let gitBranch        = "git.branch"
     static let gitTag           = "git.tag"
+}
 
-    static let buildSourceRoot  = "build.source_root"
-
+internal struct DDCITags {
     static let ciProvider       = "ci.provider.name"
     static let ciPipelineId     = "ci.pipeline.id"
+    static let ciPipelineName   = "ci.pipeline.name"
     static let ciPipelineNumber = "ci.pipeline.number"
     static let ciPipelineURL    = "ci.pipeline.url"
-    static let ciPipelineName   = "ci.pipeline.name"
     static let ciJobURL         = "ci.job.url"
     static let ciWorkspacePath  = "ci.workspace_path"
 }
 
-internal struct DDBenchmarkingTags {
-    static let durationMean                 = "benchmark.duration.mean"
+internal struct DDBenchmarkTags {
     static let benchmarkRuns                = "benchmark.runs"
+    static let durationMean                 = "benchmark.duration.mean"
     static let memoryTotalBytes             = "benchmark.memory.total_bytes_allocations"
     static let memoryMeanBytes_allocations  = "benchmark.memory.mean_bytes_allocations"
     static let statisticsN                  = "benchmark.statistics.n"

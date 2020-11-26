@@ -372,12 +372,12 @@ class DDEnvironmentValuesTests: XCTestCase {
         env.addTagsToSpan(span: span)
 
         spanData = span.toSpanData()
-        XCTAssertEqual(spanData.attributes.count, 11)
+        XCTAssertEqual(spanData.attributes.count, 10)
 
         XCTAssertEqual(spanData.attributes["ci.provider.name"]?.description, "jenkins")
         XCTAssertEqual(spanData.attributes["git.repository_url"]?.description, "/test/repo")
         XCTAssertEqual(spanData.attributes["git.commit.sha"]?.description, "37e376448b0ac9b7f54404")
-        XCTAssertEqual(spanData.attributes["build.source_root"]?.description, "/build")
+        XCTAssertEqual(spanData.attributes["ci.workspace_path"]?.description, "/build")
         XCTAssertEqual(spanData.attributes["ci.pipeline.id"]?.description, "pipeline1")
         XCTAssertEqual(spanData.attributes["ci.pipeline.number"]?.description, "45")
         XCTAssertEqual(spanData.attributes["ci.pipeline.url"]?.description, "http://jenkins.com/build")

@@ -22,12 +22,18 @@ internal struct DDEnvironmentValues {
     let extraHTTPHeaders: Set<String>?
     let excludedURLS: Set<String>?
 
+    /// Device Information
+    let platformName: String
+    let platformArchitecture: String
+    let deviceName: String
+    let deviceModel: String
+    let deviceVersion: String
+
     /// CI  values
     let isCi: Bool
     let provider: String?
     let repository: String?
     let commit: String?
-    let sourceRoot: String?
     let workspacePath: String?
     let pipelineId: String?
     let pipelineNumber: String?
@@ -79,6 +85,13 @@ internal struct DDEnvironmentValues {
         let envStderr = DDEnvironmentValues.getEnvVariable("DD_DISABLE_STDERR_INSTRUMENTATION") as NSString?
         disableStderrInstrumentation = envStderr?.boolValue ?? false
 
+        /// Device Information
+        platformName = PlatformUtils.getRunningPlatform()
+        platformArchitecture = PlatformUtils.getPlatformArchitecture()
+        deviceName = PlatformUtils.getDeviceName()
+        deviceModel = PlatformUtils.getDeviceModel()
+        deviceVersion = PlatformUtils.getDeviceVersion()
+
         /// CI  values
         var branchEnv: String?
         if DDEnvironmentValues.getEnvVariable("TRAVIS") != nil {
@@ -86,7 +99,7 @@ internal struct DDEnvironmentValues {
             provider = "travis"
             repository = DDEnvironmentValues.getEnvVariable("TRAVIS_REPO_SLUG")
             commit = DDEnvironmentValues.getEnvVariable("TRAVIS_COMMIT")
-            sourceRoot = DDEnvironmentValues.getEnvVariable("TRAVIS_BUILD_DIR")
+            workspacePath = DDEnvironmentValues.getEnvVariable("TRAVIS_BUILD_DIR")
             pipelineId = DDEnvironmentValues.getEnvVariable("TRAVIS_BUILD_ID")
             pipelineNumber = DDEnvironmentValues.getEnvVariable("TRAVIS_BUILD_NUMBER")
             pipelineURL = DDEnvironmentValues.getEnvVariable("TRAVIS_BUILD_WEB_URL")
@@ -102,7 +115,7 @@ internal struct DDEnvironmentValues {
             provider = "circleci"
             repository = DDEnvironmentValues.getEnvVariable("CIRCLE_REPOSITORY_URL")
             commit = DDEnvironmentValues.getEnvVariable("CIRCLE_SHA1")
-            sourceRoot = DDEnvironmentValues.getEnvVariable("CIRCLE_WORKING_DIRECTORY")
+            workspacePath = DDEnvironmentValues.getEnvVariable("CIRCLE_WORKING_DIRECTORY")
             pipelineId = nil
             pipelineNumber = DDEnvironmentValues.getEnvVariable("CIRCLE_BUILD_NUM")
             pipelineURL = DDEnvironmentValues.getEnvVariable("CIRCLE_BUILD_URL")
@@ -115,7 +128,7 @@ internal struct DDEnvironmentValues {
             provider = "jenkins"
             repository = DDEnvironmentValues.getEnvVariable("GIT_URL")
             commit = DDEnvironmentValues.getEnvVariable("GIT_COMMIT")
-            sourceRoot = DDEnvironmentValues.getEnvVariable("WORKSPACE")
+            workspacePath = DDEnvironmentValues.getEnvVariable("WORKSPACE")
             pipelineId = DDEnvironmentValues.getEnvVariable("BUILD_ID")
             pipelineNumber = DDEnvironmentValues.getEnvVariable("BUILD_NUMBER")
             pipelineURL = DDEnvironmentValues.getEnvVariable("BUILD_URL")
@@ -131,7 +144,7 @@ internal struct DDEnvironmentValues {
             provider = "gitlab"
             repository = DDEnvironmentValues.getEnvVariable("CI_REPOSITORY_URL")
             commit = DDEnvironmentValues.getEnvVariable("CI_COMMIT_SHA")
-            sourceRoot = DDEnvironmentValues.getEnvVariable("CI_PROJECT_DIR")
+            workspacePath = DDEnvironmentValues.getEnvVariable("CI_PROJECT_DIR")
             pipelineId = DDEnvironmentValues.getEnvVariable("CI_PIPELINE_ID")
             pipelineNumber = DDEnvironmentValues.getEnvVariable("CI_PIPELINE_IID")
             pipelineURL = DDEnvironmentValues.getEnvVariable("CI_PIPELINE_URL")
@@ -147,7 +160,7 @@ internal struct DDEnvironmentValues {
             provider = "appveyor"
             repository = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_NAME")
             commit = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_COMMIT")
-            sourceRoot = DDEnvironmentValues.getEnvVariable("APPVEYOR_BUILD_FOLDER")
+            workspacePath = DDEnvironmentValues.getEnvVariable("APPVEYOR_BUILD_FOLDER")
             pipelineId = DDEnvironmentValues.getEnvVariable("APPVEYOR_BUILD_ID")
             pipelineNumber = DDEnvironmentValues.getEnvVariable("APPVEYOR_BUILD_NUMBER")
             let projectSlug = DDEnvironmentValues.getEnvVariable("APPVEYOR_PROJECT_SLUG")
@@ -162,7 +175,7 @@ internal struct DDEnvironmentValues {
         } else if DDEnvironmentValues.getEnvVariable("TF_BUILD") != nil {
             isCi = true
             provider = "azurepipelines"
-            sourceRoot = DDEnvironmentValues.getEnvVariable("BUILD_SOURCESDIRECTORY")
+            workspacePath = DDEnvironmentValues.getEnvVariable("BUILD_SOURCESDIRECTORY")
             pipelineId = DDEnvironmentValues.getEnvVariable("BUILD_BUILDID")
             pipelineNumber = DDEnvironmentValues.getEnvVariable("BUILD_BUILDNUMBER")
 
@@ -192,7 +205,7 @@ internal struct DDEnvironmentValues {
             provider = "bitbucketpipelines"
             repository = DDEnvironmentValues.getEnvVariable("BITBUCKET_GIT_SSH_ORIGIN")
             commit = DDEnvironmentValues.getEnvVariable("BITBUCKET_COMMIT")
-            sourceRoot = DDEnvironmentValues.getEnvVariable("BITBUCKET_CLONE_DIR")
+            workspacePath = DDEnvironmentValues.getEnvVariable("BITBUCKET_CLONE_DIR")
             pipelineId = DDEnvironmentValues.getEnvVariable("BITBUCKET_PIPELINE_UUID")
             pipelineNumber = DDEnvironmentValues.getEnvVariable("BITBUCKET_BUILD_NUMBER")
             pipelineURL = nil
@@ -204,7 +217,7 @@ internal struct DDEnvironmentValues {
             provider = "github"
             repository = DDEnvironmentValues.getEnvVariable("GITHUB_REPOSITORY")
             commit = DDEnvironmentValues.getEnvVariable("GITHUB_SHA")
-            sourceRoot = DDEnvironmentValues.getEnvVariable("GITHUB_WORKSPACE")
+            workspacePath = DDEnvironmentValues.getEnvVariable("GITHUB_WORKSPACE")
             pipelineId = DDEnvironmentValues.getEnvVariable("GITHUB_RUN_ID")
             pipelineNumber = DDEnvironmentValues.getEnvVariable("GITHUB_RUN_NUMBER")
             pipelineURL = "\(repository ?? "")/commit/\(commit ?? "")/checks"
@@ -217,7 +230,7 @@ internal struct DDEnvironmentValues {
             provider = "teamcity"
             repository = DDEnvironmentValues.getEnvVariable("BUILD_VCS_URL")
             commit = DDEnvironmentValues.getEnvVariable("BUILD_VCS_NUMBER")
-            sourceRoot = DDEnvironmentValues.getEnvVariable("BUILD_CHECKOUTDIR")
+            workspacePath = DDEnvironmentValues.getEnvVariable("BUILD_CHECKOUTDIR")
             pipelineId = DDEnvironmentValues.getEnvVariable("BUILD_ID")
             pipelineNumber = DDEnvironmentValues.getEnvVariable("BUILD_NUMBER")
             let serverUrl = DDEnvironmentValues.getEnvVariable("SERVER_URL")
@@ -234,7 +247,7 @@ internal struct DDEnvironmentValues {
             provider = "buildkite"
             repository = DDEnvironmentValues.getEnvVariable("BUILDKITE_REPO")
             commit = DDEnvironmentValues.getEnvVariable("BUILDKITE_COMMIT")
-            sourceRoot = DDEnvironmentValues.getEnvVariable("BUILDKITE_BUILD_CHECKOUT_PATH")
+            workspacePath = DDEnvironmentValues.getEnvVariable("BUILDKITE_BUILD_CHECKOUT_PATH")
             pipelineId = DDEnvironmentValues.getEnvVariable("BUILDKITE_BUILD_ID")
             pipelineNumber = DDEnvironmentValues.getEnvVariable("BUILDKITE_BUILD_NUMBER")
             pipelineURL = DDEnvironmentValues.getEnvVariable("BUILDKITE_BUILD_URL")
@@ -253,7 +266,7 @@ internal struct DDEnvironmentValues {
             }
             commit = tempCommit
 
-            sourceRoot = DDEnvironmentValues.getEnvVariable("BITRISE_SOURCE_DIR")
+            workspacePath = DDEnvironmentValues.getEnvVariable("BITRISE_SOURCE_DIR")
             pipelineId = DDEnvironmentValues.getEnvVariable("BITRISE_TRIGGERED_WORKFLOW_ID")
             pipelineNumber = DDEnvironmentValues.getEnvVariable("BITRISE_BUILD_NUMBER")
             jobURL = DDEnvironmentValues.getEnvVariable("BITRISE_APP_URL")
@@ -269,7 +282,7 @@ internal struct DDEnvironmentValues {
             provider = nil
             repository = nil
             commit = nil
-            sourceRoot = nil
+            workspacePath = nil
             pipelineId = nil
             pipelineNumber = nil
             pipelineURL = nil
@@ -288,9 +301,6 @@ internal struct DDEnvironmentValues {
             }
         }
         self.branch = branchEnv
-
-        /// Currently workspacePath is the same than sourceRoot, it could change in the future
-        workspacePath = sourceRoot
     }
 
     func addTagsToSpan(span: Span) {
@@ -304,15 +314,13 @@ internal struct DDEnvironmentValues {
         setAttributeIfExist(toSpan: span, key: DDCITags.ciPipelineURL, value: pipelineURL)
         setAttributeIfExist(toSpan: span, key: DDCITags.ciPipelineURL, value: pipelineName)
         setAttributeIfExist(toSpan: span, key: DDCITags.ciJobURL, value: jobURL)
-        setAttributeIfExist(toSpan: span, key: DDCITags.ciWorkspacePath, value: sourceRoot)
+        setAttributeIfExist(toSpan: span, key: DDCITags.ciWorkspacePath, value: workspacePath)
 
-        setAttributeIfExist(toSpan: span, key: DDCITags.gitRepository, value: repository)
-        setAttributeIfExist(toSpan: span, key: DDCITags.gitCommit, value: commit)
-        setAttributeIfExist(toSpan: span, key: DDCITags.gitCommitOld, value: commit)
-        setAttributeIfExist(toSpan: span, key: DDCITags.gitBranch, value: branch)
-        setAttributeIfExist(toSpan: span, key: DDCITags.gitTag, value: tag)
-
-        setAttributeIfExist(toSpan: span, key: DDCITags.buildSourceRoot, value: sourceRoot)
+        setAttributeIfExist(toSpan: span, key: DDGitTags.gitRepository, value: repository)
+        setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommit, value: commit)
+        setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommitOld, value: commit)
+        setAttributeIfExist(toSpan: span, key: DDGitTags.gitBranch, value: branch)
+        setAttributeIfExist(toSpan: span, key: DDGitTags.gitTag, value: tag)
     }
 
     private func setAttributeIfExist(toSpan span: Span, key: String, value: String?) {
@@ -328,4 +336,5 @@ internal struct DDEnvironmentValues {
         let returnVariable = variable.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
         return returnVariable.isEmpty ? nil : returnVariable
     }
+
 }

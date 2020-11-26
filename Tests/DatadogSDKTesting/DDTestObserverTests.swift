@@ -37,12 +37,12 @@ internal class DDTestObserverTests: XCTestCase {
 
         XCTAssertEqual(spanData.name, "-[DDTestObserverTests testWhenTestCaseWillStartIsCalled_testSpanIsCreated]")
         XCTAssertEqual(spanData.attributes.count, 6)
-        XCTAssertEqual(spanData.attributes[DDTestingTags.type]?.description, DDTestingTags.typeTest)
-        XCTAssertEqual(spanData.attributes[DDTestingTags.testName]?.description, "testWhenTestCaseWillStartIsCalled_testSpanIsCreated")
-        XCTAssertEqual(spanData.attributes[DDTestingTags.testSuite]?.description, "DDTestObserverTests")
-        XCTAssertEqual(spanData.attributes[DDTestingTags.testFramework]?.description, "XCTest")
-        XCTAssertEqual(spanData.attributes[DDTestingTags.testBundle]?.description, testObserver.currentBundleName)
-        XCTAssertEqual(spanData.attributes[DDTestingTags.testType]?.description, DDTestingTags.typeTest)
+        XCTAssertEqual(spanData.attributes[DDTestTags.type]?.description, DDTestTags.typeTest)
+        XCTAssertEqual(spanData.attributes[DDTestTags.testName]?.description, "testWhenTestCaseWillStartIsCalled_testSpanIsCreated")
+        XCTAssertEqual(spanData.attributes[DDTestTags.testSuite]?.description, "DDTestObserverTests")
+        XCTAssertEqual(spanData.attributes[DDTestTags.testFramework]?.description, "XCTest")
+        XCTAssertEqual(spanData.attributes[DDTestTags.testBundle]?.description, testObserver.currentBundleName)
+        XCTAssertEqual(spanData.attributes[DDTestTags.testType]?.description, DDTestTags.typeTest)
 
         testObserver.testCaseDidFinish(self)
     }
@@ -51,11 +51,11 @@ internal class DDTestObserverTests: XCTestCase {
         testObserver.testCaseWillStart(self)
         let testSpan = testObserver.tracer.tracerSdk.currentSpan as! RecordEventsReadableSpan
         var spanData = testSpan.toSpanData()
-        XCTAssertNil(spanData.attributes[DDTestingTags.testStatus])
+        XCTAssertNil(spanData.attributes[DDTestTags.testStatus])
 
         testObserver.testCaseDidFinish(self)
         spanData = testSpan.toSpanData()
-        XCTAssertNotNil(spanData.attributes[DDTestingTags.testStatus])
+        XCTAssertNotNil(spanData.attributes[DDTestTags.testStatus])
     }
 
     func testWhenTestCaseDidFailWithDescriptionIsCalled_testStatusIsSet() {
@@ -83,12 +83,12 @@ internal class DDTestObserverTests: XCTestCase {
         testObserver.testCaseDidFinish(self)
         
         let spanData = testSpan.toSpanData()
-        XCTAssertEqual(spanData.attributes[DDTestingTags.testType]?.description, DDTestingTags.typeBenchmark)
-        XCTAssertEqual(spanData.attributes[DDBenchmarkingTags.durationMean]?.description, "3000000000.0")
-        XCTAssertEqual(spanData.attributes[DDBenchmarkingTags.statisticsN]?.description, "5")
-        XCTAssertEqual(spanData.attributes[DDBenchmarkingTags.statisticsMin]?.description, "1000000000.0")
-        XCTAssertEqual(spanData.attributes[DDBenchmarkingTags.statisticsMax]?.description, "5000000000.0")
-        XCTAssertEqual(spanData.attributes[DDBenchmarkingTags.statisticsMedian]?.description, "3000000000.0")
+        XCTAssertEqual(spanData.attributes[DDTestTags.testType]?.description, DDTestTags.typeBenchmark)
+        XCTAssertEqual(spanData.attributes[DDBenchmarkTags.durationMean]?.description, "3000000000.0")
+        XCTAssertEqual(spanData.attributes[DDBenchmarkTags.statisticsN]?.description, "5")
+        XCTAssertEqual(spanData.attributes[DDBenchmarkTags.statisticsMin]?.description, "1000000000.0")
+        XCTAssertEqual(spanData.attributes[DDBenchmarkTags.statisticsMax]?.description, "5000000000.0")
+        XCTAssertEqual(spanData.attributes[DDBenchmarkTags.statisticsMedian]?.description, "3000000000.0")
 
         self.setValue(nil, forKey: "_activePerformanceMetricIDs")
         self.setValue(nil, forKey: "_perfMetricsForID")

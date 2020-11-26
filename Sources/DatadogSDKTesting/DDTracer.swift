@@ -114,7 +114,7 @@ internal class DDTracer {
             attributes.updateValue(value: AttributeValue.string($0.value), forKey: $0.key)
         }
 
-        attributes.updateValue(value: AttributeValue.string(DDTestingTags.statusFail), forKey: DDTestingTags.testStatus)
+        attributes.updateValue(value: AttributeValue.string(DDTestTags.statusFail), forKey: DDTestTags.testStatus)
         attributes.updateValue(value: AttributeValue.string(errorType), forKey: DDTags.errorType)
         attributes.updateValue(value: AttributeValue.string(errorMessage), forKey: DDTags.errorMessage)
         attributes.updateValue(value: AttributeValue.string(errorStack), forKey: DDTags.errorStack)

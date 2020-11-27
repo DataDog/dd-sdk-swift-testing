@@ -53,7 +53,7 @@ internal struct DDTestTags {
     static let typeBenchmark    = "benchmark"
     static let typeTest         = "test"
 
-    static let testFingerprint  = "test.fingerprint"
+   // static let testFingerprint  = "test.fingerprint"
 }
 
 internal struct DDPlatformTags {

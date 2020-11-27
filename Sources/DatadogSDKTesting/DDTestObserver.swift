@@ -58,7 +58,7 @@ internal class DDTestObserver: NSObject, XCTestObservation {
             DDTestTags.testFramework: "XCTest",
             DDTestTags.testBundle: currentBundleName,
             DDTestTags.testType: DDTestTags.typeTest,
-            DDTestTags.testFingerprint: String(fingerprint),
+            //DDTestTags.testFingerprint: String(fingerprint),
             DDPlatformTags.platformName: tracer.env.platformName,
             DDPlatformTags.platformArchitecture: tracer.env.platformArchitecture,
             DDDeviceTags.deviceName: tracer.env.deviceName,

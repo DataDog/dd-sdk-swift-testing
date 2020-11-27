@@ -5,12 +5,12 @@
  */
 
 import DatadogExporter
-#if canImport(Cocoa)
-import Cocoa
-let launchNotificationName = NSApplication.didFinishLaunchingNotification
-#elseif canImport(UIKit)
+#if canImport(UIKit)
 import UIKit
 let launchNotificationName = UIApplication.didFinishLaunchingNotification
+#elseif canImport(Cocoa)
+import Cocoa
+let launchNotificationName = NSApplication.didFinishLaunchingNotification
 #endif
 
 internal class DDTestMonitor {

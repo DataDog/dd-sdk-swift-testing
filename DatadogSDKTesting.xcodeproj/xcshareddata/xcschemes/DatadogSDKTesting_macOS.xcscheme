@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "1200"
+   LastUpgradeVersion = "1220"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "E1ABA04925231E2500ED8AEF"
+               BlueprintIdentifier = "E157A717256E9D1D00CBCA52"
                BuildableName = "DatadogSDKTesting.framework"
-               BlueprintName = "DatadogSDKTesting"
+               BlueprintName = "DatadogSDKTesting_macOS"
                ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -26,33 +26,23 @@
       buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      shouldUseLaunchSchemeArgsEnv = "YES"
-      codeCoverageEnabled = "YES"
-      onlyGenerateCoverageForSpecifiedTargets = "YES">
-      <CodeCoverageTargets>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "E1ABA04925231E2500ED8AEF"
-            BuildableName = "DatadogSDKTesting.framework"
-            BlueprintName = "DatadogSDKTesting"
-            ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
-         </BuildableReference>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "E1ABA05225231E2500ED8AEF"
-            BuildableName = "DatadogSDKTestingTests.xctest"
-            BlueprintName = "DatadogSDKTestingTests"
-            ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
-         </BuildableReference>
-      </CodeCoverageTargets>
+      shouldUseLaunchSchemeArgsEnv = "NO"
+      enableThreadSanitizer = "YES">
+      <EnvironmentVariables>
+         <EnvironmentVariable
+            key = "DD_DONT_EXPORT"
+            value = "1"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+      </EnvironmentVariables>
       <Testables>
          <TestableReference
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "E1ABA05225231E2500ED8AEF"
-               BuildableName = "DatadogSDKTestingTests.xctest"
-               BlueprintName = "DatadogSDKTestingTests"
+               BlueprintIdentifier = "E157A78B256EB0F000CBCA52"
+               BuildableName = "DatadogSDKTestingTests_macOS.xctest"
+               BlueprintName = "DatadogSDKTestingTests_macOS"
                ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -78,9 +68,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "E1ABA04925231E2500ED8AEF"
+            BlueprintIdentifier = "E157A717256E9D1D00CBCA52"
             BuildableName = "DatadogSDKTesting.framework"
-            BlueprintName = "DatadogSDKTesting"
+            BlueprintName = "DatadogSDKTesting_macOS"
             ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

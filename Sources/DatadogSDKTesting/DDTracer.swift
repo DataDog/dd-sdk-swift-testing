@@ -18,7 +18,7 @@ internal class DDTracer {
     let tracerSdk: TracerSdk
     let env = DDEnvironmentValues()
     var spanProcessor: SpanProcessor
-    let datadogExporter: DatadogExporter
+    var datadogExporter: DatadogExporter!
     var launchSpanContext: SpanContext?
 
     var activeSpan: RecordEventsReadableSpan? {
@@ -57,7 +57,12 @@ internal class DDTracer {
             exportUnsampledLogs: true
         )
 
-        datadogExporter = try! DatadogExporter(config: exporterConfiguration)
+        guard ProcessInfo.processInfo.environment["DD_DONT_EXPORT"] == nil else {
+            spanProcessor = NoopSpanProcessor()
+            OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(spanProcessor)
+            return
+        }
+        datadogExporter = try? DatadogExporter(config: exporterConfiguration)
         if launchSpanContext != nil {
             spanProcessor = SimpleSpanProcessor(spanExporter: datadogExporter).reportingOnlySampled(sampled: false)
         } else {
@@ -165,8 +170,8 @@ internal class DDTracer {
     }
 
     func logString(string: String, date: Date? = nil) {
-        if let launchContext = launchSpanContext, activeSpan == nil  {
-            //This is a special case when an app executed trough a UITest, logs without a span
+        if let launchContext = launchSpanContext, activeSpan == nil {
+            // This is a special case when an app executed trough a UITest, logs without a span
             return logStringAppUITested(context: launchContext, string: string, date: date)
         }
 

@@ -1,4 +1,4 @@
-// swift-tools-version:5.1
+// swift-tools-version:5.3
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -14,23 +14,23 @@ let package = Package(
             name: "DatadogSDKTesting",
             type: .dynamic,
             targets: [
-                "DatadogSDKTesting",
-                "DatadogSDKTestingObjc",
+                "DatadogSDKTesting"
             ]
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/open-telemetry/opentelemetry-swift.git", .revision("9991f568fa6f47bce19645df65b113b26adfa285")),
-        .package(url: "https://github.com/microsoft/plcrashreporter.git", from: "1.8.1"),
-        .package(url: "https://github.com/evgenyneu/SigmaSwiftStatistics.git", from: "9.0.2"),
+        .package(name: "opentelemetry-swift", url: "https://github.com/nachoBonafonte/opentelemetry-swift.git", .revision("acc2aa9a5ecfa509d8e9cf8e0484d1157328d993")),
+        .package(name: "PLCrashReporter", url: "https://github.com/microsoft/plcrashreporter.git", from: "1.8.1"),
+        .package(name: "SigmaSwiftStatistics",url: "https://github.com/evgenyneu/SigmaSwiftStatistics.git", from: "9.0.2"),
     ],
     targets: [
         .target(
             name: "DatadogSDKTesting",
             dependencies: [
                 .product(name: "DatadogExporter", package: "opentelemetry-swift"),
-                .product(name: "CrashReporter", package: "PLCrashReporter"),
+                .product(name: "CrashReporter", package: "PLCrashReporter", condition: .when(platforms: [.iOS, .macOS, .tvOS])),
                 .product(name: "SigmaSwiftStatistics", package: "SigmaSwiftStatistics"),
+                .target( name: "DatadogSDKTestingObjc"),
             ],
             exclude: [
                 "Objc",

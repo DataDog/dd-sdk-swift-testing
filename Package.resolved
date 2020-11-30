@@ -6,16 +6,16 @@
         "repositoryURL": "https://github.com/grpc/grpc-swift.git",
         "state": {
           "branch": null,
-          "revision": "e2e138df61dcbfc2dc1cf284fdab6f983539ab48",
-          "version": "1.0.0-alpha.20"
+          "revision": "b81b8f2398fbe55f06d209bcefe7f6fe6aaa337e",
+          "version": "1.0.0-alpha.21"
         }
       },
       {
         "package": "opentelemetry-swift",
-        "repositoryURL": "https://github.com/nachoBonafonte/opentelemetry-swift.git",
+        "repositoryURL": "https://github.com/open-telemetry/opentelemetry-swift.git",
         "state": {
           "branch": null,
-          "revision": "acc2aa9a5ecfa509d8e9cf8e0484d1157328d993",
+          "revision": "044f0fd58e8c4fb1eef42045945cc240e820d94c",
           "version": null
         }
       },
@@ -87,8 +87,8 @@
         "repositoryURL": "https://github.com/apple/swift-nio-transport-services.git",
         "state": {
           "branch": null,
-          "revision": "bb56586c4cab9a79dce6ec4738baddb5802c5de7",
-          "version": "1.9.0"
+          "revision": "5a352330c09a323e59ebd99afdf4ca3964c217bc",
+          "version": "1.9.1"
         }
       },
       {

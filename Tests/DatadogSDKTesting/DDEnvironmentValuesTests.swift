@@ -326,7 +326,8 @@ class DDEnvironmentValuesTests: XCTestCase {
         testEnvironment["GIT_REPOSITORY_URL"] = "/test/repo"
         testEnvironment["BITRISE_GIT_COMMIT"] = "37e376448b0ac9b7f54404"
         testEnvironment["BITRISE_SOURCE_DIR"] = "/build"
-        testEnvironment["BITRISE_TRIGGERED_WORKFLOW_ID"] = "pipeline1"
+        testEnvironment["BITRISE_BUILD_SLUG"] = "33234"
+        testEnvironment["BITRISE_APP_TITLE"] = "myApp"
         testEnvironment["BITRISE_BUILD_NUMBER"] = "4345"
         testEnvironment["BITRISE_APP_URL"] = "https://app.bitrise.io/app"
         testEnvironment["BITRISE_BUILD_URL"] = "https://app.bitrise.io/build"
@@ -343,8 +344,9 @@ class DDEnvironmentValuesTests: XCTestCase {
         XCTAssertEqual(env.repository!, "/test/repo")
         XCTAssertEqual(env.commit!, "37e376448b0ac9b7f54404")
         XCTAssertEqual(env.workspacePath!, "/build")
-        XCTAssertEqual(env.pipelineId!, "pipeline1")
+        XCTAssertEqual(env.pipelineId!, "33234")
         XCTAssertEqual(env.pipelineNumber!, "4345")
+        XCTAssertEqual(env.pipelineName!, "myApp")
         XCTAssertEqual(env.pipelineURL!, "https://app.bitrise.io/build")
         XCTAssertEqual(env.jobURL!, "https://app.bitrise.io/app")
         XCTAssertEqual(env.branch!, "develop")

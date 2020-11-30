@@ -25,35 +25,8 @@ build/xcframework/DatadogSDKTesting.zip: build/DatadogSDKTesting.xcframework bui
 
 build/xcframework: build/xcframework/DatadogSDKTesting.zip
 
-build/multiplatform/dir:
-	mkdir -p $(PWD)/build/multiplatform
-	mkdir -p $(PWD)/build/multiplatform/DatadogSDKTesting
 
-build/multiplatform/DatadogSDKTesting/ios: build/DatadogSDKTesting/ios
-	mkdir -p $(PWD)/build/multiplatform/DatadogSDKTesting/ios
-	cp -R $(PWD)/build/DatadogSDKTesting/iphoneos.xcarchive/Products/Library/Frameworks/DatadogSDKTesting.framework $(PWD)/build/multiplatform/DatadogSDKTesting/ios/DatadogSDKTesting.framework
-	lipo -create -output build/multiplatform/DatadogSDKTesting/ios/DatadogSDKTesting.framework/DatadogSDKTesting build/DatadogSDKTesting/iphoneos.xcarchive/Products/Library/Frameworks/DatadogSDKTesting.framework/DatadogSDKTesting build/DatadogSDKTesting/iphonesimulator.xcarchive/Products/Library/Frameworks/DatadogSDKTesting.framework/DatadogSDKTesting
-	cp -f build/DatadogSDKTesting/iphonesimulator.xcarchive/Products/Library/Frameworks/DatadogSDKTesting.framework/Modules/DatadogSDKTesting.swiftmodule/* build/multiplatform/DatadogSDKTesting/ios/DatadogSDKTesting.framework/Modules/DatadogSDKTesting.swiftmodule/
-
-build/multiplatform/DatadogSDKTesting/tvos: build/DatadogSDKTesting/tvos
-	mkdir -p $(PWD)/build/multiplatform/DatadogSDKTesting/tvos
-	cp -R $(PWD)/build/DatadogSDKTesting/appletvos.xcarchive/Products/Library/Frameworks/DatadogSDKTesting.framework $(PWD)/build/multiplatform/DatadogSDKTesting/tvos/DatadogSDKTesting.framework
-	lipo -create -output build/multiplatform/DatadogSDKTesting/tvos/DatadogSDKTesting.framework/DatadogSDKTesting build/DatadogSDKTesting/appletvos.xcarchive/Products/Library/Frameworks/DatadogSDKTesting.framework/DatadogSDKTesting build/DatadogSDKTesting/appletvsimulator.xcarchive/Products/Library/Frameworks/DatadogSDKTesting.framework/DatadogSDKTesting
-	cp -f build/DatadogSDKTesting/appletvsimulator.xcarchive/Products/Library/Frameworks/DatadogSDKTesting.framework/Modules/DatadogSDKTesting.swiftmodule/* build/multiplatform/DatadogSDKTesting/tvos/DatadogSDKTesting.framework/Modules/DatadogSDKTesting.swiftmodule/
-
-build/multiplatform/LICENSE: LICENSE
-	cp LICENSE ./build/multiplatform/DatadogSDKTesting/LICENSE
-
-build/multiplatform/DatadogSDKTesting: build/multiplatform/DatadogSDKTesting/ios build/multiplatform/DatadogSDKTesting/mac build/multiplatform/DatadogSDKTesting/tvos
-
-
-build/multiplatform/DatadogSDKTesting.zip: build/multiplatform/LICENSE build/multiplatform/DatadogSDKTesting
-	cd ./build/multiplatform/DatadogSDKTesting; zip -ry ../DatadogSDKTesting.zip ./ios ./mac ./tvos ./LICENSE
-
-
-build/multiplatform: build/multiplatform/dir build/multiplatform/DatadogSDKTesting.zip
-
-release: build/xcframework build/multiplatform
+release: build/xcframework
 
 clean:
 	rm -rf ./build

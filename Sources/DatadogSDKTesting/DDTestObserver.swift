@@ -49,7 +49,7 @@ internal class DDTestObserver: NSObject, XCTestObservation {
         let testSuite = String(testCase.name[suiteRange])
         let testName = String(testCase.name[nameRange])
 
-        let fingerprint = (currentBundleName + testSuite + testName + tracer.env.deviceModel + tracer.env.deviceVersion).hash
+        //let fingerprint = (currentBundleName + testSuite + testName + tracer.env.deviceModel + tracer.env.deviceVersion).hash
 
         let attributes: [String: String] = [
             DDGenericTags.type: DDTestTags.typeTest,

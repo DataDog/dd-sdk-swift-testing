@@ -11,7 +11,6 @@ class StderrCapture {
     private let inputPipe = Pipe()
     private let outputPipe = Pipe()
     private var originalDescriptor = FileHandle.standardError.fileDescriptor
-    private let syncCondition = NSCondition()
 
     static var logDateFormatter: DateFormatter {
         let formatter = DateFormatter()
@@ -87,8 +86,6 @@ class StderrCapture {
 
         if let message = message {
             tracer.logString(string: message, date: date)
-        } else {
-            syncCondition.signal()
         }
     }
 
@@ -110,12 +107,5 @@ class StderrCapture {
         if let message = message {
             tracer.logString(string: message, timeIntervalSinceSpanStart: timeFromStart)
         }
-    }
-
-    func synchronize() {
-        guard isCapturing else { return }
-
-        NSLog("")
-        syncCondition.wait(until: Date().addingTimeInterval(1))
     }
 }

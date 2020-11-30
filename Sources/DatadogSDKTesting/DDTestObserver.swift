@@ -90,8 +90,6 @@ internal class DDTestObserver: NSObject, XCTestObservation {
 
         activeTest.setAttribute(key: DDTestTags.testStatus, value: status)
         addBenchmarkTagsIfNeeded(testCase: testCase, activeTest: activeTest)
-        /// Need to wait for stderr to be written, stdout is synchronous
-        DDTestMonitor.instance?.stderrCapturer.synchronize()
         activeTest.end()
         currentTestSpan = nil
         DDNetworkActivityLogger.endAndCleanAliveSpans()

@@ -271,7 +271,7 @@ internal struct DDEnvironmentValues {
             pipelineNumber = DDEnvironmentValues.getEnvVariable("BITRISE_BUILD_NUMBER")
             jobURL = DDEnvironmentValues.getEnvVariable("BITRISE_APP_URL")
             pipelineURL = DDEnvironmentValues.getEnvVariable("BITRISE_BUILD_URL")
-            pipelineName = DDEnvironmentValues.getEnvVariable("BITRISE_APP_SLUG")
+            pipelineName = DDEnvironmentValues.getEnvVariable("BITRISE_APP_TITLE")
             branchEnv = DDEnvironmentValues.getEnvVariable("BITRISEIO_GIT_BRANCH_DEST")
             if branchEnv?.isEmpty ?? true {
                 branchEnv = DDEnvironmentValues.getEnvVariable("BITRISE_GIT_BRANCH")

@@ -267,11 +267,11 @@ internal struct DDEnvironmentValues {
             commit = tempCommit
 
             workspacePath = DDEnvironmentValues.getEnvVariable("BITRISE_SOURCE_DIR")
-            pipelineId = DDEnvironmentValues.getEnvVariable("BITRISE_TRIGGERED_WORKFLOW_ID")
+            pipelineId = DDEnvironmentValues.getEnvVariable("BITRISE_BUILD_SLUG")
             pipelineNumber = DDEnvironmentValues.getEnvVariable("BITRISE_BUILD_NUMBER")
             jobURL = DDEnvironmentValues.getEnvVariable("BITRISE_APP_URL")
             pipelineURL = DDEnvironmentValues.getEnvVariable("BITRISE_BUILD_URL")
-            pipelineName = DDEnvironmentValues.getEnvVariable("BITRISE_BUILD_SLUG")
+            pipelineName = DDEnvironmentValues.getEnvVariable("BITRISE_APP_SLUG")
             branchEnv = DDEnvironmentValues.getEnvVariable("BITRISEIO_GIT_BRANCH_DEST")
             if branchEnv?.isEmpty ?? true {
                 branchEnv = DDEnvironmentValues.getEnvVariable("BITRISE_GIT_BRANCH")
@@ -312,7 +312,7 @@ internal struct DDEnvironmentValues {
         setAttributeIfExist(toSpan: span, key: DDCITags.ciPipelineId, value: pipelineId)
         setAttributeIfExist(toSpan: span, key: DDCITags.ciPipelineNumber, value: pipelineNumber)
         setAttributeIfExist(toSpan: span, key: DDCITags.ciPipelineURL, value: pipelineURL)
-        setAttributeIfExist(toSpan: span, key: DDCITags.ciPipelineURL, value: pipelineName)
+        setAttributeIfExist(toSpan: span, key: DDCITags.ciPipelineName, value: pipelineName)
         setAttributeIfExist(toSpan: span, key: DDCITags.ciJobURL, value: jobURL)
         setAttributeIfExist(toSpan: span, key: DDCITags.ciWorkspacePath, value: workspacePath)
 

@@ -94,6 +94,7 @@ internal class DDTestObserver: NSObject, XCTestObservation {
         DDTestMonitor.instance?.stderrCapturer.synchronize()
         activeTest.end()
         currentTestSpan = nil
+        DDNetworkActivityLogger.endAndCleanAliveSpans()
     }
 
     func testCase(_ testCase: XCTestCase, didFailWithDescription description: String, inFile filePath: String?, atLine lineNumber: Int) {

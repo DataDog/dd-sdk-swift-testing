@@ -24,6 +24,7 @@ class DDNetworkActivityLogger {
     static let responseHeadersKey = "http.response.headers"
     static let requestPayloadKey = "http.request.payload"
     static let responsePayloadKey = "http.response.payload"
+    static let unfinishedKey = "http.unfinished"
     
     private static func redactHeaders(_ headers: [String: String]) -> [String: String] {
         return Dictionary(uniqueKeysWithValues: headers.map {
@@ -173,6 +174,16 @@ class DDNetworkActivityLogger {
                 return Status.unavailable
             default:
                 return Status.unknown
+        }
+    }
+
+    static func endAndCleanAliveSpans() {
+        spanDictQueue.sync {
+            spanDict.forEach {
+                $0.value.setAttribute(key: unfinishedKey, value: "true")
+                $0.value.end()
+            }
+            spanDict.removeAll()
         }
     }
 }

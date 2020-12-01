@@ -208,6 +208,7 @@ internal struct DDEnvironmentValues {
             workspacePath = DDEnvironmentValues.getEnvVariable("BITBUCKET_CLONE_DIR")
             pipelineId = DDEnvironmentValues.getEnvVariable("BITBUCKET_PIPELINE_UUID")
             pipelineNumber = DDEnvironmentValues.getEnvVariable("BITBUCKET_BUILD_NUMBER")
+            branchEnv = DDEnvironmentValues.getEnvVariable("BITBUCKET_BRANCH")
             pipelineURL = nil
             pipelineName = nil
             jobURL = nil

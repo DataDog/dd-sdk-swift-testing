@@ -12,9 +12,15 @@ extension XCUIApplication {
         self.launchEnvironment[environment] = ProcessInfo.processInfo.environment[environment]
     }
 
+    fileprivate func addPropagationsHeadersToEnvironment(tracer: DDTracer?) {
+        if let headers = tracer?.tracePropagationHTTPHeaders() {
+            self.launchEnvironment.merge(headers) { _, new in new }
+        }
+    }
+
     static let swizzleMethods: Void = {
         guard let originalMethod = class_getInstanceMethod(XCUIApplication.self, #selector(launch)),
-        let swizzledMethod = class_getInstanceMethod(XCUIApplication.self, #selector(swizzled_launch))
+            let swizzledMethod = class_getInstanceMethod(XCUIApplication.self, #selector(swizzled_launch))
         else { return }
         method_exchangeImplementations(originalMethod, swizzledMethod)
     }()
@@ -24,6 +30,9 @@ extension XCUIApplication {
         if let testSpanContext = DDTestMonitor.instance?.tracer.activeSpan?.context {
             self.launchEnvironment["ENVIRONMENT_TRACER_SPANID"] = testSpanContext.spanId.hexString
             self.launchEnvironment["ENVIRONMENT_TRACER_TRACEID"] = testSpanContext.traceId.hexString
+            if !(DDTestMonitor.instance?.tracer.env.disableDDSDKIOSIntegration ?? false) {
+                addPropagationsHeadersToEnvironment(tracer: DDTestMonitor.instance?.tracer)
+            }
             [
                 "DD_TEST_RUNNER",
                 "DATADOG_CLIENT_TOKEN",
@@ -37,7 +46,7 @@ extension XCUIApplication {
                 "DD_ENABLE_RECORD_PAYLOAD",
                 "DD_DISABLE_STDOUT_INSTRUMENTATION",
                 "DD_DISABLE_STDERR_INSTRUMENTATION"
-            ].forEach( addProcessEnvironmentToLaunch )
+            ].forEach(addProcessEnvironmentToLaunch)
         }
         swizzled_launch()
     }

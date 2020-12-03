@@ -21,6 +21,7 @@ internal struct DDEnvironmentValues {
     let disableStderrInstrumentation: Bool
     let extraHTTPHeaders: Set<String>?
     let excludedURLS: Set<String>?
+    let disableDDSDKIOSIntegration: Bool
 
     /// Device Information
     let platformName: String
@@ -84,6 +85,10 @@ internal struct DDEnvironmentValues {
 
         let envStderr = DDEnvironmentValues.getEnvVariable("DD_DISABLE_STDERR_INSTRUMENTATION") as NSString?
         disableStderrInstrumentation = envStderr?.boolValue ?? false
+
+        /// Instrumentation configuration values
+        let envDisableDDSDKIOSIntegration = DDEnvironmentValues.getEnvVariable("DD_DISABLE_SDKIOS_INTEGRATION") as NSString?
+        disableDDSDKIOSIntegration = envDisableDDSDKIOSIntegration?.boolValue ?? false
 
         /// Device Information
         platformName = PlatformUtils.getRunningPlatform()

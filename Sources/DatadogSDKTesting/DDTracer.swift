@@ -41,7 +41,10 @@ internal class DDTracer {
                                                    traceState: TraceState())
         }
 
-        tracerSdk = OpenTelemetrySDK.instance.tracerProvider.get(instrumentationName: "com.datadoghq.testing", instrumentationVersion: "0.2.0") as! TracerSdk
+        let tracerProvider = OpenTelemetrySDK.instance.tracerProvider
+        let traceConfig = TraceConfig().settingMaxNumberOfAttributes(64)
+        tracerProvider.updateActiveTraceConfig(traceConfig)
+        tracerSdk = tracerProvider.get(instrumentationName: "com.datadoghq.testing", instrumentationVersion: "0.2.0") as! TracerSdk
 
         let exporterConfiguration = ExporterConfiguration(
             serviceName: env.ddService ?? ProcessInfo.processInfo.processName,

@@ -67,6 +67,9 @@ internal class DDTestObserver: NSObject, XCTestObservation {
         ]
 
         let testSpan = tracer.startSpan(name: testCase.name, attributes: attributes)
+        if !tracer.env.disableDDSDKIOSIntegration {
+            tracer.addPropagationsHeadersToEnvironment()
+        }
         tracer.env.addTagsToSpan(span: testSpan)
 
         let simpleSpan = SimpleSpanData(spanData: testSpan.toSpanData())

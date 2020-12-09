@@ -209,6 +209,13 @@ internal class DDTracer {
         spanProcessor.forceFlush()
     }
 
+    func addPropagationsHeadersToEnvironment() {
+        let headers = tracePropagationHTTPHeaders()
+        headers.forEach {
+            setenv($0.key, $0.value, 1)
+        }
+    }
+
     func tracePropagationHTTPHeaders() -> [String: String] {
         var headers = [String: String]()
 
@@ -223,8 +230,8 @@ internal class DDTracer {
         }
         tracerSdk.textFormat.inject(spanContext: currentSpan.context, carrier: &headers, setter: HeaderSetter())
 
-        headers[DDHeaders.traceIDField.rawValue] = String(format: "%016llx", currentSpan.context.traceId.rawLowerLong)
-        headers[DDHeaders.parentSpanIDField.rawValue] = currentSpan.context.spanId.hexString
+        headers[DDHeaders.traceIDField.rawValue] = String(currentSpan.context.traceId.rawLowerLong)
+        headers[DDHeaders.parentSpanIDField.rawValue] = String(currentSpan.context.spanId.rawValue)
 
         return headers
     }

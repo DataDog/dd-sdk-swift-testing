@@ -53,8 +53,8 @@ class DDTracerTests: XCTestCase {
         let spanData = span.toSpanData()
         let headers = tracer.tracePropagationHTTPHeaders()
 
-        XCTAssertEqual(headers[DDHeaders.traceIDField.rawValue], String(format: "%016llx", spanData.traceId.rawLowerLong))
-        XCTAssertEqual(headers[DDHeaders.parentSpanIDField.rawValue], spanData.spanId.hexString)
+        XCTAssertEqual(headers[DDHeaders.traceIDField.rawValue], String(spanData.traceId.rawLowerLong))
+        XCTAssertEqual(headers[DDHeaders.parentSpanIDField.rawValue], String(spanData.spanId.rawValue))
 
         span.end()
     }

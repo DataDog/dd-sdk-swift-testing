@@ -133,7 +133,7 @@ internal struct DDEnvironmentValues {
             pipelineNumber = DDEnvironmentValues.getEnvVariable("BUILD_NUMBER")
             pipelineURL = DDEnvironmentValues.getEnvVariable("BUILD_URL")
             pipelineName = nil
-            jobURL = DDEnvironmentValues.getEnvVariable("JOB_URL")
+            jobURL = nil
             branchEnv = DDEnvironmentValues.getEnvVariable("GIT_BRANCH")
             if let branchCopy = branchEnv, branchCopy.hasPrefix("origin/") {
                 branchEnv = String(branchCopy.dropFirst("origin/".count))

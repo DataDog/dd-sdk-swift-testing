@@ -129,7 +129,6 @@ class DDEnvironmentValuesTests: XCTestCase {
         testEnvironment["BUILD_ID"] = "pipeline1"
         testEnvironment["BUILD_NUMBER"] = "45"
         testEnvironment["BUILD_URL"] = "http://jenkins.com/build"
-        testEnvironment["JOB_URL"] = "http://jenkins.com/job"
         testEnvironment["GIT_BRANCH"] = "origin/develop"
 
         setEnvVariables()
@@ -144,7 +143,6 @@ class DDEnvironmentValuesTests: XCTestCase {
         XCTAssertEqual(env.pipelineId!, "pipeline1")
         XCTAssertEqual(env.pipelineNumber!, "45")
         XCTAssertEqual(env.pipelineURL!, "http://jenkins.com/build")
-        XCTAssertEqual(env.jobURL!, "http://jenkins.com/job")
         XCTAssertEqual(env.branch!, "develop")
     }
 
@@ -361,7 +359,6 @@ class DDEnvironmentValuesTests: XCTestCase {
         testEnvironment["BUILD_ID"] = "pipeline1"
         testEnvironment["BUILD_NUMBER"] = "45"
         testEnvironment["BUILD_URL"] = "http://jenkins.com/build"
-        testEnvironment["JOB_URL"] = "http://jenkins.com/job"
         testEnvironment["GIT_BRANCH"] = "origin/develop"
 
         setEnvVariables()
@@ -374,7 +371,7 @@ class DDEnvironmentValuesTests: XCTestCase {
         env.addTagsToSpan(span: span)
 
         spanData = span.toSpanData()
-        XCTAssertEqual(spanData.attributes.count, 10)
+        XCTAssertEqual(spanData.attributes.count, 9)
 
         XCTAssertEqual(spanData.attributes["ci.provider.name"]?.description, "jenkins")
         XCTAssertEqual(spanData.attributes["git.repository_url"]?.description, "/test/repo")
@@ -383,7 +380,6 @@ class DDEnvironmentValuesTests: XCTestCase {
         XCTAssertEqual(spanData.attributes["ci.pipeline.id"]?.description, "pipeline1")
         XCTAssertEqual(spanData.attributes["ci.pipeline.number"]?.description, "45")
         XCTAssertEqual(spanData.attributes["ci.pipeline.url"]?.description, "http://jenkins.com/build")
-        XCTAssertEqual(spanData.attributes["ci.job.url"]?.description, "http://jenkins.com/job")
         XCTAssertEqual(spanData.attributes["git.branch"]?.description, "develop")
     }
 

@@ -15,17 +15,17 @@
         "repositoryURL": "https://github.com/open-telemetry/opentelemetry-swift.git",
         "state": {
           "branch": null,
-          "revision": "044f0fd58e8c4fb1eef42045945cc240e820d94c",
-          "version": null
+          "revision": "9f2be3e42f8c68c83f6b60494638bb7e89534b11",
+          "version": "0.4.0"
         }
       },
       {
         "package": "Opentracing",
         "repositoryURL": "https://github.com/undefinedlabs/opentracing-objc",
         "state": {
-          "branch": "spm-support",
-          "revision": "c3a60aa19668e48f647c2e9d9ce7e364f69bc496",
-          "version": null
+          "branch": null,
+          "revision": "18c1a35ca966236cee0c5a714a51a73ff33384c1",
+          "version": "0.5.2"
         }
       },
       {

@@ -27,7 +27,9 @@
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "NO"
-      enableThreadSanitizer = "YES">
+      enableThreadSanitizer = "YES"
+      codeCoverageEnabled = "YES"
+      onlyGenerateCoverageForSpecifiedTargets = "YES">
       <EnvironmentVariables>
          <EnvironmentVariable
             key = "DD_DONT_EXPORT"
@@ -35,6 +37,22 @@
             isEnabled = "YES">
          </EnvironmentVariable>
       </EnvironmentVariables>
+      <CodeCoverageTargets>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "E157A78B256EB0F000CBCA52"
+            BuildableName = "DatadogSDKTestingTests_macOS.xctest"
+            BlueprintName = "DatadogSDKTestingTests_macOS"
+            ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
+         </BuildableReference>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "E157A717256E9D1D00CBCA52"
+            BuildableName = "DatadogSDKTesting.framework"
+            BlueprintName = "DatadogSDKTesting_macOS"
+            ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
+         </BuildableReference>
+      </CodeCoverageTargets>
       <Testables>
          <TestableReference
             skipped = "NO">

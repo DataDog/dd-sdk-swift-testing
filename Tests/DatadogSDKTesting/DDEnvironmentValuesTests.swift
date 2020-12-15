@@ -73,7 +73,7 @@ class DDEnvironmentValuesTests: XCTestCase {
     func testTravisEnvironment() {
         testEnvironment["TRAVIS"] = "1"
         testEnvironment["TRAVIS_REPO_SLUG"] = "/test/repo"
-        testEnvironment["TRAVIS_COMMIT"] = "37e376448b0ac9b7f54404"
+        testEnvironment["TRAVIS_GIT_COMMIT"] = "37e376448b0ac9b7f54404"
         testEnvironment["TRAVIS_BUILD_DIR"] = "/build"
         testEnvironment["TRAVIS_BUILD_ID"] = "pipeline1"
         testEnvironment["TRAVIS_BUILD_NUMBER"] = "4345"
@@ -87,7 +87,7 @@ class DDEnvironmentValuesTests: XCTestCase {
         let env = DDEnvironmentValues()
 
         XCTAssertTrue(env.isCi)
-        XCTAssertEqual(env.provider!, "travis")
+        XCTAssertEqual(env.provider!, "travisci")
         XCTAssertEqual(env.repository!, "/test/repo")
         XCTAssertEqual(env.commit!, "37e376448b0ac9b7f54404")
         XCTAssertEqual(env.workspacePath!, "/build")
@@ -126,10 +126,10 @@ class DDEnvironmentValuesTests: XCTestCase {
         testEnvironment["GIT_URL"] = "/test/repo"
         testEnvironment["GIT_COMMIT"] = "37e376448b0ac9b7f54404"
         testEnvironment["WORKSPACE"] = "/build"
-        testEnvironment["BUILD_ID"] = "pipeline1"
+        testEnvironment["BUILD_TAG"] = "pipeline1"
         testEnvironment["BUILD_NUMBER"] = "45"
         testEnvironment["BUILD_URL"] = "http://jenkins.com/build"
-        testEnvironment["GIT_BRANCH"] = "origin/develop"
+        testEnvironment["GIT_BRANCH"] = "/tags/name"
 
         setEnvVariables()
 
@@ -143,7 +143,8 @@ class DDEnvironmentValuesTests: XCTestCase {
         XCTAssertEqual(env.pipelineId!, "pipeline1")
         XCTAssertEqual(env.pipelineNumber!, "45")
         XCTAssertEqual(env.pipelineURL!, "http://jenkins.com/build")
-        XCTAssertEqual(env.branch!, "develop")
+        XCTAssertNil(env.branch)
+        XCTAssertEqual(env.tag!, "name")
     }
 
     func testGitlabCIEnvironment() {
@@ -178,7 +179,7 @@ class DDEnvironmentValuesTests: XCTestCase {
 
     func testAppVeyorEnvironment() {
         testEnvironment["APPVEYOR"] = "1"
-        testEnvironment["APPVEYOR_REPO_NAME"] = "/test/repo"
+        testEnvironment["APPVEYOR_REPO_NAME"] = "repo"
         testEnvironment["APPVEYOR_REPO_COMMIT"] = "37e376448b0ac9b7f54404"
         testEnvironment["APPVEYOR_BUILD_FOLDER"] = "/build"
         testEnvironment["APPVEYOR_BUILD_ID"] = "pipeline1"
@@ -192,12 +193,12 @@ class DDEnvironmentValuesTests: XCTestCase {
 
         XCTAssertTrue(env.isCi)
         XCTAssertEqual(env.provider!, "appveyor")
-        XCTAssertEqual(env.repository!, "/test/repo")
+        XCTAssertEqual(env.repository!, "https://github.com/repo.git")
         XCTAssertEqual(env.commit!, "37e376448b0ac9b7f54404")
         XCTAssertEqual(env.workspacePath!, "/build")
         XCTAssertEqual(env.pipelineId!, "pipeline1")
         XCTAssertEqual(env.pipelineNumber!, "4345")
-        XCTAssertEqual(env.pipelineURL!, "https://ci.appveyor.com/project/projectSlug/builds/pipeline1")
+        XCTAssertEqual(env.pipelineURL!, "https://ci.appveyor.com/project/repo/builds/pipeline1")
         XCTAssertEqual(env.branch!, "develop")
     }
 
@@ -205,12 +206,11 @@ class DDEnvironmentValuesTests: XCTestCase {
         testEnvironment["TF_BUILD"] = "1"
         testEnvironment["BUILD_SOURCESDIRECTORY"] = "/test/repo"
         testEnvironment["BUILD_SOURCEVERSION"] = "37e376448b0ac9b7f54404"
-        testEnvironment["BUILD_BUILDID"] = "pipeline1"
-        testEnvironment["BUILD_BUILDNUMBER"] = "4345"
-        testEnvironment["SYSTEM_TEAMFOUNDATIONCOLLECTIONURI"] = "foundationCollection"
-        testEnvironment["SYSTEM_TEAMPROJECT"] = "teamProject"
+        testEnvironment["BUILD_BUILDID"] = "4345"
+        testEnvironment["SYSTEM_TEAMFOUNDATIONSERVERURI"] = "foundationCollection"
+        testEnvironment["SYSTEM_TEAMPROJECTID"] = "teamProject"
         testEnvironment["BUILD_REPOSITORY_URI"] = "/test/repo"
-        testEnvironment["BUILD_SOURCEBRANCHNAME"] = "/refs/develop"
+        testEnvironment["BUILD_SOURCEBRANCH"] = "/refs/heads/develop"
 
         setEnvVariables()
 
@@ -221,9 +221,9 @@ class DDEnvironmentValuesTests: XCTestCase {
         XCTAssertEqual(env.repository!, "/test/repo")
         XCTAssertEqual(env.commit!, "37e376448b0ac9b7f54404")
         XCTAssertEqual(env.workspacePath!, "/test/repo")
-        XCTAssertEqual(env.pipelineId!, "pipeline1")
+        XCTAssertEqual(env.pipelineId!, "4345")
         XCTAssertEqual(env.pipelineNumber!, "4345")
-        XCTAssertEqual(env.pipelineURL!, "foundationCollection/teamProject/_build/results?buildId=pipeline1&_a=summary")
+        XCTAssertEqual(env.pipelineURL!, "foundationCollection/teamProject/_build/results?buildId=4345&_a=summary")
         XCTAssertEqual(env.branch!, "develop")
     }
 
@@ -271,30 +271,7 @@ class DDEnvironmentValuesTests: XCTestCase {
         XCTAssertEqual(env.branch!, "develop")
     }
 
-    func testTeamCityEnvironment() {
-        testEnvironment["TEAMCITY_VERSION"] = "1"
-        testEnvironment["BUILD_VCS_URL"] = "/test/repo"
-        testEnvironment["BUILD_VCS_NUMBER"] = "37e376448b0ac9b7f54404"
-        testEnvironment["BUILD_CHECKOUTDIR"] = "/build"
-        testEnvironment["BUILD_ID"] = "pipeline1"
-        testEnvironment["BUILD_NUMBER"] = "4345"
-        testEnvironment["SERVER_URL"] = "http://teamcity.com"
-
-        setEnvVariables()
-
-        let env = DDEnvironmentValues()
-
-        XCTAssertTrue(env.isCi)
-        XCTAssertEqual(env.provider!, "teamcity")
-        XCTAssertEqual(env.repository!, "/test/repo")
-        XCTAssertEqual(env.commit!, "37e376448b0ac9b7f54404")
-        XCTAssertEqual(env.workspacePath!, "/build")
-        XCTAssertEqual(env.pipelineId!, "pipeline1")
-        XCTAssertEqual(env.pipelineNumber!, "4345")
-        XCTAssertEqual(env.pipelineURL!, "http://teamcity.com/viewLog.html?buildId=pipeline1")
-    }
-
-    func testBuildkiteEnvironment() {
+     func testBuildkiteEnvironment() {
         testEnvironment["BUILDKITE"] = "1"
         testEnvironment["BUILDKITE_REPO"] = "/test/repo"
         testEnvironment["BUILDKITE_COMMIT"] = "37e376448b0ac9b7f54404"
@@ -302,7 +279,7 @@ class DDEnvironmentValuesTests: XCTestCase {
         testEnvironment["BUILDKITE_BUILD_ID"] = "pipeline1"
         testEnvironment["BUILDKITE_BUILD_NUMBER"] = "4345"
         testEnvironment["BUILDKITE_BUILD_URL"] = "http://buildkite.com/build"
-        testEnvironment["BUILDKITE_BRANCH"] = "develop"
+        testEnvironment["BUILDKITE_BRANCH"] = "/origin/develop"
 
         setEnvVariables()
 
@@ -356,10 +333,11 @@ class DDEnvironmentValuesTests: XCTestCase {
         testEnvironment["GIT_URL"] = "/test/repo"
         testEnvironment["GIT_COMMIT"] = "37e376448b0ac9b7f54404"
         testEnvironment["WORKSPACE"] = "/build"
-        testEnvironment["BUILD_ID"] = "pipeline1"
+        testEnvironment["BUILD_TAG"] = "pipeline1"
         testEnvironment["BUILD_NUMBER"] = "45"
         testEnvironment["BUILD_URL"] = "http://jenkins.com/build"
-        testEnvironment["GIT_BRANCH"] = "origin/develop"
+        testEnvironment["GIT_BRANCH"] = "/origin/develop"
+        testEnvironment["JOB_NAME"] = "job1"
 
         setEnvVariables()
 
@@ -371,7 +349,7 @@ class DDEnvironmentValuesTests: XCTestCase {
         env.addTagsToSpan(span: span)
 
         spanData = span.toSpanData()
-        XCTAssertEqual(spanData.attributes.count, 9)
+        XCTAssertEqual(spanData.attributes.count, 10)
 
         XCTAssertEqual(spanData.attributes["ci.provider.name"]?.description, "jenkins")
         XCTAssertEqual(spanData.attributes["git.repository_url"]?.description, "/test/repo")
@@ -380,6 +358,7 @@ class DDEnvironmentValuesTests: XCTestCase {
         XCTAssertEqual(spanData.attributes["ci.pipeline.id"]?.description, "pipeline1")
         XCTAssertEqual(spanData.attributes["ci.pipeline.number"]?.description, "45")
         XCTAssertEqual(spanData.attributes["ci.pipeline.url"]?.description, "http://jenkins.com/build")
+        XCTAssertEqual(spanData.attributes["ci.pipeline.name"]?.description, "job1")
         XCTAssertEqual(spanData.attributes["git.branch"]?.description, "develop")
     }
 

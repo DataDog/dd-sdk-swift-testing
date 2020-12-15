@@ -69,10 +69,16 @@ internal struct DDDeviceTags {
 
 internal struct DDGitTags {
     static let gitRepository    = "git.repository_url"
-    static let gitCommitOld     = "git.commit_sha"
-    static let gitCommit        = "git.commit.sha"
     static let gitBranch        = "git.branch"
     static let gitTag           = "git.tag"
+    static let gitCommit        = "git.commit.sha"
+    static let gitCommitMessage = "git.commit.message"
+    static let gitAuthorName    = "git.commit.author.name"
+    static let gitAuthorEmail   = "git.commit.author.email"
+    static let gitCommitterName = "git.commit.committer.name"
+    static let gitCommitterEmail = "git.commit.committer.email"
+    static let gitCommitOld     = "git.commit_sha"
+
 }
 
 internal struct DDCITags {

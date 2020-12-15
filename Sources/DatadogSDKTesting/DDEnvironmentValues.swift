@@ -33,16 +33,23 @@ internal struct DDEnvironmentValues {
     /// CI  values
     let isCi: Bool
     let provider: String?
-    let repository: String?
-    let commit: String?
     let workspacePath: String?
     let pipelineId: String?
     let pipelineNumber: String?
     let pipelineURL: String?
     let pipelineName: String?
     let jobURL: String?
+
+    /// Git values
+    let repository: String?
     let branch: String?
     let tag: String?
+    let commit: String?
+    let commitMessage: String?
+    let authorName: String?
+    let authorEmail: String?
+    let committerName: String?
+    let committerEmail: String?
 
     static var environment = ProcessInfo.processInfo.environment
 
@@ -304,8 +311,30 @@ internal struct DDEnvironmentValues {
             jobURL = nil
         }
 
-        self.branch = DDEnvironmentValues.normalizedBranchOrTag(branchOrTag: branchEnv)
-        self.tag = DDEnvironmentValues.normalizedBranchOrTag(branchOrTag: tagEnv)
+        branch = DDEnvironmentValues.normalizedBranchOrTag(branchOrTag: branchEnv)
+        tag = DDEnvironmentValues.normalizedBranchOrTag(branchOrTag: tagEnv)
+
+        // Temporary change until proper git information support
+        if DDEnvironmentValues.getEnvVariable("BITRISE_BUILD_NUMBER") != nil {
+            let tempCommit = DDEnvironmentValues.getEnvVariable("BITRISE_GIT_COMMIT")
+            if tempCommit?.isEmpty ?? true {
+                let messageSubject = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_MESSAGE_SUBJECT")
+                let messageBody = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_MESSAGE_BODY")
+                commitMessage = ((messageSubject != nil) ? messageSubject! + ":\n" : "") + (messageBody ?? "")
+            } else {
+                commitMessage = DDEnvironmentValues.getEnvVariable("BITRISE_GIT_MESSAGE")
+            }
+            authorName = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_AUTHOR_NAME")
+            authorEmail = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_AUTHOR_EMAIL")
+            committerName = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_COMMITER_NAME")
+            committerEmail = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_COMMITER_EMAIL")
+        } else {
+            commitMessage = nil
+            authorName = nil
+            authorEmail = nil
+            committerName = nil
+            committerEmail = nil
+        }
     }
 
     func addTagsToSpan(span: Span) {
@@ -326,6 +355,12 @@ internal struct DDEnvironmentValues {
         setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommitOld, value: commit)
         setAttributeIfExist(toSpan: span, key: DDGitTags.gitBranch, value: branch)
         setAttributeIfExist(toSpan: span, key: DDGitTags.gitTag, value: tag)
+
+        setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommitMessage, value: commitMessage)
+        setAttributeIfExist(toSpan: span, key: DDGitTags.gitAuthorName, value: authorName)
+        setAttributeIfExist(toSpan: span, key: DDGitTags.gitAuthorEmail, value: authorEmail)
+        setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommitterName, value: committerName)
+        setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommitterEmail, value: committerEmail)
     }
 
     private func setAttributeIfExist(toSpan span: Span, key: String, value: String?) {

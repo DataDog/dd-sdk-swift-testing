@@ -323,7 +323,7 @@ class DDEnvironmentValuesTests: XCTestCase {
         XCTAssertEqual(env.pipelineNumber!, "4345")
         XCTAssertEqual(env.pipelineName!, "myApp")
         XCTAssertEqual(env.pipelineURL!, "https://app.bitrise.io/build")
-        XCTAssertEqual(env.jobURL!, "https://app.bitrise.io/app")
+        XCTAssertNil(env.jobURL)
         XCTAssertEqual(env.branch!, "develop")
         XCTAssertEqual(env.tag!, "0.0.1")
     }

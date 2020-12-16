@@ -142,7 +142,7 @@ internal struct DDEnvironmentValues {
             pipelineNumber = DDEnvironmentValues.getEnvVariable("CIRCLE_BUILD_NUM")
             pipelineURL = DDEnvironmentValues.getEnvVariable("CIRCLE_BUILD_URL")
             pipelineName = DDEnvironmentValues.getEnvVariable("CIRCLE_PROJECT_REPONAME")
-            jobURL = pipelineURL
+            jobURL = nil
             tagEnv = DDEnvironmentValues.getEnvVariable("CIRCLE_TAG")
             if tagEnv?.isEmpty ?? true {
                 branchEnv = DDEnvironmentValues.getEnvVariable("CIRCLE_BRANCH")
@@ -189,7 +189,7 @@ internal struct DDEnvironmentValues {
             pipelineNumber = DDEnvironmentValues.getEnvVariable("APPVEYOR_BUILD_NUMBER")
             pipelineURL = "https://ci.appveyor.com/project/\(repoName)/builds/\(pipelineId ?? "")"
             pipelineName = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_NAME")
-            jobURL = pipelineURL
+            jobURL = nil
             branchEnv = DDEnvironmentValues.getEnvVariable("APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH")
             if branchEnv?.isEmpty ?? true {
                 branchEnv = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_BRANCH")
@@ -241,7 +241,7 @@ internal struct DDEnvironmentValues {
             pipelineNumber = DDEnvironmentValues.getEnvVariable("BITBUCKET_BUILD_NUMBER")
             pipelineName = DDEnvironmentValues.getEnvVariable("BITBUCKET_REPO_FULL_NAME")
             pipelineURL = "https://bitbucket.org/\(pipelineName ?? "")/addon/pipelines/home#!/results/\(pipelineNumber ?? ""))"
-            jobURL = pipelineURL
+            jobURL = nil
             branchEnv = DDEnvironmentValues.getEnvVariable("BITBUCKET_BRANCH")
             tagEnv = DDEnvironmentValues.getEnvVariable("BITBUCKET_TAG")
         } else if DDEnvironmentValues.getEnvVariable("GITHUB_SHA") != nil {
@@ -254,7 +254,7 @@ internal struct DDEnvironmentValues {
             pipelineNumber = DDEnvironmentValues.getEnvVariable("GITHUB_RUN_NUMBER")
             pipelineURL = "\(repository ?? "")/commit/\(commit ?? "")/checks"
             pipelineName = DDEnvironmentValues.getEnvVariable("GITHUB_WORKFLOW")
-            jobURL = pipelineURL
+            jobURL = nil
             branchEnv = DDEnvironmentValues.getEnvVariable("GITHUB_HEAD_REF")
             if branchEnv?.isEmpty ?? true {
                 branchEnv = DDEnvironmentValues.getEnvVariable("GITHUB_REF")
@@ -290,7 +290,7 @@ internal struct DDEnvironmentValues {
             workspacePath = DDEnvironmentValues.getEnvVariable("BITRISE_SOURCE_DIR")
             pipelineId = DDEnvironmentValues.getEnvVariable("BITRISE_BUILD_SLUG")
             pipelineNumber = DDEnvironmentValues.getEnvVariable("BITRISE_BUILD_NUMBER")
-            jobURL = DDEnvironmentValues.getEnvVariable("BITRISE_APP_URL")
+            jobURL = nil
             pipelineURL = DDEnvironmentValues.getEnvVariable("BITRISE_BUILD_URL")
             pipelineName = DDEnvironmentValues.getEnvVariable("BITRISE_APP_TITLE")
             branchEnv = DDEnvironmentValues.getEnvVariable("BITRISEIO_GIT_BRANCH_DEST")

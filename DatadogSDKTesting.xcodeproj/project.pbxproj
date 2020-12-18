@@ -7,6 +7,33 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E121DF10258CF652009EA71E /* azurepipelines.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF07258CF652009EA71E /* azurepipelines.json */; };
+		E121DF11258CF652009EA71E /* azurepipelines.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF07258CF652009EA71E /* azurepipelines.json */; };
+		E121DF12258CF652009EA71E /* azurepipelines.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF07258CF652009EA71E /* azurepipelines.json */; };
+		E121DF13258CF652009EA71E /* buildkite.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF08258CF652009EA71E /* buildkite.json */; };
+		E121DF14258CF652009EA71E /* buildkite.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF08258CF652009EA71E /* buildkite.json */; };
+		E121DF15258CF652009EA71E /* buildkite.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF08258CF652009EA71E /* buildkite.json */; };
+		E121DF16258CF652009EA71E /* appveyor.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF09258CF652009EA71E /* appveyor.json */; };
+		E121DF17258CF652009EA71E /* appveyor.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF09258CF652009EA71E /* appveyor.json */; };
+		E121DF18258CF652009EA71E /* appveyor.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF09258CF652009EA71E /* appveyor.json */; };
+		E121DF19258CF652009EA71E /* bitbucket.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0A258CF652009EA71E /* bitbucket.json */; };
+		E121DF1A258CF652009EA71E /* bitbucket.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0A258CF652009EA71E /* bitbucket.json */; };
+		E121DF1B258CF652009EA71E /* bitbucket.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0A258CF652009EA71E /* bitbucket.json */; };
+		E121DF1C258CF652009EA71E /* circleci.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0B258CF652009EA71E /* circleci.json */; };
+		E121DF1D258CF652009EA71E /* circleci.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0B258CF652009EA71E /* circleci.json */; };
+		E121DF1E258CF652009EA71E /* circleci.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0B258CF652009EA71E /* circleci.json */; };
+		E121DF1F258CF652009EA71E /* gitlab.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0C258CF652009EA71E /* gitlab.json */; };
+		E121DF20258CF652009EA71E /* gitlab.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0C258CF652009EA71E /* gitlab.json */; };
+		E121DF21258CF652009EA71E /* gitlab.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0C258CF652009EA71E /* gitlab.json */; };
+		E121DF22258CF652009EA71E /* travisci.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0D258CF652009EA71E /* travisci.json */; };
+		E121DF23258CF652009EA71E /* travisci.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0D258CF652009EA71E /* travisci.json */; };
+		E121DF24258CF652009EA71E /* travisci.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0D258CF652009EA71E /* travisci.json */; };
+		E121DF25258CF652009EA71E /* jenkins.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0E258CF652009EA71E /* jenkins.json */; };
+		E121DF26258CF652009EA71E /* jenkins.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0E258CF652009EA71E /* jenkins.json */; };
+		E121DF27258CF652009EA71E /* jenkins.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0E258CF652009EA71E /* jenkins.json */; };
+		E121DF28258CF652009EA71E /* github.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0F258CF652009EA71E /* github.json */; };
+		E121DF29258CF652009EA71E /* github.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0F258CF652009EA71E /* github.json */; };
+		E121DF2A258CF652009EA71E /* github.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0F258CF652009EA71E /* github.json */; };
 		E12515E5254892C600670D23 /* XCUIApplicationSwizzler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12515E4254892C500670D23 /* XCUIApplicationSwizzler.swift */; };
 		E126DD2D253F366200700A40 /* StdoutCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E126DD2C253F366200700A40 /* StdoutCapture.swift */; };
 		E126DD2F253F367600700A40 /* StderrCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E126DD2E253F367600700A40 /* StderrCapture.swift */; };
@@ -233,6 +260,15 @@
 
 /* Begin PBXFileReference section */
 		E116D7DA25248C390022779D /* SwiftExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftExtensions.swift; sourceTree = "<group>"; };
+		E121DF07258CF652009EA71E /* azurepipelines.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = azurepipelines.json; sourceTree = "<group>"; };
+		E121DF08258CF652009EA71E /* buildkite.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = buildkite.json; sourceTree = "<group>"; };
+		E121DF09258CF652009EA71E /* appveyor.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = appveyor.json; sourceTree = "<group>"; };
+		E121DF0A258CF652009EA71E /* bitbucket.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = bitbucket.json; sourceTree = "<group>"; };
+		E121DF0B258CF652009EA71E /* circleci.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = circleci.json; sourceTree = "<group>"; };
+		E121DF0C258CF652009EA71E /* gitlab.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = gitlab.json; sourceTree = "<group>"; };
+		E121DF0D258CF652009EA71E /* travisci.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = travisci.json; sourceTree = "<group>"; };
+		E121DF0E258CF652009EA71E /* jenkins.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = jenkins.json; sourceTree = "<group>"; };
+		E121DF0F258CF652009EA71E /* github.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = github.json; sourceTree = "<group>"; };
 		E12515E4254892C500670D23 /* XCUIApplicationSwizzler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XCUIApplicationSwizzler.swift; sourceTree = "<group>"; };
 		E126DD2C253F366200700A40 /* StdoutCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StdoutCapture.swift; sourceTree = "<group>"; };
 		E126DD2E253F367600700A40 /* StderrCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StderrCapture.swift; sourceTree = "<group>"; };
@@ -360,6 +396,30 @@
 			path = Utils;
 			sourceTree = "<group>";
 		};
+		E121DEA9258CBD88009EA71E /* fixtures */ = {
+			isa = PBXGroup;
+			children = (
+				E121DEAA258CBDB8009EA71E /* ci */,
+			);
+			path = fixtures;
+			sourceTree = "<group>";
+		};
+		E121DEAA258CBDB8009EA71E /* ci */ = {
+			isa = PBXGroup;
+			children = (
+				E121DF09258CF652009EA71E /* appveyor.json */,
+				E121DF07258CF652009EA71E /* azurepipelines.json */,
+				E121DF0A258CF652009EA71E /* bitbucket.json */,
+				E121DF08258CF652009EA71E /* buildkite.json */,
+				E121DF0B258CF652009EA71E /* circleci.json */,
+				E121DF0F258CF652009EA71E /* github.json */,
+				E121DF0C258CF652009EA71E /* gitlab.json */,
+				E121DF0E258CF652009EA71E /* jenkins.json */,
+				E121DF0D258CF652009EA71E /* travisci.json */,
+			);
+			path = ci;
+			sourceTree = "<group>";
+		};
 		E126DD27253F355F00700A40 /* OutputCapture */ = {
 			isa = PBXGroup;
 			children = (
@@ -443,6 +503,7 @@
 		E1ABA05725231E2500ED8AEF /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				E121DEA9258CBD88009EA71E /* fixtures */,
 				E1AD0736252E1E1A003705C1 /* DatadogSDKTesting */,
 				E1ABA05A25231E2500ED8AEF /* Info.plist */,
 			);
@@ -772,6 +833,15 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E121DF11258CF652009EA71E /* azurepipelines.json in Resources */,
+				E121DF29258CF652009EA71E /* github.json in Resources */,
+				E121DF17258CF652009EA71E /* appveyor.json in Resources */,
+				E121DF23258CF652009EA71E /* travisci.json in Resources */,
+				E121DF20258CF652009EA71E /* gitlab.json in Resources */,
+				E121DF1D258CF652009EA71E /* circleci.json in Resources */,
+				E121DF14258CF652009EA71E /* buildkite.json in Resources */,
+				E121DF26258CF652009EA71E /* jenkins.json in Resources */,
+				E121DF1A258CF652009EA71E /* bitbucket.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -779,6 +849,15 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E121DF12258CF652009EA71E /* azurepipelines.json in Resources */,
+				E121DF2A258CF652009EA71E /* github.json in Resources */,
+				E121DF18258CF652009EA71E /* appveyor.json in Resources */,
+				E121DF24258CF652009EA71E /* travisci.json in Resources */,
+				E121DF21258CF652009EA71E /* gitlab.json in Resources */,
+				E121DF1E258CF652009EA71E /* circleci.json in Resources */,
+				E121DF15258CF652009EA71E /* buildkite.json in Resources */,
+				E121DF27258CF652009EA71E /* jenkins.json in Resources */,
+				E121DF1B258CF652009EA71E /* bitbucket.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -793,6 +872,15 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E121DF10258CF652009EA71E /* azurepipelines.json in Resources */,
+				E121DF28258CF652009EA71E /* github.json in Resources */,
+				E121DF16258CF652009EA71E /* appveyor.json in Resources */,
+				E121DF22258CF652009EA71E /* travisci.json in Resources */,
+				E121DF1F258CF652009EA71E /* gitlab.json in Resources */,
+				E121DF1C258CF652009EA71E /* circleci.json in Resources */,
+				E121DF13258CF652009EA71E /* buildkite.json in Resources */,
+				E121DF25258CF652009EA71E /* jenkins.json in Resources */,
+				E121DF19258CF652009EA71E /* bitbucket.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

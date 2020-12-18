@@ -107,6 +107,8 @@ internal struct DDEnvironmentValues {
         /// CI  values
         var branchEnv: String?
         var tagEnv: String?
+        var workspaceEnv: String?
+
         if DDEnvironmentValues.getEnvVariable("TRAVIS") != nil {
             isCi = true
             provider = "travisci"
@@ -115,10 +117,15 @@ internal struct DDEnvironmentValues {
             if branchEnv?.isEmpty ?? true {
                 repositoryEnv = DDEnvironmentValues.getEnvVariable("TRAVIS_REPO_SLUG")
             }
-            repository = repositoryEnv
 
-            commit = DDEnvironmentValues.getEnvVariable("TRAVIS_GIT_COMMIT")
-            workspacePath = DDEnvironmentValues.getEnvVariable("TRAVIS_BUILD_DIR")
+            if let repo = repositoryEnv {
+                repository = "https://github.com/\(repo).git"
+            } else {
+                repository = nil
+            }
+
+            commit = DDEnvironmentValues.getEnvVariable("TRAVIS_COMMIT")
+            workspaceEnv = DDEnvironmentValues.getEnvVariable("TRAVIS_BUILD_DIR")
             pipelineId = DDEnvironmentValues.getEnvVariable("TRAVIS_BUILD_ID")
             pipelineNumber = DDEnvironmentValues.getEnvVariable("TRAVIS_BUILD_NUMBER")
             pipelineURL = DDEnvironmentValues.getEnvVariable("TRAVIS_BUILD_WEB_URL")
@@ -135,14 +142,14 @@ internal struct DDEnvironmentValues {
         } else if DDEnvironmentValues.getEnvVariable("CIRCLECI") != nil {
             isCi = true
             provider = "circleci"
-            repository = DDEnvironmentValues.getEnvVariable("CIRCLE_REPOSITORY_URL")
+            repository = DDEnvironmentValues.removingUserPassword(DDEnvironmentValues.getEnvVariable("CIRCLE_REPOSITORY_URL"))
             commit = DDEnvironmentValues.getEnvVariable("CIRCLE_SHA1")
-            workspacePath = DDEnvironmentValues.getEnvVariable("CIRCLE_WORKING_DIRECTORY")
+            workspaceEnv = DDEnvironmentValues.getEnvVariable("CIRCLE_WORKING_DIRECTORY")
             pipelineId = DDEnvironmentValues.getEnvVariable("CIRCLE_WORKFLOW_ID")
             pipelineNumber = DDEnvironmentValues.getEnvVariable("CIRCLE_BUILD_NUM")
             pipelineURL = DDEnvironmentValues.getEnvVariable("CIRCLE_BUILD_URL")
             pipelineName = DDEnvironmentValues.getEnvVariable("CIRCLE_PROJECT_REPONAME")
-            jobURL = nil
+            jobURL = pipelineURL
             tagEnv = DDEnvironmentValues.getEnvVariable("CIRCLE_TAG")
             if tagEnv?.isEmpty ?? true {
                 branchEnv = DDEnvironmentValues.getEnvVariable("CIRCLE_BRANCH")
@@ -151,13 +158,14 @@ internal struct DDEnvironmentValues {
         } else if DDEnvironmentValues.getEnvVariable("JENKINS_URL") != nil {
             isCi = true
             provider = "jenkins"
-            repository = DDEnvironmentValues.getEnvVariable("GIT_URL")
+            repository = DDEnvironmentValues.removingUserPassword(DDEnvironmentValues.getEnvVariable("GIT_URL"))
             commit = DDEnvironmentValues.getEnvVariable("GIT_COMMIT")
-            workspacePath = DDEnvironmentValues.getEnvVariable("WORKSPACE")
+            workspaceEnv = DDEnvironmentValues.getEnvVariable("WORKSPACE")
             pipelineId = DDEnvironmentValues.getEnvVariable("BUILD_TAG")
             pipelineNumber = DDEnvironmentValues.getEnvVariable("BUILD_NUMBER")
             pipelineURL = DDEnvironmentValues.getEnvVariable("BUILD_URL")
-            pipelineName = DDEnvironmentValues.getEnvVariable("JOB_NAME")
+            pipelineName = DDEnvironmentValues.filterJenkinsJobName(name: DDEnvironmentValues.getEnvVariable("JOB_NAME"),
+                                                                    gitBranch: DDEnvironmentValues.normalizedBranchOrTag(DDEnvironmentValues.getEnvVariable("GIT_BRANCH")))
             jobURL = nil
             branchEnv = DDEnvironmentValues.getEnvVariable("GIT_BRANCH")
             if branchEnv?.contains("tags") ?? false {
@@ -168,12 +176,12 @@ internal struct DDEnvironmentValues {
         } else if DDEnvironmentValues.getEnvVariable("GITLAB_CI") != nil {
             isCi = true
             provider = "gitlab"
-            repository = DDEnvironmentValues.getEnvVariable("CI_REPOSITORY_URL")
+            repository = DDEnvironmentValues.removingUserPassword(DDEnvironmentValues.getEnvVariable("CI_REPOSITORY_URL"))
             commit = DDEnvironmentValues.getEnvVariable("CI_COMMIT_SHA")
-            workspacePath = DDEnvironmentValues.getEnvVariable("CI_PROJECT_DIR")
+            workspaceEnv = DDEnvironmentValues.getEnvVariable("CI_PROJECT_DIR")
             pipelineId = DDEnvironmentValues.getEnvVariable("CI_PIPELINE_ID")
             pipelineNumber = DDEnvironmentValues.getEnvVariable("CI_PIPELINE_IID")
-            pipelineURL = DDEnvironmentValues.getEnvVariable("CI_PIPELINE_URL")
+            pipelineURL = DDEnvironmentValues.getEnvVariable("CI_PIPELINE_URL")?.replacingOccurrences(of: "/-/", with: "/")
             pipelineName = DDEnvironmentValues.getEnvVariable("CI_PROJECT_PATH")
             jobURL = DDEnvironmentValues.getEnvVariable("CI_JOB_URL")
             branchEnv = DDEnvironmentValues.getEnvVariable("CI_COMMIT_BRANCH")
@@ -184,12 +192,12 @@ internal struct DDEnvironmentValues {
             let repoName = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_NAME") ?? ""
             repository = "https://github.com/\(repoName).git"
             commit = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_COMMIT")
-            workspacePath = DDEnvironmentValues.getEnvVariable("APPVEYOR_BUILD_FOLDER")
+            workspaceEnv = DDEnvironmentValues.getEnvVariable("APPVEYOR_BUILD_FOLDER")
             pipelineId = DDEnvironmentValues.getEnvVariable("APPVEYOR_BUILD_ID")
             pipelineNumber = DDEnvironmentValues.getEnvVariable("APPVEYOR_BUILD_NUMBER")
             pipelineURL = "https://ci.appveyor.com/project/\(repoName)/builds/\(pipelineId ?? "")"
             pipelineName = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_NAME")
-            jobURL = nil
+            jobURL = pipelineURL
             branchEnv = DDEnvironmentValues.getEnvVariable("APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH")
             if branchEnv?.isEmpty ?? true {
                 branchEnv = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_BRANCH")
@@ -198,17 +206,17 @@ internal struct DDEnvironmentValues {
         } else if DDEnvironmentValues.getEnvVariable("TF_BUILD") != nil {
             isCi = true
             provider = "azurepipelines"
-            workspacePath = DDEnvironmentValues.getEnvVariable("BUILD_SOURCESDIRECTORY")
+            workspaceEnv = DDEnvironmentValues.getEnvVariable("BUILD_SOURCESDIRECTORY")
             pipelineId = DDEnvironmentValues.getEnvVariable("BUILD_BUILDID")
             pipelineNumber = DDEnvironmentValues.getEnvVariable("BUILD_BUILDID")
 
             let foundationServerUri = DDEnvironmentValues.getEnvVariable("SYSTEM_TEAMFOUNDATIONSERVERURI") ?? ""
             let teamProjectId = DDEnvironmentValues.getEnvVariable("SYSTEM_TEAMPROJECTID") ?? ""
-            pipelineURL = "\(foundationServerUri)/\(teamProjectId)/_build/results?buildId=\(pipelineId ?? "")&_a=summary"
+            pipelineURL = "\(foundationServerUri)\(teamProjectId)/_build/results?buildId=\(pipelineId ?? "")&_a=summary"
             pipelineName = DDEnvironmentValues.getEnvVariable("BUILD_DEFINITIONNAME")
             let jobId = DDEnvironmentValues.getEnvVariable("SYSTEM_JOBID") ?? ""
             let taskId = DDEnvironmentValues.getEnvVariable("SYSTEM_TASKINSTANCEID") ?? ""
-            jobURL = "\(foundationServerUri)/\(teamProjectId)/_build/results?buildId=\(pipelineId ?? "")&view=logs&j=\(jobId)&t=\(taskId)"
+            jobURL = "\(foundationServerUri)\(teamProjectId)/_build/results?buildId=\(pipelineId ?? "")&view=logs&j=\(jobId)&t=\(taskId)"
 
             var repositoryEnv = DDEnvironmentValues.getEnvVariable("SYSTEM_PULLREQUEST_SOURCEREPOSITORYURI")
             if repositoryEnv?.isEmpty ?? true {
@@ -233,28 +241,29 @@ internal struct DDEnvironmentValues {
             }
         } else if DDEnvironmentValues.getEnvVariable("BITBUCKET_COMMIT") != nil {
             isCi = true
-            provider = "bitbucketpipelines"
+            provider = "bitbucket"
             repository = DDEnvironmentValues.getEnvVariable("BITBUCKET_GIT_SSH_ORIGIN")
             commit = DDEnvironmentValues.getEnvVariable("BITBUCKET_COMMIT")
-            workspacePath = DDEnvironmentValues.getEnvVariable("BITBUCKET_CLONE_DIR")
+            workspaceEnv = DDEnvironmentValues.getEnvVariable("BITBUCKET_CLONE_DIR")
             pipelineId = DDEnvironmentValues.getEnvVariable("BITBUCKET_PIPELINE_UUID")?.replacingOccurrences(of: "[{}]", with: "", options: .regularExpression)
             pipelineNumber = DDEnvironmentValues.getEnvVariable("BITBUCKET_BUILD_NUMBER")
             pipelineName = DDEnvironmentValues.getEnvVariable("BITBUCKET_REPO_FULL_NAME")
-            pipelineURL = "https://bitbucket.org/\(pipelineName ?? "")/addon/pipelines/home#!/results/\(pipelineNumber ?? ""))"
-            jobURL = nil
+            pipelineURL = "https://bitbucket.org/\(pipelineName ?? "")/addon/pipelines/home#!/results/\(pipelineNumber ?? "")"
+            jobURL = pipelineURL
             branchEnv = DDEnvironmentValues.getEnvVariable("BITBUCKET_BRANCH")
             tagEnv = DDEnvironmentValues.getEnvVariable("BITBUCKET_TAG")
         } else if DDEnvironmentValues.getEnvVariable("GITHUB_SHA") != nil {
             isCi = true
             provider = "github"
-            repository = DDEnvironmentValues.getEnvVariable("GITHUB_REPOSITORY")
+            let repositoryEnv = DDEnvironmentValues.getEnvVariable("GITHUB_REPOSITORY")
+            repository = "https://github.com/\(repositoryEnv ?? "").git"
             commit = DDEnvironmentValues.getEnvVariable("GITHUB_SHA")
-            workspacePath = DDEnvironmentValues.getEnvVariable("GITHUB_WORKSPACE")
+            workspaceEnv = DDEnvironmentValues.getEnvVariable("GITHUB_WORKSPACE")
             pipelineId = DDEnvironmentValues.getEnvVariable("GITHUB_RUN_ID")
             pipelineNumber = DDEnvironmentValues.getEnvVariable("GITHUB_RUN_NUMBER")
-            pipelineURL = "\(repository ?? "")/commit/\(commit ?? "")/checks"
+            pipelineURL = "https://github.com/\(repositoryEnv ?? "")/commit/\(commit ?? "")/checks"
             pipelineName = DDEnvironmentValues.getEnvVariable("GITHUB_WORKFLOW")
-            jobURL = nil
+            jobURL = pipelineURL
             branchEnv = DDEnvironmentValues.getEnvVariable("GITHUB_HEAD_REF")
             if branchEnv?.isEmpty ?? true {
                 branchEnv = DDEnvironmentValues.getEnvVariable("GITHUB_REF")
@@ -266,9 +275,9 @@ internal struct DDEnvironmentValues {
         } else if DDEnvironmentValues.getEnvVariable("BUILDKITE") != nil {
             isCi = true
             provider = "buildkite"
-            repository = DDEnvironmentValues.getEnvVariable("BUILDKITE_REPO")
+            repository = DDEnvironmentValues.removingUserPassword(DDEnvironmentValues.getEnvVariable("BUILDKITE_REPO"))
             commit = DDEnvironmentValues.getEnvVariable("BUILDKITE_COMMIT")
-            workspacePath = DDEnvironmentValues.getEnvVariable("BUILDKITE_BUILD_CHECKOUT_PATH")
+            workspaceEnv = DDEnvironmentValues.getEnvVariable("BUILDKITE_BUILD_CHECKOUT_PATH")
             pipelineId = DDEnvironmentValues.getEnvVariable("BUILDKITE_BUILD_ID")
             pipelineNumber = DDEnvironmentValues.getEnvVariable("BUILDKITE_BUILD_NUMBER")
             pipelineURL = DDEnvironmentValues.getEnvVariable("BUILDKITE_BUILD_URL")
@@ -287,7 +296,7 @@ internal struct DDEnvironmentValues {
             }
             commit = tempCommit
 
-            workspacePath = DDEnvironmentValues.getEnvVariable("BITRISE_SOURCE_DIR")
+            workspaceEnv = DDEnvironmentValues.getEnvVariable("BITRISE_SOURCE_DIR")
             pipelineId = DDEnvironmentValues.getEnvVariable("BITRISE_BUILD_SLUG")
             pipelineNumber = DDEnvironmentValues.getEnvVariable("BITRISE_BUILD_NUMBER")
             jobURL = nil
@@ -303,7 +312,6 @@ internal struct DDEnvironmentValues {
             provider = nil
             repository = nil
             commit = nil
-            workspacePath = nil
             pipelineId = nil
             pipelineNumber = nil
             pipelineURL = nil
@@ -311,8 +319,9 @@ internal struct DDEnvironmentValues {
             jobURL = nil
         }
 
-        branch = DDEnvironmentValues.normalizedBranchOrTag(branchOrTag: branchEnv)
-        tag = DDEnvironmentValues.normalizedBranchOrTag(branchOrTag: tagEnv)
+        branch = DDEnvironmentValues.normalizedBranchOrTag(branchEnv)
+        tag = DDEnvironmentValues.normalizedBranchOrTag(tagEnv)
+        workspacePath = DDEnvironmentValues.expandingTilde(workspaceEnv)
 
         // Temporary change until proper git information support
         if DDEnvironmentValues.getEnvVariable("BITRISE_BUILD_NUMBER") != nil {
@@ -369,18 +378,79 @@ internal struct DDEnvironmentValues {
         }
     }
 
-    private static func normalizedBranchOrTag(branchOrTag value: String?) -> String? {
+    private static func normalizedBranchOrTag(_ value: String?) -> String? {
         var result = value
-        if let value = value {
-            if value.hasPrefix("/refs/heads/") {
-                result = String(value.dropFirst("/refs/heads/".count))
-            } else if value.hasPrefix("/origin/") {
-                result = String(value.dropFirst("/origin/".count))
-            } else if value.hasPrefix("/tags/") {
-                result = String(value.dropFirst("/tags/".count))
+
+        if let aux = result, aux.hasPrefix("/") {
+            result = String(aux.dropFirst("/".count))
+        }
+        if let aux = result, aux.hasPrefix("refs/") {
+            result = String(aux.dropFirst("refs/".count))
+        }
+        if let aux = result, aux.hasPrefix("heads/") {
+            result = String(aux.dropFirst("heads/".count))
+        }
+        if let aux = result, aux.hasPrefix("origin/") {
+            result = String(aux.dropFirst("origin/".count))
+        }
+        if let aux = result, aux.hasPrefix("tags/") {
+            result = String(aux.dropFirst("tags/".count))
+        }
+        if let aux = result, aux.hasPrefix("tag/") {
+            result = String(aux.dropFirst("tag/".count))
+        }
+        return result
+    }
+
+    private static func expandingTilde(_ path: String?) -> String? {
+        var result = path
+        if let aux = result {
+            if aux == "~" {
+                result = DDEnvironmentValues.getEnvVariable("HOME")
+            } else if aux.hasPrefix("~"), let home = DDEnvironmentValues.getEnvVariable("HOME") {
+                result = aux.replacingOccurrences(of: "~/", with: home + "/")
             }
         }
         return result
+    }
+
+    private static func removingUserPassword(_ string: String?) -> String? {
+        var result = string
+        if let string = string, let url = URL(string: string) {
+            var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+            components?.user = nil
+            components?.password = nil
+            result = components?.string
+        }
+        return result
+    }
+
+    private static func filterJenkinsJobName(name: String?, gitBranch: String?) -> String? {
+        guard let name = name else { return nil }
+        var jobNameNoBranch = name
+
+        if let gitBranch = gitBranch {
+            jobNameNoBranch = name.trimmingCharacters(in: .whitespacesAndNewlines)
+                .replacingOccurrences(of: "/" + gitBranch, with: "")
+        }
+
+        var configurations = [String: String]()
+        let jobNameParts = jobNameNoBranch.split(separator: "/")
+        if jobNameParts.count > 1, jobNameParts[1].contains("=") {
+            let configStr = jobNameParts[1].lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+            let configsKeyValue = configStr.split(separator: ",")
+            configsKeyValue.forEach {
+                let keyValue = $0.trimmingCharacters(in: .whitespacesAndNewlines)
+                    .split(separator: "=")
+                configurations[String(keyValue[0])] = String(keyValue[1])
+            }
+        }
+
+        if configurations.isEmpty {
+            return jobNameNoBranch
+        } else {
+            return String(jobNameParts[0])
+        }
     }
 
     static func getEnvVariable(_ name: String) -> String? {

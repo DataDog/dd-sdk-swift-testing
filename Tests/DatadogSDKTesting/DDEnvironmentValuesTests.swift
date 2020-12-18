@@ -4,11 +4,12 @@
  * Copyright 2019-2020 Datadog, Inc.
  */
 
-import XCTest
 @testable import DatadogSDKTesting
-import OpenTelemetrySdk
 import OpenTelemetryApi
+import OpenTelemetrySdk
+import XCTest
 
+struct FixtureError: Error {}
 
 class DDEnvironmentValuesTests: XCTestCase {
     var testEnvironment = [String: String]()
@@ -17,12 +18,14 @@ class DDEnvironmentValuesTests: XCTestCase {
     var tracerSdk: Tracer!
 
     override func setUp() {
+        testEnvironment = [String: String]()
         DDEnvironmentValues.environment = [String: String]()
         tracerSdk = tracerSdkFactory.get(instrumentationName: "SpanBuilderSdkTest")
     }
 
-    func setEnvVariables() {
+    private func setEnvVariables() {
         DDEnvironmentValues.environment = testEnvironment
+        testEnvironment = [String: String]()
     }
 
     func testWhenDatadogEnvironmentAreSet_TheyAreStoredCorrectly() {
@@ -68,264 +71,6 @@ class DDEnvironmentValuesTests: XCTestCase {
         XCTAssertEqual(env.extraHTTPHeaders?.count, 4)
         XCTAssertEqual(env.excludedURLS?.count, 1)
         XCTAssertEqual(env.enableRecordPayload, true)
-    }
-
-    func testTravisEnvironment() {
-        testEnvironment["TRAVIS"] = "1"
-        testEnvironment["TRAVIS_REPO_SLUG"] = "/test/repo"
-        testEnvironment["TRAVIS_GIT_COMMIT"] = "37e376448b0ac9b7f54404"
-        testEnvironment["TRAVIS_BUILD_DIR"] = "/build"
-        testEnvironment["TRAVIS_BUILD_ID"] = "pipeline1"
-        testEnvironment["TRAVIS_BUILD_NUMBER"] = "4345"
-        testEnvironment["TRAVIS_BUILD_WEB_URL"] = "http://travis.com/build"
-        testEnvironment["TRAVIS_JOB_WEB_URL"] = "http://travis.com/job"
-        testEnvironment["TRAVIS_PULL_REQUEST_BRANCH"] = ""
-        testEnvironment["TRAVIS_BRANCH"] = "develop"
-
-        setEnvVariables()
-
-        let env = DDEnvironmentValues()
-
-        XCTAssertTrue(env.isCi)
-        XCTAssertEqual(env.provider!, "travisci")
-        XCTAssertEqual(env.repository!, "/test/repo")
-        XCTAssertEqual(env.commit!, "37e376448b0ac9b7f54404")
-        XCTAssertEqual(env.workspacePath!, "/build")
-        XCTAssertEqual(env.pipelineId!, "pipeline1")
-        XCTAssertEqual(env.pipelineNumber!, "4345")
-        XCTAssertEqual(env.pipelineURL!, "http://travis.com/build")
-        XCTAssertEqual(env.jobURL!, "http://travis.com/job")
-        XCTAssertEqual(env.branch!, "develop")
-    }
-
-    func testCircleCIEnvironment() {
-        testEnvironment["CIRCLECI"] = "1"
-        testEnvironment["CIRCLE_REPOSITORY_URL"] = "/test/repo"
-        testEnvironment["CIRCLE_SHA1"] = "37e376448b0ac9b7f54404"
-        testEnvironment["CIRCLE_WORKING_DIRECTORY"] = "/build"
-        testEnvironment["CIRCLE_BUILD_NUM"] = "43"
-        testEnvironment["CIRCLE_BUILD_URL"] = "http://circleenv.com/build"
-        testEnvironment["CIRCLE_BRANCH"] = "develop"
-
-        setEnvVariables()
-
-        let env = DDEnvironmentValues()
-
-        XCTAssertTrue(env.isCi)
-        XCTAssertEqual(env.provider!, "circleci")
-        XCTAssertEqual(env.repository!, "/test/repo")
-        XCTAssertEqual(env.commit!, "37e376448b0ac9b7f54404")
-        XCTAssertEqual(env.workspacePath!, "/build")
-        XCTAssertEqual(env.pipelineNumber!, "43")
-        XCTAssertEqual(env.pipelineURL!, "http://circleenv.com/build")
-        XCTAssertEqual(env.branch!, "develop")
-    }
-
-    func testJenkinsEnvironment() {
-        testEnvironment["JENKINS_URL"] = "http://jenkins.com/"
-        testEnvironment["GIT_URL"] = "/test/repo"
-        testEnvironment["GIT_COMMIT"] = "37e376448b0ac9b7f54404"
-        testEnvironment["WORKSPACE"] = "/build"
-        testEnvironment["BUILD_TAG"] = "pipeline1"
-        testEnvironment["BUILD_NUMBER"] = "45"
-        testEnvironment["BUILD_URL"] = "http://jenkins.com/build"
-        testEnvironment["GIT_BRANCH"] = "/tags/name"
-
-        setEnvVariables()
-
-        let env = DDEnvironmentValues()
-
-        XCTAssertTrue(env.isCi)
-        XCTAssertEqual(env.provider!, "jenkins")
-        XCTAssertEqual(env.repository!, "/test/repo")
-        XCTAssertEqual(env.commit!, "37e376448b0ac9b7f54404")
-        XCTAssertEqual(env.workspacePath!, "/build")
-        XCTAssertEqual(env.pipelineId!, "pipeline1")
-        XCTAssertEqual(env.pipelineNumber!, "45")
-        XCTAssertEqual(env.pipelineURL!, "http://jenkins.com/build")
-        XCTAssertNil(env.branch)
-        XCTAssertEqual(env.tag!, "name")
-    }
-
-    func testGitlabCIEnvironment() {
-        testEnvironment["GITLAB_CI"] = "1"
-        testEnvironment["CI_REPOSITORY_URL"] = "/test/repo"
-        testEnvironment["CI_COMMIT_SHA"] = "37e376448b0ac9b7f54404"
-        testEnvironment["CI_PROJECT_DIR"] = "/build"
-        testEnvironment["CI_PIPELINE_ID"] = "pipeline1"
-        testEnvironment["CI_PIPELINE_IID"] = "4345"
-        testEnvironment["CI_PIPELINE_URL"] = "http://travis.com/build"
-        testEnvironment["CI_JOB_URL"] = "http://travis.com/job"
-        testEnvironment["TRAVIS_PULL_REQUEST_BRANCH"] = ""
-        testEnvironment["CI_COMMIT_BRANCH"] = "develop"
-        testEnvironment["CI_COMMIT_TAG"] = "0.1.1"
-
-        setEnvVariables()
-
-        let env = DDEnvironmentValues()
-
-        XCTAssertTrue(env.isCi)
-        XCTAssertEqual(env.provider!, "gitlab")
-        XCTAssertEqual(env.repository!, "/test/repo")
-        XCTAssertEqual(env.commit!, "37e376448b0ac9b7f54404")
-        XCTAssertEqual(env.workspacePath!, "/build")
-        XCTAssertEqual(env.pipelineId!, "pipeline1")
-        XCTAssertEqual(env.pipelineNumber!, "4345")
-        XCTAssertEqual(env.pipelineURL!, "http://travis.com/build")
-        XCTAssertEqual(env.jobURL!, "http://travis.com/job")
-        XCTAssertEqual(env.branch!, "develop")
-        XCTAssertEqual(env.tag!, "0.1.1")
-    }
-
-    func testAppVeyorEnvironment() {
-        testEnvironment["APPVEYOR"] = "1"
-        testEnvironment["APPVEYOR_REPO_NAME"] = "repo"
-        testEnvironment["APPVEYOR_REPO_COMMIT"] = "37e376448b0ac9b7f54404"
-        testEnvironment["APPVEYOR_BUILD_FOLDER"] = "/build"
-        testEnvironment["APPVEYOR_BUILD_ID"] = "pipeline1"
-        testEnvironment["APPVEYOR_BUILD_NUMBER"] = "4345"
-        testEnvironment["APPVEYOR_PROJECT_SLUG"] = "projectSlug"
-        testEnvironment["APPVEYOR_REPO_BRANCH"] = "develop"
-
-        setEnvVariables()
-
-        let env = DDEnvironmentValues()
-
-        XCTAssertTrue(env.isCi)
-        XCTAssertEqual(env.provider!, "appveyor")
-        XCTAssertEqual(env.repository!, "https://github.com/repo.git")
-        XCTAssertEqual(env.commit!, "37e376448b0ac9b7f54404")
-        XCTAssertEqual(env.workspacePath!, "/build")
-        XCTAssertEqual(env.pipelineId!, "pipeline1")
-        XCTAssertEqual(env.pipelineNumber!, "4345")
-        XCTAssertEqual(env.pipelineURL!, "https://ci.appveyor.com/project/repo/builds/pipeline1")
-        XCTAssertEqual(env.branch!, "develop")
-    }
-
-    func testAzureEnvironment() {
-        testEnvironment["TF_BUILD"] = "1"
-        testEnvironment["BUILD_SOURCESDIRECTORY"] = "/test/repo"
-        testEnvironment["BUILD_SOURCEVERSION"] = "37e376448b0ac9b7f54404"
-        testEnvironment["BUILD_BUILDID"] = "4345"
-        testEnvironment["SYSTEM_TEAMFOUNDATIONSERVERURI"] = "foundationCollection"
-        testEnvironment["SYSTEM_TEAMPROJECTID"] = "teamProject"
-        testEnvironment["BUILD_REPOSITORY_URI"] = "/test/repo"
-        testEnvironment["BUILD_SOURCEBRANCH"] = "/refs/heads/develop"
-
-        setEnvVariables()
-
-        let env = DDEnvironmentValues()
-
-        XCTAssertTrue(env.isCi)
-        XCTAssertEqual(env.provider!, "azurepipelines")
-        XCTAssertEqual(env.repository!, "/test/repo")
-        XCTAssertEqual(env.commit!, "37e376448b0ac9b7f54404")
-        XCTAssertEqual(env.workspacePath!, "/test/repo")
-        XCTAssertEqual(env.pipelineId!, "4345")
-        XCTAssertEqual(env.pipelineNumber!, "4345")
-        XCTAssertEqual(env.pipelineURL!, "foundationCollection/teamProject/_build/results?buildId=4345&_a=summary")
-        XCTAssertEqual(env.branch!, "develop")
-    }
-
-    func testBitbucketEnvironment() {
-        testEnvironment["BITBUCKET_GIT_SSH_ORIGIN"] = "/test/repo"
-        testEnvironment["BITBUCKET_COMMIT"] = "37e376448b0ac9b7f54404"
-        testEnvironment["BITBUCKET_CLONE_DIR"] = "/build"
-        testEnvironment["BITBUCKET_PIPELINE_UUID"] = "pipeline1"
-        testEnvironment["BITBUCKET_BUILD_NUMBER"] = "4345"
-
-        setEnvVariables()
-
-        let env = DDEnvironmentValues()
-
-        XCTAssertTrue(env.isCi)
-        XCTAssertEqual(env.provider!, "bitbucketpipelines")
-        XCTAssertEqual(env.repository!, "/test/repo")
-        XCTAssertEqual(env.commit!, "37e376448b0ac9b7f54404")
-        XCTAssertEqual(env.workspacePath!, "/build")
-        XCTAssertEqual(env.pipelineId!, "pipeline1")
-        XCTAssertEqual(env.pipelineNumber!, "4345")
-    }
-
-    func testGithubEnvironment() {
-        testEnvironment["GITHUB_REPOSITORY"] = "http://github.com/project"
-        testEnvironment["GITHUB_SHA"] = "37e376448b0ac9b7f54404"
-        testEnvironment["GITHUB_WORKSPACE"] = "/build"
-        testEnvironment["GITHUB_RUN_ID"] = "pipeline1"
-        testEnvironment["GITHUB_RUN_NUMBER"] = "4345"
-        testEnvironment["TRAVIS_PULL_REQUEST_BRANCH"] = ""
-        testEnvironment["GITHUB_REF"] = "/refs/heads/develop"
-
-        setEnvVariables()
-
-        let env = DDEnvironmentValues()
-
-        XCTAssertTrue(env.isCi)
-        XCTAssertEqual(env.provider!, "github")
-        XCTAssertEqual(env.repository!, "http://github.com/project")
-        XCTAssertEqual(env.commit!, "37e376448b0ac9b7f54404")
-        XCTAssertEqual(env.workspacePath!, "/build")
-        XCTAssertEqual(env.pipelineId!, "pipeline1")
-        XCTAssertEqual(env.pipelineNumber!, "4345")
-        XCTAssertEqual(env.pipelineURL!, "http://github.com/project/commit/37e376448b0ac9b7f54404/checks")
-        XCTAssertEqual(env.branch!, "develop")
-    }
-
-     func testBuildkiteEnvironment() {
-        testEnvironment["BUILDKITE"] = "1"
-        testEnvironment["BUILDKITE_REPO"] = "/test/repo"
-        testEnvironment["BUILDKITE_COMMIT"] = "37e376448b0ac9b7f54404"
-        testEnvironment["BUILDKITE_BUILD_CHECKOUT_PATH"] = "/build"
-        testEnvironment["BUILDKITE_BUILD_ID"] = "pipeline1"
-        testEnvironment["BUILDKITE_BUILD_NUMBER"] = "4345"
-        testEnvironment["BUILDKITE_BUILD_URL"] = "http://buildkite.com/build"
-        testEnvironment["BUILDKITE_BRANCH"] = "/origin/develop"
-
-        setEnvVariables()
-
-        let env = DDEnvironmentValues()
-
-        XCTAssertTrue(env.isCi)
-        XCTAssertEqual(env.provider!, "buildkite")
-        XCTAssertEqual(env.repository!, "/test/repo")
-        XCTAssertEqual(env.commit!, "37e376448b0ac9b7f54404")
-        XCTAssertEqual(env.workspacePath!, "/build")
-        XCTAssertEqual(env.pipelineId!, "pipeline1")
-        XCTAssertEqual(env.pipelineNumber!, "4345")
-        XCTAssertEqual(env.pipelineURL!, "http://buildkite.com/build")
-        XCTAssertEqual(env.branch!, "develop")
-    }
-
-    func testBitriseEnvironment() {
-        testEnvironment["BITRISE_BUILD_NUMBER"] = "1"
-        testEnvironment["GIT_REPOSITORY_URL"] = "/test/repo"
-        testEnvironment["BITRISE_GIT_COMMIT"] = "37e376448b0ac9b7f54404"
-        testEnvironment["BITRISE_SOURCE_DIR"] = "/build"
-        testEnvironment["BITRISE_BUILD_SLUG"] = "33234"
-        testEnvironment["BITRISE_APP_TITLE"] = "myApp"
-        testEnvironment["BITRISE_BUILD_NUMBER"] = "4345"
-        testEnvironment["BITRISE_APP_URL"] = "https://app.bitrise.io/app"
-        testEnvironment["BITRISE_BUILD_URL"] = "https://app.bitrise.io/build"
-        testEnvironment["TRAVIS_PULL_REQUEST_BRANCH"] = ""
-        testEnvironment["BITRISE_GIT_BRANCH"] = "develop"
-        testEnvironment["BITRISE_GIT_TAG"] = "0.0.1"
-
-        setEnvVariables()
-
-        let env = DDEnvironmentValues()
-
-        XCTAssertTrue(env.isCi)
-        XCTAssertEqual(env.provider!, "bitrise")
-        XCTAssertEqual(env.repository!, "/test/repo")
-        XCTAssertEqual(env.commit!, "37e376448b0ac9b7f54404")
-        XCTAssertEqual(env.workspacePath!, "/build")
-        XCTAssertEqual(env.pipelineId!, "33234")
-        XCTAssertEqual(env.pipelineNumber!, "4345")
-        XCTAssertEqual(env.pipelineName!, "myApp")
-        XCTAssertEqual(env.pipelineURL!, "https://app.bitrise.io/build")
-        XCTAssertNil(env.jobURL)
-        XCTAssertEqual(env.branch!, "develop")
-        XCTAssertEqual(env.tag!, "0.0.1")
     }
 
     func testAddsTagsToSpan() {
@@ -376,8 +121,81 @@ class DDEnvironmentValuesTests: XCTestCase {
         XCTAssertEqual(spanData.attributes.count, 0)
     }
 
-    func createSimpleSpan() -> RecordEventsReadableSpan {
+    private func createSimpleSpan() -> RecordEventsReadableSpan {
         return tracerSdk.spanBuilder(spanName: "spanName").startSpan() as! RecordEventsReadableSpan
+    }
 
+    func testTags() {
+        let bundle = Bundle(for: type(of: self))
+        let fixturesURL = bundle.resourceURL!
+        let jsonEnumerator = FileManager.default.enumerator(at: fixturesURL,
+                                                            includingPropertiesForKeys: nil)!
+
+        for case let jsonFile as URL in jsonEnumerator {
+            print("validating \(jsonFile.lastPathComponent)")
+            validateSpec(file: jsonFile)
+        }
+    }
+
+    private func validateSpec(file: URL) {
+        do {
+            let data = try Data(contentsOf: file)
+            guard let json = try JSONSerialization.jsonObject(with: data, options: []) as? [Any] else { throw FixtureError() }
+            try json.forEach { spec in
+                DDEnvironmentValues.environment = [String: String]()
+                guard let spec = spec as? [[String: String]] else { throw FixtureError() }
+                spec[0].forEach {
+                    testEnvironment[$0.key] = $0.value
+                }
+
+                setEnvVariables()
+                let span = createSimpleSpan()
+                var spanData = span.toSpanData()
+                let env = DDEnvironmentValues()
+                env.addTagsToSpan(span: span)
+                spanData = span.toSpanData()
+
+                spec[1].forEach {
+                    XCTAssertEqual(spanData.attributes[$0.key]?.description, $0.value)
+                    if spanData.attributes[$0.key]?.description != $0.value {
+                        print("\(spanData.attributes[$0.key]!.description) != \($0.value)")
+                    }
+                }
+            }
+        } catch {
+            XCTFail("Spec at \(file.lastPathComponent) is not valid")
+        }
+    }
+
+    func testBitriseEnvironment() {
+        testEnvironment["BITRISE_BUILD_NUMBER"] = "1"
+        testEnvironment["GIT_REPOSITORY_URL"] = "/test/repo"
+        testEnvironment["BITRISE_GIT_COMMIT"] = "37e376448b0ac9b7f54404"
+        testEnvironment["BITRISE_SOURCE_DIR"] = "/build"
+        testEnvironment["BITRISE_BUILD_SLUG"] = "33234"
+        testEnvironment["BITRISE_APP_TITLE"] = "myApp"
+        testEnvironment["BITRISE_BUILD_NUMBER"] = "4345"
+        testEnvironment["BITRISE_APP_URL"] = "https://app.bitrise.io/app"
+        testEnvironment["BITRISE_BUILD_URL"] = "https://app.bitrise.io/build"
+        testEnvironment["TRAVIS_PULL_REQUEST_BRANCH"] = ""
+        testEnvironment["BITRISE_GIT_BRANCH"] = "develop"
+        testEnvironment["BITRISE_GIT_TAG"] = "0.0.1"
+
+        setEnvVariables()
+
+        let env = DDEnvironmentValues()
+
+        XCTAssertTrue(env.isCi)
+        XCTAssertEqual(env.provider!, "bitrise")
+        XCTAssertEqual(env.repository!, "/test/repo")
+        XCTAssertEqual(env.commit!, "37e376448b0ac9b7f54404")
+        XCTAssertEqual(env.workspacePath!, "/build")
+        XCTAssertEqual(env.pipelineId!, "33234")
+        XCTAssertEqual(env.pipelineNumber!, "4345")
+        XCTAssertEqual(env.pipelineName!, "myApp")
+        XCTAssertEqual(env.pipelineURL!, "https://app.bitrise.io/build")
+        XCTAssertNil(env.jobURL)
+        XCTAssertEqual(env.branch!, "develop")
+        XCTAssertEqual(env.tag!, "0.0.1")
     }
 }

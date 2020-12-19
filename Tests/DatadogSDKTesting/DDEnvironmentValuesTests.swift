@@ -13,34 +13,34 @@ struct FixtureError: Error {}
 
 class DDEnvironmentValuesTests: XCTestCase {
     var testEnvironment = [String: String]()
-
+    
     var tracerSdkFactory = TracerSdkProvider()
     var tracerSdk: Tracer!
-
+    
     override func setUp() {
         testEnvironment = [String: String]()
         DDEnvironmentValues.environment = [String: String]()
         tracerSdk = tracerSdkFactory.get(instrumentationName: "SpanBuilderSdkTest")
     }
-
+    
     private func setEnvVariables() {
         DDEnvironmentValues.environment = testEnvironment
         testEnvironment = [String: String]()
     }
-
+    
     func testWhenDatadogEnvironmentAreSet_TheyAreStoredCorrectly() {
         testEnvironment["DATADOG_CLIENT_TOKEN"] = "token5a101f16"
         testEnvironment["DD_SERVICE"] = "testService"
         testEnvironment["DD_ENV"] = "testEnv"
-
+        
         setEnvVariables()
-
+        
         let env = DDEnvironmentValues()
         XCTAssertEqual(env.ddClientToken, "token5a101f16")
         XCTAssertEqual(env.ddEnvironment, "testEnv")
         XCTAssertEqual(env.ddService, "testService")
     }
-
+    
     func testWhenNoConfigurationEnvironmentAreSet_DefaultValuesAreUsed() {
         let env = DDEnvironmentValues()
         XCTAssertEqual(env.disableNetworkInstrumentation, false)
@@ -51,7 +51,7 @@ class DDEnvironmentValuesTests: XCTestCase {
         XCTAssertEqual(env.excludedURLS, nil)
         XCTAssertEqual(env.enableRecordPayload, false)
     }
-
+    
     func testWhenConfigurationEnvironmentAreSet_TheyAreStoredCorrectly() {
         testEnvironment["DD_DISABLE_NETWORK_INSTRUMENTATION"] = "1"
         testEnvironment["DD_DISABLE_STDOUT_INSTRUMENTATION"] = "yes"
@@ -60,9 +60,9 @@ class DDEnvironmentValuesTests: XCTestCase {
         testEnvironment["DD_INSTRUMENTATION_EXTRA_HEADERS"] = "header1,header2;header3 header4"
         testEnvironment["DD_EXCLUDED_URLS"] = "http://www.google"
         testEnvironment["DD_ENABLE_RECORD_PAYLOAD"] = "true"
-
+        
         setEnvVariables()
-
+        
         let env = DDEnvironmentValues()
         XCTAssertEqual(env.disableNetworkInstrumentation, true)
         XCTAssertEqual(env.disableStdoutInstrumentation, true)
@@ -72,7 +72,7 @@ class DDEnvironmentValuesTests: XCTestCase {
         XCTAssertEqual(env.excludedURLS?.count, 1)
         XCTAssertEqual(env.enableRecordPayload, true)
     }
-
+    
     func testAddsTagsToSpan() {
         testEnvironment["JENKINS_URL"] = "http://jenkins.com/"
         testEnvironment["GIT_URL"] = "/test/repo"
@@ -83,19 +83,19 @@ class DDEnvironmentValuesTests: XCTestCase {
         testEnvironment["BUILD_URL"] = "http://jenkins.com/build"
         testEnvironment["GIT_BRANCH"] = "/origin/develop"
         testEnvironment["JOB_NAME"] = "job1"
-
+        
         setEnvVariables()
-
+        
         let span = createSimpleSpan()
         var spanData = span.toSpanData()
         XCTAssertEqual(spanData.attributes.count, 0)
-
+        
         let env = DDEnvironmentValues()
         env.addTagsToSpan(span: span)
-
+        
         spanData = span.toSpanData()
         XCTAssertEqual(spanData.attributes.count, 10)
-
+        
         XCTAssertEqual(spanData.attributes["ci.provider.name"]?.description, "jenkins")
         XCTAssertEqual(spanData.attributes["git.repository_url"]?.description, "/test/repo")
         XCTAssertEqual(spanData.attributes["git.commit.sha"]?.description, "37e376448b0ac9b7f54404")
@@ -106,37 +106,38 @@ class DDEnvironmentValuesTests: XCTestCase {
         XCTAssertEqual(spanData.attributes["ci.pipeline.name"]?.description, "job1")
         XCTAssertEqual(spanData.attributes["git.branch"]?.description, "develop")
     }
-
+    
     func testWhenNotRunningInCI_TagsAreNotAdded() {
         setEnvVariables()
-
+        
         let span = createSimpleSpan()
         var spanData = span.toSpanData()
         XCTAssertEqual(spanData.attributes.count, 0)
-
+        
         let env = DDEnvironmentValues()
         env.addTagsToSpan(span: span)
-
+        
         spanData = span.toSpanData()
         XCTAssertEqual(spanData.attributes.count, 0)
     }
-
+    
     private func createSimpleSpan() -> RecordEventsReadableSpan {
         return tracerSdk.spanBuilder(spanName: "spanName").startSpan() as! RecordEventsReadableSpan
     }
-
+    
     func testTags() {
         let bundle = Bundle(for: type(of: self))
         let fixturesURL = bundle.resourceURL!
-        let jsonEnumerator = FileManager.default.enumerator(at: fixturesURL,
-                                                            includingPropertiesForKeys: nil)!
-
-        for case let jsonFile as URL in jsonEnumerator {
-            print("validating \(jsonFile.lastPathComponent)")
-            validateSpec(file: jsonFile)
+        let fileEnumerator = FileManager.default.enumerator(at: fixturesURL, includingPropertiesForKeys: nil)!
+        
+        for case let fileURL as URL in fileEnumerator {
+            if fileURL.pathExtension == "json" {
+                print("validating \(fileURL.lastPathComponent)")
+                validateSpec(file: fileURL)
+            }
         }
     }
-
+    
     private func validateSpec(file: URL) {
         do {
             let data = try Data(contentsOf: file)
@@ -147,14 +148,14 @@ class DDEnvironmentValuesTests: XCTestCase {
                 spec[0].forEach {
                     testEnvironment[$0.key] = $0.value
                 }
-
+                
                 setEnvVariables()
                 let span = createSimpleSpan()
                 var spanData = span.toSpanData()
                 let env = DDEnvironmentValues()
                 env.addTagsToSpan(span: span)
                 spanData = span.toSpanData()
-
+                
                 spec[1].forEach {
                     XCTAssertEqual(spanData.attributes[$0.key]?.description, $0.value)
                     if spanData.attributes[$0.key]?.description != $0.value {
@@ -166,7 +167,7 @@ class DDEnvironmentValuesTests: XCTestCase {
             XCTFail("Spec at \(file.lastPathComponent) is not valid")
         }
     }
-
+    
     func testBitriseEnvironment() {
         testEnvironment["BITRISE_BUILD_NUMBER"] = "1"
         testEnvironment["GIT_REPOSITORY_URL"] = "/test/repo"
@@ -180,11 +181,11 @@ class DDEnvironmentValuesTests: XCTestCase {
         testEnvironment["TRAVIS_PULL_REQUEST_BRANCH"] = ""
         testEnvironment["BITRISE_GIT_BRANCH"] = "develop"
         testEnvironment["BITRISE_GIT_TAG"] = "0.0.1"
-
+        
         setEnvVariables()
-
+        
         let env = DDEnvironmentValues()
-
+        
         XCTAssertTrue(env.isCi)
         XCTAssertEqual(env.provider!, "bitrise")
         XCTAssertEqual(env.repository!, "/test/repo")

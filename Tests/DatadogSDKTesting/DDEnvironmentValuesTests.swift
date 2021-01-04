@@ -159,44 +159,12 @@ class DDEnvironmentValuesTests: XCTestCase {
                 spec[1].forEach {
                     XCTAssertEqual(spanData.attributes[$0.key]?.description, $0.value)
                     if spanData.attributes[$0.key]?.description != $0.value {
-                        print("\(spanData.attributes[$0.key]!.description) != \($0.value)")
+                        print("\(spanData.attributes[$0.key]?.description) != \($0.value)")
                     }
                 }
             }
         } catch {
             XCTFail("Spec at \(file.lastPathComponent) is not valid")
         }
-    }
-    
-    func testBitriseEnvironment() {
-        testEnvironment["BITRISE_BUILD_NUMBER"] = "1"
-        testEnvironment["GIT_REPOSITORY_URL"] = "/test/repo"
-        testEnvironment["BITRISE_GIT_COMMIT"] = "37e376448b0ac9b7f54404"
-        testEnvironment["BITRISE_SOURCE_DIR"] = "/build"
-        testEnvironment["BITRISE_BUILD_SLUG"] = "33234"
-        testEnvironment["BITRISE_APP_TITLE"] = "myApp"
-        testEnvironment["BITRISE_BUILD_NUMBER"] = "4345"
-        testEnvironment["BITRISE_APP_URL"] = "https://app.bitrise.io/app"
-        testEnvironment["BITRISE_BUILD_URL"] = "https://app.bitrise.io/build"
-        testEnvironment["TRAVIS_PULL_REQUEST_BRANCH"] = ""
-        testEnvironment["BITRISE_GIT_BRANCH"] = "develop"
-        testEnvironment["BITRISE_GIT_TAG"] = "0.0.1"
-        
-        setEnvVariables()
-        
-        let env = DDEnvironmentValues()
-        
-        XCTAssertTrue(env.isCi)
-        XCTAssertEqual(env.provider!, "bitrise")
-        XCTAssertEqual(env.repository!, "/test/repo")
-        XCTAssertEqual(env.commit!, "37e376448b0ac9b7f54404")
-        XCTAssertEqual(env.workspacePath!, "/build")
-        XCTAssertEqual(env.pipelineId!, "33234")
-        XCTAssertEqual(env.pipelineNumber!, "4345")
-        XCTAssertEqual(env.pipelineName!, "myApp")
-        XCTAssertEqual(env.pipelineURL!, "https://app.bitrise.io/build")
-        XCTAssertNil(env.jobURL)
-        XCTAssertEqual(env.branch!, "develop")
-        XCTAssertEqual(env.tag!, "0.0.1")
     }
 }

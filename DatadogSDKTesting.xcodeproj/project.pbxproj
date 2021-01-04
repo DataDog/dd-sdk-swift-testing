@@ -37,6 +37,9 @@
 		E12515E5254892C600670D23 /* XCUIApplicationSwizzler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12515E4254892C500670D23 /* XCUIApplicationSwizzler.swift */; };
 		E126DD2D253F366200700A40 /* StdoutCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E126DD2C253F366200700A40 /* StdoutCapture.swift */; };
 		E126DD2F253F367600700A40 /* StderrCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E126DD2E253F367600700A40 /* StderrCapture.swift */; };
+		E12E506625A363A500B92F3A /* bitrise.json in Resources */ = {isa = PBXBuildFile; fileRef = E12E506525A363A400B92F3A /* bitrise.json */; };
+		E12E506725A363A500B92F3A /* bitrise.json in Resources */ = {isa = PBXBuildFile; fileRef = E12E506525A363A400B92F3A /* bitrise.json */; };
+		E12E506825A363A500B92F3A /* bitrise.json in Resources */ = {isa = PBXBuildFile; fileRef = E12E506525A363A400B92F3A /* bitrise.json */; };
 		E13D0BCA2546E29C00C37D56 /* SignalUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E13D0BC92546E29C00C37D56 /* SignalUtils.swift */; };
 		E141CF60256FD513008B6B70 /* PlatformUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141CF5F256FD513008B6B70 /* PlatformUtils.swift */; };
 		E14AA0C12555AA61003FA711 /* DDNetworkInstrumentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14AA0BF2555A9A1003FA711 /* DDNetworkInstrumentationTests.swift */; };
@@ -272,6 +275,7 @@
 		E12515E4254892C500670D23 /* XCUIApplicationSwizzler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XCUIApplicationSwizzler.swift; sourceTree = "<group>"; };
 		E126DD2C253F366200700A40 /* StdoutCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StdoutCapture.swift; sourceTree = "<group>"; };
 		E126DD2E253F367600700A40 /* StderrCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StderrCapture.swift; sourceTree = "<group>"; };
+		E12E506525A363A400B92F3A /* bitrise.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = bitrise.json; sourceTree = "<group>"; };
 		E13D0BC92546E29C00C37D56 /* SignalUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalUtils.swift; sourceTree = "<group>"; };
 		E141CF5F256FD513008B6B70 /* PlatformUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformUtils.swift; sourceTree = "<group>"; };
 		E14AA0BF2555A9A1003FA711 /* DDNetworkInstrumentationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDNetworkInstrumentationTests.swift; sourceTree = "<group>"; };
@@ -407,6 +411,7 @@
 		E121DEAA258CBDB8009EA71E /* ci */ = {
 			isa = PBXGroup;
 			children = (
+				E12E506525A363A400B92F3A /* bitrise.json */,
 				E121DF09258CF652009EA71E /* appveyor.json */,
 				E121DF07258CF652009EA71E /* azurepipelines.json */,
 				E121DF0A258CF652009EA71E /* bitbucket.json */,
@@ -837,6 +842,7 @@
 				E121DF29258CF652009EA71E /* github.json in Resources */,
 				E121DF17258CF652009EA71E /* appveyor.json in Resources */,
 				E121DF23258CF652009EA71E /* travisci.json in Resources */,
+				E12E506725A363A500B92F3A /* bitrise.json in Resources */,
 				E121DF20258CF652009EA71E /* gitlab.json in Resources */,
 				E121DF1D258CF652009EA71E /* circleci.json in Resources */,
 				E121DF14258CF652009EA71E /* buildkite.json in Resources */,
@@ -853,6 +859,7 @@
 				E121DF2A258CF652009EA71E /* github.json in Resources */,
 				E121DF18258CF652009EA71E /* appveyor.json in Resources */,
 				E121DF24258CF652009EA71E /* travisci.json in Resources */,
+				E12E506825A363A500B92F3A /* bitrise.json in Resources */,
 				E121DF21258CF652009EA71E /* gitlab.json in Resources */,
 				E121DF1E258CF652009EA71E /* circleci.json in Resources */,
 				E121DF15258CF652009EA71E /* buildkite.json in Resources */,
@@ -876,6 +883,7 @@
 				E121DF28258CF652009EA71E /* github.json in Resources */,
 				E121DF16258CF652009EA71E /* appveyor.json in Resources */,
 				E121DF22258CF652009EA71E /* travisci.json in Resources */,
+				E12E506625A363A500B92F3A /* bitrise.json in Resources */,
 				E121DF1F258CF652009EA71E /* gitlab.json in Resources */,
 				E121DF1C258CF652009EA71E /* circleci.json in Resources */,
 				E121DF13258CF652009EA71E /* buildkite.json in Resources */,

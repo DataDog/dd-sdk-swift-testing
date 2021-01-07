@@ -212,7 +212,7 @@ internal struct DDEnvironmentValues {
 
             let foundationServerUri = DDEnvironmentValues.getEnvVariable("SYSTEM_TEAMFOUNDATIONSERVERURI") ?? ""
             let teamProjectId = DDEnvironmentValues.getEnvVariable("SYSTEM_TEAMPROJECTID") ?? ""
-            pipelineURL = "\(foundationServerUri)\(teamProjectId)/_build/results?buildId=\(pipelineId ?? "")&_a=summary"
+            pipelineURL = "\(foundationServerUri)\(teamProjectId)/_build/results?buildId=\(pipelineId ?? "")"
             pipelineName = DDEnvironmentValues.getEnvVariable("BUILD_DEFINITIONNAME")
             let jobId = DDEnvironmentValues.getEnvVariable("SYSTEM_JOBID") ?? ""
             let taskId = DDEnvironmentValues.getEnvVariable("SYSTEM_TASKINSTANCEID") ?? ""

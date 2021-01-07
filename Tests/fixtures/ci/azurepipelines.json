@@ -24,7 +24,7 @@
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
       "ci.pipeline.number": "azure-pipelines-build-id",
-      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&_a=summary"
+      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id"
     }
   ],
   [
@@ -52,7 +52,7 @@
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
       "ci.pipeline.number": "azure-pipelines-build-id",
-      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&_a=summary"
+      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id"
     }
   ],
   [
@@ -81,7 +81,7 @@
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
       "ci.pipeline.number": "azure-pipelines-build-id",
-      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&_a=summary"
+      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id"
     }
   ],
   [
@@ -109,7 +109,7 @@
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
       "ci.pipeline.number": "azure-pipelines-build-id",
-      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&_a=summary"
+      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id"
     }
   ],
   [
@@ -137,7 +137,7 @@
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
       "ci.pipeline.number": "azure-pipelines-build-id",
-      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&_a=summary"
+      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id"
     }
   ],
   [
@@ -165,7 +165,7 @@
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
       "ci.pipeline.number": "azure-pipelines-build-id",
-      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&_a=summary"
+      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id"
     }
   ],
   [
@@ -195,7 +195,7 @@
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
       "ci.pipeline.number": "azure-pipelines-build-id",
-      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&_a=summary"
+      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id"
     }
   ],
   [
@@ -225,7 +225,7 @@
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
       "ci.pipeline.number": "azure-pipelines-build-id",
-      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&_a=summary"
+      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id"
     }
   ],
   [
@@ -255,7 +255,7 @@
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
       "ci.pipeline.number": "azure-pipelines-build-id",
-      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&_a=summary"
+      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id"
     }
   ],
   [
@@ -285,7 +285,7 @@
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
       "ci.pipeline.number": "azure-pipelines-build-id",
-      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&_a=summary"
+      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id"
     }
   ],
   [
@@ -315,7 +315,7 @@
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
       "ci.pipeline.number": "azure-pipelines-build-id",
-      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&_a=summary"
+      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id"
     }
   ],
   [
@@ -343,7 +343,7 @@
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
       "ci.pipeline.number": "azure-pipelines-build-id",
-      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&_a=summary"
+      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id"
     }
   ],
   [
@@ -371,7 +371,7 @@
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
       "ci.pipeline.number": "azure-pipelines-build-id",
-      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&_a=summary"
+      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id"
     }
   ],
   [
@@ -399,7 +399,7 @@
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
       "ci.pipeline.number": "azure-pipelines-build-id",
-      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&_a=summary"
+      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id"
     }
   ],
   [
@@ -427,7 +427,7 @@
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
       "ci.pipeline.number": "azure-pipelines-build-id",
-      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&_a=summary"
+      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id"
     }
   ],
   [
@@ -455,7 +455,7 @@
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
       "ci.pipeline.number": "azure-pipelines-build-id",
-      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&_a=summary"
+      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id"
     }
   ],
   [
@@ -485,7 +485,7 @@
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
       "ci.pipeline.number": "azure-pipelines-build-id",
-      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&_a=summary"
+      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id"
     }
   ],
   [
@@ -515,7 +515,7 @@
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
       "ci.pipeline.number": "azure-pipelines-build-id",
-      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&_a=summary"
+      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id"
     }
   ],
   [
@@ -545,7 +545,7 @@
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
       "ci.pipeline.number": "azure-pipelines-build-id",
-      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&_a=summary"
+      "ci.pipeline.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id"
     }
   ]
 ]

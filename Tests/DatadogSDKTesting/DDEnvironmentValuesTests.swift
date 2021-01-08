@@ -125,7 +125,7 @@ class DDEnvironmentValuesTests: XCTestCase {
         return tracerSdk.spanBuilder(spanName: "spanName").startSpan() as! RecordEventsReadableSpan
     }
     
-    func testTags() {
+    func testSpecs() {
         let bundle = Bundle(for: type(of: self))
         let fixturesURL = bundle.resourceURL!
         let fileEnumerator = FileManager.default.enumerator(at: fixturesURL, includingPropertiesForKeys: nil)!

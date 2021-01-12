@@ -94,7 +94,7 @@ class DDEnvironmentValuesTests: XCTestCase {
         env.addTagsToSpan(span: span)
         
         spanData = span.toSpanData()
-        XCTAssertEqual(spanData.attributes.count, 10)
+        XCTAssertEqual(spanData.attributes.count, 9)
         
         XCTAssertEqual(spanData.attributes["ci.provider.name"]?.description, "jenkins")
         XCTAssertEqual(spanData.attributes["git.repository_url"]?.description, "/test/repo")

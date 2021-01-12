@@ -77,7 +77,6 @@ internal struct DDGitTags {
     static let gitAuthorEmail   = "git.commit.author.email"
     static let gitCommitterName = "git.commit.committer.name"
     static let gitCommitterEmail = "git.commit.committer.email"
-    static let gitCommitOld     = "git.commit_sha"
 
 }
 

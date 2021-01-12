@@ -19,8 +19,7 @@
       "ci.pipeline.number": "bitbucket-build-num",
       "ci.pipeline.url": "https://bitbucket.org/bitbucket-repo/addon/pipelines/home#!/results/bitbucket-build-num",
       "ci.job.url": "https://bitbucket.org/bitbucket-repo/addon/pipelines/home#!/results/bitbucket-build-num",
-      "git.commit.sha": "bitbucket-commit",
-      "git.commit_sha": "bitbucket-commit"
+      "git.commit.sha": "bitbucket-commit"
     }
   ],
   [
@@ -43,8 +42,7 @@
       "ci.pipeline.number": "bitbucket-build-num",
       "ci.pipeline.url": "https://bitbucket.org/bitbucket-repo/addon/pipelines/home#!/results/bitbucket-build-num",
       "ci.job.url": "https://bitbucket.org/bitbucket-repo/addon/pipelines/home#!/results/bitbucket-build-num",
-      "git.commit.sha": "bitbucket-commit",
-      "git.commit_sha": "bitbucket-commit"
+      "git.commit.sha": "bitbucket-commit"
     }
   ],
   [
@@ -67,8 +65,7 @@
       "ci.pipeline.number": "bitbucket-build-num",
       "ci.pipeline.url": "https://bitbucket.org/bitbucket-repo/addon/pipelines/home#!/results/bitbucket-build-num",
       "ci.job.url": "https://bitbucket.org/bitbucket-repo/addon/pipelines/home#!/results/bitbucket-build-num",
-      "git.commit.sha": "bitbucket-commit",
-      "git.commit_sha": "bitbucket-commit"
+      "git.commit.sha": "bitbucket-commit"
     }
   ],
   [
@@ -91,8 +88,7 @@
       "ci.pipeline.number": "bitbucket-build-num",
       "ci.pipeline.url": "https://bitbucket.org/bitbucket-repo/addon/pipelines/home#!/results/bitbucket-build-num",
       "ci.job.url": "https://bitbucket.org/bitbucket-repo/addon/pipelines/home#!/results/bitbucket-build-num",
-      "git.commit.sha": "bitbucket-commit",
-      "git.commit_sha": "bitbucket-commit"
+      "git.commit.sha": "bitbucket-commit"
     }
   ],
   [
@@ -115,8 +111,7 @@
       "ci.pipeline.number": "bitbucket-build-num",
       "ci.pipeline.url": "https://bitbucket.org/bitbucket-repo/addon/pipelines/home#!/results/bitbucket-build-num",
       "ci.job.url": "https://bitbucket.org/bitbucket-repo/addon/pipelines/home#!/results/bitbucket-build-num",
-      "git.commit.sha": "bitbucket-commit",
-      "git.commit_sha": "bitbucket-commit"
+      "git.commit.sha": "bitbucket-commit"
     }
   ],
   [
@@ -141,8 +136,7 @@
       "ci.pipeline.number": "bitbucket-build-num",
       "ci.pipeline.url": "https://bitbucket.org/bitbucket-repo/addon/pipelines/home#!/results/bitbucket-build-num",
       "ci.job.url": "https://bitbucket.org/bitbucket-repo/addon/pipelines/home#!/results/bitbucket-build-num",
-      "git.commit.sha": "bitbucket-commit",
-      "git.commit_sha": "bitbucket-commit"
+      "git.commit.sha": "bitbucket-commit"
     }
   ],
   [
@@ -165,8 +159,7 @@
       "ci.pipeline.number": "bitbucket-build-num",
       "ci.pipeline.url": "https://bitbucket.org/bitbucket-repo/addon/pipelines/home#!/results/bitbucket-build-num",
       "ci.job.url": "https://bitbucket.org/bitbucket-repo/addon/pipelines/home#!/results/bitbucket-build-num",
-      "git.commit.sha": "bitbucket-commit",
-      "git.commit_sha": "bitbucket-commit"
+      "git.commit.sha": "bitbucket-commit"
     }
   ],
   [
@@ -191,8 +184,7 @@
       "ci.pipeline.number": "bitbucket-build-num",
       "ci.pipeline.url": "https://bitbucket.org/bitbucket-repo/addon/pipelines/home#!/results/bitbucket-build-num",
       "ci.job.url": "https://bitbucket.org/bitbucket-repo/addon/pipelines/home#!/results/bitbucket-build-num",
-      "git.commit.sha": "bitbucket-commit",
-      "git.commit_sha": "bitbucket-commit"
+      "git.commit.sha": "bitbucket-commit"
     }
   ],
   [
@@ -215,8 +207,7 @@
       "ci.pipeline.number": "bitbucket-build-num",
       "ci.pipeline.url": "https://bitbucket.org/bitbucket-repo/addon/pipelines/home#!/results/bitbucket-build-num",
       "ci.job.url": "https://bitbucket.org/bitbucket-repo/addon/pipelines/home#!/results/bitbucket-build-num",
-      "git.commit.sha": "bitbucket-commit",
-      "git.commit_sha": "bitbucket-commit"
+      "git.commit.sha": "bitbucket-commit"
     }
   ],
   [
@@ -239,8 +230,7 @@
       "ci.pipeline.number": "bitbucket-build-num",
       "ci.pipeline.url": "https://bitbucket.org/bitbucket-repo/addon/pipelines/home#!/results/bitbucket-build-num",
       "ci.job.url": "https://bitbucket.org/bitbucket-repo/addon/pipelines/home#!/results/bitbucket-build-num",
-      "git.commit.sha": "bitbucket-commit",
-      "git.commit_sha": "bitbucket-commit"
+      "git.commit.sha": "bitbucket-commit"
     }
   ],
   [
@@ -263,8 +253,7 @@
       "ci.pipeline.number": "bitbucket-build-num",
       "ci.pipeline.url": "https://bitbucket.org/bitbucket-repo/addon/pipelines/home#!/results/bitbucket-build-num",
       "ci.job.url": "https://bitbucket.org/bitbucket-repo/addon/pipelines/home#!/results/bitbucket-build-num",
-      "git.commit.sha": "bitbucket-commit",
-      "git.commit_sha": "bitbucket-commit"
+      "git.commit.sha": "bitbucket-commit"
     }
   ],
   [
@@ -287,8 +276,7 @@
       "ci.pipeline.number": "bitbucket-build-num",
       "ci.pipeline.url": "https://bitbucket.org/bitbucket-repo/addon/pipelines/home#!/results/bitbucket-build-num",
       "ci.job.url": "https://bitbucket.org/bitbucket-repo/addon/pipelines/home#!/results/bitbucket-build-num",
-      "git.commit.sha": "bitbucket-commit",
-      "git.commit_sha": "bitbucket-commit"
+      "git.commit.sha": "bitbucket-commit"
     }
   ],
   [
@@ -311,8 +299,7 @@
       "ci.pipeline.number": "bitbucket-build-num",
       "ci.pipeline.url": "https://bitbucket.org/bitbucket-repo/addon/pipelines/home#!/results/bitbucket-build-num",
       "ci.job.url": "https://bitbucket.org/bitbucket-repo/addon/pipelines/home#!/results/bitbucket-build-num",
-      "git.commit.sha": "bitbucket-commit",
-      "git.commit_sha": "bitbucket-commit"
+      "git.commit.sha": "bitbucket-commit"
     }
   ],
   [
@@ -335,8 +322,7 @@
       "ci.pipeline.number": "bitbucket-build-num",
       "ci.pipeline.url": "https://bitbucket.org/bitbucket-repo/addon/pipelines/home#!/results/bitbucket-build-num",
       "ci.job.url": "https://bitbucket.org/bitbucket-repo/addon/pipelines/home#!/results/bitbucket-build-num",
-      "git.commit.sha": "bitbucket-commit",
-      "git.commit_sha": "bitbucket-commit"
+      "git.commit.sha": "bitbucket-commit"
     }
   ],
   [
@@ -359,8 +345,7 @@
       "ci.pipeline.number": "bitbucket-build-num",
       "ci.pipeline.url": "https://bitbucket.org/bitbucket-repo/addon/pipelines/home#!/results/bitbucket-build-num",
       "ci.job.url": "https://bitbucket.org/bitbucket-repo/addon/pipelines/home#!/results/bitbucket-build-num",
-      "git.commit.sha": "bitbucket-commit",
-      "git.commit_sha": "bitbucket-commit"
+      "git.commit.sha": "bitbucket-commit"
     }
   ],
   [
@@ -383,8 +368,7 @@
       "ci.pipeline.number": "bitbucket-build-num",
       "ci.pipeline.url": "https://bitbucket.org/bitbucket-repo/addon/pipelines/home#!/results/bitbucket-build-num",
       "ci.job.url": "https://bitbucket.org/bitbucket-repo/addon/pipelines/home#!/results/bitbucket-build-num",
-      "git.commit.sha": "bitbucket-commit",
-      "git.commit_sha": "bitbucket-commit"
+      "git.commit.sha": "bitbucket-commit"
     }
   ]
 ]

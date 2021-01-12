@@ -22,8 +22,7 @@
       "ci.pipeline.number": "buildkite-pipeline-number",
       "ci.pipeline.url": "buildkite-build-url",
       "ci.job.url": "buildkite-build-url#buildkite-job-id",
-      "git.commit.sha": "buildkite-git-commit",
-      "git.commit_sha": "buildkite-git-commit"
+      "git.commit.sha": "buildkite-git-commit"
     }
   ],
   [
@@ -49,8 +48,7 @@
       "ci.pipeline.number": "buildkite-pipeline-number",
       "ci.pipeline.url": "buildkite-build-url",
       "ci.job.url": "buildkite-build-url#buildkite-job-id",
-      "git.commit.sha": "buildkite-git-commit",
-      "git.commit_sha": "buildkite-git-commit"
+      "git.commit.sha": "buildkite-git-commit"
     }
   ],
   [
@@ -76,8 +74,7 @@
       "ci.pipeline.number": "buildkite-pipeline-number",
       "ci.pipeline.url": "buildkite-build-url",
       "ci.job.url": "buildkite-build-url#buildkite-job-id",
-      "git.commit.sha": "buildkite-git-commit",
-      "git.commit_sha": "buildkite-git-commit"
+      "git.commit.sha": "buildkite-git-commit"
     }
   ],
   [
@@ -103,8 +100,7 @@
       "ci.pipeline.number": "buildkite-pipeline-number",
       "ci.pipeline.url": "buildkite-build-url",
       "ci.job.url": "buildkite-build-url#buildkite-job-id",
-      "git.commit.sha": "buildkite-git-commit",
-      "git.commit_sha": "buildkite-git-commit"
+      "git.commit.sha": "buildkite-git-commit"
     }
   ],
   [
@@ -132,8 +128,7 @@
       "ci.pipeline.number": "buildkite-pipeline-number",
       "ci.pipeline.url": "buildkite-build-url",
       "ci.job.url": "buildkite-build-url#buildkite-job-id",
-      "git.commit.sha": "buildkite-git-commit",
-      "git.commit_sha": "buildkite-git-commit"
+      "git.commit.sha": "buildkite-git-commit"
     }
   ],
   [
@@ -161,8 +156,7 @@
       "ci.pipeline.number": "buildkite-pipeline-number",
       "ci.pipeline.url": "buildkite-build-url",
       "ci.job.url": "buildkite-build-url#buildkite-job-id",
-      "git.commit.sha": "buildkite-git-commit",
-      "git.commit_sha": "buildkite-git-commit"
+      "git.commit.sha": "buildkite-git-commit"
     }
   ],
   [
@@ -190,8 +184,7 @@
       "ci.pipeline.number": "buildkite-pipeline-number",
       "ci.pipeline.url": "buildkite-build-url",
       "ci.job.url": "buildkite-build-url#buildkite-job-id",
-      "git.commit.sha": "buildkite-git-commit",
-      "git.commit_sha": "buildkite-git-commit"
+      "git.commit.sha": "buildkite-git-commit"
     }
   ],
   [
@@ -217,8 +210,7 @@
       "ci.pipeline.number": "buildkite-pipeline-number",
       "ci.pipeline.url": "buildkite-build-url",
       "ci.job.url": "buildkite-build-url#buildkite-job-id",
-      "git.commit.sha": "buildkite-git-commit",
-      "git.commit_sha": "buildkite-git-commit"
+      "git.commit.sha": "buildkite-git-commit"
     }
   ],
   [
@@ -244,8 +236,7 @@
       "ci.pipeline.number": "buildkite-pipeline-number",
       "ci.pipeline.url": "buildkite-build-url",
       "ci.job.url": "buildkite-build-url#buildkite-job-id",
-      "git.commit.sha": "buildkite-git-commit",
-      "git.commit_sha": "buildkite-git-commit"
+      "git.commit.sha": "buildkite-git-commit"
     }
   ],
   [
@@ -271,8 +262,7 @@
       "ci.pipeline.number": "buildkite-pipeline-number",
       "ci.pipeline.url": "buildkite-build-url",
       "ci.job.url": "buildkite-build-url#buildkite-job-id",
-      "git.commit.sha": "buildkite-git-commit",
-      "git.commit_sha": "buildkite-git-commit"
+      "git.commit.sha": "buildkite-git-commit"
     }
   ],
   [
@@ -298,8 +288,7 @@
       "ci.pipeline.number": "buildkite-pipeline-number",
       "ci.pipeline.url": "buildkite-build-url",
       "ci.job.url": "buildkite-build-url#buildkite-job-id",
-      "git.commit.sha": "buildkite-git-commit",
-      "git.commit_sha": "buildkite-git-commit"
+      "git.commit.sha": "buildkite-git-commit"
     }
   ],
   [
@@ -325,8 +314,7 @@
       "ci.pipeline.number": "buildkite-pipeline-number",
       "ci.pipeline.url": "buildkite-build-url",
       "ci.job.url": "buildkite-build-url#buildkite-job-id",
-      "git.commit.sha": "buildkite-git-commit",
-      "git.commit_sha": "buildkite-git-commit"
+      "git.commit.sha": "buildkite-git-commit"
     }
   ],
   [
@@ -352,8 +340,7 @@
       "ci.pipeline.number": "buildkite-pipeline-number",
       "ci.pipeline.url": "buildkite-build-url",
       "ci.job.url": "buildkite-build-url#buildkite-job-id",
-      "git.commit.sha": "buildkite-git-commit",
-      "git.commit_sha": "buildkite-git-commit"
+      "git.commit.sha": "buildkite-git-commit"
     }
   ],
   [
@@ -379,8 +366,7 @@
       "ci.pipeline.number": "buildkite-pipeline-number",
       "ci.pipeline.url": "buildkite-build-url",
       "ci.job.url": "buildkite-build-url#buildkite-job-id",
-      "git.commit.sha": "buildkite-git-commit",
-      "git.commit_sha": "buildkite-git-commit"
+      "git.commit.sha": "buildkite-git-commit"
     }
   ],
   [
@@ -406,8 +392,7 @@
       "ci.pipeline.number": "buildkite-pipeline-number",
       "ci.pipeline.url": "buildkite-build-url",
       "ci.job.url": "buildkite-build-url#buildkite-job-id",
-      "git.commit.sha": "buildkite-git-commit",
-      "git.commit_sha": "buildkite-git-commit"
+      "git.commit.sha": "buildkite-git-commit"
     }
   ],
   [
@@ -433,8 +418,7 @@
       "ci.pipeline.number": "buildkite-pipeline-number",
       "ci.pipeline.url": "buildkite-build-url",
       "ci.job.url": "buildkite-build-url#buildkite-job-id",
-      "git.commit.sha": "buildkite-git-commit",
-      "git.commit_sha": "buildkite-git-commit"
+      "git.commit.sha": "buildkite-git-commit"
     }
   ],
   [
@@ -460,8 +444,7 @@
       "ci.pipeline.number": "buildkite-pipeline-number",
       "ci.pipeline.url": "buildkite-build-url",
       "ci.job.url": "buildkite-build-url#buildkite-job-id",
-      "git.commit.sha": "buildkite-git-commit",
-      "git.commit_sha": "buildkite-git-commit"
+      "git.commit.sha": "buildkite-git-commit"
     }
   ]
 ]

@@ -14,7 +14,6 @@
       "ci.workspace_path": "/foo/bar",
       "git.repository_url": "sample",
       "git.commit.sha": "gitcommit",
-      "git.commit_sha": "gitcommit",
       "ci.provider.name": "bitrise",
       "ci.pipeline.id": "bitrise-pipeline-id",
       "ci.pipeline.name": "bitrise-pipeline-name",
@@ -42,8 +41,7 @@
       "ci.pipeline.name": "bitrise-pipeline-name",
       "ci.pipeline.number": "bitrise-pipeline-number",
       "ci.pipeline.url": "bitrise-build-url",
-      "git.commit.sha": "bitrise-git-commit",
-      "git.commit_sha": "bitrise-git-commit"
+      "git.commit.sha": "bitrise-git-commit"
     }
   ],
   [
@@ -66,8 +64,7 @@
       "ci.pipeline.name": "bitrise-pipeline-name",
       "ci.pipeline.number": "bitrise-pipeline-number",
       "ci.pipeline.url": "bitrise-build-url",
-      "git.commit.sha": "bitrise-git-commit",
-      "git.commit_sha": "bitrise-git-commit"
+      "git.commit.sha": "bitrise-git-commit"
     }
   ],
   [
@@ -90,8 +87,7 @@
       "ci.pipeline.name": "bitrise-pipeline-name",
       "ci.pipeline.number": "bitrise-pipeline-number",
       "ci.pipeline.url": "bitrise-build-url",
-      "git.commit.sha": "bitrise-git-commit",
-      "git.commit_sha": "bitrise-git-commit"
+      "git.commit.sha": "bitrise-git-commit"
     }
   ],
   [
@@ -114,8 +110,7 @@
       "ci.pipeline.name": "bitrise-pipeline-name",
       "ci.pipeline.number": "bitrise-pipeline-number",
       "ci.pipeline.url": "bitrise-build-url",
-      "git.commit.sha": "bitrise-git-commit",
-      "git.commit_sha": "bitrise-git-commit"
+      "git.commit.sha": "bitrise-git-commit"
     }
   ],
   [
@@ -138,8 +133,7 @@
       "ci.pipeline.name": "bitrise-pipeline-name",
       "ci.pipeline.number": "bitrise-pipeline-number",
       "ci.pipeline.url": "bitrise-build-url",
-      "git.commit.sha": "bitrise-git-commit",
-      "git.commit_sha": "bitrise-git-commit"
+      "git.commit.sha": "bitrise-git-commit"
     }
   ],
   [
@@ -162,8 +156,7 @@
       "ci.pipeline.name": "bitrise-pipeline-name",
       "ci.pipeline.number": "bitrise-pipeline-number",
       "ci.pipeline.url": "bitrise-build-url",
-      "git.commit.sha": "bitrise-git-commit",
-      "git.commit_sha": "bitrise-git-commit"
+      "git.commit.sha": "bitrise-git-commit"
     }
   ],
   [
@@ -186,8 +179,7 @@
       "ci.pipeline.name": "bitrise-pipeline-name",
       "ci.pipeline.number": "bitrise-pipeline-number",
       "ci.pipeline.url": "bitrise-build-url",
-      "git.commit.sha": "bitrise-git-commit",
-      "git.commit_sha": "bitrise-git-commit"
+      "git.commit.sha": "bitrise-git-commit"
     }
   ],
   [
@@ -212,8 +204,7 @@
       "ci.pipeline.name": "bitrise-pipeline-name",
       "ci.pipeline.number": "bitrise-pipeline-number",
       "ci.pipeline.url": "bitrise-build-url",
-      "git.commit.sha": "bitrise-git-commit",
-      "git.commit_sha": "bitrise-git-commit"
+      "git.commit.sha": "bitrise-git-commit"
     }
   ],
   [
@@ -238,8 +229,7 @@
       "ci.pipeline.name": "bitrise-pipeline-name",
       "ci.pipeline.number": "bitrise-pipeline-number",
       "ci.pipeline.url": "bitrise-build-url",
-      "git.commit.sha": "bitrise-git-commit",
-      "git.commit_sha": "bitrise-git-commit"
+      "git.commit.sha": "bitrise-git-commit"
     }
   ],
   [
@@ -264,8 +254,7 @@
       "ci.pipeline.name": "bitrise-pipeline-name",
       "ci.pipeline.number": "bitrise-pipeline-number",
       "ci.pipeline.url": "bitrise-build-url",
-      "git.commit.sha": "bitrise-git-commit",
-      "git.commit_sha": "bitrise-git-commit"
+      "git.commit.sha": "bitrise-git-commit"
     }
   ],
   [
@@ -288,8 +277,7 @@
       "ci.pipeline.name": "bitrise-pipeline-name",
       "ci.pipeline.number": "bitrise-pipeline-number",
       "ci.pipeline.url": "bitrise-build-url",
-      "git.commit.sha": "bitrise-git-commit",
-      "git.commit_sha": "bitrise-git-commit"
+      "git.commit.sha": "bitrise-git-commit"
     }
   ],
   [
@@ -312,8 +300,7 @@
       "ci.pipeline.name": "bitrise-pipeline-name",
       "ci.pipeline.number": "bitrise-pipeline-number",
       "ci.pipeline.url": "bitrise-build-url",
-      "git.commit.sha": "bitrise-git-commit",
-      "git.commit_sha": "bitrise-git-commit"
+      "git.commit.sha": "bitrise-git-commit"
     }
   ],
   [
@@ -337,8 +324,7 @@
       "ci.pipeline.name": "bitrise-pipeline-name",
       "ci.pipeline.number": "bitrise-pipeline-number",
       "ci.pipeline.url": "bitrise-build-url",
-      "git.commit.sha": "bitrise-git-commit",
-      "git.commit_sha": "bitrise-git-commit"
+      "git.commit.sha": "bitrise-git-commit"
     }
   ],
   [
@@ -362,8 +348,7 @@
       "ci.pipeline.name": "bitrise-pipeline-name",
       "ci.pipeline.number": "bitrise-pipeline-number",
       "ci.pipeline.url": "bitrise-build-url",
-      "git.commit.sha": "bitrise-git-commit",
-      "git.commit_sha": "bitrise-git-commit"
+      "git.commit.sha": "bitrise-git-commit"
     }
   ],
   [
@@ -386,8 +371,7 @@
       "ci.pipeline.name": "bitrise-pipeline-name",
       "ci.pipeline.number": "bitrise-pipeline-number",
       "ci.pipeline.url": "bitrise-build-url",
-      "git.commit.sha": "bitrise-git-commit",
-      "git.commit_sha": "bitrise-git-commit"
+      "git.commit.sha": "bitrise-git-commit"
     }
   ],
   [
@@ -410,8 +394,7 @@
       "ci.pipeline.name": "bitrise-pipeline-name",
       "ci.pipeline.number": "bitrise-pipeline-number",
       "ci.pipeline.url": "bitrise-build-url",
-      "git.commit.sha": "bitrise-git-commit",
-      "git.commit_sha": "bitrise-git-commit"
+      "git.commit.sha": "bitrise-git-commit"
     }
   ],
   [
@@ -434,8 +417,7 @@
       "ci.pipeline.name": "bitrise-pipeline-name",
       "ci.pipeline.number": "bitrise-pipeline-number",
       "ci.pipeline.url": "bitrise-build-url",
-      "git.commit.sha": "bitrise-git-commit",
-      "git.commit_sha": "bitrise-git-commit"
+      "git.commit.sha": "bitrise-git-commit"
     }
   ],
   [
@@ -458,8 +440,7 @@
       "ci.pipeline.name": "bitrise-pipeline-name",
       "ci.pipeline.number": "bitrise-pipeline-number",
       "ci.pipeline.url": "bitrise-build-url",
-      "git.commit.sha": "bitrise-git-commit",
-      "git.commit_sha": "bitrise-git-commit"
+      "git.commit.sha": "bitrise-git-commit"
     }
   ],
   [
@@ -482,8 +463,7 @@
       "ci.pipeline.name": "bitrise-pipeline-name",
       "ci.pipeline.number": "bitrise-pipeline-number",
       "ci.pipeline.url": "bitrise-build-url",
-      "git.commit.sha": "bitrise-git-commit",
-      "git.commit_sha": "bitrise-git-commit"
+      "git.commit.sha": "bitrise-git-commit"
     }
   ],
   [
@@ -507,8 +487,7 @@
       "ci.pipeline.name": "bitrise-pipeline-name",
       "ci.pipeline.number": "bitrise-pipeline-number",
       "ci.pipeline.url": "bitrise-build-url",
-      "git.commit.sha": "bitrise-git-commit",
-      "git.commit_sha": "bitrise-git-commit"
+      "git.commit.sha": "bitrise-git-commit"
     }
   ]
 ]

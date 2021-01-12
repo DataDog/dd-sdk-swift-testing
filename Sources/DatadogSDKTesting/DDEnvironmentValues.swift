@@ -361,7 +361,6 @@ internal struct DDEnvironmentValues {
 
         setAttributeIfExist(toSpan: span, key: DDGitTags.gitRepository, value: repository)
         setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommit, value: commit)
-        setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommitOld, value: commit)
         setAttributeIfExist(toSpan: span, key: DDGitTags.gitBranch, value: branch)
         setAttributeIfExist(toSpan: span, key: DDGitTags.gitTag, value: tag)
 

@@ -84,11 +84,13 @@ internal class DDTestObserver: NSObject, XCTestObservation {
         var status: String
         if supportsSkipping, testCase.testRun?.hasBeenSkipped == true {
             status = DDTestTags.statusSkip
+            activeTest.status = .ok
         } else if testCase.testRun?.hasSucceeded ?? false {
             status = DDTestTags.statusPass
+            activeTest.status = .ok
         } else {
             status = DDTestTags.statusFail
-            activeTest.status = .internalError
+            activeTest.status = .error
         }
 
         activeTest.setAttribute(key: DDTestTags.testStatus, value: status)

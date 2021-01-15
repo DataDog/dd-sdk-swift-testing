@@ -22,13 +22,14 @@ class StdoutCaptureTests: XCTestCase {
         StdoutCapture.startCapturing(tracer: tracer)
         let span = tracer.startSpan(name: "Unnamed", attributes: [:])
         print(stringToCapture)
+        span.status = .ok
         span.end()
         let spanData = span.toSpanData()
         DDInstrumentationControl.stopStdoutCapture()
 
         XCTAssertTrue(StdoutCapture.stdoutBuffer.isEmpty)
-        XCTAssertEqual(spanData.timedEvents.count, 1)
-        XCTAssertEqual(spanData.timedEvents.first?.attributes["message"]?.description, stringToCapture + "\n" )
+        XCTAssertEqual(spanData.events.count, 1)
+        XCTAssertEqual(spanData.events.first?.attributes["message"]?.description, stringToCapture + "\n" )
     }
 
     func testWhenPrintIsCalledAndIsNotCapturing_stringIsNotCaptured() {
@@ -39,11 +40,12 @@ class StdoutCaptureTests: XCTestCase {
         DDInstrumentationControl.stopStdoutCapture()
         let span = tracer.startSpan(name: "Unnamed", attributes: [:])
         print(stringToCapture)
+        span.status = .ok
         span.end()
         let spanData = span.toSpanData()
 
         XCTAssertTrue(StdoutCapture.stdoutBuffer.isEmpty)
-        XCTAssertEqual(spanData.timedEvents.count, 0)
+        XCTAssertEqual(spanData.events.count, 0)
     }
 
     func testWhenSomeCharactersAreWrittenToStdoutWithoutNewLines_charactersAreCapturedButNotConvertedToEvents () {
@@ -54,11 +56,12 @@ class StdoutCaptureTests: XCTestCase {
         let span = tracer.startSpan(name: "Unnamed", attributes: [:])
         fputs(stringToCapture, stdout)
         let spanData = span.toSpanData()
+        span.status = .ok
         span.end()
         DDInstrumentationControl.stopStdoutCapture()
 
         XCTAssertFalse(StdoutCapture.stdoutBuffer.isEmpty)
         XCTAssertEqual(StdoutCapture.stdoutBuffer, stringToCapture)
-        XCTAssertEqual(spanData.timedEvents.count, 0)
+        XCTAssertEqual(spanData.events.count, 0)
     }
 }

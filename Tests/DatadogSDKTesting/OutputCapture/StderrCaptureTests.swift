@@ -25,14 +25,15 @@ class StderrCaptureTests: XCTestCase {
         DDTestMonitor.instance?.testObserver?.currentTestSpan = span
         capturer.stderrMessage(tracer: tracer, string: stringToCapture)
         Thread.sleep(forTimeInterval: 0.5)
+        span.status = .ok
         span.end()
         let spanData = span.toSpanData()
 
-        XCTAssertEqual(spanData.timedEvents.count, 1)
-        XCTAssertEqual(spanData.timedEvents.first?.attributes["message"]?.description, "This should be captured" )
+        XCTAssertEqual(spanData.events.count, 1)
+        XCTAssertEqual(spanData.events.first?.attributes["message"]?.description, "This should be captured" )
 
-        let timeToCheck = StderrCapture.logDateFormatter.date(from: "2020-10-22 12:01:33.161546+0200")!.timeIntervalSince1970
-        XCTAssertEqual(spanData.timedEvents.first?.epochNanos, UInt64(timeToCheck * 1_000_000_000))
+        let timeToCheck = StderrCapture.logDateFormatter.date(from: "2020-10-22 12:01:33.161546+0200")!
+        XCTAssertEqual(spanData.events.first?.timestamp, timeToCheck)
     }
 
     func testWhenWhenUIStepHappens_messageIsCapturedAndConvertedToEvents() {
@@ -46,13 +47,14 @@ class StderrCaptureTests: XCTestCase {
         DDTestMonitor.instance?.testObserver?.currentTestSpan = span
         capturer.stderrMessage(tracer: tracer, string: stringToCapture)
         Thread.sleep(forTimeInterval: 0.6)
+        span.status = .ok
         span.end()
         let spanData = span.toSpanData()
 
-        XCTAssertEqual(spanData.timedEvents.count, 1)
-        XCTAssertEqual(spanData.timedEvents.first?.attributes["message"]?.description, "Open com.datadoghq.DemoSwift" )
+        XCTAssertEqual(spanData.events.count, 1)
+        XCTAssertEqual(spanData.events.first?.attributes["message"]?.description, "Open com.datadoghq.DemoSwift" )
 
-        let timeToCheck = date.addingTimeInterval(0.5).timeIntervalSince1970
-        XCTAssertEqual(spanData.timedEvents.first?.epochNanos,  UInt64(timeToCheck * 1_000_000_000))
+        let timeToCheck = date.addingTimeInterval(0.5)
+        XCTAssertEqual(spanData.events.first?.timestamp,  timeToCheck)
     }
 }

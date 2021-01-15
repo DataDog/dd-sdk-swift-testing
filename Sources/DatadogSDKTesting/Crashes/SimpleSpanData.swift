@@ -15,7 +15,7 @@ internal struct SimpleSpanData: Codable, Equatable {
     var traceIdLo: UInt64
     var spanId: UInt64
     var name: String
-    var startEpochNanos: UInt64
+    var startTime: Date
     var stringAttributes = [String: String]()
 
     init(spanData: SpanData) {
@@ -23,16 +23,16 @@ internal struct SimpleSpanData: Codable, Equatable {
         self.traceIdLo = spanData.traceId.rawLowerLong
         self.spanId = spanData.spanId.rawValue
         self.name = spanData.name
-        self.startEpochNanos = spanData.startEpochNanos
+        self.startTime = spanData.startTime
         self.stringAttributes = spanData.attributes.mapValues { $0.description }
     }
 
-    internal init(traceIdHi: UInt64, traceIdLo: UInt64, spanId: UInt64, name: String, startEpochNanos: UInt64, stringAttributes: [String: String] = [String: String]()) {
+    internal init(traceIdHi: UInt64, traceIdLo: UInt64, spanId: UInt64, name: String, startTime: Date, stringAttributes: [String: String] = [String: String]()) {
         self.traceIdHi = traceIdHi
         self.traceIdLo = traceIdLo
         self.spanId = spanId
         self.name = name
-        self.startEpochNanos = startEpochNanos
+        self.startTime = startTime
         self.stringAttributes = stringAttributes
     }
 }

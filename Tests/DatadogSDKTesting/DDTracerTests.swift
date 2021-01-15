@@ -68,7 +68,7 @@ class DDTracerTests: XCTestCase {
     }
 
     func testCreateSpanFromCrash() {
-        let simpleSpan = SimpleSpanData(traceIdHi: 1, traceIdLo: 2, spanId: 3, name: "name", startEpochNanos: 33, stringAttributes: [:])
+        let simpleSpan = SimpleSpanData(traceIdHi: 1, traceIdLo: 2, spanId: 3, name: "name", startTime: Date(timeIntervalSinceReferenceDate: 33), stringAttributes: [:])
         let crashDate: Date? = nil
         let errorType = "errorType"
         let errorMessage = "errorMessage"
@@ -86,11 +86,11 @@ class DDTracerTests: XCTestCase {
         XCTAssertEqual(spanData.traceId, TraceId(idHi: 1, idLo: 2))
         XCTAssertEqual(spanData.spanId, SpanId(id:3))
         XCTAssertEqual(spanData.attributes[DDTestTags.testStatus],  AttributeValue.string( DDTestTags.statusFail))
-        XCTAssertEqual(spanData.status, Status.internalError)
+        XCTAssertEqual(spanData.status, Status.error)
         XCTAssertEqual(spanData.attributes[DDTags.errorType], AttributeValue.string(errorType))
         XCTAssertEqual(spanData.attributes[DDTags.errorMessage], AttributeValue.string(errorMessage))
         XCTAssertEqual(spanData.attributes[DDTags.errorStack], AttributeValue.string(errorStack))
-        XCTAssertEqual(spanData.endEpochNanos, spanData.startEpochNanos + 100)
+        XCTAssertEqual(spanData.endTime, spanData.startTime.addingTimeInterval(TimeInterval.fromMicroseconds(1)))
     }
     
 }

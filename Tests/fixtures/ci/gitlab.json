@@ -9,6 +9,8 @@
       "CI_PROJECT_PATH": "gitlab-pipeline-name",
       "CI_PIPELINE_IID": "gitlab-pipeline-number",
       "CI_JOB_URL": "gitlab-job-url",
+      "CI_JOB_NAME": "gitlab-job-name",
+      "CI_JOB_STAGE": "gitlab-stage-name",
       "CI_COMMIT_SHA": "gitlab-git-commit"
     },
     {
@@ -20,6 +22,8 @@
       "ci.pipeline.name": "gitlab-pipeline-name",
       "ci.pipeline.number": "gitlab-pipeline-number",
       "ci.job.url": "gitlab-job-url",
+      "ci.job.name": "gitlab-job-name",
+      "ci.stage.name": "gitlab-stage-name",
       "git.commit.sha": "gitlab-git-commit"
     }
   ],
@@ -33,6 +37,8 @@
       "CI_PROJECT_PATH": "gitlab-pipeline-name",
       "CI_PIPELINE_IID": "gitlab-pipeline-number",
       "CI_JOB_URL": "gitlab-job-url",
+      "CI_JOB_NAME": "gitlab-job-name",
+      "CI_JOB_STAGE": "gitlab-stage-name",
       "CI_COMMIT_SHA": "gitlab-git-commit"
     },
     {
@@ -44,6 +50,8 @@
       "ci.pipeline.name": "gitlab-pipeline-name",
       "ci.pipeline.number": "gitlab-pipeline-number",
       "ci.job.url": "gitlab-job-url",
+      "ci.job.name": "gitlab-job-name",
+      "ci.stage.name": "gitlab-stage-name",
       "git.commit.sha": "gitlab-git-commit"
     }
   ],
@@ -58,6 +66,8 @@
       "CI_PROJECT_PATH": "gitlab-pipeline-name",
       "CI_PIPELINE_IID": "gitlab-pipeline-number",
       "CI_JOB_URL": "gitlab-job-url",
+      "CI_JOB_NAME": "gitlab-job-name",
+      "CI_JOB_STAGE": "gitlab-stage-name",
       "CI_COMMIT_SHA": "gitlab-git-commit"
     },
     {
@@ -70,6 +80,8 @@
       "ci.pipeline.name": "gitlab-pipeline-name",
       "ci.pipeline.number": "gitlab-pipeline-number",
       "ci.job.url": "gitlab-job-url",
+      "ci.job.name": "gitlab-job-name",
+      "ci.stage.name": "gitlab-stage-name",
       "git.commit.sha": "gitlab-git-commit"
     }
   ],
@@ -84,6 +96,8 @@
       "CI_PROJECT_PATH": "gitlab-pipeline-name",
       "CI_PIPELINE_IID": "gitlab-pipeline-number",
       "CI_JOB_URL": "gitlab-job-url",
+      "CI_JOB_NAME": "gitlab-job-name",
+      "CI_JOB_STAGE": "gitlab-stage-name",
       "CI_COMMIT_SHA": "gitlab-git-commit"
     },
     {
@@ -96,6 +110,8 @@
       "ci.pipeline.name": "gitlab-pipeline-name",
       "ci.pipeline.number": "gitlab-pipeline-number",
       "ci.job.url": "gitlab-job-url",
+      "ci.job.name": "gitlab-job-name",
+      "ci.stage.name": "gitlab-stage-name",
       "git.commit.sha": "gitlab-git-commit"
     }
   ],
@@ -110,6 +126,8 @@
       "CI_PROJECT_PATH": "gitlab-pipeline-name",
       "CI_PIPELINE_IID": "gitlab-pipeline-number",
       "CI_JOB_URL": "gitlab-job-url",
+      "CI_JOB_NAME": "gitlab-job-name",
+      "CI_JOB_STAGE": "gitlab-stage-name",
       "CI_COMMIT_SHA": "gitlab-git-commit"
     },
     {
@@ -122,6 +140,8 @@
       "ci.pipeline.name": "gitlab-pipeline-name",
       "ci.pipeline.number": "gitlab-pipeline-number",
       "ci.job.url": "gitlab-job-url",
+      "ci.job.name": "gitlab-job-name",
+      "ci.stage.name": "gitlab-stage-name",
       "git.commit.sha": "gitlab-git-commit"
     }
   ],
@@ -138,6 +158,8 @@
       "CI_PROJECT_PATH": "gitlab-pipeline-name",
       "CI_PIPELINE_IID": "gitlab-pipeline-number",
       "CI_JOB_URL": "gitlab-job-url",
+      "CI_JOB_NAME": "gitlab-job-name",
+      "CI_JOB_STAGE": "gitlab-stage-name",
       "CI_COMMIT_SHA": "gitlab-git-commit"
     },
     {
@@ -150,6 +172,8 @@
       "ci.pipeline.name": "gitlab-pipeline-name",
       "ci.pipeline.number": "gitlab-pipeline-number",
       "ci.job.url": "gitlab-job-url",
+      "ci.job.name": "gitlab-job-name",
+      "ci.stage.name": "gitlab-stage-name",
       "git.commit.sha": "gitlab-git-commit"
     }
   ],
@@ -166,6 +190,8 @@
       "CI_PROJECT_PATH": "gitlab-pipeline-name",
       "CI_PIPELINE_IID": "gitlab-pipeline-number",
       "CI_JOB_URL": "gitlab-job-url",
+      "CI_JOB_NAME": "gitlab-job-name",
+      "CI_JOB_STAGE": "gitlab-stage-name",
       "CI_COMMIT_SHA": "gitlab-git-commit"
     },
     {
@@ -178,6 +204,8 @@
       "ci.pipeline.name": "gitlab-pipeline-name",
       "ci.pipeline.number": "gitlab-pipeline-number",
       "ci.job.url": "gitlab-job-url",
+      "ci.job.name": "gitlab-job-name",
+      "ci.stage.name": "gitlab-stage-name",
       "git.commit.sha": "gitlab-git-commit"
     }
   ],
@@ -194,6 +222,8 @@
       "CI_PROJECT_PATH": "gitlab-pipeline-name",
       "CI_PIPELINE_IID": "gitlab-pipeline-number",
       "CI_JOB_URL": "gitlab-job-url",
+      "CI_JOB_NAME": "gitlab-job-name",
+      "CI_JOB_STAGE": "gitlab-stage-name",
       "CI_COMMIT_SHA": "gitlab-git-commit"
     },
     {
@@ -206,6 +236,8 @@
       "ci.pipeline.name": "gitlab-pipeline-name",
       "ci.pipeline.number": "gitlab-pipeline-number",
       "ci.job.url": "gitlab-job-url",
+      "ci.job.name": "gitlab-job-name",
+      "ci.stage.name": "gitlab-stage-name",
       "git.commit.sha": "gitlab-git-commit"
     }
   ],
@@ -220,6 +252,8 @@
       "CI_PROJECT_PATH": "gitlab-pipeline-name",
       "CI_PIPELINE_IID": "gitlab-pipeline-number",
       "CI_JOB_URL": "gitlab-job-url",
+      "CI_JOB_NAME": "gitlab-job-name",
+      "CI_JOB_STAGE": "gitlab-stage-name",
       "CI_COMMIT_SHA": "gitlab-git-commit"
     },
     {
@@ -232,6 +266,8 @@
       "ci.pipeline.name": "gitlab-pipeline-name",
       "ci.pipeline.number": "gitlab-pipeline-number",
       "ci.job.url": "gitlab-job-url",
+      "ci.job.name": "gitlab-job-name",
+      "ci.stage.name": "gitlab-stage-name",
       "git.commit.sha": "gitlab-git-commit"
     }
   ],
@@ -245,6 +281,8 @@
       "CI_PROJECT_PATH": "gitlab-pipeline-name",
       "CI_PIPELINE_IID": "gitlab-pipeline-number",
       "CI_JOB_URL": "gitlab-job-url",
+      "CI_JOB_NAME": "gitlab-job-name",
+      "CI_JOB_STAGE": "gitlab-stage-name",
       "CI_COMMIT_SHA": "gitlab-git-commit"
     },
     {
@@ -256,6 +294,8 @@
       "ci.pipeline.name": "gitlab-pipeline-name",
       "ci.pipeline.number": "gitlab-pipeline-number",
       "ci.job.url": "gitlab-job-url",
+      "ci.job.name": "gitlab-job-name",
+      "ci.stage.name": "gitlab-stage-name",
       "git.commit.sha": "gitlab-git-commit"
     }
   ],
@@ -269,6 +309,8 @@
       "CI_PROJECT_PATH": "gitlab-pipeline-name",
       "CI_PIPELINE_IID": "gitlab-pipeline-number",
       "CI_JOB_URL": "gitlab-job-url",
+      "CI_JOB_NAME": "gitlab-job-name",
+      "CI_JOB_STAGE": "gitlab-stage-name",
       "CI_COMMIT_SHA": "gitlab-git-commit"
     },
     {
@@ -280,6 +322,8 @@
       "ci.pipeline.name": "gitlab-pipeline-name",
       "ci.pipeline.number": "gitlab-pipeline-number",
       "ci.job.url": "gitlab-job-url",
+      "ci.job.name": "gitlab-job-name",
+      "ci.stage.name": "gitlab-stage-name",
       "git.commit.sha": "gitlab-git-commit"
     }
   ],
@@ -294,6 +338,8 @@
       "CI_PROJECT_PATH": "gitlab-pipeline-name",
       "CI_PIPELINE_IID": "gitlab-pipeline-number",
       "CI_JOB_URL": "gitlab-job-url",
+      "CI_JOB_NAME": "gitlab-job-name",
+      "CI_JOB_STAGE": "gitlab-stage-name",
       "CI_COMMIT_SHA": "gitlab-git-commit"
     },
     {
@@ -306,6 +352,8 @@
       "ci.pipeline.name": "gitlab-pipeline-name",
       "ci.pipeline.number": "gitlab-pipeline-number",
       "ci.job.url": "gitlab-job-url",
+      "ci.job.name": "gitlab-job-name",
+      "ci.stage.name": "gitlab-stage-name",
       "git.commit.sha": "gitlab-git-commit"
     }
   ],
@@ -320,6 +368,8 @@
       "CI_PROJECT_PATH": "gitlab-pipeline-name",
       "CI_PIPELINE_IID": "gitlab-pipeline-number",
       "CI_JOB_URL": "gitlab-job-url",
+      "CI_JOB_NAME": "gitlab-job-name",
+      "CI_JOB_STAGE": "gitlab-stage-name",
       "CI_COMMIT_SHA": "gitlab-git-commit"
     },
     {
@@ -332,6 +382,8 @@
       "ci.pipeline.name": "gitlab-pipeline-name",
       "ci.pipeline.number": "gitlab-pipeline-number",
       "ci.job.url": "gitlab-job-url",
+      "ci.job.name": "gitlab-job-name",
+      "ci.stage.name": "gitlab-stage-name",
       "git.commit.sha": "gitlab-git-commit"
     }
   ],
@@ -346,6 +398,8 @@
       "CI_PROJECT_PATH": "gitlab-pipeline-name",
       "CI_PIPELINE_IID": "gitlab-pipeline-number",
       "CI_JOB_URL": "gitlab-job-url",
+      "CI_JOB_NAME": "gitlab-job-name",
+      "CI_JOB_STAGE": "gitlab-stage-name",
       "CI_COMMIT_SHA": "gitlab-git-commit"
     },
     {
@@ -358,6 +412,8 @@
       "ci.pipeline.name": "gitlab-pipeline-name",
       "ci.pipeline.number": "gitlab-pipeline-number",
       "ci.job.url": "gitlab-job-url",
+      "ci.job.name": "gitlab-job-name",
+      "ci.stage.name": "gitlab-stage-name",
       "git.commit.sha": "gitlab-git-commit"
     }
   ],
@@ -372,6 +428,8 @@
       "CI_PROJECT_PATH": "gitlab-pipeline-name",
       "CI_PIPELINE_IID": "gitlab-pipeline-number",
       "CI_JOB_URL": "gitlab-job-url",
+      "CI_JOB_NAME": "gitlab-job-name",
+      "CI_JOB_STAGE": "gitlab-stage-name",
       "CI_COMMIT_SHA": "gitlab-git-commit"
     },
     {
@@ -384,6 +442,8 @@
       "ci.pipeline.name": "gitlab-pipeline-name",
       "ci.pipeline.number": "gitlab-pipeline-number",
       "ci.job.url": "gitlab-job-url",
+      "ci.job.name": "gitlab-job-name",
+      "ci.stage.name": "gitlab-stage-name",
       "git.commit.sha": "gitlab-git-commit"
     }
   ],
@@ -398,6 +458,8 @@
       "CI_PROJECT_PATH": "gitlab-pipeline-name",
       "CI_PIPELINE_IID": "gitlab-pipeline-number",
       "CI_JOB_URL": "gitlab-job-url",
+      "CI_JOB_NAME": "gitlab-job-name",
+      "CI_JOB_STAGE": "gitlab-stage-name",
       "CI_COMMIT_SHA": "gitlab-git-commit"
     },
     {
@@ -410,6 +472,8 @@
       "ci.pipeline.name": "gitlab-pipeline-name",
       "ci.pipeline.number": "gitlab-pipeline-number",
       "ci.job.url": "gitlab-job-url",
+      "ci.job.name": "gitlab-job-name",
+      "ci.stage.name": "gitlab-stage-name",
       "git.commit.sha": "gitlab-git-commit"
     }
   ],
@@ -424,6 +488,8 @@
       "CI_PROJECT_PATH": "gitlab-pipeline-name",
       "CI_PIPELINE_IID": "gitlab-pipeline-number",
       "CI_JOB_URL": "gitlab-job-url",
+      "CI_JOB_NAME": "gitlab-job-name",
+      "CI_JOB_STAGE": "gitlab-stage-name",
       "CI_COMMIT_SHA": "gitlab-git-commit"
     },
     {
@@ -436,6 +502,8 @@
       "ci.pipeline.name": "gitlab-pipeline-name",
       "ci.pipeline.number": "gitlab-pipeline-number",
       "ci.job.url": "gitlab-job-url",
+      "ci.job.name": "gitlab-job-name",
+      "ci.stage.name": "gitlab-stage-name",
       "git.commit.sha": "gitlab-git-commit"
     }
   ],
@@ -450,6 +518,8 @@
       "CI_PROJECT_PATH": "gitlab-pipeline-name",
       "CI_PIPELINE_IID": "gitlab-pipeline-number",
       "CI_JOB_URL": "gitlab-job-url",
+      "CI_JOB_NAME": "gitlab-job-name",
+      "CI_JOB_STAGE": "gitlab-stage-name",
       "CI_COMMIT_SHA": "gitlab-git-commit"
     },
     {
@@ -462,6 +532,8 @@
       "ci.pipeline.name": "gitlab-pipeline-name",
       "ci.pipeline.number": "gitlab-pipeline-number",
       "ci.job.url": "gitlab-job-url",
+      "ci.job.name": "gitlab-job-name",
+      "ci.stage.name": "gitlab-stage-name",
       "git.commit.sha": "gitlab-git-commit"
     }
   ],
@@ -476,6 +548,8 @@
       "CI_PROJECT_PATH": "gitlab-pipeline-name",
       "CI_PIPELINE_IID": "gitlab-pipeline-number",
       "CI_JOB_URL": "gitlab-job-url",
+      "CI_JOB_NAME": "gitlab-job-name",
+      "CI_JOB_STAGE": "gitlab-stage-name",
       "CI_COMMIT_SHA": "gitlab-git-commit"
     },
     {
@@ -488,6 +562,8 @@
       "ci.pipeline.name": "gitlab-pipeline-name",
       "ci.pipeline.number": "gitlab-pipeline-number",
       "ci.job.url": "gitlab-job-url",
+      "ci.job.name": "gitlab-job-name",
+      "ci.stage.name": "gitlab-stage-name",
       "git.commit.sha": "gitlab-git-commit"
     }
   ],
@@ -502,6 +578,8 @@
       "CI_PROJECT_PATH": "gitlab-pipeline-name",
       "CI_PIPELINE_IID": "gitlab-pipeline-number",
       "CI_JOB_URL": "gitlab-job-url",
+      "CI_JOB_NAME": "gitlab-job-name",
+      "CI_JOB_STAGE": "gitlab-stage-name",
       "CI_COMMIT_SHA": "gitlab-git-commit"
     },
     {
@@ -514,6 +592,8 @@
       "ci.pipeline.name": "gitlab-pipeline-name",
       "ci.pipeline.number": "gitlab-pipeline-number",
       "ci.job.url": "gitlab-job-url",
+      "ci.job.name": "gitlab-job-name",
+      "ci.stage.name": "gitlab-stage-name",
       "git.commit.sha": "gitlab-git-commit"
     }
   ],
@@ -528,6 +608,8 @@
       "CI_PROJECT_PATH": "gitlab-pipeline-name",
       "CI_PIPELINE_IID": "gitlab-pipeline-number",
       "CI_JOB_URL": "gitlab-job-url",
+      "CI_JOB_NAME": "gitlab-job-name",
+      "CI_JOB_STAGE": "gitlab-stage-name",
       "CI_COMMIT_SHA": "gitlab-git-commit"
     },
     {
@@ -540,6 +622,8 @@
       "ci.pipeline.name": "gitlab-pipeline-name",
       "ci.pipeline.number": "gitlab-pipeline-number",
       "ci.job.url": "gitlab-job-url",
+      "ci.job.name": "gitlab-job-name",
+      "ci.stage.name": "gitlab-stage-name",
       "git.commit.sha": "gitlab-git-commit"
     }
   ]

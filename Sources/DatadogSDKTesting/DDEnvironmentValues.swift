@@ -39,6 +39,8 @@ internal struct DDEnvironmentValues {
     let pipelineURL: String?
     let pipelineName: String?
     let jobURL: String?
+    let jobName: String?
+    let stageName: String?
 
     /// Git values
     let repository: String?
@@ -131,6 +133,8 @@ internal struct DDEnvironmentValues {
             pipelineURL = DDEnvironmentValues.getEnvVariable("TRAVIS_BUILD_WEB_URL")
             pipelineName = repositoryEnv
             jobURL = DDEnvironmentValues.getEnvVariable("TRAVIS_JOB_WEB_URL")
+            jobName = nil
+            stageName = nil
             tagEnv = DDEnvironmentValues.getEnvVariable("TRAVIS_TAG")
             if tagEnv?.isEmpty ?? true {
                 branchEnv = DDEnvironmentValues.getEnvVariable("TRAVIS_PULL_REQUEST_BRANCH")
@@ -150,6 +154,8 @@ internal struct DDEnvironmentValues {
             pipelineURL = DDEnvironmentValues.getEnvVariable("CIRCLE_BUILD_URL")
             pipelineName = DDEnvironmentValues.getEnvVariable("CIRCLE_PROJECT_REPONAME")
             jobURL = pipelineURL
+            jobName = nil
+            stageName = nil
             tagEnv = DDEnvironmentValues.getEnvVariable("CIRCLE_TAG")
             if tagEnv?.isEmpty ?? true {
                 branchEnv = DDEnvironmentValues.getEnvVariable("CIRCLE_BRANCH")
@@ -167,6 +173,8 @@ internal struct DDEnvironmentValues {
             pipelineName = DDEnvironmentValues.filterJenkinsJobName(name: DDEnvironmentValues.getEnvVariable("JOB_NAME"),
                                                                     gitBranch: DDEnvironmentValues.normalizedBranchOrTag(DDEnvironmentValues.getEnvVariable("GIT_BRANCH")))
             jobURL = nil
+            jobName = nil
+            stageName = nil
             branchEnv = DDEnvironmentValues.getEnvVariable("GIT_BRANCH")
             if branchEnv?.contains("tags") ?? false {
                 tagEnv = branchEnv
@@ -184,6 +192,8 @@ internal struct DDEnvironmentValues {
             pipelineURL = DDEnvironmentValues.getEnvVariable("CI_PIPELINE_URL")?.replacingOccurrences(of: "/-/", with: "/")
             pipelineName = DDEnvironmentValues.getEnvVariable("CI_PROJECT_PATH")
             jobURL = DDEnvironmentValues.getEnvVariable("CI_JOB_URL")
+            jobName = DDEnvironmentValues.getEnvVariable("CI_JOB_NAME")
+            stageName = DDEnvironmentValues.getEnvVariable("CI_JOB_STAGE")
             branchEnv = DDEnvironmentValues.getEnvVariable("CI_COMMIT_BRANCH")
             tagEnv = DDEnvironmentValues.getEnvVariable("CI_COMMIT_TAG")
         } else if DDEnvironmentValues.getEnvVariable("APPVEYOR") != nil {
@@ -198,6 +208,8 @@ internal struct DDEnvironmentValues {
             pipelineURL = "https://ci.appveyor.com/project/\(repoName)/builds/\(pipelineId ?? "")"
             pipelineName = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_NAME")
             jobURL = pipelineURL
+            jobName = nil
+            stageName = nil
             branchEnv = DDEnvironmentValues.getEnvVariable("APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH")
             if branchEnv?.isEmpty ?? true {
                 branchEnv = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_BRANCH")
@@ -217,7 +229,8 @@ internal struct DDEnvironmentValues {
             let jobId = DDEnvironmentValues.getEnvVariable("SYSTEM_JOBID") ?? ""
             let taskId = DDEnvironmentValues.getEnvVariable("SYSTEM_TASKINSTANCEID") ?? ""
             jobURL = "\(foundationServerUri)\(teamProjectId)/_build/results?buildId=\(pipelineId ?? "")&view=logs&j=\(jobId)&t=\(taskId)"
-
+            jobName = nil
+            stageName = nil
             var repositoryEnv = DDEnvironmentValues.getEnvVariable("SYSTEM_PULLREQUEST_SOURCEREPOSITORYURI")
             if repositoryEnv?.isEmpty ?? true {
                 repositoryEnv = DDEnvironmentValues.getEnvVariable("BUILD_REPOSITORY_URI")
@@ -250,6 +263,8 @@ internal struct DDEnvironmentValues {
             pipelineName = DDEnvironmentValues.getEnvVariable("BITBUCKET_REPO_FULL_NAME")
             pipelineURL = "https://bitbucket.org/\(pipelineName ?? "")/addon/pipelines/home#!/results/\(pipelineNumber ?? "")"
             jobURL = pipelineURL
+            jobName = nil
+            stageName = nil
             branchEnv = DDEnvironmentValues.getEnvVariable("BITBUCKET_BRANCH")
             tagEnv = DDEnvironmentValues.getEnvVariable("BITBUCKET_TAG")
         } else if DDEnvironmentValues.getEnvVariable("GITHUB_SHA") != nil {
@@ -264,6 +279,8 @@ internal struct DDEnvironmentValues {
             pipelineURL = "https://github.com/\(repositoryEnv ?? "")/commit/\(commit ?? "")/checks"
             pipelineName = DDEnvironmentValues.getEnvVariable("GITHUB_WORKFLOW")
             jobURL = pipelineURL
+            jobName = nil
+            stageName = nil
             branchEnv = DDEnvironmentValues.getEnvVariable("GITHUB_HEAD_REF")
             if branchEnv?.isEmpty ?? true {
                 branchEnv = DDEnvironmentValues.getEnvVariable("GITHUB_REF")
@@ -283,6 +300,8 @@ internal struct DDEnvironmentValues {
             pipelineURL = DDEnvironmentValues.getEnvVariable("BUILDKITE_BUILD_URL")
             pipelineName = DDEnvironmentValues.getEnvVariable("BUILDKITE_PIPELINE_SLUG")
             jobURL = (pipelineURL ?? "") + "#" + (DDEnvironmentValues.getEnvVariable("BUILDKITE_JOB_ID") ?? "")
+            jobName = nil
+            stageName = nil
             branchEnv = DDEnvironmentValues.getEnvVariable("BUILDKITE_BRANCH")
             tagEnv = DDEnvironmentValues.getEnvVariable("BUILDKITE_TAG")
         } else if DDEnvironmentValues.getEnvVariable("BITRISE_BUILD_NUMBER") != nil {
@@ -300,6 +319,8 @@ internal struct DDEnvironmentValues {
             pipelineId = DDEnvironmentValues.getEnvVariable("BITRISE_BUILD_SLUG")
             pipelineNumber = DDEnvironmentValues.getEnvVariable("BITRISE_BUILD_NUMBER")
             jobURL = nil
+            jobName = nil
+            stageName = nil
             pipelineURL = DDEnvironmentValues.getEnvVariable("BITRISE_BUILD_URL")
             pipelineName = DDEnvironmentValues.getEnvVariable("BITRISE_APP_TITLE")
             branchEnv = DDEnvironmentValues.getEnvVariable("BITRISEIO_GIT_BRANCH_DEST")
@@ -317,6 +338,8 @@ internal struct DDEnvironmentValues {
             pipelineURL = nil
             pipelineName = nil
             jobURL = nil
+            jobName = nil
+            stageName = nil
         }
 
         branch = DDEnvironmentValues.normalizedBranchOrTag(branchEnv)
@@ -356,6 +379,8 @@ internal struct DDEnvironmentValues {
         setAttributeIfExist(toSpan: span, key: DDCITags.ciPipelineNumber, value: pipelineNumber)
         setAttributeIfExist(toSpan: span, key: DDCITags.ciPipelineURL, value: pipelineURL)
         setAttributeIfExist(toSpan: span, key: DDCITags.ciPipelineName, value: pipelineName)
+        setAttributeIfExist(toSpan: span, key: DDCITags.ciStageName, value: stageName)
+        setAttributeIfExist(toSpan: span, key: DDCITags.ciJobName, value: jobName)
         setAttributeIfExist(toSpan: span, key: DDCITags.ciJobURL, value: jobURL)
         setAttributeIfExist(toSpan: span, key: DDCITags.ciWorkspacePath, value: workspacePath)
 

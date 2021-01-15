@@ -22,7 +22,7 @@ internal class DDTracer {
     var launchSpanContext: SpanContext?
 
     var activeSpan: RecordEventsReadableSpan? {
-        return tracerSdk.currentSpan as? RecordEventsReadableSpan ??
+        return tracerSdk.activeSpan as? RecordEventsReadableSpan ??
             DDTestMonitor.instance?.testObserver?.currentTestSpan
     }
 
@@ -80,18 +80,16 @@ internal class DDTracer {
         attributes.forEach {
             spanBuilder.setAttribute(key: $0.key, value: $0.value)
         }
-        if let startTimestamp = date {
-            spanBuilder.setStartTimestamp(timestamp: startTimestamp)
-        }
+        spanBuilder.setStartTime(time: date ?? Date())
 
         /// launchSpanContext will only be available when running in the app launched from UITest, so assign this as the parent
         /// when there is no one
-        if let launchContext = launchSpanContext, tracerSdk.currentSpan == nil {
+        if let launchContext = launchSpanContext, tracerSdk.activeSpan == nil {
             spanBuilder.setParent(launchContext)
         }
 
         let span = spanBuilder.startSpan() as! RecordEventsReadableSpan
-        _ = tracerSdk.withSpan(span)
+        tracerSdk.setActive(span)
         return span
     }
 
@@ -112,12 +110,12 @@ internal class DDTracer {
 
         let spanName = spanData.name
         let traceId = TraceId(idHi: spanData.traceIdHi, idLo: spanData.traceIdLo)
-        let startTime = spanData.startEpochNanos
+        let startTime = spanData.startTime
         let spanContext = SpanContext.create(traceId: traceId,
                                              spanId: spanId,
                                              traceFlags: TraceFlags().settingIsSampled(true),
                                              traceState: TraceState())
-        var attributes = AttributesWithCapacity(capacity: tracerSdk.sharedState.activeTraceConfig.maxNumberOfAttributes)
+        var attributes = AttributesDictionary(capacity: tracerSdk.sharedState.activeTraceConfig.maxNumberOfAttributes)
         spanData.stringAttributes.forEach {
             attributes.updateValue(value: AttributeValue.string($0.value), forKey: $0.key)
         }
@@ -138,22 +136,22 @@ internal class DDTracer {
                                                       clock: MonotonicClock(clock: tracerSdk.sharedState.clock),
                                                       resource: Resource(),
                                                       attributes: attributes,
-                                                      links: [Link](),
+                                                      links: [SpanData.Link](),
                                                       totalRecordedLinks: 0,
-                                                      startEpochNanos: startTime)
+                                                      startTime: startTime)
 
-        var crashTimeStamp = spanData.startEpochNanos + 100
-        if let timeInterval = crashDate?.timeIntervalSince1970 {
-            crashTimeStamp = max(crashTimeStamp, UInt64(timeInterval * 1_000_000_000))
+        var minimumCrashTime = spanData.startTime.addingTimeInterval(TimeInterval.fromMicroseconds(1))
+        if let crashDate = crashDate {
+            minimumCrashTime = max(minimumCrashTime, crashDate)
         }
-        span.status = .internalError
-        span.end(endOptions: EndSpanOptions(timestamp: crashTimeStamp))
+        span.status = .error
+        span.end(time: minimumCrashTime)
         self.flush()
         return span
     }
 
     @discardableResult func createSpanFromContext(spanContext: SpanContext) -> RecordEventsReadableSpan {
-        let attributes = AttributesWithCapacity(capacity: tracerSdk.sharedState.activeTraceConfig.maxNumberOfAttributes)
+        let attributes = AttributesDictionary(capacity: tracerSdk.sharedState.activeTraceConfig.maxNumberOfAttributes)
         let span = RecordEventsReadableSpan.startSpan(context: spanContext,
                                                       name: "ApplicationSpan",
                                                       instrumentationLibraryInfo: tracerSdk.instrumentationLibraryInfo,
@@ -165,9 +163,9 @@ internal class DDTracer {
                                                       clock: MonotonicClock(clock: tracerSdk.sharedState.clock),
                                                       resource: Resource(),
                                                       attributes: attributes,
-                                                      links: [Link](),
+                                                      links: [SpanData.Link](),
                                                       totalRecordedLinks: 0,
-                                                      startEpochNanos: 0)
+                                                      startTime: Date())
 
         return span
     }
@@ -186,11 +184,8 @@ internal class DDTracer {
         guard let activeSpan = activeSpan else {
             return
         }
-        let eventNanos = activeSpan.startEpochNanos + UInt64(timeIntervalSinceSpanStart * 1_000_000_000)
-        let timedEvent = TimedEvent(name: "logString",
-                                    epochNanos: eventNanos,
-                                    attributes: ["message": AttributeValue.string(string)])
-        activeSpan.addEvent(event: timedEvent)
+        let timestamp = activeSpan.startTime.addingTimeInterval(timeIntervalSinceSpanStart)
+        activeSpan.addEvent(name: "logString", attributes: ["message": AttributeValue.string(string)], timestamp: timestamp)
     }
 
     /// This method is only currently used when logging with an app being launched from a UITest, and no span has been created in the App.
@@ -200,6 +195,7 @@ internal class DDTracer {
         let auxSpan = createSpanFromContext(spanContext: context)
         auxSpan.addEvent(name: "logString", attributes: ["message": AttributeValue.string(string)], timestamp: date ?? Date())
         DispatchQueue.global().async {
+            auxSpan.status = .ok
             auxSpan.end()
             self.flush()
         }

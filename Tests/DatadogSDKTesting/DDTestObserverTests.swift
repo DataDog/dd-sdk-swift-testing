@@ -41,7 +41,7 @@ internal class DDTestObserverTests: XCTestCase {
 
         //let fingerprint = String((testBundle + testSuite + testName + deviceModel + deviceVersion).hash)
 
-        let span = testObserver.tracer.tracerSdk.currentSpan as! RecordEventsReadableSpan
+        let span = testObserver.tracer.tracerSdk.activeSpan as! RecordEventsReadableSpan
         let spanData = span.toSpanData()
 
         XCTAssertEqual(spanData.name, "-[DDTestObserverTests testWhenTestCaseWillStartIsCalled_testSpanIsCreated]")
@@ -64,7 +64,7 @@ internal class DDTestObserverTests: XCTestCase {
 
     func testWhenTestCaseDidFinishIsCalled_testStatusIsSet() {
         testObserver.testCaseWillStart(self)
-        let testSpan = testObserver.tracer.tracerSdk.currentSpan as! RecordEventsReadableSpan
+        let testSpan = testObserver.tracer.tracerSdk.activeSpan as! RecordEventsReadableSpan
         var spanData = testSpan.toSpanData()
         XCTAssertNil(spanData.attributes[DDTestTags.testStatus])
 
@@ -78,7 +78,7 @@ internal class DDTestObserverTests: XCTestCase {
         testObserver.testCaseWillStart(self)
         testObserver.testCase(self, didFailWithDescription: "descrip", inFile: "samplefile", atLine: 239)
 
-        let testSpan = testObserver.tracer.tracerSdk.currentSpan as! RecordEventsReadableSpan
+        let testSpan = testObserver.tracer.tracerSdk.activeSpan as! RecordEventsReadableSpan
         let spanData = testSpan.toSpanData()
 
         XCTAssertNotNil(spanData.attributes[DDTags.errorType])
@@ -90,7 +90,7 @@ internal class DDTestObserverTests: XCTestCase {
 
     func testWhenTestCaseDidFinishIsCalledAndTheTestIsABenchmark_benchmarkTagsAreAdded() {
         testObserver.testCaseWillStart(self)
-        let testSpan = testObserver.tracer.tracerSdk.currentSpan as! RecordEventsReadableSpan
+        let testSpan = testObserver.tracer.tracerSdk.activeSpan as! RecordEventsReadableSpan
         let perfMetric = XCTPerformanceMetric.wallClockTime
         self.setValue([perfMetric], forKey: "_activePerformanceMetricIDs")
         self.setValue([perfMetric: ["measurements" : [1,2,3,4,5]]], forKey: "_perfMetricsForID")

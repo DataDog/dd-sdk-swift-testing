@@ -156,24 +156,8 @@ class DDNetworkActivityLogger {
         switch code {
             case 200...399:
                 return Status.ok
-            case 400:
-                return Status.invalidArgument
-            case 504:
-                return Status.deadlineExceeded
-            case 404:
-                return Status.notFound
-            case 403:
-                return Status.permissionDenied
-            case 401:
-                return Status.unauthenticated
-            case 429:
-                return Status.resourceExhausted
-            case 501:
-                return Status.unimplemented
-            case 503:
-                return Status.unavailable
             default:
-                return Status.unknown
+                return Status.error
         }
     }
 

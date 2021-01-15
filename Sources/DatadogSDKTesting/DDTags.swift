@@ -86,6 +86,8 @@ internal struct DDCITags {
     static let ciPipelineName   = "ci.pipeline.name"
     static let ciPipelineNumber = "ci.pipeline.number"
     static let ciPipelineURL    = "ci.pipeline.url"
+    static let ciStageName      = "ci.stage.name"
+    static let ciJobName        = "ci.job.name"
     static let ciJobURL         = "ci.job.url"
     static let ciWorkspacePath  = "ci.workspace_path"
 }

@@ -97,24 +97,28 @@ internal class DDTracer {
     /// and adds the error status and information
     @discardableResult func createSpanFromCrash(spanData: SimpleSpanData, crashDate: Date?, errorType: String, errorMessage: String, errorStack: String) -> RecordEventsReadableSpan {
         var spanId: SpanId
-        var parent: SpanId?
+        var parentContext: SpanContext?
+        let traceId = TraceId(idHi: spanData.traceIdHi, idLo: spanData.traceIdLo)
         if isBinaryUnderUITesting {
             /// We create an independent span with the test as parent
             spanId = SpanId.random()
-            parent = SpanId(id: spanData.spanId)
+            parentContext = SpanContext.create(traceId: traceId,
+                                               spanId: SpanId(id: spanData.spanId),
+                                               traceFlags: TraceFlags().settingIsSampled(true),
+                                               traceState: TraceState())
         } else {
             /// We recreate the test span that crashed
             spanId = SpanId(id: spanData.spanId)
-            parent = nil
+            parentContext = nil
         }
 
         let spanName = spanData.name
-        let traceId = TraceId(idHi: spanData.traceIdHi, idLo: spanData.traceIdLo)
         let startTime = spanData.startTime
         let spanContext = SpanContext.create(traceId: traceId,
                                              spanId: spanId,
                                              traceFlags: TraceFlags().settingIsSampled(true),
                                              traceState: TraceState())
+
         var attributes = AttributesDictionary(capacity: tracerSdk.sharedState.activeTraceConfig.maxNumberOfAttributes)
         spanData.stringAttributes.forEach {
             attributes.updateValue(value: AttributeValue.string($0.value), forKey: $0.key)
@@ -129,7 +133,7 @@ internal class DDTracer {
                                                       name: spanName,
                                                       instrumentationLibraryInfo: tracerSdk.instrumentationLibraryInfo,
                                                       kind: .internal,
-                                                      parentSpanId: parent,
+                                                      parentContext: parentContext,
                                                       hasRemoteParent: false,
                                                       traceConfig: tracerSdk.sharedState.activeTraceConfig,
                                                       spanProcessor: tracerSdk.sharedState.activeSpanProcessor,
@@ -156,7 +160,7 @@ internal class DDTracer {
                                                       name: "ApplicationSpan",
                                                       instrumentationLibraryInfo: tracerSdk.instrumentationLibraryInfo,
                                                       kind: .internal,
-                                                      parentSpanId: nil,
+                                                      parentContext: nil,
                                                       hasRemoteParent: false,
                                                       traceConfig: tracerSdk.sharedState.activeTraceConfig,
                                                       spanProcessor: tracerSdk.sharedState.activeSpanProcessor,

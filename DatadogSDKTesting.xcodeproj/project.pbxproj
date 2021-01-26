@@ -1590,7 +1590,7 @@
 			repositoryURL = "https://github.com/open-telemetry/opentelemetry-swift.git";
 			requirement = {
 				kind = revision;
-				revision = 27949622ed49f28ddc62a00b4bad69ea330826e5;
+				revision = 19a13a2e636abcd7414baa6877792a458b8b9644;
 			};
 		};
 		E1FB4839253891650083B263 /* XCRemoteSwiftPackageReference "plcrashreporter" */ = {

@@ -42,7 +42,7 @@ internal class DDTracer {
         }
 
         let tracerProvider = OpenTelemetrySDK.instance.tracerProvider
-        let traceConfig = TraceConfig().settingMaxNumberOfAttributes(64)
+        let traceConfig = TraceConfig()
         tracerProvider.updateActiveTraceConfig(traceConfig)
         tracerSdk = tracerProvider.get(instrumentationName: "com.datadoghq.testing", instrumentationVersion: "0.2.0") as! TracerSdk
 
@@ -53,6 +53,7 @@ internal class DDTracer {
             applicationVersion: "0.0.1",
             environment: env.ddEnvironment ?? "ci",
             clientToken: env.ddClientToken ?? "",
+            apiKey: nil,
             endpoint: Endpoint.us,
             uploadCondition: { true },
             performancePreset: .instantDataDelivery,

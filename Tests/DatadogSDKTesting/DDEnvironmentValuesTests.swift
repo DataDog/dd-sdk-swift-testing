@@ -135,7 +135,14 @@ class DDEnvironmentValuesTests: XCTestCase {
         for case let fileURL as URL in fileEnumerator {
             if fileURL.pathExtension == "json" {
                 print("validating \(fileURL.lastPathComponent)")
-                try validateSpec(file: fileURL)
+                do {
+                    try validateSpec(file: fileURL)
+                } catch {
+                    print("[FixtureError] JSON serialization failed on file: \(fileURL)")
+                    let content = try String(contentsOf: fileURL)
+                    print("[FixtureError] content:\n" + content)
+                    throw error
+                }
             }
         }
     }

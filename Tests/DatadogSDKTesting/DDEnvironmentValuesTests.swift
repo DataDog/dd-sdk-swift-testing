@@ -9,7 +9,9 @@ import OpenTelemetryApi
 import OpenTelemetrySdk
 import XCTest
 
-struct FixtureError: Error {}
+struct FixtureError: Error, CustomStringConvertible {
+    let description: String
+}
 
 class DDEnvironmentValuesTests: XCTestCase {
     var testEnvironment = [String: String]()
@@ -125,46 +127,42 @@ class DDEnvironmentValuesTests: XCTestCase {
         return tracerSdk.spanBuilder(spanName: "spanName").startSpan() as! RecordEventsReadableSpan
     }
     
-    func testSpecs() {
+    func testSpecs() throws {
         let bundle = Bundle(for: type(of: self))
         let fixturesURL = bundle.resourceURL!
         let fileEnumerator = FileManager.default.enumerator(at: fixturesURL, includingPropertiesForKeys: nil)!
-        
+
         for case let fileURL as URL in fileEnumerator {
             if fileURL.pathExtension == "json" {
                 print("validating \(fileURL.lastPathComponent)")
-                validateSpec(file: fileURL)
+                try validateSpec(file: fileURL)
             }
         }
     }
-    
-    private func validateSpec(file: URL) {
-        do {
-            let data = try Data(contentsOf: file)
-            guard let json = try JSONSerialization.jsonObject(with: data, options: []) as? [Any] else { throw FixtureError() }
-            try json.forEach { spec in
-                DDEnvironmentValues.environment = [String: String]()
-                guard let spec = spec as? [[String: String]] else { throw FixtureError() }
-                spec[0].forEach {
-                    testEnvironment[$0.key] = $0.value
-                }
-                
-                setEnvVariables()
-                let span = createSimpleSpan()
-                var spanData = span.toSpanData()
-                let env = DDEnvironmentValues()
-                env.addTagsToSpan(span: span)
-                spanData = span.toSpanData()
-                
-                spec[1].forEach {
-                    XCTAssertEqual(spanData.attributes[$0.key]?.description, $0.value)
-                    if spanData.attributes[$0.key]?.description != $0.value {
-                        print("\(spanData.attributes[$0.key]!.description) != \($0.value)")
-                    }
+
+    private func validateSpec(file: URL) throws {
+        let data = try Data(contentsOf: file)
+        guard let json = try JSONSerialization.jsonObject(with: data, options: []) as? [Any] else { throw FixtureError(description: "[FixtureError] JSON serialization failed on file: \(file)") }
+        try json.forEach { specVal in
+            DDEnvironmentValues.environment = [String: String]()
+            guard let spec = specVal as? [[String: String]] else { throw FixtureError(description: "[FixtureError] spec invalid: \(specVal)") }
+            spec[0].forEach {
+                testEnvironment[$0.key] = $0.value
+            }
+
+            setEnvVariables()
+            let span = createSimpleSpan()
+            var spanData = span.toSpanData()
+            let env = DDEnvironmentValues()
+            env.addTagsToSpan(span: span)
+            spanData = span.toSpanData()
+
+            spec[1].forEach {
+                XCTAssertEqual(spanData.attributes[$0.key]?.description, $0.value)
+                if spanData.attributes[$0.key]?.description != $0.value {
+                    print("\(spanData.attributes[$0.key]!.description) != \($0.value)")
                 }
             }
-        } catch {
-            XCTFail("Spec at \(file.lastPathComponent) is not valid")
         }
     }
 }

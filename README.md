@@ -70,7 +70,8 @@ For Network autoinstrumentation there are other settings that you can configure
 DD_DISABLE_HEADERS_INJECTION # Disables all injection of tracing headers (Boolean)
 DD_INSTRUMENTATION_EXTRA_HEADERS # Specific extra headers that you want the tool to log (String List)
 DD_EXCLUDED_URLS # Urls that you dont want to log or inject headers into(String List)
-DD_ENABLE_RECORD_PAYLOAD # It enables reporting a subset (512 bytes) of the payloads in requests and responses (Boolean)
+DD_ENABLE_RECORD_PAYLOAD # It enables reporting a subset of the payloads in requests and responses (Boolean)
+DD_MAX_PAYLOAD_SIZE # It sets the maximum size that will be reported from the payload, 1024 by default (Integer)
 ```
 
 You can also disable or enable specific autoinstrumentation in some of the tests from Swift or Objective-C by importing the module `DatadogSDKTesting` and using the class: `DDInstrumentationControl`.

@@ -16,21 +16,24 @@ let launchNotificationName = NSApplication.didFinishLaunchingNotification
 internal class DDTestMonitor {
     static var instance: DDTestMonitor?
 
+    static let defaultPayloadSize = 1024
+
     let tracer: DDTracer
     var testObserver: DDTestObserver?
     var networkInstrumentation: DDNetworkInstrumentation?
     var stderrCapturer: StderrCapture
     var injectHeaders: Bool = false
     var recordPayload: Bool = false
+    var maxPayloadSize: Int = defaultPayloadSize
     var notificationObserver: NSObjectProtocol?
 
     init() {
         tracer = DDTracer()
         stderrCapturer = StderrCapture()
-        ///If the library is being loaded in a binary launched from a UITest, dont start test observing
+        /// If the library is being loaded in a binary launched from a UITest, dont start test observing
         if !tracer.isBinaryUnderUITesting {
             testObserver = DDTestObserver(tracer: tracer)
-        }  else {
+        } else {
             notificationObserver = NotificationCenter.default.addObserver(
                 forName: launchNotificationName,
                 object: nil, queue: nil) { _ in
@@ -53,6 +56,9 @@ internal class DDTestMonitor {
             }
             if tracer.env.enableRecordPayload {
                 recordPayload = true
+            }
+            if let maxPayload = tracer.env.maxPayloadSize {
+                maxPayloadSize = maxPayload
             }
         }
         if !tracer.env.disableStdoutInstrumentation {
@@ -78,6 +84,7 @@ internal class DDTestMonitor {
     func startStdoutCapture() {
         StdoutCapture.startCapturing(tracer: tracer)
     }
+
     func stopStdoutCapture() {
         StdoutCapture.stopCapturing()
     }
@@ -85,6 +92,7 @@ internal class DDTestMonitor {
     func startStderrCapture() {
         stderrCapturer.startCapturing(tracer: tracer)
     }
+
     func stopStderrCapture() {
         stderrCapturer.stopCapturing()
     }

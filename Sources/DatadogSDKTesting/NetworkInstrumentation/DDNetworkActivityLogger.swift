@@ -38,8 +38,8 @@ class DDNetworkActivityLogger {
     
     static func log(request: URLRequest, sessionTaskId: String) {
         guard let tracer = DDTestMonitor.instance?.tracer,
-              tracer.activeSpan != nil || tracer.launchSpanContext != nil,
-              !(DDTestMonitor.instance?.networkInstrumentation?.excludes(request.url) ?? false) else {
+            tracer.activeSpan != nil || tracer.launchSpanContext != nil,
+            !(DDTestMonitor.instance?.networkInstrumentation?.excludes(request.url) ?? false) else {
             return
         }
         
@@ -92,7 +92,7 @@ class DDNetworkActivityLogger {
             span = spanDict.removeValue(forKey: sessionTaskId)
         }
         guard span != nil,
-              let httpResponse = response as? HTTPURLResponse else {
+            let httpResponse = response as? HTTPURLResponse else {
             return
         }
         
@@ -109,7 +109,7 @@ class DDNetworkActivityLogger {
         
         if DDTestMonitor.instance?.networkInstrumentation?.recordPayload ?? false {
             if let data = dataOrFile as? Data, data.count > 0 {
-                let dataSample = data.subdata(in: 0..<min(data.count, 512))
+                let dataSample = data.subdata(in: 0..<min(data.count, DDTestMonitor.instance?.maxPayloadSize ?? DDTestMonitor.defaultPayloadSize))
                 let payload = String(data: dataSample, encoding: .ascii) ?? "<unknown>"
                 span.setAttribute(key: responsePayloadKey, value: payload)
             } else if let fileUrl = dataOrFile as? URL {
@@ -160,7 +160,7 @@ class DDNetworkActivityLogger {
                 return Status.error
         }
     }
-
+    
     static func endAndCleanAliveSpans() {
         spanDictQueue.sync {
             spanDict.forEach {

@@ -17,6 +17,7 @@ internal struct DDEnvironmentValues {
     let disableNetworkInstrumentation: Bool
     let disableHeadersInjection: Bool
     let enableRecordPayload: Bool
+    let maxPayloadSize: Int?
     let disableStdoutInstrumentation: Bool
     let disableStderrInstrumentation: Bool
     let extraHTTPHeaders: Set<String>?
@@ -88,6 +89,9 @@ internal struct DDEnvironmentValues {
 
         let envRecordPayload = DDEnvironmentValues.getEnvVariable("DD_ENABLE_RECORD_PAYLOAD") as NSString?
         enableRecordPayload = envRecordPayload?.boolValue ?? false
+
+        let envMaxPayloadSize = DDEnvironmentValues.getEnvVariable("DD_MAX_PAYLOAD_SIZE") as NSString?
+        maxPayloadSize = envMaxPayloadSize?.integerValue
 
         let envStdout = DDEnvironmentValues.getEnvVariable("DD_DISABLE_STDOUT_INSTRUMENTATION") as NSString?
         disableStdoutInstrumentation = envStdout?.boolValue ?? false

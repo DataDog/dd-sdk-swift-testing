@@ -5,6 +5,7 @@
  */
 
 import Foundation
+import MachO
 
 struct DDSymbolicator {
     private static let crashLineRegex = try! NSRegularExpression(pattern: "^([0-9]+)([ \t]+)([^ \t]+)([ \t]+)(0x[0-9a-fA-F]+)([ \t]+)(0x[0-9a-fA-F]+)([ \t]+\\+[ \t]+[0-9]+)$?", options: .anchorsMatchLines)
@@ -77,6 +78,18 @@ struct DDSymbolicator {
     private static func symbolicateCrash(crashLog: String, dSYMFiles: [URL]) -> String {
         var lines: [String] = crashLog.components(separatedBy: "\n").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
 
+        /// User library addresses are randomized each time an app is run, create a map to locate library addresses by name,
+        /// system libraries are not so address returned is 0
+        let numImages = _dyld_image_count()
+        var imageAddresses = [String: UInt]()
+        for i in 0 ..< numImages {
+            let name = URL(fileURLWithPath: String(cString: _dyld_get_image_name(i))).lastPathComponent
+            let address = UInt(_dyld_get_image_vmaddr_slide(i))
+            if address != 0 {
+                imageAddresses[name] = address
+            }
+        }
+
         for i in 0 ..< lines.count {
             let line = lines[i]
             if let match = crashLineRegex.firstMatch(in: line, options: [], range: NSRange(location: 0, length: line.count)) {
@@ -91,12 +104,24 @@ struct DDSymbolicator {
                 let callAddress = String(line[callAddressRange])
 
                 guard let dsym = dSYMFiles.first(where: { $0.lastPathComponent == library }) else {
-                    // No dSYM to symbolicate this line, write symbol Information
-                    var info = Dl_info()
-                    guard let floatAdress = Float64(callAddress),
-                        let ptr = UnsafeRawPointer(bitPattern: UInt(floatAdress)) else {
+                    /// No dSYM to symbolicate this line, write symbol Information
+                    guard let originalCallAdress = Float64(callAddress) else {
                         continue
                     }
+                    var callAdress = UInt(originalCallAdress)
+
+                    /// Calculate the new address of the library, if it is in the map
+                    if let libraryOffset = imageAddresses[library],
+                       let originalLibraryAddress = Float64(libraryAddress) {
+                        let callOffset = UInt(originalCallAdress) - UInt(originalLibraryAddress)
+                        callAdress = libraryOffset + callOffset
+                    }
+
+                    guard let ptr = UnsafeRawPointer(bitPattern: UInt(callAdress)) else {
+                        continue
+                    }
+
+                    var info = Dl_info()
                     let result = dladdr(ptr, &info)
                     if result != 0 {
                         let symbolName = info.dli_sname != nil ? demangleName(String(cString: info.dli_sname)) : ""

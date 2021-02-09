@@ -127,8 +127,17 @@ internal class DDTracer {
 
         attributes.updateValue(value: AttributeValue.string(DDTestTags.statusFail), forKey: DDTestTags.testStatus)
         attributes.updateValue(value: AttributeValue.string(errorType), forKey: DDTags.errorType)
-        attributes.updateValue(value: AttributeValue.string(errorMessage), forKey: DDTags.errorMessage)
-        attributes.updateValue(value: AttributeValue.string(errorStack), forKey: DDTags.errorStack)
+        if errorStack.count < 5000 {
+            attributes.updateValue(value: AttributeValue.string(errorMessage), forKey: DDTags.errorMessage)
+            attributes.updateValue(value: AttributeValue.string(errorStack), forKey: DDTags.errorStack)
+        } else {
+            attributes.updateValue(value: AttributeValue.string(errorMessage + ". Check error.stack"), forKey: DDTags.errorMessage)
+            let splitted = errorStack.split(by: 5000)
+            for i in 0 ..< splitted.count {
+                attributes.updateValue(value: AttributeValue.string(splitted[i]), forKey: "\(DDTags.errorStack).\( String(format: "%02d", i))")
+
+            }
+        }
 
         let span = RecordEventsReadableSpan.startSpan(context: spanContext,
                                                       name: spanName,

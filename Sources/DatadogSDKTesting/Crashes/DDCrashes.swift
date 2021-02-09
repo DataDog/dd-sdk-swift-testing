@@ -20,7 +20,7 @@ internal class DDCrashes {
     }
 
     private static func installPLCrashReporterHandler() {
-        let config = PLCrashReporterConfig(signalHandlerType: .BSD, symbolicationStrategy: .all)
+        let config = PLCrashReporterConfig(signalHandlerType: .BSD, symbolicationStrategy: [])
         guard let plCrashReporter = PLCrashReporter(configuration: config) else {
             return
         }
@@ -41,8 +41,15 @@ internal class DDCrashes {
         plCrashReporter.purgePendingCrashReport()
 
         if let crashReport = try? PLCrashReport(data: crashData) {
-            let crashLog = PLCrashReportTextFormatter.stringValue(for: crashReport, with: PLCrashReportTextFormatiOS) ?? ""
-            // This code needs our PR for PLCrashReporter
+            var crashLog = PLCrashReportTextFormatter.stringValue(for: crashReport, with: PLCrashReportTextFormatiOS) ?? ""
+
+            #if targetEnvironment(simulator) || os(macOS)
+                let symbolicated = DDSymbolicator.symbolicate(crashLog: crashLog)
+                if !symbolicated.isEmpty {
+                    crashLog = symbolicated
+                }
+            #endif
+
             if let customData = crashReport.customData {
                 if let spanData = SimpleSpanSerializer.deserializeSpan(data: customData) {
                     var errorType = ""

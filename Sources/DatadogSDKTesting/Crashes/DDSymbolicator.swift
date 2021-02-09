@@ -10,11 +10,7 @@ import MachO
 struct DDSymbolicator {
     private static let crashLineRegex = try! NSRegularExpression(pattern: "^([0-9]+)([ \t]+)([^ \t]+)([ \t]+)(0x[0-9a-fA-F]+)([ \t]+)(0x[0-9a-fA-F]+)([ \t]+\\+[ \t]+[0-9]+)$?", options: .anchorsMatchLines)
 
-    static func symbolicate(crashLog: String) -> String {
-        return symbolicateCrash(crashLog: crashLog, dSYMFiles: locateDSYMFiles())
-    }
-
-    private static func locateDSYMFiles() -> [URL] {
+    private static var dSYMFiles: [URL] = {
         var dSYMFiles = [URL]()
         guard let configurationBuildPath = DDEnvironmentValues.getEnvVariable("DYLD_LIBRARY_PATH") else {
             return dSYMFiles
@@ -71,11 +67,10 @@ struct DDSymbolicator {
             dSYMFiles[i] = binaries[0]
             i += 1
         }
-
         return dSYMFiles
-    }
+    }()
 
-    private static func symbolicateCrash(crashLog: String, dSYMFiles: [URL]) -> String {
+    public static func symbolicate(crashLog: String) -> String {
         var lines: [String] = crashLog.components(separatedBy: "\n").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
 
         /// User library addresses are randomized each time an app is run, create a map to locate library addresses by name,
@@ -103,38 +98,40 @@ struct DDSymbolicator {
                 let libraryAddress = String(line[libraryAddressRange])
                 let callAddress = String(line[callAddressRange])
 
-                guard let dsym = dSYMFiles.first(where: { $0.lastPathComponent == library }) else {
-                    /// No dSYM to symbolicate this line, write symbol Information
-                    guard let originalCallAdress = Float64(callAddress) else {
-                        continue
+                #if os(iOS) || os(macOS)
+                    if let dsym = dSYMFiles.first(where: { $0.lastPathComponent == library }) {
+                        let symbol = Spawn.commandWithResult("/usr/bin/atos -o \(dsym.path) -l \(libraryAddress) \(callAddress)")
+                            .trimmingCharacters(in: .whitespacesAndNewlines)
+                        if !symbol.isEmpty {
+                            lines[i] = crashLineRegex.replacementString(for: match, in: line, offset: 0, template: "$1$2$3$4$5$6\(symbol)")
+                            continue
+                        }
                     }
-                    var callAdress = UInt(originalCallAdress)
-
-                    /// Calculate the new address of the library, if it is in the map
-                    if let libraryOffset = imageAddresses[library],
-                       let originalLibraryAddress = Float64(libraryAddress) {
-                        let callOffset = UInt(originalCallAdress) - UInt(originalLibraryAddress)
-                        callAdress = libraryOffset + callOffset
-                    }
-
-                    guard let ptr = UnsafeRawPointer(bitPattern: UInt(callAdress)) else {
-                        continue
-                    }
-
-                    var info = Dl_info()
-                    let result = dladdr(ptr, &info)
-                    if result != 0 {
-                        let symbolName = info.dli_sname != nil ? demangleName(String(cString: info.dli_sname)) : ""
-                        lines[i] = crashLineRegex.replacementString(for: match, in: line, offset: 0, template: "$1$2$3$4$5$6\(symbolName)")
-                    }
+                #endif
+                /// No dSYM to symbolicate this line, write symbol Information
+                guard let originalCallAdress = Float64(callAddress) else {
                     continue
                 }
-                let symbol = Spawn.commandWithResult("/usr/bin/atos -o \(dsym.path) -l \(libraryAddress) \(callAddress)")
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                if symbol.isEmpty {
+                var callAdress = UInt(originalCallAdress)
+
+                /// Calculate the new address of the library, if it is in the map
+                if let libraryOffset = imageAddresses[library],
+                    let originalLibraryAddress = Float64(libraryAddress) {
+                    let callOffset = UInt(originalCallAdress) - UInt(originalLibraryAddress)
+                    callAdress = libraryOffset + callOffset
+                }
+
+                guard let ptr = UnsafeRawPointer(bitPattern: UInt(callAdress)) else {
                     continue
                 }
-                lines[i] = crashLineRegex.replacementString(for: match, in: line, offset: 0, template: "$1$2$3$4$5$6\(symbol)")
+
+                var info = Dl_info()
+                let result = dladdr(ptr, &info)
+                if result != 0 {
+                    let symbolName = info.dli_sname != nil ? demangleName(String(cString: info.dli_sname)) : ""
+                    lines[i] = crashLineRegex.replacementString(for: match, in: line, offset: 0, template: "$1$2$3$4$5$6\(symbolName)")
+                }
+                continue
             }
         }
         return lines.joined(separator: "\n")

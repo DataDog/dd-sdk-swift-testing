@@ -6,6 +6,10 @@
 
 import Foundation
 
+#if os(tvOS)
+/// posix_spawn is not accessible in tvOS
+#else
+
 struct Spawn {
     static func command(_ command: String, environment: [String: String]? = nil) {
         let arguments = ["/bin/sh", "-c", command]
@@ -68,3 +72,4 @@ struct Spawn {
         return output
     }
 }
+#endif

@@ -74,25 +74,4 @@ internal class DDCrashes {
     public static func setCustomData(customData: Data) {
         DDCrashes.sharedPLCrashReporter?.customData = customData
     }
-
-    private static func getSimulatorCrashDirectory() -> String? {
-        guard let homeDirectory = getHomeDirectory() else {
-            return nil
-        }
-
-        let identifier = Bundle.main.bundleIdentifier?.replacingOccurrences(of: "/", with: "_") ??
-            "DatadogSDKTesting"
-
-        let directory = URL(fileURLWithPath: homeDirectory, isDirectory: true)
-            .appendingPathComponent("Library")
-            .appendingPathComponent("Caches")
-            .appendingPathComponent("com.plausiblelabs.crashreporter.data")
-            .appendingPathComponent(identifier)
-
-        return directory.path
-    }
-
-    private static func getHomeDirectory() -> String? {
-        return DDEnvironmentValues.getEnvVariable("IPHONE_SIMULATOR_HOST_HOME") ?? DDEnvironmentValues.getEnvVariable("SIMULATOR_HOST_HOME")
-    }
 }

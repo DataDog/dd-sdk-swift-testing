@@ -20,7 +20,7 @@ internal class DDCrashes {
     }
 
     private static func installPLCrashReporterHandler() {
-        let config = PLCrashReporterConfig(signalHandlerType: .BSD, symbolicationStrategy: .all)
+        let config = PLCrashReporterConfig(signalHandlerType: .BSD, symbolicationStrategy: [])
         guard let plCrashReporter = PLCrashReporter(configuration: config) else {
             return
         }
@@ -41,8 +41,15 @@ internal class DDCrashes {
         plCrashReporter.purgePendingCrashReport()
 
         if let crashReport = try? PLCrashReport(data: crashData) {
-            let crashLog = PLCrashReportTextFormatter.stringValue(for: crashReport, with: PLCrashReportTextFormatiOS) ?? ""
-            // This code needs our PR for PLCrashReporter
+            var crashLog = PLCrashReportTextFormatter.stringValue(for: crashReport, with: PLCrashReportTextFormatiOS) ?? ""
+
+            #if targetEnvironment(simulator) || os(macOS)
+                let symbolicated = DDSymbolicator.symbolicate(crashLog: crashLog)
+                if !symbolicated.isEmpty {
+                    crashLog = symbolicated
+                }
+            #endif
+
             if let customData = crashReport.customData {
                 if let spanData = SimpleSpanSerializer.deserializeSpan(data: customData) {
                     var errorType = ""
@@ -66,5 +73,26 @@ internal class DDCrashes {
 
     public static func setCustomData(customData: Data) {
         DDCrashes.sharedPLCrashReporter?.customData = customData
+    }
+
+    private static func getSimulatorCrashDirectory() -> String? {
+        guard let homeDirectory = getHomeDirectory() else {
+            return nil
+        }
+
+        let identifier = Bundle.main.bundleIdentifier?.replacingOccurrences(of: "/", with: "_") ??
+            "DatadogSDKTesting"
+
+        let directory = URL(fileURLWithPath: homeDirectory, isDirectory: true)
+            .appendingPathComponent("Library")
+            .appendingPathComponent("Caches")
+            .appendingPathComponent("com.plausiblelabs.crashreporter.data")
+            .appendingPathComponent(identifier)
+
+        return directory.path
+    }
+
+    private static func getHomeDirectory() -> String? {
+        return DDEnvironmentValues.getEnvVariable("IPHONE_SIMULATOR_HOST_HOME") ?? DDEnvironmentValues.getEnvVariable("SIMULATOR_HOST_HOME")
     }
 }

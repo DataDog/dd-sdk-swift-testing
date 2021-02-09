@@ -17,7 +17,6 @@ internal class DDTestObserver: NSObject, XCTestObservation {
     let testNameRegex = try? NSRegularExpression(pattern: "([\\w]+) ([\\w]+)", options: .caseInsensitive)
     let supportsSkipping = NSClassFromString("XCTSkippedTestContext") != nil
     var currentBundleName = ""
-//    let isUITestRunner = Bundle.main.bundleIdentifier?.hasSuffix("xctrunner") ?? false
     var currentTestSpan: RecordEventsReadableSpan?
 
     init(tracer: DDTracer) {
@@ -49,8 +48,6 @@ internal class DDTestObserver: NSObject, XCTestObservation {
         let testSuite = String(testCase.name[suiteRange])
         let testName = String(testCase.name[nameRange])
 
-        //let fingerprint = (currentBundleName + testSuite + testName + tracer.env.deviceModel + tracer.env.deviceVersion).hash
-
         let attributes: [String: String] = [
             DDGenericTags.type: DDTestTags.typeTest,
             DDTestTags.testName: testName,
@@ -58,7 +55,6 @@ internal class DDTestObserver: NSObject, XCTestObservation {
             DDTestTags.testFramework: "XCTest",
             DDTestTags.testBundle: currentBundleName,
             DDTestTags.testType: DDTestTags.typeTest,
-            //DDTestTags.testFingerprint: String(fingerprint),
             DDPlatformTags.platformName: tracer.env.platformName,
             DDPlatformTags.platformArchitecture: tracer.env.platformArchitecture,
             DDDeviceTags.deviceName: tracer.env.deviceName,
@@ -106,8 +102,6 @@ internal class DDTestObserver: NSObject, XCTestObservation {
         }
         activeTest.setAttribute(key: DDTags.errorType, value: AttributeValue.string(description))
         activeTest.setAttribute(key: DDTags.errorMessage, value: AttributeValue.string("test_failure: \(filePath ?? ""):\(lineNumber)"))
-        let fullDescription = "\(description):\n\(filePath ?? ""):\(lineNumber)"
-        activeTest.setAttribute(key: DDTags.errorStack, value: AttributeValue.string(fullDescription))
     }
 
     private func addBenchmarkTagsIfNeeded(testCase: XCTestCase, activeTest: Span) {

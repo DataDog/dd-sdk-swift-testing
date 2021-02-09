@@ -121,6 +121,12 @@
 		E157A7C7256EB37800CBCA52 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E157A74D256E9D1D00CBCA52 /* DatadogSDKTesting.framework */; };
 		E157A7C8256EB39200CBCA52 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E157A785256E9D3300CBCA52 /* DatadogSDKTesting.framework */; };
 		E158E2DC25471DA000DBCD6C /* DDInstrumentationControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = E158E2DB25471DA000DBCD6C /* DDInstrumentationControl.swift */; };
+		E1665A7325D12D7500BA53CD /* Spawn.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1665A7225D12D7500BA53CD /* Spawn.swift */; };
+		E1665A7425D12D7500BA53CD /* Spawn.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1665A7225D12D7500BA53CD /* Spawn.swift */; };
+		E1665A7525D12D7500BA53CD /* Spawn.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1665A7225D12D7500BA53CD /* Spawn.swift */; };
+		E1665A8125D13BBB00BA53CD /* DDSymbolicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1665A8025D13BBB00BA53CD /* DDSymbolicator.swift */; };
+		E1665A8225D13BBB00BA53CD /* DDSymbolicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1665A8025D13BBB00BA53CD /* DDSymbolicator.swift */; };
+		E1665A8525D1524100BA53CD /* DDSymbolicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1665A8025D13BBB00BA53CD /* DDSymbolicator.swift */; };
 		E1798CC62524B9BD008DEBB9 /* DDTracer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1798CC52524B9BD008DEBB9 /* DDTracer.swift */; };
 		E1798CD22524C256008DEBB9 /* MethodSwizzler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1798CD02524C255008DEBB9 /* MethodSwizzler.swift */; };
 		E17B7AA8253F02580081D7F3 /* SigmaSwiftStatistics in Frameworks */ = {isa = PBXBuildFile; productRef = E17B7AA7253F02580081D7F3 /* SigmaSwiftStatistics */; };
@@ -287,6 +293,8 @@
 		E158E2DB25471DA000DBCD6C /* DDInstrumentationControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDInstrumentationControl.swift; sourceTree = "<group>"; };
 		E160A11125275CC1003121A5 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		E160A114252B3A6B003121A5 /* ObjcLoadHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ObjcLoadHandler.h; sourceTree = "<group>"; };
+		E1665A7225D12D7500BA53CD /* Spawn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spawn.swift; sourceTree = "<group>"; };
+		E1665A8025D13BBB00BA53CD /* DDSymbolicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDSymbolicator.swift; sourceTree = "<group>"; };
 		E1798CC52524B9BD008DEBB9 /* DDTracer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTracer.swift; sourceTree = "<group>"; };
 		E1798CD02524C255008DEBB9 /* MethodSwizzler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MethodSwizzler.swift; sourceTree = "<group>"; };
 		E1798CE52524D0D5008DEBB9 /* DDErrorTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DDErrorTests.swift; sourceTree = "<group>"; };
@@ -396,6 +404,7 @@
 				E1798CD02524C255008DEBB9 /* MethodSwizzler.swift */,
 				E116D7DA25248C390022779D /* SwiftExtensions.swift */,
 				E141CF5F256FD513008B6B70 /* PlatformUtils.swift */,
+				E1665A7225D12D7500BA53CD /* Spawn.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -589,6 +598,7 @@
 		E1FB483C253891CE0083B263 /* Crashes */ = {
 			isa = PBXGroup;
 			children = (
+				E1665A8025D13BBB00BA53CD /* DDSymbolicator.swift */,
 				E1FB483D253891CE0083B263 /* SimpleSpanSerializer.swift */,
 				E1FB483E253891CE0083B263 /* DDCrashes.swift */,
 				E1FB483F253891CE0083B263 /* SimpleSpanData.swift */,
@@ -900,6 +910,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E157A723256E9D1D00CBCA52 /* SwiftExtensions.swift in Sources */,
+				E1665A8225D13BBB00BA53CD /* DDSymbolicator.swift in Sources */,
 				E157A724256E9D1D00CBCA52 /* DDTestMonitor.swift in Sources */,
 				E157A725256E9D1D00CBCA52 /* DDEnvironmentValues.swift in Sources */,
 				E157A726256E9D1D00CBCA52 /* ObjcLoadHandler.m in Sources */,
@@ -908,6 +919,7 @@
 				E157A72A256E9D1D00CBCA52 /* DDNetworkInstrumentation.swift in Sources */,
 				E157A72B256E9D1D00CBCA52 /* FrameworkLoadHandler.swift in Sources */,
 				E157A72C256E9D1D00CBCA52 /* DDTags.swift in Sources */,
+				E1665A7425D12D7500BA53CD /* Spawn.swift in Sources */,
 				E157A72D256E9D1D00CBCA52 /* DDNetworkActivityLogger.swift in Sources */,
 				E157A730256E9D1D00CBCA52 /* SignalUtils.swift in Sources */,
 				E157A731256E9D1D00CBCA52 /* XCUIApplicationSwizzler.swift in Sources */,
@@ -928,6 +940,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E157A75B256E9D3300CBCA52 /* SwiftExtensions.swift in Sources */,
+				E1665A8125D13BBB00BA53CD /* DDSymbolicator.swift in Sources */,
 				E157A75C256E9D3300CBCA52 /* DDTestMonitor.swift in Sources */,
 				E157A75D256E9D3300CBCA52 /* DDEnvironmentValues.swift in Sources */,
 				E157A75E256E9D3300CBCA52 /* ObjcLoadHandler.m in Sources */,
@@ -936,6 +949,7 @@
 				E157A762256E9D3300CBCA52 /* DDNetworkInstrumentation.swift in Sources */,
 				E157A763256E9D3300CBCA52 /* FrameworkLoadHandler.swift in Sources */,
 				E157A764256E9D3300CBCA52 /* DDTags.swift in Sources */,
+				E1665A7525D12D7500BA53CD /* Spawn.swift in Sources */,
 				E157A765256E9D3300CBCA52 /* DDNetworkActivityLogger.swift in Sources */,
 				E157A768256E9D3300CBCA52 /* SignalUtils.swift in Sources */,
 				E157A769256E9D3300CBCA52 /* XCUIApplicationSwizzler.swift in Sources */,
@@ -996,6 +1010,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E1AD079F252F5B00003705C1 /* SwiftExtensions.swift in Sources */,
+				E1665A8525D1524100BA53CD /* DDSymbolicator.swift in Sources */,
 				E1ABA08B252341EA00ED8AEF /* DDTestMonitor.swift in Sources */,
 				E1ABA07725231F4700ED8AEF /* DDEnvironmentValues.swift in Sources */,
 				E1ABA06D25231F3200ED8AEF /* ObjcLoadHandler.m in Sources */,
@@ -1004,6 +1019,7 @@
 				E19E053C255177770032BAB9 /* DDNetworkInstrumentation.swift in Sources */,
 				E1ABA07625231F4700ED8AEF /* FrameworkLoadHandler.swift in Sources */,
 				E1ABA07525231F4700ED8AEF /* DDTags.swift in Sources */,
+				E1665A7325D12D7500BA53CD /* Spawn.swift in Sources */,
 				E19E08232552F01C0032BAB9 /* DDNetworkActivityLogger.swift in Sources */,
 				E13D0BCA2546E29C00C37D56 /* SignalUtils.swift in Sources */,
 				E12515E5254892C600670D23 /* XCUIApplicationSwizzler.swift in Sources */,
@@ -1590,7 +1606,7 @@
 			repositoryURL = "https://github.com/open-telemetry/opentelemetry-swift.git";
 			requirement = {
 				kind = revision;
-				revision = 19a13a2e636abcd7414baa6877792a458b8b9644;
+				revision = b42d035448a1dc881a74dbeb25c28cb6ae55e144;
 			};
 		};
 		E1FB4839253891650083B263 /* XCRemoteSwiftPackageReference "plcrashreporter" */ = {

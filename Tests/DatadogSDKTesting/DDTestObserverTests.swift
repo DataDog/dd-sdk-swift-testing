@@ -83,7 +83,7 @@ internal class DDTestObserverTests: XCTestCase {
 
         XCTAssertNotNil(spanData.attributes[DDTags.errorType])
         XCTAssertNotNil(spanData.attributes[DDTags.errorMessage])
-        XCTAssertNotNil(spanData.attributes[DDTags.errorStack])
+        XCTAssertNil(spanData.attributes[DDTags.errorStack])
 
         testObserver.testCaseDidFinish(self)
     }

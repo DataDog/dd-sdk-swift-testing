@@ -44,13 +44,18 @@ internal class DDTracer {
         let tracerProvider = OpenTelemetrySDK.instance.tracerProvider
         let traceConfig = TraceConfig()
         tracerProvider.updateActiveTraceConfig(traceConfig)
-        tracerSdk = tracerProvider.get(instrumentationName: "com.datadoghq.testing", instrumentationVersion: "0.2.0") as! TracerSdk
+
+        let bundle = Bundle(for: type(of: self))
+        let identifier = bundle.bundleIdentifier ?? "com.datadoghq.DatadogSDKTesting"
+        let version = (bundle.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "unknown"
+
+        tracerSdk = tracerProvider.get(instrumentationName: identifier, instrumentationVersion: version) as! TracerSdk
 
         let exporterConfiguration = ExporterConfiguration(
             serviceName: env.ddService ?? ProcessInfo.processInfo.processName,
             resource: "Resource",
-            applicationName: "SimpleExporter",
-            applicationVersion: "0.0.1",
+            applicationName: identifier,
+            applicationVersion: version,
             environment: env.ddEnvironment ?? "ci",
             clientToken: env.ddClientToken ?? "",
             apiKey: nil,

@@ -19,6 +19,17 @@ class GitInfoTests: XCTestCase {
         XCTAssertThrowsError(try GitInfo(gitFolder: noCommitsFolder))
     }
 
+    func testNoObjects() throws {
+        let bundle = Bundle(for: type(of: self))
+        let fixturesURL = bundle.resourceURL!
+
+        let withCommitsFolder = fixturesURL.appendingPathComponent("git")
+            .appendingPathComponent("no_objects").appendingPathComponent("git")
+
+        XCTAssertTrue(try withCommitsFolder.checkPromisedItemIsReachable())
+        let gitInfo = try GitInfo(gitFolder: withCommitsFolder)
+    }
+
     func testWithCommits() throws {
         let bundle = Bundle(for: type(of: self))
         let fixturesURL = bundle.resourceURL!

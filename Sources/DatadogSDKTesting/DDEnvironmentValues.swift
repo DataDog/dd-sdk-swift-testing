@@ -45,7 +45,7 @@ internal struct DDEnvironmentValues {
 
     /// Git values
     var repository: String?
-    var branch: String?
+    let branch: String?
     let tag: String?
     var commit: String?
     var commitMessage: String?
@@ -332,11 +332,24 @@ internal struct DDEnvironmentValues {
                 branchEnv = DDEnvironmentValues.getEnvVariable("BITRISE_GIT_BRANCH")
             }
             tagEnv = DDEnvironmentValues.getEnvVariable("BITRISE_GIT_TAG")
+
+            let tempMessage = DDEnvironmentValues.getEnvVariable("BITRISE_GIT_MESSAGE")
+            if tempMessage == nil {
+                let messageSubject = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_MESSAGE_SUBJECT")
+                let messageBody = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_MESSAGE_BODY")
+                commitMessage = ((messageSubject != nil) ? messageSubject! + ":\n" : "") + (messageBody ?? "")
+            } else {
+                commitMessage = tempMessage
+            }
+            authorName = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_AUTHOR_NAME")
+            authorEmail = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_AUTHOR_EMAIL")
+            committerName = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_COMMITER_NAME")
+            committerEmail = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_COMMITER_EMAIL")
+
         } else {
             isCi = false
             provider = nil
             repository = nil
-            commit = nil
             pipelineId = nil
             pipelineNumber = nil
             pipelineURL = nil
@@ -346,89 +359,60 @@ internal struct DDEnvironmentValues {
             stageName = nil
         }
 
+        // Read git folder information
+        var gitInfo: GitInfo?
+        if let srcRoot = ProcessInfo.processInfo.environment["SRCROOT"] {
+            var rootFolder = URL(fileURLWithPath: srcRoot)
+            while !FileManager.default.fileExists(atPath: rootFolder.appendingPathComponent(".git").path) {
+                if rootFolder == rootFolder.deletingLastPathComponent() {
+                    // We reached to the top
+                    print("[DDSwiftTesting] could not find .git folder at \(rootFolder.path)")
+                    break
+                }
+                rootFolder = rootFolder.deletingLastPathComponent()
+            }
+            gitInfo = try? GitInfo(gitFolder: rootFolder.appendingPathComponent(".git"))
+        }
+
+        if commit == nil {
+            commit = gitInfo?.commit
+        }
+
+        if workspaceEnv == nil {
+            workspaceEnv = gitInfo?.workspacePath
+        }
+
+        if repository == nil {
+            repository = gitInfo?.repository
+        }
+
+        if branchEnv == nil {
+            branchEnv = gitInfo?.branch
+        }
+
+        if commitMessage == nil {
+            commitMessage = gitInfo?.commitMessage
+        }
+
+        if authorName == nil {
+            authorName = gitInfo?.authorName
+        }
+
+        if authorEmail == nil {
+            authorEmail = gitInfo?.authorEmail
+        }
+
+        if committerName == nil {
+            committerName = gitInfo?.committerName
+        }
+
+        if committerEmail == nil {
+            committerEmail = gitInfo?.committerEmail
+        }
+
         branch = DDEnvironmentValues.normalizedBranchOrTag(branchEnv)
         tag = DDEnvironmentValues.normalizedBranchOrTag(tagEnv)
         workspacePath = DDEnvironmentValues.expandingTilde(workspaceEnv)
-
-        // Temporary change until proper git information support
-        if DDEnvironmentValues.getEnvVariable("BITRISE_BUILD_NUMBER") != nil {
-            let tempCommit = DDEnvironmentValues.getEnvVariable("BITRISE_GIT_COMMIT")
-            if tempCommit?.isEmpty ?? true {
-                let messageSubject = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_MESSAGE_SUBJECT")
-                let messageBody = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_MESSAGE_BODY")
-                commitMessage = ((messageSubject != nil) ? messageSubject! + ":\n" : "") + (messageBody ?? "")
-            } else {
-                commitMessage = DDEnvironmentValues.getEnvVariable("BITRISE_GIT_MESSAGE")
-            }
-            authorName = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_AUTHOR_NAME")
-            authorEmail = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_AUTHOR_EMAIL")
-            committerName = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_COMMITER_NAME")
-            committerEmail = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_COMMITER_EMAIL")
-        } else {
-            commitMessage = nil
-            authorName = nil
-            authorEmail = nil
-            committerName = nil
-            committerEmail = nil
-        }
-
-        if commit == nil || repository == nil, workspacePath == nil || branch == nil || commitMessage == nil ||
-            authorName == nil || authorEmail == nil || committerName == nil || committerEmail == nil {
-            guard let srcRoot = ProcessInfo.processInfo.environment["SRCROOT"] else {
-                return
-            }
-
-            var rootFolder = URL(fileURLWithPath: srcRoot)
-            do {
-                while !(try rootFolder.appendingPathComponent(".git").checkResourceIsReachable()) {
-                    if rootFolder == rootFolder.deletingLastPathComponent() {
-                        // We reached to the top
-                        return
-                    }
-                    rootFolder = rootFolder.deletingLastPathComponent()
-                }
-                let gitInfo = try GitInfo(gitFolder: rootFolder.appendingPathComponent(".git"))
-
-                if commit == nil {
-                    commit = gitInfo.commit
-                }
-
-                if workspacePath == nil {
-                    workspacePath = gitInfo.workspacePath
-                }
-
-                if repository == nil {
-                    repository = gitInfo.repository
-                }
-
-                if branch == nil {
-                    branch = gitInfo.branch
-                }
-
-                if commitMessage == nil {
-                    commitMessage = gitInfo.commitMessage
-                }
-
-                if authorName == nil {
-                    authorName = gitInfo.authorName
-                }
-
-                if authorEmail == nil {
-                    authorEmail = gitInfo.authorEmail
-                }
-
-                if committerName == nil {
-                    committerName = gitInfo.committerName
-                }
-
-                if committerEmail == nil {
-                    committerEmail = gitInfo.committerEmail
-                }
-            } catch {
-                print(error)
-                return
-            }
-        }
     }
 
     func addTagsToSpan(span: Span) {

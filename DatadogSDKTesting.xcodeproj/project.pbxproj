@@ -317,6 +317,10 @@
 		E1BB54AC25401E85007C2D93 /* StdoutCaptureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StdoutCaptureTests.swift; sourceTree = "<group>"; };
 		E1BB54C325408E92007C2D93 /* StderrCaptureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StderrCaptureTests.swift; sourceTree = "<group>"; };
 		E1D4743625DBD8D900832592 /* config */ = {isa = PBXFileReference; lastKnownFileType = text; path = config; sourceTree = "<group>"; };
+		E1D4768C25DC2B8E00832592 /* dummy.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = dummy.txt; sourceTree = "<group>"; };
+		E1D4768E25DC2B8E00832592 /* HEAD */ = {isa = PBXFileReference; lastKnownFileType = text; path = HEAD; sourceTree = "<group>"; };
+		E1D4768F25DC2B8E00832592 /* config */ = {isa = PBXFileReference; lastKnownFileType = text; path = config; sourceTree = "<group>"; };
+		E1D4769525DC2B8E00832592 /* master */ = {isa = PBXFileReference; lastKnownFileType = text; path = master; sourceTree = "<group>"; };
 		E1FB483D253891CE0083B263 /* SimpleSpanSerializer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleSpanSerializer.swift; sourceTree = "<group>"; };
 		E1FB483E253891CE0083B263 /* DDCrashes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DDCrashes.swift; sourceTree = "<group>"; };
 		E1FB483F253891CE0083B263 /* SimpleSpanData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleSpanData.swift; sourceTree = "<group>"; };
@@ -443,6 +447,7 @@
 				E14405B825DBC32900FE3D3C /* with_tag */,
 				E14405C425DBC32900FE3D3C /* with_commits_no_refs */,
 				E14405CB25DBC32900FE3D3C /* no_commits */,
+				E1D4768B25DC2B8E00832592 /* no_objects */,
 				E14405CE25DBC32900FE3D3C /* with_commits */,
 			);
 			path = git;
@@ -761,6 +766,49 @@
 				E1BB54C325408E92007C2D93 /* StderrCaptureTests.swift */,
 			);
 			path = OutputCapture;
+			sourceTree = "<group>";
+		};
+		E1D4768B25DC2B8E00832592 /* no_objects */ = {
+			isa = PBXGroup;
+			children = (
+				E1D4768C25DC2B8E00832592 /* dummy.txt */,
+				E1D4768D25DC2B8E00832592 /* git */,
+			);
+			path = no_objects;
+			sourceTree = "<group>";
+		};
+		E1D4768D25DC2B8E00832592 /* git */ = {
+			isa = PBXGroup;
+			children = (
+				E1D4768F25DC2B8E00832592 /* config */,
+				E1D4769025DC2B8E00832592 /* objects */,
+				E1D4768E25DC2B8E00832592 /* HEAD */,
+				E1D4769125DC2B8E00832592 /* refs */,
+			);
+			path = git;
+			sourceTree = "<group>";
+		};
+		E1D4769025DC2B8E00832592 /* objects */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = objects;
+			sourceTree = "<group>";
+		};
+		E1D4769125DC2B8E00832592 /* refs */ = {
+			isa = PBXGroup;
+			children = (
+				E1D4769425DC2B8E00832592 /* heads */,
+			);
+			path = refs;
+			sourceTree = "<group>";
+		};
+		E1D4769425DC2B8E00832592 /* heads */ = {
+			isa = PBXGroup;
+			children = (
+				E1D4769525DC2B8E00832592 /* master */,
+			);
+			path = heads;
 			sourceTree = "<group>";
 		};
 		E1FB483C253891CE0083B263 /* Crashes */ = {

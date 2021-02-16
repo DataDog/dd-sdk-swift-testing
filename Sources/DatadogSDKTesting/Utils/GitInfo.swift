@@ -71,13 +71,13 @@ struct GitInfo {
             }
         }
 
-        let commitInfo = try self.findCommit(gitFolder: gitFolder, commit: commit)
-
-        commitMessage = commitInfo.fullMessage
-        authorName = commitInfo.authorName
-        authorEmail = commitInfo.authorEmail
-        committerName = commitInfo.committerName
-        committerEmail = commitInfo.committerEmail
+        if let commitInfo = try? self.findCommit(gitFolder: gitFolder, commit: commit) {
+            commitMessage = commitInfo.fullMessage
+            authorName = commitInfo.authorName
+            authorEmail = commitInfo.authorEmail
+            committerName = commitInfo.committerName
+            committerEmail = commitInfo.committerEmail
+        }
     }
 
     private func findCommit(gitFolder: URL, commit: String) throws -> CommitInfo {

@@ -34,7 +34,7 @@ internal struct DDEnvironmentValues {
     /// CI  values
     let isCi: Bool
     let provider: String?
-    let workspacePath: String?
+    var workspacePath: String?
     let pipelineId: String?
     let pipelineNumber: String?
     let pipelineURL: String?
@@ -44,15 +44,15 @@ internal struct DDEnvironmentValues {
     let stageName: String?
 
     /// Git values
-    let repository: String?
-    let branch: String?
+    var repository: String?
+    var branch: String?
     let tag: String?
-    let commit: String?
-    let commitMessage: String?
-    let authorName: String?
-    let authorEmail: String?
-    let committerName: String?
-    let committerEmail: String?
+    var commit: String?
+    var commitMessage: String?
+    var authorName: String?
+    var authorEmail: String?
+    var committerName: String?
+    var committerEmail: String?
 
     static var environment = ProcessInfo.processInfo.environment
 
@@ -371,6 +371,64 @@ internal struct DDEnvironmentValues {
             committerName = nil
             committerEmail = nil
         }
+
+        if commit == nil || repository == nil, workspacePath == nil || branch == nil || commitMessage == nil ||
+            authorName == nil || authorEmail == nil || committerName == nil || committerEmail == nil {
+            guard let srcRoot = ProcessInfo.processInfo.environment["SRCROOT"] else {
+                return
+            }
+
+            var rootFolder = URL(fileURLWithPath: srcRoot)
+            do {
+                while !(try rootFolder.appendingPathComponent(".git").checkResourceIsReachable()) {
+                    if rootFolder == rootFolder.deletingLastPathComponent() {
+                        // We reached to the top
+                        return
+                    }
+                    rootFolder = rootFolder.deletingLastPathComponent()
+                }
+                let gitInfo = try GitInfo(gitFolder: rootFolder.appendingPathComponent(".git"))
+
+                if commit == nil {
+                    commit = gitInfo.commit
+                }
+
+                if workspacePath == nil {
+                    workspacePath = gitInfo.workspacePath
+                }
+
+                if repository == nil {
+                    repository = gitInfo.repository
+                }
+
+                if branch == nil {
+                    branch = gitInfo.branch
+                }
+
+                if commitMessage == nil {
+                    commitMessage = gitInfo.commitMessage
+                }
+
+                if authorName == nil {
+                    authorName = gitInfo.authorName
+                }
+
+                if authorEmail == nil {
+                    authorEmail = gitInfo.authorEmail
+                }
+
+                if committerName == nil {
+                    committerName = gitInfo.committerName
+                }
+
+                if committerEmail == nil {
+                    committerEmail = gitInfo.committerEmail
+                }
+            } catch {
+                print(error)
+                return
+            }
+        }
     }
 
     func addTagsToSpan(span: Span) {
@@ -378,7 +436,7 @@ internal struct DDEnvironmentValues {
             return
         }
 
-        setAttributeIfExist(toSpan: span, key: DDCITags.ciProvider, value: provider)
+        setAttributeIfExist(toSpan: span, key: DDCITags.ciProvider, value: provider ?? "local development")
         setAttributeIfExist(toSpan: span, key: DDCITags.ciPipelineId, value: pipelineId)
         setAttributeIfExist(toSpan: span, key: DDCITags.ciPipelineNumber, value: pipelineNumber)
         setAttributeIfExist(toSpan: span, key: DDCITags.ciPipelineURL, value: pipelineURL)

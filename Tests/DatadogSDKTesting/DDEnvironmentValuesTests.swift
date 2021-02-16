@@ -129,7 +129,7 @@ class DDEnvironmentValuesTests: XCTestCase {
 
     func testSpecs() throws {
         let bundle = Bundle(for: type(of: self))
-        let fixturesURL = bundle.resourceURL!
+        let fixturesURL = bundle.resourceURL!.appendingPathComponent("fixtures").appendingPathComponent("ci")
         let fileEnumerator = FileManager.default.enumerator(at: fixturesURL, includingPropertiesForKeys: nil)!
 
         for case let fileURL as URL in fileEnumerator {

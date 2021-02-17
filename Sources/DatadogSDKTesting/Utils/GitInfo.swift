@@ -187,6 +187,7 @@ struct GitInfo {
                 let string = indexData.subdata(in: 0..<20).hexString
                 if string.compare(commit, options: .caseInsensitive) == .orderedSame {
                     indexOfCommit = numberOfPreviousObjects + i
+                    break
                 } else {
                     indexData = indexData.advanced(by: 20)
                 }

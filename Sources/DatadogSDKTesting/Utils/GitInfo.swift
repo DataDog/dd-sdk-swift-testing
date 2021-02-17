@@ -87,9 +87,15 @@ struct GitInfo {
         let commitObject = gitFolder.appendingPathComponent("objects")
             .appendingPathComponent(String(folder))
             .appendingPathComponent(String(filename))
-        let objectContent = try Data(contentsOf: commitObject).zlibDecompress()
-        let gitObject = try GitObject(objectContent: objectContent)
-        return try parseCommit(gitFolder: gitFolder, gitObject: gitObject)
+        let objectContent: String
+        if FileManager.default.fileExists(atPath: commitObject.path) {
+            objectContent = try Data(contentsOf: commitObject).zlibDecompress()
+            let gitObject = try GitObject(objectContent: objectContent)
+            return try parseCommit(gitFolder: gitFolder, gitObject: gitObject)
+        } else {
+            objectContent = try getObjectFromPackFile(gitFolder: gitFolder, commit: commit)
+            return CommitInfo(content: objectContent)
+        }
     }
 
     private func parseCommit(gitFolder: URL, gitObject: GitObject) throws -> CommitInfo {
@@ -110,6 +116,114 @@ struct GitInfo {
             }
             return CommitInfo(content: gitObject.content)
         }
+    }
+
+    private func getObjectFromPackFile(gitFolder: URL, commit: String) throws -> String {
+        let packFolder = gitFolder.appendingPathComponent("objects").appendingPathComponent("pack")
+
+        var packOffset: UInt64
+        var indexFile: URL
+        (indexFile, packOffset) = try locateIndex(packFolder: packFolder, commit: commit)
+
+        let packFile = indexFile.deletingPathExtension().appendingPathExtension("pack")
+        let filehandler = try FileHandle(forReadingFrom: packFile)
+        var objectSize: Int
+
+        filehandler.seek(toFileOffset: packOffset)
+        var packData = filehandler.readData(ofLength: 2)
+        if packData[0] < 128 {
+            objectSize = Int(packData[0] & 0x0F)
+            packData = filehandler.readData(ofLength: objectSize)
+        } else {
+            objectSize = Int(packData[0] & 0x0F) * 256 + Int(packData[1] & 0x7F)
+            packData = filehandler.readData(ofLength: objectSize)
+        }
+
+        let aux = packData.zlibDecompress(minimumSize: objectSize * 10)
+
+        return packData.zlibDecompress()
+    }
+
+    /// This function returns the index file containing the commit sha (it there are more than one idx file in the folder,
+    /// and the offset of this object in the pack file
+    fileprivate func locateIndex(packFolder: URL, commit: String) throws -> (indexFile: URL, packOffset: UInt64) {
+        var indexFile: URL?
+        var packOffset: UInt64 = 0
+
+        var indexFiles: [URL] = []
+        if let enumerator = FileManager.default.enumerator(at: packFolder, includingPropertiesForKeys: nil) {
+            for element in enumerator {
+                if let file = element as? URL, file.pathExtension == "idx" {
+                    indexFiles.append(file)
+                }
+            }
+        }
+
+        let index = commit.index(commit.startIndex, offsetBy: 2)
+        let folder = commit[..<index]
+
+        try indexFiles.forEach { file in
+            //Index files has 4 or five different layers of information
+            var indexData = try Data(contentsOf: file)
+            // skip header
+            indexData = indexData.advanced(by: 8)
+
+            // First layer: 256 4-byte elements, with number of elements per folder
+            let folderIndex = Int(folder, radix: 16)!
+            let previousIndex = folderIndex > 0 ? folderIndex - 1 : folderIndex
+            indexData = indexData.advanced(by: previousIndex * 4)
+            var parser = BinaryParser(data: indexData.subdata(in: 0..<8))
+            let numberOfPreviousObjects = try parser.parseUInt32()
+            let numberOfObjectsInIndex = (try parser.parseUInt32() - numberOfPreviousObjects)
+            indexData = indexData.advanced(by: (255 - previousIndex) * 4)
+            parser = BinaryParser(data: indexData.subdata(in: 0..<4))
+            let totalNumberOfObjects = try parser.parseUInt32()
+            indexData = indexData.advanced(by: 4)
+
+            // Second layer: 20-byte elements with the names in order
+            indexData = indexData.advanced(by: 20 * Int(numberOfPreviousObjects))
+            var indexOfCommit: UInt32?
+            for i in 0..<numberOfObjectsInIndex {
+                let string = indexData.subdata(in: 0..<20).hexString
+                if string.compare(commit, options: .caseInsensitive) == .orderedSame {
+                    indexOfCommit = numberOfPreviousObjects + i
+                } else {
+                    indexData = indexData.advanced(by: 20)
+                }
+            }
+
+            guard let indexOfObject = indexOfCommit else {
+                return
+            }
+
+            indexFile = file
+            indexData = indexData.advanced(by: 20 * Int(totalNumberOfObjects - indexOfObject))
+
+            // Third layer: 4 byte CRC for each object
+            indexData = indexData.advanced(by: 4 * Int(totalNumberOfObjects))
+
+            // Fourth layer: 4 byte per object of offset in pack file
+            indexData = indexData.advanced(by: 4 * Int(indexOfObject))
+            parser = BinaryParser(data: indexData.subdata(in: 0..<4))
+            var offset = try parser.parseUInt32()
+            if offset & 0x8000000 == 0 {
+                // offset is in this layes
+                packOffset = UInt64(offset)
+            } else {
+                // offset is not in this layer, clear first bit and look at it at the 5th layer
+                offset = offset & 0x7FFFFFFF
+                indexData = indexData.advanced(by: 4 * Int(totalNumberOfObjects - indexOfObject))
+                indexData = indexData.advanced(by: 8 * Int(indexOfObject))
+                parser = BinaryParser(data: indexData.subdata(in: 0..<8))
+                packOffset = try parser.parseUInt64()
+            }
+        }
+
+        guard let desiredIndexFile = indexFile else {
+            throw InternalError(description: "Incorrect Git object")
+        }
+
+        return (desiredIndexFile, packOffset)
     }
 }
 

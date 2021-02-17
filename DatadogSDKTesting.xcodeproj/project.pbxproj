@@ -140,6 +140,9 @@
 		E1AD07AD252F5D86003705C1 /* DDErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1798CE52524D0D5008DEBB9 /* DDErrorTests.swift */; };
 		E1BB54AD25401E85007C2D93 /* StdoutCaptureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1BB54AC25401E85007C2D93 /* StdoutCaptureTests.swift */; };
 		E1BB54C425408E92007C2D93 /* StderrCaptureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1BB54C325408E92007C2D93 /* StderrCaptureTests.swift */; };
+		E1D476A625DD369F00832592 /* BinaryParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1D476A525DD369F00832592 /* BinaryParser.swift */; };
+		E1D476A725DD369F00832592 /* BinaryParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1D476A525DD369F00832592 /* BinaryParser.swift */; };
+		E1D476A825DD369F00832592 /* BinaryParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1D476A525DD369F00832592 /* BinaryParser.swift */; };
 		E1DFF0EA257010E700344895 /* PlatformUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141CF5F256FD513008B6B70 /* PlatformUtils.swift */; };
 		E1DFF0EB257010E800344895 /* PlatformUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141CF5F256FD513008B6B70 /* PlatformUtils.swift */; };
 		E1FB48312538909D0083B263 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1ABA04A25231E2500ED8AEF /* DatadogSDKTesting.framework */; settings = {ATTRIBUTES = (Required, ); }; };
@@ -321,6 +324,7 @@
 		E1D4768E25DC2B8E00832592 /* HEAD */ = {isa = PBXFileReference; lastKnownFileType = text; path = HEAD; sourceTree = "<group>"; };
 		E1D4768F25DC2B8E00832592 /* config */ = {isa = PBXFileReference; lastKnownFileType = text; path = config; sourceTree = "<group>"; };
 		E1D4769525DC2B8E00832592 /* master */ = {isa = PBXFileReference; lastKnownFileType = text; path = master; sourceTree = "<group>"; };
+		E1D476A525DD369F00832592 /* BinaryParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinaryParser.swift; sourceTree = "<group>"; };
 		E1FB483D253891CE0083B263 /* SimpleSpanSerializer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleSpanSerializer.swift; sourceTree = "<group>"; };
 		E1FB483E253891CE0083B263 /* DDCrashes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DDCrashes.swift; sourceTree = "<group>"; };
 		E1FB483F253891CE0083B263 /* SimpleSpanData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleSpanData.swift; sourceTree = "<group>"; };
@@ -395,6 +399,7 @@
 			isa = PBXGroup;
 			children = (
 				E1AD07A8252F5CB8003705C1 /* DDError.swift */,
+				E1D476A525DD369F00832592 /* BinaryParser.swift */,
 				E14405A225D6A80800FE3D3C /* GitInfo.swift */,
 				E1798CD02524C255008DEBB9 /* MethodSwizzler.swift */,
 				E141CF5F256FD513008B6B70 /* PlatformUtils.swift */,
@@ -1169,6 +1174,7 @@
 				E157A731256E9D1D00CBCA52 /* XCUIApplicationSwizzler.swift in Sources */,
 				E157A732256E9D1D00CBCA52 /* DDError.swift in Sources */,
 				E157A734256E9D1D00CBCA52 /* StdoutCapture.swift in Sources */,
+				E1D476A725DD369F00832592 /* BinaryParser.swift in Sources */,
 				E157A735256E9D1D00CBCA52 /* SimpleSpanSerializer.swift in Sources */,
 				E1DFF0EA257010E700344895 /* PlatformUtils.swift in Sources */,
 				E157A736256E9D1D00CBCA52 /* DDCrashes.swift in Sources */,
@@ -1200,6 +1206,7 @@
 				E157A769256E9D3300CBCA52 /* XCUIApplicationSwizzler.swift in Sources */,
 				E157A76A256E9D3300CBCA52 /* DDError.swift in Sources */,
 				E157A76C256E9D3300CBCA52 /* StdoutCapture.swift in Sources */,
+				E1D476A825DD369F00832592 /* BinaryParser.swift in Sources */,
 				E157A76D256E9D3300CBCA52 /* SimpleSpanSerializer.swift in Sources */,
 				E1DFF0EB257010E800344895 /* PlatformUtils.swift in Sources */,
 				E157A76E256E9D3300CBCA52 /* DDCrashes.swift in Sources */,
@@ -1273,6 +1280,7 @@
 				E12515E5254892C600670D23 /* XCUIApplicationSwizzler.swift in Sources */,
 				E1AD07A9252F5CB8003705C1 /* DDError.swift in Sources */,
 				E126DD2D253F366200700A40 /* StdoutCapture.swift in Sources */,
+				E1D476A625DD369F00832592 /* BinaryParser.swift in Sources */,
 				E1FB4840253891CE0083B263 /* SimpleSpanSerializer.swift in Sources */,
 				E1FB4841253891CE0083B263 /* DDCrashes.swift in Sources */,
 				E1ABA07425231F4700ED8AEF /* DDTestObserver.swift in Sources */,

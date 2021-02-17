@@ -34,13 +34,18 @@ extension String {
 }
 
 extension Data {
-    func zlibDecompress() -> String {
-        let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: 8192)
+    func zlibDecompress(minimumSize: Int = 0) -> String {
+        var expectedSize = minimumSize < 0x10000 ? 0x10000 : 0x10000
+        let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: expectedSize)
         let result = self.subdata(in: 2 ..< self.count).withUnsafeBytes {
-            let read = compression_decode_buffer(buffer, 8192, $0.baseAddress!.bindMemory(to: UInt8.self, capacity: 1), self.count - 2, nil, COMPRESSION_ZLIB)
+            let read = compression_decode_buffer(buffer, expectedSize, $0.baseAddress!.bindMemory(to: UInt8.self, capacity: 1), self.count - 2, nil, COMPRESSION_ZLIB)
             return String(decoding: Data(bytes: buffer, count: read), as: UTF8.self)
         } as String
         buffer.deallocate()
         return result
+    }
+
+    var hexString: String {
+        return self.map { String(format: "%02x", $0) }.joined()
     }
 }

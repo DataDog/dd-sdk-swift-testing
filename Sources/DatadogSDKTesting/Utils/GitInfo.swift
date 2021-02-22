@@ -131,9 +131,15 @@ struct GitInfo {
 
         let packFile = indexFile.deletingPathExtension().appendingPathExtension("pack")
         let filehandler = try FileHandle(forReadingFrom: packFile)
-        var objectSize: Int
+
+        // check .pack version is 2
+        let packHeaderData = filehandler.readData(ofLength: 8)
+        if(  packHeaderData[4] != 0 || packHeaderData[5] != 0 || packHeaderData[6] != 0 || packHeaderData[7] != 2 ) {
+            return ""
+        }
 
         filehandler.seek(toFileOffset: packOffset)
+        var objectSize: Int
         var packData = filehandler.readData(ofLength: 2)
         if packData[0] < 128 {
             objectSize = Int(packData[0] & 0x0F)
@@ -142,10 +148,7 @@ struct GitInfo {
             objectSize = Int(UInt16(packData[1] & 0x7F) * 16 + UInt16(packData[0] & 0x0F))
             packData = filehandler.readData(ofLength: objectSize * 100)
         }
-
-        let aux = packData.zlibDecompress(minimumSize: objectSize)
-
-        return packData.zlibDecompress()
+        return packData.zlibDecompress(minimumSize: objectSize)
     }
 
     /// This function returns the index file containing the commit sha (it there are more than one idx file in the folder,

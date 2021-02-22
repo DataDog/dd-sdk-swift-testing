@@ -379,49 +379,17 @@ internal struct DDEnvironmentValues {
             gitInfo = try? GitInfo(gitFolder: rootFolder.appendingPathComponent(".git"))
         }
 
-        if commit == nil {
-            commit = gitInfo?.commit
-        }
-
-        if workspaceEnv == nil {
-            workspaceEnv = gitInfo?.workspacePath
-        }
-
-        if repository == nil {
-            repository = gitInfo?.repository
-        }
-
-        if branchEnv == nil {
-            branchEnv = gitInfo?.branch
-        }
-
-        if commitMessage == nil {
-            commitMessage = gitInfo?.commitMessage
-        }
-
-        if authorName == nil {
-            authorName = gitInfo?.authorName
-        }
-
-        if authorEmail == nil {
-            authorEmail = gitInfo?.authorEmail
-        }
-
-        if authorDate == nil {
-            authorDate = gitInfo?.authorDate
-        }
-
-        if committerName == nil {
-            committerName = gitInfo?.committerName
-        }
-
-        if committerEmail == nil {
-            committerEmail = gitInfo?.committerEmail
-        }
-
-        if committerDate == nil {
-            committerDate = gitInfo?.committerDate
-        }
+        commit = commit ?? gitInfo?.commit
+        workspaceEnv = workspaceEnv ?? gitInfo?.workspacePath
+        repository = repository ?? gitInfo?.repository
+        branchEnv = branchEnv ?? gitInfo?.branch
+        commitMessage = commitMessage ?? gitInfo?.commitMessage
+        authorName = authorName ?? gitInfo?.authorName
+        authorEmail = authorEmail ?? gitInfo?.authorEmail
+        authorDate = authorDate ?? gitInfo?.authorDate
+        committerName = committerName ?? gitInfo?.committerName
+        committerEmail = committerEmail ?? gitInfo?.committerEmail
+        committerDate = committerDate ?? gitInfo?.committerDate
 
         branch = DDEnvironmentValues.normalizedBranchOrTag(branchEnv)
         tag = DDEnvironmentValues.normalizedBranchOrTag(tagEnv)

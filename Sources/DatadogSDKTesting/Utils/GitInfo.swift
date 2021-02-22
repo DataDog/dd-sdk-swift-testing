@@ -73,14 +73,14 @@ struct GitInfo {
             }
         }
 
-        if let commitInfo = try? self.findCommit(gitFolder: gitFolder, commit: commit) {
+        if let commitInfo = try? findCommit(gitFolder: gitFolder, commit: commit) {
             commitMessage = commitInfo.fullMessage
             authorName = commitInfo.authorName
             authorEmail = commitInfo.authorEmail
             authorDate = ConvertGitTimeToISO8601(date: commitInfo.authorDate)
             committerName = commitInfo.committerName
             committerEmail = commitInfo.committerEmail
-            committerDate =  ConvertGitTimeToISO8601(date: commitInfo.committerDate)
+            committerDate = ConvertGitTimeToISO8601(date: commitInfo.committerDate)
         }
     }
 
@@ -139,7 +139,7 @@ struct GitInfo {
             objectSize = Int(packData[0] & 0x0F)
             packData = filehandler.readData(ofLength: objectSize)
         } else {
-            objectSize = Int( UInt16(packData[1] & 0x7F) * 16 + UInt16(packData[0] & 0x0F))
+            objectSize = Int(UInt16(packData[1] & 0x7F) * 16 + UInt16(packData[0] & 0x0F))
             packData = filehandler.readData(ofLength: objectSize * 100)
         }
 
@@ -167,7 +167,7 @@ struct GitInfo {
         let folder = commit[..<index]
 
         try indexFiles.forEach { file in
-            //Index files has 4 or five different layers of information
+            // Index files has 4 or five different layers of information
             var indexData = try Data(contentsOf: file)
             // skip header
             indexData = indexData.advanced(by: 8)
@@ -236,12 +236,11 @@ struct GitInfo {
 
         let components = date.components(separatedBy: CharacterSet(charactersIn: " "))
         guard components.count >= 1,
-              let timeInterval = TimeInterval(components[0]) else { return nil }
+            let timeInterval = TimeInterval(components[0]) else { return nil }
 
         let myDate = Date(timeIntervalSince1970: timeInterval)
         return ISO8601DateFormatter().string(from: myDate)
     }
-
 }
 
 struct GitObject {

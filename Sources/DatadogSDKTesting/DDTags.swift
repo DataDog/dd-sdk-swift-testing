@@ -73,9 +73,10 @@ internal struct DDGitTags {
     static let gitCommitMessage = "git.commit.message"
     static let gitAuthorName    = "git.commit.author.name"
     static let gitAuthorEmail   = "git.commit.author.email"
+    static let gitAuthorDate    = "git.commit.author.date"
     static let gitCommitterName = "git.commit.committer.name"
     static let gitCommitterEmail = "git.commit.committer.email"
-
+    static let gitCommitterDate = "git.commit.committer.date"
 }
 
 internal struct DDCITags {

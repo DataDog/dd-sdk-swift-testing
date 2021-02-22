@@ -14,8 +14,10 @@ struct GitInfo {
     private(set) var commitMessage: String?
     private(set) var authorName: String?
     private(set) var authorEmail: String?
+    private(set) var authorDate: String?
     private(set) var committerName: String?
     private(set) var committerEmail: String?
+    private(set) var committerDate: String?
 
     init(gitFolder: URL) throws {
         workspacePath = gitFolder.deletingLastPathComponent().path
@@ -75,8 +77,10 @@ struct GitInfo {
             commitMessage = commitInfo.fullMessage
             authorName = commitInfo.authorName
             authorEmail = commitInfo.authorEmail
+            authorDate = ConvertGitTimeToISO8601(date: commitInfo.authorDate)
             committerName = commitInfo.committerName
             committerEmail = commitInfo.committerEmail
+            committerDate =  ConvertGitTimeToISO8601(date: commitInfo.committerDate)
         }
     }
 
@@ -226,6 +230,18 @@ struct GitInfo {
 
         return (desiredIndexFile, packOffset)
     }
+
+    private func ConvertGitTimeToISO8601(date: String?) -> String? {
+        guard let date = date else { return nil }
+
+        let components = date.components(separatedBy: CharacterSet(charactersIn: " "))
+        guard components.count >= 1,
+              let timeInterval = TimeInterval(components[0]) else { return nil }
+
+        let myDate = Date(timeIntervalSince1970: timeInterval)
+        return ISO8601DateFormatter().string(from: myDate)
+    }
+
 }
 
 struct GitObject {
@@ -251,8 +267,10 @@ struct GitObject {
 struct CommitInfo {
     var authorName: String?
     var authorEmail: String?
+    var authorDate: String?
     var committerName: String?
     var committerEmail: String?
+    var committerDate: String?
     var fullMessage: String?
 
     init(content: String) {
@@ -260,18 +278,20 @@ struct CommitInfo {
         for line in lines {
             if line.hasPrefix("author ") {
                 let author = line.dropFirst(7).components(separatedBy: CharacterSet(charactersIn: "<>"))
-                guard author.count >= 2 else {
+                guard author.count >= 3 else {
                     return
                 }
                 authorName = author[0].trimmingCharacters(in: .whitespaces)
                 authorEmail = author[1].trimmingCharacters(in: .whitespaces)
+                authorDate = author[2].trimmingCharacters(in: .whitespaces)
             } else if line.hasPrefix("committer ") {
                 let committer = line.dropFirst(10).components(separatedBy: CharacterSet(charactersIn: "<>"))
-                guard committer.count >= 2 else {
+                guard committer.count >= 3 else {
                     return
                 }
                 committerName = committer[0].trimmingCharacters(in: .whitespaces)
                 committerEmail = committer[1].trimmingCharacters(in: .whitespaces)
+                committerDate = committer[2].trimmingCharacters(in: .whitespaces)
             } else if authorName != nil, committerName != nil {
                 fullMessage = line.trimmingCharacters(in: .whitespaces)
             }

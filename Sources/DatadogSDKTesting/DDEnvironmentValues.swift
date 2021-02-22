@@ -51,8 +51,10 @@ internal struct DDEnvironmentValues {
     var commitMessage: String?
     var authorName: String?
     var authorEmail: String?
+    var authorDate: String?
     var committerName: String?
     var committerEmail: String?
+    var committerDate: String?
 
     static var environment = ProcessInfo.processInfo.environment
 
@@ -337,7 +339,10 @@ internal struct DDEnvironmentValues {
             if tempMessage == nil {
                 let messageSubject = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_MESSAGE_SUBJECT")
                 let messageBody = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_MESSAGE_BODY")
-                commitMessage = ((messageSubject != nil) ? messageSubject! + ":\n" : "") + (messageBody ?? "")
+                let auxMessage = ((messageSubject != nil) ? messageSubject! + ":\n" : "") + (messageBody ?? "")
+                if !auxMessage.isEmpty {
+                    commitMessage = auxMessage
+                }
             } else {
                 commitMessage = tempMessage
             }
@@ -402,12 +407,20 @@ internal struct DDEnvironmentValues {
             authorEmail = gitInfo?.authorEmail
         }
 
+        if authorDate == nil {
+            authorDate = gitInfo?.authorDate
+        }
+
         if committerName == nil {
             committerName = gitInfo?.committerName
         }
 
         if committerEmail == nil {
             committerEmail = gitInfo?.committerEmail
+        }
+
+        if committerDate == nil {
+            committerDate = gitInfo?.committerDate
         }
 
         branch = DDEnvironmentValues.normalizedBranchOrTag(branchEnv)
@@ -438,8 +451,10 @@ internal struct DDEnvironmentValues {
         setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommitMessage, value: commitMessage)
         setAttributeIfExist(toSpan: span, key: DDGitTags.gitAuthorName, value: authorName)
         setAttributeIfExist(toSpan: span, key: DDGitTags.gitAuthorEmail, value: authorEmail)
+        setAttributeIfExist(toSpan: span, key: DDGitTags.gitAuthorDate, value: authorDate)
         setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommitterName, value: committerName)
         setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommitterEmail, value: committerEmail)
+        setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommitterDate, value: committerDate)
     }
 
     private func setAttributeIfExist(toSpan span: Span, key: String, value: String?) {

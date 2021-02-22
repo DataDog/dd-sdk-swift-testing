@@ -135,11 +135,11 @@ struct GitInfo {
             objectSize = Int(packData[0] & 0x0F)
             packData = filehandler.readData(ofLength: objectSize)
         } else {
-            objectSize = Int(packData[0] & 0x0F) * 256 + Int(packData[1] & 0x7F)
-            packData = filehandler.readData(ofLength: objectSize)
+            objectSize = Int( UInt16(packData[1] & 0x7F) * 16 + UInt16(packData[0] & 0x0F))
+            packData = filehandler.readData(ofLength: objectSize * 100)
         }
 
-        let aux = packData.zlibDecompress(minimumSize: objectSize * 10)
+        let aux = packData.zlibDecompress(minimumSize: objectSize)
 
         return packData.zlibDecompress()
     }

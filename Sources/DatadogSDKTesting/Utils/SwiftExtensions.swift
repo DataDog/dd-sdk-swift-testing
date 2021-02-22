@@ -4,6 +4,7 @@
  * Copyright 2019-2020 Datadog, Inc.
  */
 
+import Compression
 import Foundation
 
 extension Array where Element: BinaryFloatingPoint {
@@ -24,10 +25,27 @@ extension String {
 
         while startIndex < self.endIndex {
             let endIndex = self.index(startIndex, offsetBy: length, limitedBy: self.endIndex) ?? self.endIndex
-            results.append(self[startIndex..<endIndex])
+            results.append(self[startIndex ..< endIndex])
             startIndex = endIndex
         }
 
         return results.map { String($0) }
+    }
+}
+
+extension Data {
+    func zlibDecompress(minimumSize: Int = 0) -> String {
+        let expectedSize = minimumSize < 0x10000 ? 0x10000 : 0x10000
+        let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: expectedSize)
+        let result = self.subdata(in: 2 ..< self.count).withUnsafeBytes {
+            let read = compression_decode_buffer(buffer, expectedSize, $0.baseAddress!.bindMemory(to: UInt8.self, capacity: 1), self.count - 2, nil, COMPRESSION_ZLIB)
+            return String(decoding: Data(bytes: buffer, count: read), as: UTF8.self)
+        } as String
+        buffer.deallocate()
+        return result
+    }
+
+    var hexString: String {
+        return self.map { String(format: "%02x", $0) }.joined()
     }
 }

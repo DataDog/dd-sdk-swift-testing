@@ -7,41 +7,17 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		E121DF10258CF652009EA71E /* azurepipelines.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF07258CF652009EA71E /* azurepipelines.json */; };
-		E121DF11258CF652009EA71E /* azurepipelines.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF07258CF652009EA71E /* azurepipelines.json */; };
-		E121DF12258CF652009EA71E /* azurepipelines.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF07258CF652009EA71E /* azurepipelines.json */; };
-		E121DF13258CF652009EA71E /* buildkite.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF08258CF652009EA71E /* buildkite.json */; };
-		E121DF14258CF652009EA71E /* buildkite.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF08258CF652009EA71E /* buildkite.json */; };
-		E121DF15258CF652009EA71E /* buildkite.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF08258CF652009EA71E /* buildkite.json */; };
-		E121DF16258CF652009EA71E /* appveyor.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF09258CF652009EA71E /* appveyor.json */; };
-		E121DF17258CF652009EA71E /* appveyor.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF09258CF652009EA71E /* appveyor.json */; };
-		E121DF18258CF652009EA71E /* appveyor.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF09258CF652009EA71E /* appveyor.json */; };
-		E121DF19258CF652009EA71E /* bitbucket.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0A258CF652009EA71E /* bitbucket.json */; };
-		E121DF1A258CF652009EA71E /* bitbucket.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0A258CF652009EA71E /* bitbucket.json */; };
-		E121DF1B258CF652009EA71E /* bitbucket.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0A258CF652009EA71E /* bitbucket.json */; };
-		E121DF1C258CF652009EA71E /* circleci.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0B258CF652009EA71E /* circleci.json */; };
-		E121DF1D258CF652009EA71E /* circleci.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0B258CF652009EA71E /* circleci.json */; };
-		E121DF1E258CF652009EA71E /* circleci.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0B258CF652009EA71E /* circleci.json */; };
-		E121DF1F258CF652009EA71E /* gitlab.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0C258CF652009EA71E /* gitlab.json */; };
-		E121DF20258CF652009EA71E /* gitlab.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0C258CF652009EA71E /* gitlab.json */; };
-		E121DF21258CF652009EA71E /* gitlab.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0C258CF652009EA71E /* gitlab.json */; };
-		E121DF22258CF652009EA71E /* travisci.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0D258CF652009EA71E /* travisci.json */; };
-		E121DF23258CF652009EA71E /* travisci.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0D258CF652009EA71E /* travisci.json */; };
-		E121DF24258CF652009EA71E /* travisci.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0D258CF652009EA71E /* travisci.json */; };
-		E121DF25258CF652009EA71E /* jenkins.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0E258CF652009EA71E /* jenkins.json */; };
-		E121DF26258CF652009EA71E /* jenkins.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0E258CF652009EA71E /* jenkins.json */; };
-		E121DF27258CF652009EA71E /* jenkins.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0E258CF652009EA71E /* jenkins.json */; };
-		E121DF28258CF652009EA71E /* github.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0F258CF652009EA71E /* github.json */; };
-		E121DF29258CF652009EA71E /* github.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0F258CF652009EA71E /* github.json */; };
-		E121DF2A258CF652009EA71E /* github.json in Resources */ = {isa = PBXBuildFile; fileRef = E121DF0F258CF652009EA71E /* github.json */; };
 		E12515E5254892C600670D23 /* XCUIApplicationSwizzler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12515E4254892C500670D23 /* XCUIApplicationSwizzler.swift */; };
 		E126DD2D253F366200700A40 /* StdoutCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E126DD2C253F366200700A40 /* StdoutCapture.swift */; };
 		E126DD2F253F367600700A40 /* StderrCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E126DD2E253F367600700A40 /* StderrCapture.swift */; };
-		E12E506625A363A500B92F3A /* bitrise.json in Resources */ = {isa = PBXBuildFile; fileRef = E12E506525A363A400B92F3A /* bitrise.json */; };
-		E12E506725A363A500B92F3A /* bitrise.json in Resources */ = {isa = PBXBuildFile; fileRef = E12E506525A363A400B92F3A /* bitrise.json */; };
-		E12E506825A363A500B92F3A /* bitrise.json in Resources */ = {isa = PBXBuildFile; fileRef = E12E506525A363A400B92F3A /* bitrise.json */; };
 		E13D0BCA2546E29C00C37D56 /* SignalUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E13D0BC92546E29C00C37D56 /* SignalUtils.swift */; };
 		E141CF60256FD513008B6B70 /* PlatformUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141CF5F256FD513008B6B70 /* PlatformUtils.swift */; };
+		E14405A625D6AA9500FE3D3C /* GitInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14405A225D6A80800FE3D3C /* GitInfo.swift */; };
+		E14405A725D6AA9500FE3D3C /* GitInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14405A225D6A80800FE3D3C /* GitInfo.swift */; };
+		E14405A825D6AA9600FE3D3C /* GitInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14405A225D6A80800FE3D3C /* GitInfo.swift */; };
+		E14405D925DBC3A800FE3D3C /* GitInfoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14405D825DBC3A800FE3D3C /* GitInfoTests.swift */; };
+		E14405DA25DBC3A800FE3D3C /* GitInfoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14405D825DBC3A800FE3D3C /* GitInfoTests.swift */; };
+		E14405DB25DBC3A800FE3D3C /* GitInfoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14405D825DBC3A800FE3D3C /* GitInfoTests.swift */; };
 		E14AA0C12555AA61003FA711 /* DDNetworkInstrumentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14AA0BF2555A9A1003FA711 /* DDNetworkInstrumentationTests.swift */; };
 		E14AA0CA255AE8D3003FA711 /* SignalUtilsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14AA0C9255AE8D3003FA711 /* SignalUtilsTests.swift */; };
 		E157A721256E9D1D00CBCA52 /* DatadogSDKTesting.h in Headers */ = {isa = PBXBuildFile; fileRef = E1ABA04D25231E2500ED8AEF /* DatadogSDKTesting.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -164,6 +140,9 @@
 		E1AD07AD252F5D86003705C1 /* DDErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1798CE52524D0D5008DEBB9 /* DDErrorTests.swift */; };
 		E1BB54AD25401E85007C2D93 /* StdoutCaptureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1BB54AC25401E85007C2D93 /* StdoutCaptureTests.swift */; };
 		E1BB54C425408E92007C2D93 /* StderrCaptureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1BB54C325408E92007C2D93 /* StderrCaptureTests.swift */; };
+		E1D476A625DD369F00832592 /* BinaryParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1D476A525DD369F00832592 /* BinaryParser.swift */; };
+		E1D476A725DD369F00832592 /* BinaryParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1D476A525DD369F00832592 /* BinaryParser.swift */; };
+		E1D476A825DD369F00832592 /* BinaryParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1D476A525DD369F00832592 /* BinaryParser.swift */; };
 		E1DFF0EA257010E700344895 /* PlatformUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141CF5F256FD513008B6B70 /* PlatformUtils.swift */; };
 		E1DFF0EB257010E800344895 /* PlatformUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141CF5F256FD513008B6B70 /* PlatformUtils.swift */; };
 		E1FB48312538909D0083B263 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1ABA04A25231E2500ED8AEF /* DatadogSDKTesting.framework */; settings = {ATTRIBUTES = (Required, ); }; };
@@ -284,6 +263,21 @@
 		E12E506525A363A400B92F3A /* bitrise.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = bitrise.json; sourceTree = "<group>"; };
 		E13D0BC92546E29C00C37D56 /* SignalUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalUtils.swift; sourceTree = "<group>"; };
 		E141CF5F256FD513008B6B70 /* PlatformUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformUtils.swift; sourceTree = "<group>"; };
+		E14405A225D6A80800FE3D3C /* GitInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitInfo.swift; sourceTree = "<group>"; };
+		E14405B925DBC32900FE3D3C /* dummy.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = dummy.txt; sourceTree = "<group>"; };
+		E14405BD25DBC32900FE3D3C /* 3f93d12768105fa9bd1a548c767c4ea11f75d7 */ = {isa = PBXFileReference; lastKnownFileType = file; path = 3f93d12768105fa9bd1a548c767c4ea11f75d7; sourceTree = "<group>"; };
+		E14405BF25DBC32900FE3D3C /* 8915a6f8e46f8a91212fdf7bed92481d7499e3 */ = {isa = PBXFileReference; lastKnownFileType = file; path = 8915a6f8e46f8a91212fdf7bed92481d7499e3; sourceTree = "<group>"; };
+		E14405C025DBC32900FE3D3C /* HEAD */ = {isa = PBXFileReference; lastKnownFileType = text; path = HEAD; sourceTree = "<group>"; };
+		E14405C325DBC32900FE3D3C /* 1.0 */ = {isa = PBXFileReference; lastKnownFileType = text; path = 1.0; sourceTree = "<group>"; };
+		E14405C525DBC32900FE3D3C /* dummy.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = dummy.txt; sourceTree = "<group>"; };
+		E14405C925DBC32900FE3D3C /* 97c248e019314fc1d91a483e859b32f4509953 */ = {isa = PBXFileReference; lastKnownFileType = file; path = 97c248e019314fc1d91a483e859b32f4509953; sourceTree = "<group>"; };
+		E14405CA25DBC32900FE3D3C /* HEAD */ = {isa = PBXFileReference; lastKnownFileType = text; path = HEAD; sourceTree = "<group>"; };
+		E14405CD25DBC32900FE3D3C /* HEAD */ = {isa = PBXFileReference; lastKnownFileType = text; path = HEAD; sourceTree = "<group>"; };
+		E14405CF25DBC32900FE3D3C /* dummy.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = dummy.txt; sourceTree = "<group>"; };
+		E14405D325DBC32A00FE3D3C /* 97c248e019314fc1d91a483e859b32f4509953 */ = {isa = PBXFileReference; lastKnownFileType = file; path = 97c248e019314fc1d91a483e859b32f4509953; sourceTree = "<group>"; };
+		E14405D425DBC32A00FE3D3C /* HEAD */ = {isa = PBXFileReference; lastKnownFileType = text; path = HEAD; sourceTree = "<group>"; };
+		E14405D725DBC32A00FE3D3C /* master */ = {isa = PBXFileReference; lastKnownFileType = text; path = master; sourceTree = "<group>"; };
+		E14405D825DBC3A800FE3D3C /* GitInfoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitInfoTests.swift; sourceTree = "<group>"; };
 		E14AA0BF2555A9A1003FA711 /* DDNetworkInstrumentationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDNetworkInstrumentationTests.swift; sourceTree = "<group>"; };
 		E14AA0C9255AE8D3003FA711 /* SignalUtilsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalUtilsTests.swift; sourceTree = "<group>"; };
 		E157A74D256E9D1D00CBCA52 /* DatadogSDKTesting.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = DatadogSDKTesting.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -325,6 +319,12 @@
 		E1AD07A8252F5CB8003705C1 /* DDError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDError.swift; sourceTree = "<group>"; };
 		E1BB54AC25401E85007C2D93 /* StdoutCaptureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StdoutCaptureTests.swift; sourceTree = "<group>"; };
 		E1BB54C325408E92007C2D93 /* StderrCaptureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StderrCaptureTests.swift; sourceTree = "<group>"; };
+		E1D4743625DBD8D900832592 /* config */ = {isa = PBXFileReference; lastKnownFileType = text; path = config; sourceTree = "<group>"; };
+		E1D4768C25DC2B8E00832592 /* dummy.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = dummy.txt; sourceTree = "<group>"; };
+		E1D4768E25DC2B8E00832592 /* HEAD */ = {isa = PBXFileReference; lastKnownFileType = text; path = HEAD; sourceTree = "<group>"; };
+		E1D4768F25DC2B8E00832592 /* config */ = {isa = PBXFileReference; lastKnownFileType = text; path = config; sourceTree = "<group>"; };
+		E1D4769525DC2B8E00832592 /* master */ = {isa = PBXFileReference; lastKnownFileType = text; path = master; sourceTree = "<group>"; };
+		E1D476A525DD369F00832592 /* BinaryParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinaryParser.swift; sourceTree = "<group>"; };
 		E1FB483D253891CE0083B263 /* SimpleSpanSerializer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleSpanSerializer.swift; sourceTree = "<group>"; };
 		E1FB483E253891CE0083B263 /* DDCrashes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DDCrashes.swift; sourceTree = "<group>"; };
 		E1FB483F253891CE0083B263 /* SimpleSpanData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleSpanData.swift; sourceTree = "<group>"; };
@@ -398,13 +398,15 @@
 		E116D7D925248C280022779D /* Utils */ = {
 			isa = PBXGroup;
 			children = (
-				E12515E4254892C500670D23 /* XCUIApplicationSwizzler.swift */,
 				E1AD07A8252F5CB8003705C1 /* DDError.swift */,
-				E13D0BC92546E29C00C37D56 /* SignalUtils.swift */,
+				E1D476A525DD369F00832592 /* BinaryParser.swift */,
+				E14405A225D6A80800FE3D3C /* GitInfo.swift */,
 				E1798CD02524C255008DEBB9 /* MethodSwizzler.swift */,
-				E116D7DA25248C390022779D /* SwiftExtensions.swift */,
 				E141CF5F256FD513008B6B70 /* PlatformUtils.swift */,
+				E13D0BC92546E29C00C37D56 /* SignalUtils.swift */,
+				E116D7DA25248C390022779D /* SwiftExtensions.swift */,
 				E1665A7225D12D7500BA53CD /* Spawn.swift */,
+				E12515E4254892C500670D23 /* XCUIApplicationSwizzler.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -412,6 +414,7 @@
 		E121DEA9258CBD88009EA71E /* fixtures */ = {
 			isa = PBXGroup;
 			children = (
+				E14405B725DBC32900FE3D3C /* git */,
 				E121DEAA258CBDB8009EA71E /* ci */,
 			);
 			path = fixtures;
@@ -441,6 +444,180 @@
 				E126DD2E253F367600700A40 /* StderrCapture.swift */,
 			);
 			path = OutputCapture;
+			sourceTree = "<group>";
+		};
+		E14405B725DBC32900FE3D3C /* git */ = {
+			isa = PBXGroup;
+			children = (
+				E14405B825DBC32900FE3D3C /* with_tag */,
+				E14405C425DBC32900FE3D3C /* with_commits_no_refs */,
+				E14405CB25DBC32900FE3D3C /* no_commits */,
+				E1D4768B25DC2B8E00832592 /* no_objects */,
+				E14405CE25DBC32900FE3D3C /* with_commits */,
+			);
+			path = git;
+			sourceTree = "<group>";
+		};
+		E14405B825DBC32900FE3D3C /* with_tag */ = {
+			isa = PBXGroup;
+			children = (
+				E14405B925DBC32900FE3D3C /* dummy.txt */,
+				E14405BA25DBC32900FE3D3C /* git */,
+			);
+			path = with_tag;
+			sourceTree = "<group>";
+		};
+		E14405BA25DBC32900FE3D3C /* git */ = {
+			isa = PBXGroup;
+			children = (
+				E14405BB25DBC32900FE3D3C /* objects */,
+				E14405C025DBC32900FE3D3C /* HEAD */,
+				E14405C125DBC32900FE3D3C /* refs */,
+			);
+			path = git;
+			sourceTree = "<group>";
+		};
+		E14405BB25DBC32900FE3D3C /* objects */ = {
+			isa = PBXGroup;
+			children = (
+				E14405BC25DBC32900FE3D3C /* 64 */,
+				E14405BE25DBC32900FE3D3C /* 1c */,
+			);
+			path = objects;
+			sourceTree = "<group>";
+		};
+		E14405BC25DBC32900FE3D3C /* 64 */ = {
+			isa = PBXGroup;
+			children = (
+				E14405BD25DBC32900FE3D3C /* 3f93d12768105fa9bd1a548c767c4ea11f75d7 */,
+			);
+			path = 64;
+			sourceTree = "<group>";
+		};
+		E14405BE25DBC32900FE3D3C /* 1c */ = {
+			isa = PBXGroup;
+			children = (
+				E14405BF25DBC32900FE3D3C /* 8915a6f8e46f8a91212fdf7bed92481d7499e3 */,
+			);
+			path = 1c;
+			sourceTree = "<group>";
+		};
+		E14405C125DBC32900FE3D3C /* refs */ = {
+			isa = PBXGroup;
+			children = (
+				E14405C225DBC32900FE3D3C /* tags */,
+			);
+			path = refs;
+			sourceTree = "<group>";
+		};
+		E14405C225DBC32900FE3D3C /* tags */ = {
+			isa = PBXGroup;
+			children = (
+				E14405C325DBC32900FE3D3C /* 1.0 */,
+			);
+			path = tags;
+			sourceTree = "<group>";
+		};
+		E14405C425DBC32900FE3D3C /* with_commits_no_refs */ = {
+			isa = PBXGroup;
+			children = (
+				E14405C525DBC32900FE3D3C /* dummy.txt */,
+				E14405C625DBC32900FE3D3C /* git */,
+			);
+			path = with_commits_no_refs;
+			sourceTree = "<group>";
+		};
+		E14405C625DBC32900FE3D3C /* git */ = {
+			isa = PBXGroup;
+			children = (
+				E14405C725DBC32900FE3D3C /* objects */,
+				E14405CA25DBC32900FE3D3C /* HEAD */,
+			);
+			path = git;
+			sourceTree = "<group>";
+		};
+		E14405C725DBC32900FE3D3C /* objects */ = {
+			isa = PBXGroup;
+			children = (
+				E14405C825DBC32900FE3D3C /* 07 */,
+			);
+			path = objects;
+			sourceTree = "<group>";
+		};
+		E14405C825DBC32900FE3D3C /* 07 */ = {
+			isa = PBXGroup;
+			children = (
+				E14405C925DBC32900FE3D3C /* 97c248e019314fc1d91a483e859b32f4509953 */,
+			);
+			path = 07;
+			sourceTree = "<group>";
+		};
+		E14405CB25DBC32900FE3D3C /* no_commits */ = {
+			isa = PBXGroup;
+			children = (
+				E14405CC25DBC32900FE3D3C /* git */,
+			);
+			path = no_commits;
+			sourceTree = "<group>";
+		};
+		E14405CC25DBC32900FE3D3C /* git */ = {
+			isa = PBXGroup;
+			children = (
+				E14405CD25DBC32900FE3D3C /* HEAD */,
+			);
+			path = git;
+			sourceTree = "<group>";
+		};
+		E14405CE25DBC32900FE3D3C /* with_commits */ = {
+			isa = PBXGroup;
+			children = (
+				E14405CF25DBC32900FE3D3C /* dummy.txt */,
+				E14405D025DBC32900FE3D3C /* git */,
+			);
+			path = with_commits;
+			sourceTree = "<group>";
+		};
+		E14405D025DBC32900FE3D3C /* git */ = {
+			isa = PBXGroup;
+			children = (
+				E1D4743625DBD8D900832592 /* config */,
+				E14405D125DBC32900FE3D3C /* objects */,
+				E14405D425DBC32A00FE3D3C /* HEAD */,
+				E14405D525DBC32A00FE3D3C /* refs */,
+			);
+			path = git;
+			sourceTree = "<group>";
+		};
+		E14405D125DBC32900FE3D3C /* objects */ = {
+			isa = PBXGroup;
+			children = (
+				E14405D225DBC32A00FE3D3C /* 07 */,
+			);
+			path = objects;
+			sourceTree = "<group>";
+		};
+		E14405D225DBC32A00FE3D3C /* 07 */ = {
+			isa = PBXGroup;
+			children = (
+				E14405D325DBC32A00FE3D3C /* 97c248e019314fc1d91a483e859b32f4509953 */,
+			);
+			path = 07;
+			sourceTree = "<group>";
+		};
+		E14405D525DBC32A00FE3D3C /* refs */ = {
+			isa = PBXGroup;
+			children = (
+				E14405D625DBC32A00FE3D3C /* heads */,
+			);
+			path = refs;
+			sourceTree = "<group>";
+		};
+		E14405D625DBC32A00FE3D3C /* heads */ = {
+			isa = PBXGroup;
+			children = (
+				E14405D725DBC32A00FE3D3C /* master */,
+			);
+			path = heads;
 			sourceTree = "<group>";
 		};
 		E160A113252B3A6B003121A5 /* include */ = {
@@ -569,9 +746,10 @@
 			isa = PBXGroup;
 			children = (
 				E1798CE52524D0D5008DEBB9 /* DDErrorTests.swift */,
-				E1AD07A1252F5B02003705C1 /* SwiftExtensionsTests.swift */,
+				E14405D825DBC3A800FE3D3C /* GitInfoTests.swift */,
 				E1AD0742252E1F16003705C1 /* MethodSwizzlerTests.swift */,
 				E14AA0C9255AE8D3003FA711 /* SignalUtilsTests.swift */,
+				E1AD07A1252F5B02003705C1 /* SwiftExtensionsTests.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -593,6 +771,49 @@
 				E1BB54C325408E92007C2D93 /* StderrCaptureTests.swift */,
 			);
 			path = OutputCapture;
+			sourceTree = "<group>";
+		};
+		E1D4768B25DC2B8E00832592 /* no_objects */ = {
+			isa = PBXGroup;
+			children = (
+				E1D4768C25DC2B8E00832592 /* dummy.txt */,
+				E1D4768D25DC2B8E00832592 /* git */,
+			);
+			path = no_objects;
+			sourceTree = "<group>";
+		};
+		E1D4768D25DC2B8E00832592 /* git */ = {
+			isa = PBXGroup;
+			children = (
+				E1D4768F25DC2B8E00832592 /* config */,
+				E1D4769025DC2B8E00832592 /* objects */,
+				E1D4768E25DC2B8E00832592 /* HEAD */,
+				E1D4769125DC2B8E00832592 /* refs */,
+			);
+			path = git;
+			sourceTree = "<group>";
+		};
+		E1D4769025DC2B8E00832592 /* objects */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = objects;
+			sourceTree = "<group>";
+		};
+		E1D4769125DC2B8E00832592 /* refs */ = {
+			isa = PBXGroup;
+			children = (
+				E1D4769425DC2B8E00832592 /* heads */,
+			);
+			path = refs;
+			sourceTree = "<group>";
+		};
+		E1D4769425DC2B8E00832592 /* heads */ = {
+			isa = PBXGroup;
+			children = (
+				E1D4769525DC2B8E00832592 /* master */,
+			);
+			path = heads;
 			sourceTree = "<group>";
 		};
 		E1FB483C253891CE0083B263 /* Crashes */ = {
@@ -700,6 +921,7 @@
 				E157A79C256EB0F000CBCA52 /* Frameworks */,
 				E157A79E256EB0F000CBCA52 /* Resources */,
 				E157A79F256EB0F000CBCA52 /* Embed Frameworks */,
+				E1D4743125DBD39600832592 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -722,6 +944,7 @@
 				E157A7B6256EB0F200CBCA52 /* Frameworks */,
 				E157A7B8256EB0F200CBCA52 /* Resources */,
 				E157A7B9256EB0F200CBCA52 /* Embed Frameworks */,
+				E1D4743225DBD3AD00832592 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -768,6 +991,7 @@
 				E1ABA05025231E2500ED8AEF /* Frameworks */,
 				E1ABA05125231E2500ED8AEF /* Resources */,
 				E1FB4837253891180083B263 /* Embed Frameworks */,
+				E14405DD25DBCF0400FE3D3C /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -848,16 +1072,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E121DF11258CF652009EA71E /* azurepipelines.json in Resources */,
-				E121DF29258CF652009EA71E /* github.json in Resources */,
-				E121DF17258CF652009EA71E /* appveyor.json in Resources */,
-				E121DF23258CF652009EA71E /* travisci.json in Resources */,
-				E12E506725A363A500B92F3A /* bitrise.json in Resources */,
-				E121DF20258CF652009EA71E /* gitlab.json in Resources */,
-				E121DF1D258CF652009EA71E /* circleci.json in Resources */,
-				E121DF14258CF652009EA71E /* buildkite.json in Resources */,
-				E121DF26258CF652009EA71E /* jenkins.json in Resources */,
-				E121DF1A258CF652009EA71E /* bitbucket.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -865,16 +1079,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E121DF12258CF652009EA71E /* azurepipelines.json in Resources */,
-				E121DF2A258CF652009EA71E /* github.json in Resources */,
-				E121DF18258CF652009EA71E /* appveyor.json in Resources */,
-				E121DF24258CF652009EA71E /* travisci.json in Resources */,
-				E12E506825A363A500B92F3A /* bitrise.json in Resources */,
-				E121DF21258CF652009EA71E /* gitlab.json in Resources */,
-				E121DF1E258CF652009EA71E /* circleci.json in Resources */,
-				E121DF15258CF652009EA71E /* buildkite.json in Resources */,
-				E121DF27258CF652009EA71E /* jenkins.json in Resources */,
-				E121DF1B258CF652009EA71E /* bitbucket.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -889,20 +1093,64 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E121DF10258CF652009EA71E /* azurepipelines.json in Resources */,
-				E121DF28258CF652009EA71E /* github.json in Resources */,
-				E121DF16258CF652009EA71E /* appveyor.json in Resources */,
-				E121DF22258CF652009EA71E /* travisci.json in Resources */,
-				E12E506625A363A500B92F3A /* bitrise.json in Resources */,
-				E121DF1F258CF652009EA71E /* gitlab.json in Resources */,
-				E121DF1C258CF652009EA71E /* circleci.json in Resources */,
-				E121DF13258CF652009EA71E /* buildkite.json in Resources */,
-				E121DF25258CF652009EA71E /* jenkins.json in Resources */,
-				E121DF19258CF652009EA71E /* bitbucket.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		E14405DD25DBCF0400FE3D3C /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "ditto \"${SRCROOT}/Tests/fixtures/\" \"${CODESIGNING_FOLDER_PATH}/Resources\"\n";
+		};
+		E1D4743125DBD39600832592 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "ditto \"${SRCROOT}/Tests/fixtures/\" \"${CODESIGNING_FOLDER_PATH}/Contents/Resources\"\n";
+		};
+		E1D4743225DBD3AD00832592 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "ditto \"${SRCROOT}/Tests/fixtures/\" \"${CODESIGNING_FOLDER_PATH}/Resources\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		E157A722256E9D1D00CBCA52 /* Sources */ = {
@@ -912,6 +1160,7 @@
 				E157A723256E9D1D00CBCA52 /* SwiftExtensions.swift in Sources */,
 				E1665A8225D13BBB00BA53CD /* DDSymbolicator.swift in Sources */,
 				E157A724256E9D1D00CBCA52 /* DDTestMonitor.swift in Sources */,
+				E14405A725D6AA9500FE3D3C /* GitInfo.swift in Sources */,
 				E157A725256E9D1D00CBCA52 /* DDEnvironmentValues.swift in Sources */,
 				E157A726256E9D1D00CBCA52 /* ObjcLoadHandler.m in Sources */,
 				E157A728256E9D1D00CBCA52 /* DDInstrumentationControl.swift in Sources */,
@@ -925,6 +1174,7 @@
 				E157A731256E9D1D00CBCA52 /* XCUIApplicationSwizzler.swift in Sources */,
 				E157A732256E9D1D00CBCA52 /* DDError.swift in Sources */,
 				E157A734256E9D1D00CBCA52 /* StdoutCapture.swift in Sources */,
+				E1D476A725DD369F00832592 /* BinaryParser.swift in Sources */,
 				E157A735256E9D1D00CBCA52 /* SimpleSpanSerializer.swift in Sources */,
 				E1DFF0EA257010E700344895 /* PlatformUtils.swift in Sources */,
 				E157A736256E9D1D00CBCA52 /* DDCrashes.swift in Sources */,
@@ -942,6 +1192,7 @@
 				E157A75B256E9D3300CBCA52 /* SwiftExtensions.swift in Sources */,
 				E1665A8125D13BBB00BA53CD /* DDSymbolicator.swift in Sources */,
 				E157A75C256E9D3300CBCA52 /* DDTestMonitor.swift in Sources */,
+				E14405A825D6AA9600FE3D3C /* GitInfo.swift in Sources */,
 				E157A75D256E9D3300CBCA52 /* DDEnvironmentValues.swift in Sources */,
 				E157A75E256E9D3300CBCA52 /* ObjcLoadHandler.m in Sources */,
 				E157A760256E9D3300CBCA52 /* DDInstrumentationControl.swift in Sources */,
@@ -955,6 +1206,7 @@
 				E157A769256E9D3300CBCA52 /* XCUIApplicationSwizzler.swift in Sources */,
 				E157A76A256E9D3300CBCA52 /* DDError.swift in Sources */,
 				E157A76C256E9D3300CBCA52 /* StdoutCapture.swift in Sources */,
+				E1D476A825DD369F00832592 /* BinaryParser.swift in Sources */,
 				E157A76D256E9D3300CBCA52 /* SimpleSpanSerializer.swift in Sources */,
 				E1DFF0EB257010E800344895 /* PlatformUtils.swift in Sources */,
 				E157A76E256E9D3300CBCA52 /* DDCrashes.swift in Sources */,
@@ -978,6 +1230,7 @@
 				E157A795256EB0F000CBCA52 /* DDTestObserverTests.swift in Sources */,
 				E157A796256EB0F000CBCA52 /* DDNetworkInstrumentationTests.swift in Sources */,
 				E157A797256EB0F000CBCA52 /* DDErrorTests.swift in Sources */,
+				E14405DA25DBC3A800FE3D3C /* GitInfoTests.swift in Sources */,
 				E157A798256EB0F000CBCA52 /* DDTracerTests.swift in Sources */,
 				E157A799256EB0F000CBCA52 /* SignalUtilsTests.swift in Sources */,
 				E157A79A256EB0F000CBCA52 /* SwiftExtensionsTests.swift in Sources */,
@@ -998,6 +1251,7 @@
 				E157A7AF256EB0F200CBCA52 /* DDTestObserverTests.swift in Sources */,
 				E157A7B0256EB0F200CBCA52 /* DDNetworkInstrumentationTests.swift in Sources */,
 				E157A7B1256EB0F200CBCA52 /* DDErrorTests.swift in Sources */,
+				E14405DB25DBC3A800FE3D3C /* GitInfoTests.swift in Sources */,
 				E157A7B2256EB0F200CBCA52 /* DDTracerTests.swift in Sources */,
 				E157A7B3256EB0F200CBCA52 /* SignalUtilsTests.swift in Sources */,
 				E157A7B4256EB0F200CBCA52 /* SwiftExtensionsTests.swift in Sources */,
@@ -1012,6 +1266,7 @@
 				E1AD079F252F5B00003705C1 /* SwiftExtensions.swift in Sources */,
 				E1665A8525D1524100BA53CD /* DDSymbolicator.swift in Sources */,
 				E1ABA08B252341EA00ED8AEF /* DDTestMonitor.swift in Sources */,
+				E14405A625D6AA9500FE3D3C /* GitInfo.swift in Sources */,
 				E1ABA07725231F4700ED8AEF /* DDEnvironmentValues.swift in Sources */,
 				E1ABA06D25231F3200ED8AEF /* ObjcLoadHandler.m in Sources */,
 				E158E2DC25471DA000DBCD6C /* DDInstrumentationControl.swift in Sources */,
@@ -1025,6 +1280,7 @@
 				E12515E5254892C600670D23 /* XCUIApplicationSwizzler.swift in Sources */,
 				E1AD07A9252F5CB8003705C1 /* DDError.swift in Sources */,
 				E126DD2D253F366200700A40 /* StdoutCapture.swift in Sources */,
+				E1D476A625DD369F00832592 /* BinaryParser.swift in Sources */,
 				E1FB4840253891CE0083B263 /* SimpleSpanSerializer.swift in Sources */,
 				E1FB4841253891CE0083B263 /* DDCrashes.swift in Sources */,
 				E1ABA07425231F4700ED8AEF /* DDTestObserver.swift in Sources */,
@@ -1048,6 +1304,7 @@
 				E1AD0762252F2F7E003705C1 /* DDTestObserverTests.swift in Sources */,
 				E14AA0C12555AA61003FA711 /* DDNetworkInstrumentationTests.swift in Sources */,
 				E1AD07AD252F5D86003705C1 /* DDErrorTests.swift in Sources */,
+				E14405D925DBC3A800FE3D3C /* GitInfoTests.swift in Sources */,
 				E1AD075D252F206D003705C1 /* DDTracerTests.swift in Sources */,
 				E14AA0CA255AE8D3003FA711 /* SignalUtilsTests.swift in Sources */,
 				E1AD07A2252F5B02003705C1 /* SwiftExtensionsTests.swift in Sources */,
@@ -1184,7 +1441,6 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = Tests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1207,7 +1463,6 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = Tests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1229,7 +1484,6 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = Tests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1251,7 +1505,6 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = Tests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1456,7 +1709,6 @@
 				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
 				CLANG_ENABLE_MODULES = YES;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
-				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = Tests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1479,7 +1731,6 @@
 				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
 				CLANG_ENABLE_MODULES = YES;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
-				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = Tests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

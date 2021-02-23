@@ -49,17 +49,20 @@ internal class DDTestObserver: NSObject, XCTestObservation {
         let testName = String(testCase.name[nameRange])
 
         let attributes: [String: String] = [
+            DDGenericTags.language: "swift",
             DDGenericTags.type: DDTestTags.typeTest,
             DDTestTags.testName: testName,
             DDTestTags.testSuite: testSuite,
             DDTestTags.testFramework: "XCTest",
             DDTestTags.testBundle: currentBundleName,
             DDTestTags.testType: DDTestTags.typeTest,
-            DDPlatformTags.platformName: tracer.env.platformName,
-            DDPlatformTags.platformArchitecture: tracer.env.platformArchitecture,
+            DDOSTags.osPlatform: tracer.env.osName,
+            DDOSTags.osArchitecture: tracer.env.osArchitecture,
+            DDOSTags.osVersion: tracer.env.osVersion,
             DDDeviceTags.deviceName: tracer.env.deviceName,
             DDDeviceTags.deviceModel: tracer.env.deviceModel,
-            DDDeviceTags.deviceVersion: tracer.env.deviceVersion
+            DDRuntimeTags.runtimeName: "Xcode",
+            DDRuntimeTags.runtimeVersion: tracer.env.runtimeVersion
         ]
 
         let testSpan = tracer.startSpan(name: testCase.name, attributes: attributes)

@@ -24,12 +24,17 @@ internal struct DDEnvironmentValues {
     let excludedURLS: Set<String>?
     let disableDDSDKIOSIntegration: Bool
 
+    /// OS Information
+    let osName: String
+    let osArchitecture: String
+    let osVersion: String
+
     /// Device Information
-    let platformName: String
-    let platformArchitecture: String
     let deviceName: String
     let deviceModel: String
-    let deviceVersion: String
+
+    /// Runtime Information
+    let runtimeVersion: String
 
     /// CI  values
     let isCi: Bool
@@ -106,11 +111,12 @@ internal struct DDEnvironmentValues {
         disableDDSDKIOSIntegration = envDisableDDSDKIOSIntegration?.boolValue ?? false
 
         /// Device Information
-        platformName = PlatformUtils.getRunningPlatform()
-        platformArchitecture = PlatformUtils.getPlatformArchitecture()
+        osName = PlatformUtils.getRunningPlatform()
+        osArchitecture = PlatformUtils.getPlatformArchitecture()
+        osVersion = PlatformUtils.getDeviceVersion()
         deviceName = PlatformUtils.getDeviceName()
         deviceModel = PlatformUtils.getDeviceModel()
-        deviceVersion = PlatformUtils.getDeviceVersion()
+        runtimeVersion = PlatformUtils.getXcodeVersion()
 
         /// CI  values
         var branchEnv: String?

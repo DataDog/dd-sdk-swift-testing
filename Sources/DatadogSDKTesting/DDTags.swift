@@ -34,6 +34,7 @@ internal struct DDTags {
 }
 
 internal struct DDGenericTags {
+    static let language         = "language"
     static let type             = "type"
 }
 
@@ -54,15 +55,20 @@ internal struct DDTestTags {
     static let typeTest         = "test"
 }
 
-internal struct DDPlatformTags {
-    static let platformName         = "platform.name"
-    static let platformArchitecture = "platform.architecture"
+internal struct DDOSTags {
+    static let osPlatform       = "os.platform"
+    static let osArchitecture   = "os.architecture"
+    static let osVersion        = "os.version"
 }
 
 internal struct DDDeviceTags {
-    static let deviceName       = "device.name"
-    static let deviceModel      = "device.model"
-    static let deviceVersion    = "device.version"
+    static let deviceName   = "device.name"
+    static let deviceModel  = "device.model"
+}
+
+internal struct DDRuntimeTags {
+    static let runtimeName   = "runtime.name"
+    static let runtimeVersion   = "runtime.version"
 }
 
 internal struct DDGitTags {

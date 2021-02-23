@@ -123,6 +123,28 @@ class DDEnvironmentValuesTests: XCTestCase {
         XCTAssertEqual(spanData.attributes.count, 0)
     }
 
+    func testAddCustomTagsWithDDTags() {
+        testEnvironment["DD_TAGS"] = "key1:value1 key2:value2 key3:value3 keyFoo:$FOO keyFooFoo:$FOOFOO"
+        testEnvironment["FOO"] = "BAR"
+        setEnvVariables()
+
+        let span = createSimpleSpan()
+        var spanData = span.toSpanData()
+        XCTAssertEqual(spanData.attributes.count, 0)
+
+        let env = DDEnvironmentValues()
+        env.addTagsToSpan(span: span)
+
+        spanData = span.toSpanData()
+        XCTAssertEqual(spanData.attributes.count, 5)
+
+        XCTAssertEqual(spanData.attributes["key1"]?.description, "value1")
+        XCTAssertEqual(spanData.attributes["key2"]?.description, "value2")
+        XCTAssertEqual(spanData.attributes["key3"]?.description, "value3")
+        XCTAssertEqual(spanData.attributes["keyFoo"]?.description, "BAR")
+        XCTAssertEqual(spanData.attributes["keyFooFoo"]?.description, "$FOOFOO")
+    }
+
     private func createSimpleSpan() -> RecordEventsReadableSpan {
         return tracerSdk.spanBuilder(spanName: "spanName").startSpan() as! RecordEventsReadableSpan
     }

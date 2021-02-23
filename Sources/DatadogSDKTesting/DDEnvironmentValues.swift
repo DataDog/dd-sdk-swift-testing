@@ -12,6 +12,7 @@ internal struct DDEnvironmentValues {
     let ddClientToken: String?
     let ddEnvironment: String?
     let ddService: String?
+    var ddTags = [String: String]()
 
     /// Instrumentation configuration values
     let disableNetworkInstrumentation: Bool
@@ -69,6 +70,17 @@ internal struct DDEnvironmentValues {
 
         ddEnvironment = DDEnvironmentValues.getEnvVariable("DD_ENV")
         ddService = DDEnvironmentValues.getEnvVariable("DD_SERVICE")
+
+        if let envDDTags = DDEnvironmentValues.getEnvVariable("DD_TAGS") {
+            let ddtagsEntries = envDDTags.components(separatedBy: " ")
+            for entry in ddtagsEntries {
+                let entryPair = entry.components(separatedBy: ":")
+                guard entryPair.count == 2 else { continue }
+                let key = entryPair[0].trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+                let value = entryPair[1].trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+                ddTags[key] = value
+            }
+        }
 
         /// Instrumentation configuration values
         let envNetwork = DDEnvironmentValues.getEnvVariable("DD_DISABLE_NETWORK_INSTRUMENTATION") as NSString?
@@ -397,7 +409,19 @@ internal struct DDEnvironmentValues {
     }
 
     func addTagsToSpan(span: Span) {
-        guard isCi else {
+        // Add the user defined tags
+        ddTags.forEach {
+            let value: String
+            if $0.value.hasPrefix("$") {
+                value = DDEnvironmentValues.getEnvVariable(String($0.value.dropFirst())) ?? $0.value
+            } else {
+                value = $0.value
+            }
+            setAttributeIfExist(toSpan: span, key: $0.key, value: value)
+        }
+
+        // Add the CI and Git tags, only if running in CI
+        if !isCi {
             return
         }
 

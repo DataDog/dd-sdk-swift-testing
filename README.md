@@ -67,6 +67,33 @@ DD_MAX_PAYLOAD_SIZE # It sets the maximum size that will be reported from the pa
 You can also disable or enable specific autoinstrumentation in some of the tests from Swift or Objective-C by importing the module `DatadogSDKTesting` and using the class: `DDInstrumentationControl`.
 
 
+## Adding custom tags
+
+### Using environment variables
+
+You can use `DD_TAGS` environment variable. It must contain pairs of `key:tag` separated by spaces. For example:
+
+```shell
+DDTAGS=tag-key-0:tag-value-0 tag-key-1:tag-value-1
+```
+
+If one of your values starts with the `$` character, it will be replaced with the environment variable with the same name if it exists, example:
+
+```shell
+DDTAGS=home:$HOME
+```
+
+### Using OpenTelemetry (only for Swift)
+
+Datadog swift testing framework uses [OpenTelemetry](https://github.com/open-telemetry/opentelemetry-swift) as the tracing technology under the hood. You can access the OpenTelemetry tracer using `DDInstrumentationControl.openTelemetryTracer` and can use any OpenTelemetry api. For example, for adding a tag/attribute
+
+```swift
+let tracer = DDInstrumentationControl.openTelemetryTracer
+tracer?.activeSpan?.setAttribute(key: "OTelTag", value: "OTelValue")
+```
+
+Test target needs to link explicitly with OpenTelemetry
+
 ## Contributing
 
 Pull requests are welcome. First, open an issue to discuss what you would like to change. For more information, read the [Contributing Guide](CONTRIBUTING.md).

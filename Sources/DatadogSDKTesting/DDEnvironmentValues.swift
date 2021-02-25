@@ -58,6 +58,7 @@ internal struct DDEnvironmentValues {
     var committerDate: String?
 
     static var environment = ProcessInfo.processInfo.environment
+    static let environmentCharset = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_")
 
     init() {
         /// Datatog configuration values
@@ -413,7 +414,16 @@ internal struct DDEnvironmentValues {
         ddTags.forEach {
             let value: String
             if $0.value.hasPrefix("$") {
-                value = DDEnvironmentValues.getEnvVariable(String($0.value.dropFirst())) ?? $0.value
+                var auxValue = $0.value.dropFirst()
+                let environmentPrefix = auxValue.unicodeScalars.prefix(while: { DDEnvironmentValues.environmentCharset.contains($0) })
+                if let environmentValue = DDEnvironmentValues.getEnvVariable(String(environmentPrefix)),
+                   let environmentRange = auxValue.range(of: String(environmentPrefix))
+                {
+                    auxValue.replaceSubrange(environmentRange, with: environmentValue)
+                    value = String(auxValue)
+                } else {
+                    value = $0.value
+                }
             } else {
                 value = $0.value
             }

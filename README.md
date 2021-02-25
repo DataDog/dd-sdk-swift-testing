@@ -82,6 +82,12 @@ If one of your values starts with the `$` character, it will be replaced with th
 ```shell
 DDTAGS=home:$HOME
 ```
+It also supports replacing a environment variable at the beggining of the value if contains non env variables supported characters (`a-z`,  `A-Z` or `_`):
+
+```shell
+FOO = BAR
+DD_TAGS=key1:$FOO-v1 // expected: key1:BAR-v1
+```
 
 ### Using OpenTelemetry (only for Swift)
 

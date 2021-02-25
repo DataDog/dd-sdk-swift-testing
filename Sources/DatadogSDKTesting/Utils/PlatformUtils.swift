@@ -66,8 +66,13 @@ struct PlatformUtils {
     }
 
     static func getDeviceVersion() -> String {
-        let version = ProcessInfo.processInfo.operatingSystemVersion
-        return "\(version.majorVersion).\(version.minorVersion).\(version.patchVersion)"
+        return ProcessInfo.processInfo.operatingSystemVersionString
     }
 
+    static func getXcodeVersion() -> String {
+        guard let xcTestClass = NSClassFromString("XCTest") else { return "" }
+        let bundle = Bundle(for: xcTestClass)
+        let version =  bundle.infoDictionary?["DTXcode"] as? String ?? ""
+        return version
+    }
 }

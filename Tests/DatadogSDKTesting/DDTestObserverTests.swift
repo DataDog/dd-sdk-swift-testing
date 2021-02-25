@@ -30,7 +30,6 @@ internal class DDTestObserverTests: XCTestCase {
     }
 
     func testWhenTestCaseWillStartIsCalled_testSpanIsCreated() {
-
         let testName = "testWhenTestCaseWillStartIsCalled_testSpanIsCreated"
         let testSuite = "DDTestObserverTests"
         let testBundle = testObserver.currentBundleName
@@ -39,25 +38,25 @@ internal class DDTestObserverTests: XCTestCase {
 
         testObserver.testCaseWillStart(self)
 
-        //let fingerprint = String((testBundle + testSuite + testName + deviceModel + deviceVersion).hash)
-
         let span = testObserver.tracer.tracerSdk.activeSpan as! RecordEventsReadableSpan
         let spanData = span.toSpanData()
 
         XCTAssertEqual(spanData.name, "-[DDTestObserverTests testWhenTestCaseWillStartIsCalled_testSpanIsCreated]")
-        XCTAssertEqual(spanData.attributes.count, 11)
+        XCTAssertEqual(spanData.attributes.count, 14)
+        XCTAssertEqual(spanData.attributes[DDGenericTags.language]?.description, "swift")
         XCTAssertEqual(spanData.attributes[DDGenericTags.type]?.description, DDTestTags.typeTest)
         XCTAssertEqual(spanData.attributes[DDTestTags.testName]?.description, testName)
         XCTAssertEqual(spanData.attributes[DDTestTags.testSuite]?.description, testSuite)
         XCTAssertEqual(spanData.attributes[DDTestTags.testFramework]?.description, "XCTest")
         XCTAssertEqual(spanData.attributes[DDTestTags.testBundle]?.description, testBundle)
         XCTAssertEqual(spanData.attributes[DDTestTags.testType]?.description, DDTestTags.typeTest)
-       // XCTAssertEqual(spanData.attributes[DDTestTags.testFingerprint]?.description, fingerprint)
-        XCTAssertEqual(spanData.attributes[DDPlatformTags.platformArchitecture]?.description, PlatformUtils.getPlatformArchitecture())
-        XCTAssertEqual(spanData.attributes[DDPlatformTags.platformName]?.description, PlatformUtils.getRunningPlatform())
+        XCTAssertEqual(spanData.attributes[DDOSTags.osArchitecture]?.description, PlatformUtils.getPlatformArchitecture())
+        XCTAssertEqual(spanData.attributes[DDOSTags.osPlatform]?.description, PlatformUtils.getRunningPlatform())
+        XCTAssertEqual(spanData.attributes[DDOSTags.osVersion]?.description, deviceVersion)
         XCTAssertEqual(spanData.attributes[DDDeviceTags.deviceModel]?.description, deviceModel)
         XCTAssertEqual(spanData.attributes[DDDeviceTags.deviceName]?.description, PlatformUtils.getDeviceName())
-        XCTAssertEqual(spanData.attributes[DDDeviceTags.deviceVersion]?.description, deviceVersion)
+        XCTAssertEqual(spanData.attributes[DDRuntimeTags.runtimeName]?.description, "Xcode")
+        XCTAssertEqual(spanData.attributes[DDRuntimeTags.runtimeVersion]?.description, PlatformUtils.getXcodeVersion())
 
         testObserver.testCaseDidFinish(self)
     }
@@ -74,7 +73,6 @@ internal class DDTestObserverTests: XCTestCase {
     }
 
     func testWhenTestCaseDidFailWithDescriptionIsCalled_testStatusIsSet() {
-
         testObserver.testCaseWillStart(self)
         testObserver.testCase(self, didFailWithDescription: "descrip", inFile: "samplefile", atLine: 239)
 
@@ -93,10 +91,10 @@ internal class DDTestObserverTests: XCTestCase {
         let testSpan = testObserver.tracer.tracerSdk.activeSpan as! RecordEventsReadableSpan
         let perfMetric = XCTPerformanceMetric.wallClockTime
         self.setValue([perfMetric], forKey: "_activePerformanceMetricIDs")
-        self.setValue([perfMetric: ["measurements" : [1,2,3,4,5]]], forKey: "_perfMetricsForID")
+        self.setValue([perfMetric: ["measurements": [1, 2, 3, 4, 5]]], forKey: "_perfMetricsForID")
 
         testObserver.testCaseDidFinish(self)
-        
+
         let spanData = testSpan.toSpanData()
         XCTAssertEqual(spanData.attributes[DDTestTags.testType]?.description, DDTestTags.typeBenchmark)
         XCTAssertEqual(spanData.attributes[DDBenchmarkTags.durationMean]?.description, "3000000000.0")

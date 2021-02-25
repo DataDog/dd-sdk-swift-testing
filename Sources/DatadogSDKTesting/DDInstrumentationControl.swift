@@ -5,6 +5,7 @@
  */
 
 import Foundation
+import OpenTelemetrySdk
 
 @objc public class DDInstrumentationControl: NSObject {
     @objc public static func startInjectingHeaders() {
@@ -37,5 +38,9 @@ import Foundation
 
     @objc public static func stopStderrCapture() {
         DDTestMonitor.instance?.stopStderrCapture()
+    }
+
+    public static var openTelemetryTracer: TracerSdk? {
+        return DDTestMonitor.instance?.tracer.tracerSdk
     }
 }

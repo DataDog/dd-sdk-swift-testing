@@ -12,6 +12,7 @@ internal struct DDEnvironmentValues {
     let ddClientToken: String?
     let ddEnvironment: String?
     let ddService: String?
+    var ddTags = [String: String]()
 
     /// Instrumentation configuration values
     let disableNetworkInstrumentation: Bool
@@ -62,6 +63,7 @@ internal struct DDEnvironmentValues {
     var committerDate: String?
 
     static var environment = ProcessInfo.processInfo.environment
+    static let environmentCharset = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_")
 
     init() {
         /// Datatog configuration values
@@ -74,6 +76,17 @@ internal struct DDEnvironmentValues {
 
         ddEnvironment = DDEnvironmentValues.getEnvVariable("DD_ENV")
         ddService = DDEnvironmentValues.getEnvVariable("DD_SERVICE")
+
+        if let envDDTags = DDEnvironmentValues.getEnvVariable("DD_TAGS") {
+            let ddtagsEntries = envDDTags.components(separatedBy: " ")
+            for entry in ddtagsEntries {
+                let entryPair = entry.components(separatedBy: ":")
+                guard entryPair.count == 2 else { continue }
+                let key = entryPair[0].trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+                let value = entryPair[1].trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+                ddTags[key] = value
+            }
+        }
 
         /// Instrumentation configuration values
         let envNetwork = DDEnvironmentValues.getEnvVariable("DD_DISABLE_NETWORK_INSTRUMENTATION") as NSString?
@@ -403,7 +416,28 @@ internal struct DDEnvironmentValues {
     }
 
     func addTagsToSpan(span: Span) {
-        guard isCi else {
+        // Add the user defined tags
+        ddTags.forEach {
+            let value: String
+            if $0.value.hasPrefix("$") {
+                var auxValue = $0.value.dropFirst()
+                let environmentPrefix = auxValue.unicodeScalars.prefix(while: { DDEnvironmentValues.environmentCharset.contains($0) })
+                if let environmentValue = DDEnvironmentValues.getEnvVariable(String(environmentPrefix)),
+                   let environmentRange = auxValue.range(of: String(environmentPrefix))
+                {
+                    auxValue.replaceSubrange(environmentRange, with: environmentValue)
+                    value = String(auxValue)
+                } else {
+                    value = $0.value
+                }
+            } else {
+                value = $0.value
+            }
+            setAttributeIfExist(toSpan: span, key: $0.key, value: value)
+        }
+
+        // Add the CI and Git tags, only if running in CI
+        if !isCi {
             return
         }
 

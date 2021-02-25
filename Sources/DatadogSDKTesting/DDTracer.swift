@@ -32,7 +32,8 @@ internal class DDTracer {
 
     init() {
         if let envTraceId = ProcessInfo.processInfo.environment["ENVIRONMENT_TRACER_TRACEID"],
-            let envSpanId = ProcessInfo.processInfo.environment["ENVIRONMENT_TRACER_SPANID"] {
+           let envSpanId = ProcessInfo.processInfo.environment["ENVIRONMENT_TRACER_SPANID"]
+        {
             let launchTraceId = TraceId(fromHexString: envTraceId)
             let launchSpanId = SpanId(fromHexString: envSpanId)
             launchSpanContext = SpanContext.create(traceId: launchTraceId,
@@ -139,8 +140,7 @@ internal class DDTracer {
             attributes.updateValue(value: AttributeValue.string(errorMessage + ". Check error.stack"), forKey: DDTags.errorMessage)
             let splitted = errorStack.split(by: 5000)
             for i in 0 ..< splitted.count {
-                attributes.updateValue(value: AttributeValue.string(splitted[i]), forKey: "\(DDTags.errorStack).\( String(format: "%02d", i))")
-
+                attributes.updateValue(value: AttributeValue.string(splitted[i]), forKey: "\(DDTags.errorStack).\(String(format: "%02d", i))")
             }
         }
 

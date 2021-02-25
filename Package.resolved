@@ -6,8 +6,8 @@
         "repositoryURL": "https://github.com/grpc/grpc-swift.git",
         "state": {
           "branch": null,
-          "revision": "b81b8f2398fbe55f06d209bcefe7f6fe6aaa337e",
-          "version": "1.0.0-alpha.21"
+          "revision": "b83ee1ee2caa0660eb02444977b9b6e353c2adbf",
+          "version": "1.0.0-alpha.12"
         }
       },
       {
@@ -15,8 +15,8 @@
         "repositoryURL": "https://github.com/open-telemetry/opentelemetry-swift.git",
         "state": {
           "branch": null,
-          "revision": "9f2be3e42f8c68c83f6b60494638bb7e89534b11",
-          "version": "0.4.0"
+          "revision": "42da6aeb3ef463da93f201849b2df6148c818b66",
+          "version": "0.5.0"
         }
       },
       {
@@ -44,6 +44,15 @@
           "branch": null,
           "revision": "d36db09f97a1739edc8c63897220c7ecbb5de684",
           "version": "9.0.2"
+        }
+      },
+      {
+        "package": "swift-atomics",
+        "repositoryURL": "https://github.com/apple/swift-atomics.git",
+        "state": {
+          "branch": null,
+          "revision": "26e346cd64f6b92d4089e7fafe2f8e82f60ddb8c",
+          "version": "0.0.2"
         }
       },
       {

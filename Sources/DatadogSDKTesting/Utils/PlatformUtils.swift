@@ -5,7 +5,6 @@
  */
 
 import Foundation
-@_implementationOnly import XCTest
 #if os(iOS) || os(tvOS) || os(watchOS)
     import UIKit
 #else
@@ -71,9 +70,9 @@ struct PlatformUtils {
     }
 
     static func getXcodeVersion() -> String {
-        guard let xcTestClass = NSClassFromString("XCTest") else { return nil }
+        guard let xcTestClass = NSClassFromString("XCTest") else { return "" }
         let bundle = Bundle(for: xcTestClass)
-        return bundle.infoDictionary?["DTXcode"] as? String ?? ""
+        let version =  bundle.infoDictionary?["DTXcode"] as? String ?? ""
         return version
     }
 }

@@ -71,8 +71,9 @@ struct PlatformUtils {
     }
 
     static func getXcodeVersion() -> String {
-        let bundle = Bundle(for: XCTest.self)
-        let version = bundle.infoDictionary?["DTXcode"] as? String ?? ""
+        guard let xcTestClass = NSClassFromString("XCTest") else { return nil }
+        let bundle = Bundle(for: xcTestClass)
+        return bundle.infoDictionary?["DTXcode"] as? String ?? ""
         return version
     }
 }

@@ -25,15 +25,21 @@ class CISpec: XCTestCase {
 
     func testGenerateSpecJson() throws {
         testEnvironment["DATADOG_CLIENT_TOKEN"] = "fakeToken"
-        testEnvironment["JENKINS_URL"] = "http://jenkins.com/"
-        testEnvironment["GIT_URL"] = "/test/repo"
-        testEnvironment["GIT_COMMIT"] = "37e376448b0ac9b7f54404"
-        testEnvironment["WORKSPACE"] = "/build"
-        testEnvironment["BUILD_TAG"] = "pipeline1"
-        testEnvironment["BUILD_NUMBER"] = "45"
-        testEnvironment["BUILD_URL"] = "http://jenkins.com/build"
-        testEnvironment["GIT_BRANCH"] = "/origin/develop"
-        testEnvironment["JOB_NAME"] = "job1"
+        testEnvironment["CI_PIPELINE_URL"] = "https://foo/repo/-/pipelines/1234"
+        testEnvironment["HOME"] = "/not-my-home"
+        testEnvironment["USERPROFILE"] = "/not-my-home"
+        testEnvironment["CI_PROJECT_DIR"] = "~/foo/bar"
+        testEnvironment["CI_REPOSITORY_URL"] = "sample"
+        testEnvironment["CI_COMMIT_BRANCH"] = "origin/master"
+        testEnvironment["CI_COMMIT_TAG"] = "tag"
+        testEnvironment["GITLAB_CI"] = "gitlab"
+        testEnvironment["CI_PIPELINE_ID"] = "gitlab-pipeline-id"
+        testEnvironment["CI_PROJECT_PATH"] = "gitlab-pipeline-name"
+        testEnvironment["CI_PIPELINE_IID"] = "gitlab-pipeline-number"
+        testEnvironment["CI_JOB_URL"] = "gitlab-job-url"
+        testEnvironment["CI_JOB_NAME"] = "gitlab-job-name"
+        testEnvironment["CI_JOB_STAGE"] = "gitlab-stage-name"
+        testEnvironment["CI_COMMIT_SHA"] = "gitlab-git-commit"
         setEnvVariables()
 
         testObserver = DDTestObserver(tracer: DDTracer())
@@ -54,7 +60,10 @@ class CISpec: XCTestCase {
         let keys = spanData.attributes.map { $0.key }.sorted()
         let keyJson = try JSONEncoder().encode(keys)
         if let srcRoot = ProcessInfo.processInfo.environment["SRCROOT"] {
-            try keyJson.write(to: URL(fileURLWithPath: srcRoot).appendingPathComponent("ci-app-spec.json"), options: .atomic)
+            let fileManager = FileManager.default
+            let fileURL = URL(fileURLWithPath: srcRoot).appendingPathComponent("ci-app-spec.json")
+            try? fileManager.removeItem(at: fileURL)
+            try keyJson.write(to: fileURL, options: .atomic)
         }
 
     }

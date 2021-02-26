@@ -89,7 +89,7 @@ internal class DDTestObserver: NSObject, XCTestObservation {
             activeTest.status = .ok
         } else {
             status = DDTestTags.statusFail
-            activeTest.status = .error
+            activeTest.status = .error(description: "Test failed")
         }
 
         activeTest.setAttribute(key: DDTestTags.testStatus, value: status)

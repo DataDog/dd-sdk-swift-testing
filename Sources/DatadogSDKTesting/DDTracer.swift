@@ -43,8 +43,8 @@ internal class DDTracer {
         }
 
         let tracerProvider = OpenTelemetrySDK.instance.tracerProvider
-        let traceConfig = TraceConfig()
-        tracerProvider.updateActiveTraceConfig(traceConfig)
+        let spanLimist = SpanLimits()
+        tracerProvider.updateActiveSpanLimits(spanLimist)
 
         let bundle = Bundle(for: type(of: self))
         let identifier = bundle.bundleIdentifier ?? "com.datadoghq.DatadogSDKTesting"
@@ -126,7 +126,7 @@ internal class DDTracer {
                                              traceFlags: TraceFlags().settingIsSampled(true),
                                              traceState: TraceState())
 
-        var attributes = AttributesDictionary(capacity: tracerSdk.sharedState.activeTraceConfig.maxNumberOfAttributes)
+        var attributes = AttributesDictionary(capacity: tracerSdk.sharedState.activeSpanLimits.attributeCountLimit)
         spanData.stringAttributes.forEach {
             attributes.updateValue(value: AttributeValue.string($0.value), forKey: $0.key)
         }
@@ -150,7 +150,7 @@ internal class DDTracer {
                                                       kind: .internal,
                                                       parentContext: parentContext,
                                                       hasRemoteParent: false,
-                                                      traceConfig: tracerSdk.sharedState.activeTraceConfig,
+                                                      spanLimits: tracerSdk.sharedState.activeSpanLimits,
                                                       spanProcessor: tracerSdk.sharedState.activeSpanProcessor,
                                                       clock: MonotonicClock(clock: tracerSdk.sharedState.clock),
                                                       resource: Resource(),
@@ -163,21 +163,21 @@ internal class DDTracer {
         if let crashDate = crashDate {
             minimumCrashTime = max(minimumCrashTime, crashDate)
         }
-        span.status = .error
+        span.status = .error(description: errorMessage)
         span.end(time: minimumCrashTime)
         self.flush()
         return span
     }
 
     @discardableResult func createSpanFromContext(spanContext: SpanContext) -> RecordEventsReadableSpan {
-        let attributes = AttributesDictionary(capacity: tracerSdk.sharedState.activeTraceConfig.maxNumberOfAttributes)
+        let attributes = AttributesDictionary(capacity: tracerSdk.sharedState.activeSpanLimits.attributeCountLimit)
         let span = RecordEventsReadableSpan.startSpan(context: spanContext,
                                                       name: "ApplicationSpan",
                                                       instrumentationLibraryInfo: tracerSdk.instrumentationLibraryInfo,
                                                       kind: .internal,
                                                       parentContext: nil,
                                                       hasRemoteParent: false,
-                                                      traceConfig: tracerSdk.sharedState.activeTraceConfig,
+                                                      spanLimits: tracerSdk.sharedState.activeSpanLimits,
                                                       spanProcessor: tracerSdk.sharedState.activeSpanProcessor,
                                                       clock: MonotonicClock(clock: tracerSdk.sharedState.clock),
                                                       resource: Resource(),

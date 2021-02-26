@@ -155,9 +155,9 @@ class DDNetworkActivityLogger {
     static func statusForStatusCode(code: Int) -> Status {
         switch code {
             case 200...399:
-                return Status.ok
+                return .ok
             default:
-                return Status.error
+                return .error(description: String(code))
         }
     }
     

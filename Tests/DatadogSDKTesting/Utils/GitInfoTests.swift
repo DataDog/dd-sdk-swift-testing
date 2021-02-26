@@ -27,7 +27,7 @@ class GitInfoTests: XCTestCase {
             .appendingPathComponent("no_objects").appendingPathComponent("git")
 
         XCTAssertTrue(try withCommitsFolder.checkPromisedItemIsReachable())
-        let gitInfo = try GitInfo(gitFolder: withCommitsFolder)
+        _ = try GitInfo(gitFolder: withCommitsFolder)
     }
 
     func testWithCommits() throws {

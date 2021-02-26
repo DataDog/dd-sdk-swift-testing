@@ -134,7 +134,7 @@ struct GitInfo {
 
         // check .pack version is 2
         let packHeaderData = filehandler.readData(ofLength: 8)
-        if(  packHeaderData[4] != 0 || packHeaderData[5] != 0 || packHeaderData[6] != 0 || packHeaderData[7] != 2 ) {
+        if packHeaderData[4] != 0 || packHeaderData[5] != 0 || packHeaderData[6] != 0 || packHeaderData[7] != 2 {
             return ""
         }
 
@@ -239,7 +239,7 @@ struct GitInfo {
 
         let components = date.components(separatedBy: CharacterSet(charactersIn: " "))
         guard components.count >= 1,
-            let timeInterval = TimeInterval(components[0]) else { return nil }
+              let timeInterval = TimeInterval(components[0]) else { return nil }
 
         let myDate = Date(timeIntervalSince1970: timeInterval)
         return ISO8601DateFormatter().string(from: myDate)
@@ -277,6 +277,8 @@ struct CommitInfo {
 
     init(content: String) {
         let lines = content.components(separatedBy: CharacterSet(charactersIn: "\n")).filter { !$0.isEmpty }
+        var message = ""
+        var foundPGP = false
         for line in lines {
             if line.hasPrefix("author ") {
                 let author = line.dropFirst(7).components(separatedBy: CharacterSet(charactersIn: "<>"))
@@ -295,8 +297,22 @@ struct CommitInfo {
                 committerEmail = committer[1].trimmingCharacters(in: .whitespaces)
                 committerDate = committer[2].trimmingCharacters(in: .whitespaces)
             } else if authorName != nil, committerName != nil {
-                fullMessage = line.trimmingCharacters(in: .whitespaces)
+                if line.contains("--BEGIN PGP SIGNATURE--") {
+                    foundPGP = true
+                } else if line.contains("--END PGP SIGNATURE--") {
+                    foundPGP = false
+                } else if foundPGP == false {
+                    if message.count > 0 {
+                        message += "\n"
+                    }
+                    let messageline = line.trimmingCharacters(in: .whitespaces)
+                    if messageline.count > 0 {
+                        message += messageline
+                    }
+                }
             }
         }
+
+        fullMessage = message
     }
 }

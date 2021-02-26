@@ -120,6 +120,9 @@
 		E18ABC33258759F7007370F7 /* DatadogExporter in Embed Frameworks */ = {isa = PBXBuildFile; productRef = E18ABC31258759F7007370F7 /* DatadogExporter */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		E19E053C255177770032BAB9 /* DDNetworkInstrumentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E19E053B255177770032BAB9 /* DDNetworkInstrumentation.swift */; };
 		E19E08232552F01C0032BAB9 /* DDNetworkActivityLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = E19E08222552F01C0032BAB9 /* DDNetworkActivityLogger.swift */; };
+		E19F869F25E7FCB6003202F5 /* CISpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = E19F869E25E7FA73003202F5 /* CISpec.swift */; };
+		E19F86A025E7FCB7003202F5 /* CISpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = E19F869E25E7FA73003202F5 /* CISpec.swift */; };
+		E19F86A125E7FCB8003202F5 /* CISpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = E19F869E25E7FA73003202F5 /* CISpec.swift */; };
 		E1ABA05B25231E2500ED8AEF /* DatadogSDKTesting.h in Headers */ = {isa = PBXBuildFile; fileRef = E1ABA04D25231E2500ED8AEF /* DatadogSDKTesting.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E1ABA06D25231F3200ED8AEF /* ObjcLoadHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA06C25231F3200ED8AEF /* ObjcLoadHandler.m */; };
 		E1ABA07425231F4700ED8AEF /* DDTestObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA07025231F4700ED8AEF /* DDTestObserver.swift */; };
@@ -295,6 +298,7 @@
 		E17B7AA5253F010C0081D7F3 /* LICENSE-3rdparty.csv */ = {isa = PBXFileReference; lastKnownFileType = text; path = "LICENSE-3rdparty.csv"; sourceTree = "<group>"; };
 		E19E053B255177770032BAB9 /* DDNetworkInstrumentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDNetworkInstrumentation.swift; sourceTree = "<group>"; };
 		E19E08222552F01C0032BAB9 /* DDNetworkActivityLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDNetworkActivityLogger.swift; sourceTree = "<group>"; };
+		E19F869E25E7FA73003202F5 /* CISpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CISpec.swift; sourceTree = "<group>"; };
 		E1ABA04A25231E2500ED8AEF /* DatadogSDKTesting.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = DatadogSDKTesting.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E1ABA04D25231E2500ED8AEF /* DatadogSDKTesting.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DatadogSDKTesting.h; sourceTree = "<group>"; };
 		E1ABA04E25231E2500ED8AEF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -729,6 +733,7 @@
 				E1AD0761252F2F7E003705C1 /* DDTestObserverTests.swift */,
 				E1AD0756252F01F0003705C1 /* DDEnvironmentValuesTests.swift */,
 				E1AD075C252F206D003705C1 /* DDTracerTests.swift */,
+				E19F869E25E7FA73003202F5 /* CISpec.swift */,
 				E1AD0757252F01F0003705C1 /* FrameworkLoadHandlerTests.swift */,
 			);
 			path = DatadogSDKTesting;
@@ -1234,6 +1239,7 @@
 				E157A798256EB0F000CBCA52 /* DDTracerTests.swift in Sources */,
 				E157A799256EB0F000CBCA52 /* SignalUtilsTests.swift in Sources */,
 				E157A79A256EB0F000CBCA52 /* SwiftExtensionsTests.swift in Sources */,
+				E19F86A025E7FCB7003202F5 /* CISpec.swift in Sources */,
 				E157A79B256EB0F000CBCA52 /* MethodSwizzlerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1255,6 +1261,7 @@
 				E157A7B2256EB0F200CBCA52 /* DDTracerTests.swift in Sources */,
 				E157A7B3256EB0F200CBCA52 /* SignalUtilsTests.swift in Sources */,
 				E157A7B4256EB0F200CBCA52 /* SwiftExtensionsTests.swift in Sources */,
+				E19F86A125E7FCB8003202F5 /* CISpec.swift in Sources */,
 				E157A7B5256EB0F200CBCA52 /* MethodSwizzlerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1308,6 +1315,7 @@
 				E1AD075D252F206D003705C1 /* DDTracerTests.swift in Sources */,
 				E14AA0CA255AE8D3003FA711 /* SignalUtilsTests.swift in Sources */,
 				E1AD07A2252F5B02003705C1 /* SwiftExtensionsTests.swift in Sources */,
+				E19F869F25E7FCB6003202F5 /* CISpec.swift in Sources */,
 				E1AD0743252E1F16003705C1 /* MethodSwizzlerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

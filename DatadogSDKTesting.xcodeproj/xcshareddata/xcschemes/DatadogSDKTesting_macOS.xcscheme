@@ -30,7 +30,21 @@
       enableThreadSanitizer = "YES"
       codeCoverageEnabled = "YES"
       onlyGenerateCoverageForSpecifiedTargets = "YES">
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "E157A717256E9D1D00CBCA52"
+            BuildableName = "DatadogSDKTesting.framework"
+            BlueprintName = "DatadogSDKTesting_macOS"
+            ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
       <EnvironmentVariables>
+         <EnvironmentVariable
+            key = "SRCROOT"
+            value = "$(SRCROOT)"
+            isEnabled = "YES">
+         </EnvironmentVariable>
          <EnvironmentVariable
             key = "DD_DONT_EXPORT"
             value = "1"

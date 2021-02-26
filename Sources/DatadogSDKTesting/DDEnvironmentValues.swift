@@ -386,16 +386,17 @@ internal struct DDEnvironmentValues {
         // Read git folder information
         var gitInfo: GitInfo?
         if let srcRoot = ProcessInfo.processInfo.environment["SRCROOT"] {
-            var rootFolder = URL(fileURLWithPath: srcRoot)
-            while !FileManager.default.fileExists(atPath: rootFolder.appendingPathComponent(".git").path) {
-                if rootFolder == rootFolder.deletingLastPathComponent() {
+            var rootFolder = NSString(string: URL(fileURLWithPath: srcRoot).path)
+            while !FileManager.default.fileExists(atPath: rootFolder.appendingPathComponent(".git")) {
+                if rootFolder.isEqual(to: rootFolder.deletingLastPathComponent) {
                     // We reached to the top
-                    print("[DDSwiftTesting] could not find .git folder at \(rootFolder.path)")
+                    print("[DDSwiftTesting] could not find .git folder at \(rootFolder)")
                     break
                 }
-                rootFolder = rootFolder.deletingLastPathComponent()
+                rootFolder = rootFolder.deletingLastPathComponent as NSString
             }
-            gitInfo = try? GitInfo(gitFolder: rootFolder.appendingPathComponent(".git"))
+            let rootDirectory = URL(fileURLWithPath: rootFolder as String, isDirectory: true)
+            gitInfo = try? GitInfo(gitFolder: rootDirectory.appendingPathComponent(".git"))
         }
 
         commit = commit ?? gitInfo?.commit

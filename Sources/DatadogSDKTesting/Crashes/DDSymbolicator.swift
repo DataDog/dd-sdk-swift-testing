@@ -160,6 +160,7 @@ struct DDSymbolicator {
         return lines.joined(separator: "\n")
     }
 
+#if os(iOS) || os(macOS)
     private static func symbolWithAtos(objectPath: String, libraryAdress: String, callAddress: String) -> String {
         var symbol = Spawn.commandWithResult("/usr/bin/atos -o \(objectPath) -l \(libraryAdress) \(callAddress)")
             .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -170,6 +171,7 @@ struct DDSymbolicator {
         }
         return symbol
     }
+#endif
 
     private static func demangleName(_ mangledName: String) -> String {
         return mangledName.utf8CString.withUnsafeBufferPointer {

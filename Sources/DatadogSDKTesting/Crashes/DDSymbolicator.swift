@@ -9,6 +9,7 @@ import MachO
 
 struct DDSymbolicator {
     private static let crashLineRegex = try! NSRegularExpression(pattern: "^([0-9]+)([ \t]+)([^ \t]+)([ \t]+)(0x[0-9a-fA-F]+)([ \t]+)(0x[0-9a-fA-F]+)([ \t]+\\+[ \t]+[0-9]+)$?", options: .anchorsMatchLines)
+    private static let binaryImageLines = try! NSRegularExpression(pattern: "^\\s*(0x[0-9a-fA-F]+)\\s*\\-\\s*(0x[0-9a-fA-F]+)\\s*\\+?(.+)\\s+(.+)\\s+\\<(.+)\\>\\s+(\\/.*)\\s*$", options: [.anchorsMatchLines, .caseInsensitive])
 
     private static var dSYMFiles: [URL] = {
         var dSYMFiles = [URL]()
@@ -23,7 +24,7 @@ struct DDSymbolicator {
                                                          options: [.skipsHiddenFiles], errorHandler: { (url, error) -> Bool in
                                                              print("[DDSymbolicate] directoryEnumerator error at \(url): ", error)
                                                              return true
-        })!
+                                                         })!
         for case let fileURL as URL in dSYMFilesEnumerator {
             if fileURL.pathExtension.compare("dSYM", options: .caseInsensitive) != .orderedSame {
                 dSYMFiles.append(fileURL)
@@ -85,12 +86,26 @@ struct DDSymbolicator {
             }
         }
 
+        var binaries = [String: String]()
+        for i in 0 ..< lines.count {
+            let line = lines[i]
+            if let match = binaryImageLines.firstMatch(in: line, options: [], range: NSRange(location: 0, length: line.count)) {
+                guard let startAddressRange = Range(match.range(at: 1), in: line),
+                      let pathRange = Range(match.range(at: 6), in: line)
+                else {
+                    continue
+                }
+                binaries[String(line[startAddressRange])] = String(line[pathRange])
+            }
+        }
+
         for i in 0 ..< lines.count {
             let line = lines[i]
             if let match = crashLineRegex.firstMatch(in: line, options: [], range: NSRange(location: 0, length: line.count)) {
                 guard let libraryRange = Range(match.range(at: 3), in: line),
-                    let libraryAddressRange = Range(match.range(at: 7), in: line),
-                    let callAddressRange = Range(match.range(at: 5), in: line) else {
+                      let libraryAddressRange = Range(match.range(at: 7), in: line),
+                      let callAddressRange = Range(match.range(at: 5), in: line)
+                else {
                     continue
                 }
 
@@ -100,11 +115,18 @@ struct DDSymbolicator {
 
                 #if os(iOS) || os(macOS)
                     if let dsym = dSYMFiles.first(where: { $0.lastPathComponent == library }) {
-                        let symbol = Spawn.commandWithResult("/usr/bin/atos -o \(dsym.path) -l \(libraryAddress) \(callAddress)")
-                            .trimmingCharacters(in: .whitespacesAndNewlines)
+                        let symbol = symbolWithAtos(objectPath: dsym.path, libraryAdress: libraryAddress, callAddress: callAddress)
                         if !symbol.isEmpty {
                             lines[i] = crashLineRegex.replacementString(for: match, in: line, offset: 0, template: "$1$2$3$4$5$6\(symbol)")
                             continue
+                        }
+                    } else {
+                        if let symbolFilePath = binaries[libraryAddress] {
+                            let symbol = symbolWithAtos(objectPath: symbolFilePath, libraryAdress: libraryAddress, callAddress: callAddress)
+                            if !symbol.isEmpty {
+                                lines[i] = crashLineRegex.replacementString(for: match, in: line, offset: 0, template: "$1$2$3$4$5$6\(symbol)")
+                                continue
+                            }
                         }
                     }
                 #endif
@@ -116,7 +138,8 @@ struct DDSymbolicator {
 
                 /// Calculate the new address of the library, if it is in the map
                 if let libraryOffset = imageAddresses[library],
-                    let originalLibraryAddress = Float64(libraryAddress) {
+                   let originalLibraryAddress = Float64(libraryAddress)
+                {
                     let callOffset = UInt(originalCallAdress) - UInt(originalLibraryAddress)
                     callAdress = libraryOffset + callOffset
                 }
@@ -135,6 +158,17 @@ struct DDSymbolicator {
             }
         }
         return lines.joined(separator: "\n")
+    }
+
+    private static func symbolWithAtos(objectPath: String, libraryAdress: String, callAddress: String) -> String {
+        var symbol = Spawn.commandWithResult("/usr/bin/atos -o \(objectPath) -l \(libraryAdress) \(callAddress)")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        if symbol.hasPrefix("atos cannot load") {
+            return ""
+        } else if symbol.hasPrefix("Invalid connection: com.apple.coresymbolicationd\n") {
+            symbol = String(symbol.dropFirst("Invalid connection: com.apple.coresymbolicationd\n".count))
+        }
+        return symbol
     }
 
     private static func demangleName(_ mangledName: String) -> String {

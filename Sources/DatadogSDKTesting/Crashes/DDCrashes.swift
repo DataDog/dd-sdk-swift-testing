@@ -9,7 +9,7 @@ import Foundation
 
 /// This class is our interface with the crash reporter, now it is based on PLCrashReporter,
 /// but we could modify this class to use another if needed
-internal class DDCrashes {
+internal enum DDCrashes {
     private static var sharedPLCrashReporter: PLCrashReporter?
     private static var crashCustomData = [String: Data]()
 
@@ -33,7 +33,8 @@ internal class DDCrashes {
     /// If the crash  contains a serialized span it passes this data to the tracer to recreate the crashed span
     private static func handlePLCrashReport() {
         guard let plCrashReporter = sharedPLCrashReporter,
-            plCrashReporter.hasPendingCrashReport() else {
+              plCrashReporter.hasPendingCrashReport()
+        else {
             return
         }
 

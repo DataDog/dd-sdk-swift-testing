@@ -49,7 +49,8 @@ class StderrCapture {
 
     func stderrMessage(tracer: DDTracer, string: String) {
         guard tracer.activeSpan != nil ||
-                tracer.isBinaryUnderUITesting else {
+            tracer.isBinaryUnderUITesting
+        else {
             return
         }
 
@@ -72,7 +73,8 @@ class StderrCapture {
         scanner.scanUpToCharacters(from: space, into: &timeNSString)
         guard let dateString = dateNSString as String?,
               let timeString = timeNSString as String?,
-              let date = StderrCapture.logDateFormatter.date(from: dateString + " " + timeString) else {
+              let date = StderrCapture.logDateFormatter.date(from: dateString + " " + timeString)
+        else {
             return
         }
 

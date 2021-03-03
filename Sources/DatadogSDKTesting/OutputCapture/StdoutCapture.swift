@@ -13,7 +13,7 @@ class StdoutCapture {
 
     static func startCapturing(tracer: DDTracer) {
         StdoutCapture.tracer = tracer
-        if  StdoutCapture.originalStdoutWriter == nil {
+        if StdoutCapture.originalStdoutWriter == nil {
             StdoutCapture.originalStdoutWriter = stdout.pointee._write
         }
         stdout.pointee._write = capturedStdoutWriter
@@ -23,12 +23,13 @@ class StdoutCapture {
         stdout.pointee._write = standardStdoutWriter
     }
 
-    ///This is the logging code, we are buffering the output because sometimes single characters can appear
+    /// This is the logging code, we are buffering the output because sometimes single characters can appear
     static func logStdOutMessage(_ string: String) {
         stdoutBuffer += string
         let newlineChar = CharacterSet.newlines
         if let lastCharacter = self.stdoutBuffer.unicodeScalars.last,
-           newlineChar.contains(lastCharacter) {
+           newlineChar.contains(lastCharacter)
+        {
             if self.stdoutBuffer.trimmingCharacters(in: newlineChar).count > 0 {
                 tracer?.logString(string: self.stdoutBuffer)
             }
@@ -53,4 +54,3 @@ func capturedStdoutWriter(fd: UnsafeMutableRawPointer?, buffer: UnsafePointer<In
 func standardStdoutWriter(fd: UnsafeMutableRawPointer?, buffer: UnsafePointer<Int8>?, size: Int32) -> Int32 {
     return StdoutCapture.originalStdoutWriter?(fd, buffer, size) ?? size
 }
-

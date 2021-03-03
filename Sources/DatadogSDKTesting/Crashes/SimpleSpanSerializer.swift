@@ -8,7 +8,7 @@ import Foundation
 import OpenTelemetryApi
 import OpenTelemetrySdk
 
-internal struct SimpleSpanSerializer {
+internal enum SimpleSpanSerializer {
     static func serializeSpan(simpleSpan: SimpleSpanData) -> Data {
         var encodedData = Data()
         do {

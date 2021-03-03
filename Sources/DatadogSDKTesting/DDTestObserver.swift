@@ -41,8 +41,9 @@ internal class DDTestObserver: NSObject, XCTestObservation {
 
     func testCaseWillStart(_ testCase: XCTestCase) {
         guard let namematch = testNameRegex?.firstMatch(in: testCase.name, range: NSRange(location: 0, length: testCase.name.count)),
-            let suiteRange = Range(namematch.range(at: 1), in: testCase.name),
-            let nameRange = Range(namematch.range(at: 2), in: testCase.name) else {
+              let suiteRange = Range(namematch.range(at: 1), in: testCase.name),
+              let nameRange = Range(namematch.range(at: 2), in: testCase.name)
+        else {
             return
         }
         let testSuite = String(testCase.name[suiteRange])
@@ -109,10 +110,11 @@ internal class DDTestObserver: NSObject, XCTestObservation {
 
     private func addBenchmarkTagsIfNeeded(testCase: XCTestCase, activeTest: Span) {
         guard let metricsForId = testCase.value(forKey: "_perfMetricsForID") as? [XCTPerformanceMetric: AnyObject],
-            let metric = metricsForId.first(where: {
-                let measurements = $0.value.value(forKey: "measurements") as? [Double]
-                return (measurements?.count ?? 0) > 0
-            }) else {
+              let metric = metricsForId.first(where: {
+                  let measurements = $0.value.value(forKey: "measurements") as? [Double]
+                  return (measurements?.count ?? 0) > 0
+              })
+        else {
             return
         }
 

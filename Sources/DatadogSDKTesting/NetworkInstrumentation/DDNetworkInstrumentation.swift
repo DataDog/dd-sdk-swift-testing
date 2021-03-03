@@ -104,7 +104,8 @@ class DDNetworkInstrumentation {
             
             let block: @convention(block) (URLSession, AnyObject) -> URLSessionTask = { session, argument in
                 if let url = argument as? URL,
-                   self.injectHeaders == true {
+                   self.injectHeaders == true
+                {
                     let request = URLRequest(url: url)
                     if selector == #selector(URLSession.dataTask(with:) as (URLSession) -> (URL) -> URLSessionDataTask) {
                         return session.dataTask(with: request)
@@ -123,7 +124,8 @@ class DDNetworkInstrumentation {
                 } else {
                     task = castedIMP(session, selector, argument)
                     if objc_getAssociatedObject(argument, &idKey) == nil,
-                       let currentRequest = task.currentRequest {
+                       let currentRequest = task.currentRequest
+                    {
                         DDNetworkActivityLogger.log(request: currentRequest, sessionTaskId: sessionTaskId)
                     }
                 }
@@ -179,10 +181,11 @@ class DDNetworkInstrumentation {
             var originalIMP: IMP?
             let sessionTaskId = UUID().uuidString
 
-            let block: @convention(block) (URLSession, AnyObject, ((Any?, URLResponse?, Error?) -> Void)? ) -> URLSessionTask = { session, argument, completion in
+            let block: @convention(block) (URLSession, AnyObject, ((Any?, URLResponse?, Error?) -> Void)?) -> URLSessionTask = { session, argument, completion in
 
                 if let url = argument as? URL,
-                   self.injectHeaders == true {
+                   self.injectHeaders == true
+                {
                     let request = URLRequest(url: url)
                     if selector == #selector(URLSession.dataTask(with:completionHandler:) as (URLSession) -> (URL, @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask) {
                         if let completion = completion {
@@ -199,7 +202,7 @@ class DDNetworkInstrumentation {
                     }
                 }
                 
-                let castedIMP = unsafeBitCast(originalIMP, to: (@convention(c) (URLSession, Selector, Any, ( (Any?, URLResponse?, Error?) -> Void)?) -> URLSessionDataTask).self)
+                let castedIMP = unsafeBitCast(originalIMP, to: (@convention(c) (URLSession, Selector, Any, ((Any?, URLResponse?, Error?) -> Void)?) -> URLSessionDataTask).self)
                 var task: URLSessionTask!
                 
                 var completionBlock = completion
@@ -229,7 +232,8 @@ class DDNetworkInstrumentation {
                 } else {
                     task = castedIMP(session, selector, argument, completionBlock)
                     if objc_getAssociatedObject(argument, &idKey) == nil,
-                       let currentRequest = task.currentRequest {
+                       let currentRequest = task.currentRequest
+                    {
                         DDNetworkActivityLogger.log(request: currentRequest, sessionTaskId: sessionTaskId)
                     }
                 }
@@ -255,9 +259,9 @@ class DDNetworkInstrumentation {
             var originalIMP: IMP?
             let sessionTaskId = UUID().uuidString
             
-            let block: @convention(block) (URLSession, URLRequest, AnyObject, ( (Any?, URLResponse?, Error?) -> Void)?) -> URLSessionTask = { session, request, argument, completion in
+            let block: @convention(block) (URLSession, URLRequest, AnyObject, ((Any?, URLResponse?, Error?) -> Void)?) -> URLSessionTask = { session, request, argument, completion in
                 
-                let castedIMP = unsafeBitCast(originalIMP, to: (@convention(c) (URLSession, Selector, URLRequest, AnyObject, ( (Any?, URLResponse?, Error?) -> Void)?) -> URLSessionDataTask).self)
+                let castedIMP = unsafeBitCast(originalIMP, to: (@convention(c) (URLSession, Selector, URLRequest, AnyObject, ((Any?, URLResponse?, Error?) -> Void)?) -> URLSessionDataTask).self)
 
                 var task: URLSessionTask!
                 var completionBlock = completion
@@ -357,7 +361,8 @@ class DDNetworkInstrumentation {
     func injectRespondsToSelectorIntoDelegateClass(cls: AnyClass) {
         let selector = #selector(NSObject.responds(to:))
         guard let original = class_getInstanceMethod(cls, selector),
-              DDNetworkInstrumentation.instanceRespondsAndImplements(cls: cls, selector: selector) else {
+              DDNetworkInstrumentation.instanceRespondsAndImplements(cls: cls, selector: selector)
+        else {
             return
         }
 
@@ -468,7 +473,8 @@ class DDNetworkInstrumentation {
         guard injectHeaders == true,
               let tracer = DDTestMonitor.instance?.tracer,
               tracer.activeSpan != nil,
-              !excludes(request.url) else {
+              !excludes(request.url)
+        else {
             return request
         }
         var instrumentedRequest = request
@@ -525,7 +531,7 @@ class DDNetworkInstrumentation {
         return implements
     }
 
-    private static func enumerateCArray<T>(array: UnsafePointer<T>, count: UInt32, f: (UInt32, T) -> ()) {
+    private static func enumerateCArray<T>(array: UnsafePointer<T>, count: UInt32, f: (UInt32, T) -> Void) {
         var ptr = array
         for i in 0..<count {
             f(i, ptr.pointee)

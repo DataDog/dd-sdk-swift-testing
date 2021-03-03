@@ -38,8 +38,9 @@ class DDNetworkActivityLogger {
     
     static func log(request: URLRequest, sessionTaskId: String) {
         guard let tracer = DDTestMonitor.instance?.tracer,
-            tracer.activeSpan != nil || tracer.launchSpanContext != nil,
-            !(DDTestMonitor.instance?.networkInstrumentation?.excludes(request.url) ?? false) else {
+              tracer.activeSpan != nil || tracer.launchSpanContext != nil,
+              !(DDTestMonitor.instance?.networkInstrumentation?.excludes(request.url) ?? false)
+        else {
             return
         }
         
@@ -92,7 +93,8 @@ class DDNetworkActivityLogger {
             span = spanDict.removeValue(forKey: sessionTaskId)
         }
         guard span != nil,
-            let httpResponse = response as? HTTPURLResponse else {
+              let httpResponse = response as? HTTPURLResponse
+        else {
             return
         }
         
@@ -154,7 +156,7 @@ class DDNetworkActivityLogger {
     
     static func statusForStatusCode(code: Int) -> Status {
         switch code {
-            case 200...399:
+            case 200 ... 399:
                 return .ok
             default:
                 return .error(description: String(code))

@@ -71,13 +71,11 @@ struct DDSymbolicator {
         return dSYMFiles
     }()
 
-    public static func symbolicate(crashLog: String) -> String {
-        var lines: [String] = crashLog.components(separatedBy: "\n").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-
+    private static var imageAddresses: [String: UInt] = {
         /// User library addresses are randomized each time an app is run, create a map to locate library addresses by name,
         /// system libraries are not so address returned is 0
-        let numImages = _dyld_image_count()
         var imageAddresses = [String: UInt]()
+        let numImages = _dyld_image_count()
         for i in 0 ..< numImages {
             let name = URL(fileURLWithPath: String(cString: _dyld_get_image_name(i))).lastPathComponent
             let address = UInt(_dyld_get_image_vmaddr_slide(i))
@@ -85,6 +83,11 @@ struct DDSymbolicator {
                 imageAddresses[name] = address
             }
         }
+        return imageAddresses
+    }()
+
+    public static func symbolicate(crashLog: String) -> String {
+        var lines: [String] = crashLog.components(separatedBy: "\n").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
 
         var binaries = [String: String]()
         for i in 0 ..< lines.count {
@@ -160,18 +163,18 @@ struct DDSymbolicator {
         return lines.joined(separator: "\n")
     }
 
-#if os(iOS) || os(macOS)
-    private static func symbolWithAtos(objectPath: String, libraryAdress: String, callAddress: String) -> String {
-        var symbol = Spawn.commandWithResult("/usr/bin/atos -o \(objectPath) -l \(libraryAdress) \(callAddress)")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        if symbol.hasPrefix("atos cannot load") {
-            return ""
-        } else if symbol.hasPrefix("Invalid connection: com.apple.coresymbolicationd\n") {
-            symbol = String(symbol.dropFirst("Invalid connection: com.apple.coresymbolicationd\n".count))
+    #if os(iOS) || os(macOS)
+        private static func symbolWithAtos(objectPath: String, libraryAdress: String, callAddress: String) -> String {
+            var symbol = Spawn.commandWithResult("/usr/bin/atos -o \(objectPath) -l \(libraryAdress) \(callAddress)")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            if symbol.hasPrefix("atos cannot load") {
+                return ""
+            } else if symbol.hasPrefix("Invalid connection: com.apple.coresymbolicationd\n") {
+                symbol = String(symbol.dropFirst("Invalid connection: com.apple.coresymbolicationd\n".count))
+            }
+            return symbol
         }
-        return symbol
-    }
-#endif
+    #endif
 
     private static func demangleName(_ mangledName: String) -> String {
         return mangledName.utf8CString.withUnsafeBufferPointer {

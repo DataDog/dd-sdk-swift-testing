@@ -39,7 +39,6 @@
 		E157A736256E9D1D00CBCA52 /* DDCrashes.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FB483E253891CE0083B263 /* DDCrashes.swift */; };
 		E157A738256E9D1D00CBCA52 /* DDTestObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA07025231F4700ED8AEF /* DDTestObserver.swift */; };
 		E157A73A256E9D1D00CBCA52 /* DDTracer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1798CC52524B9BD008DEBB9 /* DDTracer.swift */; };
-		E157A73B256E9D1D00CBCA52 /* MethodSwizzler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1798CD02524C255008DEBB9 /* MethodSwizzler.swift */; };
 		E157A73E256E9D1D00CBCA52 /* StderrCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E126DD2E253F367600700A40 /* StderrCapture.swift */; };
 		E157A742256E9D1D00CBCA52 /* CrashReporter in Frameworks */ = {isa = PBXBuildFile; productRef = E157A718256E9D1D00CBCA52 /* CrashReporter */; };
 		E157A744256E9D1D00CBCA52 /* SigmaSwiftStatistics in Frameworks */ = {isa = PBXBuildFile; productRef = E157A71A256E9D1D00CBCA52 /* SigmaSwiftStatistics */; };
@@ -63,7 +62,6 @@
 		E157A76E256E9D3300CBCA52 /* DDCrashes.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FB483E253891CE0083B263 /* DDCrashes.swift */; };
 		E157A770256E9D3300CBCA52 /* DDTestObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA07025231F4700ED8AEF /* DDTestObserver.swift */; };
 		E157A772256E9D3300CBCA52 /* DDTracer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1798CC52524B9BD008DEBB9 /* DDTracer.swift */; };
-		E157A773256E9D3300CBCA52 /* MethodSwizzler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1798CD02524C255008DEBB9 /* MethodSwizzler.swift */; };
 		E157A776256E9D3300CBCA52 /* StderrCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E126DD2E253F367600700A40 /* StderrCapture.swift */; };
 		E157A77A256E9D3300CBCA52 /* CrashReporter in Frameworks */ = {isa = PBXBuildFile; productRef = E157A750256E9D3300CBCA52 /* CrashReporter */; };
 		E157A77C256E9D3300CBCA52 /* SigmaSwiftStatistics in Frameworks */ = {isa = PBXBuildFile; productRef = E157A752256E9D3300CBCA52 /* SigmaSwiftStatistics */; };
@@ -104,7 +102,6 @@
 		E1665A8225D13BBB00BA53CD /* DDSymbolicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1665A8025D13BBB00BA53CD /* DDSymbolicator.swift */; };
 		E1665A8525D1524100BA53CD /* DDSymbolicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1665A8025D13BBB00BA53CD /* DDSymbolicator.swift */; };
 		E1798CC62524B9BD008DEBB9 /* DDTracer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1798CC52524B9BD008DEBB9 /* DDTracer.swift */; };
-		E1798CD22524C256008DEBB9 /* MethodSwizzler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1798CD02524C255008DEBB9 /* MethodSwizzler.swift */; };
 		E17B7AA8253F02580081D7F3 /* SigmaSwiftStatistics in Frameworks */ = {isa = PBXBuildFile; productRef = E17B7AA7253F02580081D7F3 /* SigmaSwiftStatistics */; };
 		E18ABC232583FB41007370F7 /* DatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E18ABC222583FB41007370F7 /* DatadogExporter */; };
 		E18ABC242583FB41007370F7 /* DatadogExporter in Embed Frameworks */ = {isa = PBXBuildFile; productRef = E18ABC222583FB41007370F7 /* DatadogExporter */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -293,7 +290,6 @@
 		E1665A7225D12D7500BA53CD /* Spawn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spawn.swift; sourceTree = "<group>"; };
 		E1665A8025D13BBB00BA53CD /* DDSymbolicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDSymbolicator.swift; sourceTree = "<group>"; };
 		E1798CC52524B9BD008DEBB9 /* DDTracer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTracer.swift; sourceTree = "<group>"; };
-		E1798CD02524C255008DEBB9 /* MethodSwizzler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MethodSwizzler.swift; sourceTree = "<group>"; };
 		E1798CE52524D0D5008DEBB9 /* DDErrorTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DDErrorTests.swift; sourceTree = "<group>"; };
 		E17B7AA5253F010C0081D7F3 /* LICENSE-3rdparty.csv */ = {isa = PBXFileReference; lastKnownFileType = text; path = "LICENSE-3rdparty.csv"; sourceTree = "<group>"; };
 		E19E053B255177770032BAB9 /* DDNetworkInstrumentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDNetworkInstrumentation.swift; sourceTree = "<group>"; };
@@ -405,7 +401,6 @@
 				E1AD07A8252F5CB8003705C1 /* DDError.swift */,
 				E1D476A525DD369F00832592 /* BinaryParser.swift */,
 				E14405A225D6A80800FE3D3C /* GitInfo.swift */,
-				E1798CD02524C255008DEBB9 /* MethodSwizzler.swift */,
 				E141CF5F256FD513008B6B70 /* PlatformUtils.swift */,
 				E13D0BC92546E29C00C37D56 /* SignalUtils.swift */,
 				E116D7DA25248C390022779D /* SwiftExtensions.swift */,
@@ -1185,7 +1180,6 @@
 				E157A736256E9D1D00CBCA52 /* DDCrashes.swift in Sources */,
 				E157A738256E9D1D00CBCA52 /* DDTestObserver.swift in Sources */,
 				E157A73A256E9D1D00CBCA52 /* DDTracer.swift in Sources */,
-				E157A73B256E9D1D00CBCA52 /* MethodSwizzler.swift in Sources */,
 				E157A73E256E9D1D00CBCA52 /* StderrCapture.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1217,7 +1211,6 @@
 				E157A76E256E9D3300CBCA52 /* DDCrashes.swift in Sources */,
 				E157A770256E9D3300CBCA52 /* DDTestObserver.swift in Sources */,
 				E157A772256E9D3300CBCA52 /* DDTracer.swift in Sources */,
-				E157A773256E9D3300CBCA52 /* MethodSwizzler.swift in Sources */,
 				E157A776256E9D3300CBCA52 /* StderrCapture.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1293,7 +1286,6 @@
 				E1ABA07425231F4700ED8AEF /* DDTestObserver.swift in Sources */,
 				E1798CC62524B9BD008DEBB9 /* DDTracer.swift in Sources */,
 				E141CF60256FD513008B6B70 /* PlatformUtils.swift in Sources */,
-				E1798CD22524C256008DEBB9 /* MethodSwizzler.swift in Sources */,
 				E126DD2F253F367600700A40 /* StderrCapture.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

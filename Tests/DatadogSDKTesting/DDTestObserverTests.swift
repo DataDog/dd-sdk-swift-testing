@@ -72,9 +72,10 @@ internal class DDTestObserverTests: XCTestCase {
         XCTAssertNotNil(spanData.attributes[DDTestTags.testStatus])
     }
 
-    func testWhenTestCaseDidFailWithDescriptionIsCalled_testStatusIsSet() {
+    func testWhenTestCaseDidRecordIssueIsCalled_testStatusIsSet() {
         testObserver.testCaseWillStart(self)
-        testObserver.testCase(self, didFailWithDescription: "descrip", inFile: "samplefile", atLine: 239)
+        let issue = XCTIssue(type: .assertionFailure, compactDescription: "descrip", detailedDescription: nil, sourceCodeContext: XCTSourceCodeContext(), associatedError: nil, attachments: [])
+        testObserver.testCase(self, didRecord: issue)
 
         let testSpan = testObserver.tracer.tracerSdk.activeSpan as! RecordEventsReadableSpan
         let spanData = testSpan.toSpanData()

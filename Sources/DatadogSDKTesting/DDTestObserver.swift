@@ -100,12 +100,15 @@ internal class DDTestObserver: NSObject, XCTestObservation {
         DDNetworkActivityLogger.endAndCleanAliveSpans()
     }
 
-    func testCase(_ testCase: XCTestCase, didFailWithDescription description: String, inFile filePath: String?, atLine lineNumber: Int) {
+    func testCase(_ testCase: XCTestCase, didRecord issue: XCTIssue) {
         guard let activeTest = currentTestSpan else {
             return
         }
-        activeTest.setAttribute(key: DDTags.errorType, value: AttributeValue.string(description))
-        activeTest.setAttribute(key: DDTags.errorMessage, value: AttributeValue.string("test_failure: \(filePath ?? ""):\(lineNumber)"))
+        activeTest.setAttribute(key: DDTags.errorType, value: AttributeValue.string(issue.compactDescription))
+        activeTest.setAttribute(key: DDTags.errorMessage, value: AttributeValue.string(issue.description))
+        if let detailedDescription = issue.detailedDescription {
+            activeTest.setAttribute(key: DDTags.errorStack, value: AttributeValue.string(detailedDescription))
+        }
     }
 
     private func addBenchmarkTagsIfNeeded(testCase: XCTestCase, activeTest: Span) {

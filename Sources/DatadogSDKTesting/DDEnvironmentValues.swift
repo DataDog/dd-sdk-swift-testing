@@ -63,6 +63,9 @@ internal struct DDEnvironmentValues {
     var committerEmail: String?
     var committerDate: String?
 
+    /// Source location
+    var sourceRoot: String?
+
     static var environment = ProcessInfo.processInfo.environment
     static let environmentCharset = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_")
 
@@ -77,6 +80,8 @@ internal struct DDEnvironmentValues {
 
         ddEnvironment = DDEnvironmentValues.getEnvVariable("DD_ENV")
         ddService = DDEnvironmentValues.getEnvVariable("DD_SERVICE")
+
+        sourceRoot = ProcessInfo.processInfo.environment["SRCROOT"]
 
         if let envDDTags = DDEnvironmentValues.getEnvVariable("DD_TAGS") {
             let ddtagsEntries = envDDTags.components(separatedBy: " ")
@@ -388,8 +393,8 @@ internal struct DDEnvironmentValues {
 
         // Read git folder information
         var gitInfo: GitInfo?
-        if let srcRoot = ProcessInfo.processInfo.environment["SRCROOT"] {
-            var rootFolder = NSString(string: URL(fileURLWithPath: srcRoot).path)
+        if let sourceRoot = sourceRoot {
+            var rootFolder = NSString(string: URL(fileURLWithPath: sourceRoot).path)
             while !FileManager.default.fileExists(atPath: rootFolder.appendingPathComponent(".git")) {
                 if rootFolder.isEqual(to: rootFolder.deletingLastPathComponent) {
                     // We reached to the top

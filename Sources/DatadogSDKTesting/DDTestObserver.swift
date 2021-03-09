@@ -8,7 +8,6 @@ import Foundation
 import OpenTelemetryApi
 import OpenTelemetrySdk
 import SigmaSwiftStatistics
-
 @_implementationOnly import XCTest
 
 internal class DDTestObserver: NSObject, XCTestObservation {
@@ -72,6 +71,22 @@ internal class DDTestObserver: NSObject, XCTestObservation {
         if !tracer.env.disableDDSDKIOSIntegration {
             tracer.addPropagationsHeadersToEnvironment()
         }
+
+        let className = object_getClassName(testCase)
+        var testSourcePath = FileLocator.filePath(forTestClass: className, testName: testName, library: currentBundleName)
+        if !testSourcePath.isEmpty {
+            if let srcRoot = tracer.env.sourceRoot,
+               let rootRange = testSourcePath.range(of: srcRoot + "/")
+            {
+                testSourcePath.removeSubrange(rootRange)
+            }
+            let sourceComponents = testSourcePath.components(separatedBy: ":")
+            if sourceComponents.count == 2 {
+                testSpan.setAttribute(key: DDTestTags.testSourceFile, value: sourceComponents[0])
+                testSpan.setAttribute(key: DDTestTags.testSourceStartLine, value: sourceComponents[1])
+            }
+        }
+
         tracer.env.addTagsToSpan(span: testSpan)
 
         let simpleSpan = SimpleSpanData(spanData: testSpan.toSpanData())

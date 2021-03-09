@@ -31,7 +31,9 @@ internal class DDTestObserver: NSObject, XCTestObservation {
 
     func testBundleWillStart(_ testBundle: Bundle) {
         currentBundleName = testBundle.bundleURL.deletingPathExtension().lastPathComponent
-        DDCrashes.install()
+        if !tracer.env.disableCrashHandler {
+            DDCrashes.install()
+        }
     }
 
     func testBundleDidFinish(_ testBundle: Bundle) {

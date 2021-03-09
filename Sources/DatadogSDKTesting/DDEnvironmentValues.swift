@@ -24,6 +24,7 @@ internal struct DDEnvironmentValues {
     let extraHTTPHeaders: Set<String>?
     let excludedURLS: Set<String>?
     let disableDDSDKIOSIntegration: Bool
+    let disableCrashHandler: Bool
 
     /// OS Information
     let osName: String
@@ -119,9 +120,11 @@ internal struct DDEnvironmentValues {
         let envStderr = DDEnvironmentValues.getEnvVariable("DD_DISABLE_STDERR_INSTRUMENTATION") as NSString?
         disableStderrInstrumentation = envStderr?.boolValue ?? false
 
-        /// Instrumentation configuration values
         let envDisableDDSDKIOSIntegration = DDEnvironmentValues.getEnvVariable("DD_DISABLE_SDKIOS_INTEGRATION") as NSString?
         disableDDSDKIOSIntegration = envDisableDDSDKIOSIntegration?.boolValue ?? false
+
+        let envDisableCrashReporting = DDEnvironmentValues.getEnvVariable("DD_DISABLE_CRASH_HANDLER") as NSString?
+        disableCrashHandler = envDisableCrashReporting?.boolValue ?? false
 
         /// Device Information
         osName = PlatformUtils.getRunningPlatform()

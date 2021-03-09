@@ -52,6 +52,7 @@ class DDEnvironmentValuesTests: XCTestCase {
         XCTAssertEqual(env.extraHTTPHeaders, nil)
         XCTAssertEqual(env.excludedURLS, nil)
         XCTAssertEqual(env.enableRecordPayload, false)
+        XCTAssertEqual(env.disableCrashHandler, false)
     }
 
     func testWhenConfigurationEnvironmentAreSet_TheyAreStoredCorrectly() {
@@ -62,6 +63,7 @@ class DDEnvironmentValuesTests: XCTestCase {
         testEnvironment["DD_INSTRUMENTATION_EXTRA_HEADERS"] = "header1,header2;header3 header4"
         testEnvironment["DD_EXCLUDED_URLS"] = "http://www.google"
         testEnvironment["DD_ENABLE_RECORD_PAYLOAD"] = "true"
+        testEnvironment["DD_DISABLE_CRASH_HANDLER"] = "true"
 
         setEnvVariables()
 
@@ -73,6 +75,7 @@ class DDEnvironmentValuesTests: XCTestCase {
         XCTAssertEqual(env.extraHTTPHeaders?.count, 4)
         XCTAssertEqual(env.excludedURLS?.count, 1)
         XCTAssertEqual(env.enableRecordPayload, true)
+        XCTAssertEqual(env.disableCrashHandler, true)
     }
 
     func testAddsTagsToSpan() {

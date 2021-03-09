@@ -66,6 +66,14 @@ DD_MAX_PAYLOAD_SIZE # It sets the maximum size that will be reported from the pa
 
 You can also disable or enable specific autoinstrumentation in some of the tests from Swift or Objective-C by importing the module `DatadogSDKTesting` and using the class: `DDInstrumentationControl`.
 
+### Disable crash handling
+
+You should never need to do it, but in some ***very specific cases*** you may want to disable crash reporting for tests (e.g. you want to test your own crash handler, ... ):
+```shell
+DD_DISABLE_CRASH_HANDLER # Disables crash handling and reporting. (Boolean) WARNING, read note below
+```
+> You must know that if you disable crash reporting, crashing tests wont be reported to the backend and wont appear as a failure. If you really, really need to do this for any of your tests, run it as a totally separated target, so you dont disable it for the rest of the tests
+
 
 ## Adding custom tags
 

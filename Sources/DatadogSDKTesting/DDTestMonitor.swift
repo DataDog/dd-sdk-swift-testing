@@ -36,13 +36,18 @@ internal class DDTestMonitor {
         } else {
             notificationObserver = NotificationCenter.default.addObserver(
                 forName: launchNotificationName,
-                object: nil, queue: nil) { _ in
+                object: nil, queue: nil) { [weak self] _ in
                     /// As crash reporter is initialized in testBundleWillStart() method, we initialize it here
                     /// because dont have test observer
-                    DDCrashes.install()
-                    let launchedSpan = self.tracer.createSpanFromContext(spanContext: self.tracer.launchSpanContext!)
-                    let simpleSpan = SimpleSpanData(spanData: launchedSpan.toSpanData())
-                    DDCrashes.setCustomData(customData: SimpleSpanSerializer.serializeSpan(simpleSpan: simpleSpan))
+                    guard let self = self else {
+                        return
+                    }
+                    if !self.tracer.env.disableCrashHandler {
+                        DDCrashes.install()
+                        let launchedSpan = self.tracer.createSpanFromContext(spanContext: self.tracer.launchSpanContext!)
+                        let simpleSpan = SimpleSpanData(spanData: launchedSpan.toSpanData())
+                        DDCrashes.setCustomData(customData: SimpleSpanSerializer.serializeSpan(simpleSpan: simpleSpan))
+                    }
             }
         }
     }

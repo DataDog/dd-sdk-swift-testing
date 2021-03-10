@@ -14,4 +14,4 @@ FOUNDATION_EXPORT const unsigned char DatadogSDKTestingVersionString[];
 
 // In this header, you should import all the public headers of your framework using statements like #import <DatadogSDKTesting/PublicHeader.h>
 
-
+#import <DatadogSDKTesting/DDSymbolAddress.h>

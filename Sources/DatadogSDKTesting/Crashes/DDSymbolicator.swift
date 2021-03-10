@@ -93,6 +93,9 @@ enum DDSymbolicator {
             let slide = _dyld_get_image_vmaddr_slide(i)
             if slide != 0 {
                 imageAddresses[name] = MachImage(header: header, slide: slide, path: path)
+            } else {
+                //Its a system library, use library Address as slide value instead of 0
+                imageAddresses[name] = MachImage(header: header, slide: Int(bitPattern: header), path: path)
             }
         }
         return imageAddresses
@@ -124,7 +127,7 @@ enum DDSymbolicator {
                             continue
                         }
                     } else {
-                        if let symbolFilePath = imageAddresses[libraryAddress]?.path {
+                        if let symbolFilePath = imageAddresses[library]?.path {
                             let symbol = symbolWithAtos(objectPath: symbolFilePath, libraryAdress: libraryAddress, callAddress: callAddress)
                             if !symbol.isEmpty {
                                 lines[i] = crashLineRegex.replacementString(for: match, in: line, offset: 0, template: "$1$2$3$4$5$6\(symbol)")

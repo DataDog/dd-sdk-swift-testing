@@ -280,7 +280,7 @@ internal struct DDEnvironmentValues {
                 tagEnv = branchEnv
                 branchEnv = nil
             }
-        } else if DDEnvironmentValues.getEnvVariable("BITBUCKET_COMMIT") != nil {
+        } else if DDEnvironmentValues.getEnvVariable("BITBUCKET_BUILD_NUMBER") != nil {
             isCi = true
             provider = "bitbucket"
             repository = DDEnvironmentValues.getEnvVariable("BITBUCKET_GIT_SSH_ORIGIN")
@@ -295,7 +295,7 @@ internal struct DDEnvironmentValues {
             stageName = nil
             branchEnv = DDEnvironmentValues.getEnvVariable("BITBUCKET_BRANCH")
             tagEnv = DDEnvironmentValues.getEnvVariable("BITBUCKET_TAG")
-        } else if DDEnvironmentValues.getEnvVariable("GITHUB_SHA") != nil {
+        } else if DDEnvironmentValues.getEnvVariable("GITHUB_WORKSPACE") != nil {
             isCi = true
             provider = "github"
             let repositoryEnv = DDEnvironmentValues.getEnvVariable("GITHUB_REPOSITORY")

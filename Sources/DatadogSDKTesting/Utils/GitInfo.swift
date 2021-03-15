@@ -237,7 +237,7 @@ struct GitInfo {
     private func ConvertGitTimeToISO8601(date: String?) -> String? {
         guard let date = date else { return nil }
 
-        let components = date.components(separatedBy: CharacterSet(charactersIn: " "))
+        let components = date.components(separatedBy: " ")
         guard components.count >= 1,
               let timeInterval = TimeInterval(components[0]) else { return nil }
 
@@ -276,7 +276,7 @@ struct CommitInfo {
     var fullMessage: String?
 
     init(content: String) {
-        let lines = content.components(separatedBy: CharacterSet(charactersIn: "\n")).filter { !$0.isEmpty }
+        let lines = content.components(separatedBy: "\n").filter { !$0.isEmpty }
         var message = ""
         var foundPGP = false
         for line in lines {

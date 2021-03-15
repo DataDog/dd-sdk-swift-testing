@@ -7,7 +7,7 @@
 import Foundation
 import MachO
 #if SWIFT_PACKAGE
-import DatadogSDKTestingObjc
+    import DatadogSDKTestingObjc
 #endif
 
 /// It stores information about loaded mach images
@@ -94,7 +94,7 @@ enum DDSymbolicator {
             if slide != 0 {
                 imageAddresses[name] = MachImage(header: header, slide: slide, path: path)
             } else {
-                //Its a system library, use library Address as slide value instead of 0
+                // Its a system library, use library Address as slide value instead of 0
                 imageAddresses[name] = MachImage(header: header, slide: Int(bitPattern: header), path: path)
             }
         }
@@ -187,16 +187,72 @@ enum DDSymbolicator {
     #endif
 
     /// Manually creates the symbol of a swift test with a given name, this is the name we will locate in the mach image
-    /// It only supports test, because only can have one parameter nad dont return values, for more complex symbols
+    /// It only supports test, because only can have one parameter and dont return values, for more complex symbols
     /// a complete Mangler should be implemented
     static func swiftTestMangledName(forClassName className: String, testName: String, throwsError: Bool) -> String {
-        let components = className.components(separatedBy: ".")
-        guard let theClass = components.last else {
+        let bundleAndClassComponents = className.components(separatedBy: ".")
+        guard bundleAndClassComponents.count == 2 else {
             return ""
         }
-
         let endName = throwsError ? "KF" : "F"
-        return "_$s14" + theClass + "AAC\(testName.count)" + testName + "yy" + endName
+
+        var componentsAdded = [String]()
+
+        let moduleMangled = mangleIdentifier(identifier: bundleAndClassComponents[0], previousComponents: &componentsAdded, existingModule: "")
+        let classMangled = mangleIdentifier(identifier: bundleAndClassComponents[1], previousComponents: &componentsAdded, existingModule: bundleAndClassComponents[0])
+        let testNameMangled = mangleIdentifier(identifier: testName, previousComponents: &componentsAdded, existingModule: bundleAndClassComponents[0])
+        return "_$s" + moduleMangled + classMangled + "C" + testNameMangled + "yy" + endName
+    }
+
+    fileprivate static func mangleIdentifier(identifier: String, previousComponents: inout [String], existingModule: String) -> String {
+        if identifier == existingModule {
+            return "AA"
+        }
+
+        var mangledIdentifier = ""
+        let namesToProcess = identifier.separatedByWords.components(separatedBy: " ")
+        var accumulator = ""
+
+        let numNamesToProcess = namesToProcess.count
+        var replacementHappened = false
+
+        var lastReplacementIndex: Int?
+        for namesIdx in 0 ..< numNamesToProcess {
+            let wordToProcess = namesToProcess[namesIdx].replacingOccurrences(of: "_", with: "")
+            if let index = previousComponents.firstIndex(of: wordToProcess) {
+                replacementHappened = true
+                let replacingCharacter = Unicode.Scalar(Int(Unicode.Scalar("a").value) + index)
+                if !accumulator.isEmpty {
+                    mangledIdentifier += "\(accumulator.count)" + accumulator
+                }
+                accumulator = String(namesToProcess[namesIdx].suffix(namesToProcess[namesIdx].count - wordToProcess.count))
+                mangledIdentifier += String(replacingCharacter!)
+                lastReplacementIndex = mangledIdentifier.count - 1
+                if namesIdx == numNamesToProcess - 1 {
+                    mangledIdentifier += "0"
+                }
+            } else {
+                accumulator += namesToProcess[namesIdx]
+                if previousComponents.count < 26 {
+                    previousComponents.append(wordToProcess)
+                }
+            }
+        }
+        if !accumulator.isEmpty {
+            mangledIdentifier += "\(accumulator.count)" + accumulator
+        }
+
+        if let replacementIndex = lastReplacementIndex {
+            mangledIdentifier = DDSymbolicator.upperCase(mangledIdentifier, replacementIndex)
+        }
+        return replacementHappened ? "0" + mangledIdentifier : mangledIdentifier
+    }
+
+    fileprivate static func upperCase(_ myString: String, _ index: Int) -> String {
+        var chars = Array(myString) // gets an array of characters
+        chars[index] = Character(String(chars[index]).uppercased())
+        let modifiedString = String(chars)
+        return modifiedString
     }
 
     /// It locates the address in the image og the library where the symbol is located, it must receive a mangled name

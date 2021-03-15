@@ -31,6 +31,14 @@ extension String {
 
         return results.map { String($0) }
     }
+
+    public var separatedByWords: String {
+        enum My {
+            static let regex = try! NSRegularExpression(pattern: "([A-Z]+)[a-zA-Z]|(?<=_).")
+        }
+        
+        return My.regex.stringByReplacingMatches(in: self, range: NSRange(0 ..< self.utf16.count), withTemplate: " $0").trimmingCharacters(in: CharacterSet(charactersIn: " "))
+    }
 }
 
 extension Data {

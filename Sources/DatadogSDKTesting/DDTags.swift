@@ -36,6 +36,7 @@ internal struct DDTags {
 internal struct DDGenericTags {
     static let language         = "language"
     static let type             = "type"
+    static let resourceName     = "resource.name"
 }
 
 

@@ -53,6 +53,7 @@ internal class DDTestObserver: NSObject, XCTestObservation {
         let attributes: [String: String] = [
             DDGenericTags.language: "swift",
             DDGenericTags.type: DDTestTags.typeTest,
+            DDGenericTags.resourceName: "\(currentBundleName).\(testSuite).\(testName)",
             DDTestTags.testName: testName,
             DDTestTags.testSuite: testSuite,
             DDTestTags.testFramework: "XCTest",

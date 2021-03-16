@@ -1374,6 +1374,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
+				MARKETING_VERSION = 0.7.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
 				SDKROOT = macosx;
@@ -1400,6 +1401,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
+				MARKETING_VERSION = 0.7.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
 				SDKROOT = macosx;
@@ -1425,6 +1427,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
+				MARKETING_VERSION = 0.7.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
 				SDKROOT = appletvos;
@@ -1451,6 +1454,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
+				MARKETING_VERSION = 0.7.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
 				SDKROOT = appletvos;
@@ -1690,6 +1694,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
+				MARKETING_VERSION = 0.7.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
 				SDKROOT = iphoneos;
@@ -1717,6 +1722,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
+				MARKETING_VERSION = 0.7.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
 				SDKROOT = iphoneos;

@@ -425,7 +425,7 @@ internal struct DDEnvironmentValues {
 
         branch = DDEnvironmentValues.normalizedBranchOrTag(branchEnv)
         tag = DDEnvironmentValues.normalizedBranchOrTag(tagEnv)
-        workspacePath = DDEnvironmentValues.expandingTilde(workspaceEnv)
+        workspacePath = DDEnvironmentValues.expandingTilde(workspaceEnv) ?? sourceRoot
     }
 
     func addTagsToSpan(span: Span) {
@@ -449,7 +449,8 @@ internal struct DDEnvironmentValues {
             setAttributeIfExist(toSpan: span, key: $0.key, value: value)
         }
 
-        // Add the CI and Git tags, only if running in CI
+        setAttributeIfExist(toSpan: span, key: DDCITags.ciWorkspacePath, value: workspacePath)
+        // Add the CI and Git tags, only if running in CI except workspace
         if !isCi {
             return
         }
@@ -462,7 +463,6 @@ internal struct DDEnvironmentValues {
         setAttributeIfExist(toSpan: span, key: DDCITags.ciStageName, value: stageName)
         setAttributeIfExist(toSpan: span, key: DDCITags.ciJobName, value: jobName)
         setAttributeIfExist(toSpan: span, key: DDCITags.ciJobURL, value: jobURL)
-        setAttributeIfExist(toSpan: span, key: DDCITags.ciWorkspacePath, value: workspacePath)
 
         setAttributeIfExist(toSpan: span, key: DDGitTags.gitRepository, value: repository)
         setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommit, value: commit)

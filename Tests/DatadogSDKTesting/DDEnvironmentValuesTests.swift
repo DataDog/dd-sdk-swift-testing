@@ -111,7 +111,7 @@ class DDEnvironmentValuesTests: XCTestCase {
         XCTAssertEqual(spanData.attributes["git.branch"]?.description, "develop")
     }
 
-    func testWhenNotRunningInCI_TagsAreNotAdded() {
+    func testWhenNotRunningInCI_OnlyOneTagsIsAdded() {
         setEnvVariables()
 
         let span = createSimpleSpan()
@@ -122,7 +122,9 @@ class DDEnvironmentValuesTests: XCTestCase {
         env.addTagsToSpan(span: span)
 
         spanData = span.toSpanData()
-        XCTAssertEqual(spanData.attributes.count, 0)
+        XCTAssertEqual(spanData.attributes.count, 1)
+        XCTAssertNotNil(spanData.attributes[DDCITags.ciWorkspacePath])
+
     }
 
     func testAddCustomTagsWithDDTags() {
@@ -138,7 +140,7 @@ class DDEnvironmentValuesTests: XCTestCase {
         env.addTagsToSpan(span: span)
 
         spanData = span.toSpanData()
-        XCTAssertEqual(spanData.attributes.count, 6)
+        XCTAssertEqual(spanData.attributes.count, 7)
 
         XCTAssertEqual(spanData.attributes["key1"]?.description, "value1")
         XCTAssertEqual(spanData.attributes["key2"]?.description, "value2")
@@ -146,6 +148,7 @@ class DDEnvironmentValuesTests: XCTestCase {
         XCTAssertEqual(spanData.attributes["keyFoo"]?.description, "BAR")
         XCTAssertEqual(spanData.attributes["keyFooFoo"]?.description, "$FOOFOO")
         XCTAssertEqual(spanData.attributes["keyMix"]?.description, "BAR-v1")
+        XCTAssertNotNil(spanData.attributes[DDCITags.ciWorkspacePath])
     }
 
     private func createSimpleSpan() -> RecordEventsReadableSpan {

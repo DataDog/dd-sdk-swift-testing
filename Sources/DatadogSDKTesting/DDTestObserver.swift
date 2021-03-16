@@ -16,7 +16,21 @@ internal class DDTestObserver: NSObject, XCTestObservation {
     let testNameRegex = try? NSRegularExpression(pattern: "([\\w]+) ([\\w]+)", options: .caseInsensitive)
     let supportsSkipping = NSClassFromString("XCTSkippedTestContext") != nil
     var currentBundleName = ""
-    var currentTestSpan: RecordEventsReadableSpan?
+
+    var rLock = NSRecursiveLock()
+    private var privateCurrentTestSpan: RecordEventsReadableSpan?
+    var currentTestSpan: RecordEventsReadableSpan? {
+        get {
+            rLock.lock()
+            defer { rLock.unlock()}
+            return privateCurrentTestSpan
+        }
+        set {
+            rLock.lock()
+            defer { rLock.unlock()}
+            privateCurrentTestSpan = newValue
+        }
+    }
 
     init(tracer: DDTracer) {
         XCUIApplication.swizzleMethods

@@ -21,9 +21,8 @@ internal class DDTracer {
     var datadogExporter: DatadogExporter!
     var launchSpanContext: SpanContext?
 
-    var activeSpan: RecordEventsReadableSpan? {
-        return tracerSdk.activeSpan as? RecordEventsReadableSpan ??
-            DDTestMonitor.instance?.testObserver?.currentTestSpan
+    var activeSpan: Span? {
+        return tracerSdk.activeSpan ?? DDTestMonitor.instance?.testObserver?.currentTestSpan
     }
 
     var isBinaryUnderUITesting: Bool {
@@ -51,6 +50,7 @@ internal class DDTracer {
         let version = (bundle.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "unknown"
 
         tracerSdk = tracerProvider.get(instrumentationName: identifier, instrumentationVersion: version) as! TracerSdk
+        tracerSdk.sharedState.setSampler(Samplers.alwaysOn)
 
         let exporterConfiguration = ExporterConfiguration(
             serviceName: env.ddService ?? ProcessInfo.processInfo.processName,
@@ -82,7 +82,7 @@ internal class DDTracer {
         OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(spanProcessor)
     }
 
-    func startSpan(name: String, attributes: [String: String], date: Date? = nil) -> RecordEventsReadableSpan {
+    func startSpan(name: String, attributes: [String: String], date: Date? = nil) -> Span {
         let spanBuilder = tracerSdk.spanBuilder(spanName: name)
         attributes.forEach {
             spanBuilder.setAttribute(key: $0.key, value: $0.value)
@@ -95,7 +95,7 @@ internal class DDTracer {
             spanBuilder.setParent(launchContext)
         }
 
-        let span = spanBuilder.startSpan() as! RecordEventsReadableSpan
+        let span = spanBuilder.startSpan()
         tracerSdk.setActive(span)
         return span
     }
@@ -200,7 +200,7 @@ internal class DDTracer {
 
     /// This method is only currently used for loggign the steps when runnning UITest
     func logString(string: String, timeIntervalSinceSpanStart: Double) {
-        guard let activeSpan = activeSpan else {
+        guard let activeSpan = activeSpan as? RecordEventsReadableSpan else {
             return
         }
         let timestamp = activeSpan.startTime.addingTimeInterval(timeIntervalSinceSpanStart)

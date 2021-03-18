@@ -10,7 +10,6 @@ import OpenTelemetrySdk
 import XCTest
 
 class DDNetworkInstrumentationTests: XCTestCase {
-
     override func setUp() {
         DDEnvironmentValues.environment["DATADOG_CLIENT_TOKEN"] = "fakeToken"
         DDTestMonitor.instance = DDTestMonitor()
@@ -22,19 +21,18 @@ class DDNetworkInstrumentationTests: XCTestCase {
     }
 
     func testItInterceptsDataTaskWithURL() {
-
         var testSpan: RecordEventsReadableSpan?
 
         let url = URL(string: "http://httpbin.org/get")!
         let expec = expectation(description: "GET \(url)")
         var task: URLSessionTask
-        task = URLSession.shared.dataTask(with: url) { data, response, _ in
+        task = URLSession.shared.dataTask(with: url) { _, _, _ in
             expec.fulfill()
         }
         task.resume()
         let taskIdentifier = DDTestMonitor.instance!.networkInstrumentation!.idKeyForTask(task)
-        testSpan = DDNetworkActivityLogger.spanDict[taskIdentifier]
-        waitForExpectations(timeout: 30) { error in
+        testSpan = DDNetworkActivityLogger.spanDict[taskIdentifier] as? RecordEventsReadableSpan
+        waitForExpectations(timeout: 30) { _ in
             task.cancel()
         }
 
@@ -61,13 +59,13 @@ class DDNetworkInstrumentationTests: XCTestCase {
         let urlRequest = URLRequest(url: url)
         let expec = expectation(description: "GET \(url)")
         var task: URLSessionTask
-        task = URLSession.shared.dataTask(with: urlRequest) { data, response, _ in
+        task = URLSession.shared.dataTask(with: urlRequest) { _, _, _ in
             expec.fulfill()
         }
         task.resume()
         let taskIdentifier = DDTestMonitor.instance!.networkInstrumentation!.idKeyForTask(task)
-        testSpan = DDNetworkActivityLogger.spanDict[taskIdentifier]
-        waitForExpectations(timeout: 30) { error in
+        testSpan = DDNetworkActivityLogger.spanDict[taskIdentifier] as? RecordEventsReadableSpan
+        waitForExpectations(timeout: 30) { _ in
             task.cancel()
         }
 

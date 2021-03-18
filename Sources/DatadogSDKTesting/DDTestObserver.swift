@@ -18,8 +18,8 @@ internal class DDTestObserver: NSObject, XCTestObservation {
     var currentBundleName = ""
 
     var rLock = NSRecursiveLock()
-    private var privateCurrentTestSpan: RecordEventsReadableSpan?
-    var currentTestSpan: RecordEventsReadableSpan? {
+    private var privateCurrentTestSpan: Span?
+    var currentTestSpan: Span? {
         get {
             rLock.lock()
             defer { rLock.unlock()}
@@ -106,8 +106,10 @@ internal class DDTestObserver: NSObject, XCTestObservation {
 
         tracer.env.addTagsToSpan(span: testSpan)
 
-        let simpleSpan = SimpleSpanData(spanData: testSpan.toSpanData())
-        DDCrashes.setCustomData(customData: SimpleSpanSerializer.serializeSpan(simpleSpan: simpleSpan))
+        if let testSpan = testSpan as? RecordEventsReadableSpan {
+            let simpleSpan = SimpleSpanData(spanData: testSpan.toSpanData())
+            DDCrashes.setCustomData(customData: SimpleSpanSerializer.serializeSpan(simpleSpan: simpleSpan))
+        }
         currentTestSpan = testSpan
     }
 

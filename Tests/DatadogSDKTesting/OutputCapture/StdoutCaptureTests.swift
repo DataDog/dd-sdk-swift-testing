@@ -6,6 +6,7 @@
 
 @testable import DatadogSDKTesting
 import XCTest
+import OpenTelemetrySdk
 
 class StdoutCaptureTests: XCTestCase {
 
@@ -20,7 +21,7 @@ class StdoutCaptureTests: XCTestCase {
         let stringToCapture = "This should be captured"
 
         StdoutCapture.startCapturing(tracer: tracer)
-        let span = tracer.startSpan(name: "Unnamed", attributes: [:])
+        let span = tracer.startSpan(name: "Unnamed", attributes: [:]) as! RecordEventsReadableSpan
         print(stringToCapture)
         span.status = .ok
         span.end()
@@ -38,7 +39,7 @@ class StdoutCaptureTests: XCTestCase {
 
         DDInstrumentationControl.startStdoutCapture()
         DDInstrumentationControl.stopStdoutCapture()
-        let span = tracer.startSpan(name: "Unnamed", attributes: [:])
+        let span = tracer.startSpan(name: "Unnamed", attributes: [:]) as! RecordEventsReadableSpan
         print(stringToCapture)
         span.status = .ok
         span.end()
@@ -53,7 +54,7 @@ class StdoutCaptureTests: XCTestCase {
         let stringToCapture = "This should  not be captured"
 
         StdoutCapture.startCapturing(tracer: tracer)
-        let span = tracer.startSpan(name: "Unnamed", attributes: [:])
+        let span = tracer.startSpan(name: "Unnamed", attributes: [:]) as! RecordEventsReadableSpan
         fputs(stringToCapture, stdout)
         let spanData = span.toSpanData()
         span.status = .ok

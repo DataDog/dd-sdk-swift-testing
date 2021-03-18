@@ -5,10 +5,10 @@
  */
 
 @testable import DatadogSDKTesting
+import OpenTelemetrySdk
 import XCTest
 
 class StderrCaptureTests: XCTestCase {
-
     override func setUp() {
         DDEnvironmentValues.environment["DATADOG_CLIENT_TOKEN"] = "fakeToken"
     }
@@ -21,7 +21,7 @@ class StderrCaptureTests: XCTestCase {
         let stringToCapture = "2020-10-22 12:01:33.161546+0200 xctest[91153:14310375] This should be captured"
         let capturer = StderrCapture()
 
-        let span = tracer.startSpan(name: "Unnamed", attributes: [:])
+        let span = tracer.startSpan(name: "Unnamed", attributes: [:]) as! RecordEventsReadableSpan
         DDTestMonitor.instance?.testObserver?.currentTestSpan = span
         capturer.stderrMessage(tracer: tracer, string: stringToCapture)
         Thread.sleep(forTimeInterval: 0.5)
@@ -30,7 +30,7 @@ class StderrCaptureTests: XCTestCase {
         let spanData = span.toSpanData()
 
         XCTAssertEqual(spanData.events.count, 1)
-        XCTAssertEqual(spanData.events.first?.attributes["message"]?.description, "This should be captured" )
+        XCTAssertEqual(spanData.events.first?.attributes["message"]?.description, "This should be captured")
 
         let timeToCheck = StderrCapture.logDateFormatter.date(from: "2020-10-22 12:01:33.161546+0200")!
         XCTAssertEqual(spanData.events.first?.timestamp, timeToCheck)
@@ -43,7 +43,7 @@ class StderrCaptureTests: XCTestCase {
         let capturer = StderrCapture()
 
         let date = Date()
-        let span = tracer.startSpan(name: "Unnamed", attributes: [:], date:date)
+        let span = tracer.startSpan(name: "Unnamed", attributes: [:], date: date) as! RecordEventsReadableSpan
         DDTestMonitor.instance?.testObserver?.currentTestSpan = span
         capturer.stderrMessage(tracer: tracer, string: stringToCapture)
         Thread.sleep(forTimeInterval: 0.6)
@@ -52,9 +52,9 @@ class StderrCaptureTests: XCTestCase {
         let spanData = span.toSpanData()
 
         XCTAssertEqual(spanData.events.count, 1)
-        XCTAssertEqual(spanData.events.first?.attributes["message"]?.description, "Open com.datadoghq.DemoSwift" )
+        XCTAssertEqual(spanData.events.first?.attributes["message"]?.description, "Open com.datadoghq.DemoSwift")
 
         let timeToCheck = date.addingTimeInterval(0.5)
-        XCTAssertEqual(spanData.events.first?.timestamp,  timeToCheck)
+        XCTAssertEqual(spanData.events.first?.timestamp, timeToCheck)
     }
 }

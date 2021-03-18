@@ -9,7 +9,7 @@ import OpenTelemetryApi
 import OpenTelemetrySdk
 
 class DDNetworkActivityLogger {
-    static var spanDict = [String: RecordEventsReadableSpan]()
+    static var spanDict = [String: Span]()
     static var spanDictQueue = DispatchQueue(label: "com.datadoghq.ddnetworkactivityLogger")
     
     internal static let acceptableHeaders: Set<String> = {
@@ -88,7 +88,7 @@ class DDNetworkActivityLogger {
     }
     
     static func log(response: URLResponse, dataOrFile: Any?, sessionTaskId: String) {
-        var span: RecordEventsReadableSpan!
+        var span: Span!
         spanDictQueue.sync {
             span = spanDict.removeValue(forKey: sessionTaskId)
         }
@@ -127,7 +127,7 @@ class DDNetworkActivityLogger {
     }
     
     static func log(error: Error, dataOrFile: Any?, statusCode: Int, sessionTaskId: String) {
-        var span: RecordEventsReadableSpan!
+        var span: Span!
         spanDictQueue.sync {
             span = spanDict.removeValue(forKey: sessionTaskId)
         }

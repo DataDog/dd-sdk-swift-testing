@@ -133,7 +133,7 @@ internal struct DDEnvironmentValues {
         disableCrashHandler = envDisableCrashReporting?.boolValue ?? false
 
         let envEnableTestLocation = DDEnvironmentValues.getEnvVariable("DD_ENABLE_TEST_SOURCE_LOCATION") as NSString?
-        enableTestLocation = envDisableCrashReporting?.boolValue ?? false
+        enableTestLocation = envEnableTestLocation?.boolValue ?? false
 
         /// Device Information
         osName = PlatformUtils.getRunningPlatform()

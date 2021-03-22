@@ -1375,6 +1375,7 @@
 					"@loader_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.7.0;
+				OTHER_LDFLAGS = " -weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
 				SDKROOT = macosx;
@@ -1402,6 +1403,7 @@
 					"@loader_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.7.0;
+				OTHER_LDFLAGS = " -weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
 				SDKROOT = macosx;
@@ -1428,6 +1430,7 @@
 					"@loader_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.7.0;
+				OTHER_LDFLAGS = " -weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
 				SDKROOT = appletvos;
@@ -1455,6 +1458,7 @@
 					"@loader_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.7.0;
+				OTHER_LDFLAGS = " -weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
 				SDKROOT = appletvos;
@@ -1695,6 +1699,7 @@
 					"@loader_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.7.0;
+				OTHER_LDFLAGS = " -weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
 				SDKROOT = iphoneos;
@@ -1723,6 +1728,7 @@
 					"@loader_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.7.0;
+				OTHER_LDFLAGS = " -weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
 				SDKROOT = iphoneos;

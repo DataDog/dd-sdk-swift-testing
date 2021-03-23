@@ -231,6 +231,15 @@ internal class DDTracer {
         }
     }
 
+    func datadogHeaders() -> [String: String] {
+        guard let currentSpan = activeSpan else {
+            return [String: String]()
+        }
+
+    return [ DDHeaders.traceIDField.rawValue: String(currentSpan.context.traceId.rawLowerLong),
+            DDHeaders.parentSpanIDField.rawValue: String(currentSpan.context.spanId.rawValue)]
+    }
+
     func tracePropagationHTTPHeaders() -> [String: String] {
         var headers = [String: String]()
 
@@ -245,9 +254,7 @@ internal class DDTracer {
         }
         tracerSdk.textFormat.inject(spanContext: currentSpan.context, carrier: &headers, setter: HeaderSetter())
 
-        headers[DDHeaders.traceIDField.rawValue] = String(currentSpan.context.traceId.rawLowerLong)
-        headers[DDHeaders.parentSpanIDField.rawValue] = String(currentSpan.context.spanId.rawValue)
-
+        headers.merge(datadogHeaders()) { (current, _) in current }
         return headers
     }
 

@@ -133,7 +133,7 @@ internal class DDTestObserver: NSObject, XCTestObservation {
         addBenchmarkTagsIfNeeded(testCase: testCase, activeTest: activeTest)
         activeTest.end()
         currentTestSpan = nil
-        DDNetworkActivityLogger.endAndCleanAliveSpans()
+       // DDNetworkActivityLogger.endAndCleanAliveSpans()
     }
 
     func testCase(_ testCase: XCTestCase, didRecord issue: XCTIssue) {

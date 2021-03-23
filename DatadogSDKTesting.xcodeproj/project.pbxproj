@@ -36,10 +36,8 @@
 		E157A726256E9D1D00CBCA52 /* ObjcLoadHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA06C25231F3200ED8AEF /* ObjcLoadHandler.m */; };
 		E157A728256E9D1D00CBCA52 /* DDInstrumentationControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = E158E2DB25471DA000DBCD6C /* DDInstrumentationControl.swift */; };
 		E157A729256E9D1D00CBCA52 /* SimpleSpanData.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FB483F253891CE0083B263 /* SimpleSpanData.swift */; };
-		E157A72A256E9D1D00CBCA52 /* DDNetworkInstrumentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E19E053B255177770032BAB9 /* DDNetworkInstrumentation.swift */; };
 		E157A72B256E9D1D00CBCA52 /* FrameworkLoadHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA07225231F4700ED8AEF /* FrameworkLoadHandler.swift */; };
 		E157A72C256E9D1D00CBCA52 /* DDTags.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA07125231F4700ED8AEF /* DDTags.swift */; };
-		E157A72D256E9D1D00CBCA52 /* DDNetworkActivityLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = E19E08222552F01C0032BAB9 /* DDNetworkActivityLogger.swift */; };
 		E157A730256E9D1D00CBCA52 /* SignalUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E13D0BC92546E29C00C37D56 /* SignalUtils.swift */; };
 		E157A731256E9D1D00CBCA52 /* XCUIApplicationSwizzler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12515E4254892C500670D23 /* XCUIApplicationSwizzler.swift */; };
 		E157A732256E9D1D00CBCA52 /* DDError.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1AD07A8252F5CB8003705C1 /* DDError.swift */; };
@@ -59,10 +57,8 @@
 		E157A75E256E9D3300CBCA52 /* ObjcLoadHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA06C25231F3200ED8AEF /* ObjcLoadHandler.m */; };
 		E157A760256E9D3300CBCA52 /* DDInstrumentationControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = E158E2DB25471DA000DBCD6C /* DDInstrumentationControl.swift */; };
 		E157A761256E9D3300CBCA52 /* SimpleSpanData.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FB483F253891CE0083B263 /* SimpleSpanData.swift */; };
-		E157A762256E9D3300CBCA52 /* DDNetworkInstrumentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E19E053B255177770032BAB9 /* DDNetworkInstrumentation.swift */; };
 		E157A763256E9D3300CBCA52 /* FrameworkLoadHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA07225231F4700ED8AEF /* FrameworkLoadHandler.swift */; };
 		E157A764256E9D3300CBCA52 /* DDTags.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA07125231F4700ED8AEF /* DDTags.swift */; };
-		E157A765256E9D3300CBCA52 /* DDNetworkActivityLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = E19E08222552F01C0032BAB9 /* DDNetworkActivityLogger.swift */; };
 		E157A768256E9D3300CBCA52 /* SignalUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E13D0BC92546E29C00C37D56 /* SignalUtils.swift */; };
 		E157A769256E9D3300CBCA52 /* XCUIApplicationSwizzler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12515E4254892C500670D23 /* XCUIApplicationSwizzler.swift */; };
 		E157A76A256E9D3300CBCA52 /* DDError.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1AD07A8252F5CB8003705C1 /* DDError.swift */; };
@@ -110,20 +106,6 @@
 		E1665A8525D1524100BA53CD /* DDSymbolicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1665A8025D13BBB00BA53CD /* DDSymbolicator.swift */; };
 		E1798CC62524B9BD008DEBB9 /* DDTracer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1798CC52524B9BD008DEBB9 /* DDTracer.swift */; };
 		E17B7AA8253F02580081D7F3 /* SigmaSwiftStatistics in Frameworks */ = {isa = PBXBuildFile; productRef = E17B7AA7253F02580081D7F3 /* SigmaSwiftStatistics */; };
-		E18ABC232583FB41007370F7 /* DatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E18ABC222583FB41007370F7 /* DatadogExporter */; };
-		E18ABC242583FB41007370F7 /* DatadogExporter in Embed Frameworks */ = {isa = PBXBuildFile; productRef = E18ABC222583FB41007370F7 /* DatadogExporter */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		E18ABC26258758E8007370F7 /* DatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E18ABC25258758E8007370F7 /* DatadogExporter */; };
-		E18ABC27258758E8007370F7 /* DatadogExporter in Embed Frameworks */ = {isa = PBXBuildFile; productRef = E18ABC25258758E8007370F7 /* DatadogExporter */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		E18ABC29258758F1007370F7 /* DatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E18ABC28258758F1007370F7 /* DatadogExporter */; };
-		E18ABC2A258758F1007370F7 /* DatadogExporter in Embed Frameworks */ = {isa = PBXBuildFile; productRef = E18ABC28258758F1007370F7 /* DatadogExporter */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		E18ABC2C258759EC007370F7 /* DatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E18ABC2B258759EC007370F7 /* DatadogExporter */; };
-		E18ABC2D258759EC007370F7 /* DatadogExporter in Embed Frameworks */ = {isa = PBXBuildFile; productRef = E18ABC2B258759EC007370F7 /* DatadogExporter */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		E18ABC2F258759F2007370F7 /* DatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E18ABC2E258759F2007370F7 /* DatadogExporter */; };
-		E18ABC30258759F2007370F7 /* DatadogExporter in Embed Frameworks */ = {isa = PBXBuildFile; productRef = E18ABC2E258759F2007370F7 /* DatadogExporter */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		E18ABC32258759F7007370F7 /* DatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E18ABC31258759F7007370F7 /* DatadogExporter */; };
-		E18ABC33258759F7007370F7 /* DatadogExporter in Embed Frameworks */ = {isa = PBXBuildFile; productRef = E18ABC31258759F7007370F7 /* DatadogExporter */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		E19E053C255177770032BAB9 /* DDNetworkInstrumentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E19E053B255177770032BAB9 /* DDNetworkInstrumentation.swift */; };
-		E19E08232552F01C0032BAB9 /* DDNetworkActivityLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = E19E08222552F01C0032BAB9 /* DDNetworkActivityLogger.swift */; };
 		E19F869F25E7FCB6003202F5 /* CISpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = E19F869E25E7FA73003202F5 /* CISpec.swift */; };
 		E19F86A025E7FCB7003202F5 /* CISpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = E19F869E25E7FA73003202F5 /* CISpec.swift */; };
 		E19F86A125E7FCB8003202F5 /* CISpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = E19F869E25E7FA73003202F5 /* CISpec.swift */; };
@@ -154,6 +136,11 @@
 		E1D6EFA525F6647F00E8C3AE /* ObjcLoadHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA06C25231F3200ED8AEF /* ObjcLoadHandler.m */; };
 		E1DFF0EA257010E700344895 /* PlatformUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141CF5F256FD513008B6B70 /* PlatformUtils.swift */; };
 		E1DFF0EB257010E800344895 /* PlatformUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141CF5F256FD513008B6B70 /* PlatformUtils.swift */; };
+		E1EE7959260A099A004421B1 /* libDatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E1EE7958260A099A004421B1 /* libDatadogExporter */; };
+		E1EE795B260A099A004421B1 /* libURLSessionInstrumentation in Frameworks */ = {isa = PBXBuildFile; productRef = E1EE795A260A099A004421B1 /* libURLSessionInstrumentation */; };
+		E1F595D42609FC3000AE92B7 /* DDNetworkInstrumentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F595D32609FC3000AE92B7 /* DDNetworkInstrumentation.swift */; };
+		E1F595D52609FC3000AE92B7 /* DDNetworkInstrumentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F595D32609FC3000AE92B7 /* DDNetworkInstrumentation.swift */; };
+		E1F595D62609FC3000AE92B7 /* DDNetworkInstrumentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F595D32609FC3000AE92B7 /* DDNetworkInstrumentation.swift */; };
 		E1FB48312538909D0083B263 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1ABA04A25231E2500ED8AEF /* DatadogSDKTesting.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 		E1FB483B253891650083B263 /* CrashReporter in Frameworks */ = {isa = PBXBuildFile; productRef = E1FB483A253891650083B263 /* CrashReporter */; };
 		E1FB4840253891CE0083B263 /* SimpleSpanSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FB483D253891CE0083B263 /* SimpleSpanSerializer.swift */; };
@@ -193,7 +180,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				E18ABC27258758E8007370F7 /* DatadogExporter in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -204,7 +190,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				E18ABC2A258758F1007370F7 /* DatadogExporter in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -215,7 +200,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				E18ABC30258759F2007370F7 /* DatadogExporter in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -226,7 +210,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				E18ABC33258759F7007370F7 /* DatadogExporter in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -237,7 +220,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				E18ABC242583FB41007370F7 /* DatadogExporter in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -248,7 +230,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				E18ABC2D258759EC007370F7 /* DatadogExporter in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -304,8 +285,6 @@
 		E1798CC52524B9BD008DEBB9 /* DDTracer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTracer.swift; sourceTree = "<group>"; };
 		E1798CE52524D0D5008DEBB9 /* DDErrorTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DDErrorTests.swift; sourceTree = "<group>"; };
 		E17B7AA5253F010C0081D7F3 /* LICENSE-3rdparty.csv */ = {isa = PBXFileReference; lastKnownFileType = text; path = "LICENSE-3rdparty.csv"; sourceTree = "<group>"; };
-		E19E053B255177770032BAB9 /* DDNetworkInstrumentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDNetworkInstrumentation.swift; sourceTree = "<group>"; };
-		E19E08222552F01C0032BAB9 /* DDNetworkActivityLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDNetworkActivityLogger.swift; sourceTree = "<group>"; };
 		E19F869E25E7FA73003202F5 /* CISpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CISpec.swift; sourceTree = "<group>"; };
 		E1ABA04A25231E2500ED8AEF /* DatadogSDKTesting.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = DatadogSDKTesting.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E1ABA04D25231E2500ED8AEF /* DatadogSDKTesting.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DatadogSDKTesting.h; sourceTree = "<group>"; };
@@ -337,6 +316,7 @@
 		E1D4769525DC2B8E00832592 /* master */ = {isa = PBXFileReference; lastKnownFileType = text; path = master; sourceTree = "<group>"; };
 		E1D476A525DD369F00832592 /* BinaryParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinaryParser.swift; sourceTree = "<group>"; };
 		E1D6EFA125F6563000E8C3AE /* DDSymbolAddress.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DDSymbolAddress.h; sourceTree = "<group>"; };
+		E1F595D32609FC3000AE92B7 /* DDNetworkInstrumentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDNetworkInstrumentation.swift; sourceTree = "<group>"; };
 		E1FB483D253891CE0083B263 /* SimpleSpanSerializer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleSpanSerializer.swift; sourceTree = "<group>"; };
 		E1FB483E253891CE0083B263 /* DDCrashes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DDCrashes.swift; sourceTree = "<group>"; };
 		E1FB483F253891CE0083B263 /* SimpleSpanData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleSpanData.swift; sourceTree = "<group>"; };
@@ -348,7 +328,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E18ABC26258758E8007370F7 /* DatadogExporter in Frameworks */,
 				E157A742256E9D1D00CBCA52 /* CrashReporter in Frameworks */,
 				E157A744256E9D1D00CBCA52 /* SigmaSwiftStatistics in Frameworks */,
 				E157A745256E9D1D00CBCA52 /* XCTest.framework in Frameworks */,
@@ -359,7 +338,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E18ABC29258758F1007370F7 /* DatadogExporter in Frameworks */,
 				E157A77A256E9D3300CBCA52 /* CrashReporter in Frameworks */,
 				E157A77C256E9D3300CBCA52 /* SigmaSwiftStatistics in Frameworks */,
 				E157A77D256E9D3300CBCA52 /* XCTest.framework in Frameworks */,
@@ -370,7 +348,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E18ABC2F258759F2007370F7 /* DatadogExporter in Frameworks */,
 				E157A7C7256EB37800CBCA52 /* DatadogSDKTesting.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -379,7 +356,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E18ABC32258759F7007370F7 /* DatadogExporter in Frameworks */,
 				E157A7C8256EB39200CBCA52 /* DatadogSDKTesting.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -388,9 +364,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E18ABC232583FB41007370F7 /* DatadogExporter in Frameworks */,
 				E1FB483B253891650083B263 /* CrashReporter in Frameworks */,
+				E1EE795B260A099A004421B1 /* libURLSessionInstrumentation in Frameworks */,
 				E17B7AA8253F02580081D7F3 /* SigmaSwiftStatistics in Frameworks */,
+				E1EE7959260A099A004421B1 /* libDatadogExporter in Frameworks */,
 				E1ABA08025231F8E00ED8AEF /* XCTest.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -399,7 +376,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E18ABC2C258759EC007370F7 /* DatadogExporter in Frameworks */,
 				E1FB48312538909D0083B263 /* DatadogSDKTesting.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -644,8 +620,7 @@
 		E1798CCA2524C1E2008DEBB9 /* NetworkInstrumentation */ = {
 			isa = PBXGroup;
 			children = (
-				E19E053B255177770032BAB9 /* DDNetworkInstrumentation.swift */,
-				E19E08222552F01C0032BAB9 /* DDNetworkActivityLogger.swift */,
+				E1F595D32609FC3000AE92B7 /* DDNetworkInstrumentation.swift */,
 			);
 			path = NetworkInstrumentation;
 			sourceTree = "<group>";
@@ -901,7 +876,6 @@
 			packageProductDependencies = (
 				E157A718256E9D1D00CBCA52 /* CrashReporter */,
 				E157A71A256E9D1D00CBCA52 /* SigmaSwiftStatistics */,
-				E18ABC25258758E8007370F7 /* DatadogExporter */,
 			);
 			productName = DatadogSDKTesting;
 			productReference = E157A74D256E9D1D00CBCA52 /* DatadogSDKTesting.framework */;
@@ -925,7 +899,6 @@
 			packageProductDependencies = (
 				E157A750256E9D3300CBCA52 /* CrashReporter */,
 				E157A752256E9D3300CBCA52 /* SigmaSwiftStatistics */,
-				E18ABC28258758F1007370F7 /* DatadogExporter */,
 			);
 			productName = DatadogSDKTesting;
 			productReference = E157A785256E9D3300CBCA52 /* DatadogSDKTesting.framework */;
@@ -948,7 +921,6 @@
 			);
 			name = DatadogSDKTestingTests_macOS;
 			packageProductDependencies = (
-				E18ABC2E258759F2007370F7 /* DatadogExporter */,
 			);
 			productName = DatadogSDKTestingTests;
 			productReference = E157A7A3256EB0F000CBCA52 /* DatadogSDKTestingTests_macOS.xctest */;
@@ -971,7 +943,6 @@
 			);
 			name = DatadogSDKTestingTests_tvOS;
 			packageProductDependencies = (
-				E18ABC31258759F7007370F7 /* DatadogExporter */,
 			);
 			productName = DatadogSDKTestingTests;
 			productReference = E157A7BD256EB0F200CBCA52 /* DatadogSDKTestingTests_tvOS.xctest */;
@@ -995,7 +966,8 @@
 			packageProductDependencies = (
 				E1FB483A253891650083B263 /* CrashReporter */,
 				E17B7AA7253F02580081D7F3 /* SigmaSwiftStatistics */,
-				E18ABC222583FB41007370F7 /* DatadogExporter */,
+				E1EE7958260A099A004421B1 /* libDatadogExporter */,
+				E1EE795A260A099A004421B1 /* libURLSessionInstrumentation */,
 			);
 			productName = DatadogSDKTesting;
 			productReference = E1ABA04A25231E2500ED8AEF /* DatadogSDKTesting.framework */;
@@ -1018,7 +990,6 @@
 			);
 			name = DatadogSDKTestingTests_iOS;
 			packageProductDependencies = (
-				E18ABC2B258759EC007370F7 /* DatadogExporter */,
 			);
 			productName = DatadogSDKTestingTests;
 			productReference = E1ABA05325231E2500ED8AEF /* DatadogSDKTestingTests_iOS.xctest */;
@@ -1055,7 +1026,7 @@
 			packageReferences = (
 				E1FB4839253891650083B263 /* XCRemoteSwiftPackageReference "plcrashreporter" */,
 				E17B7AA6253F02580081D7F3 /* XCRemoteSwiftPackageReference "SigmaSwiftStatistics" */,
-				E18ABC212583FB41007370F7 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */,
+				E1F595CF2609FBBD00AE92B7 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */,
 			);
 			productRefGroup = E1ABA04B25231E2500ED8AEF /* Products */;
 			projectDirPath = "";
@@ -1184,11 +1155,10 @@
 				E157A726256E9D1D00CBCA52 /* ObjcLoadHandler.m in Sources */,
 				E157A728256E9D1D00CBCA52 /* DDInstrumentationControl.swift in Sources */,
 				E157A729256E9D1D00CBCA52 /* SimpleSpanData.swift in Sources */,
-				E157A72A256E9D1D00CBCA52 /* DDNetworkInstrumentation.swift in Sources */,
+				E1F595D52609FC3000AE92B7 /* DDNetworkInstrumentation.swift in Sources */,
 				E157A72B256E9D1D00CBCA52 /* FrameworkLoadHandler.swift in Sources */,
 				E157A72C256E9D1D00CBCA52 /* DDTags.swift in Sources */,
 				E1665A7425D12D7500BA53CD /* Spawn.swift in Sources */,
-				E157A72D256E9D1D00CBCA52 /* DDNetworkActivityLogger.swift in Sources */,
 				E157A730256E9D1D00CBCA52 /* SignalUtils.swift in Sources */,
 				E157A731256E9D1D00CBCA52 /* XCUIApplicationSwizzler.swift in Sources */,
 				E157A732256E9D1D00CBCA52 /* DDError.swift in Sources */,
@@ -1217,11 +1187,10 @@
 				E157A75E256E9D3300CBCA52 /* ObjcLoadHandler.m in Sources */,
 				E157A760256E9D3300CBCA52 /* DDInstrumentationControl.swift in Sources */,
 				E157A761256E9D3300CBCA52 /* SimpleSpanData.swift in Sources */,
-				E157A762256E9D3300CBCA52 /* DDNetworkInstrumentation.swift in Sources */,
+				E1F595D62609FC3000AE92B7 /* DDNetworkInstrumentation.swift in Sources */,
 				E157A763256E9D3300CBCA52 /* FrameworkLoadHandler.swift in Sources */,
 				E157A764256E9D3300CBCA52 /* DDTags.swift in Sources */,
 				E1665A7525D12D7500BA53CD /* Spawn.swift in Sources */,
-				E157A765256E9D3300CBCA52 /* DDNetworkActivityLogger.swift in Sources */,
 				E157A768256E9D3300CBCA52 /* SignalUtils.swift in Sources */,
 				E157A769256E9D3300CBCA52 /* XCUIApplicationSwizzler.swift in Sources */,
 				E157A76A256E9D3300CBCA52 /* DDError.swift in Sources */,
@@ -1294,11 +1263,10 @@
 				E1ABA07725231F4700ED8AEF /* DDEnvironmentValues.swift in Sources */,
 				E158E2DC25471DA000DBCD6C /* DDInstrumentationControl.swift in Sources */,
 				E1FB4842253891CE0083B263 /* SimpleSpanData.swift in Sources */,
-				E19E053C255177770032BAB9 /* DDNetworkInstrumentation.swift in Sources */,
+				E1F595D42609FC3000AE92B7 /* DDNetworkInstrumentation.swift in Sources */,
 				E1ABA07625231F4700ED8AEF /* FrameworkLoadHandler.swift in Sources */,
 				E1ABA07525231F4700ED8AEF /* DDTags.swift in Sources */,
 				E1665A7325D12D7500BA53CD /* Spawn.swift in Sources */,
-				E19E08232552F01C0032BAB9 /* DDNetworkActivityLogger.swift in Sources */,
 				E13D0BCA2546E29C00C37D56 /* SignalUtils.swift in Sources */,
 				E12515E5254892C600670D23 /* XCUIApplicationSwizzler.swift in Sources */,
 				E1AD07A9252F5CB8003705C1 /* DDError.swift in Sources */,
@@ -1890,12 +1858,12 @@
 				minimumVersion = 9.0.2;
 			};
 		};
-		E18ABC212583FB41007370F7 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */ = {
+		E1F595CF2609FBBD00AE92B7 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/open-telemetry/opentelemetry-swift.git";
+			repositoryURL = "https://github.com/nachoBonafonte/opentelemetry-swift.git";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.6.0;
+				kind = revision;
+				revision = 13eca95135dafeec4daff653450411c13f9e3d28;
 			};
 		};
 		E1FB4839253891650083B263 /* XCRemoteSwiftPackageReference "plcrashreporter" */ = {
@@ -1934,35 +1902,15 @@
 			package = E17B7AA6253F02580081D7F3 /* XCRemoteSwiftPackageReference "SigmaSwiftStatistics" */;
 			productName = SigmaSwiftStatistics;
 		};
-		E18ABC222583FB41007370F7 /* DatadogExporter */ = {
+		E1EE7958260A099A004421B1 /* libDatadogExporter */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = E18ABC212583FB41007370F7 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
-			productName = DatadogExporter;
+			package = E1F595CF2609FBBD00AE92B7 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			productName = libDatadogExporter;
 		};
-		E18ABC25258758E8007370F7 /* DatadogExporter */ = {
+		E1EE795A260A099A004421B1 /* libURLSessionInstrumentation */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = E18ABC212583FB41007370F7 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
-			productName = DatadogExporter;
-		};
-		E18ABC28258758F1007370F7 /* DatadogExporter */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E18ABC212583FB41007370F7 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
-			productName = DatadogExporter;
-		};
-		E18ABC2B258759EC007370F7 /* DatadogExporter */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E18ABC212583FB41007370F7 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
-			productName = DatadogExporter;
-		};
-		E18ABC2E258759F2007370F7 /* DatadogExporter */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E18ABC212583FB41007370F7 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
-			productName = DatadogExporter;
-		};
-		E18ABC31258759F7007370F7 /* DatadogExporter */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E18ABC212583FB41007370F7 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
-			productName = DatadogExporter;
+			package = E1F595CF2609FBBD00AE92B7 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			productName = libURLSessionInstrumentation;
 		};
 		E1FB483A253891650083B263 /* CrashReporter */ = {
 			isa = XCSwiftPackageProductDependency;

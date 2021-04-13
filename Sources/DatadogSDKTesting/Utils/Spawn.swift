@@ -57,16 +57,19 @@ struct Spawn {
 
         close(outputPipe[1])
         var output = ""
-        let bufferSize: size_t = 1024 * 8
-        let dynamicBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
+        let bufferSize: size_t = (1024 * 8) - 1
+        let dynamicBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize + 1)
         while true {
             let amtRead = read(outputPipe[0], dynamicBuffer, bufferSize)
             if amtRead <= 0 { break }
-            let array = Array(UnsafeBufferPointer(start: dynamicBuffer, count: amtRead))
-            let tmp = array + [UInt8(0)]
-            tmp.withUnsafeBufferPointer { ptr in
-                output += String(cString: unsafeBitCast(ptr.baseAddress, to: UnsafePointer<CChar>.self))
+            if amtRead < bufferSize {
+                output += String(cString: dynamicBuffer)
+                break
             }
+            dynamicBuffer[bufferSize] = UInt8(0)
+            output += String(cString: dynamicBuffer)
+            memset(dynamicBuffer, 0, bufferSize + 1)
+
         }
         dynamicBuffer.deallocate()
         return output

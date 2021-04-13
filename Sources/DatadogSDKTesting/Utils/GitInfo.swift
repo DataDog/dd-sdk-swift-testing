@@ -156,9 +156,9 @@ struct GitInfo {
             packData = filehandler.readData(ofLength: objectSize)
         } else {
             objectSize = Int(UInt16(packData[1] & 0x7F) * 16 + UInt16(packData[0] & 0x0F))
-            packData = filehandler.readData(ofLength: objectSize * 100)
+            packData = filehandler.readData(ofLength: objectSize)
         }
-        return packData.zlibDecompress(minimumSize: objectSize)
+        return packData.zlibDecompress()
     }
 
     /// This function returns the index file containing the commit sha (it there are more than one idx file in the folder,
@@ -166,6 +166,10 @@ struct GitInfo {
     fileprivate func locateIndex(packFolder: URL, commit: String) throws -> (indexFile: URL, packOffset: UInt64) {
         var indexFile: URL?
         var packOffset: UInt64 = 0
+
+        guard let commitAsData = Data(hexString: commit) else {
+            throw InternalError(description: "Incorrect Git object")
+        }
 
         var indexFiles: [URL] = []
         if let enumerator = FileManager.default.enumerator(at: packFolder, includingPropertiesForKeys: nil) {
@@ -187,26 +191,40 @@ struct GitInfo {
 
             // First layer: 256 4-byte elements, with number of elements per folder
             let folderIndex = Int(folder, radix: 16)!
+
+            var numberOfObjectsInIndex: Int
+            var numberOfPreviousObjects = 0
             let previousIndex = folderIndex > 0 ? folderIndex - 1 : folderIndex
             indexData = indexData.advanced(by: previousIndex * 4)
             var parser = BinaryParser(data: indexData.subdata(in: 0..<8))
-            let numberOfPreviousObjects = try parser.parseUInt32()
-            let numberOfObjectsInIndex = (try parser.parseUInt32() - numberOfPreviousObjects)
+            if folderIndex > 0 {
+                numberOfPreviousObjects = Int(try parser.parseUInt32())
+                numberOfObjectsInIndex = Int(try parser.parseUInt32()) - numberOfPreviousObjects
+            } else {
+                numberOfObjectsInIndex = Int(try parser.parseUInt32())
+            }
             indexData = indexData.advanced(by: (255 - previousIndex) * 4)
+
             parser = BinaryParser(data: indexData.subdata(in: 0..<4))
-            let totalNumberOfObjects = try parser.parseUInt32()
+            let totalNumberOfObjects = Int(try parser.parseUInt32())
             indexData = indexData.advanced(by: 4)
 
             // Second layer: 20-byte elements with the names in order
             indexData = indexData.advanced(by: 20 * Int(numberOfPreviousObjects))
-            var indexOfCommit: UInt32?
-            for i in 0..<numberOfObjectsInIndex {
-                let string = indexData.subdata(in: 0..<20).hexString
-                if string.compare(commit, options: .caseInsensitive) == .orderedSame {
-                    indexOfCommit = numberOfPreviousObjects + i
-                    break
+            var indexOfCommit: Int?
+
+            var startSearchIndex = indexData.startIndex
+            let endSearchIndex = startSearchIndex.advanced(by: 20 * numberOfObjectsInIndex)
+            while indexOfCommit == nil {
+                if let range = indexData.range(of: commitAsData, options: [], in: Range(uncheckedBounds: (startSearchIndex, endSearchIndex))) {
+                    // Check we are really at the start of a commit and are not finding the sha in between two others
+                    if range.startIndex.isMultiple(of: 20) {
+                        indexOfCommit = Int(numberOfPreviousObjects) + (startSearchIndex.distance(to: range.startIndex) / 20)
+                    } else {
+                        startSearchIndex = range.startIndex
+                    }
                 } else {
-                    indexData = indexData.advanced(by: 20)
+                    return
                 }
             }
 
@@ -215,7 +233,7 @@ struct GitInfo {
             }
 
             indexFile = file
-            indexData = indexData.advanced(by: 20 * Int(totalNumberOfObjects - indexOfObject))
+            indexData = indexData.advanced(by: 20 * Int(totalNumberOfObjects - numberOfPreviousObjects))
 
             // Third layer: 4 byte CRC for each object
             indexData = indexData.advanced(by: 4 * Int(totalNumberOfObjects))
@@ -231,7 +249,7 @@ struct GitInfo {
                 // offset is not in this layer, clear first bit and look at it at the 5th layer
                 offset = offset & 0x7FFFFFFF
                 indexData = indexData.advanced(by: 4 * Int(totalNumberOfObjects - indexOfObject))
-                indexData = indexData.advanced(by: 8 * Int(indexOfObject))
+                indexData = indexData.advanced(by: 8 * Int(offset))
                 parser = BinaryParser(data: indexData.subdata(in: 0..<8))
                 packOffset = try parser.parseUInt64()
             }

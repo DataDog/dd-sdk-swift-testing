@@ -107,8 +107,7 @@ struct GitInfo {
             let gitObject = try GitObject(objectContent: objectContent)
             return try parseCommit(gitFolder: gitFolder, gitObject: gitObject)
         } else {
-            objectContent = try getObjectFromPackFile(gitFolder: gitFolder, commit: commit)
-            return CommitInfo(content: objectContent)
+            return try getObjectFromPackFile(gitFolder: gitFolder, commit: commit)
         }
     }
 
@@ -132,7 +131,13 @@ struct GitInfo {
         }
     }
 
-    private func getObjectFromPackFile(gitFolder: URL, commit: String) throws -> String {
+    /// Recovers commit info from pack and idx files.
+    /// Implemented based on: https://codewords.recurse.com/issues/three/unpacking-git-packfiles
+    /// More references:
+    /// https://git-scm.com/docs/pack-format#_object_types
+    /// http://shafiul.github.io/gitbook/7_the_packfile.html
+    /// http://driusan.github.io/git-pack.html
+    private func getObjectFromPackFile(gitFolder: URL, commit: String) throws -> CommitInfo {
         let packFolder = gitFolder.appendingPathComponent("objects").appendingPathComponent("pack")
 
         var packOffset: UInt64
@@ -145,20 +150,40 @@ struct GitInfo {
         // check .pack version is 2
         let packHeaderData = filehandler.readData(ofLength: 8)
         if packHeaderData[4] != 0 || packHeaderData[5] != 0 || packHeaderData[6] != 0 || packHeaderData[7] != 2 {
-            return ""
+            return CommitInfo(content: "")
         }
 
         filehandler.seek(toFileOffset: packOffset)
         var objectSize: Int
+
+        let typeCommit = 1
+        let typeTag = 4
+
         var packData = filehandler.readData(ofLength: 2)
+        let type = (packData[0] & 0x70) >> 4
+        guard type == typeCommit || type == typeTag else {
+            return CommitInfo(content: "")
+        }
+
         if packData[0] < 128 {
             objectSize = Int(packData[0] & 0x0F)
-            packData = filehandler.readData(ofLength: objectSize)
         } else {
             objectSize = Int(UInt16(packData[1] & 0x7F) * 16 + UInt16(packData[0] & 0x0F))
-            packData = filehandler.readData(ofLength: objectSize)
         }
-        return packData.zlibDecompress()
+        packData = filehandler.readData(ofLength: objectSize)
+
+        let decompressedString = packData.zlibDecompress()
+        if type == typeCommit {
+            return CommitInfo(content: decompressedString)
+        } else {
+            // We will probably always receive only typeCommit, but tag is supported just in case
+            let parts = decompressedString.components(separatedBy: " ")
+            guard parts.count == 2 else {
+                return CommitInfo(content: "")
+            }
+            let sha = parts[1]
+            return try findCommit(gitFolder: gitFolder, commit: sha)
+        }
     }
 
     /// This function returns the index file containing the commit sha (it there are more than one idx file in the folder,

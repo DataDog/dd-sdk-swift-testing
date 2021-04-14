@@ -10,7 +10,7 @@ import Foundation
 /// posix_spawn is not accessible in tvOS
 #else
 
-struct Spawn {
+enum Spawn {
     static func command(_ command: String, environment: [String: String]? = nil) {
         let arguments = ["/bin/sh", "-c", command]
         let command = "/bin/sh"
@@ -22,10 +22,14 @@ struct Spawn {
                 "\($0.0)=\($0.1)".withCString(strdup)
             } + [nil]
         }
-        let pid = posix_spawn(nil, command, nil, nil, args, env)
+
+        var pid: pid_t = 0
+        let ret = posix_spawn(&pid, command, nil, nil, args, env)
+        guard ret == 0 else {
+            return
+        }
         var status: Int32 = 0
         waitpid(pid, &status, 0)
-
         return
     }
 
@@ -50,28 +54,30 @@ struct Spawn {
         posix_spawn_file_actions_addclose(&childActions, outputPipe[0])
         posix_spawn_file_actions_addclose(&childActions, outputPipe[1])
 
-        let pid = posix_spawn(nil, command, &childActions, nil, args, env)
+        var pid: pid_t = 0
+
+        let ret = posix_spawn(&pid, command, &childActions, nil, args, env)
+        guard ret == 0 else {
+            return ""
+        }
 
         var status: Int32 = 0
         waitpid(pid, &status, 0)
 
         close(outputPipe[1])
         var output = ""
-        let bufferSize: size_t = (1024 * 8) - 1
-        let dynamicBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize + 1)
+        let bufferSize: size_t = 1024 * 8
+        let dynamicBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
         while true {
-            let amtRead = read(outputPipe[0], dynamicBuffer, bufferSize)
-            if amtRead <= 0 { break }
-            if amtRead < bufferSize {
-                output += String(cString: dynamicBuffer)
+            memset(dynamicBuffer, 0, bufferSize)
+            let amtRead = read(outputPipe[0], dynamicBuffer, bufferSize - 1)
+            output += String(cString: dynamicBuffer)
+            if amtRead < bufferSize - 1 {
                 break
             }
-            dynamicBuffer[bufferSize] = UInt8(0)
-            output += String(cString: dynamicBuffer)
-            memset(dynamicBuffer, 0, bufferSize + 1)
-
         }
         dynamicBuffer.deallocate()
+        print(output)
         return output
     }
 }

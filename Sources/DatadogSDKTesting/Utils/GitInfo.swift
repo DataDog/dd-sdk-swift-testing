@@ -154,25 +154,28 @@ struct GitInfo {
         }
 
         filehandler.seek(toFileOffset: packOffset)
-        var objectSize: Int
 
+        var objectSize: Int
         let typeCommit = 1
         let typeTag = 4
 
-        var packData = filehandler.readData(ofLength: 2)
+        var packData = filehandler.readData(ofLength: 1)
         let type = (packData[0] & 0x70) >> 4
         guard type == typeCommit || type == typeTag else {
             return CommitInfo(content: "")
         }
 
-        if packData[0] < 128 {
-            objectSize = Int(packData[0] & 0x0F)
-        } else {
-            objectSize = Int(UInt16(packData[1] & 0x7F) * 16 + UInt16(packData[0] & 0x0F))
+        objectSize = Int(packData[0] & 0x0F)
+        var multiplier = 16
+        while packData[0] >= 128 {
+            packData = filehandler.readData(ofLength: 1)
+            objectSize += Int(packData[0] & 0x7F) * multiplier
+            multiplier *= 128
         }
+
         packData = filehandler.readData(ofLength: objectSize)
 
-        let decompressedString = packData.zlibDecompress()
+        let decompressedString = packData.zlibDecompress(minimumSize: objectSize)
         if type == typeCommit {
             return CommitInfo(content: decompressedString)
         } else {

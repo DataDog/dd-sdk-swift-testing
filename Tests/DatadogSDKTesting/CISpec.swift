@@ -45,14 +45,12 @@ class CISpec: XCTestCase {
         testObserver = DDTestObserver(tracer: DDTracer())
         testObserver.startObserving()
 
-        
         testObserver.testCaseWillStart(self)
 
-        
         measure {
-            let _ = 2+2
+            _ = 2 + 2
         }
-        let span = testObserver.tracer.tracerSdk.activeSpan as! RecordEventsReadableSpan
+        let span = OpenTelemetry.instance.contextProvider.activeSpan as! RecordEventsReadableSpan
         testObserver.testCaseDidFinish(self)
 
         let spanData = span.toSpanData()
@@ -65,6 +63,5 @@ class CISpec: XCTestCase {
             try? fileManager.removeItem(at: fileURL)
             try keyJson.write(to: fileURL, options: .atomic)
         }
-
     }
 }

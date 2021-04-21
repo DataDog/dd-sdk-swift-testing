@@ -10,14 +10,22 @@ import OpenTelemetrySdk
 import XCTest
 
 class DDNetworkInstrumentationTests: XCTestCase {
+    var containerSpan: Span?
+    let testSpanProcessor = SpySpanProcessor()
+
     override func setUp() {
         DDEnvironmentValues.environment["DATADOG_CLIENT_TOKEN"] = "fakeToken"
         DDTestMonitor.instance = DDTestMonitor()
         let tracer = DDTestMonitor.instance!.tracer
+        OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(testSpanProcessor)
         DDTestMonitor.instance?.networkInstrumentation = DDNetworkInstrumentation()
         DDTestMonitor.instance?.injectHeaders = true // This is the default
         let spanName = "containerSpan"
-        _ = tracer.startSpan(name: spanName, attributes: [:])
+        containerSpan = tracer.startSpan(name: spanName, attributes: [:])
+    }
+
+    override func tearDown() {
+        containerSpan?.end()
     }
 
     func testItInterceptsDataTaskWithURL() {
@@ -30,20 +38,20 @@ class DDNetworkInstrumentationTests: XCTestCase {
             expec.fulfill()
         }
         task.resume()
-        let taskIdentifier = DDTestMonitor.instance!.networkInstrumentation!.idKeyForTask(task)
-        testSpan = DDNetworkActivityLogger.spanDict[taskIdentifier] as? RecordEventsReadableSpan
+        testSpan = testSpanProcessor.lastProcessedSpan as? RecordEventsReadableSpan
         waitForExpectations(timeout: 30) { _ in
             task.cancel()
         }
 
         let spanData = testSpan!.toSpanData()
         XCTAssertEqual(spanData.name, "HTTP GET")
-        XCTAssertEqual(spanData.attributes.count, 9)
+        XCTAssertEqual(spanData.attributes.count, 10)
         XCTAssertEqual(spanData.attributes["http.status_code"]?.description, "200")
         XCTAssertEqual(spanData.attributes["http.scheme"]?.description, "http")
         XCTAssertEqual(spanData.attributes["net.peer.name"]?.description, "httpbin.org")
         XCTAssertEqual(spanData.attributes["http.url"]?.description, "http://httpbin.org/get")
         XCTAssertEqual(spanData.attributes["http.method"]?.description, "GET")
+        XCTAssertEqual(spanData.attributes["http.target"]?.description, "/get")
         XCTAssertFalse(spanData.attributes["http.request.headers"]?.description.isEmpty ?? true)
         XCTAssertEqual(spanData.attributes["http.request.payload"]?.description, "<disabled>")
         XCTAssertEqual(spanData.attributes["http.response.payload"]?.description, "<disabled>")
@@ -63,20 +71,20 @@ class DDNetworkInstrumentationTests: XCTestCase {
             expec.fulfill()
         }
         task.resume()
-        let taskIdentifier = DDTestMonitor.instance!.networkInstrumentation!.idKeyForTask(task)
-        testSpan = DDNetworkActivityLogger.spanDict[taskIdentifier] as? RecordEventsReadableSpan
+        testSpan = testSpanProcessor.lastProcessedSpan as? RecordEventsReadableSpan
         waitForExpectations(timeout: 30) { _ in
             task.cancel()
         }
 
         let spanData = testSpan!.toSpanData()
         XCTAssertEqual(spanData.name, "HTTP GET")
-        XCTAssertEqual(spanData.attributes.count, 9)
+        XCTAssertEqual(spanData.attributes.count, 10)
         XCTAssertEqual(spanData.attributes["http.status_code"]?.description, "200")
         XCTAssertEqual(spanData.attributes["http.scheme"]?.description, "http")
         XCTAssertEqual(spanData.attributes["net.peer.name"]?.description, "httpbin.org")
         XCTAssertEqual(spanData.attributes["http.url"]?.description, "http://httpbin.org/get")
         XCTAssertEqual(spanData.attributes["http.method"]?.description, "GET")
+        XCTAssertEqual(spanData.attributes["http.target"]?.description, "/get")
         XCTAssertTrue(spanData.attributes["http.request.headers"]?.description.isEmpty ?? true)
         XCTAssertEqual(spanData.attributes["http.request.payload"]!.description, "<empty>")
         XCTAssert(spanData.attributes["http.response.payload"]!.description.count > 20)

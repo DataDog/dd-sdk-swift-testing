@@ -22,12 +22,12 @@ internal class DDTestObserver: NSObject, XCTestObservation {
     var currentTestSpan: Span? {
         get {
             rLock.lock()
-            defer { rLock.unlock()}
+            defer { rLock.unlock() }
             return privateCurrentTestSpan
         }
         set {
             rLock.lock()
-            defer { rLock.unlock()}
+            defer { rLock.unlock() }
             privateCurrentTestSpan = newValue
         }
     }
@@ -133,7 +133,7 @@ internal class DDTestObserver: NSObject, XCTestObservation {
         addBenchmarkTagsIfNeeded(testCase: testCase, activeTest: activeTest)
         activeTest.end()
         currentTestSpan = nil
-       // DDNetworkActivityLogger.endAndCleanAliveSpans()
+        DDTestMonitor.instance?.networkInstrumentation?.endAndCleanAliveSpans()
     }
 
     func testCase(_ testCase: XCTestCase, didRecord issue: XCTIssue) {

@@ -10,7 +10,7 @@ import OpenTelemetrySdk
 import URLSessionInstrumentation
 
 class DDNetworkInstrumentation {
-    var networkInstrumentation: URLSessionInstrumentation!
+    var urlSessionInstrumentation: URLSessionInstrumentation!
 
     internal static let acceptableHeaders: Set<String> = {
         let headers: Set = ["CONTENT-TYPE", "CONTENT-LENGTH", "CONTENT-ENCODING", "CONTENT-LANGUAGE", "USER-AGENT", "REFERER", "ACCEPT", "ORIGIN", "ACCESS-CONTROL-ALLOW-ORIGIN", "ACCESS-CONTROL-ALLOW-CREDENTIALS", "ACCESS-CONTROL-ALLOW-HEADERS", "ACCESS-CONTROL-ALLOW-METHODS", "ACCESS-CONTROL-EXPOSE-HEADERS", "ACCESS-CONTROL-MAX-AGE", "ACCESS-CONTROL-REQUEST-HEADERS", "ACCESS-CONTROL-REQUEST-METHOD", "DATE", "EXPIRES", "CACHE-CONTROL", "ALLOW", "SERVER", "CONNECTION"]
@@ -56,11 +56,11 @@ class DDNetworkInstrumentation {
         else {
             return false
         }
-        
+
         return true
     }
 
-    func shouldInjectTracingHeaders( request: inout URLRequest) -> Bool {
+    func shouldInjectTracingHeaders(request: inout URLRequest) -> Bool {
         guard injectHeaders == true,
               let tracer = DDTestMonitor.instance?.tracer,
               tracer.activeSpan != nil,
@@ -136,7 +136,7 @@ class DDNetworkInstrumentation {
     func receivedError(error: Error, dataOrFile: DataOrFile?, status: HTTPStatus, span: Span) {
         if DDTestMonitor.instance?.networkInstrumentation?.recordPayload ?? false {
             if let data = dataOrFile as? Data, data.count > 0 {
-                let dataSample = data.subdata(in: 0..<min(data.count, 512))
+                let dataSample = data.subdata(in: 0 ..< min(data.count, 512))
                 let payload = String(data: dataSample, encoding: .ascii) ?? "<unknown>"
                 span.setAttribute(key: DDNetworkInstrumentation.responsePayloadKey, value: payload)
             } else if let fileUrl = dataOrFile as? URL {
@@ -149,30 +149,24 @@ class DDNetworkInstrumentation {
         }
     }
 
-//
-//    static func endAndCleanAliveSpans() {
-//        spanDictQueue.sync {
-//            spanDict.forEach {
-//                $0.value.setAttribute(key: unfinishedKey, value: "true")
-//                $0.value.end()
-//            }
-//            spanDict.removeAll()
-//        }
-//    }
+    func endAndCleanAliveSpans() {
+        urlSessionInstrumentation.startedRequestSpans.forEach {
+            $0.end()
+        }
+    }
 
     init() {
         excludedURLs = ["https://mobile-http-intake.logs",
                         "https://public-trace-http-intake.logs.",
                         "https://rum-http-intake.logs."]
 
-
         let configuration = URLSessionInstrumentationConfiguration(shouldRecordPayload: shouldRecordPayload,
-                                                    shouldInstrument: shouldInstrumentRequest,
-                                                    shouldInjectTracingHeaders: shouldInjectTracingHeaders,
-                                                    createdRequest: createdRequest,
-                                                    receivedResponse: receivedResponse,
-                                                    receivedError: receivedError)
+                                                                   shouldInstrument: shouldInstrumentRequest,
+                                                                   shouldInjectTracingHeaders: shouldInjectTracingHeaders,
+                                                                   createdRequest: createdRequest,
+                                                                   receivedResponse: receivedResponse,
+                                                                   receivedError: receivedError)
 
-        networkInstrumentation = URLSessionInstrumentation(configuration: configuration)
+        urlSessionInstrumentation = URLSessionInstrumentation(configuration: configuration)
     }
 }

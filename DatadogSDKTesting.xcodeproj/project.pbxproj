@@ -13,6 +13,14 @@
 		E11295C825F63BA8002719E7 /* DDSymbolAddress.c in Sources */ = {isa = PBXBuildFile; fileRef = E11295C725F63BA8002719E7 /* DDSymbolAddress.c */; };
 		E11295C925F63BA8002719E7 /* DDSymbolAddress.c in Sources */ = {isa = PBXBuildFile; fileRef = E11295C725F63BA8002719E7 /* DDSymbolAddress.c */; };
 		E11295CA25F63BA8002719E7 /* DDSymbolAddress.c in Sources */ = {isa = PBXBuildFile; fileRef = E11295C725F63BA8002719E7 /* DDSymbolAddress.c */; };
+		E117CFBE2630644300ACE977 /* libDatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E117CFBD2630644300ACE977 /* libDatadogExporter */; };
+		E117CFC02630644800ACE977 /* libURLSessionInstrumentation in Frameworks */ = {isa = PBXBuildFile; productRef = E117CFBF2630644800ACE977 /* libURLSessionInstrumentation */; };
+		E117CFC22630644E00ACE977 /* libDatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E117CFC12630644E00ACE977 /* libDatadogExporter */; };
+		E117CFC42630645600ACE977 /* libURLSessionInstrumentation in Frameworks */ = {isa = PBXBuildFile; productRef = E117CFC32630645600ACE977 /* libURLSessionInstrumentation */; };
+		E117CFC526306BB200ACE977 /* DDNetworkInstrumentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14AA0BF2555A9A1003FA711 /* DDNetworkInstrumentationTests.swift */; };
+		E117CFC726307B9A00ACE977 /* SpySpanProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E117CFC626307B9A00ACE977 /* SpySpanProcessor.swift */; };
+		E117CFC826307B9A00ACE977 /* SpySpanProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E117CFC626307B9A00ACE977 /* SpySpanProcessor.swift */; };
+		E117CFC926307B9A00ACE977 /* SpySpanProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E117CFC626307B9A00ACE977 /* SpySpanProcessor.swift */; };
 		E12515E5254892C600670D23 /* XCUIApplicationSwizzler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12515E4254892C500670D23 /* XCUIApplicationSwizzler.swift */; };
 		E126DD2D253F366200700A40 /* StdoutCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E126DD2C253F366200700A40 /* StdoutCapture.swift */; };
 		E126DD2F253F367600700A40 /* StderrCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E126DD2E253F367600700A40 /* StderrCapture.swift */; };
@@ -78,7 +86,6 @@
 		E157A793256EB0F000CBCA52 /* StdoutCaptureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1BB54AC25401E85007C2D93 /* StdoutCaptureTests.swift */; };
 		E157A794256EB0F000CBCA52 /* NSURLSessionBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = E1AD074A252E1FBC003705C1 /* NSURLSessionBridge.m */; };
 		E157A795256EB0F000CBCA52 /* DDTestObserverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1AD0761252F2F7E003705C1 /* DDTestObserverTests.swift */; };
-		E157A796256EB0F000CBCA52 /* DDNetworkInstrumentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14AA0BF2555A9A1003FA711 /* DDNetworkInstrumentationTests.swift */; };
 		E157A797256EB0F000CBCA52 /* DDErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1798CE52524D0D5008DEBB9 /* DDErrorTests.swift */; };
 		E157A798256EB0F000CBCA52 /* DDTracerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1AD075C252F206D003705C1 /* DDTracerTests.swift */; };
 		E157A799256EB0F000CBCA52 /* SignalUtilsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14AA0C9255AE8D3003FA711 /* SignalUtilsTests.swift */; };
@@ -251,6 +258,7 @@
 		E11295BA25F2483D002719E7 /* FileLocator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileLocator.swift; sourceTree = "<group>"; };
 		E11295C725F63BA8002719E7 /* DDSymbolAddress.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = DDSymbolAddress.c; sourceTree = "<group>"; };
 		E116D7DA25248C390022779D /* SwiftExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftExtensions.swift; sourceTree = "<group>"; };
+		E117CFC626307B9A00ACE977 /* SpySpanProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpySpanProcessor.swift; sourceTree = "<group>"; };
 		E121DF07258CF652009EA71E /* azurepipelines.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = azurepipelines.json; sourceTree = "<group>"; };
 		E121DF08258CF652009EA71E /* buildkite.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = buildkite.json; sourceTree = "<group>"; };
 		E121DF09258CF652009EA71E /* appveyor.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = appveyor.json; sourceTree = "<group>"; };
@@ -349,7 +357,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				E157A742256E9D1D00CBCA52 /* CrashReporter in Frameworks */,
+				E117CFC02630644800ACE977 /* libURLSessionInstrumentation in Frameworks */,
 				E157A744256E9D1D00CBCA52 /* SigmaSwiftStatistics in Frameworks */,
+				E117CFBE2630644300ACE977 /* libDatadogExporter in Frameworks */,
 				E157A745256E9D1D00CBCA52 /* XCTest.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -359,7 +369,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				E157A77A256E9D3300CBCA52 /* CrashReporter in Frameworks */,
+				E117CFC42630645600ACE977 /* libURLSessionInstrumentation in Frameworks */,
 				E157A77C256E9D3300CBCA52 /* SigmaSwiftStatistics in Frameworks */,
+				E117CFC22630644E00ACE977 /* libDatadogExporter in Frameworks */,
 				E157A77D256E9D3300CBCA52 /* XCTest.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -774,6 +786,7 @@
 			isa = PBXGroup;
 			children = (
 				E1798CE52524D0D5008DEBB9 /* DDErrorTests.swift */,
+				E117CFC626307B9A00ACE977 /* SpySpanProcessor.swift */,
 				E14405D825DBC3A800FE3D3C /* GitInfoTests.swift */,
 				E14AA0C9255AE8D3003FA711 /* SignalUtilsTests.swift */,
 				E1AD07A1252F5B02003705C1 /* SwiftExtensionsTests.swift */,
@@ -935,6 +948,8 @@
 			packageProductDependencies = (
 				E157A718256E9D1D00CBCA52 /* CrashReporter */,
 				E157A71A256E9D1D00CBCA52 /* SigmaSwiftStatistics */,
+				E117CFBD2630644300ACE977 /* libDatadogExporter */,
+				E117CFBF2630644800ACE977 /* libURLSessionInstrumentation */,
 			);
 			productName = DatadogSDKTesting;
 			productReference = E157A74D256E9D1D00CBCA52 /* DatadogSDKTesting.framework */;
@@ -958,6 +973,8 @@
 			packageProductDependencies = (
 				E157A750256E9D3300CBCA52 /* CrashReporter */,
 				E157A752256E9D3300CBCA52 /* SigmaSwiftStatistics */,
+				E117CFC12630644E00ACE977 /* libDatadogExporter */,
+				E117CFC32630645600ACE977 /* libURLSessionInstrumentation */,
 			);
 			productName = DatadogSDKTesting;
 			productReference = E157A785256E9D3300CBCA52 /* DatadogSDKTesting.framework */;
@@ -1330,13 +1347,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				E157A78F256EB0F000CBCA52 /* FrameworkLoadHandlerTests.swift in Sources */,
+				E117CFC526306BB200ACE977 /* DDNetworkInstrumentationTests.swift in Sources */,
 				E157A790256EB0F000CBCA52 /* DDEnvironmentValuesTests.swift in Sources */,
 				E157A791256EB0F000CBCA52 /* SimpleSpanSerializerTests.swift in Sources */,
+				E117CFC826307B9A00ACE977 /* SpySpanProcessor.swift in Sources */,
 				E157A792256EB0F000CBCA52 /* StderrCaptureTests.swift in Sources */,
 				E157A793256EB0F000CBCA52 /* StdoutCaptureTests.swift in Sources */,
 				E157A794256EB0F000CBCA52 /* NSURLSessionBridge.m in Sources */,
 				E157A795256EB0F000CBCA52 /* DDTestObserverTests.swift in Sources */,
-				E157A796256EB0F000CBCA52 /* DDNetworkInstrumentationTests.swift in Sources */,
 				E157A797256EB0F000CBCA52 /* DDErrorTests.swift in Sources */,
 				E15264B025FA3C16008B8665 /* DDSymbolicatorTests.swift in Sources */,
 				E14405DA25DBC3A800FE3D3C /* GitInfoTests.swift in Sources */,
@@ -1355,6 +1373,7 @@
 				E157A7AA256EB0F200CBCA52 /* DDEnvironmentValuesTests.swift in Sources */,
 				E157A7AB256EB0F200CBCA52 /* SimpleSpanSerializerTests.swift in Sources */,
 				E157A7AC256EB0F200CBCA52 /* StderrCaptureTests.swift in Sources */,
+				E117CFC926307B9A00ACE977 /* SpySpanProcessor.swift in Sources */,
 				E157A7AD256EB0F200CBCA52 /* StdoutCaptureTests.swift in Sources */,
 				E157A7AE256EB0F200CBCA52 /* NSURLSessionBridge.m in Sources */,
 				E157A7AF256EB0F200CBCA52 /* DDTestObserverTests.swift in Sources */,
@@ -1409,6 +1428,7 @@
 				E1AD0758252F01F0003705C1 /* DDEnvironmentValuesTests.swift in Sources */,
 				E1FB4845253891E70083B263 /* SimpleSpanSerializerTests.swift in Sources */,
 				E1BB54C425408E92007C2D93 /* StderrCaptureTests.swift in Sources */,
+				E117CFC726307B9A00ACE977 /* SpySpanProcessor.swift in Sources */,
 				E1BB54AD25401E85007C2D93 /* StdoutCaptureTests.swift in Sources */,
 				E1AD074B252E1FBC003705C1 /* NSURLSessionBridge.m in Sources */,
 				E1AD0762252F2F7E003705C1 /* DDTestObserverTests.swift in Sources */,
@@ -2128,6 +2148,26 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		E117CFBD2630644300ACE977 /* libDatadogExporter */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E1F595CF2609FBBD00AE92B7 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			productName = libDatadogExporter;
+		};
+		E117CFBF2630644800ACE977 /* libURLSessionInstrumentation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E1F595CF2609FBBD00AE92B7 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			productName = libURLSessionInstrumentation;
+		};
+		E117CFC12630644E00ACE977 /* libDatadogExporter */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E1F595CF2609FBBD00AE92B7 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			productName = libDatadogExporter;
+		};
+		E117CFC32630645600ACE977 /* libURLSessionInstrumentation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E1F595CF2609FBBD00AE92B7 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			productName = libURLSessionInstrumentation;
+		};
 		E157A718256E9D1D00CBCA52 /* CrashReporter */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = E157A719256E9D1D00CBCA52 /* XCRemoteSwiftPackageReference "plcrashreporter" */;

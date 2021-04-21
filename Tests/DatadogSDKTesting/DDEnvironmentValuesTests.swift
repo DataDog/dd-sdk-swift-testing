@@ -16,13 +16,13 @@ struct FixtureError: Error, CustomStringConvertible {
 class DDEnvironmentValuesTests: XCTestCase {
     var testEnvironment = [String: String]()
 
-    var tracerSdkFactory = TracerSdkProvider()
+    var tracerProvider = OpenTelemetrySDK.instance.tracerProvider
     var tracerSdk: Tracer!
 
     override func setUp() {
         testEnvironment = [String: String]()
         DDEnvironmentValues.environment = [String: String]()
-        tracerSdk = tracerSdkFactory.get(instrumentationName: "SpanBuilderSdkTest")
+        tracerSdk = tracerProvider.get(instrumentationName: "SpanBuilderSdkTest")
     }
 
     private func setEnvVariables() {
@@ -124,7 +124,6 @@ class DDEnvironmentValuesTests: XCTestCase {
         spanData = span.toSpanData()
         XCTAssertEqual(spanData.attributes.count, 1)
         XCTAssertNotNil(spanData.attributes[DDCITags.ciWorkspacePath])
-
     }
 
     func testAddCustomTagsWithDDTags() {

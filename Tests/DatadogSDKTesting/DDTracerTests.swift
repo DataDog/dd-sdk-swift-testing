@@ -98,9 +98,8 @@ class DDTracerTests: XCTestCase {
         let spanName = "myName"
         let span = tracer.startSpan(name: spanName, attributes: [:]) as! RecordEventsReadableSpan
 
-        // Get tracer with OpentelemetryApi and set tags
-        let oteltracer = DDInstrumentationControl.openTelemetryTracer
-        oteltracer?.activeSpan?.setAttribute(key: "OTTag", value: "OTValue")
+        // Get active Span with OpentelemetryApi and set tags
+        OpenTelemetry.instance.contextProvider.activeSpan?.setAttribute(key: "OTTag", value: "OTValue")
 
         let spanData = span.toSpanData()
 

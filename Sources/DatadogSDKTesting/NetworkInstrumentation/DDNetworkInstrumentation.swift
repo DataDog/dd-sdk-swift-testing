@@ -85,7 +85,7 @@ class DDNetworkInstrumentation {
         })
     }
 
-    func createdRequest(request: URLRequest, builder: SpanBuilder) {
+    func createdRequest(request: URLRequest, span: Span) {
         var headersString = ""
         if let headers = request.allHTTPHeaderFields {
             headersString = DDNetworkInstrumentation.redactHeaders(headers)
@@ -93,18 +93,18 @@ class DDNetworkInstrumentation {
                 .joined(separator: "\n")
         }
 
-        builder.setAttribute(key: DDNetworkInstrumentation.requestHeadersKey, value: headersString)
+        span.setAttribute(key: DDNetworkInstrumentation.requestHeadersKey, value: headersString)
 
         if DDTestMonitor.instance?.networkInstrumentation?.recordPayload ?? false {
             if let data = request.httpBody, data.count > 0 {
                 let dataSample = data.subdata(in: 0 ..< min(data.count, 512))
                 let payload = String(data: dataSample, encoding: .ascii) ?? "<unknown>"
-                builder.setAttribute(key: DDNetworkInstrumentation.requestPayloadKey, value: payload)
+                span.setAttribute(key: DDNetworkInstrumentation.requestPayloadKey, value: payload)
             } else {
-                builder.setAttribute(key: DDNetworkInstrumentation.requestPayloadKey, value: "<empty>")
+                span.setAttribute(key: DDNetworkInstrumentation.requestPayloadKey, value: "<empty>")
             }
         } else {
-            builder.setAttribute(key: DDNetworkInstrumentation.requestPayloadKey, value: "<disabled>")
+            span.setAttribute(key: DDNetworkInstrumentation.requestPayloadKey, value: "<disabled>")
         }
     }
 
@@ -165,7 +165,8 @@ class DDNetworkInstrumentation {
                         "https://public-trace-http-intake.logs.",
                         "https://rum-http-intake.logs."]
 
-        let configuration = URLSessionConfiguration(shouldRecordPayload: shouldRecordPayload,
+
+        let configuration = URLSessionInstrumentationConfiguration(shouldRecordPayload: shouldRecordPayload,
                                                     shouldInstrument: shouldInstrumentRequest,
                                                     shouldInjectTracingHeaders: shouldInjectTracingHeaders,
                                                     createdRequest: createdRequest,

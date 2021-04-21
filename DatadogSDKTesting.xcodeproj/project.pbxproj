@@ -136,15 +136,15 @@
 		E1D6EFA525F6647F00E8C3AE /* ObjcLoadHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA06C25231F3200ED8AEF /* ObjcLoadHandler.m */; };
 		E1DFF0EA257010E700344895 /* PlatformUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141CF5F256FD513008B6B70 /* PlatformUtils.swift */; };
 		E1DFF0EB257010E800344895 /* PlatformUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141CF5F256FD513008B6B70 /* PlatformUtils.swift */; };
+		E1E90B19260B3B0E0016ECF5 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1E90B18260B3B0E0016ECF5 /* AppDelegate.swift */; };
+		E1E90B1B260B3B0F0016ECF5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E1E90B1A260B3B0F0016ECF5 /* Assets.xcassets */; };
+		E1E90B1E260B3B0F0016ECF5 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = E1E90B1C260B3B0F0016ECF5 /* MainMenu.xib */; };
+		E1E90B2D260B3BB10016ECF5 /* IntegrationTestsAppTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1E90B2C260B3BB10016ECF5 /* IntegrationTestsAppTests.swift */; };
 		E1EE7959260A099A004421B1 /* libDatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E1EE7958260A099A004421B1 /* libDatadogExporter */; };
 		E1EE795B260A099A004421B1 /* libURLSessionInstrumentation in Frameworks */ = {isa = PBXBuildFile; productRef = E1EE795A260A099A004421B1 /* libURLSessionInstrumentation */; };
 		E1F595D42609FC3000AE92B7 /* DDNetworkInstrumentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F595D32609FC3000AE92B7 /* DDNetworkInstrumentation.swift */; };
 		E1F595D52609FC3000AE92B7 /* DDNetworkInstrumentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F595D32609FC3000AE92B7 /* DDNetworkInstrumentation.swift */; };
 		E1F595D62609FC3000AE92B7 /* DDNetworkInstrumentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F595D32609FC3000AE92B7 /* DDNetworkInstrumentation.swift */; };
-		E1E90B19260B3B0E0016ECF5 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1E90B18260B3B0E0016ECF5 /* AppDelegate.swift */; };
-		E1E90B1B260B3B0F0016ECF5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E1E90B1A260B3B0F0016ECF5 /* Assets.xcassets */; };
-		E1E90B1E260B3B0F0016ECF5 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = E1E90B1C260B3B0F0016ECF5 /* MainMenu.xib */; };
-		E1E90B2D260B3BB10016ECF5 /* IntegrationTestsAppTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1E90B2C260B3BB10016ECF5 /* IntegrationTestsAppTests.swift */; };
 		E1FB48312538909D0083B263 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1ABA04A25231E2500ED8AEF /* DatadogSDKTesting.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 		E1FB483B253891650083B263 /* CrashReporter in Frameworks */ = {isa = PBXBuildFile; productRef = E1FB483A253891650083B263 /* CrashReporter */; };
 		E1FB4840253891CE0083B263 /* SimpleSpanSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FB483D253891CE0083B263 /* SimpleSpanSerializer.swift */; };
@@ -327,7 +327,6 @@
 		E1D4769525DC2B8E00832592 /* master */ = {isa = PBXFileReference; lastKnownFileType = text; path = master; sourceTree = "<group>"; };
 		E1D476A525DD369F00832592 /* BinaryParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinaryParser.swift; sourceTree = "<group>"; };
 		E1D6EFA125F6563000E8C3AE /* DDSymbolAddress.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DDSymbolAddress.h; sourceTree = "<group>"; };
-		E1F595D32609FC3000AE92B7 /* DDNetworkInstrumentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDNetworkInstrumentation.swift; sourceTree = "<group>"; };
 		E1E90B16260B3B0E0016ECF5 /* IntegrationTestsApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IntegrationTestsApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E1E90B18260B3B0E0016ECF5 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		E1E90B1A260B3B0F0016ECF5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -337,6 +336,7 @@
 		E1E90B2A260B3BB10016ECF5 /* IntegrationTestsAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = IntegrationTestsAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E1E90B2C260B3BB10016ECF5 /* IntegrationTestsAppTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegrationTestsAppTests.swift; sourceTree = "<group>"; };
 		E1E90B2E260B3BB10016ECF5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		E1F595D32609FC3000AE92B7 /* DDNetworkInstrumentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDNetworkInstrumentation.swift; sourceTree = "<group>"; };
 		E1FB483D253891CE0083B263 /* SimpleSpanSerializer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleSpanSerializer.swift; sourceTree = "<group>"; };
 		E1FB483E253891CE0083B263 /* DDCrashes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DDCrashes.swift; sourceTree = "<group>"; };
 		E1FB483F253891CE0083B263 /* SimpleSpanData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleSpanData.swift; sourceTree = "<group>"; };
@@ -2114,7 +2114,7 @@
 			repositoryURL = "https://github.com/nachoBonafonte/opentelemetry-swift.git";
 			requirement = {
 				kind = revision;
-				revision = 13eca95135dafeec4daff653450411c13f9e3d28;
+				revision = fb106e36b0e84e4814f706964df85c439adff355;
 			};
 		};
 		E1FB4839253891650083B263 /* XCRemoteSwiftPackageReference "plcrashreporter" */ = {

@@ -17,12 +17,13 @@ enum DDHeaders: String, CaseIterable {
 internal class DDTracer {
     let tracerSdk: TracerSdk
     let env = DDEnvironmentValues()
-    var spanProcessor: SpanProcessor
+    var spanProcessor: SpanProcessor?
     var datadogExporter: DatadogExporter!
     var launchSpanContext: SpanContext?
 
     var activeSpan: Span? {
-        return tracerSdk.activeSpan ?? DDTestMonitor.instance?.testObserver?.currentTestSpan
+        return OpenTelemetrySDK.instance.contextProvider.activeSpan ??
+            DDTestMonitor.instance?.testObserver?.currentTestSpan
     }
 
     var isBinaryUnderUITesting: Bool {
@@ -42,15 +43,13 @@ internal class DDTracer {
         }
 
         let tracerProvider = OpenTelemetrySDK.instance.tracerProvider
-        let spanLimist = SpanLimits()
-        tracerProvider.updateActiveSpanLimits(spanLimist)
+        tracerProvider.updateActiveSampler(Samplers.alwaysOn)
 
         let bundle = Bundle(for: type(of: self))
         let identifier = bundle.bundleIdentifier ?? "com.datadoghq.DatadogSDKTesting"
         let version = (bundle.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "unknown"
 
         tracerSdk = tracerProvider.get(instrumentationName: identifier, instrumentationVersion: version) as! TracerSdk
-        tracerSdk.sharedState.setSampler(Samplers.alwaysOn)
 
         let exporterConfiguration = ExporterConfiguration(
             serviceName: env.ddService ?? ProcessInfo.processInfo.processName,
@@ -68,8 +67,6 @@ internal class DDTracer {
         )
 
         guard ProcessInfo.processInfo.environment["DD_DONT_EXPORT"] == nil else {
-            spanProcessor = NoopSpanProcessor()
-            OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(spanProcessor)
             return
         }
         datadogExporter = try? DatadogExporter(config: exporterConfiguration)
@@ -79,7 +76,7 @@ internal class DDTracer {
             spanProcessor = SimpleSpanProcessor(spanExporter: datadogExporter)
         }
 
-        OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(spanProcessor)
+        OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(spanProcessor!)
     }
 
     func startSpan(name: String, attributes: [String: String], date: Date? = nil) -> Span {
@@ -91,12 +88,12 @@ internal class DDTracer {
 
         /// launchSpanContext will only be available when running in the app launched from UITest, so assign this as the parent
         /// when there is no one
-        if let launchContext = launchSpanContext, tracerSdk.activeSpan == nil {
+        if let launchContext = launchSpanContext, OpenTelemetrySDK.instance.contextProvider.activeSpan == nil {
             spanBuilder.setParent(launchContext)
         }
 
         let span = spanBuilder.startSpan()
-        tracerSdk.setActive(span)
+        OpenTelemetrySDK.instance.contextProvider.setActiveSpan(span)
         return span
     }
 
@@ -126,7 +123,8 @@ internal class DDTracer {
                                              traceFlags: TraceFlags().settingIsSampled(true),
                                              traceState: TraceState())
 
-        var attributes = AttributesDictionary(capacity: tracerSdk.sharedState.activeSpanLimits.attributeCountLimit)
+        let tracerProvider = OpenTelemetrySDK.instance.tracerProvider
+        var attributes = AttributesDictionary(capacity: OpenTelemetrySDK.instance.tracerProvider.getActiveSpanLimits().attributeCountLimit)
         spanData.stringAttributes.forEach {
             attributes.updateValue(value: AttributeValue.string($0.value), forKey: $0.key)
         }
@@ -150,9 +148,9 @@ internal class DDTracer {
                                                       kind: .internal,
                                                       parentContext: parentContext,
                                                       hasRemoteParent: false,
-                                                      spanLimits: tracerSdk.sharedState.activeSpanLimits,
-                                                      spanProcessor: tracerSdk.sharedState.activeSpanProcessor,
-                                                      clock: MonotonicClock(clock: tracerSdk.sharedState.clock),
+                                                      spanLimits: tracerProvider.getActiveSpanLimits(),
+                                                      spanProcessor: tracerProvider.getActiveSpanProcessor(),
+                                                      clock: tracerProvider.getActiveClock(),
                                                       resource: Resource(),
                                                       attributes: attributes,
                                                       links: [SpanData.Link](),
@@ -170,16 +168,17 @@ internal class DDTracer {
     }
 
     @discardableResult func createSpanFromContext(spanContext: SpanContext) -> RecordEventsReadableSpan {
-        let attributes = AttributesDictionary(capacity: tracerSdk.sharedState.activeSpanLimits.attributeCountLimit)
+        let tracerProvider = OpenTelemetrySDK.instance.tracerProvider
+        let attributes = AttributesDictionary(capacity: tracerProvider.getActiveSpanLimits().attributeCountLimit)
         let span = RecordEventsReadableSpan.startSpan(context: spanContext,
                                                       name: "ApplicationSpan",
                                                       instrumentationLibraryInfo: tracerSdk.instrumentationLibraryInfo,
                                                       kind: .internal,
                                                       parentContext: nil,
                                                       hasRemoteParent: false,
-                                                      spanLimits: tracerSdk.sharedState.activeSpanLimits,
-                                                      spanProcessor: tracerSdk.sharedState.activeSpanProcessor,
-                                                      clock: MonotonicClock(clock: tracerSdk.sharedState.clock),
+                                                      spanLimits: tracerProvider.getActiveSpanLimits(),
+                                                      spanProcessor: tracerProvider.getActiveSpanProcessor(),
+                                                      clock: tracerProvider.getActiveClock(),
                                                       resource: Resource(),
                                                       attributes: attributes,
                                                       links: [SpanData.Link](),
@@ -221,7 +220,7 @@ internal class DDTracer {
     }
 
     func flush() {
-        spanProcessor.forceFlush()
+        spanProcessor?.forceFlush()
     }
 
     func addPropagationsHeadersToEnvironment() {

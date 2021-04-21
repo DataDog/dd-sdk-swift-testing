@@ -107,8 +107,7 @@ struct GitInfo {
             let gitObject = try GitObject(objectContent: objectContent)
             return try parseCommit(gitFolder: gitFolder, gitObject: gitObject)
         } else {
-            objectContent = try getObjectFromPackFile(gitFolder: gitFolder, commit: commit)
-            return CommitInfo(content: objectContent)
+            return try getObjectFromPackFile(gitFolder: gitFolder, commit: commit)
         }
     }
 
@@ -132,7 +131,13 @@ struct GitInfo {
         }
     }
 
-    private func getObjectFromPackFile(gitFolder: URL, commit: String) throws -> String {
+    /// Recovers commit info from pack and idx files.
+    /// Implemented based on: https://codewords.recurse.com/issues/three/unpacking-git-packfiles
+    /// More references:
+    /// https://git-scm.com/docs/pack-format#_object_types
+    /// http://shafiul.github.io/gitbook/7_the_packfile.html
+    /// http://driusan.github.io/git-pack.html
+    private func getObjectFromPackFile(gitFolder: URL, commit: String) throws -> CommitInfo {
         let packFolder = gitFolder.appendingPathComponent("objects").appendingPathComponent("pack")
 
         var packOffset: UInt64
@@ -145,20 +150,43 @@ struct GitInfo {
         // check .pack version is 2
         let packHeaderData = filehandler.readData(ofLength: 8)
         if packHeaderData[4] != 0 || packHeaderData[5] != 0 || packHeaderData[6] != 0 || packHeaderData[7] != 2 {
-            return ""
+            return CommitInfo(content: "")
         }
 
         filehandler.seek(toFileOffset: packOffset)
+
         var objectSize: Int
-        var packData = filehandler.readData(ofLength: 2)
-        if packData[0] < 128 {
-            objectSize = Int(packData[0] & 0x0F)
-            packData = filehandler.readData(ofLength: objectSize)
-        } else {
-            objectSize = Int(UInt16(packData[1] & 0x7F) * 16 + UInt16(packData[0] & 0x0F))
-            packData = filehandler.readData(ofLength: objectSize * 100)
+        let typeCommit = 1
+        let typeTag = 4
+
+        var packData = filehandler.readData(ofLength: 1)
+        let type = (packData[0] & 0x70) >> 4
+        guard type == typeCommit || type == typeTag else {
+            return CommitInfo(content: "")
         }
-        return packData.zlibDecompress(minimumSize: objectSize)
+
+        objectSize = Int(packData[0] & 0x0F)
+        var multiplier = 16
+        while packData[0] >= 128 {
+            packData = filehandler.readData(ofLength: 1)
+            objectSize += Int(packData[0] & 0x7F) * multiplier
+            multiplier *= 128
+        }
+
+        packData = filehandler.readData(ofLength: objectSize)
+
+        let decompressedString = packData.zlibDecompress(minimumSize: objectSize)
+        if type == typeCommit {
+            return CommitInfo(content: decompressedString)
+        } else {
+            // We will probably always receive only typeCommit, but tag is supported just in case
+            let parts = decompressedString.components(separatedBy: " ")
+            guard parts.count == 2 else {
+                return CommitInfo(content: "")
+            }
+            let sha = parts[1]
+            return try findCommit(gitFolder: gitFolder, commit: sha)
+        }
     }
 
     /// This function returns the index file containing the commit sha (it there are more than one idx file in the folder,
@@ -166,6 +194,10 @@ struct GitInfo {
     fileprivate func locateIndex(packFolder: URL, commit: String) throws -> (indexFile: URL, packOffset: UInt64) {
         var indexFile: URL?
         var packOffset: UInt64 = 0
+
+        guard let commitAsData = Data(hexString: commit) else {
+            throw InternalError(description: "Incorrect Git object")
+        }
 
         var indexFiles: [URL] = []
         if let enumerator = FileManager.default.enumerator(at: packFolder, includingPropertiesForKeys: nil) {
@@ -187,26 +219,40 @@ struct GitInfo {
 
             // First layer: 256 4-byte elements, with number of elements per folder
             let folderIndex = Int(folder, radix: 16)!
+
+            var numberOfObjectsInIndex: Int
+            var numberOfPreviousObjects = 0
             let previousIndex = folderIndex > 0 ? folderIndex - 1 : folderIndex
             indexData = indexData.advanced(by: previousIndex * 4)
             var parser = BinaryParser(data: indexData.subdata(in: 0..<8))
-            let numberOfPreviousObjects = try parser.parseUInt32()
-            let numberOfObjectsInIndex = (try parser.parseUInt32() - numberOfPreviousObjects)
+            if folderIndex > 0 {
+                numberOfPreviousObjects = Int(try parser.parseUInt32())
+                numberOfObjectsInIndex = Int(try parser.parseUInt32()) - numberOfPreviousObjects
+            } else {
+                numberOfObjectsInIndex = Int(try parser.parseUInt32())
+            }
             indexData = indexData.advanced(by: (255 - previousIndex) * 4)
+
             parser = BinaryParser(data: indexData.subdata(in: 0..<4))
-            let totalNumberOfObjects = try parser.parseUInt32()
+            let totalNumberOfObjects = Int(try parser.parseUInt32())
             indexData = indexData.advanced(by: 4)
 
             // Second layer: 20-byte elements with the names in order
             indexData = indexData.advanced(by: 20 * Int(numberOfPreviousObjects))
-            var indexOfCommit: UInt32?
-            for i in 0..<numberOfObjectsInIndex {
-                let string = indexData.subdata(in: 0..<20).hexString
-                if string.compare(commit, options: .caseInsensitive) == .orderedSame {
-                    indexOfCommit = numberOfPreviousObjects + i
-                    break
+            var indexOfCommit: Int?
+
+            var startSearchIndex = indexData.startIndex
+            let endSearchIndex = startSearchIndex.advanced(by: 20 * numberOfObjectsInIndex)
+            while indexOfCommit == nil {
+                if let range = indexData.range(of: commitAsData, options: [], in: Range(uncheckedBounds: (startSearchIndex, endSearchIndex))) {
+                    // Check we are really at the start of a commit and are not finding the sha in between two others
+                    if range.startIndex.isMultiple(of: 20) {
+                        indexOfCommit = Int(numberOfPreviousObjects) + (startSearchIndex.distance(to: range.startIndex) / 20)
+                    } else {
+                        startSearchIndex = range.startIndex
+                    }
                 } else {
-                    indexData = indexData.advanced(by: 20)
+                    return
                 }
             }
 
@@ -215,7 +261,7 @@ struct GitInfo {
             }
 
             indexFile = file
-            indexData = indexData.advanced(by: 20 * Int(totalNumberOfObjects - indexOfObject))
+            indexData = indexData.advanced(by: 20 * Int(totalNumberOfObjects - numberOfPreviousObjects))
 
             // Third layer: 4 byte CRC for each object
             indexData = indexData.advanced(by: 4 * Int(totalNumberOfObjects))
@@ -231,7 +277,7 @@ struct GitInfo {
                 // offset is not in this layer, clear first bit and look at it at the 5th layer
                 offset = offset & 0x7FFFFFFF
                 indexData = indexData.advanced(by: 4 * Int(totalNumberOfObjects - indexOfObject))
-                indexData = indexData.advanced(by: 8 * Int(indexOfObject))
+                indexData = indexData.advanced(by: 8 * Int(offset))
                 parser = BinaryParser(data: indexData.subdata(in: 0..<8))
                 packOffset = try parser.parseUInt64()
             }

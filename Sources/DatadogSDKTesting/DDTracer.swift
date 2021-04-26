@@ -149,7 +149,7 @@ internal class DDTracer {
                                                       parentContext: parentContext,
                                                       hasRemoteParent: false,
                                                       spanLimits: tracerProvider.getActiveSpanLimits(),
-                                                      spanProcessor: tracerProvider.getActiveSpanProcessor(),
+                                                      spanProcessor: tracerProvider.getActiveSpanProcessors().first!,
                                                       clock: tracerProvider.getActiveClock(),
                                                       resource: Resource(),
                                                       attributes: attributes,
@@ -177,7 +177,7 @@ internal class DDTracer {
                                                       parentContext: nil,
                                                       hasRemoteParent: false,
                                                       spanLimits: tracerProvider.getActiveSpanLimits(),
-                                                      spanProcessor: tracerProvider.getActiveSpanProcessor(),
+                                                      spanProcessor: tracerProvider.getActiveSpanProcessors().first!,
                                                       clock: tracerProvider.getActiveClock(),
                                                       resource: Resource(),
                                                       attributes: attributes,
@@ -252,6 +252,24 @@ internal class DDTracer {
             return headers
         }
         tracerSdk.textFormat.inject(spanContext: currentSpan.context, carrier: &headers, setter: HeaderSetter())
+
+        headers.merge(datadogHeaders()) { (current, _) in current }
+        return headers
+    }
+
+    func environmentPropagationHTTPHeaders() -> [String: String] {
+        var headers = [String: String]()
+
+        struct HeaderSetter: Setter {
+            func set(carrier: inout [String: String], key: String, value: String) {
+                carrier[key] = value
+            }
+        }
+
+        guard let currentSpan = activeSpan else {
+            return headers
+        }
+        EnvironmentContextPropagator().inject(spanContext: currentSpan.context, carrier: &headers, setter: HeaderSetter())
 
         headers.merge(datadogHeaders()) { (current, _) in current }
         return headers

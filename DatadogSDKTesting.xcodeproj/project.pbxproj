@@ -2134,7 +2134,7 @@
 			repositoryURL = "https://github.com/nachoBonafonte/opentelemetry-swift.git";
 			requirement = {
 				kind = revision;
-				revision = fb106e36b0e84e4814f706964df85c439adff355;
+				revision = d8bbe0f877077925ee5c40fca0fc83cfb64ade89;
 			};
 		};
 		E1FB4839253891650083B263 /* XCRemoteSwiftPackageReference "plcrashreporter" */ = {

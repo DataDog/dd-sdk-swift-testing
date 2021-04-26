@@ -13,7 +13,7 @@ extension XCUIApplication {
     }
 
     fileprivate func addPropagationsHeadersToEnvironment(tracer: DDTracer?) {
-        if let headers = tracer?.tracePropagationHTTPHeaders() {
+        if let headers = tracer?.environmentPropagationHTTPHeaders() {
             self.launchEnvironment.merge(headers) { _, new in new }
         }
     }

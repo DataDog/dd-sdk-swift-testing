@@ -44,23 +44,24 @@ internal enum DDCrashes {
         if let crashReport = try? PLCrashReport(data: crashData) {
             var crashLog = PLCrashReportTextFormatter.stringValue(for: crashReport, with: PLCrashReportTextFormatiOS) ?? ""
 
-           // #if targetEnvironment(simulator) || os(macOS)
-                let symbolicated = DDSymbolicator.symbolicate(crashLog: crashLog)
-                if !symbolicated.isEmpty {
-                    crashLog = symbolicated
-                }
-          //  #endif
+            // #if targetEnvironment(simulator) || os(macOS)
+            let symbolicated = DDSymbolicator.symbolicate(crashLog: crashLog)
+            if !symbolicated.isEmpty {
+                crashLog = symbolicated
+            }
+            //  #endif
 
             if let customData = crashReport.customData {
                 if let spanData = SimpleSpanSerializer.deserializeSpan(data: customData) {
-                    var errorType = ""
+                    var errorType = "Crash"
                     var errorMessage = ""
                     if let name = crashReport.signalInfo.name {
-                        errorType += "Exception Type: \(name)"
+                        errorType = "Exception Type: \(name)"
                         errorMessage = SignalUtils.descriptionForSignalName(signalName: name)
-                    }
-                    if let code = crashReport.signalInfo.code {
-                        errorType += "\nException Code: \(code)"
+
+                        if let code = crashReport.signalInfo.code {
+                            errorType += "\nException Code: \(code)"
+                        }
                     }
                     DDTestMonitor.instance?.tracer.createSpanFromCrash(spanData: spanData,
                                                                        crashDate: crashReport.systemInfo.timestamp,

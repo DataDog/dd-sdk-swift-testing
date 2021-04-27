@@ -181,7 +181,7 @@ enum DDSymbolicator {
     /// Generates a dSYM symbol file from a binary if possible
     /// and adds it to the dSYMFiles for the future
     #if os(tvOS)
-        static func generateDSYMFile(forBinaryPath binaryPath: String) -> String? {
+        static func generateDSYMFile(forImageName imageName: String) -> String? {
             return nil
         }
     #else

@@ -120,8 +120,8 @@ enum DDSymbolicator {
                 let callAddress = String(line[callAddressRange])
 
                 #if os(iOS) || os(macOS)
-                    if let dsym = dSYMFiles.first(where: { $0.lastPathComponent == library }) {
-                        let symbol = symbolWithAtos(objectPath: dsym.path, libraryAdress: libraryAddress, callAddress: callAddress)
+                    if let dsymPath = dSYMFiles.first(where: { $0.lastPathComponent == library })?.path {
+                        let symbol = symbolWithAtos(objectPath: dsymPath, libraryAdress: libraryAddress, callAddress: callAddress)
                         if !symbol.isEmpty {
                             lines[i] = crashLineRegex.replacementString(for: match, in: line, offset: 0, template: "$1$2$3$4$5$6\(symbol)")
                             continue
@@ -161,11 +161,11 @@ enum DDSymbolicator {
     /// Locates a symbol based on its adress and the name of the library where it belongs,
     /// the result is the atos return information, it must be processed later
     #if os(tvOS)
-        static func symbol(forAddress callAddress: String, library: String) -> String? {
+        static func atosSymbol(forAddress callAddress: String, library: String) -> String? {
             return nil
         }
     #else
-        static func symbol(forAddress callAddress: String, library: String) -> String? {
+        static func atosSymbol(forAddress callAddress: String, library: String) -> String? {
             guard let imageAddress = imageAddresses[library],
                   let imagePath = dSYMFiles.first(where: { $0.lastPathComponent == library })?.path ?? imageAddresses[library]?.path
             else { return nil }
@@ -177,6 +177,37 @@ enum DDSymbolicator {
             return symbol
         }
     #endif
+
+    /// Generates a dSYM symbol file from a binary if possible
+    /// and adds it to the dSYMFiles for the future
+    #if os(tvOS)
+        static func generateDSYMFile(forBinaryPath binaryPath: String) -> String? {
+            return nil
+        }
+    #else
+        static func generateDSYMFile(forImageName imageName: String) -> String? {
+            guard let binaryPath = imageAddresses[imageName]?.path else {
+                return nil
+            }
+            let binaryURL = URL(fileURLWithPath: binaryPath)
+            let dSYMFileURL = URL(fileURLWithPath: NSTemporaryDirectory())
+                .appendingPathComponent(binaryURL.lastPathComponent)
+
+            Spawn.command("/usr/bin/dsymutil --minimize --flat \(binaryPath) --out \(dSYMFileURL.path)")
+            if FileManager.default.fileExists(atPath: dSYMFileURL.path) {
+                dSYMFiles.append(dSYMFileURL)
+                return dSYMFileURL.path
+            }
+            return nil
+        }
+    #endif
+
+    static func createDSYMFileIfNeeded(forImageName imageName: String) {
+        let dSYMFile = DDSymbolicator.dSYMFiles.first(where: { $0.lastPathComponent == imageName })
+        if dSYMFile == nil {
+            _ = DDSymbolicator.generateDSYMFile(forImageName: imageName)
+        }
+    }
 
     /// Manually creates the symbol of a swift test with a given name, this is the name we will locate in the mach image
     /// It only supports test, because only can have one parameter and dont return values, for more complex symbols

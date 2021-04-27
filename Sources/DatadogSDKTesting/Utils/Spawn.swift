@@ -77,7 +77,6 @@ enum Spawn {
             }
         }
         dynamicBuffer.deallocate()
-        print(output)
         return output
     }
 }

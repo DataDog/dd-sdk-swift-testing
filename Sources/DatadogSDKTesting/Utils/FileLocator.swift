@@ -25,7 +25,7 @@ struct FileLocator {
         }
 
         let imp = method_getImplementation(method!)
-        guard let symbol = DDSymbolicator.symbol(forAddress: imp.debugDescription, library: library) else {
+        guard let symbol = DDSymbolicator.atosSymbol(forAddress: imp.debugDescription, library: library) else {
             return ""
         }
 
@@ -35,7 +35,7 @@ struct FileLocator {
             // me must locate the original swift method address in the binary
             let newName = DDSymbolicator.swiftTestMangledName(forClassName: String(cString: testClass), testName: testName, throwsError: testThrowsError)
             if let address = DDSymbolicator.address(forSymbolName: newName, library: library),
-               let swiftSymbol = DDSymbolicator.symbol(forAddress: address.debugDescription, library: library)
+               let swiftSymbol = DDSymbolicator.atosSymbol(forAddress: address.debugDescription, library: library)
             {
                 symbolInfo = swiftSymbol
             } else {

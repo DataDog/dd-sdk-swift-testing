@@ -44,12 +44,12 @@ internal enum DDCrashes {
         if let crashReport = try? PLCrashReport(data: crashData) {
             var crashLog = PLCrashReportTextFormatter.stringValue(for: crashReport, with: PLCrashReportTextFormatiOS) ?? ""
 
-            #if targetEnvironment(simulator) || os(macOS)
+           // #if targetEnvironment(simulator) || os(macOS)
                 let symbolicated = DDSymbolicator.symbolicate(crashLog: crashLog)
                 if !symbolicated.isEmpty {
                     crashLog = symbolicated
                 }
-            #endif
+          //  #endif
 
             if let customData = crashReport.customData {
                 if let spanData = SimpleSpanSerializer.deserializeSpan(data: customData) {

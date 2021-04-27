@@ -397,6 +397,8 @@ internal struct DDEnvironmentValues {
 
         // Read git folder information
         var gitInfo: GitInfo?
+
+        #if targetEnvironment(simulator) || os(macOS)
         if let sourceRoot = sourceRoot {
             var rootFolder = NSString(string: URL(fileURLWithPath: sourceRoot).path)
             while !FileManager.default.fileExists(atPath: rootFolder.appendingPathComponent(".git")) {
@@ -410,6 +412,7 @@ internal struct DDEnvironmentValues {
             let rootDirectory = URL(fileURLWithPath: rootFolder as String, isDirectory: true)
             gitInfo = try? GitInfo(gitFolder: rootDirectory.appendingPathComponent(".git"))
         }
+        #endif
 
         commit = commit ?? gitInfo?.commit
         workspaceEnv = workspaceEnv ?? gitInfo?.workspacePath

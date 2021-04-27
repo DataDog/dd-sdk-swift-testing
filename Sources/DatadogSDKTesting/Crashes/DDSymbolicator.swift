@@ -93,6 +93,9 @@ enum DDSymbolicator {
             let slide = _dyld_get_image_vmaddr_slide(i)
             if slide != 0 {
                 imageAddresses[name] = MachImage(header: header, slide: slide, path: path)
+            } else {
+                // Its a system library, use library Address as slide value instead of 0
+                imageAddresses[name] = MachImage(header: header, slide: Int(bitPattern: header), path: path)
             }
         }
         return imageAddresses
@@ -129,17 +132,17 @@ enum DDSymbolicator {
                 guard let originalCallAdress = Float64(callAddress) else {
                     continue
                 }
-                var callAdress = UInt(originalCallAdress)
+                var callAddressInt = UInt(originalCallAdress)
 
                 /// Calculate the new address of the library, if it is in the map
                 if let libraryOffset = imageAddresses[library]?.slide,
                    let originalLibraryAddress = Float64(libraryAddress)
                 {
                     let callOffset = UInt(originalCallAdress) - UInt(originalLibraryAddress)
-                    callAdress = UInt(libraryOffset) + callOffset
+                    callAddressInt = UInt(libraryOffset) + callOffset
                 }
 
-                guard let ptr = UnsafeRawPointer(bitPattern: UInt(callAdress)) else {
+                guard let ptr = UnsafeRawPointer(bitPattern: UInt(callAddressInt)) else {
                     continue
                 }
 

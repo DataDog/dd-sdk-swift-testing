@@ -72,9 +72,7 @@ enum FileLocator {
 
     static func functionsInModule(_ module: String) -> FunctionMap {
         var functionMap = FunctionMap()
-        let symbolsInfo = DDSymbolicator.symbolsInfo(forLibrary: module)
-
-        guard let symbolsInfo = symbolsInfo else {
+        guard let symbolsInfo = DDSymbolicator.symbolsInfo(forLibrary: module) else {
             return functionMap
         }
 

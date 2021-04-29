@@ -44,16 +44,17 @@ internal class DDTestObserver: NSObject, XCTestObservation {
     }
 
     func testBundleWillStart(_ testBundle: Bundle) {
-        #if !os(tvOS) && ( targetEnvironment(simulator) || os(macOS) )
         currentBundleName = testBundle.bundleURL.deletingPathExtension().lastPathComponent
-        DDSymbolicator.createDSYMFileIfNeeded(forImageName: currentBundleName)
 
+        #if !os(tvOS) && (targetEnvironment(simulator) || os(macOS))
+
+        DDSymbolicator.createDSYMFileIfNeeded(forImageName: currentBundleName)
         let currentTargetName = Bundle.main.bundleURL.deletingPathExtension().lastPathComponent
         DDSymbolicator.createDSYMFileIfNeeded(forImageName: currentTargetName)
-
         currentBundleFunctionInfo = FileLocator.functionsInModule(currentBundleName)
-
+        
         #endif
+
         if !tracer.env.disableCrashHandler {
             DDCrashes.install()
         }

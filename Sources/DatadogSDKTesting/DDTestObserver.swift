@@ -44,7 +44,7 @@ internal class DDTestObserver: NSObject, XCTestObservation {
     }
 
     func testBundleWillStart(_ testBundle: Bundle) {
-        #if targetEnvironment(simulator) || os(macOS)
+        #if !os(tvOS) && ( targetEnvironment(simulator) || os(macOS) )
         currentBundleName = testBundle.bundleURL.deletingPathExtension().lastPathComponent
         DDSymbolicator.createDSYMFileIfNeeded(forImageName: currentBundleName)
 

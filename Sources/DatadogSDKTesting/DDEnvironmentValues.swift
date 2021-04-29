@@ -394,7 +394,7 @@ internal struct DDEnvironmentValues {
         // Read git folder information
         var gitInfo: GitInfo?
 
-        #if !os(tvOS) && ( targetEnvironment(simulator) || os(macOS) )
+        #if targetEnvironment(simulator) || os(macOS)
         if let sourceRoot = sourceRoot {
             var rootFolder = NSString(string: URL(fileURLWithPath: sourceRoot).path)
             while !FileManager.default.fileExists(atPath: rootFolder.appendingPathComponent(".git")) {

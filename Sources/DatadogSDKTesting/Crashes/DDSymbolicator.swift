@@ -301,6 +301,22 @@ enum DDSymbolicator {
         }
     #endif
 
+    /// Dumps symbols output for a given libraryName , it must be processed later
+    #if os(tvOS)
+    static func symbolsInfo(forLibrary library: String) -> String? {
+        return nil
+    }
+    #else
+    static func symbolsInfo(forLibrary library: String) -> String? {
+        if let imagePath = dSYMFiles.first(where: { $0.lastPathComponent == library })?.path {
+            let dwarfInfo = Spawn.commandWithResult("/usr/bin/symbols -fullSourcePath -lazy \(imagePath)")
+            return dwarfInfo
+        } else {
+            return nil
+        }
+    }
+    #endif
+
     private static func demangleName(_ mangledName: String) -> String {
         return mangledName.utf8CString.withUnsafeBufferPointer {
             mangledNameUTF8CStr in

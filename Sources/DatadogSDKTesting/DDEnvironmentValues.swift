@@ -25,7 +25,6 @@ internal struct DDEnvironmentValues {
     let excludedURLS: Set<String>?
     let disableDDSDKIOSIntegration: Bool
     let disableCrashHandler: Bool
-    let enableTestLocation: Bool
 
     /// OS Information
     let osName: String
@@ -131,9 +130,6 @@ internal struct DDEnvironmentValues {
 
         let envDisableCrashReporting = DDEnvironmentValues.getEnvVariable("DD_DISABLE_CRASH_HANDLER") as NSString?
         disableCrashHandler = envDisableCrashReporting?.boolValue ?? false
-
-        let envEnableTestLocation = DDEnvironmentValues.getEnvVariable("DD_ENABLE_TEST_SOURCE_LOCATION") as NSString?
-        enableTestLocation = envEnableTestLocation?.boolValue ?? false
 
         /// Device Information
         osName = PlatformUtils.getRunningPlatform()
@@ -398,7 +394,7 @@ internal struct DDEnvironmentValues {
         // Read git folder information
         var gitInfo: GitInfo?
 
-        #if targetEnvironment(simulator) || os(macOS)
+        #if !os(tvOS) && ( targetEnvironment(simulator) || os(macOS) )
         if let sourceRoot = sourceRoot {
             var rootFolder = NSString(string: URL(fileURLWithPath: sourceRoot).path)
             while !FileManager.default.fileExists(atPath: rootFolder.appendingPathComponent(".git")) {

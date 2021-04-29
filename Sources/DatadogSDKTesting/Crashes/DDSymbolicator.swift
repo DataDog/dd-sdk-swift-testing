@@ -309,8 +309,13 @@ enum DDSymbolicator {
     #else
     static func symbolsInfo(forLibrary library: String) -> String? {
         if let imagePath = dSYMFiles.first(where: { $0.lastPathComponent == library })?.path {
-            let dwarfInfo = Spawn.commandWithResult("/usr/bin/symbols -fullSourcePath -lazy \(imagePath)")
-            return dwarfInfo
+            let symbolsOutputURL = URL(fileURLWithPath: NSTemporaryDirectory())
+                .appendingPathComponent("symbols_output")
+            FileManager.default.createFile(atPath: symbolsOutputURL.path, contents: nil, attributes: nil)
+            Spawn.commandToFile("/usr/bin/symbols -fullSourcePath -lazy \(imagePath)", outputPath: symbolsOutputURL.path)
+            defer{ try? FileManager.default.removeItem(at: symbolsOutputURL) }
+            let outputData = try? String(contentsOf: symbolsOutputURL)
+            return outputData
         } else {
             return nil
         }

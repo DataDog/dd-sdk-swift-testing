@@ -301,6 +301,27 @@ enum DDSymbolicator {
         }
     #endif
 
+    /// Dumps symbols output for a given libraryName , it must be processed later
+    #if os(tvOS)
+    static func symbolsInfo(forLibrary library: String) -> String? {
+        return nil
+    }
+    #else
+    static func symbolsInfo(forLibrary library: String) -> String? {
+        guard let imagePath = dSYMFiles.first(where: { $0.lastPathComponent == library })?.path else {
+            return nil
+        }
+
+        let symbolsOutputURL = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("symbols_output")
+        FileManager.default.createFile(atPath: symbolsOutputURL.path, contents: nil, attributes: nil)
+        Spawn.commandToFile("/usr/bin/symbols -fullSourcePath -lazy \(imagePath)", outputPath: symbolsOutputURL.path)
+        defer{ try? FileManager.default.removeItem(at: symbolsOutputURL) }
+        let outputData = try? String(contentsOf: symbolsOutputURL)
+        return outputData
+    }
+    #endif
+
     private static func demangleName(_ mangledName: String) -> String {
         return mangledName.utf8CString.withUnsafeBufferPointer {
             mangledNameUTF8CStr in

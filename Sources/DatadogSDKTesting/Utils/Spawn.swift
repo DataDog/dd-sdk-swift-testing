@@ -77,7 +77,37 @@ enum Spawn {
             }
         }
         dynamicBuffer.deallocate()
+        posix_spawn_file_actions_destroy(&childActions)
         return output
+    }
+
+    static func commandToFile(_ command: String, outputPath: String, environment: [String: String]? = nil) {
+        let arguments = ["/bin/sh", "-c", command]
+        let command = "/bin/sh"
+        let args = arguments.map { strdup($0) } + [nil]
+
+        var env: [UnsafeMutablePointer<CChar>?]?
+        if let environment = environment {
+            env = environment.map {
+                "\($0.0)=\($0.1)".withCString(strdup)
+            } + [nil]
+        }
+
+        var childActions: posix_spawn_file_actions_t?
+        posix_spawn_file_actions_init(&childActions)
+        posix_spawn_file_actions_addopen(&childActions, 1, outputPath, O_RDWR | O_CREAT | O_TRUNC, 0644)
+        posix_spawn_file_actions_adddup2(&childActions, 1, 2)
+        var pid: pid_t = 0
+
+        let ret = posix_spawn(&pid, command, &childActions, nil, args, env)
+        guard ret == 0 else {
+            return
+        }
+
+        var status: Int32 = 0
+        waitpid(pid, &status, 0)
+        posix_spawn_file_actions_destroy(&childActions)
+        return
     }
 }
 #endif

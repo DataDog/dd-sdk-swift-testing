@@ -16,6 +16,7 @@ internal class DDTestObserver: NSObject, XCTestObservation {
     let testNameRegex = try? NSRegularExpression(pattern: "([\\w]+) ([\\w]+)", options: .caseInsensitive)
     let supportsSkipping = NSClassFromString("XCTSkippedTestContext") != nil
     var currentBundleName = ""
+    var currentBundleFunctionInfo = FunctionMap()
 
     var rLock = NSRecursiveLock()
     private var privateCurrentTestSpan: Span?
@@ -44,10 +45,15 @@ internal class DDTestObserver: NSObject, XCTestObservation {
 
     func testBundleWillStart(_ testBundle: Bundle) {
         currentBundleName = testBundle.bundleURL.deletingPathExtension().lastPathComponent
-        DDSymbolicator.createDSYMFileIfNeeded(forImageName: currentBundleName )
 
+        #if !os(tvOS) && (targetEnvironment(simulator) || os(macOS))
+
+        DDSymbolicator.createDSYMFileIfNeeded(forImageName: currentBundleName)
         let currentTargetName = Bundle.main.bundleURL.deletingPathExtension().lastPathComponent
-        DDSymbolicator.createDSYMFileIfNeeded(forImageName: currentTargetName )
+        DDSymbolicator.createDSYMFileIfNeeded(forImageName: currentTargetName)
+        currentBundleFunctionInfo = FileLocator.functionsInModule(currentBundleName)
+        
+        #endif
 
         if !tracer.env.disableCrashHandler {
             DDCrashes.install()
@@ -92,21 +98,17 @@ internal class DDTestObserver: NSObject, XCTestObservation {
             tracer.addPropagationsHeadersToEnvironment()
         }
 
-        if tracer.env.enableTestLocation {
-            let className = object_getClassName(testCase)
-            var testSourcePath = FileLocator.filePath(forTestClass: className, testName: testName, library: currentBundleName)
-            if !testSourcePath.isEmpty {
-                if let srcRoot = tracer.env.sourceRoot,
-                   let rootRange = testSourcePath.range(of: srcRoot + "/")
-                {
-                    testSourcePath.removeSubrange(rootRange)
-                }
-                let sourceComponents = testSourcePath.components(separatedBy: ":")
-                if sourceComponents.count == 2 {
-                    testSpan.setAttribute(key: DDTestTags.testSourceFile, value: sourceComponents[0])
-                    testSpan.setAttribute(key: DDTestTags.testSourceStartLine, value: sourceComponents[1])
-                }
+        let functionName = testSuite + "." + testName
+        if let functionInfo = currentBundleFunctionInfo[functionName] {
+            var filePath = functionInfo.file
+            if let srcRoot = tracer.env.sourceRoot,
+               let rootRange = filePath.range(of: srcRoot + "/")
+            {
+                filePath.removeSubrange(rootRange)
             }
+            testSpan.setAttribute(key: DDTestTags.testSourceFile, value: filePath)
+            testSpan.setAttribute(key: DDTestTags.testSourceStartLine, value: functionInfo.startLine)
+            testSpan.setAttribute(key: DDTestTags.testSourceEndLine, value: functionInfo.endLine)
         }
 
         tracer.env.addTagsToSpan(span: testSpan)

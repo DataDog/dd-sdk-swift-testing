@@ -13,7 +13,7 @@ class DDNetworkInstrumentation {
     var urlSessionInstrumentation: URLSessionInstrumentation!
 
     internal static let acceptableHeaders: Set<String> = {
-        let headers: Set = ["CONTENT-TYPE", "CONTENT-LENGTH", "CONTENT-ENCODING", "CONTENT-LANGUAGE", "USER-AGENT", "REFERER", "ACCEPT", "ORIGIN", "ACCESS-CONTROL-ALLOW-ORIGIN", "ACCESS-CONTROL-ALLOW-CREDENTIALS", "ACCESS-CONTROL-ALLOW-HEADERS", "ACCESS-CONTROL-ALLOW-METHODS", "ACCESS-CONTROL-EXPOSE-HEADERS", "ACCESS-CONTROL-MAX-AGE", "ACCESS-CONTROL-REQUEST-HEADERS", "ACCESS-CONTROL-REQUEST-METHOD", "DATE", "EXPIRES", "CACHE-CONTROL", "ALLOW", "SERVER", "CONNECTION"]
+        let headers: Set = ["CONTENT-TYPE", "CONTENT-LENGTH", "CONTENT-ENCODING", "CONTENT-LANGUAGE", "USER-AGENT", "REFERER", "ACCEPT", "ORIGIN", "ACCESS-CONTROL-ALLOW-ORIGIN", "ACCESS-CONTROL-ALLOW-CREDENTIALS", "ACCESS-CONTROL-ALLOW-HEADERS", "ACCESS-CONTROL-ALLOW-METHODS", "ACCESS-CONTROL-EXPOSE-HEADERS", "ACCESS-CONTROL-MAX-AGE", "ACCESS-CONTROL-REQUEST-HEADERS", "ACCESS-CONTROL-REQUEST-METHOD", "DATE", "EXPIRES", "CACHE-CONTROL", "ALLOW", "SERVER", "CONNECTION", "TRACEPARENT", "X-DATADOG-TRACE-ID", "X-DATADOG-PARENT-ID"]
         if let extraHeaders = DDTestMonitor.instance?.tracer.env.extraHTTPHeaders {
             return headers.union(extraHeaders)
         }
@@ -51,7 +51,7 @@ class DDNetworkInstrumentation {
 
     func shouldInstrumentRequest(request: URLRequest) -> Bool {
         guard let tracer = DDTestMonitor.instance?.tracer,
-              tracer.activeSpan != nil || tracer.launchSpanContext != nil,
+              tracer.propagationContext != nil,
               !self.excludes(request.url)
         else {
             return false
@@ -63,7 +63,7 @@ class DDNetworkInstrumentation {
     func shouldInjectTracingHeaders(request: inout URLRequest) -> Bool {
         guard injectHeaders == true,
               let tracer = DDTestMonitor.instance?.tracer,
-              tracer.activeSpan != nil,
+              tracer.propagationContext != nil,
               !excludes(request.url)
         else {
             return false

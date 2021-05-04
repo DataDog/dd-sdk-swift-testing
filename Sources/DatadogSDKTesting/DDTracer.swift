@@ -19,11 +19,15 @@ internal class DDTracer {
     let env = DDEnvironmentValues()
     var spanProcessor: SpanProcessor?
     var datadogExporter: DatadogExporter!
-    var launchSpanContext: SpanContext?
+    private var launchSpanContext: SpanContext?
 
     var activeSpan: Span? {
         return OpenTelemetrySDK.instance.contextProvider.activeSpan ??
             DDTestMonitor.instance?.testObserver?.currentTestSpan
+    }
+
+    var propagationContext: SpanContext? {
+        return activeSpan?.context ?? launchSpanContext
     }
 
     var isBinaryUnderUITesting: Bool {
@@ -167,10 +171,10 @@ internal class DDTracer {
         return span
     }
 
-    @discardableResult func createSpanFromContext(spanContext: SpanContext) -> RecordEventsReadableSpan {
+    @discardableResult func createSpanFromLaunchContext() -> RecordEventsReadableSpan {
         let tracerProvider = OpenTelemetrySDK.instance.tracerProvider
         let attributes = AttributesDictionary(capacity: tracerProvider.getActiveSpanLimits().attributeCountLimit)
-        let span = RecordEventsReadableSpan.startSpan(context: spanContext,
+        let span = RecordEventsReadableSpan.startSpan(context: launchSpanContext!,
                                                       name: "ApplicationSpan",
                                                       instrumentationLibraryInfo: tracerSdk.instrumentationLibraryInfo,
                                                       kind: .internal,
@@ -189,9 +193,9 @@ internal class DDTracer {
     }
 
     func logString(string: String, date: Date? = nil) {
-        if let launchContext = launchSpanContext, activeSpan == nil {
+        if launchSpanContext != nil, activeSpan == nil {
             // This is a special case when an app executed trough a UITest, logs without a span
-            return logStringAppUITested(context: launchContext, string: string, date: date)
+            return logStringAppUITested(string: string, date: date)
         }
 
         activeSpan?.addEvent(name: "logString", attributes: ["message": AttributeValue.string(string)], timestamp: date ?? Date())
@@ -209,8 +213,8 @@ internal class DDTracer {
     /// This method is only currently used when logging with an app being launched from a UITest, and no span has been created in the App.
     /// It creates a "non-sampled" instantaneous span that wont be serialized but where we can add the log using the SpanId and TraceId of the
     /// test Span that lunched the app.
-    func logStringAppUITested(context: SpanContext, string: String, date: Date? = nil) {
-        let auxSpan = createSpanFromContext(spanContext: context)
+    func logStringAppUITested(string: String, date: Date? = nil) {
+        let auxSpan = createSpanFromLaunchContext()
         auxSpan.addEvent(name: "logString", attributes: ["message": AttributeValue.string(string)], timestamp: date ?? Date())
         DispatchQueue.global().async {
             auxSpan.status = .ok
@@ -231,12 +235,11 @@ internal class DDTracer {
     }
 
     func datadogHeaders() -> [String: String] {
-        guard let currentSpan = activeSpan else {
+        guard let propagationContext = propagationContext else {
             return [String: String]()
         }
-
-    return [ DDHeaders.traceIDField.rawValue: String(currentSpan.context.traceId.rawLowerLong),
-            DDHeaders.parentSpanIDField.rawValue: String(currentSpan.context.spanId.rawValue)]
+        return [DDHeaders.traceIDField.rawValue: String(propagationContext.traceId.rawLowerLong),
+                DDHeaders.parentSpanIDField.rawValue: String(propagationContext.spanId.rawValue)]
     }
 
     func tracePropagationHTTPHeaders() -> [String: String] {
@@ -248,12 +251,12 @@ internal class DDTracer {
             }
         }
 
-        guard let currentSpan = activeSpan else {
+        guard let propagationContext = propagationContext else {
             return headers
         }
-        tracerSdk.textFormat.inject(spanContext: currentSpan.context, carrier: &headers, setter: HeaderSetter())
 
-        headers.merge(datadogHeaders()) { (current, _) in current }
+        tracerSdk.textFormat.inject(spanContext: propagationContext, carrier: &headers, setter: HeaderSetter())
+        headers.merge(datadogHeaders()) { current, _ in current }
         return headers
     }
 
@@ -266,12 +269,12 @@ internal class DDTracer {
             }
         }
 
-        guard let currentSpan = activeSpan else {
+        guard let propagationContext = propagationContext else {
             return headers
         }
-        EnvironmentContextPropagator().inject(spanContext: currentSpan.context, carrier: &headers, setter: HeaderSetter())
 
-        headers.merge(datadogHeaders()) { (current, _) in current }
+        EnvironmentContextPropagator().inject(spanContext: propagationContext, carrier: &headers, setter: HeaderSetter())
+        headers.merge(datadogHeaders()) { current, _ in current }
         return headers
     }
 

@@ -47,12 +47,8 @@ internal class DDTestObserver: NSObject, XCTestObservation {
         currentBundleName = testBundle.bundleURL.deletingPathExtension().lastPathComponent
 
         #if !os(tvOS) && (targetEnvironment(simulator) || os(macOS))
-
         DDSymbolicator.createDSYMFileIfNeeded(forImageName: currentBundleName)
-        let currentTargetName = Bundle.main.bundleURL.deletingPathExtension().lastPathComponent
-        DDSymbolicator.createDSYMFileIfNeeded(forImageName: currentTargetName)
         currentBundleFunctionInfo = FileLocator.functionsInModule(currentBundleName)
-        
         #endif
 
         if !tracer.env.disableCrashHandler {

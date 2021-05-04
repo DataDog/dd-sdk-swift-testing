@@ -105,14 +105,14 @@ enum DDSymbolicator {
     static func symbolicate(crashLog: String) -> String {
         var lines: [String] = crashLog.components(separatedBy: "\n").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
 
-        for i in 0 ..< lines.count {
-            let line = lines[i]
+        DispatchQueue.concurrentPerform(iterations: lines.count) {
+            let line = lines[$0]
             if let match = crashLineRegex.firstMatch(in: line, options: [], range: NSRange(location: 0, length: line.count)) {
                 guard let libraryRange = Range(match.range(at: 3), in: line),
                       let libraryAddressRange = Range(match.range(at: 7), in: line),
                       let callAddressRange = Range(match.range(at: 5), in: line)
                 else {
-                    continue
+                    return
                 }
 
                 let library = String(line[libraryRange])
@@ -123,14 +123,23 @@ enum DDSymbolicator {
                     if let dsymPath = dSYMFiles.first(where: { $0.lastPathComponent == library })?.path {
                         let symbol = symbolWithAtos(objectPath: dsymPath, libraryAdress: libraryAddress, callAddress: callAddress)
                         if !symbol.isEmpty {
-                            lines[i] = crashLineRegex.replacementString(for: match, in: line, offset: 0, template: "$1$2$3$4$5$6\(symbol)")
-                            continue
+                            lines[$0] = crashLineRegex.replacementString(for: match, in: line, offset: 0, template: "$1$2$3$4$5$6\(symbol)")
+                            return
+                        }
+                    } else {
+                        if let symbolFilePath = imageAddresses[library]?.path {
+                            let symbol = symbolWithAtos(objectPath: symbolFilePath, libraryAdress: libraryAddress, callAddress: callAddress)
+                            if !symbol.isEmpty {
+                                lines[$0] = crashLineRegex.replacementString(for: match, in: line, offset: 0, template: "$1$2$3$4$5$6\(symbol)")
+                                return
+                            }
                         }
                     }
+
                 #endif
                 /// No dSYM to symbolicate this line, write symbol Information
                 guard let originalCallAdress = Float64(callAddress) else {
-                    continue
+                    return
                 }
                 var callAddressInt = UInt(originalCallAdress)
 
@@ -143,16 +152,16 @@ enum DDSymbolicator {
                 }
 
                 guard let ptr = UnsafeRawPointer(bitPattern: UInt(callAddressInt)) else {
-                    continue
+                    return
                 }
 
                 var info = Dl_info()
                 let result = dladdr(ptr, &info)
                 if result != 0 {
                     let symbolName = info.dli_sname != nil ? demangleName(String(cString: info.dli_sname)) : ""
-                    lines[i] = crashLineRegex.replacementString(for: match, in: line, offset: 0, template: "$1$2$3$4$5$6\(symbolName)")
+                    lines[$0] = crashLineRegex.replacementString(for: match, in: line, offset: 0, template: "$1$2$3$4$5$6\(symbolName)")
                 }
-                continue
+                return
             }
         }
         return lines.joined(separator: "\n")
@@ -303,23 +312,23 @@ enum DDSymbolicator {
 
     /// Dumps symbols output for a given libraryName , it must be processed later
     #if os(tvOS)
-    static func symbolsInfo(forLibrary library: String) -> String? {
-        return nil
-    }
-    #else
-    static func symbolsInfo(forLibrary library: String) -> String? {
-        guard let imagePath = dSYMFiles.first(where: { $0.lastPathComponent == library })?.path else {
+        static func symbolsInfo(forLibrary library: String) -> String? {
             return nil
         }
+    #else
+        static func symbolsInfo(forLibrary library: String) -> String? {
+            guard let imagePath = dSYMFiles.first(where: { $0.lastPathComponent == library })?.path else {
+                return nil
+            }
 
-        let symbolsOutputURL = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent("symbols_output")
-        FileManager.default.createFile(atPath: symbolsOutputURL.path, contents: nil, attributes: nil)
-        Spawn.commandToFile("/usr/bin/symbols -fullSourcePath -lazy \(imagePath)", outputPath: symbolsOutputURL.path)
-        defer{ try? FileManager.default.removeItem(at: symbolsOutputURL) }
-        let outputData = try? String(contentsOf: symbolsOutputURL)
-        return outputData
-    }
+            let symbolsOutputURL = URL(fileURLWithPath: NSTemporaryDirectory())
+                .appendingPathComponent("symbols_output")
+            FileManager.default.createFile(atPath: symbolsOutputURL.path, contents: nil, attributes: nil)
+            Spawn.commandToFile("/usr/bin/symbols -fullSourcePath -lazy \(imagePath)", outputPath: symbolsOutputURL.path)
+            defer { try? FileManager.default.removeItem(at: symbolsOutputURL) }
+            let outputData = try? String(contentsOf: symbolsOutputURL)
+            return outputData
+        }
     #endif
 
     private static func demangleName(_ mangledName: String) -> String {

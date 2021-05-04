@@ -44,6 +44,7 @@ class CISpec: XCTestCase {
 
         testObserver = DDTestObserver(tracer: DDTracer())
         testObserver.startObserving()
+        testObserver.testBundleWillStart(Bundle(for: CISpec.self))
 
         testObserver.testCaseWillStart(self)
 

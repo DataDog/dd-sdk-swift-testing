@@ -44,7 +44,7 @@ internal class DDTestMonitor {
                     }
                     if !self.tracer.env.disableCrashHandler {
                         DDCrashes.install()
-                        let launchedSpan = self.tracer.createSpanFromContext(spanContext: self.tracer.launchSpanContext!)
+                        let launchedSpan = self.tracer.createSpanFromLaunchContext()
                         let simpleSpan = SimpleSpanData(spanData: launchedSpan.toSpanData())
                         DDCrashes.setCustomData(customData: SimpleSpanSerializer.serializeSpan(simpleSpan: simpleSpan))
                     }

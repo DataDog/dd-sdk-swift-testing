@@ -46,8 +46,8 @@ internal struct DDTestTags {
     static let testBundle       = "test.bundle"
     static let testFramework    = "test.framework"
     static let testSourceFile   = "test.source.file"
-    static let testSourceStartLine  = "test.source.startLine"
-    static let testSourceEndLine    = "test.source.endLine"
+    static let testSourceStartLine  = "test.source.start"
+    static let testSourceEndLine    = "test.source.end"
 
 
     static let testStatus       = "test.status"

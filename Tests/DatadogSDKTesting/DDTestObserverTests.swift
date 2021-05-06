@@ -42,7 +42,6 @@ internal class DDTestObserverTests: XCTestCase {
         let spanData = span.toSpanData()
 
         XCTAssertEqual(spanData.name, "-[DDTestObserverTests testWhenTestCaseWillStartIsCalled_testSpanIsCreated]")
-        XCTAssertEqual(spanData.attributes.count, 16)
         XCTAssertEqual(spanData.attributes[DDGenericTags.language]?.description, "swift")
         XCTAssertEqual(spanData.attributes[DDGenericTags.type]?.description, DDTestTags.typeTest)
         XCTAssertEqual(spanData.attributes[DDGenericTags.resourceName]?.description, "\(testBundle).\(testSuite).\(testName)")

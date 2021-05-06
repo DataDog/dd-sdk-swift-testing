@@ -21,6 +21,9 @@
 		E117CFC726307B9A00ACE977 /* SpySpanProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E117CFC626307B9A00ACE977 /* SpySpanProcessor.swift */; };
 		E117CFC826307B9A00ACE977 /* SpySpanProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E117CFC626307B9A00ACE977 /* SpySpanProcessor.swift */; };
 		E117CFC926307B9A00ACE977 /* SpySpanProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E117CFC626307B9A00ACE977 /* SpySpanProcessor.swift */; };
+		E122488B2642F18500305968 /* InMemoryExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E122488A2642F18500305968 /* InMemoryExporter.swift */; };
+		E122488C2642F18500305968 /* InMemoryExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E122488A2642F18500305968 /* InMemoryExporter.swift */; };
+		E122488D2642F18500305968 /* InMemoryExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E122488A2642F18500305968 /* InMemoryExporter.swift */; };
 		E12515E5254892C600670D23 /* XCUIApplicationSwizzler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12515E4254892C500670D23 /* XCUIApplicationSwizzler.swift */; };
 		E126DD2D253F366200700A40 /* StdoutCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E126DD2C253F366200700A40 /* StdoutCapture.swift */; };
 		E126DD2F253F367600700A40 /* StderrCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E126DD2E253F367600700A40 /* StderrCapture.swift */; };
@@ -268,6 +271,7 @@
 		E121DF0D258CF652009EA71E /* travisci.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = travisci.json; sourceTree = "<group>"; };
 		E121DF0E258CF652009EA71E /* jenkins.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = jenkins.json; sourceTree = "<group>"; };
 		E121DF0F258CF652009EA71E /* github.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = github.json; sourceTree = "<group>"; };
+		E122488A2642F18500305968 /* InMemoryExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InMemoryExporter.swift; sourceTree = "<group>"; };
 		E12515E4254892C500670D23 /* XCUIApplicationSwizzler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XCUIApplicationSwizzler.swift; sourceTree = "<group>"; };
 		E126DD2C253F366200700A40 /* StdoutCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StdoutCapture.swift; sourceTree = "<group>"; };
 		E126DD2E253F367600700A40 /* StderrCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StderrCapture.swift; sourceTree = "<group>"; };
@@ -441,6 +445,7 @@
 				E1665A7225D12D7500BA53CD /* Spawn.swift */,
 				E12515E4254892C500670D23 /* XCUIApplicationSwizzler.swift */,
 				E11295BA25F2483D002719E7 /* FileLocator.swift */,
+				E122488A2642F18500305968 /* InMemoryExporter.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -1282,6 +1287,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E122488C2642F18500305968 /* InMemoryExporter.swift in Sources */,
 				E11295BC25F2483D002719E7 /* FileLocator.swift in Sources */,
 				E157A723256E9D1D00CBCA52 /* SwiftExtensions.swift in Sources */,
 				E1665A8225D13BBB00BA53CD /* DDSymbolicator.swift in Sources */,
@@ -1314,6 +1320,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E122488D2642F18500305968 /* InMemoryExporter.swift in Sources */,
 				E11295BD25F2483D002719E7 /* FileLocator.swift in Sources */,
 				E157A75B256E9D3300CBCA52 /* SwiftExtensions.swift in Sources */,
 				E1665A8125D13BBB00BA53CD /* DDSymbolicator.swift in Sources */,
@@ -1392,6 +1399,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E122488B2642F18500305968 /* InMemoryExporter.swift in Sources */,
 				E11295BB25F2483D002719E7 /* FileLocator.swift in Sources */,
 				E1AD079F252F5B00003705C1 /* SwiftExtensions.swift in Sources */,
 				E1D6EFA525F6647F00E8C3AE /* ObjcLoadHandler.m in Sources */,

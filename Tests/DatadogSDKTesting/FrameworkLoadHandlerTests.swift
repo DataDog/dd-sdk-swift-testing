@@ -9,10 +9,13 @@ import XCTest
 
 class FrameworkLoadHandlerTests: XCTestCase {
     private var testEnvironment = [String: String]()
+    private var previousEnvironment = [String: String]()
 
     override func setUp() {
         FrameworkLoadHandler.environment = [String: String]()
         DDTestMonitor.instance = nil
+        previousEnvironment = DDEnvironmentValues.environment 
+
     }
 
     override func tearDownWithError() throws {
@@ -21,11 +24,13 @@ class FrameworkLoadHandlerTests: XCTestCase {
             XCTestObservationCenter.shared.removeTestObserver(observer)
             DDTestMonitor.instance = nil
         }
+        DDEnvironmentValues.environment = previousEnvironment
     }
 
     func setEnvVariables() {
         FrameworkLoadHandler.environment = testEnvironment
         DDEnvironmentValues.environment = testEnvironment
+        DDEnvironmentValues.environment["DD_DONT_EXPORT"] = "true"
         DDEnvironmentValues.environment["DATADOG_CLIENT_TOKEN"] = "fakeToken"
     }
 

@@ -106,4 +106,30 @@ class DDTracerTests: XCTestCase {
         XCTAssertEqual(spanData.attributes["OTTag"], AttributeValue.string("OTValue"))
         span.end()
     }
+
+    func testEndpointIsUSByDefault() {
+        let tracer = DDTracer()
+        XCTAssertTrue (tracer.endpointURLs().contains("https://public-trace-http-intake.logs.datadoghq.com/v1/input/"))
+    }
+
+    func testEndpointChangeToUS() {
+        DDEnvironmentValues.environment["DD_ENDPOINT"] = "US"
+        let tracer = DDTracer()
+        XCTAssertTrue (tracer.endpointURLs().contains("https://public-trace-http-intake.logs.datadoghq.com/v1/input/"))
+        DDEnvironmentValues.environment["DD_ENDPOINT"] = nil
+    }
+
+    func testEndpointChangeToEU() {
+        DDEnvironmentValues.environment["DD_ENDPOINT"] = "eu"
+        let tracer = DDTracer()
+        XCTAssertTrue (tracer.endpointURLs().contains("https://public-trace-http-intake.logs.datadoghq.eu/v1/input/"))
+        DDEnvironmentValues.environment["DD_ENDPOINT"] = nil
+    }
+
+    func testEndpointChangeToGov() {
+        DDEnvironmentValues.environment["DD_ENDPOINT"] = "GOV"
+        let tracer = DDTracer()
+        XCTAssertTrue (tracer.endpointURLs().contains("https://trace.browser-intake-ddog-gov.com/v1/input/"))
+        DDEnvironmentValues.environment["DD_ENDPOINT"] = nil
+    }
 }

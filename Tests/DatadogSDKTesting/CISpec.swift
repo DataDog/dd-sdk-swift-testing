@@ -12,15 +12,23 @@ import XCTest
 class CISpec: XCTestCase {
     var testObserver: DDTestObserver!
     var testEnvironment = [String: String]()
+    var previousEnvironment = [String: String]()
 
     private func setEnvVariables() {
         DDEnvironmentValues.environment = testEnvironment
+        DDEnvironmentValues.environment["DD_DONT_EXPORT"] = "true"
         testEnvironment = [String: String]()
+    }
+
+    override func setUp() {
+        testEnvironment = [String: String]()
+        previousEnvironment = DDEnvironmentValues.environment
     }
 
     override func tearDown() {
         XCTestObservationCenter.shared.removeTestObserver(testObserver)
         testObserver = nil
+        DDEnvironmentValues.environment = previousEnvironment
     }
 
     func testGenerateSpecJson() throws {

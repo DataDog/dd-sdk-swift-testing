@@ -66,6 +66,16 @@ internal struct DDEnvironmentValues {
     /// Source location
     var sourceRoot: String?
 
+    /// Environment trace Information (Used when running in an app under UI testing)
+    let launchEnvironmentTraceId: String?
+    let launchEnvironmentSpanId: String?
+
+    /// Datadog Endpoint for traces
+    let tracesEndpoint: String?
+
+    /// Avoids configuring the traces exporter
+    let disableTracesExporting: Bool
+
     static var environment = ProcessInfo.processInfo.environment
     static let environmentCharset = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_")
 
@@ -138,6 +148,14 @@ internal struct DDEnvironmentValues {
         deviceName = PlatformUtils.getDeviceName()
         deviceModel = PlatformUtils.getDeviceModel()
         runtimeVersion = PlatformUtils.getXcodeVersion()
+
+        launchEnvironmentTraceId = DDEnvironmentValues.getEnvVariable("ENVIRONMENT_TRACER_TRACEID")
+        launchEnvironmentSpanId = DDEnvironmentValues.getEnvVariable("ENVIRONMENT_TRACER_SPANID")
+
+        tracesEndpoint = DDEnvironmentValues.getEnvVariable("DD_ENDPOINT")
+
+        let envDisableTracesExporting = DDEnvironmentValues.getEnvVariable("DD_DONT_EXPORT") as NSString?
+        disableTracesExporting = envDisableTracesExporting?.boolValue ?? false
 
         /// CI  values
         var branchEnv: String?

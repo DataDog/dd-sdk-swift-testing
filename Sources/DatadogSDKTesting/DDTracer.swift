@@ -35,8 +35,8 @@ internal class DDTracer {
     }
 
     init() {
-        if let envTraceId = ProcessInfo.processInfo.environment["ENVIRONMENT_TRACER_TRACEID"],
-           let envSpanId = ProcessInfo.processInfo.environment["ENVIRONMENT_TRACER_SPANID"]
+        if let envTraceId = env.launchEnvironmentTraceId,
+           let envSpanId = env.launchEnvironmentSpanId
         {
             let launchTraceId = TraceId(fromHexString: envTraceId)
             let launchSpanId = SpanId(fromHexString: envSpanId)
@@ -55,6 +55,18 @@ internal class DDTracer {
 
         tracerSdk = tracerProvider.get(instrumentationName: identifier, instrumentationVersion: version) as! TracerSdk
 
+        var endpoint: Endpoint
+        switch env.tracesEndpoint {
+            case "us", "US":
+                endpoint = Endpoint.us
+            case "eu", "EU":
+                endpoint = Endpoint.eu
+            case "gov", "GOV":
+                endpoint = Endpoint.gov
+            default:
+                endpoint = Endpoint.us
+        }
+
         let exporterConfiguration = ExporterConfiguration(
             serviceName: env.ddService ?? ProcessInfo.processInfo.processName,
             resource: "Resource",
@@ -63,21 +75,26 @@ internal class DDTracer {
             environment: env.ddEnvironment ?? "ci",
             clientToken: env.ddClientToken ?? "",
             apiKey: nil,
-            endpoint: Endpoint.us,
+            endpoint: endpoint,
             uploadCondition: { true },
             performancePreset: .instantDataDelivery,
             exportUnsampledSpans: false,
             exportUnsampledLogs: true
         )
-
-        guard ProcessInfo.processInfo.environment["DD_DONT_EXPORT"] == nil else {
-            return
-        }
         datadogExporter = try? DatadogExporter(config: exporterConfiguration)
-        if launchSpanContext != nil {
-            spanProcessor = SimpleSpanProcessor(spanExporter: datadogExporter).reportingOnlySampled(sampled: false)
+
+        let exporterToUse: SpanExporter
+
+        if env.disableTracesExporting {
+            exporterToUse = OtelInMemoryExporter()
         } else {
-            spanProcessor = SimpleSpanProcessor(spanExporter: datadogExporter)
+            exporterToUse = datadogExporter
+        }
+        
+        if launchSpanContext != nil {
+            spanProcessor = SimpleSpanProcessor(spanExporter: exporterToUse).reportingOnlySampled(sampled: false)
+        } else {
+            spanProcessor = SimpleSpanProcessor(spanExporter: exporterToUse)
         }
 
         OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(spanProcessor!)

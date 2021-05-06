@@ -163,11 +163,13 @@ class DDEnvironmentValuesTests: XCTestCase {
 
     func testSpecs() throws {
         let bundle = Bundle(for: type(of: self))
-        let fixturesURL = bundle.resourceURL!.appendingPathComponent("fixtures").appendingPathComponent("ci")
+        let fixturesURL = bundle.resourceURL!.appendingPathComponent("ci")
         let fileEnumerator = FileManager.default.enumerator(at: fixturesURL, includingPropertiesForKeys: nil)!
 
+        var numTestedFiles = 0
         for case let fileURL as URL in fileEnumerator {
             if fileURL.pathExtension == "json" {
+                numTestedFiles += 1
                 print("validating \(fileURL.lastPathComponent)")
                 do {
                     try validateSpec(file: fileURL)
@@ -183,6 +185,7 @@ class DDEnvironmentValuesTests: XCTestCase {
                 }
             }
         }
+        XCTAssertGreaterThan(numTestedFiles, 0)
     }
 
     private func validateSpec(file: URL) throws {

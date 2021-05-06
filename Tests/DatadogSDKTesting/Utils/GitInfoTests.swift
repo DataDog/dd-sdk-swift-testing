@@ -80,4 +80,25 @@ class GitInfoTests: XCTestCase {
         XCTAssertEqual(gitInfo.committerName, "Jane Doe")
         XCTAssertEqual(gitInfo.committerEmail, "jane@doe.com")
     }
+
+    func testWithPackFiles() throws {
+        let bundle = Bundle(for: type(of: self))
+        let fixturesURL = bundle.resourceURL!
+
+        let packFilesFolder = fixturesURL.appendingPathComponent("git")
+            .appendingPathComponent("pack_files").appendingPathComponent("git")
+
+        XCTAssertTrue(try packFilesFolder.checkPromisedItemIsReachable())
+        let gitInfo = try GitInfo(gitFolder: packFilesFolder)
+        XCTAssertEqual(gitInfo.commit, "63902373bbe01489ae104f5fc5561eb578dec196")
+        XCTAssertEqual(gitInfo.repository, "git@github.com:DataDog/dd-sdk-swift-testing.git")
+        XCTAssertEqual(gitInfo.branch, "main")
+        XCTAssertEqual(gitInfo.commitMessage, "Add possibility to change endpoint, they use `DD_ENDPOINT` environment variable: \"us\", \"eu\", \"gov\"\nMove ENVIRONMENT_TRACER handling to DDEnvironmentValues\nAdd InMemoryExporter when usinf DD_DONT_EXPORT variable (used in testing) so all the Opentelemetry code runs but dont export to backend")
+        XCTAssertEqual(gitInfo.authorName, "Ignacio Bonafonte")
+        XCTAssertEqual(gitInfo.authorEmail, "nacho.bonafontearruga@datadoghq.com")
+        XCTAssertEqual(gitInfo.authorDate, "2021-05-06T08:03:32Z")
+        XCTAssertEqual(gitInfo.committerName, "Ignacio Bonafonte")
+        XCTAssertEqual(gitInfo.committerEmail, "nacho.bonafontearruga@datadoghq.com")
+        XCTAssertEqual(gitInfo.committerDate, "2021-05-06T08:03:32Z")
+    }
 }

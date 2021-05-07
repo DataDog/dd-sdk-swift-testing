@@ -8,6 +8,7 @@ import DatadogExporter
 import Foundation
 import OpenTelemetryApi
 import OpenTelemetrySdk
+import InMemoryExporter
 
 enum DDHeaders: String, CaseIterable {
     case traceIDField = "x-datadog-trace-id"
@@ -86,7 +87,7 @@ internal class DDTracer {
         let exporterToUse: SpanExporter
 
         if env.disableTracesExporting {
-            exporterToUse = OtelInMemoryExporter()
+            exporterToUse = InMemoryExporter()
         } else {
             exporterToUse = datadogExporter
         }

@@ -18,7 +18,7 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(name: "opentelemetry-swift", url: "https://github.com/nachoBonafonte/opentelemetry-swift", ._revisionItem("2be93307732223e4e612ca045d181f69406d08b4")),
+        .package(name: "opentelemetry-swift", url: "https://github.com/open-telemetry/opentelemetry-swift", ._revisionItem("0737ab210941f138b8eaf915b1a3d131f22da19d")),
         .package(name: "PLCrashReporter", url: "https://github.com/microsoft/plcrashreporter.git", from: "1.8.1"),
         .package(name: "SigmaSwiftStatistics",url: "https://github.com/evgenyneu/SigmaSwiftStatistics.git", from: "9.0.2"),
     ],
@@ -28,6 +28,7 @@ let package = Package(
             dependencies: [
                 .product(name: "libDatadogExporter", package: "opentelemetry-swift"),
                 .product(name: "libURLSessionInstrumentation", package: "opentelemetry-swift"),
+                .product(name: "libInMemoryExporter", package: "opentelemetry-swift"),
                 .product(name: "CrashReporter", package: "PLCrashReporter"),
                 .product(name: "SigmaSwiftStatistics", package: "SigmaSwiftStatistics"),
                 .target( name: "DatadogSDKTestingObjc"),

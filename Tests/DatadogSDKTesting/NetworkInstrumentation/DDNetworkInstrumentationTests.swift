@@ -38,11 +38,11 @@ class DDNetworkInstrumentationTests: XCTestCase {
             expec.fulfill()
         }
         task.resume()
-        testSpan = testSpanProcessor.lastProcessedSpan as? RecordEventsReadableSpan
         waitForExpectations(timeout: 30) { _ in
             task.cancel()
         }
 
+        testSpan = testSpanProcessor.lastProcessedSpan
         let spanData = testSpan!.toSpanData()
         XCTAssertEqual(spanData.name, "HTTP GET")
         XCTAssertEqual(spanData.attributes.count, 10)
@@ -71,11 +71,11 @@ class DDNetworkInstrumentationTests: XCTestCase {
             expec.fulfill()
         }
         task.resume()
-        testSpan = testSpanProcessor.lastProcessedSpan as? RecordEventsReadableSpan
         waitForExpectations(timeout: 30) { _ in
             task.cancel()
         }
 
+        testSpan = testSpanProcessor.lastProcessedSpan
         let spanData = testSpan!.toSpanData()
         XCTAssertEqual(spanData.name, "HTTP GET")
         XCTAssertEqual(spanData.attributes.count, 10)
@@ -91,5 +91,45 @@ class DDNetworkInstrumentationTests: XCTestCase {
 
         DDInstrumentationControl.stopPayloadCapture()
         DDInstrumentationControl.startInjectingHeaders()
+    }
+
+    func testItReturnsErrorStatusForHTTPErrorStatus() {
+        var testSpan: RecordEventsReadableSpan?
+
+        let url = URL(string: "http://httpbin.org/status/404")!
+        let expec = expectation(description: "GET \(url)")
+        var task: URLSessionTask
+        task = URLSession.shared.dataTask(with: url) { _, _, _ in
+            expec.fulfill()
+        }
+        task.resume()
+        waitForExpectations(timeout: 30) { _ in
+            task.cancel()
+        }
+        testSpan = testSpanProcessor.lastProcessedSpan
+        let spanData = testSpan!.toSpanData()
+        XCTAssertEqual(spanData.name, "HTTP GET")
+        XCTAssertTrue(spanData.status.isError)
+        XCTAssertEqual(spanData.attributes["http.status_code"]?.description, "404")
+    }
+
+    func testItReturnsErrorStatusForNetworkErrors() {
+        var testSpan: RecordEventsReadableSpan?
+
+        let url = URL(string: "http://127.0.0.1/404")!
+        let expec = expectation(description: "GET \(url)")
+        var task: URLSessionTask
+        task = URLSession.shared.dataTask(with: url) { _, _, _ in
+            expec.fulfill()
+        }
+        task.resume()
+        waitForExpectations(timeout: 30) { _ in
+            task.cancel()
+        }
+
+        testSpan = testSpanProcessor.lastProcessedSpan
+        let spanData = testSpan!.toSpanData()
+        XCTAssertEqual(spanData.name, "HTTP GET")
+        XCTAssertTrue(spanData.status.isError)
     }
 }

@@ -12,18 +12,19 @@ import OpenTelemetrySdk
 /// An implementation of the SpanProcessor that converts the ReadableSpan SpanData
 ///  and passes it to the configured exporter.
 class SpySpanProcessor: SpanProcessor {
-    var lastProcessedSpan: Span?
+    var lastProcessedSpan: RecordEventsReadableSpan?
 
     init() {}
 
-    let isStartRequired = true
-    let isEndRequired = false
+    let isStartRequired = false
+    let isEndRequired = true
 
     func onStart(parentContext: SpanContext?, span: ReadableSpan) {
-        lastProcessedSpan = span
     }
 
-    func onEnd(span: ReadableSpan) {}
+    func onEnd(span: ReadableSpan) {
+        lastProcessedSpan = span as? RecordEventsReadableSpan
+    }
 
     func shutdown() {}
 

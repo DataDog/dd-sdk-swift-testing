@@ -13,7 +13,7 @@ import SigmaSwiftStatistics
 internal class DDTestObserver: NSObject, XCTestObservation {
     var tracer: DDTracer
 
-    let testNameRegex = try? NSRegularExpression(pattern: "([\\w]+) ([\\w]+)", options: .caseInsensitive)
+    let testNameRegex = try! NSRegularExpression(pattern: "([\\w]+) ([\\w]+)", options: .caseInsensitive)
     let supportsSkipping = NSClassFromString("XCTSkippedTestContext") != nil
     var currentBundleName = ""
     var currentBundleFunctionInfo = FunctionMap()
@@ -62,7 +62,7 @@ internal class DDTestObserver: NSObject, XCTestObservation {
     }
 
     func testCaseWillStart(_ testCase: XCTestCase) {
-        guard let namematch = testNameRegex?.firstMatch(in: testCase.name, range: NSRange(location: 0, length: testCase.name.count)),
+        guard let namematch = testNameRegex.firstMatch(in: testCase.name, range: NSRange(location: 0, length: testCase.name.count)),
               let suiteRange = Range(namematch.range(at: 1), in: testCase.name),
               let nameRange = Range(namematch.range(at: 2), in: testCase.name)
         else {
@@ -135,6 +135,7 @@ internal class DDTestObserver: NSObject, XCTestObservation {
         activeTest.setAttribute(key: DDTestTags.testStatus, value: status)
         addBenchmarkTagsIfNeeded(testCase: testCase, activeTest: activeTest)
         activeTest.end()
+        tracer.backgroundWorkQueue.sync {}
         currentTestSpan = nil
         DDTestMonitor.instance?.networkInstrumentation?.endAndCleanAliveSpans()
     }

@@ -109,27 +109,101 @@ class DDTracerTests: XCTestCase {
 
     func testEndpointIsUSByDefault() {
         let tracer = DDTracer()
-        XCTAssertTrue (tracer.endpointURLs().contains("https://public-trace-http-intake.logs.datadoghq.com/v1/input/"))
+        XCTAssertTrue(tracer.endpointURLs().contains("https://public-trace-http-intake.logs.datadoghq.com/v1/input/"))
     }
 
     func testEndpointChangeToUS() {
         DDEnvironmentValues.environment["DD_ENDPOINT"] = "US"
         let tracer = DDTracer()
-        XCTAssertTrue (tracer.endpointURLs().contains("https://public-trace-http-intake.logs.datadoghq.com/v1/input/"))
+        XCTAssertTrue(tracer.endpointURLs().contains("https://public-trace-http-intake.logs.datadoghq.com/v1/input/"))
         DDEnvironmentValues.environment["DD_ENDPOINT"] = nil
     }
 
     func testEndpointChangeToEU() {
         DDEnvironmentValues.environment["DD_ENDPOINT"] = "eu"
         let tracer = DDTracer()
-        XCTAssertTrue (tracer.endpointURLs().contains("https://public-trace-http-intake.logs.datadoghq.eu/v1/input/"))
+        XCTAssertTrue(tracer.endpointURLs().contains("https://public-trace-http-intake.logs.datadoghq.eu/v1/input/"))
         DDEnvironmentValues.environment["DD_ENDPOINT"] = nil
     }
 
     func testEndpointChangeToGov() {
         DDEnvironmentValues.environment["DD_ENDPOINT"] = "GOV"
         let tracer = DDTracer()
-        XCTAssertTrue (tracer.endpointURLs().contains("https://trace.browser-intake-ddog-gov.com/v1/input/"))
+        XCTAssertTrue(tracer.endpointURLs().contains("https://trace.browser-intake-ddog-gov.com/v1/input/"))
         DDEnvironmentValues.environment["DD_ENDPOINT"] = nil
+    }
+
+    func testEnvironmentContext() {
+        let testTraceId = TraceId(fromHexString: "ff000000000000000000000000000041")
+        let testSpanId = SpanId(fromHexString: "ff00000000000042")
+
+        DDEnvironmentValues.environment["ENVIRONMENT_TRACER_TRACEID"] = testTraceId.hexString
+        DDEnvironmentValues.environment["ENVIRONMENT_TRACER_SPANID"] = testSpanId.hexString
+
+        let tracer = DDTracer()
+
+        let propagationContext = tracer.propagationContext
+        XCTAssertEqual(propagationContext?.traceId, testTraceId)
+        XCTAssertEqual(propagationContext?.spanId, testSpanId)
+
+        DDEnvironmentValues.environment["ENVIRONMENT_TRACER_TRACEID"] = nil
+        DDEnvironmentValues.environment["ENVIRONMENT_TRACER_SPANID"] = nil
+    }
+
+    func testCreateSpanFromCrashAndEnvironmentContext() {
+        let testTraceId = TraceId(fromHexString: "ff000000000000000000000000000041")
+        let testSpanId = SpanId(fromHexString: "ff00000000000042")
+
+        DDEnvironmentValues.environment["ENVIRONMENT_TRACER_TRACEID"] = testTraceId.hexString
+        DDEnvironmentValues.environment["ENVIRONMENT_TRACER_SPANID"] = testSpanId.hexString
+
+        let simpleSpan = SimpleSpanData(traceIdHi: testTraceId.idHi, traceIdLo: testTraceId.idLo, spanId: 3, name: "name", startTime: Date(timeIntervalSinceReferenceDate: 33), stringAttributes: [:])
+        let crashDate: Date? = nil
+        let errorType = "errorType"
+        let errorMessage = "errorMessage"
+        let errorStack = "errorStack"
+
+        let tracer = DDTracer()
+        let span = tracer.createSpanFromCrash(spanData: simpleSpan,
+                                              crashDate: crashDate,
+                                              errorType: errorType,
+                                              errorMessage: errorMessage,
+                                              errorStack: errorStack)
+        let spanData = span.toSpanData()
+
+        XCTAssertEqual(spanData.name, "name")
+        XCTAssertEqual(spanData.traceId, testTraceId)
+        XCTAssertEqual(spanData.attributes[DDTestTags.testStatus], AttributeValue.string(DDTestTags.statusFail))
+        XCTAssertEqual(spanData.status, Status.error(description: errorMessage))
+        XCTAssertEqual(spanData.attributes[DDTags.errorType], AttributeValue.string(errorType))
+        XCTAssertEqual(spanData.attributes[DDTags.errorMessage], AttributeValue.string(errorMessage))
+        XCTAssertEqual(spanData.attributes[DDTags.errorStack], AttributeValue.string(errorStack))
+        XCTAssertEqual(spanData.endTime, spanData.startTime.addingTimeInterval(TimeInterval.fromMicroseconds(1)))
+
+        DDEnvironmentValues.environment["ENVIRONMENT_TRACER_TRACEID"] = nil
+        DDEnvironmentValues.environment["ENVIRONMENT_TRACER_SPANID"] = nil
+    }
+
+    func testLogStringAppUITested() {
+        let testTraceId = TraceId(fromHexString: "ff000000000000000000000000000041")
+        let testSpanId = SpanId(fromHexString: "ff00000000000042")
+
+        DDEnvironmentValues.environment["ENVIRONMENT_TRACER_TRACEID"] = testTraceId.hexString
+        DDEnvironmentValues.environment["ENVIRONMENT_TRACER_SPANID"] = testSpanId.hexString
+
+        let testSpanProcessor = SpySpanProcessor()
+        OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(testSpanProcessor)
+
+        let tracer = DDTracer()
+
+        tracer.logStringAppUITested(string: "Hello World", date: Date(timeIntervalSince1970: 1212))
+        tracer.flush()
+        let span = testSpanProcessor.lastProcessedSpan!
+
+        let spanData = span.toSpanData()
+        XCTAssertEqual(spanData.events.count, 1)
+
+        DDEnvironmentValues.environment["ENVIRONMENT_TRACER_TRACEID"] = nil
+        DDEnvironmentValues.environment["ENVIRONMENT_TRACER_SPANID"] = nil
     }
 }

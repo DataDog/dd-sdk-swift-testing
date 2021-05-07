@@ -17,9 +17,9 @@ enum DDHeaders: String, CaseIterable {
 internal class DDTracer {
     let tracerSdk: TracerSdk
     let env = DDEnvironmentValues()
-    var spanProcessor: SpanProcessor?
     var datadogExporter: DatadogExporter!
     private var launchSpanContext: SpanContext?
+    let backgroundWorkQueue = DispatchQueue(label: "com.otel.datadog.logswriter")
 
     var activeSpan: Span? {
         return OpenTelemetrySDK.instance.contextProvider.activeSpan ??
@@ -90,14 +90,15 @@ internal class DDTracer {
         } else {
             exporterToUse = datadogExporter
         }
-        
+
+        var spanProcessor: SpanProcessor
         if launchSpanContext != nil {
             spanProcessor = SimpleSpanProcessor(spanExporter: exporterToUse).reportingOnlySampled(sampled: false)
         } else {
             spanProcessor = SimpleSpanProcessor(spanExporter: exporterToUse)
         }
 
-        OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(spanProcessor!)
+        OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(spanProcessor)
     }
 
     func startSpan(name: String, attributes: [String: String], date: Date? = nil) -> Span {
@@ -163,6 +164,7 @@ internal class DDTracer {
             }
         }
 
+        let spanProcessor = MultiSpanProcessor(spanProcessors: tracerProvider.getActiveSpanProcessors())
         let span = RecordEventsReadableSpan.startSpan(context: spanContext,
                                                       name: spanName,
                                                       instrumentationLibraryInfo: tracerSdk.instrumentationLibraryInfo,
@@ -170,7 +172,7 @@ internal class DDTracer {
                                                       parentContext: parentContext,
                                                       hasRemoteParent: false,
                                                       spanLimits: tracerProvider.getActiveSpanLimits(),
-                                                      spanProcessor: tracerProvider.getActiveSpanProcessors().first!,
+                                                      spanProcessor: spanProcessor,
                                                       clock: tracerProvider.getActiveClock(),
                                                       resource: Resource(),
                                                       attributes: attributes,
@@ -191,6 +193,8 @@ internal class DDTracer {
     @discardableResult func createSpanFromLaunchContext() -> RecordEventsReadableSpan {
         let tracerProvider = OpenTelemetrySDK.instance.tracerProvider
         let attributes = AttributesDictionary(capacity: tracerProvider.getActiveSpanLimits().attributeCountLimit)
+        let spanProcessor = MultiSpanProcessor(spanProcessors: tracerProvider.getActiveSpanProcessors())
+
         let span = RecordEventsReadableSpan.startSpan(context: launchSpanContext!,
                                                       name: "ApplicationSpan",
                                                       instrumentationLibraryInfo: tracerSdk.instrumentationLibraryInfo,
@@ -198,7 +202,7 @@ internal class DDTracer {
                                                       parentContext: nil,
                                                       hasRemoteParent: false,
                                                       spanLimits: tracerProvider.getActiveSpanLimits(),
-                                                      spanProcessor: tracerProvider.getActiveSpanProcessors().first!,
+                                                      spanProcessor: spanProcessor,
                                                       clock: tracerProvider.getActiveClock(),
                                                       resource: Resource(),
                                                       attributes: attributes,
@@ -233,15 +237,17 @@ internal class DDTracer {
     func logStringAppUITested(string: String, date: Date? = nil) {
         let auxSpan = createSpanFromLaunchContext()
         auxSpan.addEvent(name: "logString", attributes: ["message": AttributeValue.string(string)], timestamp: date ?? Date())
-        DispatchQueue.global().async {
+        backgroundWorkQueue.async {
             auxSpan.status = .ok
             auxSpan.end()
-            self.flush()
+            OpenTelemetrySDK.instance.tracerProvider.forceFlush()
         }
     }
 
     func flush() {
-        spanProcessor?.forceFlush()
+        backgroundWorkQueue.sync {
+            OpenTelemetrySDK.instance.tracerProvider.forceFlush()
+        }
     }
 
     func addPropagationsHeadersToEnvironment() {

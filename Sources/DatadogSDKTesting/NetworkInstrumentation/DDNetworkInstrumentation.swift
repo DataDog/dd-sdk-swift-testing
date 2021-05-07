@@ -95,17 +95,7 @@ class DDNetworkInstrumentation {
 
         span.setAttribute(key: DDNetworkInstrumentation.requestHeadersKey, value: headersString)
 
-        if DDTestMonitor.instance?.networkInstrumentation?.recordPayload ?? false {
-            if let data = request.httpBody, data.count > 0 {
-                let dataSample = data.subdata(in: 0 ..< min(data.count, 512))
-                let payload = String(data: dataSample, encoding: .ascii) ?? "<unknown>"
-                span.setAttribute(key: DDNetworkInstrumentation.requestPayloadKey, value: payload)
-            } else {
-                span.setAttribute(key: DDNetworkInstrumentation.requestPayloadKey, value: "<empty>")
-            }
-        } else {
-            span.setAttribute(key: DDNetworkInstrumentation.requestPayloadKey, value: "<disabled>")
-        }
+        storePayloadInSpan(dataOrFile: request.httpBody, span: span, attributeKey: DDNetworkInstrumentation.requestPayloadKey)
     }
 
     func receivedResponse(response: URLResponse, dataOrFile: DataOrFile?, span: Span) {
@@ -118,34 +108,26 @@ class DDNetworkInstrumentation {
             span.setAttribute(key: DDNetworkInstrumentation.responseHeadersKey, value: AttributeValue.string(headersString))
         }
 
-        if DDTestMonitor.instance?.networkInstrumentation?.recordPayload ?? false {
-            if let data = dataOrFile as? Data, data.count > 0 {
-                let dataSample = data.subdata(in: 0 ..< min(data.count, DDTestMonitor.instance?.maxPayloadSize ?? DDTestMonitor.defaultPayloadSize))
-                let payload = String(data: dataSample, encoding: .ascii) ?? "<unknown>"
-                span.setAttribute(key: DDNetworkInstrumentation.responsePayloadKey, value: payload)
-            } else if let fileUrl = dataOrFile as? URL {
-                span.setAttribute(key: DDNetworkInstrumentation.responsePayloadKey, value: fileUrl.path)
-            } else {
-                span.setAttribute(key: DDNetworkInstrumentation.responsePayloadKey, value: "<empty>")
-            }
-        } else {
-            span.setAttribute(key: DDNetworkInstrumentation.responsePayloadKey, value: "<disabled>")
-        }
+        storePayloadInSpan(dataOrFile: dataOrFile, span: span, attributeKey: DDNetworkInstrumentation.responsePayloadKey)
     }
 
     func receivedError(error: Error, dataOrFile: DataOrFile?, status: HTTPStatus, span: Span) {
+        storePayloadInSpan(dataOrFile: dataOrFile, span: span, attributeKey: DDNetworkInstrumentation.responsePayloadKey)
+    }
+
+    private func storePayloadInSpan(dataOrFile: DataOrFile?, span: Span, attributeKey: String) {
         if DDTestMonitor.instance?.networkInstrumentation?.recordPayload ?? false {
             if let data = dataOrFile as? Data, data.count > 0 {
                 let dataSample = data.subdata(in: 0 ..< min(data.count, 512))
                 let payload = String(data: dataSample, encoding: .ascii) ?? "<unknown>"
-                span.setAttribute(key: DDNetworkInstrumentation.responsePayloadKey, value: payload)
+                span.setAttribute(key: attributeKey, value: payload)
             } else if let fileUrl = dataOrFile as? URL {
-                span.setAttribute(key: DDNetworkInstrumentation.responsePayloadKey, value: fileUrl.path)
+                span.setAttribute(key: attributeKey, value: fileUrl.path)
             } else {
-                span.setAttribute(key: DDNetworkInstrumentation.responsePayloadKey, value: "<empty>")
+                span.setAttribute(key: attributeKey, value: "<empty>")
             }
         } else {
-            span.setAttribute(key: DDNetworkInstrumentation.responsePayloadKey, value: "<disabled>")
+            span.setAttribute(key: attributeKey, value: "<disabled>")
         }
     }
 

@@ -42,6 +42,12 @@
 		E12248C72643EFF800305968 /* SpawnTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12248C62643EF4200305968 /* SpawnTests.swift */; };
 		E12248C82643EFF900305968 /* SpawnTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12248C62643EF4200305968 /* SpawnTests.swift */; };
 		E12248C92643EFF900305968 /* SpawnTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12248C62643EF4200305968 /* SpawnTests.swift */; };
+		E12248CB2644037B00305968 /* FileLocatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12248CA2644037B00305968 /* FileLocatorTests.swift */; };
+		E12248CC2644037B00305968 /* FileLocatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12248CA2644037B00305968 /* FileLocatorTests.swift */; };
+		E12248CD2644037B00305968 /* FileLocatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12248CA2644037B00305968 /* FileLocatorTests.swift */; };
+		E12248D72645595B00305968 /* MultiSpanProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12248D62645595B00305968 /* MultiSpanProcessor.swift */; };
+		E12248D82645595B00305968 /* MultiSpanProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12248D62645595B00305968 /* MultiSpanProcessor.swift */; };
+		E12248D92645595B00305968 /* MultiSpanProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12248D62645595B00305968 /* MultiSpanProcessor.swift */; };
 		E12515E5254892C600670D23 /* XCUIApplicationSwizzler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12515E4254892C500670D23 /* XCUIApplicationSwizzler.swift */; };
 		E126DD2D253F366200700A40 /* StdoutCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E126DD2C253F366200700A40 /* StdoutCapture.swift */; };
 		E126DD2F253F367600700A40 /* StderrCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E126DD2E253F367600700A40 /* StderrCapture.swift */; };
@@ -296,6 +302,8 @@
 		E12248B32643ECA800305968 /* HEAD */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = HEAD; sourceTree = "<group>"; };
 		E12248B62643ECA800305968 /* main */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = main; sourceTree = "<group>"; };
 		E12248C62643EF4200305968 /* SpawnTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpawnTests.swift; sourceTree = "<group>"; };
+		E12248CA2644037B00305968 /* FileLocatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileLocatorTests.swift; sourceTree = "<group>"; };
+		E12248D62645595B00305968 /* MultiSpanProcessor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MultiSpanProcessor.swift; sourceTree = "<group>"; };
 		E12515E4254892C500670D23 /* XCUIApplicationSwizzler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XCUIApplicationSwizzler.swift; sourceTree = "<group>"; };
 		E126DD2C253F366200700A40 /* StdoutCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StdoutCapture.swift; sourceTree = "<group>"; };
 		E126DD2E253F367600700A40 /* StderrCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StderrCapture.swift; sourceTree = "<group>"; };
@@ -460,6 +468,7 @@
 		E116D7D925248C280022779D /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				E12248D62645595B00305968 /* MultiSpanProcessor.swift */,
 				E1AD07A8252F5CB8003705C1 /* DDError.swift */,
 				E1D476A525DD369F00832592 /* BinaryParser.swift */,
 				E14405A225D6A80800FE3D3C /* GitInfo.swift */,
@@ -876,6 +885,7 @@
 			isa = PBXGroup;
 			children = (
 				E1798CE52524D0D5008DEBB9 /* DDErrorTests.swift */,
+				E12248CA2644037B00305968 /* FileLocatorTests.swift */,
 				E117CFC626307B9A00ACE977 /* SpySpanProcessor.swift */,
 				E14405D825DBC3A800FE3D3C /* GitInfoTests.swift */,
 				E14AA0C9255AE8D3003FA711 /* SignalUtilsTests.swift */,
@@ -1411,6 +1421,7 @@
 				E157A735256E9D1D00CBCA52 /* SimpleSpanSerializer.swift in Sources */,
 				E1DFF0EA257010E700344895 /* PlatformUtils.swift in Sources */,
 				E157A736256E9D1D00CBCA52 /* DDCrashes.swift in Sources */,
+				E12248D82645595B00305968 /* MultiSpanProcessor.swift in Sources */,
 				E157A738256E9D1D00CBCA52 /* DDTestObserver.swift in Sources */,
 				E157A73A256E9D1D00CBCA52 /* DDTracer.swift in Sources */,
 				E157A73E256E9D1D00CBCA52 /* StderrCapture.swift in Sources */,
@@ -1444,6 +1455,7 @@
 				E157A76D256E9D3300CBCA52 /* SimpleSpanSerializer.swift in Sources */,
 				E1DFF0EB257010E800344895 /* PlatformUtils.swift in Sources */,
 				E157A76E256E9D3300CBCA52 /* DDCrashes.swift in Sources */,
+				E12248D92645595B00305968 /* MultiSpanProcessor.swift in Sources */,
 				E157A770256E9D3300CBCA52 /* DDTestObserver.swift in Sources */,
 				E157A772256E9D3300CBCA52 /* DDTracer.swift in Sources */,
 				E157A776256E9D3300CBCA52 /* StderrCapture.swift in Sources */,
@@ -1466,6 +1478,7 @@
 				E157A795256EB0F000CBCA52 /* DDTestObserverTests.swift in Sources */,
 				E157A797256EB0F000CBCA52 /* DDErrorTests.swift in Sources */,
 				E15264B025FA3C16008B8665 /* DDSymbolicatorTests.swift in Sources */,
+				E12248CB2644037B00305968 /* FileLocatorTests.swift in Sources */,
 				E14405DA25DBC3A800FE3D3C /* GitInfoTests.swift in Sources */,
 				E157A798256EB0F000CBCA52 /* DDTracerTests.swift in Sources */,
 				E157A799256EB0F000CBCA52 /* SignalUtilsTests.swift in Sources */,
@@ -1490,6 +1503,7 @@
 				E157A7B0256EB0F200CBCA52 /* DDNetworkInstrumentationTests.swift in Sources */,
 				E157A7B1256EB0F200CBCA52 /* DDErrorTests.swift in Sources */,
 				E15264B125FA3C16008B8665 /* DDSymbolicatorTests.swift in Sources */,
+				E12248CC2644037B00305968 /* FileLocatorTests.swift in Sources */,
 				E14405DB25DBC3A800FE3D3C /* GitInfoTests.swift in Sources */,
 				E157A7B2256EB0F200CBCA52 /* DDTracerTests.swift in Sources */,
 				E157A7B3256EB0F200CBCA52 /* SignalUtilsTests.swift in Sources */,
@@ -1525,6 +1539,7 @@
 				E1FB4840253891CE0083B263 /* SimpleSpanSerializer.swift in Sources */,
 				E1FB4841253891CE0083B263 /* DDCrashes.swift in Sources */,
 				E1ABA07425231F4700ED8AEF /* DDTestObserver.swift in Sources */,
+				E12248D72645595B00305968 /* MultiSpanProcessor.swift in Sources */,
 				E1798CC62524B9BD008DEBB9 /* DDTracer.swift in Sources */,
 				E141CF60256FD513008B6B70 /* PlatformUtils.swift in Sources */,
 				E126DD2F253F367600700A40 /* StderrCapture.swift in Sources */,
@@ -1547,6 +1562,7 @@
 				E14AA0C12555AA61003FA711 /* DDNetworkInstrumentationTests.swift in Sources */,
 				E1AD07AD252F5D86003705C1 /* DDErrorTests.swift in Sources */,
 				E15264AF25FA3C16008B8665 /* DDSymbolicatorTests.swift in Sources */,
+				E12248CD2644037B00305968 /* FileLocatorTests.swift in Sources */,
 				E14405D925DBC3A800FE3D3C /* GitInfoTests.swift in Sources */,
 				E1AD075D252F206D003705C1 /* DDTracerTests.swift in Sources */,
 				E14AA0CA255AE8D3003FA711 /* SignalUtilsTests.swift in Sources */,

@@ -467,7 +467,23 @@ internal struct DDEnvironmentValues {
         }
 
         setAttributeIfExist(toSpan: span, key: DDCITags.ciWorkspacePath, value: workspacePath)
-        // Add the CI and Git tags, only if running in CI except workspace
+
+        let disableGit = (DDEnvironmentValues.getEnvVariable("DD_DISABLE_GIT_INFORMATION") as NSString?)?.boolValue ?? false
+        if !disableGit {
+            setAttributeIfExist(toSpan: span, key: DDGitTags.gitRepository, value: repository)
+            setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommit, value: commit)
+            setAttributeIfExist(toSpan: span, key: DDGitTags.gitBranch, value: branch)
+            setAttributeIfExist(toSpan: span, key: DDGitTags.gitTag, value: tag)
+
+            setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommitMessage, value: commitMessage)
+            setAttributeIfExist(toSpan: span, key: DDGitTags.gitAuthorName, value: authorName)
+            setAttributeIfExist(toSpan: span, key: DDGitTags.gitAuthorEmail, value: authorEmail)
+            setAttributeIfExist(toSpan: span, key: DDGitTags.gitAuthorDate, value: authorDate)
+            setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommitterName, value: committerName)
+            setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommitterEmail, value: committerEmail)
+            setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommitterDate, value: committerDate)
+        }
+
         if !isCi {
             return
         }
@@ -480,19 +496,6 @@ internal struct DDEnvironmentValues {
         setAttributeIfExist(toSpan: span, key: DDCITags.ciStageName, value: stageName)
         setAttributeIfExist(toSpan: span, key: DDCITags.ciJobName, value: jobName)
         setAttributeIfExist(toSpan: span, key: DDCITags.ciJobURL, value: jobURL)
-
-        setAttributeIfExist(toSpan: span, key: DDGitTags.gitRepository, value: repository)
-        setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommit, value: commit)
-        setAttributeIfExist(toSpan: span, key: DDGitTags.gitBranch, value: branch)
-        setAttributeIfExist(toSpan: span, key: DDGitTags.gitTag, value: tag)
-
-        setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommitMessage, value: commitMessage)
-        setAttributeIfExist(toSpan: span, key: DDGitTags.gitAuthorName, value: authorName)
-        setAttributeIfExist(toSpan: span, key: DDGitTags.gitAuthorEmail, value: authorEmail)
-        setAttributeIfExist(toSpan: span, key: DDGitTags.gitAuthorDate, value: authorDate)
-        setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommitterName, value: committerName)
-        setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommitterEmail, value: committerEmail)
-        setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommitterDate, value: committerDate)
     }
 
     private func setAttributeIfExist(toSpan span: Span, key: String, value: String?) {

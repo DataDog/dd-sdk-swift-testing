@@ -73,7 +73,7 @@ internal class DDTracer {
             resource: "Resource",
             applicationName: identifier,
             applicationVersion: version,
-            environment: env.ddEnvironment ?? "ci",
+            environment: env.ddEnvironment ?? (env.isCi ? "ci" : "none"),
             clientToken: env.ddClientToken ?? "",
             apiKey: nil,
             endpoint: endpoint,

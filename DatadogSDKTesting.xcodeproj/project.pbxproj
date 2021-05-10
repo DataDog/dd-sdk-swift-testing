@@ -172,7 +172,7 @@
 		E1E90B19260B3B0E0016ECF5 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1E90B18260B3B0E0016ECF5 /* AppDelegate.swift */; };
 		E1E90B1B260B3B0F0016ECF5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E1E90B1A260B3B0F0016ECF5 /* Assets.xcassets */; };
 		E1E90B1E260B3B0F0016ECF5 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = E1E90B1C260B3B0F0016ECF5 /* MainMenu.xib */; };
-		E1E90B2D260B3BB10016ECF5 /* IntegrationTestsAppTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1E90B2C260B3BB10016ECF5 /* IntegrationTestsAppTests.swift */; };
+		E1E90B2D260B3BB10016ECF5 /* IntegrationAppTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1E90B2C260B3BB10016ECF5 /* IntegrationAppTests.swift */; };
 		E1F595D42609FC3000AE92B7 /* DDNetworkInstrumentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F595D32609FC3000AE92B7 /* DDNetworkInstrumentation.swift */; };
 		E1F595D52609FC3000AE92B7 /* DDNetworkInstrumentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F595D32609FC3000AE92B7 /* DDNetworkInstrumentation.swift */; };
 		E1F595D62609FC3000AE92B7 /* DDNetworkInstrumentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F595D32609FC3000AE92B7 /* DDNetworkInstrumentation.swift */; };
@@ -366,14 +366,14 @@
 		E1D4769525DC2B8E00832592 /* master */ = {isa = PBXFileReference; lastKnownFileType = text; path = master; sourceTree = "<group>"; };
 		E1D476A525DD369F00832592 /* BinaryParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinaryParser.swift; sourceTree = "<group>"; };
 		E1D6EFA125F6563000E8C3AE /* DDSymbolAddress.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DDSymbolAddress.h; sourceTree = "<group>"; };
-		E1E90B16260B3B0E0016ECF5 /* IntegrationTestsApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IntegrationTestsApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E1E90B16260B3B0E0016ECF5 /* IntegrationApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IntegrationApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E1E90B18260B3B0E0016ECF5 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		E1E90B1A260B3B0F0016ECF5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E1E90B1D260B3B0F0016ECF5 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		E1E90B1F260B3B0F0016ECF5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		E1E90B20260B3B0F0016ECF5 /* IntegrationTestsApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = IntegrationTestsApp.entitlements; sourceTree = "<group>"; };
-		E1E90B2A260B3BB10016ECF5 /* IntegrationTestsAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = IntegrationTestsAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		E1E90B2C260B3BB10016ECF5 /* IntegrationTestsAppTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegrationTestsAppTests.swift; sourceTree = "<group>"; };
+		E1E90B20260B3B0F0016ECF5 /* IntegrationApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = IntegrationApp.entitlements; sourceTree = "<group>"; };
+		E1E90B2A260B3BB10016ECF5 /* IntegrationAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = IntegrationAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E1E90B2C260B3BB10016ECF5 /* IntegrationAppTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegrationAppTests.swift; sourceTree = "<group>"; };
 		E1E90B2E260B3BB10016ECF5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		E1F595D32609FC3000AE92B7 /* DDNetworkInstrumentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDNetworkInstrumentation.swift; sourceTree = "<group>"; };
 		E1FB483D253891CE0083B263 /* SimpleSpanSerializer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleSpanSerializer.swift; sourceTree = "<group>"; };
@@ -793,8 +793,8 @@
 				E160A11125275CC1003121A5 /* Package.swift */,
 				E1ABA04C25231E2500ED8AEF /* Sources */,
 				E1ABA05725231E2500ED8AEF /* Tests */,
-				E1E90B17260B3B0E0016ECF5 /* IntegrationTestsApp */,
-				E1E90B2B260B3BB10016ECF5 /* IntegrationTestsAppTests */,
+				E1E90B17260B3B0E0016ECF5 /* IntegrationApp */,
+				E1E90B2B260B3BB10016ECF5 /* IntegrationAppTests */,
 				E1ABA04B25231E2500ED8AEF /* Products */,
 				E1ABA07E25231F8E00ED8AEF /* Frameworks */,
 			);
@@ -809,8 +809,8 @@
 				E157A785256E9D3300CBCA52 /* DatadogSDKTesting.framework */,
 				E157A7A3256EB0F000CBCA52 /* DatadogSDKTestingTests_macOS.xctest */,
 				E157A7BD256EB0F200CBCA52 /* DatadogSDKTestingTests_tvOS.xctest */,
-				E1E90B16260B3B0E0016ECF5 /* IntegrationTestsApp.app */,
-				E1E90B2A260B3BB10016ECF5 /* IntegrationTestsAppTests.xctest */,
+				E1E90B16260B3B0E0016ECF5 /* IntegrationApp.app */,
+				E1E90B2A260B3BB10016ECF5 /* IntegrationAppTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -953,25 +953,25 @@
 			path = heads;
 			sourceTree = "<group>";
 		};
-		E1E90B17260B3B0E0016ECF5 /* IntegrationTestsApp */ = {
+		E1E90B17260B3B0E0016ECF5 /* IntegrationApp */ = {
 			isa = PBXGroup;
 			children = (
 				E1E90B18260B3B0E0016ECF5 /* AppDelegate.swift */,
 				E1E90B1A260B3B0F0016ECF5 /* Assets.xcassets */,
 				E1E90B1C260B3B0F0016ECF5 /* MainMenu.xib */,
 				E1E90B1F260B3B0F0016ECF5 /* Info.plist */,
-				E1E90B20260B3B0F0016ECF5 /* IntegrationTestsApp.entitlements */,
+				E1E90B20260B3B0F0016ECF5 /* IntegrationApp.entitlements */,
 			);
-			path = IntegrationTestsApp;
+			path = IntegrationApp;
 			sourceTree = "<group>";
 		};
-		E1E90B2B260B3BB10016ECF5 /* IntegrationTestsAppTests */ = {
+		E1E90B2B260B3BB10016ECF5 /* IntegrationAppTests */ = {
 			isa = PBXGroup;
 			children = (
-				E1E90B2C260B3BB10016ECF5 /* IntegrationTestsAppTests.swift */,
+				E1E90B2C260B3BB10016ECF5 /* IntegrationAppTests.swift */,
 				E1E90B2E260B3BB10016ECF5 /* Info.plist */,
 			);
-			path = IntegrationTestsAppTests;
+			path = IntegrationAppTests;
 			sourceTree = "<group>";
 		};
 		E1FB483C253891CE0083B263 /* Crashes */ = {
@@ -1171,9 +1171,9 @@
 			productReference = E1ABA05325231E2500ED8AEF /* DatadogSDKTestingTests_iOS.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		E1E90B15260B3B0E0016ECF5 /* IntegrationTestsApp */ = {
+		E1E90B15260B3B0E0016ECF5 /* IntegrationApp */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = E1E90B23260B3B0F0016ECF5 /* Build configuration list for PBXNativeTarget "IntegrationTestsApp" */;
+			buildConfigurationList = E1E90B23260B3B0F0016ECF5 /* Build configuration list for PBXNativeTarget "IntegrationApp" */;
 			buildPhases = (
 				E1E90B12260B3B0E0016ECF5 /* Sources */,
 				E1E90B13260B3B0E0016ECF5 /* Frameworks */,
@@ -1183,14 +1183,14 @@
 			);
 			dependencies = (
 			);
-			name = IntegrationTestsApp;
+			name = IntegrationApp;
 			productName = IntegrationTestsApp;
-			productReference = E1E90B16260B3B0E0016ECF5 /* IntegrationTestsApp.app */;
+			productReference = E1E90B16260B3B0E0016ECF5 /* IntegrationApp.app */;
 			productType = "com.apple.product-type.application";
 		};
-		E1E90B29260B3BB10016ECF5 /* IntegrationTestsAppTests */ = {
+		E1E90B29260B3BB10016ECF5 /* IntegrationAppTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = E1E90B31260B3BB10016ECF5 /* Build configuration list for PBXNativeTarget "IntegrationTestsAppTests" */;
+			buildConfigurationList = E1E90B31260B3BB10016ECF5 /* Build configuration list for PBXNativeTarget "IntegrationAppTests" */;
 			buildPhases = (
 				E1E90B26260B3BB10016ECF5 /* Sources */,
 				E1E90B27260B3BB10016ECF5 /* Frameworks */,
@@ -1201,9 +1201,9 @@
 			dependencies = (
 				E1E90B30260B3BB10016ECF5 /* PBXTargetDependency */,
 			);
-			name = IntegrationTestsAppTests;
+			name = IntegrationAppTests;
 			productName = IntegrationTestsAppTests;
-			productReference = E1E90B2A260B3BB10016ECF5 /* IntegrationTestsAppTests.xctest */;
+			productReference = E1E90B2A260B3BB10016ECF5 /* IntegrationAppTests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -1256,8 +1256,8 @@
 				E157A78B256EB0F000CBCA52 /* DatadogSDKTestingTests_macOS */,
 				E157A74F256E9D3300CBCA52 /* DatadogSDKTesting_tvOS */,
 				E157A7A5256EB0F200CBCA52 /* DatadogSDKTestingTests_tvOS */,
-				E1E90B15260B3B0E0016ECF5 /* IntegrationTestsApp */,
-				E1E90B29260B3BB10016ECF5 /* IntegrationTestsAppTests */,
+				E1E90B15260B3B0E0016ECF5 /* IntegrationApp */,
+				E1E90B29260B3BB10016ECF5 /* IntegrationAppTests */,
 			);
 		};
 /* End PBXProject section */
@@ -1576,7 +1576,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E1E90B2D260B3BB10016ECF5 /* IntegrationTestsAppTests.swift in Sources */,
+				E1E90B2D260B3BB10016ECF5 /* IntegrationAppTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1600,7 +1600,7 @@
 		};
 		E1E90B30260B3BB10016ECF5 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = E1E90B15260B3B0E0016ECF5 /* IntegrationTestsApp */;
+			target = E1E90B15260B3B0E0016ECF5 /* IntegrationApp */;
 			targetProxy = E1E90B2F260B3BB10016ECF5 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -2046,16 +2046,16 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = IntegrationTestsApp/IntegrationTestsApp.entitlements;
+				CODE_SIGN_ENTITLEMENTS = IntegrationApp/IntegrationApp.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				INFOPLIST_FILE = IntegrationTestsApp/Info.plist;
+				INFOPLIST_FILE = IntegrationApp/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.IntegrationTestsApp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.IntegrationApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SWIFT_VERSION = 5.0;
@@ -2067,16 +2067,16 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = IntegrationTestsApp/IntegrationTestsApp.entitlements;
+				CODE_SIGN_ENTITLEMENTS = IntegrationApp/IntegrationApp.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				INFOPLIST_FILE = IntegrationTestsApp/Info.plist;
+				INFOPLIST_FILE = IntegrationApp/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.IntegrationTestsApp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.IntegrationApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SWIFT_VERSION = 5.0;
@@ -2088,17 +2088,17 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				INFOPLIST_FILE = IntegrationTestsAppTests/Info.plist;
+				INFOPLIST_FILE = IntegrationAppTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.IntegrationTestsAppTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.IntegrationAppTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SWIFT_VERSION = 5.0;
-				TEST_TARGET_NAME = IntegrationTestsApp;
+				TEST_TARGET_NAME = IntegrationApp;
 			};
 			name = Debug;
 		};
@@ -2107,17 +2107,17 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				INFOPLIST_FILE = IntegrationTestsAppTests/Info.plist;
+				INFOPLIST_FILE = IntegrationAppTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.IntegrationTestsAppTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.IntegrationAppTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SWIFT_VERSION = 5.0;
-				TEST_TARGET_NAME = IntegrationTestsApp;
+				TEST_TARGET_NAME = IntegrationApp;
 			};
 			name = Release;
 		};
@@ -2187,7 +2187,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		E1E90B23260B3B0F0016ECF5 /* Build configuration list for PBXNativeTarget "IntegrationTestsApp" */ = {
+		E1E90B23260B3B0F0016ECF5 /* Build configuration list for PBXNativeTarget "IntegrationApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				E1E90B21260B3B0F0016ECF5 /* Debug */,
@@ -2196,7 +2196,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		E1E90B31260B3BB10016ECF5 /* Build configuration list for PBXNativeTarget "IntegrationTestsAppTests" */ = {
+		E1E90B31260B3BB10016ECF5 /* Build configuration list for PBXNativeTarget "IntegrationAppTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				E1E90B32260B3BB10016ECF5 /* Debug */,

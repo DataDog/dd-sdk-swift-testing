@@ -7,7 +7,7 @@
 
 import XCTest
 
-class IntegrationTestsAppTests: XCTestCase {
+class IntegrationAppTests: XCTestCase {
     func testApplicationLaunches() throws {
         // UI tests must launch the application that they test. Just by running it means
         // dependencies are correctly solved.

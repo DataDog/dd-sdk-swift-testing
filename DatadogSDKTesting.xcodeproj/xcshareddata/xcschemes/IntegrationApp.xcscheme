@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "E1E90B15260B3B0E0016ECF5"
-               BuildableName = "IntegrationTestsApp.app"
-               BlueprintName = "IntegrationTestsApp"
+               BuildableName = "IntegrationApp.app"
+               BlueprintName = "IntegrationApp"
                ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -33,8 +33,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "E1E90B29260B3BB10016ECF5"
-               BuildableName = "IntegrationTestsAppTests.xctest"
-               BlueprintName = "IntegrationTestsAppTests"
+               BuildableName = "IntegrationAppTests.xctest"
+               BlueprintName = "IntegrationAppTests"
                ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -55,8 +55,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E1E90B15260B3B0E0016ECF5"
-            BuildableName = "IntegrationTestsApp.app"
-            BlueprintName = "IntegrationTestsApp"
+            BuildableName = "IntegrationApp.app"
+            BlueprintName = "IntegrationApp"
             ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -72,8 +72,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E1E90B15260B3B0E0016ECF5"
-            BuildableName = "IntegrationTestsApp.app"
-            BlueprintName = "IntegrationTestsApp"
+            BuildableName = "IntegrationApp.app"
+            BlueprintName = "IntegrationApp"
             ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

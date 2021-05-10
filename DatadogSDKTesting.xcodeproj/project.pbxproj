@@ -38,9 +38,6 @@
 		E12248CB2644037B00305968 /* FileLocatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12248CA2644037B00305968 /* FileLocatorTests.swift */; };
 		E12248CC2644037B00305968 /* FileLocatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12248CA2644037B00305968 /* FileLocatorTests.swift */; };
 		E12248CD2644037B00305968 /* FileLocatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12248CA2644037B00305968 /* FileLocatorTests.swift */; };
-		E12248D72645595B00305968 /* MultiSpanProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12248D62645595B00305968 /* MultiSpanProcessor.swift */; };
-		E12248D82645595B00305968 /* MultiSpanProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12248D62645595B00305968 /* MultiSpanProcessor.swift */; };
-		E12248D92645595B00305968 /* MultiSpanProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12248D62645595B00305968 /* MultiSpanProcessor.swift */; };
 		E12248DC26455DEB00305968 /* libURLSessionInstrumentation in Frameworks */ = {isa = PBXBuildFile; productRef = E12248DB26455DEB00305968 /* libURLSessionInstrumentation */; };
 		E12248DE26455DEB00305968 /* libDatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E12248DD26455DEB00305968 /* libDatadogExporter */; };
 		E12248E026455DF700305968 /* libDatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E12248DF26455DF700305968 /* libDatadogExporter */; };
@@ -302,7 +299,6 @@
 		E12248B62643ECA800305968 /* main */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = main; sourceTree = "<group>"; };
 		E12248C62643EF4200305968 /* SpawnTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpawnTests.swift; sourceTree = "<group>"; };
 		E12248CA2644037B00305968 /* FileLocatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileLocatorTests.swift; sourceTree = "<group>"; };
-		E12248D62645595B00305968 /* MultiSpanProcessor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MultiSpanProcessor.swift; sourceTree = "<group>"; };
 		E12515E4254892C500670D23 /* XCUIApplicationSwizzler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XCUIApplicationSwizzler.swift; sourceTree = "<group>"; };
 		E126DD2C253F366200700A40 /* StdoutCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StdoutCapture.swift; sourceTree = "<group>"; };
 		E126DD2E253F367600700A40 /* StderrCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StderrCapture.swift; sourceTree = "<group>"; };
@@ -470,7 +466,6 @@
 		E116D7D925248C280022779D /* Utils */ = {
 			isa = PBXGroup;
 			children = (
-				E12248D62645595B00305968 /* MultiSpanProcessor.swift */,
 				E1AD07A8252F5CB8003705C1 /* DDError.swift */,
 				E1D476A525DD369F00832592 /* BinaryParser.swift */,
 				E14405A225D6A80800FE3D3C /* GitInfo.swift */,
@@ -1424,7 +1419,6 @@
 				E157A735256E9D1D00CBCA52 /* SimpleSpanSerializer.swift in Sources */,
 				E1DFF0EA257010E700344895 /* PlatformUtils.swift in Sources */,
 				E157A736256E9D1D00CBCA52 /* DDCrashes.swift in Sources */,
-				E12248D82645595B00305968 /* MultiSpanProcessor.swift in Sources */,
 				E157A738256E9D1D00CBCA52 /* DDTestObserver.swift in Sources */,
 				E157A73A256E9D1D00CBCA52 /* DDTracer.swift in Sources */,
 				E157A73E256E9D1D00CBCA52 /* StderrCapture.swift in Sources */,
@@ -1457,7 +1451,6 @@
 				E157A76D256E9D3300CBCA52 /* SimpleSpanSerializer.swift in Sources */,
 				E1DFF0EB257010E800344895 /* PlatformUtils.swift in Sources */,
 				E157A76E256E9D3300CBCA52 /* DDCrashes.swift in Sources */,
-				E12248D92645595B00305968 /* MultiSpanProcessor.swift in Sources */,
 				E157A770256E9D3300CBCA52 /* DDTestObserver.swift in Sources */,
 				E157A772256E9D3300CBCA52 /* DDTracer.swift in Sources */,
 				E157A776256E9D3300CBCA52 /* StderrCapture.swift in Sources */,
@@ -1540,7 +1533,6 @@
 				E1FB4840253891CE0083B263 /* SimpleSpanSerializer.swift in Sources */,
 				E1FB4841253891CE0083B263 /* DDCrashes.swift in Sources */,
 				E1ABA07425231F4700ED8AEF /* DDTestObserver.swift in Sources */,
-				E12248D72645595B00305968 /* MultiSpanProcessor.swift in Sources */,
 				E1798CC62524B9BD008DEBB9 /* DDTracer.swift in Sources */,
 				E141CF60256FD513008B6B70 /* PlatformUtils.swift in Sources */,
 				E126DD2F253F367600700A40 /* StderrCapture.swift in Sources */,
@@ -2221,7 +2213,7 @@
 			repositoryURL = "https://github.com/open-telemetry/opentelemetry-swift";
 			requirement = {
 				kind = revision;
-				revision = 0737ab210941f138b8eaf915b1a3d131f22da19d;
+				revision = 9cd94311069ec45d064ac52774d8c42e7a97c512;
 			};
 		};
 		E157A719256E9D1D00CBCA52 /* XCRemoteSwiftPackageReference "plcrashreporter" */ = {

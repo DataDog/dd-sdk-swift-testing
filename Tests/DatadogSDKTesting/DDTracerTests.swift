@@ -184,7 +184,7 @@ class DDTracerTests: XCTestCase {
         DDEnvironmentValues.environment["ENVIRONMENT_TRACER_SPANID"] = nil
     }
 
-    func testLogStringAppUITested() {
+    func testLogStringAppUI() {
         let testTraceId = TraceId(fromHexString: "ff000000000000000000000000000041")
         let testSpanId = SpanId(fromHexString: "ff00000000000042")
 
@@ -196,7 +196,7 @@ class DDTracerTests: XCTestCase {
 
         let tracer = DDTracer()
 
-        tracer.logStringAppUITested(string: "Hello World", date: Date(timeIntervalSince1970: 1212))
+        tracer.logString(string: "Hello World", date: Date(timeIntervalSince1970: 1212))
         tracer.flush()
         let span = testSpanProcessor.lastProcessedSpan!
 
@@ -205,5 +205,29 @@ class DDTracerTests: XCTestCase {
 
         DDEnvironmentValues.environment["ENVIRONMENT_TRACER_TRACEID"] = nil
         DDEnvironmentValues.environment["ENVIRONMENT_TRACER_SPANID"] = nil
+    }
+
+    func testEnvironmentConstantPropagation() {
+        let tracer = DDTracer()
+        let spanName = "myName"
+
+        let span = tracer.startSpan(name: spanName, attributes: [:]) as! RecordEventsReadableSpan
+        let spanData = span.toSpanData()
+        let environmentValues = tracer.environmentPropagationHTTPHeaders()
+
+        XCTAssertNotNil(environmentValues["OTEL_TRACE_PARENT"])
+        XCTAssert(environmentValues["OTEL_TRACE_PARENT"]?.contains(spanData.traceId.hexString) ?? false)
+        XCTAssertTrue(environmentValues["OTEL_TRACE_PARENT"]?.contains(spanData.spanId.hexString) ?? false)
+        span.end()
+    }
+
+    func testWhenNoContextActivePropagationAreEmpty() {
+        let tracer = DDTracer()
+        let environmentValues = tracer.environmentPropagationHTTPHeaders()
+        let datadogHeaders = tracer.datadogHeaders()
+
+        XCTAssertTrue(environmentValues.isEmpty)
+        XCTAssertTrue(datadogHeaders.isEmpty)
+
     }
 }

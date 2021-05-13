@@ -47,6 +47,18 @@
 		E12248E826455ED100305968 /* libInMemoryExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E12248E726455ED100305968 /* libInMemoryExporter */; };
 		E12248EA26455ED800305968 /* libInMemoryExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E12248E926455ED800305968 /* libInMemoryExporter */; };
 		E12248EC26455EDE00305968 /* libInMemoryExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E12248EB26455EDE00305968 /* libInMemoryExporter */; };
+		E1224A6B264ABCD000305968 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1224A43264ABCCE00305968 /* main.swift */; };
+		E1224A6C264ABCD000305968 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1224A43264ABCCE00305968 /* main.swift */; };
+		E1224A89264ADA6000305968 /* TestRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1224A5D264ABCD000305968 /* TestRunner.swift */; };
+		E1224A8A264ADA6000305968 /* TestRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1224A5D264ABCD000305968 /* TestRunner.swift */; };
+		E1224A8B264ADC7000305968 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1ABA07F25231F8E00ED8AEF /* XCTest.framework */; };
+		E1224A8C264ADC7100305968 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1ABA07F25231F8E00ED8AEF /* XCTest.framework */; };
+		E1224A90264ADFC100305968 /* IntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1224A7D264AC06900305968 /* IntegrationTests.swift */; };
+		E1224A91264ADFC200305968 /* IntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1224A7D264AC06900305968 /* IntegrationTests.swift */; };
+		E1224A94264BCED700305968 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E157A74D256E9D1D00CBCA52 /* DatadogSDKTesting.framework */; };
+		E1224A95264C128600305968 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E157A74D256E9D1D00CBCA52 /* DatadogSDKTesting.framework */; };
+		E1224A96264D59E600305968 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1ABA04A25231E2500ED8AEF /* DatadogSDKTesting.framework */; };
+		E1224A97264D5A1300305968 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1ABA04A25231E2500ED8AEF /* DatadogSDKTesting.framework */; };
 		E12515E5254892C600670D23 /* XCUIApplicationSwizzler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12515E4254892C500670D23 /* XCUIApplicationSwizzler.swift */; };
 		E126DD2D253F366200700A40 /* StdoutCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E126DD2C253F366200700A40 /* StdoutCapture.swift */; };
 		E126DD2F253F367600700A40 /* StderrCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E126DD2E253F367600700A40 /* StderrCapture.swift */; };
@@ -185,6 +197,20 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		E1224A5A264ABCD000305968 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E1ABA04125231E2500ED8AEF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E1224A49264ABCCF00305968;
+			remoteInfo = "TestRunner (iOS)";
+		};
+		E1224A65264ABCD000305968 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E1ABA04125231E2500ED8AEF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E1224A50264ABCCF00305968;
+			remoteInfo = "TestRunner (macOS)";
+		};
 		E157A7C9256EB39F00CBCA52 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = E1ABA04125231E2500ED8AEF /* Project object */;
@@ -299,6 +325,19 @@
 		E12248B62643ECA800305968 /* main */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = main; sourceTree = "<group>"; };
 		E12248C62643EF4200305968 /* SpawnTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpawnTests.swift; sourceTree = "<group>"; };
 		E12248CA2644037B00305968 /* FileLocatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileLocatorTests.swift; sourceTree = "<group>"; };
+		E1224A43264ABCCE00305968 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		E1224A4A264ABCCF00305968 /* TestRunner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TestRunner.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E1224A4C264ABCCF00305968 /* iOS-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "iOS-Info.plist"; sourceTree = "<group>"; };
+		E1224A51264ABCCF00305968 /* TestRunner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TestRunner.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E1224A53264ABCCF00305968 /* macOS-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "macOS-Info.plist"; sourceTree = "<group>"; };
+		E1224A54264ABCCF00305968 /* macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = macOS.entitlements; sourceTree = "<group>"; };
+		E1224A59264ABCCF00305968 /* Tests iOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Tests iOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		E1224A5D264ABCD000305968 /* TestRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestRunner.swift; sourceTree = "<group>"; };
+		E1224A5F264ABCD000305968 /* iOS-tests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "iOS-tests-Info.plist"; sourceTree = "<group>"; };
+		E1224A64264ABCD000305968 /* Tests macOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Tests macOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		E1224A6A264ABCD000305968 /* macOS-tests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "macOS-tests-Info.plist"; sourceTree = "<group>"; };
+		E1224A7D264AC06900305968 /* IntegrationTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IntegrationTests.swift; sourceTree = "<group>"; };
+		E1224A8D264ADD0800305968 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
 		E12515E4254892C500670D23 /* XCUIApplicationSwizzler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XCUIApplicationSwizzler.swift; sourceTree = "<group>"; };
 		E126DD2C253F366200700A40 /* StdoutCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StdoutCapture.swift; sourceTree = "<group>"; };
 		E126DD2E253F367600700A40 /* StderrCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StderrCapture.swift; sourceTree = "<group>"; };
@@ -383,6 +422,40 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		E1224A47264ABCCF00305968 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E1224A97264D5A1300305968 /* DatadogSDKTesting.framework in Frameworks */,
+				E1224A8B264ADC7000305968 /* XCTest.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1224A4E264ABCCF00305968 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E1224A95264C128600305968 /* DatadogSDKTesting.framework in Frameworks */,
+				E1224A8C264ADC7100305968 /* XCTest.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1224A56264ABCCF00305968 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E1224A96264D59E600305968 /* DatadogSDKTesting.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1224A61264ABCD000305968 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E1224A94264BCED700305968 /* DatadogSDKTesting.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E157A740256E9D1D00CBCA52 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -563,6 +636,29 @@
 				E12248B62643ECA800305968 /* main */,
 			);
 			path = heads;
+			sourceTree = "<group>";
+		};
+		E1224A42264ABCCE00305968 /* TestRunner */ = {
+			isa = PBXGroup;
+			children = (
+				E1224A88264AD2D600305968 /* plist */,
+				E1224A43264ABCCE00305968 /* main.swift */,
+				E1224A7D264AC06900305968 /* IntegrationTests.swift */,
+				E1224A5D264ABCD000305968 /* TestRunner.swift */,
+			);
+			path = TestRunner;
+			sourceTree = "<group>";
+		};
+		E1224A88264AD2D600305968 /* plist */ = {
+			isa = PBXGroup;
+			children = (
+				E1224A4C264ABCCF00305968 /* iOS-Info.plist */,
+				E1224A5F264ABCD000305968 /* iOS-tests-Info.plist */,
+				E1224A53264ABCCF00305968 /* macOS-Info.plist */,
+				E1224A6A264ABCD000305968 /* macOS-tests-Info.plist */,
+				E1224A54264ABCCF00305968 /* macOS.entitlements */,
+			);
+			path = plist;
 			sourceTree = "<group>";
 		};
 		E126DD27253F355F00700A40 /* OutputCapture */ = {
@@ -795,6 +891,7 @@
 				E1ABA05725231E2500ED8AEF /* Tests */,
 				E1E90B17260B3B0E0016ECF5 /* IntegrationApp */,
 				E1E90B2B260B3BB10016ECF5 /* IntegrationAppTests */,
+				E1224A42264ABCCE00305968 /* TestRunner */,
 				E1ABA04B25231E2500ED8AEF /* Products */,
 				E1ABA07E25231F8E00ED8AEF /* Frameworks */,
 			);
@@ -811,6 +908,10 @@
 				E157A7BD256EB0F200CBCA52 /* DatadogSDKTestingTests_tvOS.xctest */,
 				E1E90B16260B3B0E0016ECF5 /* IntegrationApp.app */,
 				E1E90B2A260B3BB10016ECF5 /* IntegrationAppTests.xctest */,
+				E1224A4A264ABCCF00305968 /* TestRunner.app */,
+				E1224A51264ABCCF00305968 /* TestRunner.app */,
+				E1224A59264ABCCF00305968 /* Tests iOS.xctest */,
+				E1224A64264ABCD000305968 /* Tests macOS.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -847,6 +948,7 @@
 		E1ABA07E25231F8E00ED8AEF /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				E1224A8D264ADD0800305968 /* XCTest.framework */,
 				E1ABA07F25231F8E00ED8AEF /* XCTest.framework */,
 			);
 			name = Frameworks;
@@ -1027,6 +1129,78 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		E1224A49264ABCCF00305968 /* IntegrationTestsRunner (iOS) */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E1224A79264ABCD000305968 /* Build configuration list for PBXNativeTarget "IntegrationTestsRunner (iOS)" */;
+			buildPhases = (
+				E1224A46264ABCCF00305968 /* Sources */,
+				E1224A47264ABCCF00305968 /* Frameworks */,
+				E1224A48264ABCCF00305968 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "IntegrationTestsRunner (iOS)";
+			packageProductDependencies = (
+			);
+			productName = "TestRunner (iOS)";
+			productReference = E1224A4A264ABCCF00305968 /* TestRunner.app */;
+			productType = "com.apple.product-type.application";
+		};
+		E1224A50264ABCCF00305968 /* IntegrationTestsRunner (macOS) */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E1224A7A264ABCD000305968 /* Build configuration list for PBXNativeTarget "IntegrationTestsRunner (macOS)" */;
+			buildPhases = (
+				E1224A4D264ABCCF00305968 /* Sources */,
+				E1224A4E264ABCCF00305968 /* Frameworks */,
+				E1224A4F264ABCCF00305968 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "IntegrationTestsRunner (macOS)";
+			productName = "TestRunner (macOS)";
+			productReference = E1224A51264ABCCF00305968 /* TestRunner.app */;
+			productType = "com.apple.product-type.application";
+		};
+		E1224A58264ABCCF00305968 /* Tests iOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E1224A7B264ABCD000305968 /* Build configuration list for PBXNativeTarget "Tests iOS" */;
+			buildPhases = (
+				E1224A55264ABCCF00305968 /* Sources */,
+				E1224A56264ABCCF00305968 /* Frameworks */,
+				E1224A57264ABCCF00305968 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				E1224A5B264ABCD000305968 /* PBXTargetDependency */,
+			);
+			name = "Tests iOS";
+			productName = "Tests iOS";
+			productReference = E1224A59264ABCCF00305968 /* Tests iOS.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		E1224A63264ABCD000305968 /* Tests macOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E1224A7C264ABCD000305968 /* Build configuration list for PBXNativeTarget "Tests macOS" */;
+			buildPhases = (
+				E1224A60264ABCD000305968 /* Sources */,
+				E1224A61264ABCD000305968 /* Frameworks */,
+				E1224A62264ABCD000305968 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				E1224A66264ABCD000305968 /* PBXTargetDependency */,
+			);
+			name = "Tests macOS";
+			productName = "Tests macOS";
+			productReference = E1224A64264ABCD000305968 /* Tests macOS.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		E157A717256E9D1D00CBCA52 /* DatadogSDKTesting_macOS */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = E157A74A256E9D1D00CBCA52 /* Build configuration list for PBXNativeTarget "DatadogSDKTesting_macOS" */;
@@ -1212,9 +1386,23 @@
 		E1ABA04125231E2500ED8AEF /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 1240;
+				LastSwiftUpdateCheck = 1250;
 				LastUpgradeCheck = 1250;
 				TargetAttributes = {
+					E1224A49264ABCCF00305968 = {
+						CreatedOnToolsVersion = 12.5;
+					};
+					E1224A50264ABCCF00305968 = {
+						CreatedOnToolsVersion = 12.5;
+					};
+					E1224A58264ABCCF00305968 = {
+						CreatedOnToolsVersion = 12.5;
+						TestTargetID = E1224A49264ABCCF00305968;
+					};
+					E1224A63264ABCD000305968 = {
+						CreatedOnToolsVersion = 12.5;
+						TestTargetID = E1224A50264ABCCF00305968;
+					};
 					E1ABA04925231E2500ED8AEF = {
 						CreatedOnToolsVersion = 12.0.1;
 						LastSwiftMigration = 1200;
@@ -1258,11 +1446,43 @@
 				E157A7A5256EB0F200CBCA52 /* DatadogSDKTestingTests_tvOS */,
 				E1E90B15260B3B0E0016ECF5 /* IntegrationApp */,
 				E1E90B29260B3BB10016ECF5 /* IntegrationAppTests */,
+				E1224A49264ABCCF00305968 /* IntegrationTestsRunner (iOS) */,
+				E1224A50264ABCCF00305968 /* IntegrationTestsRunner (macOS) */,
+				E1224A58264ABCCF00305968 /* Tests iOS */,
+				E1224A63264ABCD000305968 /* Tests macOS */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		E1224A48264ABCCF00305968 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1224A4F264ABCCF00305968 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1224A57264ABCCF00305968 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1224A62264ABCD000305968 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E157A746256E9D1D00CBCA52 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1393,6 +1613,40 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		E1224A46264ABCCF00305968 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E1224A90264ADFC100305968 /* IntegrationTests.swift in Sources */,
+				E1224A6B264ABCD000305968 /* main.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1224A4D264ABCCF00305968 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E1224A91264ADFC200305968 /* IntegrationTests.swift in Sources */,
+				E1224A6C264ABCD000305968 /* main.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1224A55264ABCCF00305968 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E1224A89264ADA6000305968 /* TestRunner.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1224A60264ABCD000305968 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E1224A8A264ADA6000305968 /* TestRunner.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E157A722256E9D1D00CBCA52 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1583,6 +1837,16 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		E1224A5B264ABCD000305968 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E1224A49264ABCCF00305968 /* IntegrationTestsRunner (iOS) */;
+			targetProxy = E1224A5A264ABCD000305968 /* PBXContainerItemProxy */;
+		};
+		E1224A66264ABCD000305968 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E1224A50264ABCCF00305968 /* IntegrationTestsRunner (macOS) */;
+			targetProxy = E1224A65264ABCD000305968 /* PBXContainerItemProxy */;
+		};
 		E157A7CA256EB39F00CBCA52 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = E157A74F256E9D3300CBCA52 /* DatadogSDKTesting_tvOS */;
@@ -1617,6 +1881,187 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		E1224A71264ABCD000305968 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = "TestRunner/plist/iOS-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib/,
+					/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks/,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.IntegrationTestsRunner;
+				PRODUCT_NAME = TestRunner;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		E1224A72264ABCD000305968 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = "TestRunner/plist/iOS-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib/,
+					/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks/,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.IntegrationTestsRunner;
+				PRODUCT_NAME = TestRunner;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		E1224A73264ABCD000305968 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = macOS/macOS.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = "TestRunner/plist/macOS-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib/,
+					/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks/,
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.IntegrationTestsRunner;
+				PRODUCT_NAME = TestRunner;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		E1224A74264ABCD000305968 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = macOS/macOS.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = "TestRunner/plist/macOS-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib/,
+					/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks/,
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.IntegrationTestsRunner;
+				PRODUCT_NAME = TestRunner;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		E1224A75264ABCD000305968 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = "TestRunner/plist/iOS-tests-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 14.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.datadoghq.Tests-iOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = "IntegrationTestsRunner (iOS)";
+			};
+			name = Debug;
+		};
+		E1224A76264ABCD000305968 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = "TestRunner/plist/iOS-tests-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 14.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.datadoghq.Tests-iOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = "IntegrationTestsRunner (iOS)";
+			};
+			name = Release;
+		};
+		E1224A77264ABCD000305968 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = "TestRunner/plist/macOS-tests-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 11.3;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.datadoghq.Tests-macOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = "IntegrationTestsRunner (macOS)";
+			};
+			name = Debug;
+		};
+		E1224A78264ABCD000305968 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = "TestRunner/plist/macOS-tests-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 11.3;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.datadoghq.Tests-macOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = "IntegrationTestsRunner (macOS)";
+			};
+			name = Release;
+		};
 		E157A74B256E9D1D00CBCA52 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -2124,6 +2569,42 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		E1224A79264ABCD000305968 /* Build configuration list for PBXNativeTarget "IntegrationTestsRunner (iOS)" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E1224A71264ABCD000305968 /* Debug */,
+				E1224A72264ABCD000305968 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E1224A7A264ABCD000305968 /* Build configuration list for PBXNativeTarget "IntegrationTestsRunner (macOS)" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E1224A73264ABCD000305968 /* Debug */,
+				E1224A74264ABCD000305968 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E1224A7B264ABCD000305968 /* Build configuration list for PBXNativeTarget "Tests iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E1224A75264ABCD000305968 /* Debug */,
+				E1224A76264ABCD000305968 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E1224A7C264ABCD000305968 /* Build configuration list for PBXNativeTarget "Tests macOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E1224A77264ABCD000305968 /* Debug */,
+				E1224A78264ABCD000305968 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		E157A74A256E9D1D00CBCA52 /* Build configuration list for PBXNativeTarget "DatadogSDKTesting_macOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

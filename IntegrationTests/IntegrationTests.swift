@@ -4,36 +4,41 @@
  * Copyright 2020-2021 Datadog, Inc.
  */
 
+import OpenTelemetrySdk
 import XCTest
 
+let tracer = OpenTelemetrySDK.instance.tracerProvider.get(instrumentationName: "Custom Tracer")
+
 class BasicPass: XCTestCase {
-    func test() throws {
+    func testBasicPass() throws {
         print("BasicPass")
         XCTAssert(true)
     }
 }
 
 class BasicSkip: XCTestCase {
-    func test() throws {
+    func testBasicSkip() throws {
         print("BasicSkip")
         try XCTSkipIf(true)
     }
 }
 
 class BasicError: XCTestCase {
-    func test() throws {
+    func testBasicError() throws {
         print("BasicError")
         XCTAssert(false)
     }
 }
 
 class AsynchronousPass: XCTestCase {
-    func test() throws {
+    func testAsynchronousPass() throws {
         print("AsynchronousPass")
         let expec = expectation(description: "AsynchronousPass")
 
         DispatchQueue.global().async {
-            sleep(2)
+            let span = tracer.spanBuilder(spanName: "AsyncWork").startSpan()
+            sleep(1)
+            span.end()
             expec.fulfill()
         }
 
@@ -46,13 +51,14 @@ class AsynchronousPass: XCTestCase {
 }
 
 class AsynchronousSkip: XCTestCase {
-    func test() throws {
+    func testAsynchronousSkip() throws {
         print("AsynchronousSkip")
         let expec = expectation(description: "AsynchronousPass")
 
         DispatchQueue.global().async {
-            sleep(2)
-            try? XCTSkipIf(true)
+            let span = tracer.spanBuilder(spanName: "AsyncWork").startSpan()
+            sleep(1)
+            span.end()
             expec.fulfill()
         }
 
@@ -61,17 +67,20 @@ class AsynchronousSkip: XCTestCase {
                 print("Error: \(error.localizedDescription)")
             }
         }
+        try XCTSkipIf(true)
     }
 }
 
 class AsynchronousError: XCTestCase {
-    func test() throws {
+    func testAsynchronousError() throws {
         print("AsynchronousError")
         let expec = expectation(description: "AsynchronousPass")
 
         DispatchQueue.global().async {
-            sleep(2)
+            let span = tracer.spanBuilder(spanName: "AsyncWork").startSpan()
+            sleep(1)
             XCTAssert(false)
+            span.end()
             expec.fulfill()
         }
 
@@ -83,9 +92,17 @@ class AsynchronousError: XCTestCase {
     }
 }
 
-class BasicNetwork: XCTestCase {
-    func test() throws {
-        print("BasicNetwork")
+class Benchmark: XCTestCase {
+    func testBenchmark() throws {
+        measure {
+            print("Benchmark")
+        }
+    }
+}
+
+class NetworkIntegration: XCTestCase {
+    func testNetworkIntegration() throws {
+        print("NetworkIntegration")
 
         let url = URL(string: "http://httpbin.org/get")!
         let expec = expectation(description: "GET \(url)")

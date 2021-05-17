@@ -16,7 +16,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "E1224A50264ABCCF00305968"
                BuildableName = "TestRunner.app"
-               BlueprintName = "IntegrationTestsRunner (macOS)"
+               BlueprintName = "IntegrationTests (macOS)"
                ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -32,7 +32,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E1224A50264ABCCF00305968"
             BuildableName = "TestRunner.app"
-            BlueprintName = "IntegrationTestsRunner (macOS)"
+            BlueprintName = "IntegrationTests (macOS)"
             ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -41,11 +41,6 @@
             key = "DD_TEST_RUNNER"
             value = "1"
             isEnabled = "YES">
-         </EnvironmentVariable>
-         <EnvironmentVariable
-            key = "DD_DONT_EXPORT"
-            value = "1"
-            isEnabled = "NO">
          </EnvironmentVariable>
          <EnvironmentVariable
             key = "SRCROOT"
@@ -87,7 +82,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E1224A50264ABCCF00305968"
             BuildableName = "TestRunner.app"
-            BlueprintName = "IntegrationTestsRunner (macOS)"
+            BlueprintName = "IntegrationTests (macOS)"
             ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -104,7 +99,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E1224A50264ABCCF00305968"
             BuildableName = "TestRunner.app"
-            BlueprintName = "IntegrationTestsRunner (macOS)"
+            BlueprintName = "IntegrationTests (macOS)"
             ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

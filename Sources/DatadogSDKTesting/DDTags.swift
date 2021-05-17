@@ -11,9 +11,6 @@ internal struct DDTags {
     /// in traces explorer on [app.datadoghq.com](https://app.datadoghq.com/)
     /// Can be used to customize the resource names grouped under the same operation name.
     ///
-    
-    /// Expects `String` value set for a tag.
-    static let resource = "resource.name"
 
     /// Those keys used to encode information received from the user through `OpenTracingLogFields`, `OpenTracingTagKeys` or custom fields.
     /// Supported by Datadog platform.
@@ -23,7 +20,6 @@ internal struct DDTags {
 
     /// Default span type for spans created without a specifying a type. In general all spans should use this type.
     static let defaultSpanType = "custom"
-
 
     /// Expected value: `String`
     public static let httpMethod = "http.method"

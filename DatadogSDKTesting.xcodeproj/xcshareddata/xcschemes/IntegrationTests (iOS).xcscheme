@@ -16,7 +16,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "E1224A49264ABCCF00305968"
                BuildableName = "TestRunner.app"
-               BlueprintName = "IntegrationTestsRunner (iOS)"
+               BlueprintName = "IntegrationTests (iOS)"
                ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -26,7 +26,33 @@
       buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      shouldUseLaunchSchemeArgsEnv = "YES">
+      shouldUseLaunchSchemeArgsEnv = "NO">
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "E1224A49264ABCCF00305968"
+            BuildableName = "TestRunner.app"
+            BlueprintName = "IntegrationTests (iOS)"
+            ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
+      <EnvironmentVariables>
+         <EnvironmentVariable
+            key = "DD_TEST_RUNNER"
+            value = "1"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "SRCROOT"
+            value = "$(SRCROOT)"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "DATADOG_CLIENT_TOKEN"
+            value = "pub1b624b2f4389b17c43cbb8b9dfd234d4"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+      </EnvironmentVariables>
       <Testables>
          <TestableReference
             skipped = "NO">
@@ -55,8 +81,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E1224A49264ABCCF00305968"
-            BuildableName = "TestRunner.app"
-            BlueprintName = "IntegrationTestsRunner (iOS)"
+            BuildableName = "IntegrationTests.app"
+            BlueprintName = "IntegrationTests (iOS)"
             ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -73,7 +99,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E1224A49264ABCCF00305968"
             BuildableName = "TestRunner.app"
-            BlueprintName = "IntegrationTestsRunner (iOS)"
+            BlueprintName = "IntegrationTests (iOS)"
             ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

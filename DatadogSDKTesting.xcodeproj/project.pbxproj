@@ -277,6 +277,27 @@
 			remoteGlobalIDString = E157A74F256E9D3300CBCA52;
 			remoteInfo = DatadogSDKTesting_tvOS;
 		};
+		E1F4229B2653D7A000233B75 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E1ABA04125231E2500ED8AEF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E1ABA04925231E2500ED8AEF;
+			remoteInfo = DatadogSDKTesting_iOS;
+		};
+		E1F4229D2653D7A600233B75 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E1ABA04125231E2500ED8AEF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E157A717256E9D1D00CBCA52;
+			remoteInfo = DatadogSDKTesting_macOS;
+		};
+		E1F4229F2653D7AD00233B75 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E1ABA04125231E2500ED8AEF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E157A74F256E9D3300CBCA52;
+			remoteInfo = DatadogSDKTesting_tvOS;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -1205,6 +1226,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				E1F4229C2653D7A000233B75 /* PBXTargetDependency */,
 				E1224A5B264ABCD000305968 /* PBXTargetDependency */,
 			);
 			name = "Tests iOS";
@@ -1223,6 +1245,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				E1F4229E2653D7A600233B75 /* PBXTargetDependency */,
 				E1224A66264ABCD000305968 /* PBXTargetDependency */,
 			);
 			name = "Tests macOS";
@@ -1403,6 +1426,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				E1F422A02653D7AD00233B75 /* PBXTargetDependency */,
 				E1F421D226539FAB00233B75 /* PBXTargetDependency */,
 			);
 			name = "Tests tvOS";
@@ -1925,6 +1949,21 @@
 			isa = PBXTargetDependency;
 			target = E157A74F256E9D3300CBCA52 /* DatadogSDKTesting_tvOS */;
 			targetProxy = E1F422992653D4BD00233B75 /* PBXContainerItemProxy */;
+		};
+		E1F4229C2653D7A000233B75 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E1ABA04925231E2500ED8AEF /* DatadogSDKTesting_iOS */;
+			targetProxy = E1F4229B2653D7A000233B75 /* PBXContainerItemProxy */;
+		};
+		E1F4229E2653D7A600233B75 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E157A717256E9D1D00CBCA52 /* DatadogSDKTesting_macOS */;
+			targetProxy = E1F4229D2653D7A600233B75 /* PBXContainerItemProxy */;
+		};
+		E1F422A02653D7AD00233B75 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E157A74F256E9D3300CBCA52 /* DatadogSDKTesting_tvOS */;
+			targetProxy = E1F4229F2653D7AD00233B75 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 

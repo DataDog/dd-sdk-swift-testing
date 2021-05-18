@@ -28,7 +28,7 @@ class TestRunner: XCTestCase {
         app = XCUIApplication()
         app.launchEnvironment["TEST_CLASS"] = "IntegrationTests.\(testDesiredClass)"
         app.launchEnvironment["SRCROOT"] = ProcessInfo.processInfo.environment["SRCROOT"]
-        app.launchEnvironment["DD_SERVICE"] = ProcessInfo.processInfo.environment["dd-sdk-swift-testing-internal-tests"]
+        app.launchEnvironment["DD_SERVICE"] = ProcessInfo.processInfo.environment["dd-sdk-swift-testing-samples"]
         app.launchEnvironment["TEST_OUTPUT_FILE"] = testOutputFile.path
         app.launch()
         let returnSpans = waitForTestResult()

@@ -52,6 +52,11 @@
             value = "pub1b624b2f4389b17c43cbb8b9dfd234d4"
             isEnabled = "YES">
          </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "DD_SERVICE"
+            value = "dd-sdk-swift-testing"
+            isEnabled = "YES">
+         </EnvironmentVariable>
       </EnvironmentVariables>
       <Testables>
          <TestableReference

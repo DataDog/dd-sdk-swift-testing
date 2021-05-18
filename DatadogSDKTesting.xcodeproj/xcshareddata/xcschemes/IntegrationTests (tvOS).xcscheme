@@ -52,13 +52,18 @@
             value = "pub1b624b2f4389b17c43cbb8b9dfd234d4"
             isEnabled = "YES">
          </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "DD_SERVICE"
+            value = "dd-sdk-swift-testing"
+            isEnabled = "YES">
+         </EnvironmentVariable>
       </EnvironmentVariables>
       <Testables>
          <TestableReference
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "E1F4218D2652CFEC00233B75"
+               BlueprintIdentifier = "E1F421CB26539FAB00233B75"
                BuildableName = "Tests tvOS.xctest"
                BlueprintName = "Tests tvOS"
                ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">

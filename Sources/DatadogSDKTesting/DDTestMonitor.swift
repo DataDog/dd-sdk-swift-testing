@@ -33,7 +33,9 @@ internal class DDTestMonitor {
         testObserver = DDTestObserver(tracer: tracer)
 
         if tracer.isBinaryUnderUITesting {
-            testObserver = DDTestObserver(tracer: tracer)
+            if tracer.env.underTesting {
+                testObserver = DDTestObserver(tracer: tracer)
+            }
 
             notificationObserver = NotificationCenter.default.addObserver(
                 forName: launchNotificationName,

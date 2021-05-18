@@ -182,7 +182,6 @@
 		E1DFF0EA257010E700344895 /* PlatformUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141CF5F256FD513008B6B70 /* PlatformUtils.swift */; };
 		E1DFF0EB257010E800344895 /* PlatformUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141CF5F256FD513008B6B70 /* PlatformUtils.swift */; };
 		E1F42084264D6B7500233B75 /* FileTraceExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F42083264D6B7500233B75 /* FileTraceExporter.swift */; };
-		E1F42085264D6B7500233B75 /* FileTraceExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F42083264D6B7500233B75 /* FileTraceExporter.swift */; };
 		E1F42086264D6C2A00233B75 /* SimpleSpanData.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FB483F253891CE0083B263 /* SimpleSpanData.swift */; };
 		E1F42088264D6C2B00233B75 /* SimpleSpanData.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FB483F253891CE0083B263 /* SimpleSpanData.swift */; };
 		E1F4208C264D752B00233B75 /* SimpleSpanData.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FB483F253891CE0083B263 /* SimpleSpanData.swift */; };
@@ -191,6 +190,18 @@
 		E1F4209C2652752400233B75 /* DDTags.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA07125231F4700ED8AEF /* DDTags.swift */; };
 		E1F4209D2652817700233B75 /* PlatformUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141CF5F256FD513008B6B70 /* PlatformUtils.swift */; };
 		E1F4209E2652817800233B75 /* PlatformUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141CF5F256FD513008B6B70 /* PlatformUtils.swift */; };
+		E1F421A92652D07E00233B75 /* IntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1224A7D264AC06900305968 /* IntegrationTests.swift */; };
+		E1F421AA2652D07E00233B75 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1224A43264ABCCE00305968 /* main.swift */; };
+		E1F421AC2652D08D00233B75 /* SimpleSpanData.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FB483F253891CE0083B263 /* SimpleSpanData.swift */; };
+		E1F421AE2652D0A100233B75 /* FileTraceExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F42083264D6B7500233B75 /* FileTraceExporter.swift */; };
+		E1F421B22652D0E900233B75 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E157A785256E9D3300CBCA52 /* DatadogSDKTesting.framework */; };
+		E1F421B42652D0F500233B75 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1F421B32652D0F500233B75 /* XCTest.framework */; };
+		E1F421D62653A04B00233B75 /* FileTraceExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F42083264D6B7500233B75 /* FileTraceExporter.swift */; };
+		E1F421D72653A07D00233B75 /* TestRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1224A5D264ABCD000305968 /* TestRunner.swift */; };
+		E1F421D82653A08200233B75 /* DDTags.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA07125231F4700ED8AEF /* DDTags.swift */; };
+		E1F421D92653A08A00233B75 /* PlatformUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141CF5F256FD513008B6B70 /* PlatformUtils.swift */; };
+		E1F421DA2653A09800233B75 /* SimpleSpanData.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FB483F253891CE0083B263 /* SimpleSpanData.swift */; };
+		E1F421DB2653A0A800233B75 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E157A785256E9D3300CBCA52 /* DatadogSDKTesting.framework */; };
 		E1F595D42609FC3000AE92B7 /* DDNetworkInstrumentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F595D32609FC3000AE92B7 /* DDNetworkInstrumentation.swift */; };
 		E1F595D52609FC3000AE92B7 /* DDNetworkInstrumentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F595D32609FC3000AE92B7 /* DDNetworkInstrumentation.swift */; };
 		E1F595D62609FC3000AE92B7 /* DDNetworkInstrumentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F595D32609FC3000AE92B7 /* DDNetworkInstrumentation.swift */; };
@@ -237,6 +248,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = E1ABA04925231E2500ED8AEF;
 			remoteInfo = DatadogSDKTesting;
+		};
+		E1F421D126539FAB00233B75 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E1ABA04125231E2500ED8AEF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E1F4217A2652CFEB00233B75;
+			remoteInfo = "IntegrationTests (tvOS)";
 		};
 /* End PBXContainerItemProxy section */
 
@@ -405,6 +423,11 @@
 		E1D476A525DD369F00832592 /* BinaryParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinaryParser.swift; sourceTree = "<group>"; };
 		E1D6EFA125F6563000E8C3AE /* DDSymbolAddress.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DDSymbolAddress.h; sourceTree = "<group>"; };
 		E1F42083264D6B7500233B75 /* FileTraceExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileTraceExporter.swift; sourceTree = "<group>"; };
+		E1F4217B2652CFEB00233B75 /* IntegrationTests.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IntegrationTests.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E1F421892652CFEC00233B75 /* tvOS-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "tvOS-Info.plist"; sourceTree = "<group>"; };
+		E1F421942652CFEC00233B75 /* tvOS-tests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "tvOS-tests-Info.plist"; sourceTree = "<group>"; };
+		E1F421B32652D0F500233B75 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Platforms/AppleTVOS.platform/Developer/Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
+		E1F421CC26539FAB00233B75 /* Tests tvOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Tests tvOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E1F595D32609FC3000AE92B7 /* DDNetworkInstrumentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDNetworkInstrumentation.swift; sourceTree = "<group>"; };
 		E1FB483D253891CE0083B263 /* SimpleSpanSerializer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleSpanSerializer.swift; sourceTree = "<group>"; };
 		E1FB483E253891CE0083B263 /* DDCrashes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DDCrashes.swift; sourceTree = "<group>"; };
@@ -507,6 +530,23 @@
 			buildActionMask = 2147483647;
 			files = (
 				E1FB48312538909D0083B263 /* DatadogSDKTesting.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1F421782652CFEB00233B75 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E1F421B22652D0E900233B75 /* DatadogSDKTesting.framework in Frameworks */,
+				E1F421B42652D0F500233B75 /* XCTest.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1F421C926539FAB00233B75 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E1F421DB2653A0A800233B75 /* DatadogSDKTesting.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -635,6 +675,8 @@
 				E1224A53264ABCCF00305968 /* macOS-Info.plist */,
 				E1224A6A264ABCD000305968 /* macOS-tests-Info.plist */,
 				E1224A54264ABCCF00305968 /* macOS.entitlements */,
+				E1F421892652CFEC00233B75 /* tvOS-Info.plist */,
+				E1F421942652CFEC00233B75 /* tvOS-tests-Info.plist */,
 			);
 			path = plist;
 			sourceTree = "<group>";
@@ -886,6 +928,8 @@
 				E1224A51264ABCCF00305968 /* IntegrationTests.app */,
 				E1224A59264ABCCF00305968 /* Tests iOS.xctest */,
 				E1224A64264ABCD000305968 /* Tests macOS.xctest */,
+				E1F4217B2652CFEB00233B75 /* IntegrationTests.app */,
+				E1F421CC26539FAB00233B75 /* Tests tvOS.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -922,6 +966,7 @@
 		E1ABA07E25231F8E00ED8AEF /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				E1F421B32652D0F500233B75 /* XCTest.framework */,
 				E1224A8D264ADD0800305968 /* XCTest.framework */,
 				E1ABA07F25231F8E00ED8AEF /* XCTest.framework */,
 			);
@@ -1306,6 +1351,41 @@
 			productReference = E1ABA05325231E2500ED8AEF /* DatadogSDKTestingTests_iOS.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		E1F4217A2652CFEB00233B75 /* IntegrationTests (tvOS) */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E1F421A02652CFEC00233B75 /* Build configuration list for PBXNativeTarget "IntegrationTests (tvOS)" */;
+			buildPhases = (
+				E1F421772652CFEB00233B75 /* Sources */,
+				E1F421782652CFEB00233B75 /* Frameworks */,
+				E1F421792652CFEB00233B75 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "IntegrationTests (tvOS)";
+			productName = IntegrationTests;
+			productReference = E1F4217B2652CFEB00233B75 /* IntegrationTests.app */;
+			productType = "com.apple.product-type.application";
+		};
+		E1F421CB26539FAB00233B75 /* Tests tvOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E1F421D326539FAB00233B75 /* Build configuration list for PBXNativeTarget "Tests tvOS" */;
+			buildPhases = (
+				E1F421C826539FAB00233B75 /* Sources */,
+				E1F421C926539FAB00233B75 /* Frameworks */,
+				E1F421CA26539FAB00233B75 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				E1F421D226539FAB00233B75 /* PBXTargetDependency */,
+			);
+			name = "Tests tvOS";
+			productName = "Tests tvOS";
+			productReference = E1F421CC26539FAB00233B75 /* Tests tvOS.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -1337,6 +1417,13 @@
 						CreatedOnToolsVersion = 12.0.1;
 						LastSwiftMigration = 1200;
 					};
+					E1F4217A2652CFEB00233B75 = {
+						CreatedOnToolsVersion = 12.5;
+					};
+					E1F421CB26539FAB00233B75 = {
+						CreatedOnToolsVersion = 12.5;
+						TestTargetID = E1F4217A2652CFEB00233B75;
+					};
 				};
 			};
 			buildConfigurationList = E1ABA04425231E2500ED8AEF /* Build configuration list for PBXProject "DatadogSDKTesting" */;
@@ -1365,8 +1452,10 @@
 				E157A7A5256EB0F200CBCA52 /* DatadogSDKTestingTests_tvOS */,
 				E1224A49264ABCCF00305968 /* IntegrationTests (iOS) */,
 				E1224A50264ABCCF00305968 /* IntegrationTests (macOS) */,
+				E1F4217A2652CFEB00233B75 /* IntegrationTests (tvOS) */,
 				E1224A58264ABCCF00305968 /* Tests iOS */,
 				E1224A63264ABCD000305968 /* Tests macOS */,
+				E1F421CB26539FAB00233B75 /* Tests tvOS */,
 			);
 		};
 /* End PBXProject section */
@@ -1457,6 +1546,20 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E1F421792652CFEB00233B75 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1F421CA26539FAB00233B75 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
@@ -1531,7 +1634,7 @@
 			files = (
 				E1224A91264ADFC200305968 /* IntegrationTests.swift in Sources */,
 				E1F42088264D6C2B00233B75 /* SimpleSpanData.swift in Sources */,
-				E1F42085264D6B7500233B75 /* FileTraceExporter.swift in Sources */,
+				E1F421D62653A04B00233B75 /* FileTraceExporter.swift in Sources */,
 				E1224A6C264ABCD000305968 /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1729,6 +1832,28 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E1F421772652CFEB00233B75 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E1F421A92652D07E00233B75 /* IntegrationTests.swift in Sources */,
+				E1F421AC2652D08D00233B75 /* SimpleSpanData.swift in Sources */,
+				E1F421AE2652D0A100233B75 /* FileTraceExporter.swift in Sources */,
+				E1F421AA2652D07E00233B75 /* main.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1F421C826539FAB00233B75 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E1F421D92653A08A00233B75 /* PlatformUtils.swift in Sources */,
+				E1F421DA2653A09800233B75 /* SimpleSpanData.swift in Sources */,
+				E1F421D82653A08200233B75 /* DDTags.swift in Sources */,
+				E1F421D72653A07D00233B75 /* TestRunner.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -1757,6 +1882,11 @@
 			target = E1ABA04925231E2500ED8AEF /* DatadogSDKTesting_iOS */;
 			targetProxy = E1ABA05525231E2500ED8AEF /* PBXContainerItemProxy */;
 		};
+		E1F421D226539FAB00233B75 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E1F4217A2652CFEB00233B75 /* IntegrationTests (tvOS) */;
+			targetProxy = E1F421D126539FAB00233B75 /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
@@ -1772,8 +1902,8 @@
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
-					/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib/,
-					/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks/,
+					/Applications/Xcode.app/Contents/Developer/Platforms/AppleTVSimulator.platform/Developer/usr/lib/,
+					/Applications/Xcode.app/Contents/Developer/Platforms/AppleTVSimulator.platform/Developer/Library/Frameworks/,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.IntegrationTests;
 				PRODUCT_NAME = IntegrationTests;
@@ -1795,8 +1925,8 @@
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
-					/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib/,
-					/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks/,
+					/Applications/Xcode.app/Contents/Developer/Platforms/AppleTVSimulator.platform/Developer/usr/lib/,
+					/Applications/Xcode.app/Contents/Developer/Platforms/AppleTVSimulator.platform/Developer/Library/Frameworks/,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.IntegrationTests;
 				PRODUCT_NAME = IntegrationTests;
@@ -2365,6 +2495,94 @@
 			};
 			name = Release;
 		};
+		E1F421A12652CFEC00233B75 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_ASSET_PATHS = "\"IntegrationTests/Preview Content\"";
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = "IntegrationTests/plist/tvOS-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					/Applications/Xcode.app/Contents/Developer/Platforms/AppleTVSimulator.platform/Developer/usr/lib/,
+					/Applications/Xcode.app/Contents/Developer/Platforms/AppleTVSimulator.platform/Developer/Library/Frameworks/,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.IntegrationTests;
+				PRODUCT_NAME = IntegrationTests;
+				SDKROOT = appletvos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 12.1;
+			};
+			name = Debug;
+		};
+		E1F421A22652CFEC00233B75 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_ASSET_PATHS = "\"IntegrationTests/Preview Content\"";
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = "IntegrationTests/plist/tvOS-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					/Applications/Xcode.app/Contents/Developer/Platforms/AppleTVSimulator.platform/Developer/usr/lib/,
+					/Applications/Xcode.app/Contents/Developer/Platforms/AppleTVSimulator.platform/Developer/Library/Frameworks/,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.IntegrationTests;
+				PRODUCT_NAME = IntegrationTests;
+				SDKROOT = appletvos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 12.1;
+			};
+			name = Release;
+		};
+		E1F421D426539FAB00233B75 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = "IntegrationTests/plist/tvOS-tests-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.datadoghq.Tests-tvOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = appletvos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TEST_TARGET_NAME = "IntegrationTests (tvOS)";
+				TVOS_DEPLOYMENT_TARGET = 14.5;
+			};
+			name = Debug;
+		};
+		E1F421D526539FAB00233B75 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = "IntegrationTests/plist/tvOS-tests-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.datadoghq.Tests-tvOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = appletvos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TEST_TARGET_NAME = "IntegrationTests (tvOS)";
+				TVOS_DEPLOYMENT_TARGET = 14.5;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -2463,6 +2681,24 @@
 			buildConfigurations = (
 				E1ABA06225231E2500ED8AEF /* Debug */,
 				E1ABA06325231E2500ED8AEF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E1F421A02652CFEC00233B75 /* Build configuration list for PBXNativeTarget "IntegrationTests (tvOS)" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E1F421A12652CFEC00233B75 /* Debug */,
+				E1F421A22652CFEC00233B75 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E1F421D326539FAB00233B75 /* Build configuration list for PBXNativeTarget "Tests tvOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E1F421D426539FAB00233B75 /* Debug */,
+				E1F421D526539FAB00233B75 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

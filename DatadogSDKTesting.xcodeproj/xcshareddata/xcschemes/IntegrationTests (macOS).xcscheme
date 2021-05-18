@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "E1224A50264ABCCF00305968"
-               BuildableName = "TestRunner.app"
+               BuildableName = "IntegrationTests.app"
                BlueprintName = "IntegrationTests (macOS)"
                ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
             </BuildableReference>
@@ -31,7 +31,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E1224A50264ABCCF00305968"
-            BuildableName = "TestRunner.app"
+            BuildableName = "IntegrationTests.app"
             BlueprintName = "IntegrationTests (macOS)"
             ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
          </BuildableReference>
@@ -81,7 +81,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E1224A50264ABCCF00305968"
-            BuildableName = "TestRunner.app"
+            BuildableName = "IntegrationTests.app"
             BlueprintName = "IntegrationTests (macOS)"
             ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
          </BuildableReference>
@@ -98,7 +98,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E1224A50264ABCCF00305968"
-            BuildableName = "TestRunner.app"
+            BuildableName = "IntegrationTests.app"
             BlueprintName = "IntegrationTests (macOS)"
             ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
          </BuildableReference>

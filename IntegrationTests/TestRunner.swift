@@ -156,9 +156,11 @@ class TestRunner: XCTestCase {
         XCTAssertEqual(attrib[DDGenericTags.type], "test")
         XCTAssertEqual(attrib[DDTestTags.testBundle], "IntegrationTests")
         XCTAssertEqual(attrib[DDTestTags.testFramework], "XCTest")
+        #if !os(tvOS)
         XCTAssertEqual(attrib[DDTestTags.testSourceFile], "IntegrationTests/IntegrationTests.swift")
         XCTAssertGreaterThan(Int(attrib[DDTestTags.testSourceStartLine] ?? "0") ?? 0, 0)
         XCTAssertGreaterThan(Int(attrib[DDTestTags.testSourceEndLine] ?? "0") ?? 0, 0)
+        #endif
         XCTAssertEqual(attrib[DDOSTags.osPlatform], PlatformUtils.getRunningPlatform())
         XCTAssertEqual(attrib[DDOSTags.osArchitecture], PlatformUtils.getPlatformArchitecture())
         XCTAssertEqual(attrib[DDOSTags.osVersion], PlatformUtils.getDeviceVersion())

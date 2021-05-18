@@ -1941,8 +1941,8 @@
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
-					/Applications/Xcode.app/Contents/Developer/Platforms/AppleTVSimulator.platform/Developer/usr/lib/,
-					/Applications/Xcode.app/Contents/Developer/Platforms/AppleTVSimulator.platform/Developer/Library/Frameworks/,
+					/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib/,
+					/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks/,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.IntegrationTests;
 				PRODUCT_NAME = IntegrationTests;
@@ -1964,8 +1964,8 @@
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
-					/Applications/Xcode.app/Contents/Developer/Platforms/AppleTVSimulator.platform/Developer/usr/lib/,
-					/Applications/Xcode.app/Contents/Developer/Platforms/AppleTVSimulator.platform/Developer/Library/Frameworks/,
+					/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib/,
+					/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks/,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.IntegrationTests;
 				PRODUCT_NAME = IntegrationTests;

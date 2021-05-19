@@ -25,13 +25,14 @@ class DDTracerTests: XCTestCase {
 
         let spanData = span.toSpanData()
         XCTAssertEqual(spanData.name, spanName)
-        XCTAssertEqual(spanData.attributes.count, 1)
+        XCTAssertEqual(spanData.attributes.count, 2)
+        XCTAssertEqual(spanData.attributes["_dd.origin"]?.description, "ciapp-test")
         XCTAssertEqual(spanData.attributes["myKey"]?.description, "myValue")
 
         span.end()
     }
 
-    func testWhenCalledStartSpanWithoutAttributes_spanIsCreatedWithoutAttributes() {
+    func testWhenCalledStartSpanWithoutAttributes_spanIsCreatedWithJustOriginAttributes() {
         let tracer = DDTracer()
         let spanName = "myName"
 
@@ -40,7 +41,8 @@ class DDTracerTests: XCTestCase {
         let spanData = span.toSpanData()
 
         XCTAssertEqual(spanData.name, spanName)
-        XCTAssertEqual(spanData.attributes.count, 0)
+        XCTAssertEqual(spanData.attributes.count, 1)
+        XCTAssertEqual(spanData.attributes["_dd.origin"]?.description, "ciapp-test")
 
         span.end()
     }
@@ -85,7 +87,7 @@ class DDTracerTests: XCTestCase {
         XCTAssertEqual(spanData.name, "name")
         XCTAssertEqual(spanData.traceId, TraceId(idHi: 1, idLo: 2))
         XCTAssertEqual(spanData.spanId, SpanId(id: 3))
-        XCTAssertEqual(spanData.attributes[DDTestTags.testStatus], AttributeValue.string(DDTestTags.statusFail))
+        XCTAssertEqual(spanData.attributes[DDTestTags.testStatus], AttributeValue.string(DDTagValues.statusFail))
         XCTAssertEqual(spanData.status, Status.error(description: errorMessage))
         XCTAssertEqual(spanData.attributes[DDTags.errorType], AttributeValue.string(errorType))
         XCTAssertEqual(spanData.attributes[DDTags.errorMessage], AttributeValue.string(errorMessage))
@@ -173,7 +175,7 @@ class DDTracerTests: XCTestCase {
 
         XCTAssertEqual(spanData.name, "name")
         XCTAssertEqual(spanData.traceId, testTraceId)
-        XCTAssertEqual(spanData.attributes[DDTestTags.testStatus], AttributeValue.string(DDTestTags.statusFail))
+        XCTAssertEqual(spanData.attributes[DDTestTags.testStatus], AttributeValue.string(DDTagValues.statusFail))
         XCTAssertEqual(spanData.status, Status.error(description: errorMessage))
         XCTAssertEqual(spanData.attributes[DDTags.errorType], AttributeValue.string(errorType))
         XCTAssertEqual(spanData.attributes[DDTags.errorMessage], AttributeValue.string(errorMessage))
@@ -228,6 +230,5 @@ class DDTracerTests: XCTestCase {
 
         XCTAssertTrue(environmentValues.isEmpty)
         XCTAssertTrue(datadogHeaders.isEmpty)
-
     }
 }

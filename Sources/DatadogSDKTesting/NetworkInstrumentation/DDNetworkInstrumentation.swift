@@ -68,8 +68,11 @@ class DDNetworkInstrumentation {
         else {
             return false
         }
-        tracer.datadogHeaders().forEach {
-            request.addValue($0.value, forHTTPHeaderField: $0.key)
+
+        if request.allHTTPHeaderFields?[DDHeaders.originField.rawValue] == nil {
+            tracer.datadogHeaders().forEach {
+                request.addValue($0.value, forHTTPHeaderField: $0.key)
+            }
         }
 
         return true

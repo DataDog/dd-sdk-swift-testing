@@ -6,13 +6,14 @@
 
 import DatadogExporter
 import Foundation
+import InMemoryExporter
 import OpenTelemetryApi
 import OpenTelemetrySdk
-import InMemoryExporter
 
 enum DDHeaders: String, CaseIterable {
     case traceIDField = "x-datadog-trace-id"
     case parentSpanIDField = "x-datadog-parent-id"
+    case originField = "X-Datadog-Origin"
 }
 
 internal class DDTracer {
@@ -100,6 +101,7 @@ internal class DDTracer {
         }
 
         OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(spanProcessor)
+        OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(OriginSpanProcessor())
     }
 
     func startSpan(name: String, attributes: [String: String], date: Date? = nil) -> Span {
@@ -152,7 +154,7 @@ internal class DDTracer {
             attributes.updateValue(value: AttributeValue.string($0.value), forKey: $0.key)
         }
 
-        attributes.updateValue(value: AttributeValue.string(DDTestTags.statusFail), forKey: DDTestTags.testStatus)
+        attributes.updateValue(value: AttributeValue.string(DDTagValues.statusFail), forKey: DDTestTags.testStatus)
         attributes.updateValue(value: AttributeValue.string(errorType), forKey: DDTags.errorType)
         if errorStack.count < 5000 {
             attributes.updateValue(value: AttributeValue.string(errorMessage), forKey: DDTags.errorMessage)
@@ -263,7 +265,8 @@ internal class DDTracer {
             return [String: String]()
         }
         return [DDHeaders.traceIDField.rawValue: String(propagationContext.traceId.rawLowerLong),
-                DDHeaders.parentSpanIDField.rawValue: String(propagationContext.spanId.rawValue)]
+                DDHeaders.parentSpanIDField.rawValue: String(propagationContext.spanId.rawValue),
+                DDHeaders.originField.rawValue: "ciapp-test"]
     }
 
     func tracePropagationHTTPHeaders() -> [String: String] {

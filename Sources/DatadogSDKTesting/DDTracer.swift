@@ -216,13 +216,18 @@ internal class DDTracer {
         return span
     }
 
+    private func attributesForString(_ string: String) -> [String: AttributeValue] {
+        return ["message": AttributeValue.string(string),
+                DDGenericTags.origin: AttributeValue.string(DDTagValues.originCiApp)]
+    }
+
     func logString(string: String, date: Date? = nil) {
         if launchSpanContext != nil, activeSpan == nil {
             // This is a special case when an app executed trough a UITest, logs without a span
             return logStringAppUITested(string: string, date: date)
         }
 
-        activeSpan?.addEvent(name: "logString", attributes: ["message": AttributeValue.string(string)], timestamp: date ?? Date())
+        activeSpan?.addEvent(name: "logString", attributes: attributesForString(string), timestamp: date ?? Date())
     }
 
     /// This method is only currently used for loggign the steps when runnning UITest
@@ -231,7 +236,7 @@ internal class DDTracer {
             return
         }
         let timestamp = activeSpan.startTime.addingTimeInterval(timeIntervalSinceSpanStart)
-        activeSpan.addEvent(name: "logString", attributes: ["message": AttributeValue.string(string)], timestamp: timestamp)
+        activeSpan.addEvent(name: "logString", attributes: attributesForString(string), timestamp: timestamp)
     }
 
     /// This method is only currently used when logging with an app being launched from a UITest, and no span has been created in the App.
@@ -239,7 +244,7 @@ internal class DDTracer {
     /// test Span that lunched the app.
     func logStringAppUITested(string: String, date: Date? = nil) {
         let auxSpan = createSpanFromLaunchContext()
-        auxSpan.addEvent(name: "logString", attributes: ["message": AttributeValue.string(string)], timestamp: date ?? Date())
+        auxSpan.addEvent(name: "logString", attributes: attributesForString(string), timestamp: date ?? Date())
         backgroundWorkQueue.async {
             auxSpan.status = .ok
             auxSpan.end()

@@ -19,7 +19,7 @@ jobs:
       run: make test-iOS
     - name: Test tvOS
       run: make test-tvOS
-  test-10.13:
+  test-10_13:
     runs-on: macos-10.13
     steps:
     - name: Checkout
@@ -32,7 +32,7 @@ jobs:
       run: make test-iOS
     - name: Test tvOS
       run: make test-tvOS
-  test-10.14:
+  test-10_14:
     runs-on: macos-10.14
     steps:
     - name: Checkout
@@ -45,7 +45,7 @@ jobs:
       run: make test-iOS
     - name: Test tvOS
       run: make test-tvOS
-  test-10.15:
+  test-10_15:
     runs-on: macos-10.15
     steps:
     - name: Checkout
@@ -58,7 +58,7 @@ jobs:
       run: make test-iOS
     - name: Test tvOS
       run: make test-tvOS
-  test-11.0:
+  test-11_0:
     runs-on: macos-11.0
     steps:
     - name: Checkout

@@ -100,7 +100,8 @@ class DDEnvironmentValuesTests: XCTestCase {
 
         let span = createSimpleSpan()
         var spanData = span.toSpanData()
-        XCTAssertEqual(spanData.attributes.count, 0)
+        XCTAssertEqual(spanData.attributes.count, 1)
+        XCTAssertEqual(spanData.attributes["_dd.origin"]?.description, "ciapp-test")
 
         let env = DDEnvironmentValues()
         env.addTagsToSpan(span: span)
@@ -123,7 +124,8 @@ class DDEnvironmentValuesTests: XCTestCase {
 
         let span = createSimpleSpan()
         var spanData = span.toSpanData()
-        XCTAssertEqual(spanData.attributes.count, 0)
+        XCTAssertEqual(spanData.attributes.count, 1)
+        XCTAssertEqual(spanData.attributes["_dd.origin"]?.description, "ciapp-test")
 
         let env = DDEnvironmentValues()
         env.addTagsToSpan(span: span)
@@ -140,7 +142,8 @@ class DDEnvironmentValuesTests: XCTestCase {
 
         let span = createSimpleSpan()
         var spanData = span.toSpanData()
-        XCTAssertEqual(spanData.attributes.count, 0)
+        XCTAssertEqual(spanData.attributes.count, 1)
+        XCTAssertEqual(spanData.attributes["_dd.origin"]?.description, "ciapp-test")
 
         let env = DDEnvironmentValues()
         env.addTagsToSpan(span: span)

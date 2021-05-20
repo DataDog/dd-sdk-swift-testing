@@ -73,13 +73,13 @@ internal class DDTestObserver: NSObject, XCTestObservation {
 
         let attributes: [String: String] = [
             DDGenericTags.language: "swift",
-            DDGenericTags.type: DDTestTags.typeTest,
+            DDGenericTags.type: DDTagValues.typeTest,
             DDGenericTags.resourceName: "\(currentBundleName).\(testSuite).\(testName)",
             DDTestTags.testName: testName,
             DDTestTags.testSuite: testSuite,
             DDTestTags.testFramework: "XCTest",
             DDTestTags.testBundle: currentBundleName,
-            DDTestTags.testType: DDTestTags.typeTest,
+            DDTestTags.testType: DDTagValues.typeTest,
             DDOSTags.osPlatform: tracer.env.osName,
             DDOSTags.osArchitecture: tracer.env.osArchitecture,
             DDOSTags.osVersion: tracer.env.osVersion,
@@ -122,13 +122,13 @@ internal class DDTestObserver: NSObject, XCTestObservation {
         }
         var status: String
         if supportsSkipping, testCase.testRun?.hasBeenSkipped == true {
-            status = DDTestTags.statusSkip
+            status = DDTagValues.statusSkip
             activeTest.status = .ok
         } else if testCase.testRun?.hasSucceeded ?? false {
-            status = DDTestTags.statusPass
+            status = DDTagValues.statusPass
             activeTest.status = .ok
         } else {
-            status = DDTestTags.statusFail
+            status = DDTagValues.statusFail
             activeTest.status = .error(description: "Test failed")
         }
 
@@ -165,7 +165,7 @@ internal class DDTestObserver: NSObject, XCTestObservation {
             return
         }
 
-        activeTest.setAttribute(key: DDTestTags.testType, value: DDTestTags.typeBenchmark)
+        activeTest.setAttribute(key: DDTestTags.testType, value: DDTagValues.typeBenchmark)
         let values = measurements.map { $0 * 1_000_000_000 } // Convert to nanoseconds
         activeTest.setAttribute(key: DDBenchmarkTags.benchmarkRuns, value: values.count)
         activeTest.setAttribute(key: DDBenchmarkTags.statisticsN, value: values.count)

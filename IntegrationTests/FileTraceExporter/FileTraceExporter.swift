@@ -26,9 +26,8 @@ public class FileTraceExporter: SpanExporter {
     }
 
     public func flush() -> SpanExporterResultCode {
-        var outputData = Data()
         do {
-            outputData = try JSONEncoder().encode(sampledSpans)
+            var outputData = try JSONEncoder().encode(sampledSpans)
             try outputData.write(to: outputURL, options: .atomicWrite)
         } catch {
             return .failure

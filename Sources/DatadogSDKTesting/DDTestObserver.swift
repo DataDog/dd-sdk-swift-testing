@@ -167,6 +167,7 @@ internal class DDTestObserver: NSObject, XCTestObservation {
 
         activeTest.setAttribute(key: DDTestTags.testType, value: DDTestTags.typeBenchmark)
         let values = measurements.map { $0 * 1_000_000_000 } // Convert to nanoseconds
+        activeTest.setAttribute(key: DDBenchmarkTags.benchmarkRuns, value: values.count)
         activeTest.setAttribute(key: DDBenchmarkTags.statisticsN, value: values.count)
         if let average = Sigma.average(values) {
             activeTest.setAttribute(key: DDBenchmarkTags.durationMean, value: average)
@@ -199,10 +200,10 @@ internal class DDTestObserver: NSObject, XCTestObservation {
             activeTest.setAttribute(key: DDBenchmarkTags.statisticsP99, value: percentile99)
         }
         if let percentile95 = Sigma.percentile(values, percentile: 0.95) {
-            activeTest.setAttribute(key: DDBenchmarkTags.statisticsP99, value: percentile95)
+            activeTest.setAttribute(key: DDBenchmarkTags.statisticsP95, value: percentile95)
         }
         if let percentile90 = Sigma.percentile(values, percentile: 0.90) {
-            activeTest.setAttribute(key: DDBenchmarkTags.statisticsP99, value: percentile90)
+            activeTest.setAttribute(key: DDBenchmarkTags.statisticsP90, value: percentile90)
         }
     }
 }

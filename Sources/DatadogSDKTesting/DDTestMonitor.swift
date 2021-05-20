@@ -30,10 +30,16 @@ internal class DDTestMonitor {
     init() {
         tracer = DDTracer()
         stderrCapturer = StderrCapture()
-        /// If the library is being loaded in a binary launched from a UITest, dont start test observing
+
         if !tracer.isBinaryUnderUITesting {
             testObserver = DDTestObserver(tracer: tracer)
         } else {
+            /// If the library is being loaded in a binary launched from a UITest, dont start test observing,
+            /// except if testing the tracer itself
+            if tracer.env.tracerUnderTesting {
+                testObserver = DDTestObserver(tracer: tracer)
+            }
+
             notificationObserver = NotificationCenter.default.addObserver(
                 forName: launchNotificationName,
                 object: nil, queue: nil) { [weak self] _ in

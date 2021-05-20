@@ -76,6 +76,9 @@ internal struct DDEnvironmentValues {
     /// Avoids configuring the traces exporter
     let disableTracesExporting: Bool
 
+    /// The tracer is being tested itself
+    let tracerUnderTesting: Bool
+
     static var environment = ProcessInfo.processInfo.environment
     static let environmentCharset = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_")
 
@@ -87,9 +90,14 @@ internal struct DDEnvironmentValues {
             clientToken = Bundle.main.infoDictionary?["DatadogClientToken"] as? String
         }
         ddClientToken = clientToken
-
         ddEnvironment = DDEnvironmentValues.getEnvVariable("DD_ENV")
-        ddService = DDEnvironmentValues.getEnvVariable("DD_SERVICE")
+        tracerUnderTesting = (DDEnvironmentValues.getEnvVariable("TEST_CLASS") != nil)
+        let service = DDEnvironmentValues.getEnvVariable("DD_SERVICE")
+        if let service = service, tracerUnderTesting {
+            ddService = service + "-internal-tests"
+        } else {
+            ddService = service
+        }
 
         sourceRoot = ProcessInfo.processInfo.environment["SRCROOT"]
 

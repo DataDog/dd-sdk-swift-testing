@@ -14,27 +14,58 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "E1E90B15260B3B0E0016ECF5"
-               BuildableName = "IntegrationApp.app"
-               BlueprintName = "IntegrationApp"
+               BlueprintIdentifier = "E1F4217A2652CFEB00233B75"
+               BuildableName = "IntegrationTests (tvOS).app"
+               BlueprintName = "IntegrationTests (tvOS)"
                ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
-      buildConfiguration = "Release"
+      buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      shouldUseLaunchSchemeArgsEnv = "YES">
+      shouldUseLaunchSchemeArgsEnv = "NO">
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "E1F4217A2652CFEB00233B75"
+            BuildableName = "IntegrationTests (tvOS).app"
+            BlueprintName = "IntegrationTests (tvOS)"
+            ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
+      <EnvironmentVariables>
+         <EnvironmentVariable
+            key = "DD_TEST_RUNNER"
+            value = "1"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "SRCROOT"
+            value = "$(SRCROOT)"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "DATADOG_CLIENT_TOKEN"
+            value = "pub1b624b2f4389b17c43cbb8b9dfd234d4"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "DD_SERVICE"
+            value = "dd-sdk-swift-testing"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+      </EnvironmentVariables>
       <Testables>
          <TestableReference
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "E1E90B29260B3BB10016ECF5"
-               BuildableName = "IntegrationAppTests.xctest"
-               BlueprintName = "IntegrationAppTests"
+               BlueprintIdentifier = "E1F421CB26539FAB00233B75"
+               BuildableName = "Tests tvOS.xctest"
+               BlueprintName = "Tests tvOS"
                ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -54,9 +85,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "E1E90B15260B3B0E0016ECF5"
-            BuildableName = "IntegrationApp.app"
-            BlueprintName = "IntegrationApp"
+            BlueprintIdentifier = "E1F4217A2652CFEB00233B75"
+            BuildableName = "IntegrationTests (tvOS).app"
+            BlueprintName = "IntegrationTests (tvOS)"
             ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -71,9 +102,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "E1E90B15260B3B0E0016ECF5"
-            BuildableName = "IntegrationApp.app"
-            BlueprintName = "IntegrationApp"
+            BlueprintIdentifier = "E1F4217A2652CFEB00233B75"
+            BuildableName = "IntegrationTests (tvOS).app"
+            BlueprintName = "IntegrationTests (tvOS)"
             ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

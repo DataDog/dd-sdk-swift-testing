@@ -16,11 +16,9 @@ public class FileTraceExporter: SpanExporter {
     }
 
     public func export(spans: [SpanData]) -> SpanExporterResultCode {
-        do {
-            spans.forEach {
-                let simpleSpan = SimpleSpanData(spanData: $0)
-                sampledSpans.append(simpleSpan)
-            }
+        spans.forEach {
+            let simpleSpan = SimpleSpanData(spanData: $0)
+            sampledSpans.append(simpleSpan)
         }
         return .success
     }

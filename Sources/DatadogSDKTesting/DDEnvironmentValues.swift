@@ -77,7 +77,7 @@ internal struct DDEnvironmentValues {
     let disableTracesExporting: Bool
 
     /// The tracer is being tested itself
-    let underTesting: Bool
+    let tracerUnderTesting: Bool
 
     static var environment = ProcessInfo.processInfo.environment
     static let environmentCharset = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_")
@@ -91,9 +91,9 @@ internal struct DDEnvironmentValues {
         }
         ddClientToken = clientToken
         ddEnvironment = DDEnvironmentValues.getEnvVariable("DD_ENV")
-        underTesting = (DDEnvironmentValues.getEnvVariable("TEST_CLASS") != nil)
+        tracerUnderTesting = (DDEnvironmentValues.getEnvVariable("TEST_CLASS") != nil)
         let service = DDEnvironmentValues.getEnvVariable("DD_SERVICE")
-        if let service = service, underTesting {
+        if let service = service, tracerUnderTesting {
             ddService = service + "-internal-tests"
         } else {
             ddService = service

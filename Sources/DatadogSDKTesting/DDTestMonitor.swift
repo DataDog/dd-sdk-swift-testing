@@ -30,10 +30,13 @@ internal class DDTestMonitor {
     init() {
         tracer = DDTracer()
         stderrCapturer = StderrCapture()
-        testObserver = DDTestObserver(tracer: tracer)
 
-        if tracer.isBinaryUnderUITesting {
-            if tracer.env.underTesting {
+        if !tracer.isBinaryUnderUITesting {
+            testObserver = DDTestObserver(tracer: tracer)
+        } else {
+            /// If the library is being loaded in a binary launched from a UITest, dont start test observing,
+            /// except if testing the tracer itself
+            if tracer.env.tracerUnderTesting {
                 testObserver = DDTestObserver(tracer: tracer)
             }
 

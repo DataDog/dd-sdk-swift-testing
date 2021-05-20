@@ -33,8 +33,8 @@ clean:
 
 tests:
 	xcodebuild -scheme DatadogSDKTesting_macOS -sdk macosx -destination 'platform=macOS,arch=x86_64' test
-	xcodebuild -scheme DatadogSDKTesting_iOS -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 11' test
-	xcodebuild -scheme DatadogSDKTesting_tvOS -sdk appletvsimulator -destination 'platform=tvOS Simulator,name=Apple TV 4K (2nd generation)' test
+	xcodebuild -scheme DatadogSDKTesting_iOS -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 8' test
+	xcodebuild -scheme DatadogSDKTesting_tvOS -sdk appletvsimulator -destination 'platform=tvOS Simulator,name=Apple TV' test
 
 test-macOS:
 	xcodebuild -scheme 'IntegrationTests (macOS)' -sdk macosx -destination 'platform=macOS,arch=x86_64' test

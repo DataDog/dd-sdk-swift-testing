@@ -13,12 +13,16 @@ jobs:
       uses: actions/checkout@v2
     - name: Unit tests
       run: make tests
+      continue-on-error: true
     - name: Test macOS
       run: make test-macOS
+      continue-on-error: true
     - name: Test iOS
       run: make test-iOS
+      continue-on-error: true
     - name: Test tvOS
       run: make test-tvOS
+      continue-on-error: true
   test-10_13:
     runs-on: macos-10.13
     steps:
@@ -26,12 +30,16 @@ jobs:
       uses: actions/checkout@v2
     - name: Unit tests
       run: make tests
+      continue-on-error: true
     - name: Test macOS
       run: make test-macOS
+      continue-on-error: true
     - name: Test iOS
       run: make test-iOS
+      continue-on-error: true
     - name: Test tvOS
       run: make test-tvOS
+      continue-on-error: true
   test-10_14:
     runs-on: macos-10.14
     steps:
@@ -39,12 +47,16 @@ jobs:
       uses: actions/checkout@v2
     - name: Unit tests
       run: make tests
+      continue-on-error: true
     - name: Test macOS
       run: make test-macOS
+      continue-on-error: true
     - name: Test iOS
       run: make test-iOS
+      continue-on-error: true
     - name: Test tvOS
       run: make test-tvOS
+      continue-on-error: true
   test-10_15:
     runs-on: macos-10.15
     steps:
@@ -52,12 +64,16 @@ jobs:
       uses: actions/checkout@v2
     - name: Unit tests
       run: make tests
+      continue-on-error: true
     - name: Test macOS
       run: make test-macOS
+      continue-on-error: true
     - name: Test iOS
       run: make test-iOS
+      continue-on-error: true
     - name: Test tvOS
       run: make test-tvOS
+      continue-on-error: true
   test-11_0:
     runs-on: macos-11.0
     steps:
@@ -65,9 +81,13 @@ jobs:
       uses: actions/checkout@v2
     - name: Unit tests
       run: make tests
+      continue-on-error: true
     - name: Test macOS
       run: make test-macOS
+      continue-on-error: true
     - name: Test iOS
       run: make test-iOS
+      continue-on-error: true
     - name: Test tvOS
       run: make test-tvOS
+      continue-on-error: true

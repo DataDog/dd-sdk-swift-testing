@@ -15,14 +15,22 @@ class TestRunner: XCTestCase {
     var testSpan: SimpleSpanData!
     var attrib: [String: String]!
 
+    static let testNameRegex = try! NSRegularExpression(pattern: "([\\w]+) ([\\w]+)", options: .caseInsensitive)
+
+
     override func setUpWithError() throws {
         continueAfterFailure = false
 
-        let testIdentifier = try XCTUnwrap(self.value(forKeyPath: "_identifier.lastComponent") as? String)
-        let testDesiredClass = testIdentifier.dropFirst(4)
+        guard let namematch = TestRunner.testNameRegex.firstMatch(in: self.name, range: NSRange(location: 0, length: self.name.count)),
+              let nameRange = Range(namematch.range(at: 2), in: self.name)
+        else {
+            return
+        }
+        let testName = String(self.name[nameRange])
+        let testDesiredClass = testName.dropFirst(4)
 
         testOutputFile = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent(testIdentifier).appendingPathExtension("json")
+            .appendingPathComponent(testName).appendingPathExtension("json")
         FileManager.default.createFile(atPath: testOutputFile.path, contents: nil, attributes: nil)
 
         app = XCUIApplication()

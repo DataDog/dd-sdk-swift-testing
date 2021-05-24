@@ -13,8 +13,8 @@ import SigmaSwiftStatistics
 internal class DDTestObserver: NSObject, XCTestObservation {
     var tracer: DDTracer
 
-    let testNameRegex = try! NSRegularExpression(pattern: "([\\w]+) ([\\w]+)", options: .caseInsensitive)
-    let supportsSkipping = NSClassFromString("XCTSkippedTestContext") != nil
+    static let testNameRegex = try! NSRegularExpression(pattern: "([\\w]+) ([\\w]+)", options: .caseInsensitive)
+    static let supportsSkipping = NSClassFromString("XCTSkippedTestContext") != nil
     var currentBundleName = ""
     var currentBundleFunctionInfo = FunctionMap()
 
@@ -62,7 +62,7 @@ internal class DDTestObserver: NSObject, XCTestObservation {
     }
 
     func testCaseWillStart(_ testCase: XCTestCase) {
-        guard let namematch = testNameRegex.firstMatch(in: testCase.name, range: NSRange(location: 0, length: testCase.name.count)),
+        guard let namematch = DDTestObserver.testNameRegex.firstMatch(in: testCase.name, range: NSRange(location: 0, length: testCase.name.count)),
               let suiteRange = Range(namematch.range(at: 1), in: testCase.name),
               let nameRange = Range(namematch.range(at: 2), in: testCase.name)
         else {
@@ -121,7 +121,7 @@ internal class DDTestObserver: NSObject, XCTestObservation {
             return
         }
         var status: String
-        if supportsSkipping, testCase.testRun?.hasBeenSkipped == true {
+        if DDTestObserver.supportsSkipping, testCase.testRun?.hasBeenSkipped == true {
             status = DDTagValues.statusSkip
             activeTest.status = .ok
         } else if testCase.testRun?.hasSucceeded ?? false {

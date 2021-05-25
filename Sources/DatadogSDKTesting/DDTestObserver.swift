@@ -140,6 +140,7 @@ internal class DDTestObserver: NSObject, XCTestObservation {
         DDTestMonitor.instance?.networkInstrumentation?.endAndCleanAliveSpans()
     }
 
+    #if swift(>=5.3)
     func testCase(_ testCase: XCTestCase, didRecord issue: XCTIssue) {
         guard let activeTest = currentTestSpan else {
             return
@@ -150,6 +151,15 @@ internal class DDTestObserver: NSObject, XCTestObservation {
             activeTest.setAttribute(key: DDTags.errorStack, value: AttributeValue.string(detailedDescription))
         }
     }
+    #else
+    func testCase(_ testCase: XCTestCase, didFailWithDescription description: String, inFile filePath: String?, atLine lineNumber: Int) {
+        guard let activeTest = currentTestSpan else {
+            return
+        }
+        activeTest.setAttribute(key: DDTags.errorType, value: AttributeValue.string(description))
+        activeTest.setAttribute(key: DDTags.errorMessage, value: AttributeValue.string("test_failure: \(filePath ?? ""):\(lineNumber)"))
+    }
+    #endif
 
     private func addBenchmarkTagsIfNeeded(testCase: XCTestCase, activeTest: Span) {
         guard let metricsForId = testCase.value(forKey: "_perfMetricsForID") as? [XCTPerformanceMetric: AnyObject],

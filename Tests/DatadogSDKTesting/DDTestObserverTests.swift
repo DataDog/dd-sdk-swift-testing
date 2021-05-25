@@ -73,6 +73,7 @@ internal class DDTestObserverTests: XCTestCase {
         XCTAssertNotNil(spanData.attributes[DDTestTags.testStatus])
     }
 
+    #if swift(>=5.3)
     func testWhenTestCaseDidRecordIssueIsCalled_testStatusIsSet() {
         testObserver.testCaseWillStart(self)
         let issue = XCTIssue(type: .assertionFailure, compactDescription: "descrip", detailedDescription: nil, sourceCodeContext: XCTSourceCodeContext(), associatedError: nil, attachments: [])
@@ -87,6 +88,21 @@ internal class DDTestObserverTests: XCTestCase {
 
         testObserver.testCaseDidFinish(self)
     }
+    #else
+    func testWhenTestCaseDidFailWithDescriptionIsCalled_testStatusIsSet() {
+        testObserver.testCaseWillStart(self)
+        testObserver.testCase(self, didFailWithDescription: "descrip", inFile: "samplefile", atLine: 239)
+
+        let testSpan = OpenTelemetry.instance.contextProvider.activeSpan as! RecordEventsReadableSpan
+        let spanData = testSpan.toSpanData()
+
+        XCTAssertNotNil(spanData.attributes[DDTags.errorType])
+        XCTAssertNotNil(spanData.attributes[DDTags.errorMessage])
+        XCTAssertNil(spanData.attributes[DDTags.errorStack])
+
+        testObserver.testCaseDidFinish(self)
+    }
+    #endif
 
     func testWhenTestCaseDidFinishIsCalledAndTheTestIsABenchmark_benchmarkTagsAreAdded() {
         testObserver.testCaseWillStart(self)

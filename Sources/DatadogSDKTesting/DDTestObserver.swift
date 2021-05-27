@@ -5,9 +5,9 @@
  */
 
 import Foundation
-import OpenTelemetryApi
-import OpenTelemetrySdk
-import SigmaSwiftStatistics
+@_implementationOnly import OpenTelemetryApi
+@_implementationOnly import OpenTelemetrySdk
+@_implementationOnly import SigmaSwiftStatistics
 @_implementationOnly import XCTest
 
 internal class DDTestObserver: NSObject, XCTestObservation {

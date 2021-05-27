@@ -7,7 +7,7 @@
 import Foundation
 import OpenTelemetrySdk
 
-public class FileTraceExporter: SpanExporter {
+class FileTraceExporter: SpanExporter {
     private var outputURL: URL
     private var sampledSpans = [SimpleSpanData]()
 
@@ -15,7 +15,7 @@ public class FileTraceExporter: SpanExporter {
         self.outputURL = outputURL
     }
 
-    public func export(spans: [SpanData]) -> SpanExporterResultCode {
+    func export(spans: [SpanData]) -> SpanExporterResultCode {
         spans.forEach {
             let simpleSpan = SimpleSpanData(spanData: $0)
             sampledSpans.append(simpleSpan)
@@ -23,7 +23,7 @@ public class FileTraceExporter: SpanExporter {
         return .success
     }
 
-    public func flush() -> SpanExporterResultCode {
+    func flush() -> SpanExporterResultCode {
         do {
             var outputData = try JSONEncoder().encode(sampledSpans)
             try outputData.write(to: outputURL, options: .atomicWrite)
@@ -33,7 +33,7 @@ public class FileTraceExporter: SpanExporter {
         return .success
     }
 
-    public func reset() {}
+    func reset() {}
 
-    public func shutdown() {}
+    func shutdown() {}
 }

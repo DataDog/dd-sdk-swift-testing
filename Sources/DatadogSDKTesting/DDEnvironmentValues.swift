@@ -5,7 +5,7 @@
  */
 
 import Foundation
-import OpenTelemetryApi
+@_implementationOnly import OpenTelemetryApi
 
 internal struct DDEnvironmentValues {
     /// Datatog Configuration values

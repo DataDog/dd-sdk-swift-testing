@@ -4,11 +4,11 @@
  * Copyright 2020-2021 Datadog, Inc.
  */
 
-import DatadogExporter
+@_implementationOnly import DatadogExporter
 import Foundation
-import InMemoryExporter
-import OpenTelemetryApi
-import OpenTelemetrySdk
+@_implementationOnly import InMemoryExporter
+@_implementationOnly import OpenTelemetryApi
+@_implementationOnly import OpenTelemetrySdk
 
 enum DDHeaders: String, CaseIterable {
     case traceIDField = "x-datadog-trace-id"

@@ -4,7 +4,7 @@
  * Copyright 2020-2021 Datadog, Inc.
  */
 
-import CrashReporter
+@_implementationOnly import CrashReporter
 import Foundation
 
 /// This class is our interface with the crash reporter, now it is based on PLCrashReporter,
@@ -71,7 +71,7 @@ internal enum DDCrashes {
         }
     }
 
-    public static func setCustomData(customData: Data) {
+    static func setCustomData(customData: Data) {
         DDCrashes.sharedPLCrashReporter?.customData = customData
     }
 }

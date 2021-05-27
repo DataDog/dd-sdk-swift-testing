@@ -4,7 +4,7 @@
  * Copyright 2020-2021 Datadog, Inc.
  */
 
-import DatadogExporter
+@_implementationOnly import DatadogExporter
 #if canImport(UIKit)
 import UIKit
 let launchNotificationName = UIApplication.didFinishLaunchingNotification

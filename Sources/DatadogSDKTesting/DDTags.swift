@@ -23,11 +23,11 @@ internal enum DDTags {
     static let defaultSpanType = "custom"
 
     /// Expected value: `String`
-    public static let httpMethod = "http.method"
+    static let httpMethod = "http.method"
     /// Expected value: `Int`
-    public static let httpStatusCode = "http.status_code"
+    static let httpStatusCode = "http.status_code"
     /// Expected value: `String`
-    public static let httpUrl = "http.url"
+    static let httpUrl = "http.url"
 }
 
 internal enum DDGenericTags {

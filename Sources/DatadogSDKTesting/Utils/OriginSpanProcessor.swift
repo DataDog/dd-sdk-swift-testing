@@ -4,19 +4,19 @@
  * Copyright 2020-2021 Datadog, Inc.
  */
 import Foundation
-import OpenTelemetryApi
-import OpenTelemetrySdk
+@_implementationOnly import OpenTelemetryApi
+@_implementationOnly import OpenTelemetrySdk
 
 /// A span processor that decorates spans with the origin attribute
-public struct OriginSpanProcessor: SpanProcessor {
-    public let isStartRequired = true
-    public let isEndRequired = false
+internal struct OriginSpanProcessor: SpanProcessor {
+    let isStartRequired = true
+    let isEndRequired = false
 
-    public func onStart(parentContext: SpanContext?, span: ReadableSpan) {
+    func onStart(parentContext: SpanContext?, span: ReadableSpan) {
         span.setAttribute(key: DDGenericTags.origin, value: DDTagValues.originCiApp)
     }
 
-    public mutating func onEnd(span: ReadableSpan) {}
-    public func shutdown() {}
-    public func forceFlush() {}
+    mutating func onEnd(span: ReadableSpan) {}
+    func shutdown() {}
+    func forceFlush() {}
 }

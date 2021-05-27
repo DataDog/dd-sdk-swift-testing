@@ -47,6 +47,8 @@ internal enum DDTestTags {
     static let testSourceFile = "test.source.file"
     static let testSourceStartLine = "test.source.start"
     static let testSourceEndLine = "test.source.end"
+    static let testExecutionOrder = "test.execution.order"
+    static let testExecutionProcessId = "test.execution.processId"
 }
 
 internal enum DDOSTags {

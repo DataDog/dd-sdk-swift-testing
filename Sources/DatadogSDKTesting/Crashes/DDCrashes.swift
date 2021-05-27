@@ -66,6 +66,14 @@ internal enum DDCrashes {
                                                                        errorType: errorType,
                                                                        errorMessage: errorMessage,
                                                                        errorStack: crashLog)
+                    if let executionOrderString = spanData.stringAttributes[DDTestTags.testExecutionOrder],
+                       let executionOrder = Int(executionOrderString),
+                       let executionProcessIdString = spanData.stringAttributes[DDTestTags.testExecutionProcessId],
+                       let processId = Int(executionProcessIdString)
+                    {
+                        DDTestMonitor.instance?.testObserver?.currentTextExecutionOrder = executionOrder
+                        DDTestMonitor.instance?.testObserver?.initialProcessId = processId
+                    }
                 }
             }
         }

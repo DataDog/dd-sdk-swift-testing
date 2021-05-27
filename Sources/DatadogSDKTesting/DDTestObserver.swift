@@ -17,6 +17,8 @@ internal class DDTestObserver: NSObject, XCTestObservation {
     static let supportsSkipping = NSClassFromString("XCTSkippedTestContext") != nil
     var currentBundleName = ""
     var currentBundleFunctionInfo = FunctionMap()
+    var currentTestExecutionOrder = 0
+    var initialProcessId = Int(ProcessInfo.processInfo.processIdentifier)
 
     var rLock = NSRecursiveLock()
     private var privateCurrentTestSpan: Span?
@@ -71,6 +73,8 @@ internal class DDTestObserver: NSObject, XCTestObservation {
         let testSuite = String(testCase.name[suiteRange])
         let testName = String(testCase.name[nameRange])
 
+        currentTextExecutionOrder = currentTextExecutionOrder + 1
+
         let attributes: [String: String] = [
             DDGenericTags.language: "swift",
             DDGenericTags.type: DDTagValues.typeTest,
@@ -80,6 +84,8 @@ internal class DDTestObserver: NSObject, XCTestObservation {
             DDTestTags.testFramework: "XCTest",
             DDTestTags.testBundle: currentBundleName,
             DDTestTags.testType: DDTagValues.typeTest,
+            DDTestTags.testExecutionOrder: "\(currentTextExecutionOrder)",
+            DDTestTags.testExecutionProcessId: "\(initialProcessId)",
             DDOSTags.osPlatform: tracer.env.osName,
             DDOSTags.osArchitecture: tracer.env.osArchitecture,
             DDOSTags.osVersion: tracer.env.osVersion,

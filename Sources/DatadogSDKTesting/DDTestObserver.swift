@@ -17,7 +17,7 @@ internal class DDTestObserver: NSObject, XCTestObservation {
     static let supportsSkipping = NSClassFromString("XCTSkippedTestContext") != nil
     var currentBundleName = ""
     var currentBundleFunctionInfo = FunctionMap()
-    var currentTextExecutionOrder = 0
+    var currentTestExecutionOrder = 0
     var initialProcessId = Int(ProcessInfo.processInfo.processIdentifier)
 
     var rLock = NSRecursiveLock()

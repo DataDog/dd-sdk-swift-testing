@@ -73,7 +73,7 @@ internal class DDTestObserver: NSObject, XCTestObservation {
         let testSuite = String(testCase.name[suiteRange])
         let testName = String(testCase.name[nameRange])
 
-        currentTextExecutionOrder = currentTextExecutionOrder + 1
+        currentTestExecutionOrder = currentTestExecutionOrder + 1
 
         let attributes: [String: String] = [
             DDGenericTags.language: "swift",
@@ -84,7 +84,7 @@ internal class DDTestObserver: NSObject, XCTestObservation {
             DDTestTags.testFramework: "XCTest",
             DDTestTags.testBundle: currentBundleName,
             DDTestTags.testType: DDTagValues.typeTest,
-            DDTestTags.testExecutionOrder: "\(currentTextExecutionOrder)",
+            DDTestTags.testExecutionOrder: "\(currentTestExecutionOrder)",
             DDTestTags.testExecutionProcessId: "\(initialProcessId)",
             DDOSTags.osPlatform: tracer.env.osName,
             DDOSTags.osArchitecture: tracer.env.osArchitecture,

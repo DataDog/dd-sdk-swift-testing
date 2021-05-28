@@ -209,11 +209,15 @@ internal struct DDEnvironmentValues {
             commit = DDEnvironmentValues.getEnvVariable("CIRCLE_SHA1")
             workspaceEnv = DDEnvironmentValues.getEnvVariable("CIRCLE_WORKING_DIRECTORY")
             pipelineId = DDEnvironmentValues.getEnvVariable("CIRCLE_WORKFLOW_ID")
-            pipelineNumber = DDEnvironmentValues.getEnvVariable("CIRCLE_BUILD_NUM")
-            pipelineURL = DDEnvironmentValues.getEnvVariable("CIRCLE_BUILD_URL")
+            pipelineNumber = nil
+            if let pipelineId = pipelineId {
+                pipelineURL = "https://app.circle.com/pipelines/workflows/\(pipelineId)"
+            } else {
+                pipelineURL = nil
+            }
             pipelineName = DDEnvironmentValues.getEnvVariable("CIRCLE_PROJECT_REPONAME")
-            jobURL = pipelineURL
-            jobName = nil
+            jobURL = DDEnvironmentValues.getEnvVariable("CIRCLE_BUILD_URL")
+            jobName = DDEnvironmentValues.getEnvVariable("CIRCLE_JOB")
             stageName = nil
             tagEnv = DDEnvironmentValues.getEnvVariable("CIRCLE_TAG")
             if tagEnv?.isEmpty ?? true {

@@ -103,10 +103,10 @@ internal class DDTestObserver: NSObject, XCTestObservation {
         let functionName = testSuite + "." + testName
         if let functionInfo = currentBundleFunctionInfo[functionName] {
             var filePath = functionInfo.file
-            if let srcRoot = tracer.env.sourceRoot,
-               let rootRange = filePath.range(of: srcRoot + "/")
+            if let workspacePath = tracer.env.workspacePath,
+               let workspaceRange = filePath.range(of: workspacePath + "/")
             {
-                filePath.removeSubrange(rootRange)
+                filePath.removeSubrange(workspaceRange)
             }
             testSpan.setAttribute(key: DDTestTags.testSourceFile, value: filePath)
             testSpan.setAttribute(key: DDTestTags.testSourceStartLine, value: functionInfo.startLine)

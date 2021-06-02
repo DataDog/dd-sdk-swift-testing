@@ -57,6 +57,36 @@
             value = "dd-sdk-swift-testing"
             isEnabled = "YES">
          </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "GITHUB_WORKSPACE"
+            value = "$(GITHUB_WORKSPACE)"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "GITHUB_REPOSITORY"
+            value = "$(GITHUB_REPOSITORY)"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "GITHUB_RUN_ID"
+            value = "$(GITHUB_RUN_ID)"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "GITHUB_RUN_NUMBER"
+            value = "$(GITHUB_RUN_NUMBER)"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "GITHUB_WORKFLOW"
+            value = "$(GITHUB_WORKFLOW)"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "GITHUB_SHA"
+            value = "$(GITHUB_SHA)"
+            isEnabled = "YES">
+         </EnvironmentVariable>
       </EnvironmentVariables>
       <Testables>
          <TestableReference

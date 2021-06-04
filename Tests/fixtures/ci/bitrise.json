@@ -447,7 +447,7 @@
     {
       "BITRISE_SOURCE_DIR": "/foo/bar",
       "GIT_REPOSITORY_URL": "git@hostname.com:org/repo.git",
-      "BITRISEIO_GIT_BRANCH_DEST": "origin/master",
+      "BITRISE_GIT_BRANCH": "origin/master",
       "BITRISE_BUILD_SLUG": "bitrise-pipeline-id",
       "BITRISE_APP_TITLE": "bitrise-pipeline-name",
       "BITRISE_BUILD_NUMBER": "bitrise-pipeline-number",
@@ -470,8 +470,7 @@
     {
       "BITRISE_SOURCE_DIR": "/foo/bar",
       "GIT_REPOSITORY_URL": "git@hostname.com:org/repo.git",
-      "BITRISE_GIT_BRANCH": "origin/master",
-      "BITRISEIO_GIT_BRANCH_DEST": "origin/notmaster",
+      "BITRISE_GIT_BRANCH": "origin/notmaster",
       "BITRISE_BUILD_SLUG": "bitrise-pipeline-id",
       "BITRISE_APP_TITLE": "bitrise-pipeline-name",
       "BITRISE_BUILD_NUMBER": "bitrise-pipeline-number",

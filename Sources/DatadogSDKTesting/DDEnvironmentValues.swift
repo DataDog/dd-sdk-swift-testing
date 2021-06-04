@@ -386,10 +386,7 @@ internal struct DDEnvironmentValues {
             stageName = nil
             pipelineURL = DDEnvironmentValues.getEnvVariable("BITRISE_BUILD_URL")
             pipelineName = DDEnvironmentValues.getEnvVariable("BITRISE_APP_TITLE")
-            branchEnv = DDEnvironmentValues.getEnvVariable("BITRISEIO_GIT_BRANCH_DEST")
-            if branchEnv?.isEmpty ?? true {
-                branchEnv = DDEnvironmentValues.getEnvVariable("BITRISE_GIT_BRANCH")
-            }
+            branchEnv = DDEnvironmentValues.getEnvVariable("BITRISE_GIT_BRANCH")
             tagEnv = DDEnvironmentValues.getEnvVariable("BITRISE_GIT_TAG")
 
             let tempMessage = DDEnvironmentValues.getEnvVariable("BITRISE_GIT_MESSAGE")

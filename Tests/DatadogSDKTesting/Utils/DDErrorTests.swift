@@ -4,12 +4,11 @@
  * Copyright 2020-2021 Datadog, Inc.
  */
 
+@testable import DatadogSDKTesting
 import Foundation
 import XCTest
-@testable import DatadogSDKTesting
 
 internal class DDErrorTests: XCTestCase {
-
     func testErrorCreatedWithSwiftError() {
         let internalError = InternalError(description: "desc")
         let ddError = DDError(error: internalError)
@@ -25,5 +24,4 @@ internal class DDErrorTests: XCTestCase {
 
         XCTAssertEqual(ddError.title, "domain - 3")
     }
-
 }

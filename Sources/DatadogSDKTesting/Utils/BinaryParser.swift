@@ -13,7 +13,8 @@ struct BinaryParser {
     }
 
     private mutating func parseUInt<Result>(_: Result.Type) throws -> Result
-        where Result: UnsignedInteger {
+        where Result: UnsignedInteger
+    {
         let expected = MemoryLayout<Result>.size
         guard data.count >= expected else { throw InternalError(description: "emptyData") }
         defer { self.data = self.data.dropFirst(expected) }

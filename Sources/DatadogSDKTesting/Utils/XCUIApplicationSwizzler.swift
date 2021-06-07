@@ -20,7 +20,7 @@ extension XCUIApplication {
 
     static let swizzleMethods: Void = {
         guard let originalMethod = class_getInstanceMethod(XCUIApplication.self, #selector(launch)),
-            let swizzledMethod = class_getInstanceMethod(XCUIApplication.self, #selector(swizzled_launch))
+              let swizzledMethod = class_getInstanceMethod(XCUIApplication.self, #selector(swizzled_launch))
         else { return }
         method_exchangeImplementations(originalMethod, swizzledMethod)
     }()

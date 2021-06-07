@@ -66,7 +66,7 @@ class CISpec: XCTestCase {
         let spanData = span.toSpanData()
 
         let keys = spanData.attributes.map { $0.key }
-            .filter{ $0 != "type" && $0 != "resource.name" }
+            .filter { $0 != "type" && $0 != "resource.name" }
             .sorted()
         let keyJson = try JSONEncoder().encode(keys)
         if let srcRoot = ProcessInfo.processInfo.environment["SRCROOT"] {

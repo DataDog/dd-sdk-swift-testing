@@ -12,7 +12,6 @@ internal enum DDTags {
     /// Can be used to customize the resource names grouped under the same operation name.
     ///
 
-
     /// Those keys used to encode information received from the user through `OpenTracingLogFields`, `OpenTracingTagKeys` or custom fields.
     /// Supported by Datadog platform.
     static let errorType = "error.type"

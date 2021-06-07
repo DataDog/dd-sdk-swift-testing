@@ -4,8 +4,8 @@
  * Copyright 2020-2021 Datadog, Inc.
  */
 
-import XCTest
 @testable import DatadogSDKTesting
+import XCTest
 
 class FrameworkLoadHandlerTests: XCTestCase {
     private var testEnvironment = [String: String]()
@@ -14,13 +14,13 @@ class FrameworkLoadHandlerTests: XCTestCase {
     override func setUp() {
         FrameworkLoadHandler.environment = [String: String]()
         DDTestMonitor.instance = nil
-        previousEnvironment = DDEnvironmentValues.environment 
-
+        previousEnvironment = DDEnvironmentValues.environment
     }
 
     override func tearDownWithError() throws {
         if let monitor = DDTestMonitor.instance,
-           let observer = monitor.testObserver {
+           let observer = monitor.testObserver
+        {
             XCTestObservationCenter.shared.removeTestObserver(observer)
             DDTestMonitor.instance = nil
         }

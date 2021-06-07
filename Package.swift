@@ -13,14 +13,14 @@ let package = Package(
             name: "DatadogSDKTesting",
             type: .dynamic,
             targets: [
-                "DatadogSDKTesting"
+                "DatadogSDKTesting",
             ]
         ),
     ],
     dependencies: [
         .package(name: "opentelemetry-swift", url: "https://github.com/open-telemetry/opentelemetry-swift", from: "1.0.1"),
         .package(name: "PLCrashReporter", url: "https://github.com/microsoft/plcrashreporter.git", from: "1.8.1"),
-        .package(name: "SigmaSwiftStatistics",url: "https://github.com/evgenyneu/SigmaSwiftStatistics.git", from: "9.0.2"),
+        .package(name: "SigmaSwiftStatistics", url: "https://github.com/evgenyneu/SigmaSwiftStatistics.git", from: "9.0.2"),
     ],
     targets: [
         .target(
@@ -31,7 +31,7 @@ let package = Package(
                 .product(name: "libInMemoryExporter", package: "opentelemetry-swift"),
                 .product(name: "CrashReporter", package: "PLCrashReporter"),
                 .product(name: "SigmaSwiftStatistics", package: "SigmaSwiftStatistics"),
-                .target( name: "DatadogSDKTestingObjc"),
+                .target(name: "DatadogSDKTestingObjc"),
             ],
             exclude: [
                 "Objc",

@@ -5,11 +5,10 @@
  */
 
 @testable import DatadogSDKTesting
-import XCTest
 import OpenTelemetrySdk
+import XCTest
 
 class StdoutCaptureTests: XCTestCase {
-
     override func setUp() {
         DDEnvironmentValues.environment["DATADOG_CLIENT_TOKEN"] = "fakeToken"
     }
@@ -30,7 +29,7 @@ class StdoutCaptureTests: XCTestCase {
 
         XCTAssertTrue(StdoutCapture.stdoutBuffer.isEmpty)
         XCTAssertEqual(spanData.events.count, 1)
-        XCTAssertEqual(spanData.events.first?.attributes["message"]?.description, stringToCapture + "\n" )
+        XCTAssertEqual(spanData.events.first?.attributes["message"]?.description, stringToCapture + "\n")
     }
 
     func testWhenPrintIsCalledAndIsNotCapturing_stringIsNotCaptured() {
@@ -49,7 +48,7 @@ class StdoutCaptureTests: XCTestCase {
         XCTAssertEqual(spanData.events.count, 0)
     }
 
-    func testWhenSomeCharactersAreWrittenToStdoutWithoutNewLines_charactersAreCapturedButNotConvertedToEvents () {
+    func testWhenSomeCharactersAreWrittenToStdoutWithoutNewLines_charactersAreCapturedButNotConvertedToEvents() {
         let tracer = DDTracer()
         let stringToCapture = "This should  not be captured"
 

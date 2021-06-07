@@ -17,7 +17,6 @@ class TestRunner: XCTestCase {
 
     static let testNameRegex = try! NSRegularExpression(pattern: "([\\w]+) ([\\w]+)", options: .caseInsensitive)
 
-
     override func setUpWithError() throws {
         continueAfterFailure = false
 

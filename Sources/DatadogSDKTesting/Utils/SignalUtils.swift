@@ -10,7 +10,7 @@ struct SignalUtils {
     static func descriptionForSignalName(signalName: String) -> String {
         let signalNames = Mirror(reflecting: sys_signame).children.map { $0.value as! UnsafePointer<Int8> }.map { String(cString: $0).uppercased() }
         let signalDescription = Mirror(reflecting: sys_siglist).children.map { $0.value as! UnsafePointer<Int8> }.map { String(cString: $0) }
-        if let index = signalNames.firstIndex(where: { signalName == ("SIG"+$0) }) {
+        if let index = signalNames.firstIndex(where: { signalName == ("SIG" + $0) }) {
             return signalDescription[index]
         }
         return ""

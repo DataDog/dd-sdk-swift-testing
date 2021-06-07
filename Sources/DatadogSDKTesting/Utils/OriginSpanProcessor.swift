@@ -3,6 +3,7 @@
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2020-2021 Datadog, Inc.
  */
+
 import Foundation
 @_implementationOnly import OpenTelemetryApi
 @_implementationOnly import OpenTelemetrySdk

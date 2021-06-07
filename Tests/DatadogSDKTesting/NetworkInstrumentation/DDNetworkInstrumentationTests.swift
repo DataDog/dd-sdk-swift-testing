@@ -144,7 +144,6 @@ class DDNetworkInstrumentationTests: XCTestCase {
         task = URLSession.shared.dataTask(with: url) { response, _, _ in
             data = response
             expec.fulfill()
-
         }
         task.resume()
         waitForExpectations(timeout: 30) { _ in
@@ -163,7 +162,5 @@ class DDNetworkInstrumentationTests: XCTestCase {
 
         let currentTraceId = try XCTUnwrap(OpenTelemetry.instance.contextProvider.activeSpan?.context.traceId)
         XCTAssertEqual(headers?.object(forKey: "X-Datadog-Trace-Id") as! String, String(currentTraceId.rawLowerLong))
-
-
     }
 }

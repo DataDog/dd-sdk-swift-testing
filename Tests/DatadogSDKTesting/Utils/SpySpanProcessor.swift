@@ -19,8 +19,7 @@ class SpySpanProcessor: SpanProcessor {
     let isStartRequired = false
     let isEndRequired = true
 
-    func onStart(parentContext: SpanContext?, span: ReadableSpan) {
-    }
+    func onStart(parentContext: SpanContext?, span: ReadableSpan) {}
 
     func onEnd(span: ReadableSpan) {
         lastProcessedSpan = span as? RecordEventsReadableSpan

@@ -4,22 +4,19 @@
  * Copyright 2020-2021 Datadog, Inc.
  */
 
+@testable import DatadogSDKTesting
 import Foundation
 import XCTest
-@testable import DatadogSDKTesting
-
 
 internal class SwiftExtensionsTests: XCTestCase {
-
     func testAverageInEmptyArray_returnsZero() {
-        let array:[Double] = []
+        let array: [Double] = []
         XCTAssertEqual(array.average, 0.0)
     }
 
     func testAverageArray_returnsCorrectValue() {
-        let array = [1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0]
+        let array = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
         XCTAssertEqual(array.average, 5.0)
-
     }
 
     func testCamelCase_returns_correctly1() {
@@ -46,6 +43,7 @@ internal class SwiftExtensionsTests: XCTestCase {
         let string = "TestNameStandardD"
         XCTAssertEqual(string.separatedByWords, "Test Name StandardD")
     }
+
     func testCamelCase_returns_correctly6() {
         let string = "Test_NAMStandard"
         XCTAssertEqual(string.separatedByWords, "Test_ NAMStandard")

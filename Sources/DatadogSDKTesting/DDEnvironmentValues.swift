@@ -211,7 +211,7 @@ internal struct DDEnvironmentValues {
             pipelineId = DDEnvironmentValues.getEnvVariable("CIRCLE_WORKFLOW_ID")
             pipelineNumber = nil
             if let pipelineId = pipelineId {
-                pipelineURL = "https://app.circle.com/pipelines/workflows/\(pipelineId)"
+                pipelineURL = "https://app.circleci.com/pipelines/workflows/\(pipelineId)"
             } else {
                 pipelineURL = nil
             }

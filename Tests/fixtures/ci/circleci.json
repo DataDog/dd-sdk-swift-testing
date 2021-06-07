@@ -19,7 +19,7 @@
       "ci.provider.name": "circleci",
       "ci.pipeline.id": "circleci-pipeline-id",
       "ci.pipeline.name": "circleci-pipeline-name",
-      "ci.pipeline.url": "https://app.circle.com/pipelines/workflows/circleci-pipeline-id",
+      "ci.pipeline.url": "https://app.circleci.com/pipelines/workflows/circleci-pipeline-id",
       "ci.job.name": "circleci-job-name",
       "ci.job.url": "circleci-build-url",
       "git.commit.sha": "circleci-git-commit"
@@ -45,7 +45,7 @@
       "ci.provider.name": "circleci",
       "ci.pipeline.id": "circleci-pipeline-id",
       "ci.pipeline.name": "circleci-pipeline-name",
-      "ci.pipeline.url": "https://app.circle.com/pipelines/workflows/circleci-pipeline-id",
+      "ci.pipeline.url": "https://app.circleci.com/pipelines/workflows/circleci-pipeline-id",
       "ci.job.name": "circleci-job-name",
       "ci.job.url": "circleci-build-url",
       "git.commit.sha": "circleci-git-commit"
@@ -71,7 +71,7 @@
       "ci.provider.name": "circleci",
       "ci.pipeline.id": "circleci-pipeline-id",
       "ci.pipeline.name": "circleci-pipeline-name",
-      "ci.pipeline.url": "https://app.circle.com/pipelines/workflows/circleci-pipeline-id",
+      "ci.pipeline.url": "https://app.circleci.com/pipelines/workflows/circleci-pipeline-id",
       "ci.job.name": "circleci-job-name",
       "ci.job.url": "circleci-build-url",
       "git.commit.sha": "circleci-git-commit"
@@ -97,7 +97,7 @@
       "ci.provider.name": "circleci",
       "ci.pipeline.id": "circleci-pipeline-id",
       "ci.pipeline.name": "circleci-pipeline-name",
-      "ci.pipeline.url": "https://app.circle.com/pipelines/workflows/circleci-pipeline-id",
+      "ci.pipeline.url": "https://app.circleci.com/pipelines/workflows/circleci-pipeline-id",
       "ci.job.name": "circleci-job-name",
       "ci.job.url": "circleci-build-url",
       "git.commit.sha": "circleci-git-commit"
@@ -123,7 +123,7 @@
       "ci.provider.name": "circleci",
       "ci.pipeline.id": "circleci-pipeline-id",
       "ci.pipeline.name": "circleci-pipeline-name",
-      "ci.pipeline.url": "https://app.circle.com/pipelines/workflows/circleci-pipeline-id",
+      "ci.pipeline.url": "https://app.circleci.com/pipelines/workflows/circleci-pipeline-id",
       "ci.job.name": "circleci-job-name",
       "ci.job.url": "circleci-build-url",
       "git.commit.sha": "circleci-git-commit"
@@ -149,7 +149,7 @@
       "ci.provider.name": "circleci",
       "ci.pipeline.id": "circleci-pipeline-id",
       "ci.pipeline.name": "circleci-pipeline-name",
-      "ci.pipeline.url": "https://app.circle.com/pipelines/workflows/circleci-pipeline-id",
+      "ci.pipeline.url": "https://app.circleci.com/pipelines/workflows/circleci-pipeline-id",
       "ci.job.name": "circleci-job-name",
       "ci.job.url": "circleci-build-url",
       "git.commit.sha": "circleci-git-commit"
@@ -175,7 +175,7 @@
       "ci.provider.name": "circleci",
       "ci.pipeline.id": "circleci-pipeline-id",
       "ci.pipeline.name": "circleci-pipeline-name",
-      "ci.pipeline.url": "https://app.circle.com/pipelines/workflows/circleci-pipeline-id",
+      "ci.pipeline.url": "https://app.circleci.com/pipelines/workflows/circleci-pipeline-id",
       "ci.job.name": "circleci-job-name",
       "ci.job.url": "circleci-build-url",
       "git.commit.sha": "circleci-git-commit"
@@ -203,7 +203,7 @@
       "ci.provider.name": "circleci",
       "ci.pipeline.id": "circleci-pipeline-id",
       "ci.pipeline.name": "circleci-pipeline-name",
-      "ci.pipeline.url": "https://app.circle.com/pipelines/workflows/circleci-pipeline-id",
+      "ci.pipeline.url": "https://app.circleci.com/pipelines/workflows/circleci-pipeline-id",
       "ci.job.name": "circleci-job-name",
       "ci.job.url": "circleci-build-url",
       "git.commit.sha": "circleci-git-commit"
@@ -231,7 +231,7 @@
       "ci.provider.name": "circleci",
       "ci.pipeline.id": "circleci-pipeline-id",
       "ci.pipeline.name": "circleci-pipeline-name",
-      "ci.pipeline.url": "https://app.circle.com/pipelines/workflows/circleci-pipeline-id",
+      "ci.pipeline.url": "https://app.circleci.com/pipelines/workflows/circleci-pipeline-id",
       "ci.job.name": "circleci-job-name",
       "ci.job.url": "circleci-build-url",
       "git.commit.sha": "circleci-git-commit"
@@ -259,7 +259,7 @@
       "ci.provider.name": "circleci",
       "ci.pipeline.id": "circleci-pipeline-id",
       "ci.pipeline.name": "circleci-pipeline-name",
-      "ci.pipeline.url": "https://app.circle.com/pipelines/workflows/circleci-pipeline-id",
+      "ci.pipeline.url": "https://app.circleci.com/pipelines/workflows/circleci-pipeline-id",
       "ci.job.name": "circleci-job-name",
       "ci.job.url": "circleci-build-url",
       "git.commit.sha": "circleci-git-commit"
@@ -285,7 +285,7 @@
       "ci.provider.name": "circleci",
       "ci.pipeline.id": "circleci-pipeline-id",
       "ci.pipeline.name": "circleci-pipeline-name",
-      "ci.pipeline.url": "https://app.circle.com/pipelines/workflows/circleci-pipeline-id",
+      "ci.pipeline.url": "https://app.circleci.com/pipelines/workflows/circleci-pipeline-id",
       "ci.job.name": "circleci-job-name",
       "ci.job.url": "circleci-build-url",
       "git.commit.sha": "circleci-git-commit"
@@ -311,7 +311,7 @@
       "ci.provider.name": "circleci",
       "ci.pipeline.id": "circleci-pipeline-id",
       "ci.pipeline.name": "circleci-pipeline-name",
-      "ci.pipeline.url": "https://app.circle.com/pipelines/workflows/circleci-pipeline-id",
+      "ci.pipeline.url": "https://app.circleci.com/pipelines/workflows/circleci-pipeline-id",
       "ci.job.name": "circleci-job-name",
       "ci.job.url": "circleci-build-url",
       "git.commit.sha": "circleci-git-commit"
@@ -338,7 +338,7 @@
       "ci.provider.name": "circleci",
       "ci.pipeline.id": "circleci-pipeline-id",
       "ci.pipeline.name": "circleci-pipeline-name",
-      "ci.pipeline.url": "https://app.circle.com/pipelines/workflows/circleci-pipeline-id",
+      "ci.pipeline.url": "https://app.circleci.com/pipelines/workflows/circleci-pipeline-id",
       "ci.job.name": "circleci-job-name",
       "ci.job.url": "circleci-build-url",
       "git.commit.sha": "circleci-git-commit"
@@ -365,7 +365,7 @@
       "ci.provider.name": "circleci",
       "ci.pipeline.id": "circleci-pipeline-id",
       "ci.pipeline.name": "circleci-pipeline-name",
-      "ci.pipeline.url": "https://app.circle.com/pipelines/workflows/circleci-pipeline-id",
+      "ci.pipeline.url": "https://app.circleci.com/pipelines/workflows/circleci-pipeline-id",
       "ci.job.name": "circleci-job-name",
       "ci.job.url": "circleci-build-url",
       "git.commit.sha": "circleci-git-commit"
@@ -391,7 +391,7 @@
       "ci.provider.name": "circleci",
       "ci.pipeline.id": "circleci-pipeline-id",
       "ci.pipeline.name": "circleci-pipeline-name",
-      "ci.pipeline.url": "https://app.circle.com/pipelines/workflows/circleci-pipeline-id",
+      "ci.pipeline.url": "https://app.circleci.com/pipelines/workflows/circleci-pipeline-id",
       "ci.job.name": "circleci-job-name",
       "ci.job.url": "circleci-build-url",
       "git.commit.sha": "circleci-git-commit"
@@ -417,7 +417,7 @@
       "ci.provider.name": "circleci",
       "ci.pipeline.id": "circleci-pipeline-id",
       "ci.pipeline.name": "circleci-pipeline-name",
-      "ci.pipeline.url": "https://app.circle.com/pipelines/workflows/circleci-pipeline-id",
+      "ci.pipeline.url": "https://app.circleci.com/pipelines/workflows/circleci-pipeline-id",
       "ci.job.name": "circleci-job-name",
       "ci.job.url": "circleci-build-url",
       "git.commit.sha": "circleci-git-commit"
@@ -443,7 +443,7 @@
       "ci.provider.name": "circleci",
       "ci.pipeline.id": "circleci-pipeline-id",
       "ci.pipeline.name": "circleci-pipeline-name",
-      "ci.pipeline.url": "https://app.circle.com/pipelines/workflows/circleci-pipeline-id",
+      "ci.pipeline.url": "https://app.circleci.com/pipelines/workflows/circleci-pipeline-id",
       "ci.job.name": "circleci-job-name",
       "ci.job.url": "circleci-build-url",
       "git.commit.sha": "circleci-git-commit"
@@ -469,7 +469,7 @@
       "ci.provider.name": "circleci",
       "ci.pipeline.id": "circleci-pipeline-id",
       "ci.pipeline.name": "circleci-pipeline-name",
-      "ci.pipeline.url": "https://app.circle.com/pipelines/workflows/circleci-pipeline-id",
+      "ci.pipeline.url": "https://app.circleci.com/pipelines/workflows/circleci-pipeline-id",
       "ci.job.name": "circleci-job-name",
       "ci.job.url": "circleci-build-url",
       "git.commit.sha": "circleci-git-commit"
@@ -495,7 +495,7 @@
       "ci.provider.name": "circleci",
       "ci.pipeline.id": "circleci-pipeline-id",
       "ci.pipeline.name": "circleci-pipeline-name",
-      "ci.pipeline.url": "https://app.circle.com/pipelines/workflows/circleci-pipeline-id",
+      "ci.pipeline.url": "https://app.circleci.com/pipelines/workflows/circleci-pipeline-id",
       "ci.job.name": "circleci-job-name",
       "ci.job.url": "circleci-build-url",
       "git.commit.sha": "circleci-git-commit"
@@ -521,7 +521,7 @@
       "ci.provider.name": "circleci",
       "ci.pipeline.id": "circleci-pipeline-id",
       "ci.pipeline.name": "circleci-pipeline-name",
-      "ci.pipeline.url": "https://app.circle.com/pipelines/workflows/circleci-pipeline-id",
+      "ci.pipeline.url": "https://app.circleci.com/pipelines/workflows/circleci-pipeline-id",
       "ci.job.name": "circleci-job-name",
       "ci.job.url": "circleci-build-url",
       "git.commit.sha": "circleci-git-commit"
@@ -547,7 +547,7 @@
       "ci.provider.name": "circleci",
       "ci.pipeline.id": "circleci-pipeline-id",
       "ci.pipeline.name": "circleci-pipeline-name",
-      "ci.pipeline.url": "https://app.circle.com/pipelines/workflows/circleci-pipeline-id",
+      "ci.pipeline.url": "https://app.circleci.com/pipelines/workflows/circleci-pipeline-id",
       "ci.job.name": "circleci-job-name",
       "ci.job.url": "circleci-build-url",
       "git.commit.sha": "circleci-git-commit"

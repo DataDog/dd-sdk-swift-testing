@@ -2781,8 +2781,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/open-telemetry/opentelemetry-swift";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.1;
+				kind = revision;
+				revision = 0bcf4da0bad436e7cd7782ce8e1214ec4e8fbb03;
 			};
 		};
 		E157A719256E9D1D00CBCA52 /* XCRemoteSwiftPackageReference "plcrashreporter" */ = {

@@ -61,6 +61,8 @@ internal class DDTracer {
         switch env.tracesEndpoint {
             case "us", "US":
                 endpoint = Endpoint.us
+            case "us3", "US3":
+                endpoint = Endpoint.us3
             case "eu", "EU":
                 endpoint = Endpoint.eu
             case "gov", "GOV":

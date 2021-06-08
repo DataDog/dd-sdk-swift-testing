@@ -121,6 +121,13 @@ class DDTracerTests: XCTestCase {
         DDEnvironmentValues.environment["DD_ENDPOINT"] = nil
     }
 
+    func testEndpointChangeToUS3() {
+        DDEnvironmentValues.environment["DD_ENDPOINT"] = "us3"
+        let tracer = DDTracer()
+        XCTAssertTrue(tracer.endpointURLs().contains("https://trace.browser-intake-us3-datadoghq.com/v1/input/"))
+        DDEnvironmentValues.environment["DD_ENDPOINT"] = nil
+    }
+
     func testEndpointChangeToEU() {
         DDEnvironmentValues.environment["DD_ENDPOINT"] = "eu"
         let tracer = DDTracer()

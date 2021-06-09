@@ -34,7 +34,7 @@ struct GitInfo {
             let fetchHeadPath = gitFolder.appendingPathComponent("FETCH_HEAD")
             if let fetchHead = try? String(contentsOf: fetchHeadPath),
                let first = fetchHead.firstIndex(of: "'"),
-               let last = fetchHead.lastIndex(of: "'")
+               let last = fetchHead[fetchHead.index(after: first)...].firstIndex(of: "'")
             {
                 let auxBranch = fetchHead[fetchHead.index(after: first) ... fetchHead.index(before: last)]
                 if auxBranch.count > 0 {

@@ -595,4 +595,13 @@ internal struct DDEnvironmentValues {
         let returnVariable = variable.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
         return returnVariable.isEmpty ? nil : returnVariable
     }
+
+    func getRepositoryName() -> String? {
+        guard let repository = repository,
+              let repoURL = URL(string: repository)
+        else {
+            return nil
+        }
+        return repoURL.deletingPathExtension().lastPathComponent
+    }
 }

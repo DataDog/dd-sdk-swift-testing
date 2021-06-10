@@ -72,7 +72,7 @@ internal class DDTracer {
         }
 
         let exporterConfiguration = ExporterConfiguration(
-            serviceName: env.ddService ?? ProcessInfo.processInfo.processName,
+            serviceName: env.ddService ?? env.getRepositoryName() ?? ProcessInfo.processInfo.processName,
             resource: "Resource",
             applicationName: identifier,
             applicationVersion: version,

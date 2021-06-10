@@ -16,9 +16,13 @@ public class FrameworkLoadHandler: NSObject {
 
     internal static func installTestObserver() {
         /// Only initialize test observer if user configured so and is running tests
-        guard let enabled = DDEnvironmentValues.getEnvVariable("DD_TEST_RUNNER") as NSString?,
-              enabled.boolValue == true else {
-            print("[DatadogSDKTesting] Library loaded but not active, DD_TEST_RUNNER missing or inactive.")
+        guard let enabled = DDEnvironmentValues.getEnvVariable("DD_TEST_RUNNER") as NSString? else {
+            print("[DatadogSDKTesting] Library loaded but not active, DD_TEST_RUNNER is missing")
+            return
+        }
+
+        if enabled.boolValue == false {
+            print("[DatadogSDKTesting] Library loaded but not active, DD_TEST_RUNNER is off")
             return
         }
 
@@ -28,7 +32,7 @@ public class FrameworkLoadHandler: NSObject {
             print("[DatadogSDKTesting] Library loaded and active. Instrumenting tests.")
             DDTestMonitor.instance = DDTestMonitor()
             DDTestMonitor.instance?.startInstrumenting()
-        }  else {
+        } else {
             print("[DatadogSDKTesting] Library loaded but not in testing mode.")
         }
     }

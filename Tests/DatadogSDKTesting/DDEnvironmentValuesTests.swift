@@ -162,6 +162,17 @@ class DDEnvironmentValuesTests: XCTestCase {
         return tracerSdk.spanBuilder(spanName: "spanName").startSpan() as! RecordEventsReadableSpan
     }
 
+    private func testRepositoryName() {
+        testEnvironment["GITHUB_WORKSPACE"] = "/tmp/folder"
+        testEnvironment["GITHUB_REPOSITORY"] = "therepo"
+
+        setEnvVariables()
+        let env = DDEnvironmentValues()
+
+        XCTAssertEqual(env.repository, "https://github.com/therepo.git")
+        XCTAssertEqual(env.getRepositoryName(), "therepo")
+    }
+
     func testSpecs() throws {
         let bundle = Bundle(for: type(of: self))
         let fixturesURL = bundle.resourceURL!.appendingPathComponent("ci")

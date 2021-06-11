@@ -36,6 +36,7 @@ class FrameworkLoadHandlerTests: XCTestCase {
 
     func testWhenTestRunnerIsConfiguredAndIsInTestingMode_ItIsInitialised() {
         testEnvironment["DD_TEST_RUNNER"] = "1"
+        testEnvironment["DATADOG_CLIENT_TOKEN"] = "fakeToken"
         testEnvironment["DD_DISABLE_STDERR_INSTRUMENTATION"] = "1"
         testEnvironment["XCTestConfigurationFilePath"] = "/Users/user/Library/tmp/xx.xctestconfiguration"
         setEnvVariables()
@@ -47,6 +48,7 @@ class FrameworkLoadHandlerTests: XCTestCase {
 
     func testWhenTestRunnerIsConfiguredAndIsInOtherTestingMode_ItIsInitialised() {
         testEnvironment["DD_TEST_RUNNER"] = "1"
+        testEnvironment["DATADOG_CLIENT_TOKEN"] = "fakeToken"
         testEnvironment["DD_DISABLE_STDERR_INSTRUMENTATION"] = "1"
         testEnvironment["XCInjectBundleInto"] = "/Users/user/Library/tmp/xx.xctestconfiguration"
         setEnvVariables()
@@ -54,6 +56,17 @@ class FrameworkLoadHandlerTests: XCTestCase {
         FrameworkLoadHandler.handleLoad()
 
         XCTAssertNotNil(DDTestMonitor.instance)
+    }
+
+    func testWhenTestRunnerIsConfiguredAndIsInTestingModeButNoToken_ItIsNotInitialised() {
+        testEnvironment["DD_TEST_RUNNER"] = "1"
+        testEnvironment["DD_DISABLE_STDERR_INSTRUMENTATION"] = "1"
+        testEnvironment["XCTestConfigurationFilePath"] = "/Users/user/Library/tmp/xx.xctestconfiguration"
+        setEnvVariables()
+
+        FrameworkLoadHandler.handleLoad()
+
+        XCTAssertNil(DDTestMonitor.instance)
     }
 
     func testWhenTestRunnerIsNotConfigured_ItIsNotInitialised() {

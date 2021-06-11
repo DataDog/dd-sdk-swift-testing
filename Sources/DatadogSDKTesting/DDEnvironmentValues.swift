@@ -201,6 +201,7 @@ internal struct DDEnvironmentValues {
                     branchEnv = DDEnvironmentValues.getEnvVariable("TRAVIS_BRANCH")
                 }
             }
+            commitMessage = DDEnvironmentValues.getEnvVariable("TRAVIS_COMMIT_MESSAGE")
 
         } else if DDEnvironmentValues.getEnvVariable("CIRCLECI") != nil {
             isCi = true
@@ -259,6 +260,8 @@ internal struct DDEnvironmentValues {
             stageName = DDEnvironmentValues.getEnvVariable("CI_JOB_STAGE")
             branchEnv = DDEnvironmentValues.getEnvVariable("CI_COMMIT_BRANCH")
             tagEnv = DDEnvironmentValues.getEnvVariable("CI_COMMIT_TAG")
+            commitMessage = DDEnvironmentValues.getEnvVariable("CI_COMMIT_MESSAGE")
+
         } else if DDEnvironmentValues.getEnvVariable("APPVEYOR") != nil {
             isCi = true
             provider = "appveyor"
@@ -278,6 +281,10 @@ internal struct DDEnvironmentValues {
                 branchEnv = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_BRANCH")
             }
             tagEnv = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_TAG_NAME")
+            commitMessage = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED")
+            authorName = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_COMMIT_AUTHOR")
+            authorEmail = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_COMMIT_AUTHOR_EMAIL")
+
         } else if DDEnvironmentValues.getEnvVariable("TF_BUILD") != nil {
             isCi = true
             provider = "azurepipelines"
@@ -315,6 +322,10 @@ internal struct DDEnvironmentValues {
                 tagEnv = branchEnv
                 branchEnv = nil
             }
+            commitMessage = DDEnvironmentValues.getEnvVariable("BUILD_SOURCEVERSIONMESSAGE")
+            authorName = DDEnvironmentValues.getEnvVariable("BUILD_REQUESTEDFORID")
+            authorEmail = DDEnvironmentValues.getEnvVariable("BUILD_REQUESTEDFOREMAIL")
+
         } else if DDEnvironmentValues.getEnvVariable("BITBUCKET_BUILD_NUMBER") != nil {
             isCi = true
             provider = "bitbucket"
@@ -367,6 +378,10 @@ internal struct DDEnvironmentValues {
             stageName = nil
             branchEnv = DDEnvironmentValues.getEnvVariable("BUILDKITE_BRANCH")
             tagEnv = DDEnvironmentValues.getEnvVariable("BUILDKITE_TAG")
+            commitMessage = DDEnvironmentValues.getEnvVariable("BUILDKITE_MESSAGE")
+            authorName = DDEnvironmentValues.getEnvVariable("BUILDKITE_BUILD_AUTHOR")
+            authorEmail = DDEnvironmentValues.getEnvVariable("BUILDKITE_BUILD_AUTHOR_EMAIL")
+
         } else if DDEnvironmentValues.getEnvVariable("BITRISE_BUILD_NUMBER") != nil {
             isCi = true
             provider = "bitrise"

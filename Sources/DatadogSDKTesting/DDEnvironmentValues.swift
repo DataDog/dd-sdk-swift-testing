@@ -437,7 +437,7 @@ internal struct DDEnvironmentValues {
         var gitInfo: GitInfo?
 
         #if targetEnvironment(simulator) || os(macOS)
-        if let sourceRoot = sourceRoot {
+        if let sourceRoot = sourceRoot ?? DDEnvironmentValues.expandingTilde(workspaceEnv) {
             var rootFolder = NSString(string: URL(fileURLWithPath: sourceRoot).path)
             while !FileManager.default.fileExists(atPath: rootFolder.appendingPathComponent(".git")) {
                 if rootFolder.isEqual(to: rootFolder.deletingLastPathComponent) {

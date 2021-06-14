@@ -50,7 +50,7 @@ internal class DDTestObserver: NSObject, XCTestObservation {
 
         #if !os(tvOS) && (targetEnvironment(simulator) || os(macOS))
         DDSymbolicator.createDSYMFileIfNeeded(forImageName: currentBundleName)
-        currentBundleFunctionInfo = FileLocator.functionsInModule(currentBundleName)
+        currentBundleFunctionInfo = FileLocator.testFunctionsInModule(currentBundleName)
         #endif
 
         if !tracer.env.disableCrashHandler {

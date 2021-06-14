@@ -12,9 +12,7 @@ struct FunctionInfo {
     var endLine: Int
 
     mutating func updateWithLine(_ line: Int) {
-        if startLine > line {
-            startLine = line
-        } else if endLine < line {
+        if endLine < line {
             endLine = line
         }
     }
@@ -70,7 +68,7 @@ enum FileLocator {
     private static let objcFunctionRegex = try! NSRegularExpression(pattern: #"-\[(\w+) (\w+)\]"#, options: .anchorsMatchLines)
     private static let pathRegex = try! NSRegularExpression(pattern: #"(\/.*?\.\S*):(\d*)"#, options: .anchorsMatchLines)
 
-    static func functionsInModule(_ module: String) -> FunctionMap {
+    static func testFunctionsInModule(_ module: String) -> FunctionMap {
         var functionMap = FunctionMap()
         guard let symbolsInfo = DDSymbolicator.symbolsInfo(forLibrary: module) else {
             return functionMap
@@ -79,12 +77,14 @@ enum FileLocator {
         var currentFunctionName: String?
         symbolsInfo.components(separatedBy: .newlines).lazy.forEach { line in
 
-            if line.contains("[FUNC, EXT, LENGTH") {
+            if line.contains("[FUNC, EXT, LENGTH") ||
+                line.contains("[FUNC, PEXT, LENGTH")
+            {
                 // Swift exported functions
                 if let match = swiftFunctionRegex.firstMatch(in: line, options: [], range: NSRange(location: 0, length: line.count)) {
                     guard let classNameRange = Range(match.range(at: 1), in: line),
-                          let functionRange = Range(match.range(at: 2), in: line)
-
+                          let functionRange = Range(match.range(at: 2), in: line),
+                          String(line[functionRange]).hasPrefix("test")
                     else {
                         return
                     }
@@ -94,8 +94,8 @@ enum FileLocator {
                 // ObjC exported functions
                 if let match = objcFunctionRegex.firstMatch(in: line, options: [], range: NSRange(location: 0, length: line.count)) {
                     guard let classNameRange = Range(match.range(at: 1), in: line),
-                          let functionRange = Range(match.range(at: 2), in: line)
-
+                          let functionRange = Range(match.range(at: 2), in: line),
+                          String(line[functionRange]).hasPrefix("test")
                     else {
                         return
                     }
@@ -117,7 +117,7 @@ enum FileLocator {
                     if let line = Int(line[lineRange]), line != 0, !file.isEmpty {
                         if functionMap[functionName]?.file == file {
                             functionMap[functionName]?.updateWithLine(line)
-                        } else {
+                        } else if functionMap[functionName] == nil {
                             functionMap[functionName] = FunctionInfo(file: file, startLine: line, endLine: line)
                         }
                     }

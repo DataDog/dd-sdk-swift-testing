@@ -63,28 +63,54 @@ struct CodeOwners {
     }
 
     private func codeOwnersWildcard(_ string: String, pattern: String) -> Bool {
-        var finalPattern: String
+        var finalPattern: String = pattern
 
-        if pattern.hasPrefix("*") || pattern.hasPrefix("/") {
-            finalPattern = pattern
+        let includesAnythingBefore: Bool
+        let includesAnythingAfter: Bool
+
+        if pattern.hasPrefix("/") {
+            includesAnythingBefore = false
         } else {
-            finalPattern = "*" + pattern
+            if finalPattern.hasPrefix("*") {
+                finalPattern = String(finalPattern.dropFirst())
+            }
+            includesAnythingBefore = true
         }
 
         if pattern.hasSuffix("/") {
-            finalPattern += "*"
+            includesAnythingAfter = true
+        } else if pattern.hasSuffix("/*") {
+            includesAnythingAfter = true
+            finalPattern = String(finalPattern.dropLast())
+        } else {
+            includesAnythingAfter = false
         }
-        let matches = genericWildcard(string, pattern: finalPattern)
 
-        if matches, pattern.hasSuffix("/*"), genericWildcard(string, pattern: finalPattern + "/*") {
-            return false
+        if includesAnythingAfter {
+            var found = true
+            if includesAnythingBefore {
+                found = string.contains(finalPattern)
+            } else {
+                found = string.hasPrefix(finalPattern)
+            }
+            guard found else {
+                return false
+            }
+            if !pattern.hasSuffix("/*") {
+                return true
+            } else {
+                if let patternEnd = string.range(of: finalPattern)?.upperBound {
+                    let remainingString = string[patternEnd...]
+                    return remainingString.firstIndex(of: "/") == nil
+                }
+                return false
+            }
+
+        } else {
+            if includesAnythingBefore {
+                return string.hasSuffix(finalPattern)
+            }
+            return string == finalPattern
         }
-
-        return matches
-    }
-
-    private func genericWildcard(_ string: String, pattern: String) -> Bool {
-        let pred = NSPredicate(format: "self LIKE %@", pattern)
-        return !NSArray(object: string).filtered(using: pred).isEmpty
     }
 }

@@ -36,8 +36,6 @@ class CISpec: XCTestCase {
         testEnvironment["DATADOG_CLIENT_TOKEN"] = "fakeToken"
         testEnvironment["CI_PIPELINE_URL"] = "https://foo/repo/-/pipelines/1234"
         testEnvironment["HOME"] = "/not-my-home"
-        testEnvironment["USERPROFILE"] = "/not-my-home"
-        testEnvironment["CI_PROJECT_DIR"] = "~/foo/bar"
         testEnvironment["CI_REPOSITORY_URL"] = "sample"
         testEnvironment["CI_COMMIT_BRANCH"] = "origin/master"
         testEnvironment["CI_COMMIT_TAG"] = "tag"

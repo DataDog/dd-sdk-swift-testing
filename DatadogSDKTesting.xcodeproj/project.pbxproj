@@ -154,6 +154,12 @@
 		E19F869F25E7FCB6003202F5 /* CISpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = E19F869E25E7FA73003202F5 /* CISpec.swift */; };
 		E19F86A025E7FCB7003202F5 /* CISpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = E19F869E25E7FA73003202F5 /* CISpec.swift */; };
 		E19F86A125E7FCB8003202F5 /* CISpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = E19F869E25E7FA73003202F5 /* CISpec.swift */; };
+		E1A63F5C26789915002F48FA /* CodeOwners.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A63F5B26789915002F48FA /* CodeOwners.swift */; };
+		E1A63F5D26789915002F48FA /* CodeOwners.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A63F5B26789915002F48FA /* CodeOwners.swift */; };
+		E1A63F5E26789915002F48FA /* CodeOwners.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A63F5B26789915002F48FA /* CodeOwners.swift */; };
+		E1A63F602678C1FD002F48FA /* CodeOwnersTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A63F5F2678C1FD002F48FA /* CodeOwnersTests.swift */; };
+		E1A63F612678C49F002F48FA /* CodeOwnersTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A63F5F2678C1FD002F48FA /* CodeOwnersTests.swift */; };
+		E1A63F622678C4A0002F48FA /* CodeOwnersTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A63F5F2678C1FD002F48FA /* CodeOwnersTests.swift */; };
 		E1ABA05B25231E2500ED8AEF /* DatadogSDKTesting.h in Headers */ = {isa = PBXBuildFile; fileRef = E1ABA04D25231E2500ED8AEF /* DatadogSDKTesting.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E1ABA07425231F4700ED8AEF /* DDTestObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA07025231F4700ED8AEF /* DDTestObserver.swift */; };
 		E1ABA07525231F4700ED8AEF /* DDTags.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA07125231F4700ED8AEF /* DDTags.swift */; };
@@ -437,6 +443,8 @@
 		E1798CE52524D0D5008DEBB9 /* DDErrorTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DDErrorTests.swift; sourceTree = "<group>"; };
 		E17B7AA5253F010C0081D7F3 /* LICENSE-3rdparty.csv */ = {isa = PBXFileReference; lastKnownFileType = text; path = "LICENSE-3rdparty.csv"; sourceTree = "<group>"; };
 		E19F869E25E7FA73003202F5 /* CISpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CISpec.swift; sourceTree = "<group>"; };
+		E1A63F5B26789915002F48FA /* CodeOwners.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeOwners.swift; sourceTree = "<group>"; };
+		E1A63F5F2678C1FD002F48FA /* CodeOwnersTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeOwnersTests.swift; sourceTree = "<group>"; };
 		E1ABA04A25231E2500ED8AEF /* DatadogSDKTesting.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = DatadogSDKTesting.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E1ABA04D25231E2500ED8AEF /* DatadogSDKTesting.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DatadogSDKTesting.h; sourceTree = "<group>"; };
 		E1ABA04E25231E2500ED8AEF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -612,6 +620,7 @@
 				E1665A7225D12D7500BA53CD /* Spawn.swift */,
 				E12515E4254892C500670D23 /* XCUIApplicationSwizzler.swift */,
 				E11295BA25F2483D002719E7 /* FileLocator.swift */,
+				E1A63F5B26789915002F48FA /* CodeOwners.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -1055,6 +1064,7 @@
 				E14AA0C9255AE8D3003FA711 /* SignalUtilsTests.swift */,
 				E12248C62643EF4200305968 /* SpawnTests.swift */,
 				E1AD07A1252F5B02003705C1 /* SwiftExtensionsTests.swift */,
+				E1A63F5F2678C1FD002F48FA /* CodeOwnersTests.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -1722,6 +1732,7 @@
 				E157A723256E9D1D00CBCA52 /* SwiftExtensions.swift in Sources */,
 				E1F422A82654F28200233B75 /* OriginSpanProcessor.swift in Sources */,
 				E1665A8225D13BBB00BA53CD /* DDSymbolicator.swift in Sources */,
+				E1A63F5D26789915002F48FA /* CodeOwners.swift in Sources */,
 				E157A724256E9D1D00CBCA52 /* DDTestMonitor.swift in Sources */,
 				E14405A725D6AA9500FE3D3C /* GitInfo.swift in Sources */,
 				E157A725256E9D1D00CBCA52 /* DDEnvironmentValues.swift in Sources */,
@@ -1755,6 +1766,7 @@
 				E157A75B256E9D3300CBCA52 /* SwiftExtensions.swift in Sources */,
 				E1F422A92654F28200233B75 /* OriginSpanProcessor.swift in Sources */,
 				E1665A8125D13BBB00BA53CD /* DDSymbolicator.swift in Sources */,
+				E1A63F5E26789915002F48FA /* CodeOwners.swift in Sources */,
 				E157A75C256E9D3300CBCA52 /* DDTestMonitor.swift in Sources */,
 				E14405A825D6AA9600FE3D3C /* GitInfo.swift in Sources */,
 				E157A75D256E9D3300CBCA52 /* DDEnvironmentValues.swift in Sources */,
@@ -1791,6 +1803,7 @@
 				E157A791256EB0F000CBCA52 /* SimpleSpanSerializerTests.swift in Sources */,
 				E117CFC826307B9A00ACE977 /* SpySpanProcessor.swift in Sources */,
 				E157A792256EB0F000CBCA52 /* StderrCaptureTests.swift in Sources */,
+				E1A63F612678C49F002F48FA /* CodeOwnersTests.swift in Sources */,
 				E157A793256EB0F000CBCA52 /* StdoutCaptureTests.swift in Sources */,
 				E157A794256EB0F000CBCA52 /* NSURLSessionBridge.m in Sources */,
 				E157A795256EB0F000CBCA52 /* DDTestObserverTests.swift in Sources */,
@@ -1816,6 +1829,7 @@
 				E157A7AC256EB0F200CBCA52 /* StderrCaptureTests.swift in Sources */,
 				E117CFC926307B9A00ACE977 /* SpySpanProcessor.swift in Sources */,
 				E157A7AD256EB0F200CBCA52 /* StdoutCaptureTests.swift in Sources */,
+				E1A63F622678C4A0002F48FA /* CodeOwnersTests.swift in Sources */,
 				E157A7AE256EB0F200CBCA52 /* NSURLSessionBridge.m in Sources */,
 				E157A7AF256EB0F200CBCA52 /* DDTestObserverTests.swift in Sources */,
 				E157A7B0256EB0F200CBCA52 /* DDNetworkInstrumentationTests.swift in Sources */,
@@ -1838,6 +1852,7 @@
 				E1AD079F252F5B00003705C1 /* SwiftExtensions.swift in Sources */,
 				E1F422A72654F28200233B75 /* OriginSpanProcessor.swift in Sources */,
 				E1D6EFA525F6647F00E8C3AE /* ObjcLoadHandler.m in Sources */,
+				E1A63F5C26789915002F48FA /* CodeOwners.swift in Sources */,
 				E1665A8525D1524100BA53CD /* DDSymbolicator.swift in Sources */,
 				E1ABA08B252341EA00ED8AEF /* DDTestMonitor.swift in Sources */,
 				E14405A625D6AA9500FE3D3C /* GitInfo.swift in Sources */,
@@ -1874,6 +1889,7 @@
 				E1BB54C425408E92007C2D93 /* StderrCaptureTests.swift in Sources */,
 				E117CFC726307B9A00ACE977 /* SpySpanProcessor.swift in Sources */,
 				E1BB54AD25401E85007C2D93 /* StdoutCaptureTests.swift in Sources */,
+				E1A63F602678C1FD002F48FA /* CodeOwnersTests.swift in Sources */,
 				E1AD074B252E1FBC003705C1 /* NSURLSessionBridge.m in Sources */,
 				E1AD0762252F2F7E003705C1 /* DDTestObserverTests.swift in Sources */,
 				E14AA0C12555AA61003FA711 /* DDNetworkInstrumentationTests.swift in Sources */,

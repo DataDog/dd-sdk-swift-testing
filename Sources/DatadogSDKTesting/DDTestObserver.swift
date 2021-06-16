@@ -19,6 +19,7 @@ internal class DDTestObserver: NSObject, XCTestObservation {
     var currentBundleFunctionInfo = FunctionMap()
     var currentTestExecutionOrder = 0
     var initialProcessId = Int(ProcessInfo.processInfo.processIdentifier)
+    var codeOwners: CodeOwners?
 
     var rLock = NSRecursiveLock()
     private var privateCurrentTestSpan: Span?
@@ -52,6 +53,9 @@ internal class DDTestObserver: NSObject, XCTestObservation {
         DDSymbolicator.createDSYMFileIfNeeded(forImageName: currentBundleName)
         currentBundleFunctionInfo = FileLocator.testFunctionsInModule(currentBundleName)
         #endif
+        if let workspacePath = tracer.env.workspacePath {
+            codeOwners = CodeOwners.init(workspacePath: URL(fileURLWithPath:workspacePath))
+        }
 
         if !tracer.env.disableCrashHandler {
             DDCrashes.install()
@@ -111,6 +115,9 @@ internal class DDTestObserver: NSObject, XCTestObservation {
             testSpan.setAttribute(key: DDTestTags.testSourceFile, value: filePath)
             testSpan.setAttribute(key: DDTestTags.testSourceStartLine, value: functionInfo.startLine)
             testSpan.setAttribute(key: DDTestTags.testSourceEndLine, value: functionInfo.endLine)
+            if let owners = codeOwners?.ownersForPath(filePath) {
+                testSpan.setAttribute(key: DDTestTags.testCodeowners, value: owners)
+            }
         }
 
         tracer.env.addTagsToSpan(span: testSpan)

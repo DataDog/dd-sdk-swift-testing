@@ -180,7 +180,7 @@ enum DDSymbolicator {
             else { return nil }
 
             let libraryAddress = String(format: "%016llx", imageAddress.slide)
-            let symbol = Spawn.commandWithResult("/usr/bin/atos --fullPath -o \(imagePath) -l \(libraryAddress) \(callAddress)")
+            let symbol = Spawn.commandWithResult("/usr/bin/atos --fullPath -o \"\(imagePath)\" -l \(libraryAddress) \(callAddress)")
                 .trimmingCharacters(in: .whitespacesAndNewlines)
 
             return symbol
@@ -202,7 +202,7 @@ enum DDSymbolicator {
             let dSYMFileURL = URL(fileURLWithPath: NSTemporaryDirectory())
                 .appendingPathComponent(binaryURL.lastPathComponent)
 
-            Spawn.command("/usr/bin/dsymutil --minimize --flat \(binaryPath) --out \(dSYMFileURL.path)")
+            Spawn.command("/usr/bin/dsymutil --minimize --flat \"\(binaryPath)\" --out \"\(dSYMFileURL.path)\"")
             if FileManager.default.fileExists(atPath: dSYMFileURL.path) {
                 dSYMFiles.append(dSYMFileURL)
                 return dSYMFileURL.path
@@ -299,7 +299,7 @@ enum DDSymbolicator {
 
     #if os(iOS) || os(macOS)
         private static func symbolWithAtos(objectPath: String, libraryAdress: String, callAddress: String) -> String {
-            var symbol = Spawn.commandWithResult("/usr/bin/atos --fullPath -o \(objectPath) -l \(libraryAdress) \(callAddress)")
+            var symbol = Spawn.commandWithResult("/usr/bin/atos --fullPath -o \"\(objectPath)\" -l \(libraryAdress) \(callAddress)")
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             if symbol.hasPrefix("atos cannot load") {
                 return ""
@@ -324,7 +324,7 @@ enum DDSymbolicator {
             let symbolsOutputURL = URL(fileURLWithPath: NSTemporaryDirectory())
                 .appendingPathComponent("symbols_output")
             FileManager.default.createFile(atPath: symbolsOutputURL.path, contents: nil, attributes: nil)
-            Spawn.commandToFile("/usr/bin/symbols -fullSourcePath -lazy \(imagePath)", outputPath: symbolsOutputURL.path)
+            Spawn.commandToFile("/usr/bin/symbols -fullSourcePath -lazy \"\(imagePath)\"", outputPath: symbolsOutputURL.path)
             defer { try? FileManager.default.removeItem(at: symbolsOutputURL) }
             let outputData = try? String(contentsOf: symbolsOutputURL)
             return outputData

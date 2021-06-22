@@ -1,5 +1,6 @@
 # Datadog SDK for Swift testing
-> Datadog Test Instrumentation framework for Swift / ObjC
+
+This SDK is part of Datadog's [CI Visibility](https://docs.datadoghq.com/continuous_integration/) product, currently in beta.
 
 ## Getting Started
 

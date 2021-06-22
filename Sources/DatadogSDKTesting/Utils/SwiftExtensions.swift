@@ -6,6 +6,9 @@
 
 import Compression
 import Foundation
+#if !os(macOS)
+import UIKit
+#endif
 
 extension Array where Element: BinaryFloatingPoint {
     /// The average value of all the items in the array
@@ -73,3 +76,18 @@ extension Data {
         self = data
     }
 }
+
+#if !os(macOS)
+extension UIDevice {
+    var modelName: String {
+        var systemInfo = utsname()
+        uname(&systemInfo)
+        let machineMirror = Mirror(reflecting: systemInfo.machine)
+        let identifier = machineMirror.children.reduce("") { identifier, element in
+            guard let value = element.value as? Int8, value != 0 else { return identifier }
+            return identifier + String(UnicodeScalar(UInt8(value)))
+        }
+        return identifier
+    }
+}
+#endif

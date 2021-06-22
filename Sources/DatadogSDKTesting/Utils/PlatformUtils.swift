@@ -55,7 +55,11 @@ struct PlatformUtils {
 
     static func getDeviceModel() -> String {
         #if os(iOS) || os(tvOS) || os(watchOS)
-            return UIDevice.current.model
+            #if targetEnvironment(simulator)
+                return UIDevice.current.model + " simulator"
+            #else
+                return UIDevice.current.modelName
+            #endif
         #else
             var size = 0
             sysctlbyname("hw.machine", nil, &size, nil, 0)

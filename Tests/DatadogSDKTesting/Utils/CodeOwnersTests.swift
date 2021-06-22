@@ -18,43 +18,43 @@ class CodeOwnersTests: XCTestCase {
     func testIfPathNotFoundDefaultIsReturned() {
         let codeOwners = CodeOwners(content: codeOwnersSample)
         let defaultOwner = codeOwners.ownersForPath("unexistent/path/test.swift")
-        XCTAssertEqual(defaultOwner, "@global-owner1 @global-owner2")
+        XCTAssertEqual(defaultOwner, #"["@global-owner1","@global-owner2"]"#)
     }
 
     func testIfPathIsFoundReturnOwner() {
         let codeOwners = CodeOwners(content: codeOwnersSample)
         let defaultOwner = codeOwners.ownersForPath("apps/test.swift")
-        XCTAssertEqual(defaultOwner, "@octocat")
+        XCTAssertEqual(defaultOwner, #"["@octocat"]"#)
     }
 
     func testIfPathIsFound2ReturnOwner() {
         let codeOwners = CodeOwners(content: codeOwnersSample)
         let defaultOwner = codeOwners.ownersForPath("/example/apps/test.swift")
-        XCTAssertEqual(defaultOwner, "@octocat")
+        XCTAssertEqual(defaultOwner, #"["@octocat"]"#)
     }
 
     func testIfPathIsFoundAtRootReturnOwner() {
         let codeOwners = CodeOwners(content: codeOwnersSample)
         let defaultOwner = codeOwners.ownersForPath("/docs/test.swift")
-        XCTAssertEqual(defaultOwner, "@doctocat")
+        XCTAssertEqual(defaultOwner, #"["@doctocat"]"#)
     }
 
     func testIfPathIsNotFoundAtRootReturnNextMatch() {
         let codeOwners = CodeOwners(content: codeOwnersSample)
         let defaultOwner = codeOwners.ownersForPath("/examples/docs/test.swift")
-        XCTAssertEqual(defaultOwner, "docs@example.com")
+        XCTAssertEqual(defaultOwner, #"["docs@example.com"]"#)
     }
 
     func testIfPathIsNotFoundReturnGlobal() {
         let codeOwners = CodeOwners(content: codeOwnersSample)
         let defaultOwner = codeOwners.ownersForPath("/examples/docs/inside/test.swift")
-        XCTAssertEqual(defaultOwner, "@global-owner1 @global-owner2")
+        XCTAssertEqual(defaultOwner, #"["@global-owner1","@global-owner2"]"#)
     }
 
     func testExtensionValue() {
         let codeOwners = CodeOwners(content: codeOwnersSample)
         let defaultOwner = codeOwners.ownersForPath("/component/path/test.js")
-        XCTAssertEqual(defaultOwner, "@js-owner")
+        XCTAssertEqual(defaultOwner, #"["@js-owner"]"#)
     }
 }
 

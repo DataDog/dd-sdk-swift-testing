@@ -9,7 +9,7 @@ import Foundation
 
 struct CodeOwnerEntry {
     var path: String
-    var codeowners: String
+    var codeowners: [String]
 }
 
 struct CodeOwners {
@@ -44,11 +44,11 @@ struct CodeOwners {
             }
             let lineComponents = line.components(separatedBy: .whitespaces).filter { !$0.isEmpty }
 
-            let owners = lineComponents.dropFirst().joined(separator: " ")
+            let owners = lineComponents.dropFirst()
             if let path = lineComponents.first,
                !owners.isEmpty
             {
-                ownerEntries.append(CodeOwnerEntry(path: path, codeowners: owners))
+                ownerEntries.append(CodeOwnerEntry(path: path, codeowners: owners.map{String($0)}))
             }
         }
     }
@@ -56,7 +56,7 @@ struct CodeOwners {
     func ownersForPath(_ path: String) -> String? {
         for owner in ownerEntries.reversed() {
             if codeOwnersWildcard(path, pattern: owner.path) {
-                return owner.codeowners
+                return "[\"" + owner.codeowners.joined(separator: "\",\"") + "\"]"
             }
         }
         return nil

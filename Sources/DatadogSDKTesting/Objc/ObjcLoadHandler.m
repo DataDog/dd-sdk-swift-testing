@@ -5,12 +5,14 @@
  */
 
 #import <Foundation/Foundation.h>
-#import "ObjcLoadHandler.h"
-#if SWIFT_PACKAGE
-#else
-#import <DatadogSDKTesting/DatadogSDKTesting-Swift.h>
-#endif
+#import <objc/runtime.h>
 
-@implementation ObjcLoadHandler : NSObject
-+ (void)load { [FrameworkLoadHandler handleLoad]; }
-@end
+__attribute__((constructor)) static void initialize_FrameworkLoadHandler() {
+    Class frameworkLoadHandlerClass = objc_getClass("DatadogSDKTesting.FrameworkLoadHandler");
+    SEL handleLoadSelector = NSSelectorFromString(@"handleLoad");
+    NSMethodSignature *methodSignature = [frameworkLoadHandlerClass methodSignatureForSelector:handleLoadSelector];
+    NSInvocation *myInvocation = [NSInvocation invocationWithMethodSignature:methodSignature];
+    [myInvocation setTarget:frameworkLoadHandlerClass];
+    [myInvocation setSelector:handleLoadSelector];
+    [myInvocation invoke];
+}

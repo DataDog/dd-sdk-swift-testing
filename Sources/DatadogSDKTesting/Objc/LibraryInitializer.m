@@ -7,6 +7,9 @@
 #import <Foundation/Foundation.h>
 #import <objc/runtime.h>
 
+// This code will run when the framework is loaded in memory and before the application
+// or tests start.
+// Reference: https://developer.apple.com/documentation/objectivec/nsobject/1418815-load
 __attribute__((constructor)) static void initialize_FrameworkLoadHandler() {
     Class frameworkLoadHandlerClass = objc_getClass("DatadogSDKTesting.FrameworkLoadHandler");
     SEL handleLoadSelector = NSSelectorFromString(@"handleLoad");

@@ -39,13 +39,20 @@ extension XCUIApplication {
                 "XCTestConfigurationFilePath",
                 "DD_ENV",
                 "DD_SERVICE",
+                "SRCROOT",
+                "DD_TAGS",
                 "DD_DISABLE_NETWORK_INSTRUMENTATION",
                 "DD_DISABLE_HEADERS_INJECTION",
                 "DD_INSTRUMENTATION_EXTRA_HEADERS",
                 "DD_EXCLUDED_URLS",
                 "DD_ENABLE_RECORD_PAYLOAD",
+                "DD_MAX_PAYLOAD_SIZE",
                 "DD_DISABLE_STDOUT_INSTRUMENTATION",
-                "DD_DISABLE_STDERR_INSTRUMENTATION"
+                "DD_DISABLE_STDERR_INSTRUMENTATION",
+                "DD_DISABLE_SDKIOS_INTEGRATION",
+                "DD_DISABLE_CRASH_HANDLER",
+                "DD_ENDPOINT",
+                "DD_DONT_EXPORT"
             ].forEach(addProcessEnvironmentToLaunch)
         }
         swizzled_launch()

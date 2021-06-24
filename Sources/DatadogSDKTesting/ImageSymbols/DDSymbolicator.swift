@@ -10,13 +10,6 @@ import MachO
     import DatadogSDKTestingObjc
 #endif
 
-/// It stores information about loaded mach images
-struct MachImage {
-    var header: UnsafePointer<mach_header>?
-    var slide: Int
-    var path: String
-}
-
 enum DDSymbolicator {
     private static let crashLineRegex = try! NSRegularExpression(pattern: "^([0-9]+)([ \t]+)([^ \t]+)([ \t]+)(0x[0-9a-fA-F]+)([ \t]+)(0x[0-9a-fA-F]+)([ \t]+\\+[ \t]+[0-9]+)$?", options: .anchorsMatchLines)
 
@@ -80,27 +73,6 @@ enum DDSymbolicator {
         return dSYMFiles
     }()
 
-    /// Structure to store all loaded libraries and images in the process
-    private static var imageAddresses: [String: MachImage] = {
-        /// User library addresses are randomized each time an app is run, create a map to locate library addresses by name,
-        /// system libraries are not so address returned is 0
-        var imageAddresses = [String: MachImage]()
-        let numImages = _dyld_image_count()
-        for i in 0 ..< numImages {
-            let path = String(cString: _dyld_get_image_name(i))
-            let name = URL(fileURLWithPath: path).lastPathComponent
-            let header = _dyld_get_image_header(i)
-            let slide = _dyld_get_image_vmaddr_slide(i)
-            if slide != 0 {
-                imageAddresses[name] = MachImage(header: header, slide: slide, path: path)
-            } else {
-                // Its a system library, use library Address as slide value instead of 0
-                imageAddresses[name] = MachImage(header: header, slide: Int(bitPattern: header), path: path)
-            }
-        }
-        return imageAddresses
-    }()
-
     /// It symbolicates using atos a given crashLog replacing all addresses by its respective symbol
     static func symbolicate(crashLog: String) -> String {
         var lines: [String] = crashLog.components(separatedBy: "\n").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -127,7 +99,7 @@ enum DDSymbolicator {
                             return
                         }
                     } else {
-                        if let symbolFilePath = imageAddresses[library]?.path {
+                        if let symbolFilePath = BinaryImages.imageAddresses[library]?.path {
                             let symbol = symbolWithAtos(objectPath: symbolFilePath, libraryAdress: libraryAddress, callAddress: callAddress)
                             if !symbol.isEmpty {
                                 lines[$0] = crashLineRegex.replacementString(for: match, in: line, offset: 0, template: "$1$2$3$4$5$6\(symbol)")
@@ -144,7 +116,7 @@ enum DDSymbolicator {
                 var callAddressInt = UInt(originalCallAdress)
 
                 /// Calculate the new address of the library, if it is in the map
-                if let libraryOffset = imageAddresses[library]?.slide,
+                if let libraryOffset = BinaryImages.imageAddresses[library]?.slide,
                    let originalLibraryAddress = Float64(libraryAddress)
                 {
                     let callOffset = UInt(originalCallAdress) - UInt(originalLibraryAddress)
@@ -175,8 +147,8 @@ enum DDSymbolicator {
         }
     #else
         static func atosSymbol(forAddress callAddress: String, library: String) -> String? {
-            guard let imageAddress = imageAddresses[library],
-                  let imagePath = dSYMFiles.first(where: { $0.lastPathComponent == library })?.path ?? imageAddresses[library]?.path
+            guard let imageAddress = BinaryImages.imageAddresses[library],
+                  let imagePath = dSYMFiles.first(where: { $0.lastPathComponent == library })?.path ?? BinaryImages.imageAddresses[library]?.path
             else { return nil }
 
             let libraryAddress = String(format: "%016llx", imageAddress.slide)
@@ -195,7 +167,7 @@ enum DDSymbolicator {
         }
     #else
         static func generateDSYMFile(forImageName imageName: String) -> String? {
-            guard let binaryPath = imageAddresses[imageName]?.path else {
+            guard let binaryPath = BinaryImages.imageAddresses[imageName]?.path else {
                 return nil
             }
             let binaryURL = URL(fileURLWithPath: binaryPath)
@@ -289,8 +261,8 @@ enum DDSymbolicator {
 
     /// It locates the address in the image og the library where the symbol is located, it must receive a mangled name
     static func address(forSymbolName name: String, library: String) -> UnsafeMutableRawPointer? {
-        guard let imageAddressHeader = imageAddresses[library]?.header,
-              let imageSlide = imageAddresses[library]?.slide else { return nil }
+        guard let imageAddressHeader = BinaryImages.imageAddresses[library]?.header,
+              let imageSlide = BinaryImages.imageAddresses[library]?.slide else { return nil }
 
         let symbol = FindSymbolInImage(name, imageAddressHeader, imageSlide)
 

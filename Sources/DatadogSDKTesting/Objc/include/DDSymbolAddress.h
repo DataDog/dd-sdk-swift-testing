@@ -12,4 +12,6 @@
 
 void *_Nullable FindSymbolInImage(const char *_Nonnull symbol, const struct mach_header *_Nonnull image, intptr_t slide);
 
+void Profile_reset_counters(void * _Nonnull beginCounters, void *_Nonnull endCounters, void * _Nonnull beginData, void * _Nonnull endData);
+
 #endif /* CSCoverageUtils_h */

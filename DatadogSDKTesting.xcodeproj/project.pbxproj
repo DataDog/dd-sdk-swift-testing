@@ -178,6 +178,12 @@
 		E1AD07AD252F5D86003705C1 /* DDErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1798CE52524D0D5008DEBB9 /* DDErrorTests.swift */; };
 		E1BB54AD25401E85007C2D93 /* StdoutCaptureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1BB54AC25401E85007C2D93 /* StdoutCaptureTests.swift */; };
 		E1BB54C425408E92007C2D93 /* StderrCaptureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1BB54C325408E92007C2D93 /* StderrCaptureTests.swift */; };
+		E1C8DEF5268363EC005B5411 /* DDCoverageHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C8DEF4268363EC005B5411 /* DDCoverageHelper.swift */; };
+		E1C8DEF8268367AB005B5411 /* BinaryImages.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C8DEF7268367AB005B5411 /* BinaryImages.swift */; };
+		E1C8DEF9268367AB005B5411 /* BinaryImages.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C8DEF7268367AB005B5411 /* BinaryImages.swift */; };
+		E1C8DEFA268367AB005B5411 /* BinaryImages.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C8DEF7268367AB005B5411 /* BinaryImages.swift */; };
+		E1C8DEFB268372C3005B5411 /* DDCoverageHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C8DEF4268363EC005B5411 /* DDCoverageHelper.swift */; };
+		E1C8DEFC268372C4005B5411 /* DDCoverageHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C8DEF4268363EC005B5411 /* DDCoverageHelper.swift */; };
 		E1D476A625DD369F00832592 /* BinaryParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1D476A525DD369F00832592 /* BinaryParser.swift */; };
 		E1D476A725DD369F00832592 /* BinaryParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1D476A525DD369F00832592 /* BinaryParser.swift */; };
 		E1D476A825DD369F00832592 /* BinaryParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1D476A525DD369F00832592 /* BinaryParser.swift */; };
@@ -468,6 +474,8 @@
 		E1AD07A8252F5CB8003705C1 /* DDError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDError.swift; sourceTree = "<group>"; };
 		E1BB54AC25401E85007C2D93 /* StdoutCaptureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StdoutCaptureTests.swift; sourceTree = "<group>"; };
 		E1BB54C325408E92007C2D93 /* StderrCaptureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StderrCaptureTests.swift; sourceTree = "<group>"; };
+		E1C8DEF4268363EC005B5411 /* DDCoverageHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDCoverageHelper.swift; sourceTree = "<group>"; };
+		E1C8DEF7268367AB005B5411 /* BinaryImages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinaryImages.swift; sourceTree = "<group>"; };
 		E1D4743625DBD8D900832592 /* config */ = {isa = PBXFileReference; lastKnownFileType = text; path = config; sourceTree = "<group>"; };
 		E1D4768C25DC2B8E00832592 /* dummy.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = dummy.txt; sourceTree = "<group>"; };
 		E1D4768E25DC2B8E00832592 /* HEAD */ = {isa = PBXFileReference; lastKnownFileType = text; path = HEAD; sourceTree = "<group>"; };
@@ -942,7 +950,9 @@
 			isa = PBXGroup;
 			children = (
 				E1ABA04D25231E2500ED8AEF /* DatadogSDKTesting.h */,
+				E1C8DEF326836386005B5411 /* CodeCoverage */,
 				E1FB483C253891CE0083B263 /* Crashes */,
+				E1C8DEF626836783005B5411 /* ImageSymbols */,
 				E1798CCA2524C1E2008DEBB9 /* NetworkInstrumentation */,
 				E1ABA06B25231F3200ED8AEF /* Objc */,
 				E126DD27253F355F00700A40 /* OutputCapture */,
@@ -1088,6 +1098,23 @@
 			path = OutputCapture;
 			sourceTree = "<group>";
 		};
+		E1C8DEF326836386005B5411 /* CodeCoverage */ = {
+			isa = PBXGroup;
+			children = (
+				E1C8DEF4268363EC005B5411 /* DDCoverageHelper.swift */,
+			);
+			path = CodeCoverage;
+			sourceTree = "<group>";
+		};
+		E1C8DEF626836783005B5411 /* ImageSymbols */ = {
+			isa = PBXGroup;
+			children = (
+				E1C8DEF7268367AB005B5411 /* BinaryImages.swift */,
+				E1665A8025D13BBB00BA53CD /* DDSymbolicator.swift */,
+			);
+			path = ImageSymbols;
+			sourceTree = "<group>";
+		};
 		E1D4768B25DC2B8E00832592 /* no_objects */ = {
 			isa = PBXGroup;
 			children = (
@@ -1143,7 +1170,6 @@
 			isa = PBXGroup;
 			children = (
 				E1FB483E253891CE0083B263 /* DDCrashes.swift */,
-				E1665A8025D13BBB00BA53CD /* DDSymbolicator.swift */,
 				E1FB483F253891CE0083B263 /* SimpleSpanData.swift */,
 				E1FB483D253891CE0083B263 /* SimpleSpanSerializer.swift */,
 			);
@@ -1745,6 +1771,7 @@
 				E1665A7425D12D7500BA53CD /* Spawn.swift in Sources */,
 				E157A730256E9D1D00CBCA52 /* SignalUtils.swift in Sources */,
 				E157A731256E9D1D00CBCA52 /* XCUIApplicationSwizzler.swift in Sources */,
+				E1C8DEF8268367AB005B5411 /* BinaryImages.swift in Sources */,
 				E157A732256E9D1D00CBCA52 /* DDError.swift in Sources */,
 				E157A734256E9D1D00CBCA52 /* StdoutCapture.swift in Sources */,
 				E1D476A725DD369F00832592 /* BinaryParser.swift in Sources */,
@@ -1752,6 +1779,7 @@
 				E157A735256E9D1D00CBCA52 /* SimpleSpanSerializer.swift in Sources */,
 				E1DFF0EA257010E700344895 /* PlatformUtils.swift in Sources */,
 				E157A736256E9D1D00CBCA52 /* DDCrashes.swift in Sources */,
+				E1C8DEFB268372C3005B5411 /* DDCoverageHelper.swift in Sources */,
 				E157A738256E9D1D00CBCA52 /* DDTestObserver.swift in Sources */,
 				E157A73A256E9D1D00CBCA52 /* DDTracer.swift in Sources */,
 				E157A73E256E9D1D00CBCA52 /* StderrCapture.swift in Sources */,
@@ -1779,6 +1807,7 @@
 				E1665A7525D12D7500BA53CD /* Spawn.swift in Sources */,
 				E157A768256E9D3300CBCA52 /* SignalUtils.swift in Sources */,
 				E157A769256E9D3300CBCA52 /* XCUIApplicationSwizzler.swift in Sources */,
+				E1C8DEFA268367AB005B5411 /* BinaryImages.swift in Sources */,
 				E157A76A256E9D3300CBCA52 /* DDError.swift in Sources */,
 				E157A76C256E9D3300CBCA52 /* StdoutCapture.swift in Sources */,
 				E1D476A825DD369F00832592 /* BinaryParser.swift in Sources */,
@@ -1786,6 +1815,7 @@
 				E157A76D256E9D3300CBCA52 /* SimpleSpanSerializer.swift in Sources */,
 				E1DFF0EB257010E800344895 /* PlatformUtils.swift in Sources */,
 				E157A76E256E9D3300CBCA52 /* DDCrashes.swift in Sources */,
+				E1C8DEFC268372C4005B5411 /* DDCoverageHelper.swift in Sources */,
 				E157A770256E9D3300CBCA52 /* DDTestObserver.swift in Sources */,
 				E157A772256E9D3300CBCA52 /* DDTracer.swift in Sources */,
 				E157A776256E9D3300CBCA52 /* StderrCapture.swift in Sources */,
@@ -1865,6 +1895,7 @@
 				E1665A7325D12D7500BA53CD /* Spawn.swift in Sources */,
 				E13D0BCA2546E29C00C37D56 /* SignalUtils.swift in Sources */,
 				E12515E5254892C600670D23 /* XCUIApplicationSwizzler.swift in Sources */,
+				E1C8DEF5268363EC005B5411 /* DDCoverageHelper.swift in Sources */,
 				E1AD07A9252F5CB8003705C1 /* DDError.swift in Sources */,
 				E126DD2D253F366200700A40 /* StdoutCapture.swift in Sources */,
 				E1D476A625DD369F00832592 /* BinaryParser.swift in Sources */,
@@ -1872,6 +1903,7 @@
 				E1FB4840253891CE0083B263 /* SimpleSpanSerializer.swift in Sources */,
 				E1FB4841253891CE0083B263 /* DDCrashes.swift in Sources */,
 				E1ABA07425231F4700ED8AEF /* DDTestObserver.swift in Sources */,
+				E1C8DEF9268367AB005B5411 /* BinaryImages.swift in Sources */,
 				E1798CC62524B9BD008DEBB9 /* DDTracer.swift in Sources */,
 				E141CF60256FD513008B6B70 /* PlatformUtils.swift in Sources */,
 				E126DD2F253F367600700A40 /* StderrCapture.swift in Sources */,

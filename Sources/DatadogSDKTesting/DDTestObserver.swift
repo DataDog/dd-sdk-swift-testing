@@ -54,12 +54,14 @@ internal class DDTestObserver: NSObject, XCTestObservation {
         currentBundleFunctionInfo = FileLocator.testFunctionsInModule(currentBundleName)
         #endif
         if let workspacePath = tracer.env.workspacePath {
-            codeOwners = CodeOwners.init(workspacePath: URL(fileURLWithPath:workspacePath))
+            codeOwners = CodeOwners(workspacePath: URL(fileURLWithPath: workspacePath))
         }
 
         if !tracer.env.disableCrashHandler {
             DDCrashes.install()
         }
+
+        DDCoverageHelper.instance = DDCoverageHelper()
     }
 
     func testBundleDidFinish(_ testBundle: Bundle) {
@@ -127,6 +129,10 @@ internal class DDTestObserver: NSObject, XCTestObservation {
             DDCrashes.setCustomData(customData: SimpleSpanSerializer.serializeSpan(simpleSpan: simpleSpan))
         }
         currentTestSpan = testSpan
+        DDCoverageHelper.instance?.setTest(name: testName,
+                                           spanId: testSpan.context.spanId.hexString,
+                                           traceId: testSpan.context.traceId.hexString)
+        DDCoverageHelper.instance?.clearCounters()
     }
 
     func testCaseDidFinish(_ testCase: XCTestCase) {
@@ -150,6 +156,7 @@ internal class DDTestObserver: NSObject, XCTestObservation {
         activeTest.end()
         tracer.backgroundWorkQueue.sync {}
         currentTestSpan = nil
+        DDCoverageHelper.instance?.writeProfile()
         DDTestMonitor.instance?.networkInstrumentation?.endAndCleanAliveSpans()
     }
 

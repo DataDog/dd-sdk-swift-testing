@@ -377,6 +377,7 @@
 		E11295C725F63BA8002719E7 /* DDSymbolAddress.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = DDSymbolAddress.c; sourceTree = "<group>"; };
 		E116D7DA25248C390022779D /* SwiftExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftExtensions.swift; sourceTree = "<group>"; };
 		E117CFC626307B9A00ACE977 /* SpySpanProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpySpanProcessor.swift; sourceTree = "<group>"; };
+		E11FC4CF2689E45700C3C256 /* Package@swift-5.3.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Package@swift-5.3.swift"; sourceTree = "<group>"; };
 		E121DF07258CF652009EA71E /* azurepipelines.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = azurepipelines.json; sourceTree = "<group>"; };
 		E121DF08258CF652009EA71E /* buildkite.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = buildkite.json; sourceTree = "<group>"; };
 		E121DF09258CF652009EA71E /* appveyor.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = appveyor.json; sourceTree = "<group>"; };
@@ -961,6 +962,7 @@
 			children = (
 				E17B7AA5253F010C0081D7F3 /* LICENSE-3rdparty.csv */,
 				E160A11125275CC1003121A5 /* Package.swift */,
+				E11FC4CF2689E45700C3C256 /* Package@swift-5.3.swift */,
 				E1ABA04C25231E2500ED8AEF /* Sources */,
 				E1ABA05725231E2500ED8AEF /* Tests */,
 				E1224A42264ABCCE00305968 /* IntegrationTests */,

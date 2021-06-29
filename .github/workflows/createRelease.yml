@@ -1,0 +1,33 @@
+name: Create relase
+
+on:
+  release:
+    types: [created]
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: macos-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Test
+      run: make tests
+
+  release:
+    needs: [test]
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build XCFrameworks
+        run: make release
+      - name: Get the tag version
+        id: tag_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      - name: Update swift binary and recreate tag
+        run: sh Scripts/uploadBinary.sh $GITHUB_TOKEN ${{ steps.tag_version.outputs.VERSION }}
+
+

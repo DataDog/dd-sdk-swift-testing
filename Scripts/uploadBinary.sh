@@ -16,4 +16,4 @@ cat Package@swift-5.3.swift
 git add Package@swift-5.3.swift
 git commit -m "Updated binary package version to $2"
 git tag -f $2
-git push --tags
+git push -f --tags origin HEAD:main

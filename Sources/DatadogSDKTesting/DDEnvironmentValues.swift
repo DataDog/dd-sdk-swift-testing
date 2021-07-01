@@ -78,6 +78,8 @@ internal struct DDEnvironmentValues {
 
     /// The tracer is being tested itself
     let tracerUnderTesting: Bool
+    /// The tracer send result to a localhost server (for testing purposes)
+    let localTestEnvironmentPort: Int?
 
     static var environment = ProcessInfo.processInfo.environment
     static let environmentCharset = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_")
@@ -98,6 +100,9 @@ internal struct DDEnvironmentValues {
         } else {
             ddService = service
         }
+
+        let envLocalTestEnvironmentPort = DDEnvironmentValues.getEnvVariable("DD_LOCAL_TEST_ENVIRONMENT_PORT") as NSString?
+        localTestEnvironmentPort = envLocalTestEnvironmentPort?.integerValue
 
         sourceRoot = ProcessInfo.processInfo.environment["SRCROOT"]
 

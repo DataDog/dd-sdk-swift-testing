@@ -71,6 +71,13 @@ internal class DDTracer {
                 endpoint = Endpoint.us
         }
 
+        // When reporting tests to local server
+        if let localPort = env.localTestEnvironmentPort {
+            let localURL = URL(string: "http://localhost:\(localPort)/")!
+            endpoint = Endpoint.custom(tracesURL: localURL, logsURL: localURL, metricsURL: localURL)
+            print("[DDSwiftTesting] Reporting tests to \(localURL.absoluteURL)")
+        }
+
         let exporterConfiguration = ExporterConfiguration(
             serviceName: env.ddService ?? env.getRepositoryName() ?? "unknown-swift-repo",
             resource: "Resource",

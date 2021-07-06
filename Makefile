@@ -17,11 +17,8 @@ build/DatadogSDKTesting.xcframework: build/DatadogSDKTesting/ios build/DatadogSD
 	mkdir -p $(PWD)/build/xcframework
 	xcodebuild -create-xcframework -framework build/DatadogSDKTesting/macos.xcarchive/Products/Library/Frameworks/DatadogSDKTesting.framework -framework build/DatadogSDKTesting/iphoneos.xcarchive/Products/Library/Frameworks/DatadogSDKTesting.framework -framework build/DatadogSDKTesting/iphonesimulator.xcarchive/Products/Library/Frameworks/DatadogSDKTesting.framework -framework build/DatadogSDKTesting/appletvos.xcarchive/Products/Library/Frameworks/DatadogSDKTesting.framework  -framework build/DatadogSDKTesting/appletvsimulator.xcarchive/Products/Library/Frameworks/DatadogSDKTesting.framework -output build/xcframework/DatadogSDKTesting.xcframework
 
-build/xcframework/LICENSE: LICENSE
-	cp LICENSE ./build/xcframework/LICENSE
-
-build/xcframework/DatadogSDKTesting.zip: build/DatadogSDKTesting.xcframework build/xcframework/LICENSE
-	cd ./build/xcframework/; zip -ry ./DatadogSDKTesting.zip ./DatadogSDKTesting.xcframework ./LICENSE
+build/xcframework/DatadogSDKTesting.zip: build/DatadogSDKTesting.xcframework
+	cd ./build/xcframework/; zip -ry ./DatadogSDKTesting.zip ./DatadogSDKTesting.xcframework
 
 build/xcframework: build/xcframework/DatadogSDKTesting.zip
 

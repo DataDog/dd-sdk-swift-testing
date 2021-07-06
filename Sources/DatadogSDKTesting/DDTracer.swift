@@ -59,13 +59,13 @@ internal class DDTracer {
 
         var endpoint: Endpoint
         switch env.tracesEndpoint {
-            case "us", "US":
+            case "us", "US", "https://app.datadoghq.com", "app.datadoghq.com", "datadoghq.com":
                 endpoint = Endpoint.us
-            case "us3", "US3":
+            case "us3", "US3", "https://us3.datadoghq.com", "us3.datadoghq.com":
                 endpoint = Endpoint.us3
-            case "eu", "EU":
+            case "eu", "EU", "https://app.datadoghq.eu", "app.datadoghq.eu", "datadoghq.eu":
                 endpoint = Endpoint.eu
-            case "gov", "GOV":
+            case "gov", "GOV", "https://app.ddog-gov.com", "app.ddog-gov.com", "ddog-gov.com":
                 endpoint = Endpoint.gov
             default:
                 endpoint = Endpoint.us

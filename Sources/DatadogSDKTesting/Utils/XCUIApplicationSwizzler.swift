@@ -37,6 +37,8 @@ extension XCUIApplication {
                 "DD_TEST_RUNNER",
                 "DATADOG_CLIENT_TOKEN",
                 "XCTestConfigurationFilePath",
+                "XCInjectBundleInto",
+                "SDKROOT",
                 "DD_ENV",
                 "DD_SERVICE",
                 "SRCROOT",

@@ -27,7 +27,7 @@ public class FrameworkLoadHandler: NSObject {
         }
 
         let isInTestMode = environment["XCInjectBundleInto"] != nil ||
-            environment["XCTestConfigurationFilePath"] != nil
+            environment["XCTestConfigurationFilePath"] != nil || environment["SDKROOT"] != nil
         if isInTestMode {
             guard environment["DATADOG_CLIENT_TOKEN"] != nil else {
                 print("[DatadogSDKTesting] DATADOG_CLIENT_TOKEN missing.")

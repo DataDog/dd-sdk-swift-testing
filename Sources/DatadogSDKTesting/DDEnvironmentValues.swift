@@ -472,6 +472,20 @@ internal struct DDEnvironmentValues {
         branch = DDEnvironmentValues.normalizedBranchOrTag(branchEnv)
         tag = DDEnvironmentValues.normalizedBranchOrTag(tagEnv)
         workspacePath = DDEnvironmentValues.expandingTilde(workspaceEnv) ?? sourceRoot
+
+        // Warn on needed git onformation when not present
+        if commit == nil {
+            print("[DDSwiftTesting] could not find git commit information")
+        }
+        if repository == nil {
+            print("[DDSwiftTesting] could not find git repository information")
+        }
+        if branch == nil && tag == nil{
+            print("[DDSwiftTesting] could not find git branch or tag  information")
+        }
+        if commit == nil || repository == nil || (branch == nil && tag == nil) {
+            print("[DDSwiftTesting] Please check: https://docs.datadoghq.com/continuous_integration/troubleshooting")
+        }
     }
 
     func addTagsToSpan(span: Span) {

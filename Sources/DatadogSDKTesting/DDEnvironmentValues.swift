@@ -405,7 +405,8 @@ internal struct DDEnvironmentValues {
             jobName = nil
             stageName = nil
             pipelineURL = DDEnvironmentValues.getEnvVariable("BITRISE_BUILD_URL")
-            pipelineName = DDEnvironmentValues.getEnvVariable("BITRISE_APP_TITLE")
+            pipelineName = DDEnvironmentValues.getEnvVariable("BITRISE_TRIGGERED_WORKFLOW_ID") ??
+                DDEnvironmentValues.getEnvVariable("BITRISE_APP_TITLE")
             branchEnv = DDEnvironmentValues.getEnvVariable("BITRISE_GIT_BRANCH")
             tagEnv = DDEnvironmentValues.getEnvVariable("BITRISE_GIT_TAG")
 

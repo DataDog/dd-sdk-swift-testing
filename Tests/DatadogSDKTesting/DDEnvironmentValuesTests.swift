@@ -220,7 +220,7 @@ class DDEnvironmentValuesTests: XCTestCase {
             spec[1].forEach {
                 XCTAssertEqual(spanData.attributes[$0.key]?.description, $0.value)
                 if spanData.attributes[$0.key]?.description != $0.value {
-                    print("\(spanData.attributes[$0.key]!.description) != \($0.value)")
+                    print("\(spanData.attributes[$0.key]?.description) != \($0.value)")
                 }
             }
         }

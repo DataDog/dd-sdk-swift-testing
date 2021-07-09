@@ -233,7 +233,7 @@ internal struct DDEnvironmentValues {
         } else if DDEnvironmentValues.getEnvVariable("JENKINS_URL") != nil {
             isCi = true
             provider = "jenkins"
-            repository = DDEnvironmentValues.removingUserPassword(DDEnvironmentValues.getEnvVariable("GIT_URL"))
+            repository = DDEnvironmentValues.removingUserPassword(DDEnvironmentValues.getEnvVariable("GIT_URL") ?? DDEnvironmentValues.getEnvVariable("GIT_URL_1"))
             commit = DDEnvironmentValues.getEnvVariable("GIT_COMMIT")
             workspaceEnv = DDEnvironmentValues.getEnvVariable("WORKSPACE")
             pipelineId = DDEnvironmentValues.getEnvVariable("BUILD_TAG")

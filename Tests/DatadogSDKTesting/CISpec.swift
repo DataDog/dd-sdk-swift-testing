@@ -46,7 +46,6 @@ class CISpec: XCTestCase {
         testEnvironment["CI_JOB_URL"] = "gitlab-job-url"
         testEnvironment["CI_JOB_NAME"] = "gitlab-job-name"
         testEnvironment["CI_JOB_STAGE"] = "gitlab-stage-name"
-        testEnvironment["CI_COMMIT_SHA"] = "gitlab-git-commit"
         setEnvVariables()
 
         testObserver = DDTestObserver(tracer: DDTracer())

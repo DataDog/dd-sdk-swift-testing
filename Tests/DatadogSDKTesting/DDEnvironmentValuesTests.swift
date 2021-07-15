@@ -162,7 +162,7 @@ class DDEnvironmentValuesTests: XCTestCase {
         return tracerSdk.spanBuilder(spanName: "spanName").startSpan() as! RecordEventsReadableSpan
     }
 
-    private func testRepositoryName() {
+    func testRepositoryName() {
         testEnvironment["GITHUB_WORKSPACE"] = "/tmp/folder"
         testEnvironment["GITHUB_REPOSITORY"] = "therepo"
 
@@ -171,6 +171,44 @@ class DDEnvironmentValuesTests: XCTestCase {
 
         XCTAssertEqual(env.repository, "https://github.com/therepo.git")
         XCTAssertEqual(env.getRepositoryName(), "therepo")
+    }
+
+    func testIfCommitHashFromEnvironmentIsNotSetGitFolderIsEvaluated() {
+        testEnvironment["GITHUB_WORKSPACE"] = "/tmp/folder"
+        testEnvironment["GITHUB_SHA"] = nil
+
+        setEnvVariables()
+        let env = DDEnvironmentValues()
+
+        XCTAssertNotNil(env.commitMessage)
+    }
+
+    func testIfCommitHashFromEnvironmentIsSetAndDifferentFromGitFolderThenGitFolderIsNotEvaluated() {
+        testEnvironment["GITHUB_WORKSPACE"] = "/tmp/folder"
+        testEnvironment["GITHUB_SHA"] = "environmentSHA"
+
+        setEnvVariables()
+        let env = DDEnvironmentValues()
+
+        XCTAssertNil(env.commitMessage)
+        XCTAssertEqual(env.commit, "environmentSHA")
+    }
+
+    func testIfCommitHashFromEnvironmentIsSetAndEqualsFromGitFolderThenGitFolderIsEvaluated() {
+        let gitInfo = DDEnvironmentValues.gitInfoAt(startingPath: #file)
+
+        testEnvironment["GITHUB_WORKSPACE"] = "/tmp/folder"
+        testEnvironment["GITHUB_SHA"] = gitInfo?.commit
+
+        setEnvVariables()
+        let env = DDEnvironmentValues()
+
+        XCTAssertNotNil(env.commitMessage)
+    }
+
+    func testGitInfoIsNilWhenNotGitFolderExists() {
+        let gitInfo = DDEnvironmentValues.gitInfoAt(startingPath: "/Users/")
+        XCTAssertNil(gitInfo)
     }
 
     func testSpecs() throws {
@@ -220,7 +258,7 @@ class DDEnvironmentValuesTests: XCTestCase {
             spec[1].forEach {
                 XCTAssertEqual(spanData.attributes[$0.key]?.description, $0.value)
                 if spanData.attributes[$0.key]?.description != $0.value {
-                    print("\(spanData.attributes[$0.key]?.description) != \($0.value)")
+                    print("\(spanData.attributes[$0.key]?.description ?? "nil") != \($0.value)")
                 }
             }
         }

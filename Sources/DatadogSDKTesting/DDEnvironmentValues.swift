@@ -444,31 +444,30 @@ internal struct DDEnvironmentValues {
 
         #if targetEnvironment(simulator) || os(macOS)
         if let sourceRoot = sourceRoot ?? DDEnvironmentValues.expandingTilde(workspaceEnv) {
-            var rootFolder = NSString(string: URL(fileURLWithPath: sourceRoot).path)
-            while !FileManager.default.fileExists(atPath: rootFolder.appendingPathComponent(".git")) {
-                if rootFolder.isEqual(to: rootFolder.deletingLastPathComponent) {
-                    // We reached to the top
-                    print("[DDSwiftTesting] could not find .git folder at \(rootFolder)")
-                    break
-                }
-                rootFolder = rootFolder.deletingLastPathComponent as NSString
-            }
-            let rootDirectory = URL(fileURLWithPath: rootFolder as String, isDirectory: true)
-            gitInfo = try? GitInfo(gitFolder: rootDirectory.appendingPathComponent(".git"))
+            gitInfo = DDEnvironmentValues.gitInfoAt(startingPath: sourceRoot)
         }
         #endif
 
-        commit = commit ?? gitInfo?.commit
-        workspaceEnv = workspaceEnv ?? gitInfo?.workspacePath
-        repository = repository ?? gitInfo?.repository
-        branchEnv = branchEnv ?? gitInfo?.branch
-        commitMessage = commitMessage ?? gitInfo?.commitMessage
-        authorName = authorName ?? gitInfo?.authorName
-        authorEmail = authorEmail ?? gitInfo?.authorEmail
-        authorDate = authorDate ?? gitInfo?.authorDate
-        committerName = committerName ?? gitInfo?.committerName
-        committerEmail = committerEmail ?? gitInfo?.committerEmail
-        committerDate = committerDate ?? gitInfo?.committerDate
+        var gitInfoIsValid = false
+        if commit == nil {
+            gitInfoIsValid = true
+        } else if commit == gitInfo?.commit {
+            gitInfoIsValid = true
+        }
+
+        if gitInfoIsValid {
+            commit = commit ?? gitInfo?.commit
+            workspaceEnv = workspaceEnv ?? gitInfo?.workspacePath
+            repository = repository ?? gitInfo?.repository
+            branchEnv = branchEnv ?? gitInfo?.branch
+            commitMessage = commitMessage ?? gitInfo?.commitMessage
+            authorName = authorName ?? gitInfo?.authorName
+            authorEmail = authorEmail ?? gitInfo?.authorEmail
+            authorDate = authorDate ?? gitInfo?.authorDate
+            committerName = committerName ?? gitInfo?.committerName
+            committerEmail = committerEmail ?? gitInfo?.committerEmail
+            committerDate = committerDate ?? gitInfo?.committerDate
+        }
 
         branch = DDEnvironmentValues.normalizedBranchOrTag(branchEnv)
         tag = DDEnvironmentValues.normalizedBranchOrTag(tagEnv)
@@ -481,7 +480,7 @@ internal struct DDEnvironmentValues {
         if repository == nil {
             print("[DDSwiftTesting] could not find git repository information")
         }
-        if branch == nil && tag == nil{
+        if branch == nil && tag == nil {
             print("[DDSwiftTesting] could not find git branch or tag  information")
         }
         if commit == nil || repository == nil || (branch == nil && tag == nil) {
@@ -638,5 +637,20 @@ internal struct DDEnvironmentValues {
             return nil
         }
         return repoURL.deletingPathExtension().lastPathComponent
+    }
+
+    static func gitInfoAt(startingPath: String) -> GitInfo? {
+        var rootFolder = NSString(string: URL(fileURLWithPath: startingPath).path)
+        while !FileManager.default.fileExists(atPath: rootFolder.appendingPathComponent(".git")) {
+            if rootFolder.isEqual(to: rootFolder.deletingLastPathComponent) {
+                // We reached to the top
+                print("[DDSwiftTesting] could not find .git folder at \(rootFolder)")
+                break
+            }
+            rootFolder = rootFolder.deletingLastPathComponent as NSString
+        }
+        let rootDirectory = URL(fileURLWithPath: rootFolder as String, isDirectory: true)
+        let gitInfo = try? GitInfo(gitFolder: rootDirectory.appendingPathComponent(".git"))
+        return gitInfo
     }
 }

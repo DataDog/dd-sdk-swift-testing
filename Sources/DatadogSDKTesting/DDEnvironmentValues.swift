@@ -266,6 +266,13 @@ internal struct DDEnvironmentValues {
             branchEnv = DDEnvironmentValues.getEnvVariable("CI_COMMIT_BRANCH")
             tagEnv = DDEnvironmentValues.getEnvVariable("CI_COMMIT_TAG")
             commitMessage = DDEnvironmentValues.getEnvVariable("CI_COMMIT_MESSAGE")
+            if let gitlabAuthorComponents = DDEnvironmentValues.getEnvVariable("CI_COMMIT_AUTHOR")?.components(separatedBy: CharacterSet(charactersIn: "<>")),
+               gitlabAuthorComponents.count >= 2
+            {
+                authorName = gitlabAuthorComponents[0].trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+                authorEmail = gitlabAuthorComponents[1].trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+            }
+            authorDate = DDEnvironmentValues.getEnvVariable("CI_COMMIT_TIMESTAMP")
 
         } else if DDEnvironmentValues.getEnvVariable("APPVEYOR") != nil {
             isCi = true

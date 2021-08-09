@@ -311,8 +311,8 @@ internal struct DDEnvironmentValues {
             let jobId = DDEnvironmentValues.getEnvVariable("SYSTEM_JOBID") ?? ""
             let taskId = DDEnvironmentValues.getEnvVariable("SYSTEM_TASKINSTANCEID") ?? ""
             jobURL = "\(foundationServerUri)\(teamProjectId)/_build/results?buildId=\(pipelineId ?? "")&view=logs&j=\(jobId)&t=\(taskId)"
-            jobName = nil
-            stageName = nil
+            jobName = DDEnvironmentValues.getEnvVariable("SYSTEM_JOBDISPLAYNAME")
+            stageName = DDEnvironmentValues.getEnvVariable("SYSTEM_STAGEDISPLAYNAME")
             var repositoryEnv = DDEnvironmentValues.getEnvVariable("SYSTEM_PULLREQUEST_SOURCEREPOSITORYURI")
             if repositoryEnv?.isEmpty ?? true {
                 repositoryEnv = DDEnvironmentValues.getEnvVariable("BUILD_REPOSITORY_URI")

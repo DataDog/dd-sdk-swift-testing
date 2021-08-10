@@ -437,6 +437,7 @@
 		E157A7A3256EB0F000CBCA52 /* DatadogSDKTestingTests_macOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DatadogSDKTestingTests_macOS.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E157A7BD256EB0F200CBCA52 /* DatadogSDKTestingTests_tvOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DatadogSDKTestingTests_tvOS.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E158E2DB25471DA000DBCD6C /* DDInstrumentationControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDInstrumentationControl.swift; sourceTree = "<group>"; };
+		E15DD03826C185AB00F60B60 /* usersupplied.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = usersupplied.json; sourceTree = "<group>"; };
 		E160A11125275CC1003121A5 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		E1665A7225D12D7500BA53CD /* Spawn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spawn.swift; sourceTree = "<group>"; };
 		E1665A8025D13BBB00BA53CD /* DDSymbolicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDSymbolicator.swift; sourceTree = "<group>"; };
@@ -656,6 +657,7 @@
 				E121DF0C258CF652009EA71E /* gitlab.json */,
 				E121DF0E258CF652009EA71E /* jenkins.json */,
 				E121DF0D258CF652009EA71E /* travisci.json */,
+				E15DD03826C185AB00F60B60 /* usersupplied.json */,
 			);
 			path = ci;
 			sourceTree = "<group>";

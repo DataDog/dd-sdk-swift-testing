@@ -256,10 +256,7 @@ class DDEnvironmentValuesTests: XCTestCase {
             spanData = span.toSpanData()
 
             spec[1].forEach {
-                XCTAssertEqual(spanData.attributes[$0.key]?.description, $0.value)
-                if spanData.attributes[$0.key]?.description != $0.value {
-                    print("\(spanData.attributes[$0.key]?.description ?? "nil") != \($0.value)")
-                }
+                XCTAssertEqual(spanData.attributes[$0.key]?.description, $0.value, "\($0.key) != \($0.value)")
             }
         }
     }

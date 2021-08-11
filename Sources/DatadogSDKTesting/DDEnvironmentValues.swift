@@ -53,7 +53,6 @@ internal struct DDEnvironmentValues {
     /// Git values
     var repository: String?
     let branch: String?
-    let defaultBranch: String?
     let tag: String?
     var commit: String?
     var commitMessage: String?
@@ -478,7 +477,6 @@ internal struct DDEnvironmentValues {
         }
 
         branch = DDEnvironmentValues.getEnvVariable("DD_GIT_BRANCH") ?? DDEnvironmentValues.normalizedBranchOrTag(branchEnv)
-        defaultBranch = DDEnvironmentValues.getEnvVariable("DD_GIT_DEFAULT_BRANCH")
         tag = DDEnvironmentValues.getEnvVariable("DD_GIT_TAG") ?? DDEnvironmentValues.normalizedBranchOrTag(tagEnv)
         repository = DDEnvironmentValues.getEnvVariable("DD_GIT_REPOSITORY_URL") ?? repository
         commit = DDEnvironmentValues.getEnvVariable("DD_GIT_COMMIT_SHA") ?? commit
@@ -535,7 +533,6 @@ internal struct DDEnvironmentValues {
             setAttributeIfExist(toSpan: span, key: DDGitTags.gitRepository, value: repository)
             setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommit, value: commit)
             setAttributeIfExist(toSpan: span, key: DDGitTags.gitBranch, value: branch)
-            setAttributeIfExist(toSpan: span, key: DDGitTags.gitDefaultBranch, value: defaultBranch)
             setAttributeIfExist(toSpan: span, key: DDGitTags.gitTag, value: tag)
 
             setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommitMessage, value: commitMessage)

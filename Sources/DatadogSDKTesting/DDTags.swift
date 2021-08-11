@@ -70,7 +70,6 @@ internal enum DDRuntimeTags {
 internal enum DDGitTags {
     static let gitRepository = "git.repository_url"
     static let gitBranch = "git.branch"
-    static let gitDefaultBranch = "git.default_branch"
     static let gitTag = "git.tag"
     static let gitCommit = "git.commit.sha"
     static let gitCommitMessage = "git.commit.message"

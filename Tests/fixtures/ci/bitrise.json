@@ -380,5 +380,79 @@
       "git.commit.sha": "bitrise-git-commit",
       "git.commit.message": "bitrise-git-commit-message"
     }
+  ],
+  [
+    {
+      "DD_GIT_REPOSITORY_URL": "usersupplied-repo",
+      "DD_GIT_BRANCH": "user-supplied-branch",
+      "DD_GIT_COMMIT_SHA": "usersupplied-commit",
+      "DD_GIT_COMMIT_MESSAGE": "usersupplied-message",
+      "DD_GIT_COMMIT_AUTHOR_NAME": "usersupplied-authorname",
+      "DD_GIT_COMMIT_AUTHOR_EMAIL": "usersupplied-authoremail",
+      "DD_GIT_COMMIT_AUTHOR_DATE": "usersupplied-authordate",
+      "DD_GIT_COMMIT_COMMITTER_NAME": "usersupplied-comittername",
+      "DD_GIT_COMMIT_COMMITTER_EMAIL": "usersupplied-comitteremail",
+      "DD_GIT_COMMIT_COMMITTER_DATE": "usersupplied-comitterdate",
+      "BITRISE_BUILD_SLUG": "bitrise-pipeline-id",
+      "BITRISE_TRIGGERED_WORKFLOW_ID": "bitrise-pipeline-name",
+      "BITRISE_BUILD_NUMBER": "bitrise-pipeline-number",
+      "BITRISE_BUILD_URL": "bitrise-build-url",
+      "GIT_CLONE_COMMIT_HASH": "bitrise-git-commit",
+      "BITRISE_GIT_MESSAGE": "bitrise-git-commit-message"
+    },
+    {
+      "git.repository_url": "usersupplied-repo",
+      "git.branch": "user-supplied-branch",
+      "git.commit.sha": "usersupplied-commit",
+      "git.commit.message": "usersupplied-message",
+      "git.commit.author.name": "usersupplied-authorname",
+      "git.commit.author.email": "usersupplied-authoremail",
+      "git.commit.author.date": "usersupplied-authordate",
+      "git.commit.committer.name": "usersupplied-comittername",
+      "git.commit.committer.email": "usersupplied-comitteremail",
+      "git.commit.committer.date": "usersupplied-comitterdate",
+      "ci.provider.name": "bitrise",
+      "ci.pipeline.id": "bitrise-pipeline-id",
+      "ci.pipeline.name": "bitrise-pipeline-name",
+      "ci.pipeline.number": "bitrise-pipeline-number",
+      "ci.pipeline.url": "bitrise-build-url"
+    }
+  ],
+  [
+    {
+      "DD_GIT_REPOSITORY_URL": "usersupplied-repo",
+      "DD_GIT_TAG": "0.0.2",
+      "DD_GIT_COMMIT_SHA": "usersupplied-commit",
+      "DD_GIT_COMMIT_MESSAGE": "usersupplied-message",
+      "DD_GIT_COMMIT_AUTHOR_NAME": "usersupplied-authorname",
+      "DD_GIT_COMMIT_AUTHOR_EMAIL": "usersupplied-authoremail",
+      "DD_GIT_COMMIT_AUTHOR_DATE": "usersupplied-authordate",
+      "DD_GIT_COMMIT_COMMITTER_NAME": "usersupplied-comittername",
+      "DD_GIT_COMMIT_COMMITTER_EMAIL": "usersupplied-comitteremail",
+      "DD_GIT_COMMIT_COMMITTER_DATE": "usersupplied-comitterdate",
+      "BITRISE_BUILD_SLUG": "bitrise-pipeline-id",
+      "BITRISE_TRIGGERED_WORKFLOW_ID": "bitrise-pipeline-name",
+      "BITRISE_BUILD_NUMBER": "bitrise-pipeline-number",
+      "BITRISE_BUILD_URL": "bitrise-build-url",
+      "GIT_CLONE_COMMIT_HASH": "bitrise-git-commit",
+      "BITRISE_GIT_MESSAGE": "bitrise-git-commit-message"
+    },
+    {
+      "git.repository_url": "usersupplied-repo",
+      "git.tag": "0.0.2",
+      "git.commit.sha": "usersupplied-commit",
+      "git.commit.message": "usersupplied-message",
+      "git.commit.author.name": "usersupplied-authorname",
+      "git.commit.author.email": "usersupplied-authoremail",
+      "git.commit.author.date": "usersupplied-authordate",
+      "git.commit.committer.name": "usersupplied-comittername",
+      "git.commit.committer.email": "usersupplied-comitteremail",
+      "git.commit.committer.date": "usersupplied-comitterdate",
+      "ci.provider.name": "bitrise",
+      "ci.pipeline.id": "bitrise-pipeline-id",
+      "ci.pipeline.name": "bitrise-pipeline-name",
+      "ci.pipeline.number": "bitrise-pipeline-number",
+      "ci.pipeline.url": "bitrise-build-url"
+    }
   ]
 ]

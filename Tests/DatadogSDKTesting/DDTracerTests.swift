@@ -233,7 +233,7 @@ class DDTracerTests: XCTestCase {
     func testWhenNoContextActivePropagationAreEmpty() {
         let tracer = DDTracer()
         let environmentValues = tracer.environmentPropagationHTTPHeaders()
-        let datadogHeaders = tracer.datadogHeaders()
+        let datadogHeaders = tracer.datadogHeaders(forContext: nil)
 
         XCTAssertTrue(environmentValues.isEmpty)
         XCTAssertTrue(datadogHeaders.isEmpty)

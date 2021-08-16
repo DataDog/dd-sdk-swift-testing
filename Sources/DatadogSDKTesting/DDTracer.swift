@@ -276,12 +276,12 @@ internal class DDTracer {
         }
     }
 
-    func datadogHeaders() -> [String: String] {
-        guard let propagationContext = propagationContext else {
+    func datadogHeaders(forContext context: SpanContext?) -> [String: String] {
+        guard let context = context else {
             return [String: String]()
         }
-        return [DDHeaders.traceIDField.rawValue: String(propagationContext.traceId.rawLowerLong),
-                DDHeaders.parentSpanIDField.rawValue: String(propagationContext.spanId.rawValue),
+        return [DDHeaders.traceIDField.rawValue: String(context.traceId.rawLowerLong),
+                DDHeaders.parentSpanIDField.rawValue: String(context.spanId.rawValue),
                 DDHeaders.originField.rawValue: "ciapp-test"]
     }
 
@@ -299,7 +299,7 @@ internal class DDTracer {
         }
 
         tracerSdk.textFormat.inject(spanContext: propagationContext, carrier: &headers, setter: HeaderSetter())
-        headers.merge(datadogHeaders()) { current, _ in current }
+        headers.merge(datadogHeaders(forContext: propagationContext)) { current, _ in current }
         return headers
     }
 
@@ -317,7 +317,7 @@ internal class DDTracer {
         }
 
         EnvironmentContextPropagator().inject(spanContext: propagationContext, carrier: &headers, setter: HeaderSetter())
-        headers.merge(datadogHeaders()) { current, _ in current }
+        headers.merge(datadogHeaders(forContext: propagationContext)) { current, _ in current }
         return headers
     }
 

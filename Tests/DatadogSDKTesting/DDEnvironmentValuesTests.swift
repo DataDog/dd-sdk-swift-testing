@@ -37,6 +37,7 @@ class DDEnvironmentValuesTests: XCTestCase {
 
     override func tearDown() {
         DDEnvironmentValues.environment = previousEnvironment
+        DDEnvironmentValues.infoDictionary = previousInfoDictionary
     }
 
     private func setEnvVariables() {
@@ -219,6 +220,7 @@ class DDEnvironmentValuesTests: XCTestCase {
     }
 
     func testWhenNotRunningInCI_CITagsAreNotAdded() {
+        testEnvironment["SRCROOT"] = ProcessInfo.processInfo.environment["SRCROOT"]
         setEnvVariables()
 
         let span = createSimpleSpan()
@@ -237,6 +239,7 @@ class DDEnvironmentValuesTests: XCTestCase {
     func testAddCustomTagsWithDDTags() {
         testEnvironment["DD_TAGS"] = "key1:value1 key2:value2 key3:value3 keyFoo:$FOO keyFooFoo:$FOOFOO keyMix:$FOO-v1"
         testEnvironment["FOO"] = "BAR"
+        testEnvironment["SRCROOT"] = ProcessInfo.processInfo.environment["SRCROOT"]
         setEnvVariables()
 
         let span = createSimpleSpan()
@@ -275,6 +278,8 @@ class DDEnvironmentValuesTests: XCTestCase {
     func testIfCommitHashFromEnvironmentIsNotSetGitFolderIsEvaluated() {
         testEnvironment["GITHUB_WORKSPACE"] = "/tmp/folder"
         testEnvironment["GITHUB_SHA"] = nil
+        testEnvironment["SRCROOT"] = ProcessInfo.processInfo.environment["SRCROOT"]
+
 
         setEnvVariables()
         let env = DDEnvironmentValues()
@@ -298,6 +303,7 @@ class DDEnvironmentValuesTests: XCTestCase {
 
         testEnvironment["GITHUB_WORKSPACE"] = "/tmp/folder"
         testEnvironment["GITHUB_SHA"] = gitInfo?.commit
+        testEnvironment["SRCROOT"] = ProcessInfo.processInfo.environment["SRCROOT"]
 
         setEnvVariables()
         let env = DDEnvironmentValues()

@@ -31,7 +31,6 @@ class FrameworkLoadHandlerTests: XCTestCase {
         FrameworkLoadHandler.environment = testEnvironment
         DDEnvironmentValues.environment = testEnvironment
         DDEnvironmentValues.environment["DD_DONT_EXPORT"] = "true"
-        DDEnvironmentValues.environment["DATADOG_CLIENT_TOKEN"] = "fakeToken"
     }
 
     func testWhenTestRunnerIsConfiguredAndIsInTestingMode_ItIsInitialised() {

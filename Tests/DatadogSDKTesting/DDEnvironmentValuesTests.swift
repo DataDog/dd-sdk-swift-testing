@@ -17,6 +17,9 @@ class DDEnvironmentValuesTests: XCTestCase {
     var testEnvironment = [String: String]()
     var previousEnvironment = [String: String]()
 
+    var testInfoDictionary = [String: Any]()
+    var previousInfoDictionary = [String: Any]()
+
     var tracerProvider = OpenTelemetrySDK.instance.tracerProvider
     var tracerSdk: Tracer!
 
@@ -24,6 +27,11 @@ class DDEnvironmentValuesTests: XCTestCase {
         testEnvironment = [String: String]()
         previousEnvironment = DDEnvironmentValues.environment
         DDEnvironmentValues.environment = [String: String]()
+
+        testInfoDictionary = [String: Any]()
+        previousInfoDictionary = DDEnvironmentValues.infoDictionary
+        DDEnvironmentValues.infoDictionary = [String: Any]()
+
         tracerSdk = tracerProvider.get(instrumentationName: "SpanBuilderSdkTest")
     }
 
@@ -37,12 +45,48 @@ class DDEnvironmentValuesTests: XCTestCase {
         testEnvironment = [String: String]()
     }
 
-    func testWhenDatadogEnvironmentAreSet_TheyAreStoredCorrectly() {
+    private func setInfoDictionary() {
+        DDEnvironmentValues.infoDictionary = testInfoDictionary
+        DDEnvironmentValues.environment["DD_DONT_EXPORT"] = "true"
+        testInfoDictionary = [String: Any]()
+    }
+
+    func testWhenDatadogSettingsAreSetInEnvironment_TheyAreStoredCorrectly() {
         testEnvironment["DATADOG_CLIENT_TOKEN"] = "token5a101f16"
         testEnvironment["DD_SERVICE"] = "testService"
         testEnvironment["DD_ENV"] = "testEnv"
 
         setEnvVariables()
+
+        let env = DDEnvironmentValues()
+        XCTAssertEqual(env.ddClientToken, "token5a101f16")
+        XCTAssertEqual(env.ddEnvironment, "testEnv")
+        XCTAssertEqual(env.ddService, "testService")
+    }
+
+    func testWhenDatadogSettingsAreSetInInfoPlist_TheyAreStoredCorrectly() {
+        testInfoDictionary["DATADOG_CLIENT_TOKEN"] = "token5a101f16"
+        testInfoDictionary["DD_SERVICE"] = "testService"
+        testInfoDictionary["DD_ENV"] = "testEnv"
+
+        setInfoDictionary()
+
+        let env = DDEnvironmentValues()
+        XCTAssertEqual(env.ddClientToken, "token5a101f16")
+        XCTAssertEqual(env.ddEnvironment, "testEnv")
+        XCTAssertEqual(env.ddService, "testService")
+    }
+
+    func testWhenDatadogSettingsAreSetInEnvironmentAndPlist_EnvironmentTakesPrecedence() {
+        testEnvironment["DATADOG_CLIENT_TOKEN"] = "token5a101f16"
+        testEnvironment["DD_SERVICE"] = "testService"
+        testEnvironment["DD_ENV"] = "testEnv"
+        setEnvVariables()
+
+        testInfoDictionary["DATADOG_CLIENT_TOKEN"] = "token5a101f162"
+        testInfoDictionary["DD_SERVICE"] = "testService2"
+        testInfoDictionary["DD_ENV"] = "testEnv2"
+        setInfoDictionary()
 
         let env = DDEnvironmentValues()
         XCTAssertEqual(env.ddClientToken, "token5a101f16")
@@ -73,6 +117,61 @@ class DDEnvironmentValuesTests: XCTestCase {
         testEnvironment["DD_DISABLE_CRASH_HANDLER"] = "true"
 
         setEnvVariables()
+
+        let env = DDEnvironmentValues()
+        XCTAssertEqual(env.disableNetworkInstrumentation, true)
+        XCTAssertEqual(env.disableStdoutInstrumentation, true)
+        XCTAssertEqual(env.disableStderrInstrumentation, true)
+        XCTAssertEqual(env.disableHeadersInjection, true)
+        XCTAssertEqual(env.extraHTTPHeaders?.count, 4)
+        XCTAssertEqual(env.excludedURLS?.count, 1)
+        XCTAssertEqual(env.enableRecordPayload, true)
+        XCTAssertEqual(env.disableCrashHandler, true)
+    }
+
+    func testWhenConfigurationPListAreSet_TheyAreStoredCorrectly() {
+        testInfoDictionary["DD_DISABLE_NETWORK_INSTRUMENTATION"] = "1"
+        testInfoDictionary["DD_DISABLE_STDOUT_INSTRUMENTATION"] = "yes"
+        testInfoDictionary["DD_DISABLE_STDERR_INSTRUMENTATION"] = "true"
+        testInfoDictionary["DD_DISABLE_HEADERS_INJECTION"] = "YES"
+        testInfoDictionary["DD_INSTRUMENTATION_EXTRA_HEADERS"] = "header1,header2;header3 header4"
+        testInfoDictionary["DD_EXCLUDED_URLS"] = "http://www.google"
+        testInfoDictionary["DD_ENABLE_RECORD_PAYLOAD"] = "true"
+        testInfoDictionary["DD_DISABLE_CRASH_HANDLER"] = "true"
+
+        setInfoDictionary()
+
+        let env = DDEnvironmentValues()
+        XCTAssertEqual(env.disableNetworkInstrumentation, true)
+        XCTAssertEqual(env.disableStdoutInstrumentation, true)
+        XCTAssertEqual(env.disableStderrInstrumentation, true)
+        XCTAssertEqual(env.disableHeadersInjection, true)
+        XCTAssertEqual(env.extraHTTPHeaders?.count, 4)
+        XCTAssertEqual(env.excludedURLS?.count, 1)
+        XCTAssertEqual(env.enableRecordPayload, true)
+        XCTAssertEqual(env.disableCrashHandler, true)
+    }
+
+    func testWhenConfigurationEnvironmentAndPListAreSet_EnvironmentTakesPrecedence() {
+        testEnvironment["DD_DISABLE_NETWORK_INSTRUMENTATION"] = "1"
+        testEnvironment["DD_DISABLE_STDOUT_INSTRUMENTATION"] = "yes"
+        testEnvironment["DD_DISABLE_STDERR_INSTRUMENTATION"] = "true"
+        testEnvironment["DD_DISABLE_HEADERS_INJECTION"] = "YES"
+        testEnvironment["DD_INSTRUMENTATION_EXTRA_HEADERS"] = "header1,header2;header3 header4"
+        testEnvironment["DD_EXCLUDED_URLS"] = "http://www.google"
+        testEnvironment["DD_ENABLE_RECORD_PAYLOAD"] = "true"
+        testEnvironment["DD_DISABLE_CRASH_HANDLER"] = "true"
+        setEnvVariables()
+
+        testInfoDictionary["DD_DISABLE_NETWORK_INSTRUMENTATION"] = "0"
+        testInfoDictionary["DD_DISABLE_STDOUT_INSTRUMENTATION"] = "no"
+        testInfoDictionary["DD_DISABLE_STDERR_INSTRUMENTATION"] = "false"
+        testInfoDictionary["DD_DISABLE_HEADERS_INJECTION"] = "NO"
+        testInfoDictionary["DD_INSTRUMENTATION_EXTRA_HEADERS"] = "header1,header2"
+        testInfoDictionary["DD_EXCLUDED_URLS"] = "http://www.microsoft.com"
+        testInfoDictionary["DD_ENABLE_RECORD_PAYLOAD"] = "false"
+        testInfoDictionary["DD_DISABLE_CRASH_HANDLER"] = "false"
+        setInfoDictionary()
 
         let env = DDEnvironmentValues()
         XCTAssertEqual(env.disableNetworkInstrumentation, true)

@@ -9,7 +9,7 @@ import Foundation
 
 extension XCUIApplication {
     fileprivate func addProcessEnvironmentToLaunch(_ environment: String) {
-        self.launchEnvironment[environment] = ProcessInfo.processInfo.environment[environment]
+        self.launchEnvironment[environment] = DDEnvironmentValues.getEnvVariable(environment)
     }
 
     fileprivate func addPropagationsHeadersToEnvironment(tracer: DDTracer?) {
@@ -38,6 +38,7 @@ extension XCUIApplication {
                 "DATADOG_CLIENT_TOKEN",
                 "XCTestConfigurationFilePath",
                 "XCInjectBundleInto",
+                "XCTestBundlePath",
                 "SDKROOT",
                 "DD_ENV",
                 "DD_SERVICE",
@@ -53,6 +54,7 @@ extension XCUIApplication {
                 "DD_DISABLE_STDERR_INSTRUMENTATION",
                 "DD_DISABLE_SDKIOS_INTEGRATION",
                 "DD_DISABLE_CRASH_HANDLER",
+                "DD_SITE",
                 "DD_ENDPOINT",
                 "DD_DONT_EXPORT"
             ].forEach(addProcessEnvironmentToLaunch)

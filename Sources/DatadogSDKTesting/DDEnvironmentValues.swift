@@ -82,6 +82,14 @@ internal struct DDEnvironmentValues {
     let localTestEnvironmentPort: Int?
 
     static var environment = ProcessInfo.processInfo.environment
+    static var infoDictionary: [String: Any] = {
+        var bundle = Bundle.allBundles.first {
+            $0.bundlePath.hasSuffix(".xctest")
+        }
+        let dictionary = bundle?.infoDictionary ?? Bundle.main.infoDictionary
+        return dictionary ?? [String: Any]()
+    }()
+
     static let environmentCharset = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_")
 
     init() {
@@ -89,7 +97,7 @@ internal struct DDEnvironmentValues {
         var clientToken: String?
         clientToken = DDEnvironmentValues.getEnvVariable("DATADOG_CLIENT_TOKEN")
         if clientToken == nil {
-            clientToken = Bundle.main.infoDictionary?["DatadogClientToken"] as? String
+            clientToken = DDEnvironmentValues.infoDictionary["DatadogClientToken"] as? String
         }
         ddClientToken = clientToken
         ddEnvironment = DDEnvironmentValues.getEnvVariable("DD_ENV")
@@ -104,7 +112,7 @@ internal struct DDEnvironmentValues {
         let envLocalTestEnvironmentPort = DDEnvironmentValues.getEnvVariable("DD_LOCAL_TEST_ENVIRONMENT_PORT") as NSString?
         localTestEnvironmentPort = envLocalTestEnvironmentPort?.integerValue
 
-        sourceRoot = ProcessInfo.processInfo.environment["SRCROOT"]
+        sourceRoot = DDEnvironmentValues.getEnvVariable("SRCROOT")
 
         if let envDDTags = DDEnvironmentValues.getEnvVariable("DD_TAGS") {
             let ddtagsEntries = envDDTags.components(separatedBy: " ")
@@ -640,7 +648,8 @@ internal struct DDEnvironmentValues {
     }
 
     static func getEnvVariable(_ name: String) -> String? {
-        guard let variable = environment[name] else {
+        guard let variable = environment[name] ?? DDEnvironmentValues.infoDictionary[name] as? String
+        else {
             return nil
         }
         let returnVariable = variable.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)

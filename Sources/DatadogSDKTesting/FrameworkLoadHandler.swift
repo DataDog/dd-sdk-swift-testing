@@ -16,7 +16,7 @@ public class FrameworkLoadHandler: NSObject {
 
     internal static func installTestObserver() {
         /// Only initialize test observer if user configured so and is running tests
-        guard let enabled = environment["DD_TEST_RUNNER"] as NSString? else {
+         guard let enabled = DDEnvironmentValues.getEnvVariable("DD_TEST_RUNNER") as NSString? else {
             print("[DatadogSDKTesting] Library loaded but not active, DD_TEST_RUNNER is missing")
             return
         }
@@ -27,13 +27,15 @@ public class FrameworkLoadHandler: NSObject {
         }
 
         let isInTestMode = environment["XCInjectBundleInto"] != nil ||
-            environment["XCTestConfigurationFilePath"] != nil || environment["SDKROOT"] != nil
+            environment["XCTestConfigurationFilePath"] != nil ||
+            environment["XCTestBundlePath"] != nil ||
+            environment["SDKROOT"] != nil
         if isInTestMode {
-            guard environment["DATADOG_CLIENT_TOKEN"] != nil else {
+            guard DDEnvironmentValues.getEnvVariable("DATADOG_CLIENT_TOKEN") != nil else {
                 print("[DatadogSDKTesting] DATADOG_CLIENT_TOKEN missing.")
                 return
             }
-            if environment["SRCROOT"] == nil {
+            if DDEnvironmentValues.getEnvVariable("SRCROOT") == nil {
                 print("[DatadogSDKTesting] SRCROOT is not properly set")
             }
             print("[DatadogSDKTesting] Library loaded and active. Instrumenting tests.")

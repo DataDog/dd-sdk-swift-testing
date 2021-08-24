@@ -25,6 +25,14 @@ build/xcframework: build/xcframework/DatadogSDKTesting.zip
 
 release: build/xcframework
 
+bump:
+		@read -p "Enter version number: " version;  \
+		sed -i "" "s/MARKETING_VERSION = .*/MARKETING_VERSION = $$version;/" DatadogSDKTesting.xcodeproj/project.pbxproj; \
+		sed "s/__DATADOG_VERSION__/$$version/g" DatadogSDKTesting.podspec.src > DatadogSDKTesting.podspec; \
+		git add . ; \
+		git commit -m "Bumped version to $$version"; \
+		echo Bumped version to $$version
+
 clean:
 	rm -rf ./build
 

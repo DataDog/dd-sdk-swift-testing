@@ -12,9 +12,9 @@ Pod::Spec.new do |s|
   }
 
   s.swift_version      = '5.1'
-  s.ios.deployment_target = '12.0'
+  s.ios.deployment_target = '11.0'
   s.osx.deployment_target = '10.13'
-  s.tvos.deployment_target = '12.0'
+  s.tvos.deployment_target = '11.0'
 
   s.source = { :http => "https://github.com/DataDog/dd-sdk-swift-testing/releases/download/#{s.version}/DatadogSDKTesting.zip" }
   s.vendored_frameworks = "DatadogSDKTesting.xcframework"

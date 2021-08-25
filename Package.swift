@@ -6,8 +6,8 @@ import PackageDescription
 let package = Package(
     name: "dd-sdk-swift-testing",
     platforms: [.macOS(.v10_13),
-                .iOS(.v12),
-                .tvOS(.v12)],
+                .iOS(.v11),
+                .tvOS(.v11)],
     products: [
         .library(
             name: "DatadogSDKTesting",
@@ -18,8 +18,8 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(name: "opentelemetry-swift", url: "https://github.com/open-telemetry/opentelemetry-swift", from: "1.0.2"),
-        .package(name: "PLCrashReporter", url: "https://github.com/microsoft/plcrashreporter.git", from: "1.8.1"),
+        .package(name: "opentelemetry-swift", url: "https://github.com/open-telemetry/opentelemetry-swift", from: "1.0.4"),
+        .package(name: "PLCrashReporter", url: "https://github.com/microsoft/plcrashreporter.git", from: "1.9.0"),
         .package(name: "SigmaSwiftStatistics", url: "https://github.com/evgenyneu/SigmaSwiftStatistics.git", from: "9.0.2"),
     ],
     targets: [

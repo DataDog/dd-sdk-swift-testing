@@ -23,13 +23,13 @@ internal class DDTracer {
     private var launchSpanContext: SpanContext?
     let backgroundWorkQueue = DispatchQueue(label: "com.otel.datadog.logswriter")
 
-    var activeSpan: Span? {
+    static var activeSpan: Span? {
         return OpenTelemetrySDK.instance.contextProvider.activeSpan ??
             DDTestMonitor.instance?.testObserver?.currentTestSpan
     }
 
     var propagationContext: SpanContext? {
-        return activeSpan?.context ?? launchSpanContext
+        return DDTracer.activeSpan?.context ?? launchSpanContext
     }
 
     var isBinaryUnderUITesting: Bool {
@@ -233,17 +233,17 @@ internal class DDTracer {
     }
 
     func logString(string: String, date: Date? = nil) {
-        if launchSpanContext != nil, activeSpan == nil {
+        if launchSpanContext != nil, DDTracer.activeSpan == nil {
             // This is a special case when an app executed trough a UITest, logs without a span
             return logStringAppUITested(string: string, date: date)
         }
 
-        activeSpan?.addEvent(name: "logString", attributes: attributesForString(string), timestamp: date ?? Date())
+        DDTracer.activeSpan?.addEvent(name: "logString", attributes: attributesForString(string), timestamp: date ?? Date())
     }
 
     /// This method is only currently used for loggign the steps when runnning UITest
     func logString(string: String, timeIntervalSinceSpanStart: Double) {
-        guard let activeSpan = activeSpan as? RecordEventsReadableSpan else {
+        guard let activeSpan = DDTracer.activeSpan as? RecordEventsReadableSpan else {
             return
         }
         let timestamp = activeSpan.startTime.addingTimeInterval(timeIntervalSinceSpanStart)

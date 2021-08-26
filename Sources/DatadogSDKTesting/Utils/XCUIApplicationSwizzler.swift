@@ -27,7 +27,7 @@ extension XCUIApplication {
 
     @objc
     func swizzled_launch() {
-        if let testSpanContext = DDTestMonitor.instance?.tracer.activeSpan?.context {
+        if let testSpanContext = DDTracer.activeSpan?.context {
             self.launchEnvironment["ENVIRONMENT_TRACER_SPANID"] = testSpanContext.spanId.hexString
             self.launchEnvironment["ENVIRONMENT_TRACER_TRACEID"] = testSpanContext.traceId.hexString
             if !(DDTestMonitor.instance?.tracer.env.disableDDSDKIOSIntegration ?? false) {

@@ -23,13 +23,13 @@ internal class DDTracer {
     private var launchSpanContext: SpanContext?
     let backgroundWorkQueue = DispatchQueue(label: "com.otel.datadog.logswriter")
 
-    var activeSpan: Span? {
+    static var activeSpan: Span? {
         return OpenTelemetrySDK.instance.contextProvider.activeSpan ??
             DDTestMonitor.instance?.testObserver?.currentTestSpan
     }
 
     var propagationContext: SpanContext? {
-        return activeSpan?.context ?? launchSpanContext
+        return DDTracer.activeSpan?.context ?? launchSpanContext
     }
 
     var isBinaryUnderUITesting: Bool {
@@ -59,16 +59,23 @@ internal class DDTracer {
 
         var endpoint: Endpoint
         switch env.tracesEndpoint {
-            case "us", "US":
+            case "us", "US", "https://app.datadoghq.com", "app.datadoghq.com", "datadoghq.com":
                 endpoint = Endpoint.us
-            case "us3", "US3":
+            case "us3", "US3", "https://us3.datadoghq.com", "us3.datadoghq.com":
                 endpoint = Endpoint.us3
-            case "eu", "EU":
+            case "eu", "EU", "https://app.datadoghq.eu", "app.datadoghq.eu", "datadoghq.eu":
                 endpoint = Endpoint.eu
-            case "gov", "GOV":
+            case "gov", "GOV", "https://app.ddog-gov.com", "app.ddog-gov.com", "ddog-gov.com":
                 endpoint = Endpoint.gov
             default:
                 endpoint = Endpoint.us
+        }
+
+        // When reporting tests to local server
+        if let localPort = env.localTestEnvironmentPort {
+            let localURL = URL(string: "http://localhost:\(localPort)/")!
+            endpoint = Endpoint.custom(tracesURL: localURL, logsURL: localURL, metricsURL: localURL)
+            print("[DDSwiftTesting] Reporting tests to \(localURL.absoluteURL)")
         }
 
         let exporterConfiguration = ExporterConfiguration(
@@ -164,10 +171,10 @@ internal class DDTracer {
             attributes.updateValue(value: AttributeValue.string(errorMessage), forKey: DDTags.errorMessage)
             attributes.updateValue(value: AttributeValue.string(errorStack), forKey: DDTags.errorStack)
         } else {
-            attributes.updateValue(value: AttributeValue.string(errorMessage + ". Check error.stack"), forKey: DDTags.errorMessage)
+            attributes.updateValue(value: AttributeValue.string(errorMessage + ". Check error.stack for the full crash log."), forKey: DDTags.errorMessage)
             let splitted = errorStack.split(by: 5000)
             for i in 0 ..< splitted.count {
-                attributes.updateValue(value: AttributeValue.string(splitted[i]), forKey: "\(DDTags.errorStack).\(String(format: "%02d", i))")
+                attributes.updateValue(value: AttributeValue.string(splitted[i]), forKey: "\(DDTags.errorStack).\(String(format: "%d", i))")
             }
         }
 
@@ -226,17 +233,17 @@ internal class DDTracer {
     }
 
     func logString(string: String, date: Date? = nil) {
-        if launchSpanContext != nil, activeSpan == nil {
+        if launchSpanContext != nil, DDTracer.activeSpan == nil {
             // This is a special case when an app executed trough a UITest, logs without a span
             return logStringAppUITested(string: string, date: date)
         }
 
-        activeSpan?.addEvent(name: "logString", attributes: attributesForString(string), timestamp: date ?? Date())
+        DDTracer.activeSpan?.addEvent(name: "logString", attributes: attributesForString(string), timestamp: date ?? Date())
     }
 
     /// This method is only currently used for loggign the steps when runnning UITest
     func logString(string: String, timeIntervalSinceSpanStart: Double) {
-        guard let activeSpan = activeSpan as? RecordEventsReadableSpan else {
+        guard let activeSpan = DDTracer.activeSpan as? RecordEventsReadableSpan else {
             return
         }
         let timestamp = activeSpan.startTime.addingTimeInterval(timeIntervalSinceSpanStart)
@@ -269,12 +276,12 @@ internal class DDTracer {
         }
     }
 
-    func datadogHeaders() -> [String: String] {
-        guard let propagationContext = propagationContext else {
+    func datadogHeaders(forContext context: SpanContext?) -> [String: String] {
+        guard let context = context else {
             return [String: String]()
         }
-        return [DDHeaders.traceIDField.rawValue: String(propagationContext.traceId.rawLowerLong),
-                DDHeaders.parentSpanIDField.rawValue: String(propagationContext.spanId.rawValue),
+        return [DDHeaders.traceIDField.rawValue: String(context.traceId.rawLowerLong),
+                DDHeaders.parentSpanIDField.rawValue: String(context.spanId.rawValue),
                 DDHeaders.originField.rawValue: "ciapp-test"]
     }
 
@@ -292,7 +299,7 @@ internal class DDTracer {
         }
 
         tracerSdk.textFormat.inject(spanContext: propagationContext, carrier: &headers, setter: HeaderSetter())
-        headers.merge(datadogHeaders()) { current, _ in current }
+        headers.merge(datadogHeaders(forContext: propagationContext)) { current, _ in current }
         return headers
     }
 
@@ -310,7 +317,7 @@ internal class DDTracer {
         }
 
         EnvironmentContextPropagator().inject(spanContext: propagationContext, carrier: &headers, setter: HeaderSetter())
-        headers.merge(datadogHeaders()) { current, _ in current }
+        headers.merge(datadogHeaders(forContext: propagationContext)) { current, _ in current }
         return headers
     }
 

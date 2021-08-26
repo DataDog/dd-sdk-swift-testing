@@ -79,8 +79,18 @@ internal struct DDEnvironmentValues {
 
     /// The tracer is being tested itself
     let tracerUnderTesting: Bool
+    /// The tracer send result to a localhost server (for testing purposes)
+    let localTestEnvironmentPort: Int?
 
     static var environment = ProcessInfo.processInfo.environment
+    static var infoDictionary: [String: Any] = {
+        var bundle = Bundle.allBundles.first {
+            $0.bundlePath.hasSuffix(".xctest")
+        }
+        let dictionary = bundle?.infoDictionary ?? Bundle.main.infoDictionary
+        return dictionary ?? [String: Any]()
+    }()
+
     static let environmentCharset = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_")
 
     init() {
@@ -88,7 +98,7 @@ internal struct DDEnvironmentValues {
         var clientToken: String?
         clientToken = DDEnvironmentValues.getEnvVariable("DATADOG_CLIENT_TOKEN")
         if clientToken == nil {
-            clientToken = Bundle.main.infoDictionary?["DatadogClientToken"] as? String
+            clientToken = DDEnvironmentValues.infoDictionary["DatadogClientToken"] as? String
         }
         ddClientToken = clientToken
         ddEnvironment = DDEnvironmentValues.getEnvVariable("DD_ENV")
@@ -100,7 +110,10 @@ internal struct DDEnvironmentValues {
             ddService = service
         }
 
-        sourceRoot = ProcessInfo.processInfo.environment["SRCROOT"]
+        let envLocalTestEnvironmentPort = DDEnvironmentValues.getEnvVariable("DD_LOCAL_TEST_ENVIRONMENT_PORT") as NSString?
+        localTestEnvironmentPort = envLocalTestEnvironmentPort?.integerValue
+
+        sourceRoot = DDEnvironmentValues.getEnvVariable("SRCROOT")
 
         if let envDDTags = DDEnvironmentValues.getEnvVariable("DD_TAGS") {
             let ddtagsEntries = envDDTags.components(separatedBy: " ")
@@ -164,7 +177,7 @@ internal struct DDEnvironmentValues {
         launchEnvironmentTraceId = DDEnvironmentValues.getEnvVariable("ENVIRONMENT_TRACER_TRACEID")
         launchEnvironmentSpanId = DDEnvironmentValues.getEnvVariable("ENVIRONMENT_TRACER_SPANID")
 
-        tracesEndpoint = DDEnvironmentValues.getEnvVariable("DD_ENDPOINT")
+        tracesEndpoint = DDEnvironmentValues.getEnvVariable("DD_SITE") ?? DDEnvironmentValues.getEnvVariable("DD_ENDPOINT")
 
         let envDisableTracesExporting = DDEnvironmentValues.getEnvVariable("DD_DONT_EXPORT") as NSString?
         disableTracesExporting = envDisableTracesExporting?.boolValue ?? false
@@ -232,7 +245,7 @@ internal struct DDEnvironmentValues {
         } else if DDEnvironmentValues.getEnvVariable("JENKINS_URL") != nil {
             isCi = true
             provider = "jenkins"
-            repository = DDEnvironmentValues.removingUserPassword(DDEnvironmentValues.getEnvVariable("GIT_URL"))
+            repository = DDEnvironmentValues.removingUserPassword(DDEnvironmentValues.getEnvVariable("GIT_URL") ?? DDEnvironmentValues.getEnvVariable("GIT_URL_1"))
             commit = DDEnvironmentValues.getEnvVariable("GIT_COMMIT")
             workspaceEnv = DDEnvironmentValues.getEnvVariable("WORKSPACE")
             pipelineId = DDEnvironmentValues.getEnvVariable("BUILD_TAG")
@@ -265,6 +278,13 @@ internal struct DDEnvironmentValues {
             branchEnv = DDEnvironmentValues.getEnvVariable("CI_COMMIT_BRANCH")
             tagEnv = DDEnvironmentValues.getEnvVariable("CI_COMMIT_TAG")
             commitMessage = DDEnvironmentValues.getEnvVariable("CI_COMMIT_MESSAGE")
+            if let gitlabAuthorComponents = DDEnvironmentValues.getEnvVariable("CI_COMMIT_AUTHOR")?.components(separatedBy: CharacterSet(charactersIn: "<>")),
+               gitlabAuthorComponents.count >= 2
+            {
+                authorName = gitlabAuthorComponents[0].trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+                authorEmail = gitlabAuthorComponents[1].trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+            }
+            authorDate = DDEnvironmentValues.getEnvVariable("CI_COMMIT_TIMESTAMP")
 
         } else if DDEnvironmentValues.getEnvVariable("APPVEYOR") != nil {
             isCi = true
@@ -303,8 +323,8 @@ internal struct DDEnvironmentValues {
             let jobId = DDEnvironmentValues.getEnvVariable("SYSTEM_JOBID") ?? ""
             let taskId = DDEnvironmentValues.getEnvVariable("SYSTEM_TASKINSTANCEID") ?? ""
             jobURL = "\(foundationServerUri)\(teamProjectId)/_build/results?buildId=\(pipelineId ?? "")&view=logs&j=\(jobId)&t=\(taskId)"
-            jobName = nil
-            stageName = nil
+            jobName = DDEnvironmentValues.getEnvVariable("SYSTEM_JOBDISPLAYNAME")
+            stageName = DDEnvironmentValues.getEnvVariable("SYSTEM_STAGEDISPLAYNAME")
             var repositoryEnv = DDEnvironmentValues.getEnvVariable("SYSTEM_PULLREQUEST_SOURCEREPOSITORYURI")
             if repositoryEnv?.isEmpty ?? true {
                 repositoryEnv = DDEnvironmentValues.getEnvVariable("BUILD_REPOSITORY_URI")
@@ -404,7 +424,8 @@ internal struct DDEnvironmentValues {
             jobName = nil
             stageName = nil
             pipelineURL = DDEnvironmentValues.getEnvVariable("BITRISE_BUILD_URL")
-            pipelineName = DDEnvironmentValues.getEnvVariable("BITRISE_APP_TITLE")
+            pipelineName = DDEnvironmentValues.getEnvVariable("BITRISE_TRIGGERED_WORKFLOW_ID") ??
+                DDEnvironmentValues.getEnvVariable("BITRISE_APP_TITLE")
             branchEnv = DDEnvironmentValues.getEnvVariable("BITRISE_GIT_BRANCH")
             tagEnv = DDEnvironmentValues.getEnvVariable("BITRISE_GIT_TAG")
 
@@ -442,35 +463,58 @@ internal struct DDEnvironmentValues {
 
         #if targetEnvironment(simulator) || os(macOS)
         if let sourceRoot = sourceRoot ?? DDEnvironmentValues.expandingTilde(workspaceEnv) {
-            var rootFolder = NSString(string: URL(fileURLWithPath: sourceRoot).path)
-            while !FileManager.default.fileExists(atPath: rootFolder.appendingPathComponent(".git")) {
-                if rootFolder.isEqual(to: rootFolder.deletingLastPathComponent) {
-                    // We reached to the top
-                    print("[DDSwiftTesting] could not find .git folder at \(rootFolder)")
-                    break
-                }
-                rootFolder = rootFolder.deletingLastPathComponent as NSString
-            }
-            let rootDirectory = URL(fileURLWithPath: rootFolder as String, isDirectory: true)
-            gitInfo = try? GitInfo(gitFolder: rootDirectory.appendingPathComponent(".git"))
+            gitInfo = DDEnvironmentValues.gitInfoAt(startingPath: sourceRoot)
         }
         #endif
 
-        commit = commit ?? gitInfo?.commit
-        workspaceEnv = workspaceEnv ?? gitInfo?.workspacePath
-        repository = repository ?? gitInfo?.repository
-        branchEnv = branchEnv ?? gitInfo?.branch
-        commitMessage = commitMessage ?? gitInfo?.commitMessage
-        authorName = authorName ?? gitInfo?.authorName
-        authorEmail = authorEmail ?? gitInfo?.authorEmail
-        authorDate = authorDate ?? gitInfo?.authorDate
-        committerName = committerName ?? gitInfo?.committerName
-        committerEmail = committerEmail ?? gitInfo?.committerEmail
-        committerDate = committerDate ?? gitInfo?.committerDate
+        var gitInfoIsValid = false
+        if commit == nil {
+            gitInfoIsValid = true
+        } else if commit == gitInfo?.commit {
+            gitInfoIsValid = true
+        }
 
-        branch = DDEnvironmentValues.normalizedBranchOrTag(branchEnv)
-        tag = DDEnvironmentValues.normalizedBranchOrTag(tagEnv)
+        if gitInfoIsValid {
+            commit = commit ?? gitInfo?.commit
+            workspaceEnv = workspaceEnv ?? gitInfo?.workspacePath
+            repository = repository ?? gitInfo?.repository
+            branchEnv = branchEnv ?? gitInfo?.branch
+            commitMessage = commitMessage ?? gitInfo?.commitMessage
+            authorName = authorName ?? gitInfo?.authorName
+            authorEmail = authorEmail ?? gitInfo?.authorEmail
+            authorDate = authorDate ?? gitInfo?.authorDate
+            committerName = committerName ?? gitInfo?.committerName
+            committerEmail = committerEmail ?? gitInfo?.committerEmail
+            committerDate = committerDate ?? gitInfo?.committerDate
+        }
+
+        branch = DDEnvironmentValues.getEnvVariable("DD_GIT_BRANCH") ?? DDEnvironmentValues.normalizedBranchOrTag(branchEnv)
+        tag = DDEnvironmentValues.getEnvVariable("DD_GIT_TAG") ?? DDEnvironmentValues.normalizedBranchOrTag(tagEnv)
+        repository = DDEnvironmentValues.getEnvVariable("DD_GIT_REPOSITORY_URL") ?? repository
+        commit = DDEnvironmentValues.getEnvVariable("DD_GIT_COMMIT_SHA") ?? commit
+        commitMessage = DDEnvironmentValues.getEnvVariable("DD_GIT_COMMIT_MESSAGE") ?? commitMessage
+        authorName = DDEnvironmentValues.getEnvVariable("DD_GIT_COMMIT_AUTHOR_NAME") ?? authorName
+        authorEmail = DDEnvironmentValues.getEnvVariable("DD_GIT_COMMIT_AUTHOR_EMAIL") ?? authorEmail
+        authorDate = DDEnvironmentValues.getEnvVariable("DD_GIT_COMMIT_AUTHOR_DATE") ?? authorDate
+        committerName = DDEnvironmentValues.getEnvVariable("DD_GIT_COMMIT_COMMITTER_NAME") ?? committerName
+        committerEmail = DDEnvironmentValues.getEnvVariable("DD_GIT_COMMIT_COMMITTER_EMAIL") ?? committerEmail
+        committerDate = DDEnvironmentValues.getEnvVariable("DD_GIT_COMMIT_COMMITTER_DATE") ?? committerDate
+
         workspacePath = DDEnvironmentValues.expandingTilde(workspaceEnv) ?? sourceRoot
+
+        // Warn on needed git onformation when not present
+        if commit == nil {
+            print("[DDSwiftTesting] could not find git commit information")
+        }
+        if repository == nil {
+            print("[DDSwiftTesting] could not find git repository information")
+        }
+        if branch == nil && tag == nil {
+            print("[DDSwiftTesting] could not find git branch or tag  information")
+        }
+        if commit == nil || repository == nil || (branch == nil && tag == nil) {
+            print("[DDSwiftTesting] Please check: https://docs.datadoghq.com/continuous_integration/troubleshooting")
+        }
     }
 
     func addTagsToSpan(span: Span) {
@@ -608,7 +652,8 @@ internal struct DDEnvironmentValues {
     }
 
     static func getEnvVariable(_ name: String) -> String? {
-        guard let variable = environment[name] else {
+        guard let variable = environment[name] ?? DDEnvironmentValues.infoDictionary[name] as? String
+        else {
             return nil
         }
         let returnVariable = variable.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
@@ -622,5 +667,20 @@ internal struct DDEnvironmentValues {
             return nil
         }
         return repoURL.deletingPathExtension().lastPathComponent
+    }
+
+    static func gitInfoAt(startingPath: String) -> GitInfo? {
+        var rootFolder = NSString(string: URL(fileURLWithPath: startingPath).path)
+        while !FileManager.default.fileExists(atPath: rootFolder.appendingPathComponent(".git")) {
+            if rootFolder.isEqual(to: rootFolder.deletingLastPathComponent) {
+                // We reached to the top
+                print("[DDSwiftTesting] could not find .git folder at \(rootFolder)")
+                break
+            }
+            rootFolder = rootFolder.deletingLastPathComponent as NSString
+        }
+        let rootDirectory = URL(fileURLWithPath: rootFolder as String, isDirectory: true)
+        let gitInfo = try? GitInfo(gitFolder: rootDirectory.appendingPathComponent(".git"))
+        return gitInfo
     }
 }

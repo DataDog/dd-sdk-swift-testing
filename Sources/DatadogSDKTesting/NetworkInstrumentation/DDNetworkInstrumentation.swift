@@ -60,22 +60,26 @@ class DDNetworkInstrumentation {
         return true
     }
 
-    func shouldInjectTracingHeaders(request: inout URLRequest) -> Bool {
+    func shouldInjectTracingHeaders(request: URLRequest) -> Bool {
         guard injectHeaders == true,
-              let tracer = DDTestMonitor.instance?.tracer,
-              tracer.propagationContext != nil,
               !excludes(request.url)
         else {
             return false
         }
+        return true
+    }
 
+    func injectCustomHeaders( request: inout URLRequest, span: Span?) {
+        guard injectHeaders == true,
+              let tracer = DDTestMonitor.instance?.tracer
+        else {
+            return
+        }
         if request.allHTTPHeaderFields?[DDHeaders.originField.rawValue] == nil {
-            tracer.datadogHeaders().forEach {
+            tracer.datadogHeaders(forContext: span?.context ?? tracer.propagationContext).forEach {
                 request.addValue($0.value, forHTTPHeaderField: $0.key)
             }
         }
-
-        return true
     }
 
     private static func redactHeaders(_ headers: [String: String]) -> [String: String] {
@@ -148,6 +152,7 @@ class DDNetworkInstrumentation {
         let configuration = URLSessionInstrumentationConfiguration(shouldRecordPayload: shouldRecordPayload,
                                                                    shouldInstrument: shouldInstrumentRequest,
                                                                    shouldInjectTracingHeaders: shouldInjectTracingHeaders,
+                                                                   injectCustomHeaders: injectCustomHeaders,
                                                                    createdRequest: createdRequest,
                                                                    receivedResponse: receivedResponse,
                                                                    receivedError: receivedError)

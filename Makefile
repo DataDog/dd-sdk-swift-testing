@@ -17,16 +17,21 @@ build/DatadogSDKTesting.xcframework: build/DatadogSDKTesting/ios build/DatadogSD
 	mkdir -p $(PWD)/build/xcframework
 	xcodebuild -create-xcframework -framework build/DatadogSDKTesting/macos.xcarchive/Products/Library/Frameworks/DatadogSDKTesting.framework -framework build/DatadogSDKTesting/iphoneos.xcarchive/Products/Library/Frameworks/DatadogSDKTesting.framework -framework build/DatadogSDKTesting/iphonesimulator.xcarchive/Products/Library/Frameworks/DatadogSDKTesting.framework -framework build/DatadogSDKTesting/appletvos.xcarchive/Products/Library/Frameworks/DatadogSDKTesting.framework  -framework build/DatadogSDKTesting/appletvsimulator.xcarchive/Products/Library/Frameworks/DatadogSDKTesting.framework -output build/xcframework/DatadogSDKTesting.xcframework
 
-build/xcframework/LICENSE: LICENSE
-	cp LICENSE ./build/xcframework/LICENSE
-
-build/xcframework/DatadogSDKTesting.zip: build/DatadogSDKTesting.xcframework build/xcframework/LICENSE
-	cd ./build/xcframework/; zip -ry ./DatadogSDKTesting.zip ./DatadogSDKTesting.xcframework ./LICENSE
+build/xcframework/DatadogSDKTesting.zip: build/DatadogSDKTesting.xcframework
+	cd ./build/xcframework/; zip -ry ./DatadogSDKTesting.zip ./DatadogSDKTesting.xcframework
 
 build/xcframework: build/xcframework/DatadogSDKTesting.zip
 
 
 release: build/xcframework
+
+bump:
+		@read -p "Enter version number: " version;  \
+		sed -i "" "s/MARKETING_VERSION = .*/MARKETING_VERSION = $$version;/" DatadogSDKTesting.xcodeproj/project.pbxproj; \
+		sed "s/__DATADOG_VERSION__/$$version/g" DatadogSDKTesting.podspec.src > DatadogSDKTesting.podspec; \
+		git add . ; \
+		git commit -m "Bumped version to $$version"; \
+		echo Bumped version to $$version
 
 clean:
 	rm -rf ./build

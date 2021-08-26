@@ -79,7 +79,7 @@
 		E157A723256E9D1D00CBCA52 /* SwiftExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E116D7DA25248C390022779D /* SwiftExtensions.swift */; };
 		E157A724256E9D1D00CBCA52 /* DDTestMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA08A252341EA00ED8AEF /* DDTestMonitor.swift */; };
 		E157A725256E9D1D00CBCA52 /* DDEnvironmentValues.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA07325231F4700ED8AEF /* DDEnvironmentValues.swift */; };
-		E157A726256E9D1D00CBCA52 /* ObjcLoadHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA06C25231F3200ED8AEF /* ObjcLoadHandler.m */; };
+		E157A726256E9D1D00CBCA52 /* LibraryInitializer.m in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA06C25231F3200ED8AEF /* LibraryInitializer.m */; };
 		E157A728256E9D1D00CBCA52 /* DDInstrumentationControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = E158E2DB25471DA000DBCD6C /* DDInstrumentationControl.swift */; };
 		E157A729256E9D1D00CBCA52 /* SimpleSpanData.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FB483F253891CE0083B263 /* SimpleSpanData.swift */; };
 		E157A72B256E9D1D00CBCA52 /* FrameworkLoadHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA07225231F4700ED8AEF /* FrameworkLoadHandler.swift */; };
@@ -100,7 +100,7 @@
 		E157A75B256E9D3300CBCA52 /* SwiftExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E116D7DA25248C390022779D /* SwiftExtensions.swift */; };
 		E157A75C256E9D3300CBCA52 /* DDTestMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA08A252341EA00ED8AEF /* DDTestMonitor.swift */; };
 		E157A75D256E9D3300CBCA52 /* DDEnvironmentValues.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA07325231F4700ED8AEF /* DDEnvironmentValues.swift */; };
-		E157A75E256E9D3300CBCA52 /* ObjcLoadHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA06C25231F3200ED8AEF /* ObjcLoadHandler.m */; };
+		E157A75E256E9D3300CBCA52 /* LibraryInitializer.m in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA06C25231F3200ED8AEF /* LibraryInitializer.m */; };
 		E157A760256E9D3300CBCA52 /* DDInstrumentationControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = E158E2DB25471DA000DBCD6C /* DDInstrumentationControl.swift */; };
 		E157A761256E9D3300CBCA52 /* SimpleSpanData.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FB483F253891CE0083B263 /* SimpleSpanData.swift */; };
 		E157A763256E9D3300CBCA52 /* FrameworkLoadHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA07225231F4700ED8AEF /* FrameworkLoadHandler.swift */; };
@@ -190,7 +190,7 @@
 		E1D6EFA225F6631200E8C3AE /* DDSymbolAddress.h in Headers */ = {isa = PBXBuildFile; fileRef = E1D6EFA125F6563000E8C3AE /* DDSymbolAddress.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E1D6EFA325F6631E00E8C3AE /* DDSymbolAddress.h in Headers */ = {isa = PBXBuildFile; fileRef = E1D6EFA125F6563000E8C3AE /* DDSymbolAddress.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E1D6EFA425F6632B00E8C3AE /* DDSymbolAddress.h in Headers */ = {isa = PBXBuildFile; fileRef = E1D6EFA125F6563000E8C3AE /* DDSymbolAddress.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		E1D6EFA525F6647F00E8C3AE /* ObjcLoadHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA06C25231F3200ED8AEF /* ObjcLoadHandler.m */; };
+		E1D6EFA525F6647F00E8C3AE /* LibraryInitializer.m in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA06C25231F3200ED8AEF /* LibraryInitializer.m */; };
 		E1DFF0EA257010E700344895 /* PlatformUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141CF5F256FD513008B6B70 /* PlatformUtils.swift */; };
 		E1DFF0EB257010E800344895 /* PlatformUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141CF5F256FD513008B6B70 /* PlatformUtils.swift */; };
 		E1F42084264D6B7500233B75 /* FileTraceExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F42083264D6B7500233B75 /* FileTraceExporter.swift */; };
@@ -383,6 +383,8 @@
 		E11295C725F63BA8002719E7 /* DDSymbolAddress.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = DDSymbolAddress.c; sourceTree = "<group>"; };
 		E116D7DA25248C390022779D /* SwiftExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftExtensions.swift; sourceTree = "<group>"; };
 		E117CFC626307B9A00ACE977 /* SpySpanProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpySpanProcessor.swift; sourceTree = "<group>"; };
+		E11FC4CF2689E45700C3C256 /* Package@swift-5.3.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Package@swift-5.3.swift"; sourceTree = "<group>"; };
+		E11FC4D1268B059A00C3C256 /* uploadBinary.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = uploadBinary.sh; sourceTree = "<group>"; };
 		E121DF07258CF652009EA71E /* azurepipelines.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = azurepipelines.json; sourceTree = "<group>"; };
 		E121DF08258CF652009EA71E /* buildkite.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = buildkite.json; sourceTree = "<group>"; };
 		E121DF09258CF652009EA71E /* appveyor.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = appveyor.json; sourceTree = "<group>"; };
@@ -441,8 +443,8 @@
 		E157A7A3256EB0F000CBCA52 /* DatadogSDKTestingTests_macOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DatadogSDKTestingTests_macOS.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E157A7BD256EB0F200CBCA52 /* DatadogSDKTestingTests_tvOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DatadogSDKTestingTests_tvOS.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E158E2DB25471DA000DBCD6C /* DDInstrumentationControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDInstrumentationControl.swift; sourceTree = "<group>"; };
+		E15DD03826C185AB00F60B60 /* usersupplied.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = usersupplied.json; sourceTree = "<group>"; };
 		E160A11125275CC1003121A5 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
-		E160A114252B3A6B003121A5 /* ObjcLoadHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ObjcLoadHandler.h; sourceTree = "<group>"; };
 		E1665A7225D12D7500BA53CD /* Spawn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spawn.swift; sourceTree = "<group>"; };
 		E1665A8025D13BBB00BA53CD /* DDSymbolicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDSymbolicator.swift; sourceTree = "<group>"; };
 		E1798CC52524B9BD008DEBB9 /* DDTracer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTracer.swift; sourceTree = "<group>"; };
@@ -456,7 +458,7 @@
 		E1ABA04E25231E2500ED8AEF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		E1ABA05325231E2500ED8AEF /* DatadogSDKTestingTests_iOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DatadogSDKTestingTests_iOS.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E1ABA05A25231E2500ED8AEF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		E1ABA06C25231F3200ED8AEF /* ObjcLoadHandler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ObjcLoadHandler.m; sourceTree = "<group>"; };
+		E1ABA06C25231F3200ED8AEF /* LibraryInitializer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LibraryInitializer.m; sourceTree = "<group>"; };
 		E1ABA07025231F4700ED8AEF /* DDTestObserver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DDTestObserver.swift; sourceTree = "<group>"; };
 		E1ABA07125231F4700ED8AEF /* DDTags.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DDTags.swift; sourceTree = "<group>"; };
 		E1ABA07225231F4700ED8AEF /* FrameworkLoadHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FrameworkLoadHandler.swift; sourceTree = "<group>"; };
@@ -633,6 +635,14 @@
 			path = Utils;
 			sourceTree = "<group>";
 		};
+		E11FC4D0268B059A00C3C256 /* Scripts */ = {
+			isa = PBXGroup;
+			children = (
+				E11FC4D1268B059A00C3C256 /* uploadBinary.sh */,
+			);
+			path = Scripts;
+			sourceTree = "<group>";
+		};
 		E121DEA9258CBD88009EA71E /* fixtures */ = {
 			isa = PBXGroup;
 			children = (
@@ -655,6 +665,7 @@
 				E121DF0C258CF652009EA71E /* gitlab.json */,
 				E121DF0E258CF652009EA71E /* jenkins.json */,
 				E121DF0D258CF652009EA71E /* travisci.json */,
+				E15DD03826C185AB00F60B60 /* usersupplied.json */,
 			);
 			path = ci;
 			sourceTree = "<group>";
@@ -933,7 +944,6 @@
 			isa = PBXGroup;
 			children = (
 				E1D6EFA125F6563000E8C3AE /* DDSymbolAddress.h */,
-				E160A114252B3A6B003121A5 /* ObjcLoadHandler.h */,
 			);
 			path = include;
 			sourceTree = "<group>";
@@ -973,9 +983,11 @@
 			children = (
 				E17B7AA5253F010C0081D7F3 /* LICENSE-3rdparty.csv */,
 				E160A11125275CC1003121A5 /* Package.swift */,
+				E11FC4CF2689E45700C3C256 /* Package@swift-5.3.swift */,
 				E1ABA04C25231E2500ED8AEF /* Sources */,
 				E1ABA05725231E2500ED8AEF /* Tests */,
 				E1224A42264ABCCE00305968 /* IntegrationTests */,
+				E11FC4D0268B059A00C3C256 /* Scripts */,
 				E1ABA04B25231E2500ED8AEF /* Products */,
 				E1ABA07E25231F8E00ED8AEF /* Frameworks */,
 			);
@@ -1023,7 +1035,7 @@
 			isa = PBXGroup;
 			children = (
 				E160A113252B3A6B003121A5 /* include */,
-				E1ABA06C25231F3200ED8AEF /* ObjcLoadHandler.m */,
+				E1ABA06C25231F3200ED8AEF /* LibraryInitializer.m */,
 				E11295C725F63BA8002719E7 /* DDSymbolAddress.c */,
 			);
 			path = Objc;
@@ -1762,7 +1774,7 @@
 				E157A724256E9D1D00CBCA52 /* DDTestMonitor.swift in Sources */,
 				E14405A725D6AA9500FE3D3C /* GitInfo.swift in Sources */,
 				E157A725256E9D1D00CBCA52 /* DDEnvironmentValues.swift in Sources */,
-				E157A726256E9D1D00CBCA52 /* ObjcLoadHandler.m in Sources */,
+				E157A726256E9D1D00CBCA52 /* LibraryInitializer.m in Sources */,
 				E157A728256E9D1D00CBCA52 /* DDInstrumentationControl.swift in Sources */,
 				E157A729256E9D1D00CBCA52 /* SimpleSpanData.swift in Sources */,
 				E1F595D52609FC3000AE92B7 /* DDNetworkInstrumentation.swift in Sources */,
@@ -1798,7 +1810,7 @@
 				E157A75C256E9D3300CBCA52 /* DDTestMonitor.swift in Sources */,
 				E14405A825D6AA9600FE3D3C /* GitInfo.swift in Sources */,
 				E157A75D256E9D3300CBCA52 /* DDEnvironmentValues.swift in Sources */,
-				E157A75E256E9D3300CBCA52 /* ObjcLoadHandler.m in Sources */,
+				E157A75E256E9D3300CBCA52 /* LibraryInitializer.m in Sources */,
 				E157A760256E9D3300CBCA52 /* DDInstrumentationControl.swift in Sources */,
 				E157A761256E9D3300CBCA52 /* SimpleSpanData.swift in Sources */,
 				E1F595D62609FC3000AE92B7 /* DDNetworkInstrumentation.swift in Sources */,
@@ -1881,7 +1893,7 @@
 				E11295BB25F2483D002719E7 /* FileLocator.swift in Sources */,
 				E1AD079F252F5B00003705C1 /* SwiftExtensions.swift in Sources */,
 				E1F422A72654F28200233B75 /* OriginSpanProcessor.swift in Sources */,
-				E1D6EFA525F6647F00E8C3AE /* ObjcLoadHandler.m in Sources */,
+				E1D6EFA525F6647F00E8C3AE /* LibraryInitializer.m in Sources */,
 				E1A63F5C26789915002F48FA /* CodeOwners.swift in Sources */,
 				E1665A8525D1524100BA53CD /* DDSymbolicator.swift in Sources */,
 				E1ABA08B252341EA00ED8AEF /* DDTestMonitor.swift in Sources */,
@@ -2210,7 +2222,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.8.2;
+				MARKETING_VERSION = 0.9.4;
 				OTHER_LDFLAGS = "-weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
@@ -2238,7 +2250,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.8.2;
+				MARKETING_VERSION = 0.9.4;
 				OTHER_LDFLAGS = "-weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
@@ -2265,7 +2277,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.8.2;
+				MARKETING_VERSION = 0.9.4;
 				OTHER_LDFLAGS = "-weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
@@ -2294,7 +2306,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.8.2;
+				MARKETING_VERSION = 0.9.4;
 				OTHER_LDFLAGS = "-weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
@@ -2443,9 +2455,9 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 0.6.0;
+				MARKETING_VERSION = 0.9.4;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -2453,7 +2465,7 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				TARGETED_DEVICE_FAMILY = "1,2,6";
-				TVOS_DEPLOYMENT_TARGET = 12.0;
+				TVOS_DEPLOYMENT_TARGET = 11.0;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
@@ -2506,16 +2518,16 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 0.6.0;
+				MARKETING_VERSION = 0.9.4;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				TARGETED_DEVICE_FAMILY = "1,2,6";
-				TVOS_DEPLOYMENT_TARGET = 12.0;
+				TVOS_DEPLOYMENT_TARGET = 11.0;
 				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
@@ -2539,7 +2551,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.8.2;
+				MARKETING_VERSION = 0.9.4;
 				OTHER_LDFLAGS = " -weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
@@ -2567,7 +2579,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.8.2;
+				MARKETING_VERSION = 0.9.4;
 				OTHER_LDFLAGS = " -weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
@@ -2830,7 +2842,7 @@
 			repositoryURL = "https://github.com/open-telemetry/opentelemetry-swift";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.2;
+				minimumVersion = 1.0.4;
 			};
 		};
 		E157A719256E9D1D00CBCA52 /* XCRemoteSwiftPackageReference "plcrashreporter" */ = {
@@ -2878,7 +2890,7 @@
 			repositoryURL = "https://github.com/microsoft/plcrashreporter.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 1.8.1;
+				minimumVersion = 1.9.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

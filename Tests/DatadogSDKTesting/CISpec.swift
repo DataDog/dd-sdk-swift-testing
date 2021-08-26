@@ -33,6 +33,7 @@ class CISpec: XCTestCase {
 
     func testGenerateSpecJson() throws {
         testEnvironment["DYLD_LIBRARY_PATH"] = ProcessInfo.processInfo.environment["DYLD_LIBRARY_PATH"]
+        testEnvironment["SRCROOT"] = ProcessInfo.processInfo.environment["SRCROOT"]
         testEnvironment["DATADOG_CLIENT_TOKEN"] = "fakeToken"
         testEnvironment["CI_PIPELINE_URL"] = "https://foo/repo/-/pipelines/1234"
         testEnvironment["HOME"] = "/not-my-home"
@@ -46,7 +47,6 @@ class CISpec: XCTestCase {
         testEnvironment["CI_JOB_URL"] = "gitlab-job-url"
         testEnvironment["CI_JOB_NAME"] = "gitlab-job-name"
         testEnvironment["CI_JOB_STAGE"] = "gitlab-stage-name"
-        testEnvironment["CI_COMMIT_SHA"] = "gitlab-git-commit"
         setEnvVariables()
 
         testObserver = DDTestObserver(tracer: DDTracer())

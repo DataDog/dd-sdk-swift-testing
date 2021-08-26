@@ -48,7 +48,7 @@ class StderrCapture {
     }
 
     func stderrMessage(tracer: DDTracer, string: String) {
-        guard tracer.activeSpan != nil ||
+        guard DDTracer.activeSpan != nil ||
             tracer.isBinaryUnderUITesting
         else {
             return

@@ -45,7 +45,6 @@ class DDNetworkInstrumentationTests: XCTestCase {
         testSpan = testSpanProcessor.lastProcessedSpan
         let spanData = testSpan!.toSpanData()
         XCTAssertEqual(spanData.name, "HTTP GET")
-        XCTAssertEqual(spanData.attributes.count, 11)
         XCTAssertEqual(spanData.attributes["http.status_code"]?.description, "200")
         XCTAssertEqual(spanData.attributes["http.scheme"]?.description, "http")
         XCTAssertEqual(spanData.attributes["net.peer.name"]?.description, "httpbin.org")
@@ -79,7 +78,6 @@ class DDNetworkInstrumentationTests: XCTestCase {
         testSpan = testSpanProcessor.lastProcessedSpan
         let spanData = testSpan!.toSpanData()
         XCTAssertEqual(spanData.name, "HTTP GET")
-        XCTAssertEqual(spanData.attributes.count, 11)
         XCTAssertEqual(spanData.attributes["http.status_code"]?.description, "200")
         XCTAssertEqual(spanData.attributes["http.scheme"]?.description, "http")
         XCTAssertEqual(spanData.attributes["net.peer.name"]?.description, "httpbin.org")

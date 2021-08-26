@@ -9,7 +9,7 @@ import Foundation
 
 extension XCUIApplication {
     fileprivate func addProcessEnvironmentToLaunch(_ environment: String) {
-        self.launchEnvironment[environment] = ProcessInfo.processInfo.environment[environment]
+        self.launchEnvironment[environment] = DDEnvironmentValues.getEnvVariable(environment)
     }
 
     fileprivate func addPropagationsHeadersToEnvironment(tracer: DDTracer?) {
@@ -27,7 +27,7 @@ extension XCUIApplication {
 
     @objc
     func swizzled_launch() {
-        if let testSpanContext = DDTestMonitor.instance?.tracer.activeSpan?.context {
+        if let testSpanContext = DDTracer.activeSpan?.context {
             self.launchEnvironment["ENVIRONMENT_TRACER_SPANID"] = testSpanContext.spanId.hexString
             self.launchEnvironment["ENVIRONMENT_TRACER_TRACEID"] = testSpanContext.traceId.hexString
             if !(DDTestMonitor.instance?.tracer.env.disableDDSDKIOSIntegration ?? false) {
@@ -37,15 +37,26 @@ extension XCUIApplication {
                 "DD_TEST_RUNNER",
                 "DATADOG_CLIENT_TOKEN",
                 "XCTestConfigurationFilePath",
+                "XCInjectBundleInto",
+                "XCTestBundlePath",
+                "SDKROOT",
                 "DD_ENV",
                 "DD_SERVICE",
+                "SRCROOT",
+                "DD_TAGS",
                 "DD_DISABLE_NETWORK_INSTRUMENTATION",
                 "DD_DISABLE_HEADERS_INJECTION",
                 "DD_INSTRUMENTATION_EXTRA_HEADERS",
                 "DD_EXCLUDED_URLS",
                 "DD_ENABLE_RECORD_PAYLOAD",
+                "DD_MAX_PAYLOAD_SIZE",
                 "DD_DISABLE_STDOUT_INSTRUMENTATION",
-                "DD_DISABLE_STDERR_INSTRUMENTATION"
+                "DD_DISABLE_STDERR_INSTRUMENTATION",
+                "DD_DISABLE_SDKIOS_INTEGRATION",
+                "DD_DISABLE_CRASH_HANDLER",
+                "DD_SITE",
+                "DD_ENDPOINT",
+                "DD_DONT_EXPORT"
             ].forEach(addProcessEnvironmentToLaunch)
         }
         swizzled_launch()

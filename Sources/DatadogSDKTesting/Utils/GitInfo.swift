@@ -218,7 +218,9 @@ struct GitInfo {
             indexData = indexData.advanced(by: 8)
 
             // First layer: 256 4-byte elements, with number of elements per folder
-            let folderIndex = Int(folder, radix: 16)!
+            guard let folderIndex = Int(folder, radix: 16) else {
+                return
+            }
 
             var numberOfObjectsInIndex: Int
             var numberOfPreviousObjects = 0

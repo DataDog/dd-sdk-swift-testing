@@ -28,12 +28,16 @@ enum DDSymbolicator {
 
         let fileManager = FileManager.default
         let buildFolder = URL(fileURLWithPath: configurationBuildPath)
-        let dSYMFilesEnumerator = fileManager.enumerator(at: buildFolder,
-                                                         includingPropertiesForKeys: nil,
-                                                         options: [.skipsHiddenFiles], errorHandler: { (url, error) -> Bool in
-                                                             print("[DDSymbolicate] directoryEnumerator error at \(url): ", error)
-                                                             return true
-                                                         })!
+        guard let dSYMFilesEnumerator = fileManager.enumerator(at: buildFolder,
+                                                               includingPropertiesForKeys: nil,
+                                                               options: [.skipsHiddenFiles], errorHandler: { (url, error) -> Bool in
+                                                                   print("[DDSymbolicate] directoryEnumerator error at \(url): ", error)
+                                                                   return true
+                                                               })
+        else {
+            return dSYMFiles
+        }
+
         for case let fileURL as URL in dSYMFilesEnumerator {
             if fileURL.pathExtension.compare("dSYM", options: .caseInsensitive) != .orderedSame {
                 dSYMFiles.append(fileURL)

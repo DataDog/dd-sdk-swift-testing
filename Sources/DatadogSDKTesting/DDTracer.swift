@@ -19,7 +19,7 @@ enum DDHeaders: String, CaseIterable {
 internal class DDTracer {
     let tracerSdk: TracerSdk
     let env = DDEnvironmentValues()
-    var datadogExporter: DatadogExporter!
+    var datadogExporter: DatadogExporter?
     private var launchSpanContext: SpanContext?
     let backgroundWorkQueue = DispatchQueue(label: "com.otel.datadog.logswriter")
 
@@ -94,12 +94,9 @@ internal class DDTracer {
         )
         datadogExporter = try? DatadogExporter(config: exporterConfiguration)
 
-        let exporterToUse: SpanExporter
-
-        if env.disableTracesExporting {
-            exporterToUse = InMemoryExporter()
-        } else {
-            exporterToUse = datadogExporter
+        guard let exporterToUse: SpanExporter = env.disableTracesExporting ? InMemoryExporter() : datadogExporter else {
+            print("[DDSwiftTesting] Failed creating Datadog exporter.")
+            return
         }
 
         var spanProcessor: SpanProcessor
@@ -322,6 +319,6 @@ internal class DDTracer {
     }
 
     func endpointURLs() -> Set<String> {
-        return datadogExporter.endpointURLs()
+        return datadogExporter?.endpointURLs() ?? Set<String>()
     }
 }

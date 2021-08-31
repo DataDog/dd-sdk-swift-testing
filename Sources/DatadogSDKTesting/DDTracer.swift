@@ -60,15 +60,15 @@ internal class DDTracer {
         var endpoint: Endpoint
         switch env.tracesEndpoint {
             case "us", "US", "https://app.datadoghq.com", "app.datadoghq.com", "datadoghq.com":
-                endpoint = Endpoint.us
+                endpoint = Endpoint.us1
             case "us3", "US3", "https://us3.datadoghq.com", "us3.datadoghq.com":
                 endpoint = Endpoint.us3
             case "eu", "EU", "https://app.datadoghq.eu", "app.datadoghq.eu", "datadoghq.eu":
-                endpoint = Endpoint.eu
+                endpoint = Endpoint.eu1
             case "gov", "GOV", "https://app.ddog-gov.com", "app.ddog-gov.com", "ddog-gov.com":
-                endpoint = Endpoint.gov
+                endpoint = Endpoint.us1_fed
             default:
-                endpoint = Endpoint.us
+                endpoint = Endpoint.us1
         }
 
         // When reporting tests to local server
@@ -84,8 +84,7 @@ internal class DDTracer {
             applicationName: identifier,
             applicationVersion: version,
             environment: env.ddEnvironment ?? (env.isCi ? "ci" : "none"),
-            clientToken: env.ddClientToken ?? "",
-            apiKey: nil,
+            apiKey: env.ddClientToken ?? "",
             endpoint: endpoint,
             uploadCondition: { true },
             performancePreset: .instantDataDelivery,

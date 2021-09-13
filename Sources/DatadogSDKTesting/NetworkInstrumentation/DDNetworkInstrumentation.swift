@@ -145,9 +145,7 @@ class DDNetworkInstrumentation {
     }
 
     init() {
-        excludedURLs = ["https://mobile-http-intake.logs",
-                        "https://public-trace-http-intake.logs.",
-                        "https://rum-http-intake.logs."]
+        excludedURLs = DDTestMonitor.instance?.tracer.endpointURLs() ?? []
 
         let configuration = URLSessionInstrumentationConfiguration(shouldRecordPayload: shouldRecordPayload,
                                                                    shouldInstrument: shouldInstrumentRequest,

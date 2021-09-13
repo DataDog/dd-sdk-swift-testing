@@ -4,8 +4,8 @@
  * Copyright 2020-2021 Datadog, Inc.
  */
 
-import OpenTelemetryApi
-import OpenTelemetrySdk
+@_implementationOnly import OpenTelemetryApi
+@_implementationOnly import OpenTelemetrySdk
 import XCTest
 
 class TestRunner: XCTestCase {

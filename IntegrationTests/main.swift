@@ -4,7 +4,7 @@
  * Copyright 2020-2021 Datadog, Inc.
  */
 
-import OpenTelemetrySdk
+@_implementationOnly import OpenTelemetrySdk
 import XCTest
 
 guard let testClass = ProcessInfo.processInfo.environment["TEST_CLASS"],

@@ -54,7 +54,7 @@ internal class DDTestObserver: NSObject, XCTestObservation {
         currentBundleFunctionInfo = FileLocator.testFunctionsInModule(currentBundleName)
         #endif
         if let workspacePath = tracer.env.workspacePath {
-            codeOwners = CodeOwners.init(workspacePath: URL(fileURLWithPath:workspacePath))
+            codeOwners = CodeOwners(workspacePath: URL(fileURLWithPath: workspacePath))
         }
 
         if !tracer.env.disableCrashHandler {
@@ -100,6 +100,10 @@ internal class DDTestObserver: NSObject, XCTestObservation {
         ]
 
         let testSpan = tracer.startSpan(name: testCase.name, attributes: attributes)
+
+        // Is not a UITest until a XCUIApplication is launched
+        testSpan.setAttribute(key: DDTestTags.testIsUITest, value: false)
+
         if !tracer.env.disableDDSDKIOSIntegration {
             tracer.addPropagationsHeadersToEnvironment()
         }

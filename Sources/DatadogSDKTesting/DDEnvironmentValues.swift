@@ -271,7 +271,7 @@ internal struct DDEnvironmentValues {
             jobURL = DDEnvironmentValues.getEnvVariable("CI_JOB_URL")
             jobName = DDEnvironmentValues.getEnvVariable("CI_JOB_NAME")
             stageName = DDEnvironmentValues.getEnvVariable("CI_JOB_STAGE")
-            branchEnv = DDEnvironmentValues.getEnvVariable("CI_COMMIT_BRANCH")
+            branchEnv = DDEnvironmentValues.getEnvVariable("CI_COMMIT_REF_NAME") ?? DDEnvironmentValues.getEnvVariable("CI_COMMIT_BRANCH") 
             tagEnv = DDEnvironmentValues.getEnvVariable("CI_COMMIT_TAG")
             commitMessage = DDEnvironmentValues.getEnvVariable("CI_COMMIT_MESSAGE")
             if let gitlabAuthorComponents = DDEnvironmentValues.getEnvVariable("CI_COMMIT_AUTHOR")?.components(separatedBy: CharacterSet(charactersIn: "<>")),

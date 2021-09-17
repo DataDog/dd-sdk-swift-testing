@@ -1468,7 +1468,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1250;
-				LastUpgradeCheck = 1250;
+				LastUpgradeCheck = 1300;
 				TargetAttributes = {
 					E1224A49264ABCCF00305968 = {
 						CreatedOnToolsVersion = 12.5;
@@ -2808,7 +2808,7 @@
 			repositoryURL = "https://github.com/open-telemetry/opentelemetry-swift";
 			requirement = {
 				kind = revision;
-				revision = 73951896dfe02bccaf55907bbc56796d1968c2f9;
+				revision = ea6f95da5a6ab2f7d350e7a4bdecee1aa93ed4b6;
 			};
 		};
 		E157A719256E9D1D00CBCA52 /* XCRemoteSwiftPackageReference "plcrashreporter" */ = {

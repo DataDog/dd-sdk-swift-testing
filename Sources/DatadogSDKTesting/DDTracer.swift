@@ -86,7 +86,7 @@ internal class DDTracer {
             applicationName: identifier,
             applicationVersion: version,
             environment: env.ddEnvironment ?? (env.isCi ? "ci" : "none"),
-            apiKey: env.ddClientToken ?? "",
+            apiKey: env.ddApikeyOrClientToken ?? "",
             endpoint: endpoint,
             uploadCondition: { true },
             performancePreset: .instantDataDelivery,

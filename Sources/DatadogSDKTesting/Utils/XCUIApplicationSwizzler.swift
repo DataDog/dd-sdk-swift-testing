@@ -37,6 +37,7 @@ extension XCUIApplication {
             [
                 "DD_TEST_RUNNER",
                 "DATADOG_CLIENT_TOKEN",
+                "DD_API_KEY",
                 "XCTestConfigurationFilePath",
                 "XCInjectBundleInto",
                 "XCTestBundlePath",

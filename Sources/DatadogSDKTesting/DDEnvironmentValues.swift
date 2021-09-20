@@ -9,7 +9,7 @@ import Foundation
 
 internal struct DDEnvironmentValues {
     /// Datatog Configuration values
-    let ddClientToken: String?
+    let ddApikeyOrClientToken: String?
     let ddEnvironment: String?
     let ddService: String?
     var ddTags = [String: String]()
@@ -99,7 +99,11 @@ internal struct DDEnvironmentValues {
         if clientToken == nil {
             clientToken = DDEnvironmentValues.infoDictionary["DatadogClientToken"] as? String
         }
-        ddClientToken = clientToken
+        if clientToken == nil {
+            clientToken = DDEnvironmentValues.getEnvVariable("DD_API_KEY")
+        }
+
+        ddApikeyOrClientToken = clientToken
         ddEnvironment = DDEnvironmentValues.getEnvVariable("DD_ENV")
         tracerUnderTesting = (DDEnvironmentValues.getEnvVariable("TEST_CLASS") != nil)
         let service = DDEnvironmentValues.getEnvVariable("DD_SERVICE")

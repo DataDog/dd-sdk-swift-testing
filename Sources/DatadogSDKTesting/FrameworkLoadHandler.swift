@@ -31,8 +31,8 @@ public class FrameworkLoadHandler: NSObject {
             environment["XCTestBundlePath"] != nil ||
             environment["SDKROOT"] != nil
         if isInTestMode {
-            guard DDEnvironmentValues.getEnvVariable("DATADOG_CLIENT_TOKEN") != nil else {
-                print("[DatadogSDKTesting] DATADOG_CLIENT_TOKEN missing.")
+            guard DDEnvironmentValues.getEnvVariable("DATADOG_CLIENT_TOKEN") != nil || DDEnvironmentValues.getEnvVariable("DD_API_KEY") != nil else {
+                print("[DatadogSDKTesting] DATADOG_CLIENT_TOKEN or DD_API_KEY are missing.")
                 return
             }
             if DDEnvironmentValues.getEnvVariable("SRCROOT") == nil {

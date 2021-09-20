@@ -10,7 +10,7 @@ import XCTest
 
 class StdoutCaptureTests: XCTestCase {
     override func setUp() {
-        DDEnvironmentValues.environment["DATADOG_CLIENT_TOKEN"] = "fakeToken"
+        DDEnvironmentValues.environment["DD_API_KEY"] = "fakeKey"
     }
 
     override func tearDown() {}

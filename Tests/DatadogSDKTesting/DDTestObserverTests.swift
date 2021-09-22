@@ -11,28 +11,31 @@ import XCTest
 
 internal class DDTestObserverTests: XCTestCase {
     var testObserver: DDTestObserver!
+    var ddTest: DDTest!
 
     override func setUp() {
         DDEnvironmentValues.environment["DD_API_KEY"] = "fakeKey"
-        testObserver = DDTestObserver(tracer: DDTracer())
+        ddTest = DDTest(tracer: DDTracer())
+        testObserver = DDTestObserver(ddTest: ddTest)
         testObserver.startObserving()
     }
 
     override func tearDown() {
         XCTestObservationCenter.shared.removeTestObserver(testObserver)
         testObserver = nil
+        ddTest = nil
     }
 
     func testWhenTestBundleWillStartIsCalled_testBundleNameIsSet() {
         testObserver.testBundleWillStart(Bundle.main)
 
-        XCTAssertFalse(testObserver.currentBundleName.isEmpty)
+        XCTAssertFalse(testObserver.ddTest.currentBundleName.isEmpty)
     }
 
     func testWhenTestCaseWillStartIsCalled_testSpanIsCreated() {
         let testName = "testWhenTestCaseWillStartIsCalled_testSpanIsCreated"
         let testSuite = "DDTestObserverTests"
-        let testBundle = testObserver.currentBundleName
+        let testBundle = testObserver.ddTest.currentBundleName
         let deviceModel = PlatformUtils.getDeviceModel()
         let deviceVersion = PlatformUtils.getDeviceVersion()
 
@@ -41,7 +44,7 @@ internal class DDTestObserverTests: XCTestCase {
         let span = OpenTelemetry.instance.contextProvider.activeSpan as! RecordEventsReadableSpan
         let spanData = span.toSpanData()
 
-        XCTAssertEqual(spanData.name, "-[DDTestObserverTests testWhenTestCaseWillStartIsCalled_testSpanIsCreated]")
+        XCTAssertEqual(spanData.name, "DDTestObserverTests.testWhenTestCaseWillStartIsCalled_testSpanIsCreated()")
         XCTAssertEqual(spanData.attributes[DDGenericTags.language]?.description, "swift")
         XCTAssertEqual(spanData.attributes[DDGenericTags.type]?.description, DDTagValues.typeTest)
         XCTAssertEqual(spanData.attributes[DDGenericTags.resourceName]?.description, "\(testBundle).\(testSuite).\(testName)")

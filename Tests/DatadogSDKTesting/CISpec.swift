@@ -10,7 +10,7 @@ import OpenTelemetrySdk
 import XCTest
 
 class CISpec: XCTestCase {
-    var testObserver: DDTestObserver!
+    var ddTest: DDTest!
     var testEnvironment = [String: String]()
     var previousEnvironment = [String: String]()
 
@@ -26,8 +26,6 @@ class CISpec: XCTestCase {
     }
 
     override func tearDown() {
-        XCTestObservationCenter.shared.removeTestObserver(testObserver)
-        testObserver = nil
         DDEnvironmentValues.environment = previousEnvironment
     }
 
@@ -49,17 +47,12 @@ class CISpec: XCTestCase {
         testEnvironment["CI_JOB_STAGE"] = "gitlab-stage-name"
         setEnvVariables()
 
-        testObserver = DDTestObserver(tracer: DDTracer())
-        testObserver.startObserving()
-        testObserver.testBundleWillStart(Bundle(for: CISpec.self))
-
-        testObserver.testCaseWillStart(self)
-
-        measure {
-            _ = 2 + 2
-        }
+        ddTest = DDTest(tracer: DDTracer())
+        ddTest.bundleStart(name: Bundle(for: CISpec.self).bundleURL.deletingPathExtension().lastPathComponent)
+        ddTest.start(name: "testGenerateSpecJson", testSuite: "CISpec")
+        ddTest.testSetBenchmarkInfo(measureName: "", measureUnit: "", values: [1,2,3,4,5])
         let span = OpenTelemetry.instance.contextProvider.activeSpan as! RecordEventsReadableSpan
-        testObserver.testCaseDidFinish(self)
+        ddTest.end(status: .pass)
 
         let spanData = span.toSpanData()
 

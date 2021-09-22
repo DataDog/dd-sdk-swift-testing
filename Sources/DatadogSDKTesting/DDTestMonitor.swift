@@ -19,7 +19,7 @@ internal class DDTestMonitor {
     static let defaultPayloadSize = 1024
 
     let tracer: DDTracer
-    var testObserver: DDTestObserver?
+    var ddTest: DDTest?
     var networkInstrumentation: DDNetworkInstrumentation?
     var stderrCapturer: StderrCapture
     var injectHeaders: Bool = false
@@ -32,12 +32,12 @@ internal class DDTestMonitor {
         stderrCapturer = StderrCapture()
 
         if !tracer.isBinaryUnderUITesting {
-            testObserver = DDTestObserver(tracer: tracer)
+            ddTest = DDTest(tracer: tracer)
         } else {
             /// If the library is being loaded in a binary launched from a UITest, dont start test observing,
             /// except if testing the tracer itself
             if tracer.env.tracerUnderTesting {
-                testObserver = DDTestObserver(tracer: tracer)
+                ddTest = DDTest(tracer: tracer)
             }
 
             notificationObserver = NotificationCenter.default.addObserver(
@@ -59,7 +59,7 @@ internal class DDTestMonitor {
     }
 
     func startInstrumenting() {
-        testObserver?.startObserving()
+        ddTest?.testObserver?.startObserving()
         if !tracer.env.disableNetworkInstrumentation {
             startNetworkAutoInstrumentation()
             if !tracer.env.disableHeadersInjection {

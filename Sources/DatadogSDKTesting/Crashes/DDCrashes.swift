@@ -71,8 +71,8 @@ internal enum DDCrashes {
                        let executionProcessIdString = spanData.stringAttributes[DDTestTags.testExecutionProcessId],
                        let processId = Int(executionProcessIdString)
                     {
-                        DDTestMonitor.instance?.testObserver?.currentTestExecutionOrder = executionOrder
-                        DDTestMonitor.instance?.testObserver?.initialProcessId = processId
+                        DDTestMonitor.instance?.ddTest?.currentTestExecutionOrder = executionOrder
+                        DDTestMonitor.instance?.ddTest?.initialProcessId = processId
                     }
                 }
             }

@@ -7,7 +7,9 @@
 import Foundation
 @_implementationOnly import OpenTelemetrySdk
 
-@objc public class DDInstrumentationControl: NSObject {
+public class DDInstrumentationControl: NSObject {
+    private override init() {}
+
     @objc public static func startInjectingHeaders() {
         DDTestMonitor.instance?.injectHeaders = true
     }

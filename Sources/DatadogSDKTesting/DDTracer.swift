@@ -27,7 +27,7 @@ internal class DDTracer {
 
     static var activeSpan: Span? {
         return OpenTelemetrySDK.instance.contextProvider.activeSpan ??
-            DDTestMonitor.instance?.testObserver?.currentTestSpan
+            DDTestMonitor.instance?.ddTest?.currentTestSpan
     }
 
     var propagationContext: SpanContext? {

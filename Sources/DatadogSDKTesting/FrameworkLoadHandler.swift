@@ -9,6 +9,8 @@ import Foundation
 public class FrameworkLoadHandler: NSObject {
     static var environment = ProcessInfo.processInfo.environment
 
+    private override init() {}
+
     @objc
     public static func handleLoad() {
         installTestObserver()

@@ -19,7 +19,7 @@ class FrameworkLoadHandlerTests: XCTestCase {
 
     override func tearDownWithError() throws {
         if let monitor = DDTestMonitor.instance,
-           let observer = monitor.testObserver
+           let observer = monitor.ddTest?.testObserver
         {
             XCTestObservationCenter.shared.removeTestObserver(observer)
             DDTestMonitor.instance = nil

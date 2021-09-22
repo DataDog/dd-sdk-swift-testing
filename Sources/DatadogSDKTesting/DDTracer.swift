@@ -53,7 +53,7 @@ internal class DDTracer {
         let tracerProvider = OpenTelemetrySDK.instance.tracerProvider
         tracerProvider.updateActiveSampler(Samplers.alwaysOn)
 
-        let bundle = Bundle(for: type(of: self))
+        let bundle = Bundle.main
         let identifier = bundle.bundleIdentifier ?? "com.datadoghq.DatadogSDKTesting"
         let version = (bundle.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "unknown"
 

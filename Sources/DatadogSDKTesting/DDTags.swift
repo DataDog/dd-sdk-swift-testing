@@ -30,7 +30,6 @@ internal enum DDTags {
 }
 
 internal enum DDGenericTags {
-    static let language = "language"
     static let type = "type"
     static let resourceName = "resource.name"
     static let origin = "_dd.origin"
@@ -66,6 +65,11 @@ internal enum DDDeviceTags {
 internal enum DDRuntimeTags {
     static let runtimeName = "runtime.name"
     static let runtimeVersion = "runtime.version"
+}
+
+internal enum DDTracerTags {
+    static let tracerLanguage = "tracer.language"
+    static let tracerVersion = "tracer.version"
 }
 
 internal enum DDGitTags {

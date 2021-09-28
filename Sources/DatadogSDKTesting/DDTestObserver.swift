@@ -15,6 +15,7 @@ internal class DDTestObserver: NSObject, XCTestObservation {
 
     static let testNameRegex = try! NSRegularExpression(pattern: "([\\w]+) ([\\w]+)", options: .caseInsensitive)
     static let supportsSkipping = NSClassFromString("XCTSkippedTestContext") != nil
+    static let tracerVersion = (Bundle(for: DDTestObserver.self).infoDictionary?["CFBundleShortVersionString"] as? String) ?? "unknown"
     var currentBundleName = ""
     var currentBundleFunctionInfo = FunctionMap()
     var currentTestExecutionOrder = 0
@@ -80,7 +81,6 @@ internal class DDTestObserver: NSObject, XCTestObservation {
         currentTestExecutionOrder = currentTestExecutionOrder + 1
 
         let attributes: [String: String] = [
-            DDGenericTags.language: "swift",
             DDGenericTags.type: DDTagValues.typeTest,
             DDGenericTags.resourceName: "\(currentBundleName).\(testSuite).\(testName)",
             DDTestTags.testName: testName,
@@ -96,7 +96,9 @@ internal class DDTestObserver: NSObject, XCTestObservation {
             DDDeviceTags.deviceName: tracer.env.deviceName,
             DDDeviceTags.deviceModel: tracer.env.deviceModel,
             DDRuntimeTags.runtimeName: "Xcode",
-            DDRuntimeTags.runtimeVersion: tracer.env.runtimeVersion
+            DDRuntimeTags.runtimeVersion: tracer.env.runtimeVersion,
+            DDTracerTags.tracerLanguage: "swift",
+            DDTracerTags.tracerVersion: DDTestObserver.tracerVersion
         ]
 
         let testSpan = tracer.startSpan(name: testCase.name, attributes: attributes)

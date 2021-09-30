@@ -7,9 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		E10034DC27035A7700439C9C /* DDTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10034D92703599D00439C9C /* DDTest.swift */; };
-		E10034DE27035A7800439C9C /* DDTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10034D92703599D00439C9C /* DDTest.swift */; };
-		E10034E027035A7900439C9C /* DDTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10034D92703599D00439C9C /* DDTest.swift */; };
+		E10034DC27035A7700439C9C /* DDTestSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10034D92703599D00439C9C /* DDTestSession.swift */; };
+		E10034DE27035A7800439C9C /* DDTestSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10034D92703599D00439C9C /* DDTestSession.swift */; };
+		E10034E027035A7900439C9C /* DDTestSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10034D92703599D00439C9C /* DDTestSession.swift */; };
 		E11295BB25F2483D002719E7 /* FileLocator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E11295BA25F2483D002719E7 /* FileLocator.swift */; };
 		E11295BC25F2483D002719E7 /* FileLocator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E11295BA25F2483D002719E7 /* FileLocator.swift */; };
 		E11295BD25F2483D002719E7 /* FileLocator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E11295BA25F2483D002719E7 /* FileLocator.swift */; };
@@ -361,7 +361,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		E10034D92703599D00439C9C /* DDTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTest.swift; sourceTree = "<group>"; };
+		E10034D92703599D00439C9C /* DDTestSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTestSession.swift; sourceTree = "<group>"; };
 		E11295BA25F2483D002719E7 /* FileLocator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileLocator.swift; sourceTree = "<group>"; };
 		E11295C725F63BA8002719E7 /* DDSymbolAddress.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = DDSymbolAddress.c; sourceTree = "<group>"; };
 		E116D7DA25248C390022779D /* SwiftExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftExtensions.swift; sourceTree = "<group>"; };
@@ -948,7 +948,7 @@
 				E116D7D925248C280022779D /* Utils */,
 				E1ABA07325231F4700ED8AEF /* DDEnvironmentValues.swift */,
 				E158E2DB25471DA000DBCD6C /* DDInstrumentationControl.swift */,
-				E10034D92703599D00439C9C /* DDTest.swift */,
+				E10034D92703599D00439C9C /* DDTestSession.swift */,
 				E1ABA07025231F4700ED8AEF /* DDTestObserver.swift */,
 				E1ABA07125231F4700ED8AEF /* DDTags.swift */,
 				E1ABA08A252341EA00ED8AEF /* DDTestMonitor.swift */,
@@ -1717,7 +1717,7 @@
 			files = (
 				E11295BC25F2483D002719E7 /* FileLocator.swift in Sources */,
 				E157A723256E9D1D00CBCA52 /* SwiftExtensions.swift in Sources */,
-				E10034DE27035A7800439C9C /* DDTest.swift in Sources */,
+				E10034DE27035A7800439C9C /* DDTestSession.swift in Sources */,
 				E1F422A82654F28200233B75 /* OriginSpanProcessor.swift in Sources */,
 				E1665A8225D13BBB00BA53CD /* DDSymbolicator.swift in Sources */,
 				E1A63F5D26789915002F48FA /* CodeOwners.swift in Sources */,
@@ -1752,7 +1752,7 @@
 			files = (
 				E11295BD25F2483D002719E7 /* FileLocator.swift in Sources */,
 				E157A75B256E9D3300CBCA52 /* SwiftExtensions.swift in Sources */,
-				E10034E027035A7900439C9C /* DDTest.swift in Sources */,
+				E10034E027035A7900439C9C /* DDTestSession.swift in Sources */,
 				E1F422A92654F28200233B75 /* OriginSpanProcessor.swift in Sources */,
 				E1665A8125D13BBB00BA53CD /* DDSymbolicator.swift in Sources */,
 				E1A63F5E26789915002F48FA /* CodeOwners.swift in Sources */,
@@ -1839,7 +1839,7 @@
 			files = (
 				E11295BB25F2483D002719E7 /* FileLocator.swift in Sources */,
 				E1AD079F252F5B00003705C1 /* SwiftExtensions.swift in Sources */,
-				E10034DC27035A7700439C9C /* DDTest.swift in Sources */,
+				E10034DC27035A7700439C9C /* DDTestSession.swift in Sources */,
 				E1F422A72654F28200233B75 /* OriginSpanProcessor.swift in Sources */,
 				E1D6EFA525F6647F00E8C3AE /* LibraryInitializer.m in Sources */,
 				E1A63F5C26789915002F48FA /* CodeOwners.swift in Sources */,

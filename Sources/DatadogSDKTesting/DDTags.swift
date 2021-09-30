@@ -67,9 +67,9 @@ internal enum DDRuntimeTags {
     static let runtimeVersion = "runtime.version"
 }
 
-internal enum DDTracerTags {
-    static let tracerLanguage = "tracer.language"
-    static let tracerVersion = "tracer.version"
+internal enum DDCILibraryTags {
+    static let ciLibraryLanguage = "ci_library.language"
+    static let ciLibraryVersion = "ci_library.version"
 }
 
 internal enum DDGitTags {

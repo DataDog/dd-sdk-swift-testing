@@ -43,6 +43,6 @@ public class DDInstrumentationControl: NSObject {
     }
 
     public static var openTelemetryTracerSdk: AnyObject? {
-        return DDTestMonitor.instance?.tracer.tracerSdk
+        return DDTestMonitor.tracer.tracerSdk
     }
 }

@@ -13,10 +13,10 @@ public class FrameworkLoadHandler: NSObject {
 
     @objc
     public static func handleLoad() {
-        installTestObserver()
+        installTestMonitor()
     }
 
-    internal static func installTestObserver() {
+    static func installTestMonitor() {
         /// Only initialize test observer if user configured so and is running tests
          guard let enabled = DDEnvironmentValues.getEnvVariable("DD_TEST_RUNNER") as NSString? else {
             print("[DatadogSDKTesting] Library loaded but not active, DD_TEST_RUNNER is missing")

@@ -10,22 +10,27 @@ import OpenTelemetrySdk
 import XCTest
 
 class CISpec: XCTestCase {
-    var ddTest: DDTest!
     var testEnvironment = [String: String]()
     var previousEnvironment = [String: String]()
 
     private func setEnvVariables() {
         DDEnvironmentValues.environment = testEnvironment
         DDEnvironmentValues.environment["DD_DONT_EXPORT"] = "true"
+        DDEnvironmentValues.environment["DD_DISABLE_TEST_OBSERVER"] = "1"
         testEnvironment = [String: String]()
+        DDTestMonitor.env = DDEnvironmentValues()
     }
 
     override func setUp() {
+        XCTAssertNil(DDTracer.activeSpan)
+        XCTAssertNil(DDTestMonitor.instance?.testObserver)
         testEnvironment = [String: String]()
         previousEnvironment = DDEnvironmentValues.environment
     }
 
     override func tearDown() {
+        XCTAssertNil(DDTracer.activeSpan)
+        XCTAssertNil(DDTestMonitor.instance?.testObserver)
         DDEnvironmentValues.environment = previousEnvironment
     }
 
@@ -47,12 +52,12 @@ class CISpec: XCTestCase {
         testEnvironment["CI_JOB_STAGE"] = "gitlab-stage-name"
         setEnvVariables()
 
-        ddTest = DDTest(tracer: DDTracer())
-        ddTest.bundleStart(name: Bundle(for: CISpec.self).bundleURL.deletingPathExtension().lastPathComponent)
-        ddTest.start(name: "testGenerateSpecJson", testSuite: "CISpec")
-        ddTest.testSetBenchmarkInfo(measureName: "", measureUnit: "", values: [1,2,3,4,5])
+        let testSession = DDTestSession(name: Bundle(for: CISpec.self).bundleURL.deletingPathExtension().lastPathComponent)
+        let suite = testSession.suiteStart(name: "CISpec")
+        let test = testSession.testStart(name: "testGenerateSpecJson", suite: suite)
+        test.setBenchmarkInfo(measureName: "", measureUnit: "", values: [1,2,3,4,5])
         let span = OpenTelemetry.instance.contextProvider.activeSpan as! RecordEventsReadableSpan
-        ddTest.end(status: .pass)
+        testSession.testEnd(test: test, status: .pass)
 
         let spanData = span.toSpanData()
 

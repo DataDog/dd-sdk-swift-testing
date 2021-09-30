@@ -11,43 +11,49 @@ import XCTest
 
 internal class DDTestObserverTests: XCTestCase {
     var testObserver: DDTestObserver!
-    var ddTest: DDTest!
+
+    let theSuite = XCTestSuite(name: "DDTestObserverTests")
 
     override func setUp() {
+        XCTAssertNil(DDTracer.activeSpan)
+        XCTAssertNil(DDTestMonitor.instance?.testObserver)
         DDEnvironmentValues.environment["DD_API_KEY"] = "fakeKey"
-        ddTest = DDTest(tracer: DDTracer())
-        testObserver = DDTestObserver(ddTest: ddTest)
+        DDEnvironmentValues.environment["DD_DISABLE_TEST_OBSERVER"] = "1"
+        DDTestMonitor.env = DDEnvironmentValues()
+        testObserver = DDTestObserver()
         testObserver.startObserving()
     }
 
     override func tearDown() {
         XCTestObservationCenter.shared.removeTestObserver(testObserver)
         testObserver = nil
-        ddTest = nil
+        XCTAssertNil(DDTracer.activeSpan)
+        XCTAssertNil(DDTestMonitor.instance?.testObserver)
     }
 
-    func testWhenTestBundleWillStartIsCalled_testBundleNameIsSet() {
+    func testWhenTestBundleWillStartIsCalled_testBundleNameIsSet() throws {
         testObserver.testBundleWillStart(Bundle.main)
-
-        XCTAssertFalse(testObserver.ddTest.currentBundleName.isEmpty)
+        let bundleName = try XCTUnwrap(testObserver.session?.bundleName)
+        XCTAssertFalse(bundleName.isEmpty)
+        testObserver.testBundleDidFinish(Bundle.main)
     }
 
     func testWhenTestCaseWillStartIsCalled_testSpanIsCreated() {
-        let testName = "testWhenTestCaseWillStartIsCalled_testSpanIsCreated"
-        let testSuite = "DDTestObserverTests"
-        let testBundle = testObserver.ddTest.currentBundleName
-        let deviceModel = PlatformUtils.getDeviceModel()
-        let deviceVersion = PlatformUtils.getDeviceVersion()
-
+        testObserver.testBundleWillStart(Bundle.main)
+        testObserver.testSuiteWillStart(theSuite)
         testObserver.testCaseWillStart(self)
 
+        let testName = "testWhenTestCaseWillStartIsCalled_testSpanIsCreated"
+        let testSuite = "DDTestObserverTests"
+        let testBundle = testObserver.session?.bundleName
+        let deviceModel = PlatformUtils.getDeviceModel()
+        let deviceVersion = PlatformUtils.getDeviceVersion()
         let span = OpenTelemetry.instance.contextProvider.activeSpan as! RecordEventsReadableSpan
         let spanData = span.toSpanData()
 
         XCTAssertEqual(spanData.name, "DDTestObserverTests.testWhenTestCaseWillStartIsCalled_testSpanIsCreated()")
-        XCTAssertEqual(spanData.attributes[DDGenericTags.language]?.description, "swift")
         XCTAssertEqual(spanData.attributes[DDGenericTags.type]?.description, DDTagValues.typeTest)
-        XCTAssertEqual(spanData.attributes[DDGenericTags.resourceName]?.description, "\(testBundle).\(testSuite).\(testName)")
+        XCTAssertEqual(spanData.attributes[DDGenericTags.resourceName]?.description, "\(testBundle ?? "").\(testSuite).\(testName)")
         XCTAssertEqual(spanData.attributes[DDTestTags.testName]?.description, testName)
         XCTAssertEqual(spanData.attributes[DDTestTags.testSuite]?.description, testSuite)
         XCTAssertEqual(spanData.attributes[DDTestTags.testFramework]?.description, "XCTest")
@@ -61,23 +67,36 @@ internal class DDTestObserverTests: XCTestCase {
         XCTAssertEqual(spanData.attributes[DDRuntimeTags.runtimeName]?.description, "Xcode")
         XCTAssertEqual(spanData.attributes[DDRuntimeTags.runtimeVersion]?.description, PlatformUtils.getXcodeVersion())
         XCTAssertNotNil(spanData.attributes[DDCITags.ciWorkspacePath])
+        XCTAssertEqual(spanData.attributes[DDCILibraryTags.ciLibraryLanguage]?.description, "swift")
+        XCTAssertNotNil(spanData.attributes[DDCILibraryTags.ciLibraryVersion])
 
         testObserver.testCaseDidFinish(self)
+        testObserver.testSuiteDidFinish(theSuite)
+        testObserver.testBundleDidFinish(Bundle.main)
     }
 
     func testWhenTestCaseDidFinishIsCalled_testStatusIsSet() {
+        testObserver.testBundleWillStart(Bundle.main)
+        testObserver.testSuiteWillStart(theSuite)
         testObserver.testCaseWillStart(self)
+
         let testSpan = OpenTelemetry.instance.contextProvider.activeSpan as! RecordEventsReadableSpan
         var spanData = testSpan.toSpanData()
         XCTAssertNil(spanData.attributes[DDTestTags.testStatus])
 
         testObserver.testCaseDidFinish(self)
+
         spanData = testSpan.toSpanData()
         XCTAssertNotNil(spanData.attributes[DDTestTags.testStatus])
+
+        testObserver.testSuiteDidFinish(theSuite)
+        testObserver.testBundleDidFinish(Bundle.main)
     }
 
     #if swift(>=5.3)
     func testWhenTestCaseDidRecordIssueIsCalled_testStatusIsSet() {
+        testObserver.testBundleWillStart(Bundle.main)
+        testObserver.testSuiteWillStart(theSuite)
         testObserver.testCaseWillStart(self)
         let issue = XCTIssue(type: .assertionFailure, compactDescription: "descrip", detailedDescription: nil, sourceCodeContext: XCTSourceCodeContext(), associatedError: nil, attachments: [])
         testObserver.testCase(self, didRecord: issue)
@@ -90,9 +109,13 @@ internal class DDTestObserverTests: XCTestCase {
         XCTAssertNil(spanData.attributes[DDTags.errorStack])
 
         testObserver.testCaseDidFinish(self)
+        testObserver.testSuiteDidFinish(theSuite)
+        testObserver.testBundleDidFinish(Bundle.main)
     }
     #else
     func testWhenTestCaseDidFailWithDescriptionIsCalled_testStatusIsSet() {
+        testObserver.testBundleWillStart(Bundle.main)
+        testObserver.testSuiteWillStart(theSuite)
         testObserver.testCaseWillStart(self)
         testObserver.testCase(self, didFailWithDescription: "descrip", inFile: "samplefile", atLine: 239)
 
@@ -104,10 +127,14 @@ internal class DDTestObserverTests: XCTestCase {
         XCTAssertNil(spanData.attributes[DDTags.errorStack])
 
         testObserver.testCaseDidFinish(self)
+        testObserver.testSuiteDidFinish(theSuite)
+        testObserver.testBundleDidFinish(Bundle.main)
     }
     #endif
 
     func testWhenTestCaseDidFinishIsCalledAndTheTestIsABenchmark_benchmarkTagsAreAdded() {
+        testObserver.testBundleWillStart(Bundle.main)
+        testObserver.testSuiteWillStart(theSuite)
         testObserver.testCaseWillStart(self)
         let testSpan = OpenTelemetry.instance.contextProvider.activeSpan as! RecordEventsReadableSpan
         let perfMetric = XCTPerformanceMetric.wallClockTime
@@ -115,6 +142,7 @@ internal class DDTestObserverTests: XCTestCase {
         self.setValue([perfMetric: ["measurements": [1, 2, 3, 4, 5]]], forKey: "_perfMetricsForID")
 
         testObserver.testCaseDidFinish(self)
+
 
         let spanData = testSpan.toSpanData()
         XCTAssertEqual(spanData.attributes[DDTestTags.testType]?.description, DDTagValues.typeBenchmark)
@@ -126,5 +154,8 @@ internal class DDTestObserverTests: XCTestCase {
 
         self.setValue(nil, forKey: "_activePerformanceMetricIDs")
         self.setValue(nil, forKey: "_perfMetricsForID")
+
+        testObserver.testSuiteDidFinish(theSuite)
+        testObserver.testBundleDidFinish(Bundle.main)
     }
 }

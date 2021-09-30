@@ -61,18 +61,18 @@ internal enum DDCrashes {
                             errorType += "\nException Code: \(code)"
                         }
                     }
-                    DDTestMonitor.instance?.tracer.createSpanFromCrash(spanData: spanData,
-                                                                       crashDate: crashReport.systemInfo.timestamp,
-                                                                       errorType: errorType,
-                                                                       errorMessage: errorMessage,
-                                                                       errorStack: crashLog)
+                    DDTestMonitor.tracer.createSpanFromCrash(spanData: spanData,
+                                                             crashDate: crashReport.systemInfo.timestamp,
+                                                             errorType: errorType,
+                                                             errorMessage: errorMessage,
+                                                             errorStack: crashLog)
                     if let executionOrderString = spanData.stringAttributes[DDTestTags.testExecutionOrder],
                        let executionOrder = Int(executionOrderString),
                        let executionProcessIdString = spanData.stringAttributes[DDTestTags.testExecutionProcessId],
                        let processId = Int(executionProcessIdString)
                     {
-                        DDTestMonitor.instance?.ddTest?.currentTestExecutionOrder = executionOrder
-                        DDTestMonitor.instance?.ddTest?.initialProcessId = processId
+                        DDTestMonitor.instance?.currentTest?.currentTestExecutionOrder = executionOrder
+                        DDTestMonitor.instance?.currentTest?.initialProcessId = processId
                     }
                 }
             }

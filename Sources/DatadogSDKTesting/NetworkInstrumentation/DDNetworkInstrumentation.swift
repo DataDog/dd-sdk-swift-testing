@@ -14,7 +14,7 @@ class DDNetworkInstrumentation {
 
     internal static let acceptableHeaders: Set<String> = {
         let headers: Set = ["CONTENT-TYPE", "CONTENT-LENGTH", "CONTENT-ENCODING", "CONTENT-LANGUAGE", "USER-AGENT", "REFERER", "ACCEPT", "ORIGIN", "ACCESS-CONTROL-ALLOW-ORIGIN", "ACCESS-CONTROL-ALLOW-CREDENTIALS", "ACCESS-CONTROL-ALLOW-HEADERS", "ACCESS-CONTROL-ALLOW-METHODS", "ACCESS-CONTROL-EXPOSE-HEADERS", "ACCESS-CONTROL-MAX-AGE", "ACCESS-CONTROL-REQUEST-HEADERS", "ACCESS-CONTROL-REQUEST-METHOD", "DATE", "EXPIRES", "CACHE-CONTROL", "ALLOW", "SERVER", "CONNECTION", "TRACEPARENT", "X-DATADOG-TRACE-ID", "X-DATADOG-PARENT-ID"]
-        if let extraHeaders = DDTestMonitor.instance?.tracer.env.extraHTTPHeaders {
+        if let extraHeaders = DDTestMonitor.env.extraHTTPHeaders {
             return headers.union(extraHeaders)
         }
         return headers
@@ -50,8 +50,7 @@ class DDNetworkInstrumentation {
     }
 
     func shouldInstrumentRequest(request: URLRequest) -> Bool {
-        guard let tracer = DDTestMonitor.instance?.tracer,
-              tracer.propagationContext != nil,
+        guard DDTestMonitor.tracer.propagationContext != nil,
               !self.excludes(request.url)
         else {
             return false
@@ -69,14 +68,12 @@ class DDNetworkInstrumentation {
         return true
     }
 
-    func injectCustomHeaders( request: inout URLRequest, span: Span?) {
-        guard injectHeaders == true,
-              let tracer = DDTestMonitor.instance?.tracer
-        else {
+    func injectCustomHeaders(request: inout URLRequest, span: Span?) {
+        guard injectHeaders == true else {
             return
         }
         if request.allHTTPHeaderFields?[DDHeaders.originField.rawValue] == nil {
-            tracer.datadogHeaders(forContext: span?.context ?? tracer.propagationContext).forEach {
+            DDTestMonitor.tracer.datadogHeaders(forContext: span?.context ?? DDTestMonitor.tracer.propagationContext).forEach {
                 request.addValue($0.value, forHTTPHeaderField: $0.key)
             }
         }
@@ -145,7 +142,7 @@ class DDNetworkInstrumentation {
     }
 
     init() {
-        excludedURLs = DDTestMonitor.instance?.tracer.endpointURLs() ?? []
+        excludedURLs = DDTestMonitor.tracer.endpointURLs()
 
         let configuration = URLSessionInstrumentationConfiguration(shouldRecordPayload: shouldRecordPayload,
                                                                    shouldInstrument: shouldInstrumentRequest,

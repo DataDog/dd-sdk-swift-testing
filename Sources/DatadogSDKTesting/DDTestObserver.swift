@@ -5,9 +5,6 @@
  */
 
 import Foundation
-@_implementationOnly import OpenTelemetryApi
-@_implementationOnly import OpenTelemetrySdk
-@_implementationOnly import SigmaSwiftStatistics
 @_implementationOnly import XCTest
 
 class DDTestObserver: NSObject, XCTestObservation {
@@ -15,9 +12,11 @@ class DDTestObserver: NSObject, XCTestObservation {
     static let supportsSkipping = NSClassFromString("XCTSkippedTestContext") != nil
     static let tracerVersion = (Bundle(for: DDTestObserver.self).infoDictionary?["CFBundleShortVersionString"] as? String) ?? "unknown"
 
-    weak var ddTest: DDTest!
-    init(ddTest: DDTest) {
-        self.ddTest = ddTest
+    var session: DDTestSession?
+    var suite: DDTestSuite?
+    var test: DDTest?
+
+    override init() {
         XCUIApplication.swizzleMethods
         super.init()
     }
@@ -28,50 +27,75 @@ class DDTestObserver: NSObject, XCTestObservation {
 
     func testBundleWillStart(_ testBundle: Bundle) {
         let bundleName = testBundle.bundleURL.deletingPathExtension().lastPathComponent
-        ddTest.bundleStart(name: bundleName)
+        session = DDTestSession(name: bundleName)
     }
 
     func testBundleDidFinish(_ testBundle: Bundle) {
         /// We need to wait for all the traces to be written to the backend before exiting
-        ddTest.bundleEnd()
+        session?.end()
+    }
+
+    func testSuiteWillStart(_ testSuite: XCTestSuite) {
+        suite = session?.suiteStart(name: testSuite.name)
+    }
+
+    func testSuiteDidFinish(_ testSuite: XCTestSuite) {
+        if let suite = suite {
+            session?.suiteEnd(suite: suite)
+        }
     }
 
     func testCaseWillStart(_ testCase: XCTestCase) {
-        guard let namematch = DDTestObserver.testNameRegex.firstMatch(in: testCase.name, range: NSRange(location: 0, length: testCase.name.count)),
-              let suiteRange = Range(namematch.range(at: 1), in: testCase.name),
+        guard let session = session,
+              let suite = suite,
+              let namematch = DDTestObserver.testNameRegex.firstMatch(in: testCase.name, range: NSRange(location: 0, length: testCase.name.count)),
               let nameRange = Range(namematch.range(at: 2), in: testCase.name)
         else {
             return
         }
-        let testSuite = String(testCase.name[suiteRange])
         let testName = String(testCase.name[nameRange])
 
-        ddTest.start(name: testName, testSuite: testSuite)
+        test = session.testStart(name: testName, suite: suite)
     }
 
     func testCaseDidFinish(_ testCase: XCTestCase) {
-        addBenchmarkTagsIfNeeded(testCase: testCase)
+        guard let session = session,
+              let test = test
+        else {
+            return
+        }
+        addBenchmarkTagsIfNeeded(testCase: testCase, test: test)
 
         if DDTestObserver.supportsSkipping, testCase.testRun?.hasBeenSkipped == true {
-            ddTest.end(status: .skip)
+            session.testEnd(test: test, status: .skip)
         } else if testCase.testRun?.hasSucceeded ?? false {
-            ddTest.end(status: .pass)
+            session.testEnd(test: test, status: .pass)
         } else {
-            ddTest.end(status: .fail)
+            session.testEnd(test: test, status: .fail)
         }
     }
 
     #if swift(>=5.3)
     func testCase(_ testCase: XCTestCase, didRecord issue: XCTIssue) {
-        ddTest.setErrorInfo(type: issue.compactDescription, message: issue.description, callStack: issue.detailedDescription)
+        guard let session = session,
+              let test = test
+        else {
+            return
+        }
+        session.testSetErrorInfo(test: test, type: issue.compactDescription, message: issue.description, callstack: issue.detailedDescription)
     }
     #else
     func testCase(_ testCase: XCTestCase, didFailWithDescription description: String, inFile filePath: String?, atLine lineNumber: Int) {
-        ddTest.testSetErrorInfo(type: description, message: "test_failure: \(filePath ?? ""):\(lineNumber)", callStack: nil)
+        guard let session = session,
+              let test = test
+        else {
+            return
+        }
+        session.testSetErrorInfo(test: test, type: description, message: "test_failure: \(filePath ?? ""):\(lineNumber)", callstack: nil)
     }
     #endif
 
-    private func addBenchmarkTagsIfNeeded(testCase: XCTestCase) {
+    private func addBenchmarkTagsIfNeeded(testCase: XCTestCase, test: DDTest) {
         guard let metricsForId = testCase.value(forKey: "_perfMetricsForID") as? [XCTPerformanceMetric: AnyObject],
               let metric = metricsForId.first(where: {
                   let measurements = $0.value.value(forKey: "measurements") as? [Double]
@@ -86,6 +110,6 @@ class DDTestObserver: NSObject, XCTestObservation {
         }
 
         let values = measurements.map { $0 * 1_000_000_000 } // Convert to nanoseconds
-        ddTest.testSetBenchmarkInfo(measureName: "", measureUnit: "", values: values)
+        test.setBenchmarkInfo(measureName: "", measureUnit: "", values: values)
     }
 }

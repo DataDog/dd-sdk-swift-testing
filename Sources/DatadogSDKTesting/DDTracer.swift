@@ -20,14 +20,13 @@ enum DDHeaders: String, CaseIterable {
 
 internal class DDTracer {
     let tracerSdk: TracerSdk
-    let env = DDEnvironmentValues()
     var datadogExporter: DatadogExporter?
     private var launchSpanContext: SpanContext?
     let backgroundWorkQueue = DispatchQueue(label: "com.otel.datadog.logswriter")
 
     static var activeSpan: Span? {
         return OpenTelemetrySDK.instance.contextProvider.activeSpan ??
-            DDTestMonitor.instance?.ddTest?.currentTestSpan
+        DDTestMonitor.instance?.currentTest?.span
     }
 
     var propagationContext: SpanContext? {
@@ -39,6 +38,7 @@ internal class DDTracer {
     }
 
     init() {
+        let env = DDTestMonitor.env
         if let envTraceId = env.launchEnvironmentTraceId,
            let envSpanId = env.launchEnvironmentSpanId
         {

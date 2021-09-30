@@ -27,12 +27,12 @@ extension XCUIApplication {
 
     @objc
     func swizzled_launch() {
-        DDTestMonitor.instance?.ddTest?.currentTestSpan?.setAttribute(key: DDTestTags.testIsUITest, value: true)
+        DDTracer.activeSpan?.setAttribute(key: DDTestTags.testIsUITest, value: true)
         if let testSpanContext = DDTracer.activeSpan?.context {
             self.launchEnvironment["ENVIRONMENT_TRACER_SPANID"] = testSpanContext.spanId.hexString
             self.launchEnvironment["ENVIRONMENT_TRACER_TRACEID"] = testSpanContext.traceId.hexString
-            if !(DDTestMonitor.instance?.tracer.env.disableDDSDKIOSIntegration ?? false) {
-                addPropagationsHeadersToEnvironment(tracer: DDTestMonitor.instance?.tracer)
+            if !DDTestMonitor.env.disableDDSDKIOSIntegration {
+                addPropagationsHeadersToEnvironment(tracer: DDTestMonitor.tracer)
             }
             [
                 "DD_TEST_RUNNER",

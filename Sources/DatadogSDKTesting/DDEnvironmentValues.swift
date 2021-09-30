@@ -25,6 +25,7 @@ internal struct DDEnvironmentValues {
     let excludedURLS: Set<String>?
     let disableDDSDKIOSIntegration: Bool
     let disableCrashHandler: Bool
+    let disableTestObserver: Bool
 
     /// OS Information
     let osName: String
@@ -165,6 +166,9 @@ internal struct DDEnvironmentValues {
 
         let envDisableCrashReporting = DDEnvironmentValues.getEnvVariable("DD_DISABLE_CRASH_HANDLER") as NSString?
         disableCrashHandler = envDisableCrashReporting?.boolValue ?? false
+
+        let envDisableTestObserver = DDEnvironmentValues.getEnvVariable("DD_DISABLE_TEST_OBSERVER") as NSString?
+        disableTestObserver = envDisableTestObserver?.boolValue ?? false
 
         /// Device Information
         osName = PlatformUtils.getRunningPlatform()

@@ -181,58 +181,205 @@ internal class DDTestObserver: NSObject, XCTestObservation {
     #endif
 
     private func addBenchmarkTagsIfNeeded(testCase: XCTestCase, activeTest: Span) {
-        guard let metricsForId = testCase.value(forKey: "_perfMetricsForID") as? [XCTPerformanceMetric: AnyObject],
-              let metric = metricsForId.first(where: {
-                  let measurements = $0.value.value(forKey: "measurements") as? [Double]
-                  return (measurements?.count ?? 0) > 0
-              })
-        else {
+        guard let metrics = testCase.value(forKey: "_perfMetricsForID") as? [XCTPerformanceMetric: AnyObject] else {
             return
         }
-
-        guard let measurements = metric.value.value(forKey: "measurements") as? [Double] else {
-            return
+        if let metric = metrics[XCTPerformanceMetric(rawValue: "com.apple.XCTPerformanceMetric_TotalHeapAllocationsKilobytes")],
+           let measurements = metric.value(forKey: "measurements") as? [Double],
+           measurements.count > 0
+        {
+            let values = measurements.map { $0 * 1024 } // Convert to bytes
+            addBenchmarkValue(activeTest: activeTest, benchmark: .total_heap_allocations, values: values, name: metric.value(forKey: "_name") as? String)
         }
+        if let metric = metrics[XCTPerformanceMetric(rawValue: "com.apple.XCTPerformanceMetric_PersistentVMAllocations")],
+           let measurements = metric.value(forKey: "measurements") as? [Double],
+           measurements.count > 0
+        {
+            let values = measurements.map { $0 * 1024 } // Convert to bytes
+            addBenchmarkValue(activeTest: activeTest, benchmark: .persistent_vm_allocations, values: values, name: metric.value(forKey: "_name") as? String)
+        }
+        if let metric = metrics[XCTPerformanceMetric(rawValue: "com.apple.XCTPerformanceMetric_RunTime")],
+           let measurements = metric.value(forKey: "measurements") as? [Double],
+           measurements.count > 0
+        {
+            let values = measurements.map { $0 * 1000000000 } // Convert to nanoseconds
+            addBenchmarkValue(activeTest: activeTest, benchmark: .run_time, values: values, name: metric.value(forKey: "_name") as? String)
+        }
+        if let metric = metrics[XCTPerformanceMetric(rawValue: "com.apple.XCTPerformanceMetric_PersistentHeapAllocations")],
+           let measurements = metric.value(forKey: "measurements") as? [Double],
+           measurements.count > 0
+        {
+            let values = measurements.map { $0 * 1024 } // Convert to bytes
+            addBenchmarkValue(activeTest: activeTest, benchmark: .persistent_heap_allocations, values: values, name: metric.value(forKey: "_name") as? String)
+        }
+        if let metric = metrics[XCTPerformanceMetric(rawValue: "com.apple.dt.XCTMetric_Memory.physical")],
+           let measurements = metric.value(forKey: "measurements") as? [Double],
+           measurements.count > 0
+        {
+            let values = measurements.map { $0 * 1024 } // Convert to bytes
+            addBenchmarkValue(activeTest: activeTest, benchmark: .memory_physical, values: values, name: metric.value(forKey: "_name") as? String)
+        }
+        if let metric = metrics[XCTPerformanceMetric(rawValue: "com.apple.dt.XCTMetric_CPU.instructions_retired")],
+           let measurements = metric.value(forKey: "measurements") as? [Double],
+           measurements.count > 0
+        {
+            let values = measurements.map { $0 * 1000 } // Convert to instructions
+            addBenchmarkValue(activeTest: activeTest, benchmark: .cpu_instructions_retired, values: values, name: metric.value(forKey: "_name") as? String)
+        }
+        if let metric = metrics[XCTPerformanceMetric(rawValue: "com.apple.dt.XCTMetric_CPU.cycles")],
+           let measurements = metric.value(forKey: "measurements") as? [Double],
+           measurements.count > 0
+        {
+            addBenchmarkValue(activeTest: activeTest, benchmark: .cpu_cycles, values: measurements, name: metric.value(forKey: "_name") as? String)
+        }
+        if let metric = metrics[XCTPerformanceMetric(rawValue: "com.apple.XCTPerformanceMetric_TemporaryHeapAllocationsKilobytes")],
+           let measurements = metric.value(forKey: "measurements") as? [Double],
+           measurements.count > 0
+        {
+            let values = measurements.map { $0 * 1024 } // Convert to bytes
+            addBenchmarkValue(activeTest: activeTest, benchmark: .temporary_heap_allocations, values: values, name: metric.value(forKey: "_name") as? String)
+        }
+        if let metric = metrics[XCTPerformanceMetric(rawValue: "com.apple.XCTPerformanceMetric_HighWaterMarkForVMAllocations")],
+           let measurements = metric.value(forKey: "measurements") as? [Double],
+           measurements.count > 0
+        {
+            let values = measurements.map { $0 * 1024 } // Convert to bytes
+            addBenchmarkValue(activeTest: activeTest, benchmark: .high_water_mark_vm_allocations, values: values, name: metric.value(forKey: "_name") as? String)
+        }
+        if let metric = metrics[XCTPerformanceMetric(rawValue: "com.apple.XCTPerformanceMetric_TransientHeapAllocationsKilobytes")],
+           let measurements = metric.value(forKey: "measurements") as? [Double],
+           measurements.count > 0
+        {
+            let values = measurements.map { $0 * 1024 } // Convert to bytes
+            addBenchmarkValue(activeTest: activeTest, benchmark: .transient_heap_allocations, values: values, name: metric.value(forKey: "_name") as? String)
+        }
+        if let metric = metrics[XCTPerformanceMetric(rawValue: "XCTPerformanceMetric_TransientVMAllocationsKilobytes")],
+           let measurements = metric.value(forKey: "measurements") as? [Double],
+           measurements.count > 0
+        {
+            let values = measurements.map { $0 * 1024 } // Convert to bytes
+            addBenchmarkValue(activeTest: activeTest, benchmark: .transient_vm_allocations, values: values, name: metric.value(forKey: "_name") as? String)
+        }
+        if let metric = metrics[XCTPerformanceMetric(rawValue: "com.apple.dt.XCTMetric_Memory.physical_peak")],
+           let measurements = metric.value(forKey: "measurements") as? [Double],
+           measurements.count > 0
+        {
+            let values = measurements.map { $0 * 1024 } // Convert to bytes
+            addBenchmarkValue(activeTest: activeTest, benchmark: .memory_physical_peak, values: values, name: metric.value(forKey: "_name") as? String)
+        }
+        if let metric = metrics[XCTPerformanceMetric(rawValue: "com.apple.dt.XCTMetric_CPU.time")],
+           let measurements = metric.value(forKey: "measurements") as? [Double],
+           measurements.count > 0
+        {
+            let values = measurements.map { $0 * 1000000000 } // Convert to nanoseconds
+            addBenchmarkValue(activeTest: activeTest, benchmark: .cpu_time, values: values, name: metric.value(forKey: "_name") as? String)
+        }
+        if let metric = metrics[XCTPerformanceMetric(rawValue: "com.apple.XCTPerformanceMetric_UserTime")],
+           let measurements = metric.value(forKey: "measurements") as? [Double],
+           measurements.count > 0
+        {
+            let values = measurements.map { $0 * 1000000000 } // Convert to nanoseconds
+            addBenchmarkValue(activeTest: activeTest, benchmark: .user_time, values: values, name: metric.value(forKey: "_name") as? String)
+        }
+        if let metric = metrics[XCTPerformanceMetric(rawValue: "com.apple.XCTPerformanceMetric_HighWaterMarkForHeapAllocations")],
+           let measurements = metric.value(forKey: "measurements") as? [Double],
+           measurements.count > 0
+        {
+            let values = measurements.map { $0 * 1024 } // Convert to bytes
+            addBenchmarkValue(activeTest: activeTest, benchmark: .high_water_mark_heap_allocations, values: values, name: metric.value(forKey: "_name") as? String)
+        }
+        if let metric = metrics[XCTPerformanceMetric(rawValue: "com.apple.XCTPerformanceMetric_SystemTime")],
+           let measurements = metric.value(forKey: "measurements") as? [Double],
+           measurements.count > 0
+        {
+            let values = measurements.map { $0 * 1000000000 } // Convert to nanoseconds
+            addBenchmarkValue(activeTest: activeTest, benchmark: .system_time, values: values, name: metric.value(forKey: "_name") as? String)
+        }
+        if let metric = metrics[XCTPerformanceMetric(rawValue: "com.apple.dt.XCTMetric_Clock.time.monotonic")],
+           let measurements = metric.value(forKey: "measurements") as? [Double],
+           measurements.count > 0
+        {
+            let values = measurements.map { $0 * 1000000000 } // Convert to nanoseconds
+            addBenchmarkValue(activeTest: activeTest, benchmark: .clock_time_monotonic, values: values, name: metric.value(forKey: "_name") as? String)
+        }
+        if let metric = metrics[XCTPerformanceMetric(rawValue: "com.apple.XCTPerformanceMetric_TransientHeapAllocationsNodes")],
+           let measurements = metric.value(forKey: "measurements") as? [Double],
+           measurements.count > 0
+        {
+            addBenchmarkValue(activeTest: activeTest, benchmark: .transient_heap_allocations_nodes, values: measurements, name: metric.value(forKey: "_name") as? String)
+        }
+        if let metric = metrics[XCTPerformanceMetric(rawValue: "com.apple.XCTPerformanceMetric_PersistentHeapAllocationsNodes")],
+           let measurements = metric.value(forKey: "measurements") as? [Double],
+           measurements.count > 0
+        {
+            let values = measurements.map { $0 * 1024 }
+            addBenchmarkValue(activeTest: activeTest, benchmark: .persistent_heap_allocations_nodes, values: values, name: metric.value(forKey: "_name") as? String)
+        }
+        if let metric = metrics[XCTPerformanceMetric(rawValue: "com.apple.dt.XCTMetric_Disk.logical_writes")],
+           let measurements = metric.value(forKey: "measurements") as? [Double],
+           measurements.count > 0
+        {
+            let values = measurements.map { $0 * 1024 }
+            addBenchmarkValue(activeTest: activeTest, benchmark: .disk_logical_writes, values: values, name: metric.value(forKey: "_name") as? String)
+        }
+        if let metric = metrics[XCTPerformanceMetric(rawValue: "com.apple.XCTPerformanceMetric_WallClockTime")],
+           let measurements = metric.value(forKey: "measurements") as? [Double],
+           measurements.count > 0
+        {
+            let values = measurements.map { $0 * 1000000000 } // Convert to nanoseconds
+            addBenchmarkValue(activeTest: activeTest, benchmark: .duration, values: values, name: metric.value(forKey: "_name") as? String)
+        }
+        if let metric = metrics[XCTPerformanceMetric(rawValue: "com.apple.dt.XCTMetric_ApplicationLaunch-AppLaunch.duration")],
+           let measurements = metric.value(forKey: "measurements") as? [Double],
+           measurements.count > 0
+        {
+            let values = measurements.map { $0 * 1000000000 } // Convert to nanoseconds
+            addBenchmarkValue(activeTest: activeTest, benchmark: .application_launch, values: values, name: metric.value(forKey: "_name") as? String)
+        }
+    }
 
+    private func addBenchmarkValue(activeTest: Span, benchmark: DDBenchmarkMeasuresTags, values: [Double], name: String?) {
         activeTest.setAttribute(key: DDTestTags.testType, value: DDTagValues.typeBenchmark)
-        let values = measurements.map { $0 * 1_000_000_000 } // Convert to nanoseconds
-        activeTest.setAttribute(key: DDBenchmarkTags.benchmarkRuns, value: values.count)
-        activeTest.setAttribute(key: DDBenchmarkTags.statisticsN, value: values.count)
+
+        let tag = DDBenchmarkTags.benchmark + "." + benchmark.rawValue + "."
+
+        activeTest.setAttribute(key: tag + DDBenchmarkTags.benchmarkRun, value: values.count)
+        activeTest.setAttribute(key: tag + DDBenchmarkTags.statisticsN, value: values.count)
         if let average = Sigma.average(values) {
-            activeTest.setAttribute(key: DDBenchmarkTags.durationMean, value: average)
+            activeTest.setAttribute(key: tag + DDBenchmarkTags.benchmarkMean, value: average)
         }
         if let max = Sigma.max(values) {
-            activeTest.setAttribute(key: DDBenchmarkTags.statisticsMax, value: max)
+            activeTest.setAttribute(key: tag + DDBenchmarkTags.statisticsMax, value: max)
         }
         if let min = Sigma.min(values) {
-            activeTest.setAttribute(key: DDBenchmarkTags.statisticsMin, value: min)
+            activeTest.setAttribute(key: tag + DDBenchmarkTags.statisticsMin, value: min)
         }
         if let mean = Sigma.average(values) {
-            activeTest.setAttribute(key: DDBenchmarkTags.statisticsMean, value: mean)
+            activeTest.setAttribute(key: tag + DDBenchmarkTags.statisticsMean, value: mean)
         }
         if let median = Sigma.median(values) {
-            activeTest.setAttribute(key: DDBenchmarkTags.statisticsMedian, value: median)
+            activeTest.setAttribute(key: tag + DDBenchmarkTags.statisticsMedian, value: median)
         }
         if let stdDev = Sigma.standardDeviationSample(values) {
-            activeTest.setAttribute(key: DDBenchmarkTags.statisticsStdDev, value: stdDev)
+            activeTest.setAttribute(key: tag + DDBenchmarkTags.statisticsStdDev, value: stdDev)
         }
         if let stdErr = Sigma.standardErrorOfTheMean(values) {
-            activeTest.setAttribute(key: DDBenchmarkTags.statisticsStdErr, value: stdErr)
+            activeTest.setAttribute(key: tag + DDBenchmarkTags.statisticsStdErr, value: stdErr)
         }
-        if let kurtosis = Sigma.kurtosisA(values) {
-            activeTest.setAttribute(key: DDBenchmarkTags.statisticsKurtosis, value: kurtosis)
+        if let kurtosis = Sigma.kurtosisA(values), kurtosis.isFinite {
+            activeTest.setAttribute(key: tag + DDBenchmarkTags.statisticsKurtosis, value: kurtosis)
         }
-        if let skewness = Sigma.skewnessA(values) {
-            activeTest.setAttribute(key: DDBenchmarkTags.statisticsSkewness, value: skewness)
+        if let skewness = Sigma.skewnessA(values), skewness.isFinite {
+            activeTest.setAttribute(key: tag + DDBenchmarkTags.statisticsSkewness, value: skewness)
         }
         if let percentile99 = Sigma.percentile(values, percentile: 0.99) {
-            activeTest.setAttribute(key: DDBenchmarkTags.statisticsP99, value: percentile99)
+            activeTest.setAttribute(key: tag + DDBenchmarkTags.statisticsP99, value: percentile99)
         }
         if let percentile95 = Sigma.percentile(values, percentile: 0.95) {
-            activeTest.setAttribute(key: DDBenchmarkTags.statisticsP95, value: percentile95)
+            activeTest.setAttribute(key: tag + DDBenchmarkTags.statisticsP95, value: percentile95)
         }
         if let percentile90 = Sigma.percentile(values, percentile: 0.90) {
-            activeTest.setAttribute(key: DDBenchmarkTags.statisticsP90, value: percentile90)
+            activeTest.setAttribute(key: tag + DDBenchmarkTags.statisticsP90, value: percentile90)
         }
     }
 }

@@ -52,6 +52,8 @@ internal class DDTracer {
 
         let tracerProvider = OpenTelemetrySDK.instance.tracerProvider
         tracerProvider.updateActiveSampler(Samplers.alwaysOn)
+        let spanLimits = tracerProvider.getActiveSpanLimits().settingAttributeCountLimit(1024)
+        tracerProvider.updateActiveSpanLimits(spanLimits)
 
         let bundle = Bundle.main
         let identifier = bundle.bundleIdentifier ?? "com.datadoghq.DatadogSDKTesting"

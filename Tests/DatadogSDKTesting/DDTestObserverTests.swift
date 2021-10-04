@@ -16,9 +16,8 @@ internal class DDTestObserverTests: XCTestCase {
 
     override func setUp() {
         XCTAssertNil(DDTracer.activeSpan)
-        XCTAssertNil(DDTestMonitor.instance?.testObserver)
         DDEnvironmentValues.environment["DD_API_KEY"] = "fakeKey"
-        DDEnvironmentValues.environment["DD_DISABLE_TEST_OBSERVER"] = "1"
+        DDEnvironmentValues.environment["DD_DISABLE_TEST_INSTRUMENTING"] = "1"
         DDTestMonitor.env = DDEnvironmentValues()
         testObserver = DDTestObserver()
         testObserver.startObserving()
@@ -28,7 +27,6 @@ internal class DDTestObserverTests: XCTestCase {
         XCTestObservationCenter.shared.removeTestObserver(testObserver)
         testObserver = nil
         XCTAssertNil(DDTracer.activeSpan)
-        XCTAssertNil(DDTestMonitor.instance?.testObserver)
     }
 
     func testWhenTestBundleWillStartIsCalled_testBundleNameIsSet() throws {
@@ -142,7 +140,6 @@ internal class DDTestObserverTests: XCTestCase {
         self.setValue([perfMetric: ["measurements": [1, 2, 3, 4, 5]]], forKey: "_perfMetricsForID")
 
         testObserver.testCaseDidFinish(self)
-
 
         let spanData = testSpan.toSpanData()
         XCTAssertEqual(spanData.attributes[DDTestTags.testType]?.description, DDTagValues.typeBenchmark)

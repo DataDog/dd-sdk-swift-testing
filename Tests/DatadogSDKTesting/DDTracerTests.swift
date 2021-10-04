@@ -13,7 +13,7 @@ class DDTracerTests: XCTestCase {
     override func setUp() {
         XCTAssertNil(DDTracer.activeSpan)
         DDEnvironmentValues.environment["DATADOG_CLIENT_TOKEN"] = "fakeToken"
-        DDEnvironmentValues.environment["DD_DISABLE_TEST_OBSERVER"] = "1"
+        DDEnvironmentValues.environment["DD_DISABLE_TEST_INSTRUMENTING"] = "1"
         DDTestMonitor.env = DDEnvironmentValues()
     }
 
@@ -173,7 +173,6 @@ class DDTracerTests: XCTestCase {
         DDEnvironmentValues.environment["ENVIRONMENT_TRACER_SPANID"] = testSpanId.hexString
         resetEnvironmentVariables()
 
-
         let tracer = DDTracer()
 
         let propagationContext = tracer.propagationContext
@@ -191,7 +190,6 @@ class DDTracerTests: XCTestCase {
         DDEnvironmentValues.environment["ENVIRONMENT_TRACER_TRACEID"] = testTraceId.hexString
         DDEnvironmentValues.environment["ENVIRONMENT_TRACER_SPANID"] = testSpanId.hexString
         resetEnvironmentVariables()
-
 
         let simpleSpan = SimpleSpanData(traceIdHi: testTraceId.idHi, traceIdLo: testTraceId.idLo, spanId: 3, name: "name", startTime: Date(timeIntervalSinceReferenceDate: 33), stringAttributes: [:])
         let crashDate: Date? = nil

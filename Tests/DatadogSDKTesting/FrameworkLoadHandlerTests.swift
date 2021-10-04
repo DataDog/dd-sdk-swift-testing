@@ -13,10 +13,10 @@ class FrameworkLoadHandlerTests: XCTestCase {
 
     override func setUp() {
         XCTAssertNil(DDTracer.activeSpan)
+        FrameworkLoadHandler.testObserver = nil
         FrameworkLoadHandler.environment = [String: String]()
         DDTestMonitor.instance = nil
         previousEnvironment = DDEnvironmentValues.environment
-        testEnvironment["DD_DISABLE_TEST_OBSERVER"] = "1"
         testEnvironment["DD_DISABLE_STDERR_INSTRUMENTATION"] = "1"
         testEnvironment["DD_DISABLE_NETWORK_INSTRUMENTATION"] = "1"
     }
@@ -41,7 +41,7 @@ class FrameworkLoadHandlerTests: XCTestCase {
 
         FrameworkLoadHandler.handleLoad()
 
-        XCTAssertNotNil(DDTestMonitor.instance)
+        XCTAssertNotNil(FrameworkLoadHandler.testObserver)
     }
 
     func testWhenTestRunnerIsConfiguredAndIsInOtherTestingMode_ItIsInitialised() {
@@ -53,17 +53,7 @@ class FrameworkLoadHandlerTests: XCTestCase {
 
         FrameworkLoadHandler.handleLoad()
 
-        XCTAssertNotNil(DDTestMonitor.instance)
-    }
-
-    func testWhenTestRunnerIsConfiguredAndIsInTestingModeButNoToken_ItIsNotInitialised() {
-        testEnvironment["DD_TEST_RUNNER"] = "1"
-        testEnvironment["XCTestConfigurationFilePath"] = "/Users/user/Library/tmp/xx.xctestconfiguration"
-        setEnvVariables()
-
-        FrameworkLoadHandler.handleLoad()
-
-        XCTAssertNil(DDTestMonitor.instance)
+        XCTAssertNotNil(FrameworkLoadHandler.testObserver)
     }
 
     func testWhenTestRunnerIsNotConfigured_ItIsNotInitialised() {
@@ -72,7 +62,7 @@ class FrameworkLoadHandlerTests: XCTestCase {
 
         FrameworkLoadHandler.handleLoad()
 
-        XCTAssertNil(DDTestMonitor.instance)
+        XCTAssertNil(FrameworkLoadHandler.testObserver)
     }
 
     func testWhenTestRunnerIsConfiguredButSetOff_ItIsNotInitialised() {
@@ -82,7 +72,7 @@ class FrameworkLoadHandlerTests: XCTestCase {
 
         FrameworkLoadHandler.handleLoad()
 
-        XCTAssertNil(DDTestMonitor.instance)
+        XCTAssertNil(FrameworkLoadHandler.testObserver)
     }
 
     func testWhenTestRunnerIsConfiguredButNotInTestingMode_ItIsNotInitialised() {
@@ -90,6 +80,6 @@ class FrameworkLoadHandlerTests: XCTestCase {
         setEnvVariables()
         FrameworkLoadHandler.handleLoad()
 
-        XCTAssertNil(DDTestMonitor.instance)
+        XCTAssertNil(FrameworkLoadHandler.testObserver)
     }
 }

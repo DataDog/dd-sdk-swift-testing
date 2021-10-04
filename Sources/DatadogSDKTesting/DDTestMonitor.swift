@@ -21,8 +21,6 @@ internal class DDTestMonitor {
     static var tracer = DDTracer()
     static var env = DDEnvironmentValues()
 
-
-    var testObserver: DDTestObserver?
     var networkInstrumentation: DDNetworkInstrumentation?
     var stderrCapturer: StderrCapture
     var injectHeaders: Bool = false
@@ -30,42 +28,47 @@ internal class DDTestMonitor {
     var maxPayloadSize: Int = defaultPayloadSize
     var notificationObserver: NSObjectProtocol?
 
-    var rLock = NSRecursiveLock()
-    fileprivate var privateCurrentTest: DDTest?
+    private var lock = os_unfair_lock_s()
+    private var privateCurrentTest: DDTest?
     var currentTest: DDTest? {
         get {
-            rLock.lock()
-            defer { rLock.unlock() }
+            os_unfair_lock_lock(&lock)
+            defer { os_unfair_lock_unlock(&lock) }
             return privateCurrentTest
         }
         set {
-            rLock.lock()
-            defer { rLock.unlock() }
+            os_unfair_lock_lock(&lock)
+            defer { os_unfair_lock_unlock(&lock) }
             privateCurrentTest = newValue
         }
     }
 
+    static func installTestMonitor() {
+        guard DDEnvironmentValues.getEnvVariable("DATADOG_CLIENT_TOKEN") != nil || DDEnvironmentValues.getEnvVariable("DD_API_KEY") != nil else {
+            print("[DatadogSDKTesting] DATADOG_CLIENT_TOKEN or DD_API_KEY are missing.")
+            return
+        }
+        if DDEnvironmentValues.getEnvVariable("SRCROOT") == nil {
+            print("[DatadogSDKTesting] SRCROOT is not properly set")
+        }
+        print("[DatadogSDKTesting] Library loaded and active. Instrumenting tests.")
+        DDTestMonitor.instance = DDTestMonitor()
+        DDTestMonitor.instance?.startInstrumenting()
+    }
+
     init() {
         stderrCapturer = StderrCapture()
-        if !DDTestMonitor.tracer.isBinaryUnderUITesting {
-            if !DDTestMonitor.env.disableTestObserver {
-                testObserver = DDTestObserver()
-            }
-        } else {
+        if DDTestMonitor.tracer.isBinaryUnderUITesting {
             /// If the library is being loaded in a binary launched from a UITest, dont start test observing,
             /// except if testing the tracer itself
-            if DDTestMonitor.env.tracerUnderTesting {
-                testObserver = DDTestObserver()
-            }
-
             notificationObserver = NotificationCenter.default.addObserver(
                 forName: launchNotificationName,
                 object: nil, queue: nil) { _ in
                     /// As crash reporter is initialized in testBundleWillStart() method, we initialize it here
                     /// because dont have test observer
-                if !DDTestMonitor.env.disableCrashHandler {
+                    if !DDTestMonitor.env.disableCrashHandler {
                         DDCrashes.install()
-                    let launchedSpan = DDTestMonitor.tracer.createSpanFromLaunchContext()
+                        let launchedSpan = DDTestMonitor.tracer.createSpanFromLaunchContext()
                         let simpleSpan = SimpleSpanData(spanData: launchedSpan.toSpanData())
                         DDCrashes.setCustomData(customData: SimpleSpanSerializer.serializeSpan(simpleSpan: simpleSpan))
                     }
@@ -74,7 +77,10 @@ internal class DDTestMonitor {
     }
 
     func startInstrumenting() {
-        testObserver?.startObserving()
+        guard !DDTestMonitor.env.disableTestInstrumenting else {
+            return
+        }
+
         if !DDTestMonitor.env.disableNetworkInstrumentation {
             startNetworkAutoInstrumentation()
             if !DDTestMonitor.env.disableHeadersInjection {

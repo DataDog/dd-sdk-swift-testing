@@ -15,6 +15,10 @@ public class DDTestSession: NSObject {
     var codeOwners: CodeOwners?
 
     public init(name: String) {
+        if DDTestMonitor.instance == nil {
+            DDTestMonitor.installTestMonitor()
+        }
+
         bundleName = name
 #if !os(tvOS) && (targetEnvironment(simulator) || os(macOS))
         DDSymbolicator.createDSYMFileIfNeeded(forImageName: name)
@@ -91,7 +95,6 @@ public class DDTest: NSObject {
     var session: DDTestSession
 
     init(name: String, suite: DDTestSuite, session: DDTestSession) {
-
         self.session = session
 
         currentTestExecutionOrder = currentTestExecutionOrder + 1

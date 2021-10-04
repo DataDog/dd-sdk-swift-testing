@@ -50,7 +50,7 @@ class CISpec: XCTestCase {
         testEnvironment["CI_JOB_STAGE"] = "gitlab-stage-name"
         setEnvVariables()
 
-        let testSession = DDTestSession(name: Bundle(for: CISpec.self).bundleURL.deletingPathExtension().lastPathComponent)
+        let testSession = DDTestSession(bundleName: Bundle(for: CISpec.self).bundleURL.deletingPathExtension().lastPathComponent)
         let suite = testSession.suiteStart(name: "CISpec")
         let test = testSession.testStart(name: "testGenerateSpecJson", suite: suite)
         test.setBenchmarkInfo(measureName: "", measureUnit: "", values: [1, 2, 3, 4, 5])

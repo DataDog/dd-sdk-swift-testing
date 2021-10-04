@@ -14,15 +14,15 @@ public class DDTestSession: NSObject {
     var bundleFunctionInfo = FunctionMap()
     var codeOwners: CodeOwners?
 
-    public init(name: String) {
+    public init(bundleName: String) {
         if DDTestMonitor.instance == nil {
             DDTestMonitor.installTestMonitor()
         }
 
-        bundleName = name
+        self.bundleName = bundleName
 #if !os(tvOS) && (targetEnvironment(simulator) || os(macOS))
-        DDSymbolicator.createDSYMFileIfNeeded(forImageName: name)
-        bundleFunctionInfo = FileLocator.testFunctionsInModule(name)
+        DDSymbolicator.createDSYMFileIfNeeded(forImageName: bundleName)
+        bundleFunctionInfo = FileLocator.testFunctionsInModule(bundleName)
 #endif
         if let workspacePath = DDTestMonitor.env.workspacePath {
             codeOwners = CodeOwners(workspacePath: URL(fileURLWithPath: workspacePath))

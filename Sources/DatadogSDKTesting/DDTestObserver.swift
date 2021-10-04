@@ -27,7 +27,7 @@ class DDTestObserver: NSObject, XCTestObservation {
 
     func testBundleWillStart(_ testBundle: Bundle) {
         let bundleName = testBundle.bundleURL.deletingPathExtension().lastPathComponent
-        session = DDTestSession(name: bundleName)
+        session = DDTestSession(bundleName: bundleName)
     }
 
     func testBundleDidFinish(_ testBundle: Bundle) {

@@ -56,6 +56,7 @@ class DDTestObserver: NSObject, XCTestObservation {
         let testName = String(testCase.name[nameRange])
 
         test = session.testStart(name: testName, suite: suite)
+        test?.setAttribute(key: DDTestTags.testFramework, value: "XCTest")
     }
 
     func testCaseDidFinish(_ testCase: XCTestCase) {

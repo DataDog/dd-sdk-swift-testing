@@ -108,7 +108,7 @@ public class DDTest: NSObject {
             DDGenericTags.resourceName: "\(session.bundleName).\(suite.name).\(name)",
             DDTestTags.testName: name,
             DDTestTags.testSuite: suite.name,
-            DDTestTags.testFramework: "XCTest",
+            DDTestTags.testFramework: "Swift API",
             DDTestTags.testBundle: session.bundleName,
             DDTestTags.testType: DDTagValues.typeTest,
             DDTestTags.testExecutionOrder: "\(currentTestExecutionOrder)",

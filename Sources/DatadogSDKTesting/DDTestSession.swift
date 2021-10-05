@@ -13,6 +13,7 @@ public class DDTestSession: NSObject {
     var bundleName = ""
     var bundleFunctionInfo = FunctionMap()
     var codeOwners: CodeOwners?
+    var testFramework = "Swift API"
 
     public init(bundleName: String) {
         if DDTestMonitor.instance == nil {
@@ -108,7 +109,7 @@ public class DDTest: NSObject {
             DDGenericTags.resourceName: "\(session.bundleName).\(suite.name).\(name)",
             DDTestTags.testName: name,
             DDTestTags.testSuite: suite.name,
-            DDTestTags.testFramework: "Swift API",
+            DDTestTags.testFramework: session.testFramework,
             DDTestTags.testBundle: session.bundleName,
             DDTestTags.testType: DDTagValues.typeTest,
             DDTestTags.testExecutionOrder: "\(currentTestExecutionOrder)",

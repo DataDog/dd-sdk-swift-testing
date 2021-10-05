@@ -28,6 +28,7 @@ class DDTestObserver: NSObject, XCTestObservation {
     func testBundleWillStart(_ testBundle: Bundle) {
         let bundleName = testBundle.bundleURL.deletingPathExtension().lastPathComponent
         session = DDTestSession(bundleName: bundleName)
+        session?.testFramework = "XCTest"
     }
 
     func testBundleDidFinish(_ testBundle: Bundle) {
@@ -56,7 +57,6 @@ class DDTestObserver: NSObject, XCTestObservation {
         let testName = String(testCase.name[nameRange])
 
         test = session.testStart(name: testName, suite: suite)
-        test?.setAttribute(key: DDTestTags.testFramework, value: "XCTest")
     }
 
     func testCaseDidFinish(_ testCase: XCTestCase) {

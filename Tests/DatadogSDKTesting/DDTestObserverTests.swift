@@ -42,7 +42,7 @@ internal class DDTestObserverTests: XCTestCase {
         let spanData = span.toSpanData()
 
         XCTAssertEqual(spanData.name, "-[DDTestObserverTests testWhenTestCaseWillStartIsCalled_testSpanIsCreated]")
-        XCTAssertEqual(spanData.attributes[DDGenericTags.language]?.description, "swift")
+        XCTAssertEqual(spanData.attributes[DDTracerTags.tracerLanguage]?.description, "swift")
         XCTAssertEqual(spanData.attributes[DDGenericTags.type]?.description, DDTagValues.typeTest)
         XCTAssertEqual(spanData.attributes[DDGenericTags.resourceName]?.description, "\(testBundle).\(testSuite).\(testName)")
         XCTAssertEqual(spanData.attributes[DDTestTags.testName]?.description, testName)
@@ -115,11 +115,13 @@ internal class DDTestObserverTests: XCTestCase {
 
         let spanData = testSpan.toSpanData()
         XCTAssertEqual(spanData.attributes[DDTestTags.testType]?.description, DDTagValues.typeBenchmark)
-        XCTAssertEqual(spanData.attributes[DDBenchmarkTags.durationMean]?.description, "3000000000.0")
-        XCTAssertEqual(spanData.attributes[DDBenchmarkTags.statisticsN]?.description, "5")
-        XCTAssertEqual(spanData.attributes[DDBenchmarkTags.statisticsMin]?.description, "1000000000.0")
-        XCTAssertEqual(spanData.attributes[DDBenchmarkTags.statisticsMax]?.description, "5000000000.0")
-        XCTAssertEqual(spanData.attributes[DDBenchmarkTags.statisticsMedian]?.description, "3000000000.0")
+
+        let measure = DDBenchmarkTags.benchmark + "." + DDBenchmarkMeasuresTags.duration.rawValue + "."
+        XCTAssertEqual(spanData.attributes[measure + DDBenchmarkTags.benchmarkMean]?.description, "3000000000.0")
+        XCTAssertEqual(spanData.attributes[measure + DDBenchmarkTags.statisticsN]?.description, "5")
+        XCTAssertEqual(spanData.attributes[measure + DDBenchmarkTags.statisticsMin]?.description, "1000000000.0")
+        XCTAssertEqual(spanData.attributes[measure + DDBenchmarkTags.statisticsMax]?.description, "5000000000.0")
+        XCTAssertEqual(spanData.attributes[measure + DDBenchmarkTags.statisticsMedian]?.description, "3000000000.0")
 
         self.setValue(nil, forKey: "_activePerformanceMetricIDs")
         self.setValue(nil, forKey: "_perfMetricsForID")

@@ -99,22 +99,49 @@ internal enum DDCITags {
 }
 
 internal enum DDBenchmarkTags {
-    static let benchmarkRuns = "benchmark.runs"
-    static let durationMean = "benchmark.duration.mean"
-    static let memoryTotalBytes = "benchmark.memory.total_bytes_allocations"
-    static let memoryMeanBytes_allocations = "benchmark.memory.mean_bytes_allocations"
-    static let statisticsN = "benchmark.statistics.n"
-    static let statisticsMax = "benchmark.statistics.max"
-    static let statisticsMin = "benchmark.statistics.min"
-    static let statisticsMean = "benchmark.statistics.mean"
-    static let statisticsMedian = "benchmark.statistics.median"
-    static let statisticsStdDev = "benchmark.statistics.std_dev"
-    static let statisticsStdErr = "benchmark.statistics.std_err"
-    static let statisticsKurtosis = "benchmark.statistics.kurtosis"
-    static let statisticsSkewness = "benchmark.statistics.skewness"
-    static let statisticsP99 = "benchmark.statistics.p99"
-    static let statisticsP95 = "benchmark.statistics.p95"
-    static let statisticsP90 = "benchmark.statistics.p90"
+    static let benchmark = "benchmark"
+    static let benchmarkMean = "mean"
+    static let benchmarkRun = "run"
+    static let benchmarkInfo = "info"
+
+    static let statisticsN = "statistics.n"
+    static let statisticsMax = "statistics.max"
+    static let statisticsMin = "statistics.min"
+    static let statisticsMean = "statistics.mean"
+    static let statisticsMedian = "statistics.median"
+    static let statisticsStdDev = "statistics.std_dev"
+    static let statisticsStdErr = "statistics.std_err"
+    static let statisticsKurtosis = "statistics.kurtosis"
+    static let statisticsSkewness = "statistics.skewness"
+    static let statisticsP99 = "statistics.p99"
+    static let statisticsP95 = "statistics.p95"
+    static let statisticsP90 = "statistics.p90"
+}
+
+internal enum DDBenchmarkMeasuresTags: String {
+    case duration
+    case system_time
+    case user_time
+    case run_time
+    case transient_vm_allocations
+    case persistent_vm_allocations
+    case temporary_heap_allocations
+    case persistent_heap_allocations
+    case persistent_heap_allocations_nodes
+    case transient_heap_allocations
+    case transient_heap_allocations_nodes
+    case total_heap_allocations
+    case memory_physical_peak
+    case memory_physical
+    case high_water_mark_vm_allocations
+    case high_water_mark_heap_allocations
+    case application_launch
+    case clock_time_monotonic
+    case cpu_instructions_retired
+    case cpu_cycles
+    case cpu_time
+    case disk_logical_writes
+    case disk_logical_reads
 }
 
 internal enum DDTagValues {

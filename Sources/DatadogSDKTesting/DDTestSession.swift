@@ -69,9 +69,14 @@ public extension DDTestSession {
         test.setErrorInfo(type: type, message: message, callstack: callstack)
     }
 
+    @objc(testAddBenchmark:name:samples:info:) func testAddBenchmark(test:DDTest, name: String, samples: [Double], info: String?) {
+        test.addBenchmark(name: name, samples: samples, info: info)
+    }
+
     @objc(testEnd:status:) func testEnd(test: DDTest, status: DDTestStatus) {
         test.end(status: status)
     }
+
 }
 
 public class DDTestSuite: NSObject {
@@ -188,45 +193,51 @@ public class DDTest: NSObject {
         DDTestMonitor.instance?.networkInstrumentation?.endAndCleanAliveSpans()
     }
 
-    func setBenchmarkInfo(measureName: String, measureUnit: String, values: [Double]) {
+    func addBenchmark(name: String, samples: [Double], info: String?) {
         span.setAttribute(key: DDTestTags.testType, value: DDTagValues.typeBenchmark)
-        span.setAttribute(key: DDBenchmarkTags.benchmarkRuns, value: values.count)
-        span.setAttribute(key: DDBenchmarkTags.statisticsN, value: values.count)
-        if let average = Sigma.average(values) {
-            span.setAttribute(key: DDBenchmarkTags.durationMean, value: average)
+
+        let tag = DDBenchmarkTags.benchmark + "." + name + "."
+
+        if let benchmarkInfo = info {
+            span.setAttribute(key: tag + DDBenchmarkTags.benchmarkInfo, value: benchmarkInfo)
         }
-        if let max = Sigma.max(values) {
-            span.setAttribute(key: DDBenchmarkTags.statisticsMax, value: max)
+        span.setAttribute(key: tag + DDBenchmarkTags.benchmarkRun, value: samples.count)
+        span.setAttribute(key: tag + DDBenchmarkTags.statisticsN, value: samples.count)
+        if let average = Sigma.average(samples) {
+            span.setAttribute(key: tag + DDBenchmarkTags.benchmarkMean, value: average)
         }
-        if let min = Sigma.min(values) {
-            span.setAttribute(key: DDBenchmarkTags.statisticsMin, value: min)
+        if let max = Sigma.max(samples) {
+            span.setAttribute(key: tag + DDBenchmarkTags.statisticsMax, value: max)
         }
-        if let mean = Sigma.average(values) {
-            span.setAttribute(key: DDBenchmarkTags.statisticsMean, value: mean)
+        if let min = Sigma.min(samples) {
+            span.setAttribute(key: tag + DDBenchmarkTags.statisticsMin, value: min)
         }
-        if let median = Sigma.median(values) {
-            span.setAttribute(key: DDBenchmarkTags.statisticsMedian, value: median)
+        if let mean = Sigma.average(samples) {
+            span.setAttribute(key: tag + DDBenchmarkTags.statisticsMean, value: mean)
         }
-        if let stdDev = Sigma.standardDeviationSample(values) {
-            span.setAttribute(key: DDBenchmarkTags.statisticsStdDev, value: stdDev)
+        if let median = Sigma.median(samples) {
+            span.setAttribute(key: tag + DDBenchmarkTags.statisticsMedian, value: median)
         }
-        if let stdErr = Sigma.standardErrorOfTheMean(values) {
-            span.setAttribute(key: DDBenchmarkTags.statisticsStdErr, value: stdErr)
+        if let stdDev = Sigma.standardDeviationSample(samples) {
+            span.setAttribute(key: tag + DDBenchmarkTags.statisticsStdDev, value: stdDev)
         }
-        if let kurtosis = Sigma.kurtosisA(values) {
-            span.setAttribute(key: DDBenchmarkTags.statisticsKurtosis, value: kurtosis)
+        if let stdErr = Sigma.standardErrorOfTheMean(samples) {
+            span.setAttribute(key: tag + DDBenchmarkTags.statisticsStdErr, value: stdErr)
         }
-        if let skewness = Sigma.skewnessA(values) {
-            span.setAttribute(key: DDBenchmarkTags.statisticsSkewness, value: skewness)
+        if let kurtosis = Sigma.kurtosisA(samples), kurtosis.isFinite {
+            span.setAttribute(key: tag + DDBenchmarkTags.statisticsKurtosis, value: kurtosis)
         }
-        if let percentile99 = Sigma.percentile(values, percentile: 0.99) {
-            span.setAttribute(key: DDBenchmarkTags.statisticsP99, value: percentile99)
+        if let skewness = Sigma.skewnessA(samples), skewness.isFinite {
+            span.setAttribute(key: tag + DDBenchmarkTags.statisticsSkewness, value: skewness)
         }
-        if let percentile95 = Sigma.percentile(values, percentile: 0.95) {
-            span.setAttribute(key: DDBenchmarkTags.statisticsP95, value: percentile95)
+        if let percentile99 = Sigma.percentile(samples, percentile: 0.99) {
+            span.setAttribute(key: tag + DDBenchmarkTags.statisticsP99, value: percentile99)
         }
-        if let percentile90 = Sigma.percentile(values, percentile: 0.90) {
-            span.setAttribute(key: DDBenchmarkTags.statisticsP90, value: percentile90)
+        if let percentile95 = Sigma.percentile(samples, percentile: 0.95) {
+            span.setAttribute(key: tag + DDBenchmarkTags.statisticsP95, value: percentile95)
+        }
+        if let percentile90 = Sigma.percentile(samples, percentile: 0.90) {
+            span.setAttribute(key: tag + DDBenchmarkTags.statisticsP90, value: percentile90)
         }
     }
 }

@@ -50,26 +50,19 @@ class DDNetworkInstrumentation {
     }
 
     func shouldInstrumentRequest(request: URLRequest) -> Bool {
-        guard DDTestMonitor.tracer.propagationContext != nil,
-              !self.excludes(request.url)
-        else {
-            return false
-        }
-
-        return true
+        return DDTestMonitor.tracer.propagationContext != nil && includes(request.url)
     }
 
     func shouldInjectTracingHeaders(request: URLRequest) -> Bool {
-        guard injectHeaders == true,
-              !excludes(request.url)
-        else {
-            return false
-        }
-        return true
+        return injectHeaders && includes(request.url)
+    }
+
+    private func includes(_ url: URL?) -> Bool {
+        return !excludes(url)
     }
 
     func injectCustomHeaders(request: inout URLRequest, span: Span?) {
-        guard injectHeaders == true else {
+        guard injectHeaders else {
             return
         }
         if request.allHTTPHeaderFields?[DDHeaders.originField.rawValue] == nil {

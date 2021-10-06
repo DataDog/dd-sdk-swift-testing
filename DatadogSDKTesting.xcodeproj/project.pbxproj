@@ -137,6 +137,9 @@
 		E1665A8125D13BBB00BA53CD /* DDSymbolicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1665A8025D13BBB00BA53CD /* DDSymbolicator.swift */; };
 		E1665A8225D13BBB00BA53CD /* DDSymbolicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1665A8025D13BBB00BA53CD /* DDSymbolicator.swift */; };
 		E1665A8525D1524100BA53CD /* DDSymbolicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1665A8025D13BBB00BA53CD /* DDSymbolicator.swift */; };
+		E171DC92270DBCAB00A12B79 /* DDTestSessionApiTests.m in Sources */ = {isa = PBXBuildFile; fileRef = E171DC91270DBCAB00A12B79 /* DDTestSessionApiTests.m */; };
+		E171DC93270DBCAB00A12B79 /* DDTestSessionApiTests.m in Sources */ = {isa = PBXBuildFile; fileRef = E171DC91270DBCAB00A12B79 /* DDTestSessionApiTests.m */; };
+		E171DC94270DBCAB00A12B79 /* DDTestSessionApiTests.m in Sources */ = {isa = PBXBuildFile; fileRef = E171DC91270DBCAB00A12B79 /* DDTestSessionApiTests.m */; };
 		E1798CC62524B9BD008DEBB9 /* DDTracer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1798CC52524B9BD008DEBB9 /* DDTracer.swift */; };
 		E17B7AA8253F02580081D7F3 /* SigmaSwiftStatistics in Frameworks */ = {isa = PBXBuildFile; productRef = E17B7AA7253F02580081D7F3 /* SigmaSwiftStatistics */; };
 		E19F869F25E7FCB6003202F5 /* CISpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = E19F869E25E7FA73003202F5 /* CISpec.swift */; };
@@ -430,6 +433,7 @@
 		E160A11125275CC1003121A5 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		E1665A7225D12D7500BA53CD /* Spawn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spawn.swift; sourceTree = "<group>"; };
 		E1665A8025D13BBB00BA53CD /* DDSymbolicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDSymbolicator.swift; sourceTree = "<group>"; };
+		E171DC91270DBCAB00A12B79 /* DDTestSessionApiTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DDTestSessionApiTests.m; sourceTree = "<group>"; };
 		E1798CC52524B9BD008DEBB9 /* DDTracer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTracer.swift; sourceTree = "<group>"; };
 		E1798CE52524D0D5008DEBB9 /* DDErrorTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DDErrorTests.swift; sourceTree = "<group>"; };
 		E17B7AA5253F010C0081D7F3 /* LICENSE-3rdparty.csv */ = {isa = PBXFileReference; lastKnownFileType = text; path = "LICENSE-3rdparty.csv"; sourceTree = "<group>"; };
@@ -929,6 +933,14 @@
 			path = include;
 			sourceTree = "<group>";
 		};
+		E171DC90270DBC6A00A12B79 /* ObjCApi */ = {
+			isa = PBXGroup;
+			children = (
+				E171DC91270DBCAB00A12B79 /* DDTestSessionApiTests.m */,
+			);
+			path = ObjCApi;
+			sourceTree = "<group>";
+		};
 		E1798CCA2524C1E2008DEBB9 /* NetworkInstrumentation */ = {
 			isa = PBXGroup;
 			children = (
@@ -1034,6 +1046,7 @@
 		E1AD0736252E1E1A003705C1 /* DatadogSDKTesting */ = {
 			isa = PBXGroup;
 			children = (
+				E171DC90270DBC6A00A12B79 /* ObjCApi */,
 				E1FB4843253891E70083B263 /* Crashes */,
 				E1AD0737252E1E1A003705C1 /* NetworkInstrumentation */,
 				E1AD0746252E1F63003705C1 /* Objc */,
@@ -1796,6 +1809,7 @@
 				E157A793256EB0F000CBCA52 /* StdoutCaptureTests.swift in Sources */,
 				E157A794256EB0F000CBCA52 /* NSURLSessionBridge.m in Sources */,
 				E157A795256EB0F000CBCA52 /* DDTestObserverTests.swift in Sources */,
+				E171DC93270DBCAB00A12B79 /* DDTestSessionApiTests.m in Sources */,
 				E157A797256EB0F000CBCA52 /* DDErrorTests.swift in Sources */,
 				E15264B025FA3C16008B8665 /* DDSymbolicatorTests.swift in Sources */,
 				E12248CB2644037B00305968 /* FileLocatorTests.swift in Sources */,
@@ -1822,6 +1836,7 @@
 				E157A7AE256EB0F200CBCA52 /* NSURLSessionBridge.m in Sources */,
 				E157A7AF256EB0F200CBCA52 /* DDTestObserverTests.swift in Sources */,
 				E157A7B0256EB0F200CBCA52 /* DDNetworkInstrumentationTests.swift in Sources */,
+				E171DC94270DBCAB00A12B79 /* DDTestSessionApiTests.m in Sources */,
 				E157A7B1256EB0F200CBCA52 /* DDErrorTests.swift in Sources */,
 				E15264B125FA3C16008B8665 /* DDSymbolicatorTests.swift in Sources */,
 				E12248CC2644037B00305968 /* FileLocatorTests.swift in Sources */,
@@ -1883,6 +1898,7 @@
 				E1AD074B252E1FBC003705C1 /* NSURLSessionBridge.m in Sources */,
 				E1AD0762252F2F7E003705C1 /* DDTestObserverTests.swift in Sources */,
 				E14AA0C12555AA61003FA711 /* DDNetworkInstrumentationTests.swift in Sources */,
+				E171DC92270DBCAB00A12B79 /* DDTestSessionApiTests.m in Sources */,
 				E1AD07AD252F5D86003705C1 /* DDErrorTests.swift in Sources */,
 				E15264AF25FA3C16008B8665 /* DDSymbolicatorTests.swift in Sources */,
 				E12248CD2644037B00305968 /* FileLocatorTests.swift in Sources */,

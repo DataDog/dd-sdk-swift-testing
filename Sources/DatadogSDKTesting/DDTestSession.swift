@@ -15,7 +15,7 @@ public class DDTestSession: NSObject {
     var codeOwners: CodeOwners?
     var testFramework = "Swift API"
 
-    public init(bundleName: String) {
+    init(bundleName: String) {
         if DDTestMonitor.instance == nil {
             DDTestMonitor.installTestMonitor()
         }
@@ -34,7 +34,7 @@ public class DDTestSession: NSObject {
         }
     }
 
-    public func end() {
+    func internalEnd() {
         /// We need to wait for all the traces to be written to the backend before exiting
         DDTestMonitor.tracer.flush()
     }
@@ -48,6 +48,14 @@ public class DDTestSession: NSObject {
 
 public extension DDTestSession {
     // Public interface for DDTestSession
+    @objc static func start(bundleName: String) -> DDTestSession {
+        let session = DDTestSession(bundleName: bundleName)
+        return session
+    }
+
+    @objc func end() {
+        internalEnd()
+    }
 
     @objc func suiteStart(name: String) -> DDTestSuite {
         let suite = DDTestSuite(name: name)

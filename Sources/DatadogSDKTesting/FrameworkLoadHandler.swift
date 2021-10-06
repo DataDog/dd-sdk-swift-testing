@@ -8,15 +8,18 @@ import Foundation
 
 public class FrameworkLoadHandler: NSObject {
     static var environment = ProcessInfo.processInfo.environment
+    static var testObserver: DDTestObserver?
+
+    override private init() {}
 
     @objc
     public static func handleLoad() {
-        installTestObserver()
+        libraryLoaded()
     }
 
-    internal static func installTestObserver() {
+    static func libraryLoaded() {
         /// Only initialize test observer if user configured so and is running tests
-         guard let enabled = DDEnvironmentValues.getEnvVariable("DD_TEST_RUNNER") as NSString? else {
+        guard let enabled = environment["DD_TEST_RUNNER"] as NSString? else {
             print("[DatadogSDKTesting] Library loaded but not active, DD_TEST_RUNNER is missing")
             return
         }
@@ -30,19 +33,17 @@ public class FrameworkLoadHandler: NSObject {
             environment["XCTestConfigurationFilePath"] != nil ||
             environment["XCTestBundlePath"] != nil ||
             environment["SDKROOT"] != nil
+
         if isInTestMode {
-            guard DDEnvironmentValues.getEnvVariable("DATADOG_CLIENT_TOKEN") != nil || DDEnvironmentValues.getEnvVariable("DD_API_KEY") != nil else {
-                print("[DatadogSDKTesting] DATADOG_CLIENT_TOKEN or DD_API_KEY are missing.")
-                return
+            let envDisableTestInstrumenting = DDEnvironmentValues.getEnvVariable("DD_DISABLE_TEST_INSTRUMENTING") as NSString?
+            let disableTestInstrumenting = envDisableTestInstrumenting?.boolValue ?? false
+
+            let needsTestObserver = !DDTestMonitor.tracer.isBinaryUnderUITesting || DDTestMonitor.env.tracerUnderTesting
+
+            if needsTestObserver && !disableTestInstrumenting {
+                testObserver = DDTestObserver()
+                testObserver?.startObserving()
             }
-            if DDEnvironmentValues.getEnvVariable("SRCROOT") == nil {
-                print("[DatadogSDKTesting] SRCROOT is not properly set")
-            }
-            print("[DatadogSDKTesting] Library loaded and active. Instrumenting tests.")
-            DDTestMonitor.instance = DDTestMonitor()
-            DDTestMonitor.instance?.startInstrumenting()
-        } else {
-            print("[DatadogSDKTesting] Library loaded but not in testing mode.")
         }
     }
 }

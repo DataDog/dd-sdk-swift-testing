@@ -67,9 +67,9 @@ internal enum DDRuntimeTags {
     static let runtimeVersion = "runtime.version"
 }
 
-internal enum DDTracerTags {
-    static let tracerLanguage = "tracer.language"
-    static let tracerVersion = "tracer.version"
+internal enum DDCILibraryTags {
+    static let ciLibraryLanguage = "ci_library.language"
+    static let ciLibraryVersion = "ci_library.version"
 }
 
 internal enum DDGitTags {
@@ -118,30 +118,30 @@ internal enum DDBenchmarkTags {
     static let statisticsP90 = "statistics.p90"
 }
 
-internal enum DDBenchmarkMeasuresTags: String {
-    case duration
-    case system_time
-    case user_time
-    case run_time
-    case transient_vm_allocations
-    case persistent_vm_allocations
-    case temporary_heap_allocations
-    case persistent_heap_allocations
-    case persistent_heap_allocations_nodes
-    case transient_heap_allocations
-    case transient_heap_allocations_nodes
-    case total_heap_allocations
-    case memory_physical_peak
-    case memory_physical
-    case high_water_mark_vm_allocations
-    case high_water_mark_heap_allocations
-    case application_launch
-    case clock_time_monotonic
-    case cpu_instructions_retired
-    case cpu_cycles
-    case cpu_time
-    case disk_logical_writes
-    case disk_logical_reads
+internal enum DDBenchmarkMeasuresTags {
+    static let duration = "duration"
+    static let system_time = "system_time"
+    static let user_time = "user_time"
+    static let run_time = "run_time"
+    static let transient_vm_allocations = "transient_vm_allocations"
+    static let persistent_vm_allocations = "persistent_vm_allocations"
+    static let temporary_heap_allocations = "temporary_heap_allocations"
+    static let persistent_heap_allocations = "persistent_heap_allocations"
+    static let persistent_heap_allocations_nodes = "persistent_heap_allocations_nodes"
+    static let transient_heap_allocations = "transient_heap_allocations"
+    static let transient_heap_allocations_nodes = "transient_heap_allocations_nodes"
+    static let total_heap_allocations = "total_heap_allocations"
+    static let memory_physical_peak = "memory_physical_peak"
+    static let memory_physical = "memory_physical"
+    static let high_water_mark_vm_allocations = "high_water_mark_vm_allocations"
+    static let high_water_mark_heap_allocations = "high_water_mark_heap_allocations"
+    static let application_launch = "application_launch"
+    static let clock_time_monotonic = "clock_time_monotonic"
+    static let cpu_instructions_retired = "cpu_instructions_retired"
+    static let cpu_cycles = "cpu_cycles"
+    static let cpu_time = "cpu_time"
+    static let disk_logical_writes = "disk_logical_writes"
+    static let disk_logical_reads = "disk_logical_reads"
 }
 
 internal enum DDTagValues {

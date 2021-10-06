@@ -11,10 +11,20 @@ import XCTest
 
 class DDTracerTests: XCTestCase {
     override func setUp() {
+        XCTAssertNil(DDTracer.activeSpan)
         DDEnvironmentValues.environment["DATADOG_CLIENT_TOKEN"] = "fakeToken"
+        DDEnvironmentValues.environment["DD_DISABLE_TEST_INSTRUMENTING"] = "1"
+        DDTestMonitor.env = DDEnvironmentValues()
     }
 
-    override func tearDown() {}
+    override func tearDown() {
+        XCTAssertNil(DDTracer.activeSpan)
+        resetEnvironmentVariables()
+    }
+
+    func resetEnvironmentVariables() {
+        DDTestMonitor.env = DDEnvironmentValues()
+    }
 
     func testWhenCalledStartSpanAttributes_spanIsCreatedWithAttributes() {
         let tracer = DDTracer()
@@ -117,6 +127,8 @@ class DDTracerTests: XCTestCase {
 
     func testEndpointChangeToUS() {
         DDEnvironmentValues.environment["DD_ENDPOINT"] = "US"
+        resetEnvironmentVariables()
+
         let tracer = DDTracer()
         XCTAssertTrue(tracer.endpointURLs().contains("https://trace.browser-intake-datadoghq.com/api/v2/spans"))
         XCTAssertTrue(tracer.endpointURLs().contains("https://logs.browser-intake-datadoghq.com/api/v2/logs"))
@@ -125,6 +137,8 @@ class DDTracerTests: XCTestCase {
 
     func testEndpointChangeToUS3() {
         DDEnvironmentValues.environment["DD_ENDPOINT"] = "us3"
+        resetEnvironmentVariables()
+
         let tracer = DDTracer()
         XCTAssertTrue(tracer.endpointURLs().contains("https://trace.browser-intake-us3-datadoghq.com/api/v2/spans"))
         XCTAssertTrue(tracer.endpointURLs().contains("https://logs.browser-intake-us3-datadoghq.com/api/v2/logs"))
@@ -133,6 +147,8 @@ class DDTracerTests: XCTestCase {
 
     func testEndpointChangeToEU() {
         DDEnvironmentValues.environment["DD_ENDPOINT"] = "eu"
+        resetEnvironmentVariables()
+
         let tracer = DDTracer()
         XCTAssertTrue(tracer.endpointURLs().contains("https:/public-trace-http-intake.logs.datadoghq.eu/api/v2/spans"))
         XCTAssertTrue(tracer.endpointURLs().contains("https://mobile-http-intake.logs.datadoghq.eu/api/v2/logs"))
@@ -141,6 +157,8 @@ class DDTracerTests: XCTestCase {
 
     func testEndpointChangeToGov() {
         DDEnvironmentValues.environment["DD_ENDPOINT"] = "GOV"
+        resetEnvironmentVariables()
+
         let tracer = DDTracer()
         XCTAssertTrue(tracer.endpointURLs().contains("https://trace.browser-intake-ddog-gov.com/api/v2/spans"))
         XCTAssertTrue(tracer.endpointURLs().contains("https://logs.browser-intake-ddog-gov.com/api/v2/logs"))
@@ -153,6 +171,7 @@ class DDTracerTests: XCTestCase {
 
         DDEnvironmentValues.environment["ENVIRONMENT_TRACER_TRACEID"] = testTraceId.hexString
         DDEnvironmentValues.environment["ENVIRONMENT_TRACER_SPANID"] = testSpanId.hexString
+        resetEnvironmentVariables()
 
         let tracer = DDTracer()
 
@@ -170,6 +189,7 @@ class DDTracerTests: XCTestCase {
 
         DDEnvironmentValues.environment["ENVIRONMENT_TRACER_TRACEID"] = testTraceId.hexString
         DDEnvironmentValues.environment["ENVIRONMENT_TRACER_SPANID"] = testSpanId.hexString
+        resetEnvironmentVariables()
 
         let simpleSpan = SimpleSpanData(traceIdHi: testTraceId.idHi, traceIdLo: testTraceId.idLo, spanId: 3, name: "name", startTime: Date(timeIntervalSinceReferenceDate: 33), stringAttributes: [:])
         let crashDate: Date? = nil
@@ -198,12 +218,13 @@ class DDTracerTests: XCTestCase {
         DDEnvironmentValues.environment["ENVIRONMENT_TRACER_SPANID"] = nil
     }
 
-    func testLogStringAppUI() {
+    func testLogStringAppUI() throws {
         let testTraceId = TraceId(fromHexString: "ff000000000000000000000000000041")
         let testSpanId = SpanId(fromHexString: "ff00000000000042")
 
         DDEnvironmentValues.environment["ENVIRONMENT_TRACER_TRACEID"] = testTraceId.hexString
         DDEnvironmentValues.environment["ENVIRONMENT_TRACER_SPANID"] = testSpanId.hexString
+        resetEnvironmentVariables()
 
         let testSpanProcessor = SpySpanProcessor()
         OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(testSpanProcessor)
@@ -212,7 +233,7 @@ class DDTracerTests: XCTestCase {
 
         tracer.logString(string: "Hello World", date: Date(timeIntervalSince1970: 1212))
         tracer.flush()
-        let span = testSpanProcessor.lastProcessedSpan!
+        let span = try XCTUnwrap(testSpanProcessor.lastProcessedSpan)
 
         let spanData = span.toSpanData()
         XCTAssertEqual(spanData.events.count, 1)

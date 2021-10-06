@@ -33,23 +33,14 @@ public class FrameworkLoadHandler: NSObject {
             environment["XCTestConfigurationFilePath"] != nil ||
             environment["XCTestBundlePath"] != nil ||
             environment["SDKROOT"] != nil
-        if isInTestMode {
-            if !DDTestMonitor.tracer.isBinaryUnderUITesting {
-                if !DDTestMonitor.env.disableTestInstrumenting {
-                    DDTestObserver().startObserving()
-                }
-            } else {
-                /// If the library is being loaded in a binary launched from a UITest, dont start test observing,
-                /// except if testing the tracer itself
-                if DDTestMonitor.env.tracerUnderTesting {
-                    testObserver = DDTestObserver()
-                    testObserver?.startObserving()
-                }
-            }
 
+        if isInTestMode {
             let envDisableTestInstrumenting = DDEnvironmentValues.getEnvVariable("DD_DISABLE_TEST_INSTRUMENTING") as NSString?
             let disableTestInstrumenting = envDisableTestInstrumenting?.boolValue ?? false
-            if !disableTestInstrumenting {
+
+            let needsTestObserver = !DDTestMonitor.tracer.isBinaryUnderUITesting || DDTestMonitor.env.tracerUnderTesting
+
+            if needsTestObserver && !disableTestInstrumenting {
                 testObserver = DDTestObserver()
                 testObserver?.startObserving()
             }

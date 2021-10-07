@@ -45,13 +45,13 @@ internal class DDTestMonitor {
 
     static func installTestMonitor() {
         guard DDEnvironmentValues.getEnvVariable("DATADOG_CLIENT_TOKEN") != nil || DDEnvironmentValues.getEnvVariable("DD_API_KEY") != nil else {
-            print("[DatadogSDKTesting] DATADOG_CLIENT_TOKEN or DD_API_KEY are missing.")
+            Log.print("DATADOG_CLIENT_TOKEN or DD_API_KEY are missing.")
             return
         }
         if DDEnvironmentValues.getEnvVariable("SRCROOT") == nil {
-            print("[DatadogSDKTesting] SRCROOT is not properly set")
+            Log.print("SRCROOT is not properly set")
         }
-        print("[DatadogSDKTesting] Library loaded and active. Instrumenting tests.")
+        Log.print("Library loaded and active. Instrumenting tests.")
         DDTestMonitor.instance = DDTestMonitor()
         DDTestMonitor.instance?.startInstrumenting()
     }

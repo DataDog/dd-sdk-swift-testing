@@ -82,6 +82,9 @@ internal struct DDEnvironmentValues {
     /// The tracer send result to a localhost server (for testing purposes)
     let localTestEnvironmentPort: Int?
 
+    /// The framework has been launched with extra debug information
+    let extraDebug: Bool
+
     static var environment = ProcessInfo.processInfo.environment
     static var infoDictionary: [String: Any] = {
         var bundle = Bundle.allBundles.first {
@@ -185,6 +188,9 @@ internal struct DDEnvironmentValues {
 
         let envDisableTracesExporting = DDEnvironmentValues.getEnvVariable("DD_DONT_EXPORT") as NSString?
         disableTracesExporting = envDisableTracesExporting?.boolValue ?? false
+
+        let envExtraDebug = DDEnvironmentValues.getEnvVariable("DD_TRACE_DEBUG") as NSString?
+        extraDebug = envExtraDebug?.boolValue ?? false
 
         /// CI  values
         var branchEnv: String?
@@ -508,16 +514,16 @@ internal struct DDEnvironmentValues {
 
         // Warn on needed git onformation when not present
         if commit == nil {
-            print("[DDSwiftTesting] could not find git commit information")
+            Log.print("could not find git commit information")
         }
         if repository == nil {
-            print("[DDSwiftTesting] could not find git repository information")
+            Log.print("could not find git repository information")
         }
         if branch == nil && tag == nil {
-            print("[DDSwiftTesting] could not find git branch or tag  information")
+            Log.print("could not find git branch or tag  information")
         }
         if commit == nil || repository == nil || (branch == nil && tag == nil) {
-            print("[DDSwiftTesting] Please check: https://docs.datadoghq.com/continuous_integration/troubleshooting")
+            Log.print("Please check: https://docs.datadoghq.com/continuous_integration/troubleshooting")
         }
     }
 
@@ -678,7 +684,7 @@ internal struct DDEnvironmentValues {
         while !FileManager.default.fileExists(atPath: rootFolder.appendingPathComponent(".git")) {
             if rootFolder.isEqual(to: rootFolder.deletingLastPathComponent) {
                 // We reached to the top
-                print("[DDSwiftTesting] could not find .git folder at \(rootFolder)")
+                Log.print("could not find .git folder at \(rootFolder)")
                 break
             }
             rootFolder = rootFolder.deletingLastPathComponent as NSString

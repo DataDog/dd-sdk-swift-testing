@@ -25,13 +25,13 @@ enum DDSymbolicator {
         guard let configurationBuildPath = DDEnvironmentValues.getEnvVariable("DYLD_LIBRARY_PATH") else {
             return dSYMFiles
         }
-
+        Log.debug("DYLD_LIBRARY_PATH: \(configurationBuildPath)")
         let fileManager = FileManager.default
         let buildFolder = URL(fileURLWithPath: configurationBuildPath)
         guard let dSYMFilesEnumerator = fileManager.enumerator(at: buildFolder,
                                                                includingPropertiesForKeys: nil,
-                                                               options: [.skipsHiddenFiles], errorHandler: { (url, error) -> Bool in
-                                                                   print("[DDSymbolicate] directoryEnumerator error at \(url): ", error)
+                                                               options: [.skipsHiddenFiles], errorHandler: { url, error -> Bool in
+                                                                   Log.print("DDSymbolicate directoryEnumerator error at \(url): " + error.localizedDescription)
                                                                    return true
                                                                })
         else {

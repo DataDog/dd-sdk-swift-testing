@@ -79,7 +79,7 @@ internal class DDTracer {
         if let localPort = env.localTestEnvironmentPort {
             let localURL = URL(string: "http://localhost:\(localPort)/")!
             endpoint = Endpoint.custom(tracesURL: localURL, logsURL: localURL, metricsURL: localURL)
-            print("[DDSwiftTesting] Reporting tests to \(localURL.absoluteURL)")
+            Log.print("Reporting tests to \(localURL.absoluteURL)")
         }
 
         let exporterConfiguration = ExporterConfiguration(
@@ -98,7 +98,7 @@ internal class DDTracer {
         datadogExporter = try? DatadogExporter(config: exporterConfiguration)
 
         guard let exporterToUse: SpanExporter = env.disableTracesExporting ? InMemoryExporter() : datadogExporter else {
-            print("[DDSwiftTesting] Failed creating Datadog exporter.")
+            Log.print("Failed creating Datadog exporter.")
             return
         }
 

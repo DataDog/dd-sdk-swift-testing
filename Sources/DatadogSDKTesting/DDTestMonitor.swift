@@ -28,17 +28,17 @@ internal class DDTestMonitor {
     var maxPayloadSize: Int = defaultPayloadSize
     var notificationObserver: NSObjectProtocol?
 
-    private var lock = os_unfair_lock_s()
+    var rLock = NSRecursiveLock()
     private var privateCurrentTest: DDTest?
     var currentTest: DDTest? {
         get {
-            os_unfair_lock_lock(&lock)
-            defer { os_unfair_lock_unlock(&lock) }
+            rLock.lock()
+            defer { rLock.unlock() }
             return privateCurrentTest
         }
         set {
-            os_unfair_lock_lock(&lock)
-            defer { os_unfair_lock_unlock(&lock) }
+            rLock.lock()
+            defer { rLock.unlock() }
             privateCurrentTest = newValue
         }
     }

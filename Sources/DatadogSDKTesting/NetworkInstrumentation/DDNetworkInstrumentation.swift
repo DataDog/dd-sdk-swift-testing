@@ -114,7 +114,7 @@ class DDNetworkInstrumentation {
 
     private func storePayloadInSpan(dataOrFile: DataOrFile?, span: Span, attributeKey: String) {
         if DDTestMonitor.instance?.networkInstrumentation?.recordPayload ?? false {
-            if let data = dataOrFile as? Data, data.count > 0 {
+            if let data = dataOrFile as? Data, !data.isEmpty {
                 let dataSample = data.subdata(in: 0 ..< min(data.count, 512))
                 let payload = String(data: dataSample, encoding: .ascii) ?? "<unknown>"
                 span.setAttribute(key: attributeKey, value: payload)

@@ -127,7 +127,7 @@ public class DDTest: NSObject {
             DDOSTags.osVersion: DDTestMonitor.env.osVersion,
             DDDeviceTags.deviceName: DDTestMonitor.env.deviceName,
             DDDeviceTags.deviceModel: DDTestMonitor.env.deviceModel,
-            DDRuntimeTags.runtimeName: "Xcode",
+            DDRuntimeTags.runtimeName: DDTestMonitor.env.runtimeName,
             DDRuntimeTags.runtimeVersion: DDTestMonitor.env.runtimeVersion,
             DDCILibraryTags.ciLibraryLanguage: "swift",
             DDCILibraryTags.ciLibraryVersion: DDTestObserver.tracerVersion

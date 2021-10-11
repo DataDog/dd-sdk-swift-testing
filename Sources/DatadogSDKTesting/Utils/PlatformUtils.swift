@@ -79,4 +79,14 @@ struct PlatformUtils {
         let version = bundle.infoDictionary?["DTXcode"] as? String ?? ""
         return version
     }
+
+    static func getRuntimeInfo() -> (String, String) {
+        if let xcTestClass = NSClassFromString("XCTest") {
+            let bundle = Bundle(for: xcTestClass)
+            let version = bundle.infoDictionary?["DTXcode"] as? String ?? "unknown"
+            return ("Xcode", version)
+        } else {
+            return (ProcessInfo.processInfo.processName, (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "")
+        }
+    }
 }

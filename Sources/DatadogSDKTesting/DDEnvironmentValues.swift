@@ -37,6 +37,7 @@ internal struct DDEnvironmentValues {
     let deviceModel: String
 
     /// Runtime Information
+    let runtimeName: String
     let runtimeVersion: String
 
     /// CI  values
@@ -179,7 +180,7 @@ internal struct DDEnvironmentValues {
         osVersion = PlatformUtils.getDeviceVersion()
         deviceName = PlatformUtils.getDeviceName()
         deviceModel = PlatformUtils.getDeviceModel()
-        runtimeVersion = PlatformUtils.getXcodeVersion()
+        (runtimeName, runtimeVersion) = PlatformUtils.getRuntimeInfo()
 
         launchEnvironmentTraceId = DDEnvironmentValues.getEnvVariable("ENVIRONMENT_TRACER_TRACEID")
         launchEnvironmentSpanId = DDEnvironmentValues.getEnvVariable("ENVIRONMENT_TRACER_SPANID")

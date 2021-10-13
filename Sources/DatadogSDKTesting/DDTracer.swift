@@ -75,11 +75,13 @@ internal class DDTracer {
                 endpoint = Endpoint.us1
         }
 
+        var payloadCompression = true
         // When reporting tests to local server
         if let localPort = env.localTestEnvironmentPort {
             let localURL = URL(string: "http://localhost:\(localPort)/")!
             endpoint = Endpoint.custom(tracesURL: localURL, logsURL: localURL, metricsURL: localURL)
             Log.print("Reporting tests to \(localURL.absoluteURL)")
+            payloadCompression = false
         }
 
         let exporterConfiguration = ExporterConfiguration(
@@ -90,6 +92,7 @@ internal class DDTracer {
             environment: env.ddEnvironment ?? (env.isCi ? "ci" : "none"),
             apiKey: env.ddApikeyOrClientToken ?? "",
             endpoint: endpoint,
+            payloadCompression: payloadCompression,
             uploadCondition: { true },
             performancePreset: .instantDataDelivery,
             exportUnsampledSpans: false,

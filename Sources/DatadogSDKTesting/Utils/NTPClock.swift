@@ -14,6 +14,16 @@ class NTPClock: OpenTelemetrySdk.Clock {
     }
 
     var now: Date {
-        return Kronos.Clock.now ?? Date()
+        if Thread.isMainThread {
+            return Kronos.Clock.now ?? Date()
+        } else {
+            var date = Date()
+            DispatchQueue.main.sync {
+                if let now = Kronos.Clock.now {
+                    date = now
+                }
+            }
+            return date
+        }
     }
 }

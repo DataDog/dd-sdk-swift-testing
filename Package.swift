@@ -21,6 +21,7 @@ let package = Package(
         .package(name: "opentelemetry-swift", url: "https://github.com/open-telemetry/opentelemetry-swift", from: "1.0.5"),
         .package(name: "PLCrashReporter", url: "https://github.com/microsoft/plcrashreporter.git", from: "1.9.0"),
         .package(name: "SigmaSwiftStatistics", url: "https://github.com/evgenyneu/SigmaSwiftStatistics.git", from: "9.0.2"),
+        .package(name: "Kronos", url: "https://github.com/MobileNativeFoundation/Kronos", from: "4.0.0"),
     ],
     targets: [
         .target(

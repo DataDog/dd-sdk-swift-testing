@@ -56,7 +56,7 @@ struct PlatformUtils {
     static func getDeviceModel() -> String {
         #if os(iOS) || os(tvOS) || os(watchOS)
             #if targetEnvironment(simulator)
-                return ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"] ?? ( UIDevice.current.model + " simulator")
+                return ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"] ?? (UIDevice.current.model + " simulator")
             #else
                 return UIDevice.current.modelName
             #endif

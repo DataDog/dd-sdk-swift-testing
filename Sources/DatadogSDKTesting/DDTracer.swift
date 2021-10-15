@@ -26,7 +26,7 @@ internal class DDTracer {
 
     static var activeSpan: Span? {
         return OpenTelemetrySDK.instance.contextProvider.activeSpan ??
-        DDTestMonitor.instance?.currentTest?.span
+            DDTestMonitor.instance?.currentTest?.span
     }
 
     var propagationContext: SpanContext? {
@@ -68,9 +68,9 @@ internal class DDTracer {
                 endpoint = Endpoint.us1
             case "us3", "US3", "https://us3.datadoghq.com", "us3.datadoghq.com":
                 endpoint = Endpoint.us3
-            case "eu", "EU", "eu1", "EU1","https://app.datadoghq.eu", "app.datadoghq.eu", "datadoghq.eu":
+            case "eu", "EU", "eu1", "EU1", "https://app.datadoghq.eu", "app.datadoghq.eu", "datadoghq.eu":
                 endpoint = Endpoint.eu1
-            case "gov", "GOV", "us1_fed", "US1_FED","https://app.ddog-gov.com", "app.ddog-gov.com", "ddog-gov.com":
+            case "gov", "GOV", "us1_fed", "US1_FED", "https://app.ddog-gov.com", "app.ddog-gov.com", "ddog-gov.com":
                 endpoint = Endpoint.us1_fed
             default:
                 endpoint = Endpoint.us1
@@ -288,8 +288,7 @@ internal class DDTracer {
                 DDHeaders.parentSpanIDField.rawValue: String(context.spanId.rawValue),
                 DDHeaders.originField.rawValue: DDTagValues.originCiApp,
                 DDHeaders.ddSamplingPriority.rawValue: "1",
-                DDHeaders.ddSampled.rawValue: "1"
-        ]
+                DDHeaders.ddSampled.rawValue: "1"]
     }
 
     func tracePropagationHTTPHeaders() -> [String: String] {

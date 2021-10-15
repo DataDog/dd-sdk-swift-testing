@@ -9,5 +9,3 @@ import Foundation
 struct InternalError: Error, CustomStringConvertible {
     let description: String
 }
-
-

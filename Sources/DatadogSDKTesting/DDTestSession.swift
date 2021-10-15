@@ -78,14 +78,13 @@ public extension DDTestSession {
         test.setErrorInfo(type: type, message: message, callstack: callstack)
     }
 
-    @objc(testAddBenchmark:name:samples:info:) func testAddBenchmark(test:DDTest, name: String, samples: [Double], info: String?) {
+    @objc(testAddBenchmark:name:samples:info:) func testAddBenchmark(test: DDTest, name: String, samples: [Double], info: String?) {
         test.addBenchmark(name: name, samples: samples, info: info)
     }
 
     @objc(testEnd:status:) func testEnd(test: DDTest, status: DDTestStatus) {
         test.end(status: status)
     }
-
 }
 
 public class DDTestSuite: NSObject {

@@ -72,7 +72,7 @@ internal class DDTestMonitor {
                         let simpleSpan = SimpleSpanData(spanData: launchedSpan.toSpanData())
                         DDCrashes.setCustomData(customData: SimpleSpanSerializer.serializeSpan(simpleSpan: simpleSpan))
                     }
-            }
+                }
         }
     }
 

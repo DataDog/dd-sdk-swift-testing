@@ -40,7 +40,7 @@ public class FrameworkLoadHandler: NSObject {
 
             let needsTestObserver = !DDTestMonitor.tracer.isBinaryUnderUITesting || DDTestMonitor.env.tracerUnderTesting
 
-            if needsTestObserver && !disableTestInstrumenting {
+            if needsTestObserver, !disableTestInstrumenting {
                 testObserver = DDTestObserver()
                 testObserver?.startObserving()
             }

@@ -41,8 +41,11 @@ public class FrameworkLoadHandler: NSObject {
             let needsTestObserver = !DDTestMonitor.tracer.isBinaryUnderUITesting || DDTestMonitor.env.tracerUnderTesting
 
             if needsTestObserver, !disableTestInstrumenting {
+                print("[DatadogSDKTesting] Library loaded and active. Instrumenting tests.")
                 testObserver = DDTestObserver()
                 testObserver?.startObserving()
+            } else if DDTestMonitor.tracer.isBinaryUnderUITesting {
+                print("[DatadogSDKTesting] Application launched from UITest while being instrumented")
             }
         }
     }

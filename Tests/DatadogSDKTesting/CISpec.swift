@@ -52,10 +52,10 @@ class CISpec: XCTestCase {
 
         let testSession = DDTestSession.start(bundleName: Bundle(for: CISpec.self).bundleURL.deletingPathExtension().lastPathComponent)
         let suite = testSession.suiteStart(name: "CISpec")
-        let test = testSession.testStart(name: "testGenerateSpecJson", suite: suite)
+        let test = suite.testStart(name: "testGenerateSpecJson")
         test.addBenchmark(name: "duration", samples: [1, 2, 3, 4, 5], info: "")
         let span = OpenTelemetry.instance.contextProvider.activeSpan as! RecordEventsReadableSpan
-        testSession.testEnd(test: test, status: .pass)
+        test.end(status: .pass)
 
         let spanData = span.toSpanData()
 

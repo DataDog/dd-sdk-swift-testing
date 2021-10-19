@@ -15,7 +15,7 @@ public class DDTestSession: NSObject {
     var codeOwners: CodeOwners?
     var testFramework = "Swift API"
 
-    init(bundleName: String) {
+    init(bundleName: String, startTime: Date?) {
         if DDTestMonitor.instance == nil {
             DDTestMonitor.installTestMonitor()
         }
@@ -34,7 +34,7 @@ public class DDTestSession: NSObject {
         }
     }
 
-    func internalEnd() {
+    func internalEnd(endTime: Date? = nil) {
         /// We need to wait for all the traces to be written to the backend before exiting
         DDTestMonitor.tracer.flush()
     }
@@ -48,53 +48,35 @@ public class DDTestSession: NSObject {
 
 public extension DDTestSession {
     // Public interface for DDTestSession
-    @objc static func start(bundleName: String) -> DDTestSession {
-        let session = DDTestSession(bundleName: bundleName)
+    @objc static func start(bundleName: String, startTime: Date? = nil) -> DDTestSession {
+        let session = DDTestSession(bundleName: bundleName, startTime: startTime)
         return session
     }
 
-    @objc func end() {
-        internalEnd()
+    @objc(endWithTime:) func end(endTime: Date? = nil) {
+        internalEnd(endTime: endTime)
     }
 
-    @objc func suiteStart(name: String) -> DDTestSuite {
-        let suite = DDTestSuite(name: name)
+    @objc func suiteStart(name: String, startTime: Date? = nil) -> DDTestSuite {
+        let suite = DDTestSuite(name: name, session: self)
         return suite
-    }
-
-    @objc(suiteEnd:) func suiteEnd(suite: DDTestSuite) {
-        suite.end()
-    }
-
-    @objc func testStart(name: String, suite: DDTestSuite) -> DDTest {
-        return DDTest(name: name, suite: suite, session: self)
-    }
-
-    @objc(testSetAttribute:key:value:) func testSetAttribute(test: DDTest, key: String, value: Any) {
-        test.setAttribute(key: key, value: value)
-    }
-
-    @objc(testSetErrorInfo:type:message:callstack:) func testSetErrorInfo(test: DDTest, type: String, message: String, callstack: String?) {
-        test.setErrorInfo(type: type, message: message, callstack: callstack)
-    }
-
-    @objc(testAddBenchmark:name:samples:info:) func testAddBenchmark(test: DDTest, name: String, samples: [Double], info: String?) {
-        test.addBenchmark(name: name, samples: samples, info: info)
-    }
-
-    @objc(testEnd:status:) func testEnd(test: DDTest, status: DDTestStatus) {
-        test.end(status: status)
     }
 }
 
 public class DDTestSuite: NSObject {
     var name: String
+    var session: DDTestSession
 
-    init(name: String) {
+    init(name: String, session: DDTestSession, startTime: Date? = nil) {
         self.name = name
+        self.session = session
     }
 
-    func end() {}
+    @objc(endWithTime:) public func end(endTime: Date? = nil) {}
+
+    @objc public func testStart(name: String, startTime: Date? = nil) -> DDTest {
+        return DDTest(name: name, suite: self, session: session, startTime: startTime)
+    }
 }
 
 public class DDTest: NSObject {
@@ -107,7 +89,7 @@ public class DDTest: NSObject {
 
     var session: DDTestSession
 
-    init(name: String, suite: DDTestSuite, session: DDTestSession) {
+    init(name: String, suite: DDTestSuite, session: DDTestSession, startTime: Date? = nil) {
         self.session = session
 
         currentTestExecutionOrder = currentTestExecutionOrder + 1
@@ -132,7 +114,7 @@ public class DDTest: NSObject {
             DDCILibraryTags.ciLibraryVersion: DDTestObserver.tracerVersion
         ]
 
-        span = DDTestMonitor.tracer.startSpan(name: "\(suite.name).\(name)()", attributes: attributes)
+        span = DDTestMonitor.tracer.startSpan(name: "\(suite.name).\(name)()", attributes: attributes, startTime: startTime)
 
         super.init()
         DDTestMonitor.instance?.currentTest = self
@@ -168,11 +150,11 @@ public class DDTest: NSObject {
         }
     }
 
-    func setAttribute(key: String, value: Any) {
+    @objc public func setAttribute(key: String, value: Any) {
         span.setAttribute(key: key, value: AttributeValue(value))
     }
 
-    func setErrorInfo(type: String, message: String, callstack: String?) {
+    @objc public func setErrorInfo(type: String, message: String, callstack: String?) {
         span.setAttribute(key: DDTags.errorType, value: AttributeValue.string(type))
         span.setAttribute(key: DDTags.errorMessage, value: AttributeValue.string(message))
         if let callstack = callstack {
@@ -180,7 +162,7 @@ public class DDTest: NSObject {
         }
     }
 
-    func end(status: DDTestStatus) {
+    @objc public func end(status: DDTestStatus, endTime: Date? = nil) {
         let testStatus: String
         switch status {
             case .pass:
@@ -195,13 +177,17 @@ public class DDTest: NSObject {
         }
 
         span.setAttribute(key: DDTestTags.testStatus, value: testStatus)
-        span.end()
+        if let endTime = endTime {
+            span.end(time: endTime)
+        } else {
+            span.end()
+        }
         DDTestMonitor.tracer.backgroundWorkQueue.sync {}
         DDTestMonitor.instance?.currentTest = nil
         DDTestMonitor.instance?.networkInstrumentation?.endAndCleanAliveSpans()
     }
 
-    func addBenchmark(name: String, samples: [Double], info: String?) {
+    @objc public func addBenchmark(name: String, samples: [Double], info: String?) {
         span.setAttribute(key: DDTestTags.testType, value: DDTagValues.typeBenchmark)
 
         let tag = DDBenchmarkTags.benchmark + "." + name + "."

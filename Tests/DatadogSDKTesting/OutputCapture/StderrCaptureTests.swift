@@ -45,7 +45,7 @@ class StderrCaptureTests: XCTestCase {
         let capturer = StderrCapture()
 
         let date = Date()
-        let span = tracer.startSpan(name: "Unnamed", attributes: [:], date: date) as! RecordEventsReadableSpan
+        let span = tracer.startSpan(name: "Unnamed", attributes: [:], startTime: date) as! RecordEventsReadableSpan
         DDTestMonitor.instance?.currentTest?.span = span
         capturer.stderrMessage(tracer: tracer, string: stringToCapture)
         Thread.sleep(forTimeInterval: 0.6)

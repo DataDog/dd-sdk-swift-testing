@@ -117,12 +117,12 @@ internal class DDTracer {
         OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(OriginSpanProcessor())
     }
 
-    func startSpan(name: String, attributes: [String: String], date: Date? = nil) -> Span {
+    func startSpan(name: String, attributes: [String: String], startTime: Date? = nil) -> Span {
         let spanBuilder = tracerSdk.spanBuilder(spanName: name)
         attributes.forEach {
             spanBuilder.setAttribute(key: $0.key, value: $0.value)
         }
-        spanBuilder.setStartTime(time: date ?? Date())
+        spanBuilder.setStartTime(time: startTime ?? Date())
 
         /// launchSpanContext will only be available when running in the app launched from UITest, so assign this as the parent
         /// when there is no one

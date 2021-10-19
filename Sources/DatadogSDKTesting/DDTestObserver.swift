@@ -41,14 +41,11 @@ class DDTestObserver: NSObject, XCTestObservation {
     }
 
     func testSuiteDidFinish(_ testSuite: XCTestSuite) {
-        if let suite = suite {
-            session?.suiteEnd(suite: suite)
-        }
+        suite?.end()
     }
 
     func testCaseWillStart(_ testCase: XCTestCase) {
-        guard let session = session,
-              let suite = suite,
+        guard let suite = suite,
               let namematch = DDTestObserver.testNameRegex.firstMatch(in: testCase.name, range: NSRange(location: 0, length: testCase.name.count)),
               let nameRange = Range(namematch.range(at: 2), in: testCase.name)
         else {
@@ -56,43 +53,40 @@ class DDTestObserver: NSObject, XCTestObservation {
         }
         let testName = String(testCase.name[nameRange])
 
-        test = session.testStart(name: testName, suite: suite)
+        test = suite.testStart(name: testName)
     }
 
     func testCaseDidFinish(_ testCase: XCTestCase) {
-        guard let session = session,
-              let test = test
+        guard let test = test
         else {
             return
         }
         addBenchmarkTagsIfNeeded(testCase: testCase, test: test)
 
         if DDTestObserver.supportsSkipping, testCase.testRun?.hasBeenSkipped == true {
-            session.testEnd(test: test, status: .skip)
+            test.end(status: .skip)
         } else if testCase.testRun?.hasSucceeded ?? false {
-            session.testEnd(test: test, status: .pass)
+            test.end(status: .pass)
         } else {
-            session.testEnd(test: test, status: .fail)
+            test.end(status: .fail)
         }
     }
 
     #if swift(>=5.3)
     func testCase(_ testCase: XCTestCase, didRecord issue: XCTIssue) {
-        guard let session = session,
-              let test = test
+        guard let test = test
         else {
             return
         }
-        session.testSetErrorInfo(test: test, type: issue.compactDescription, message: issue.description, callstack: issue.detailedDescription)
+        test.setErrorInfo(type: issue.compactDescription, message: issue.description, callstack: issue.detailedDescription)
     }
     #else
     func testCase(_ testCase: XCTestCase, didFailWithDescription description: String, inFile filePath: String?, atLine lineNumber: Int) {
-        guard let session = session,
-              let test = test
+        guard let test = test
         else {
             return
         }
-        session.testSetErrorInfo(test: test, type: description, message: "test_failure: \(filePath ?? ""):\(lineNumber)", callstack: nil)
+        test.setErrorInfo(type: description, message: "test_failure: \(filePath ?? ""):\(lineNumber)", callstack: nil)
     }
     #endif
 

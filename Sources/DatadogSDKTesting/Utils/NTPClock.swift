@@ -9,21 +9,26 @@ import Foundation
 @_implementationOnly import OpenTelemetrySdk
 
 class NTPClock: OpenTelemetrySdk.Clock {
+    private var lastOffset: TimeInterval
     init() {
         Kronos.Clock.sync()
+        let currentDate = Date()
+        if let date = Kronos.Clock.now {
+            lastOffset = date.timeIntervalSince(currentDate)
+        } else {
+            lastOffset = 0
+        }
     }
 
     var now: Date {
         if Thread.isMainThread {
-            return Kronos.Clock.now ?? Date()
-        } else {
-            var date = Date()
-            DispatchQueue.main.sync {
-                if let now = Kronos.Clock.now {
-                    date = now
-                }
+            let currentDate = Date()
+            if let date = Kronos.Clock.now {
+                lastOffset = date.timeIntervalSince(currentDate)
+            } else {
+                lastOffset = 0
             }
-            return date
         }
+        return Date().addingTimeInterval(lastOffset)
     }
 }

@@ -18,19 +18,30 @@ enum DDSymbolicator {
         guard let configurationBuildPath = DDEnvironmentValues.getEnvVariable("DYLD_LIBRARY_PATH") else {
             return dSYMFiles
         }
-
+        Log.debug("DYLD_LIBRARY_PATH: \(configurationBuildPath)")
         let fileManager = FileManager.default
-        let buildFolder = URL(fileURLWithPath: configurationBuildPath)
-        let dSYMFilesEnumerator = fileManager.enumerator(at: buildFolder,
-                                                         includingPropertiesForKeys: nil,
-                                                         options: [.skipsHiddenFiles], errorHandler: { (url, error) -> Bool in
-                                                             print("[DDSymbolicate] directoryEnumerator error at \(url): ", error)
-                                                             return true
-                                                         })!
-        for case let fileURL as URL in dSYMFilesEnumerator {
-            if fileURL.pathExtension.compare("dSYM", options: .caseInsensitive) != .orderedSame {
-                dSYMFiles.append(fileURL)
+
+        let libraryPaths = configurationBuildPath.components(separatedBy: ":")
+        libraryPaths.forEach { path in
+            Log.debug("DSYMFILE enumerating: \(path)")
+            let buildFolder = URL(fileURLWithPath: path)
+            if let dSYMFilesEnumerator = fileManager.enumerator(at: buildFolder,
+                                                                includingPropertiesForKeys: nil,
+                                                                options: [.skipsHiddenFiles], errorHandler: { url, error -> Bool in
+                                                                    Log.debug("DDSymbolicate directoryEnumerator error at \(url): " + error.localizedDescription)
+                                                                    return true
+                                                                })
+            {
+                for case let fileURL as URL in dSYMFilesEnumerator {
+                    if fileURL.pathExtension.compare("dSYM", options: .caseInsensitive) != .orderedSame {
+                        dSYMFiles.append(fileURL)
+                    }
+                }
             }
+        }
+
+        if dSYMFiles.isEmpty {
+            return dSYMFiles
         }
 
         /// Flatten folders into individual dSYM files
@@ -70,6 +81,7 @@ enum DDSymbolicator {
             dSYMFiles[i] = binaries[0]
             i += 1
         }
+        Log.debug("DSYMFILES found: \(dSYMFiles)")
         return dSYMFiles
     }()
 

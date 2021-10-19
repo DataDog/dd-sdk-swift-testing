@@ -18,8 +18,9 @@ internal class DDTestMonitor {
 
     static let defaultPayloadSize = 1024
 
-    let tracer: DDTracer
-    var testObserver: DDTestObserver?
+    static var tracer = DDTracer()
+    static var env = DDEnvironmentValues()
+
     var networkInstrumentation: DDNetworkInstrumentation?
     var stderrCapturer: StderrCapture
     var injectHeaders: Bool = false
@@ -27,55 +28,75 @@ internal class DDTestMonitor {
     var maxPayloadSize: Int = defaultPayloadSize
     var notificationObserver: NSObjectProtocol?
 
-    init() {
-        tracer = DDTracer()
-        stderrCapturer = StderrCapture()
+    var rLock = NSRecursiveLock()
+    private var privateCurrentTest: DDTest?
+    var currentTest: DDTest? {
+        get {
+            rLock.lock()
+            defer { rLock.unlock() }
+            return privateCurrentTest
+        }
+        set {
+            rLock.lock()
+            defer { rLock.unlock() }
+            privateCurrentTest = newValue
+        }
+    }
 
-        if !tracer.isBinaryUnderUITesting {
-            testObserver = DDTestObserver(tracer: tracer)
-        } else {
+    static func installTestMonitor() {
+        guard DDEnvironmentValues.getEnvVariable("DATADOG_CLIENT_TOKEN") != nil || DDEnvironmentValues.getEnvVariable("DD_API_KEY") != nil else {
+            Log.print("DATADOG_CLIENT_TOKEN or DD_API_KEY are missing.")
+            return
+        }
+        if DDEnvironmentValues.getEnvVariable("SRCROOT") == nil {
+            Log.print("SRCROOT is not properly set")
+        }
+        Log.print("Library loaded and active. Instrumenting tests.")
+        DDTestMonitor.instance = DDTestMonitor()
+        DDTestMonitor.instance?.startInstrumenting()
+    }
+
+    init() {
+        stderrCapturer = StderrCapture()
+        if DDTestMonitor.tracer.isBinaryUnderUITesting {
             /// If the library is being loaded in a binary launched from a UITest, dont start test observing,
             /// except if testing the tracer itself
-            if tracer.env.tracerUnderTesting {
-                testObserver = DDTestObserver(tracer: tracer)
-            }
-
             notificationObserver = NotificationCenter.default.addObserver(
                 forName: launchNotificationName,
-                object: nil, queue: nil) { [weak self] _ in
+                object: nil, queue: nil) { _ in
                     /// As crash reporter is initialized in testBundleWillStart() method, we initialize it here
                     /// because dont have test observer
-                    guard let self = self else {
-                        return
-                    }
-                    if !self.tracer.env.disableCrashHandler {
+                    if !DDTestMonitor.env.disableCrashHandler {
                         DDCrashes.install()
-                        let launchedSpan = self.tracer.createSpanFromLaunchContext()
+                        let launchedSpan = DDTestMonitor.tracer.createSpanFromLaunchContext()
                         let simpleSpan = SimpleSpanData(spanData: launchedSpan.toSpanData())
                         DDCrashes.setCustomData(customData: SimpleSpanSerializer.serializeSpan(simpleSpan: simpleSpan))
                     }
-            }
+                }
         }
     }
 
     func startInstrumenting() {
-        testObserver?.startObserving()
-        if !tracer.env.disableNetworkInstrumentation {
+        guard !DDTestMonitor.env.disableTestInstrumenting else {
+            return
+        }
+
+        if !DDTestMonitor.env.disableNetworkInstrumentation {
             startNetworkAutoInstrumentation()
-            if !tracer.env.disableHeadersInjection {
+            if !DDTestMonitor.env.disableHeadersInjection {
                 injectHeaders = true
             }
-            if tracer.env.enableRecordPayload {
+            if DDTestMonitor.env.enableRecordPayload {
                 recordPayload = true
             }
-            if let maxPayload = tracer.env.maxPayloadSize {
+            if let maxPayload = DDTestMonitor.env.maxPayloadSize {
                 maxPayloadSize = maxPayload
             }
         }
-        if !tracer.env.disableStdoutInstrumentation {
+        if !DDTestMonitor.env.disableStdoutInstrumentation {
             startStdoutCapture()
         }
-        if !tracer.env.disableStderrInstrumentation {
+        if !DDTestMonitor.env.disableStderrInstrumentation {
             startStderrCapture()
         }
     }
@@ -93,7 +114,7 @@ internal class DDTestMonitor {
     }
 
     func startStdoutCapture() {
-        StdoutCapture.startCapturing(tracer: tracer)
+        StdoutCapture.startCapturing(tracer: DDTestMonitor.tracer)
     }
 
     func stopStdoutCapture() {
@@ -101,7 +122,7 @@ internal class DDTestMonitor {
     }
 
     func startStderrCapture() {
-        stderrCapturer.startCapturing(tracer: tracer)
+        stderrCapturer.startCapturing(tracer: DDTestMonitor.tracer)
     }
 
     func stopStderrCapture() {

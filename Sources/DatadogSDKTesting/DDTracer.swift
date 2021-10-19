@@ -13,19 +13,20 @@ import Foundation
 enum DDHeaders: String, CaseIterable {
     case traceIDField = "x-datadog-trace-id"
     case parentSpanIDField = "x-datadog-parent-id"
-    case originField = "X-Datadog-Origin"
+    case originField = "x-datadog-origin"
+    case ddSamplingPriority = "x-datadog-sampling-priority"
+    case ddSampled = "x-datadog-sampled"
 }
 
 internal class DDTracer {
     let tracerSdk: TracerSdk
-    let env = DDEnvironmentValues()
-    var datadogExporter: DatadogExporter!
+    var datadogExporter: DatadogExporter?
     private var launchSpanContext: SpanContext?
     let backgroundWorkQueue = DispatchQueue(label: "com.otel.datadog.logswriter")
 
     static var activeSpan: Span? {
         return OpenTelemetrySDK.instance.contextProvider.activeSpan ??
-            DDTestMonitor.instance?.testObserver?.currentTestSpan
+            DDTestMonitor.instance?.currentTest?.span
     }
 
     var propagationContext: SpanContext? {
@@ -37,6 +38,7 @@ internal class DDTracer {
     }
 
     init() {
+        let env = DDTestMonitor.env
         if let envTraceId = env.launchEnvironmentTraceId,
            let envSpanId = env.launchEnvironmentSpanId
         {
@@ -50,8 +52,11 @@ internal class DDTracer {
 
         let tracerProvider = OpenTelemetrySDK.instance.tracerProvider
         tracerProvider.updateActiveSampler(Samplers.alwaysOn)
+        let spanLimits = tracerProvider.getActiveSpanLimits().settingAttributeCountLimit(1024)
+        tracerProvider.updateActiveSpanLimits(spanLimits)
+        tracerProvider.updateActiveClock(NTPClock())
 
-        let bundle = Bundle(for: type(of: self))
+        let bundle = Bundle.main
         let identifier = bundle.bundleIdentifier ?? "com.datadoghq.DatadogSDKTesting"
         let version = (bundle.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "unknown"
 
@@ -59,23 +64,25 @@ internal class DDTracer {
 
         var endpoint: Endpoint
         switch env.tracesEndpoint {
-            case "us", "US", "https://app.datadoghq.com", "app.datadoghq.com", "datadoghq.com":
-                endpoint = Endpoint.us
+            case "us", "US", "us1", "US1", "https://app.datadoghq.com", "app.datadoghq.com", "datadoghq.com":
+                endpoint = Endpoint.us1
             case "us3", "US3", "https://us3.datadoghq.com", "us3.datadoghq.com":
                 endpoint = Endpoint.us3
-            case "eu", "EU", "https://app.datadoghq.eu", "app.datadoghq.eu", "datadoghq.eu":
-                endpoint = Endpoint.eu
-            case "gov", "GOV", "https://app.ddog-gov.com", "app.ddog-gov.com", "ddog-gov.com":
-                endpoint = Endpoint.gov
+            case "eu", "EU", "eu1", "EU1", "https://app.datadoghq.eu", "app.datadoghq.eu", "datadoghq.eu":
+                endpoint = Endpoint.eu1
+            case "gov", "GOV", "us1_fed", "US1_FED", "https://app.ddog-gov.com", "app.ddog-gov.com", "ddog-gov.com":
+                endpoint = Endpoint.us1_fed
             default:
-                endpoint = Endpoint.us
+                endpoint = Endpoint.us1
         }
 
+        var payloadCompression = true
         // When reporting tests to local server
         if let localPort = env.localTestEnvironmentPort {
             let localURL = URL(string: "http://localhost:\(localPort)/")!
             endpoint = Endpoint.custom(tracesURL: localURL, logsURL: localURL, metricsURL: localURL)
-            print("[DDSwiftTesting] Reporting tests to \(localURL.absoluteURL)")
+            Log.print("Reporting tests to \(localURL.absoluteURL)")
+            payloadCompression = false
         }
 
         let exporterConfiguration = ExporterConfiguration(
@@ -84,9 +91,9 @@ internal class DDTracer {
             applicationName: identifier,
             applicationVersion: version,
             environment: env.ddEnvironment ?? (env.isCi ? "ci" : "none"),
-            clientToken: env.ddClientToken ?? "",
-            apiKey: nil,
+            apiKey: env.ddApikeyOrClientToken ?? "",
             endpoint: endpoint,
+            payloadCompression: payloadCompression,
             uploadCondition: { true },
             performancePreset: .instantDataDelivery,
             exportUnsampledSpans: false,
@@ -94,12 +101,9 @@ internal class DDTracer {
         )
         datadogExporter = try? DatadogExporter(config: exporterConfiguration)
 
-        let exporterToUse: SpanExporter
-
-        if env.disableTracesExporting {
-            exporterToUse = InMemoryExporter()
-        } else {
-            exporterToUse = datadogExporter
+        guard let exporterToUse: SpanExporter = env.disableTracesExporting ? InMemoryExporter() : datadogExporter else {
+            Log.print("Failed creating Datadog exporter.")
+            return
         }
 
         var spanProcessor: SpanProcessor
@@ -113,12 +117,12 @@ internal class DDTracer {
         OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(OriginSpanProcessor())
     }
 
-    func startSpan(name: String, attributes: [String: String], date: Date? = nil) -> Span {
+    func startSpan(name: String, attributes: [String: String], startTime: Date? = nil) -> Span {
         let spanBuilder = tracerSdk.spanBuilder(spanName: name)
         attributes.forEach {
             spanBuilder.setAttribute(key: $0.key, value: $0.value)
         }
-        spanBuilder.setStartTime(time: date ?? Date())
+        spanBuilder.setStartTime(time: startTime ?? Date())
 
         /// launchSpanContext will only be available when running in the app launched from UITest, so assign this as the parent
         /// when there is no one
@@ -282,7 +286,9 @@ internal class DDTracer {
         }
         return [DDHeaders.traceIDField.rawValue: String(context.traceId.rawLowerLong),
                 DDHeaders.parentSpanIDField.rawValue: String(context.spanId.rawValue),
-                DDHeaders.originField.rawValue: "ciapp-test"]
+                DDHeaders.originField.rawValue: DDTagValues.originCiApp,
+                DDHeaders.ddSamplingPriority.rawValue: "1",
+                DDHeaders.ddSampled.rawValue: "1"]
     }
 
     func tracePropagationHTTPHeaders() -> [String: String] {
@@ -322,6 +328,6 @@ internal class DDTracer {
     }
 
     func endpointURLs() -> Set<String> {
-        return datadogExporter.endpointURLs()
+        return datadogExporter?.endpointURLs() ?? Set<String>()
     }
 }

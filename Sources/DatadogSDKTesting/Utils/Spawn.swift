@@ -30,7 +30,6 @@ enum Spawn {
         }
         var status: Int32 = 0
         waitpid(pid, &status, 0)
-        return
     }
 
     static func commandWithResult(_ command: String, environment: [String: String]? = nil) -> String {
@@ -107,7 +106,6 @@ enum Spawn {
         var status: Int32 = 0
         waitpid(pid, &status, 0)
         posix_spawn_file_actions_destroy(&childActions)
-        return
     }
 }
 #endif

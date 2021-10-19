@@ -30,7 +30,7 @@ class StdoutCapture {
         if let lastCharacter = self.stdoutBuffer.unicodeScalars.last,
            newlineChar.contains(lastCharacter)
         {
-            if self.stdoutBuffer.trimmingCharacters(in: newlineChar).count > 0 {
+            if !self.stdoutBuffer.trimmingCharacters(in: newlineChar).isEmpty {
                 tracer?.logString(string: self.stdoutBuffer)
             }
             self.stdoutBuffer = ""
@@ -43,7 +43,7 @@ func capturedStdoutWriter(fd: UnsafeMutableRawPointer?, buffer: UnsafePointer<In
     _ = StdoutCapture.originalStdoutWriter?(fd, buffer, size)
     if let buffer = buffer {
         let string = String(cString: buffer)
-        if string.count > 0 {
+        if !string.isEmpty {
             StdoutCapture.logStdOutMessage(string)
         }
     }

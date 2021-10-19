@@ -24,6 +24,7 @@ class DDEnvironmentValuesTests: XCTestCase {
     var tracerSdk: Tracer!
 
     override func setUp() {
+        XCTAssertNil(DDTracer.activeSpan)
         testEnvironment = [String: String]()
         previousEnvironment = DDEnvironmentValues.environment
         DDEnvironmentValues.environment = [String: String]()
@@ -38,12 +39,14 @@ class DDEnvironmentValuesTests: XCTestCase {
     override func tearDown() {
         DDEnvironmentValues.environment = previousEnvironment
         DDEnvironmentValues.infoDictionary = previousInfoDictionary
+        XCTAssertNil(DDTracer.activeSpan)
     }
 
     private func setEnvVariables() {
         DDEnvironmentValues.environment = testEnvironment
         DDEnvironmentValues.environment["DD_DONT_EXPORT"] = "true"
         testEnvironment = [String: String]()
+        DDTestMonitor.env = DDEnvironmentValues()
     }
 
     private func setInfoDictionary() {
@@ -60,20 +63,20 @@ class DDEnvironmentValuesTests: XCTestCase {
         setEnvVariables()
 
         let env = DDEnvironmentValues()
-        XCTAssertEqual(env.ddClientToken, "token5a101f16")
+        XCTAssertEqual(env.ddApikeyOrClientToken, "token5a101f16")
         XCTAssertEqual(env.ddEnvironment, "testEnv")
         XCTAssertEqual(env.ddService, "testService")
     }
 
     func testWhenDatadogSettingsAreSetInInfoPlist_TheyAreStoredCorrectly() {
-        testInfoDictionary["DATADOG_CLIENT_TOKEN"] = "token5a101f16"
+        testInfoDictionary["DD_API_KEY"] = "token5a101f16"
         testInfoDictionary["DD_SERVICE"] = "testService"
         testInfoDictionary["DD_ENV"] = "testEnv"
 
         setInfoDictionary()
 
         let env = DDEnvironmentValues()
-        XCTAssertEqual(env.ddClientToken, "token5a101f16")
+        XCTAssertEqual(env.ddApikeyOrClientToken, "token5a101f16")
         XCTAssertEqual(env.ddEnvironment, "testEnv")
         XCTAssertEqual(env.ddService, "testService")
     }
@@ -90,7 +93,7 @@ class DDEnvironmentValuesTests: XCTestCase {
         setInfoDictionary()
 
         let env = DDEnvironmentValues()
-        XCTAssertEqual(env.ddClientToken, "token5a101f16")
+        XCTAssertEqual(env.ddApikeyOrClientToken, "token5a101f16")
         XCTAssertEqual(env.ddEnvironment, "testEnv")
         XCTAssertEqual(env.ddService, "testService")
     }
@@ -199,14 +202,10 @@ class DDEnvironmentValuesTests: XCTestCase {
         setEnvVariables()
 
         let span = createSimpleSpan()
-        var spanData = span.toSpanData()
-        XCTAssertEqual(spanData.attributes.count, 1)
-        XCTAssertEqual(spanData.attributes["_dd.origin"]?.description, "ciapp-test")
-
         let env = DDEnvironmentValues()
         env.addTagsToSpan(span: span)
 
-        spanData = span.toSpanData()
+        let spanData = span.toSpanData()
 
         XCTAssertEqual(spanData.attributes["ci.provider.name"]?.description, "jenkins")
         XCTAssertEqual(spanData.attributes["git.repository_url"]?.description, "/test/repo")
@@ -224,14 +223,10 @@ class DDEnvironmentValuesTests: XCTestCase {
         setEnvVariables()
 
         let span = createSimpleSpan()
-        var spanData = span.toSpanData()
-        XCTAssertEqual(spanData.attributes.count, 1)
-        XCTAssertEqual(spanData.attributes["_dd.origin"]?.description, "ciapp-test")
-
         let env = DDEnvironmentValues()
         env.addTagsToSpan(span: span)
 
-        spanData = span.toSpanData()
+        let spanData = span.toSpanData()
         XCTAssertNotNil(spanData.attributes[DDCITags.ciWorkspacePath])
         XCTAssertNil(spanData.attributes[DDCITags.ciProvider])
     }
@@ -243,14 +238,10 @@ class DDEnvironmentValuesTests: XCTestCase {
         setEnvVariables()
 
         let span = createSimpleSpan()
-        var spanData = span.toSpanData()
-        XCTAssertEqual(spanData.attributes.count, 1)
-        XCTAssertEqual(spanData.attributes["_dd.origin"]?.description, "ciapp-test")
-
         let env = DDEnvironmentValues()
         env.addTagsToSpan(span: span)
 
-        spanData = span.toSpanData()
+        let spanData = span.toSpanData()
         XCTAssertEqual(spanData.attributes["key1"]?.description, "value1")
         XCTAssertEqual(spanData.attributes["key2"]?.description, "value2")
         XCTAssertEqual(spanData.attributes["key3"]?.description, "value3")

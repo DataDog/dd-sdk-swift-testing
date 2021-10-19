@@ -14,7 +14,7 @@ internal enum SimpleSpanSerializer {
         do {
             encodedData = try JSONEncoder().encode(simpleSpan)
         } catch {
-            print("Failed encoding span: \(simpleSpan.name)")
+            Log.debug("Failed encoding span: \(simpleSpan.name)")
         }
         return encodedData
     }
@@ -24,7 +24,7 @@ internal enum SimpleSpanSerializer {
         do {
             spanData = try JSONDecoder().decode(SimpleSpanData.self, from: data)
         } catch {
-            print("Failed decoding span: \(data)")
+            Log.debug("Failed decoding span: \(data)")
         }
         return spanData
     }

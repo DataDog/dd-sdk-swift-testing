@@ -56,7 +56,7 @@ struct PlatformUtils {
     static func getDeviceModel() -> String {
         #if os(iOS) || os(tvOS) || os(watchOS)
             #if targetEnvironment(simulator)
-                return ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"] ?? ( UIDevice.current.model + " simulator")
+                return ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"] ?? (UIDevice.current.model + " simulator")
             #else
                 return UIDevice.current.modelName
             #endif
@@ -78,5 +78,13 @@ struct PlatformUtils {
         let bundle = Bundle(for: xcTestClass)
         let version = bundle.infoDictionary?["DTXcode"] as? String ?? ""
         return version
+    }
+
+    static func getRuntimeInfo() -> (String, String) {
+        if NSClassFromString("XCTest") != nil {
+            return ("Xcode", getXcodeVersion())
+        } else {
+            return (ProcessInfo.processInfo.processName, (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "")
+        }
     }
 }

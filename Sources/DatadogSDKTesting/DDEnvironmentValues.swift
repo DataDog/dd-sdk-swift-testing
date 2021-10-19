@@ -9,7 +9,7 @@ import Foundation
 
 internal struct DDEnvironmentValues {
     /// Datatog Configuration values
-    let ddClientToken: String?
+    let ddApikeyOrClientToken: String?
     let ddEnvironment: String?
     let ddService: String?
     var ddTags = [String: String]()
@@ -25,6 +25,7 @@ internal struct DDEnvironmentValues {
     let excludedURLS: Set<String>?
     let disableDDSDKIOSIntegration: Bool
     let disableCrashHandler: Bool
+    let disableTestInstrumenting: Bool
     let disableCodeCoverage: Bool
 
     /// OS Information
@@ -37,6 +38,7 @@ internal struct DDEnvironmentValues {
     let deviceModel: String
 
     /// Runtime Information
+    let runtimeName: String
     let runtimeVersion: String
 
     /// CI  values
@@ -82,6 +84,9 @@ internal struct DDEnvironmentValues {
     /// The tracer send result to a localhost server (for testing purposes)
     let localTestEnvironmentPort: Int?
 
+    /// The framework has been launched with extra debug information
+    let extraDebug: Bool
+
     static var environment = ProcessInfo.processInfo.environment
     static var infoDictionary: [String: Any] = {
         var bundle = Bundle.allBundles.first {
@@ -100,7 +105,11 @@ internal struct DDEnvironmentValues {
         if clientToken == nil {
             clientToken = DDEnvironmentValues.infoDictionary["DatadogClientToken"] as? String
         }
-        ddClientToken = clientToken
+        if clientToken == nil {
+            clientToken = DDEnvironmentValues.getEnvVariable("DD_API_KEY")
+        }
+
+        ddApikeyOrClientToken = clientToken
         ddEnvironment = DDEnvironmentValues.getEnvVariable("DD_ENV")
         tracerUnderTesting = (DDEnvironmentValues.getEnvVariable("TEST_CLASS") != nil)
         let service = DDEnvironmentValues.getEnvVariable("DD_SERVICE")
@@ -166,13 +175,16 @@ internal struct DDEnvironmentValues {
         let envDisableCodeCoverage = DDEnvironmentValues.getEnvVariable("DD_DISABLE_CODE_COVERAGE") as NSString?
         disableCodeCoverage = envDisableCodeCoverage?.boolValue ?? false
 
+        let envDisableTestInstrumenting = DDEnvironmentValues.getEnvVariable("DD_DISABLE_TEST_INSTRUMENTING") as NSString?
+        disableTestInstrumenting = envDisableTestInstrumenting?.boolValue ?? false
+
         /// Device Information
         osName = PlatformUtils.getRunningPlatform()
         osArchitecture = PlatformUtils.getPlatformArchitecture()
         osVersion = PlatformUtils.getDeviceVersion()
         deviceName = PlatformUtils.getDeviceName()
         deviceModel = PlatformUtils.getDeviceModel()
-        runtimeVersion = PlatformUtils.getXcodeVersion()
+        (runtimeName, runtimeVersion) = PlatformUtils.getRuntimeInfo()
 
         launchEnvironmentTraceId = DDEnvironmentValues.getEnvVariable("ENVIRONMENT_TRACER_TRACEID")
         launchEnvironmentSpanId = DDEnvironmentValues.getEnvVariable("ENVIRONMENT_TRACER_SPANID")
@@ -181,6 +193,9 @@ internal struct DDEnvironmentValues {
 
         let envDisableTracesExporting = DDEnvironmentValues.getEnvVariable("DD_DONT_EXPORT") as NSString?
         disableTracesExporting = envDisableTracesExporting?.boolValue ?? false
+
+        let envExtraDebug = DDEnvironmentValues.getEnvVariable("DD_TRACE_DEBUG") as NSString?
+        extraDebug = envExtraDebug?.boolValue ?? false
 
         /// CI  values
         var branchEnv: String?
@@ -275,7 +290,7 @@ internal struct DDEnvironmentValues {
             jobURL = DDEnvironmentValues.getEnvVariable("CI_JOB_URL")
             jobName = DDEnvironmentValues.getEnvVariable("CI_JOB_NAME")
             stageName = DDEnvironmentValues.getEnvVariable("CI_JOB_STAGE")
-            branchEnv = DDEnvironmentValues.getEnvVariable("CI_COMMIT_BRANCH")
+            branchEnv = DDEnvironmentValues.getEnvVariable("CI_COMMIT_REF_NAME") ?? DDEnvironmentValues.getEnvVariable("CI_COMMIT_BRANCH")
             tagEnv = DDEnvironmentValues.getEnvVariable("CI_COMMIT_TAG")
             commitMessage = DDEnvironmentValues.getEnvVariable("CI_COMMIT_MESSAGE")
             if let gitlabAuthorComponents = DDEnvironmentValues.getEnvVariable("CI_COMMIT_AUTHOR")?.components(separatedBy: CharacterSet(charactersIn: "<>")),
@@ -504,16 +519,16 @@ internal struct DDEnvironmentValues {
 
         // Warn on needed git onformation when not present
         if commit == nil {
-            print("[DDSwiftTesting] could not find git commit information")
+            Log.print("could not find git commit information")
         }
         if repository == nil {
-            print("[DDSwiftTesting] could not find git repository information")
+            Log.print("could not find git repository information")
         }
         if branch == nil && tag == nil {
-            print("[DDSwiftTesting] could not find git branch or tag  information")
+            Log.print("could not find git branch or tag  information")
         }
         if commit == nil || repository == nil || (branch == nil && tag == nil) {
-            print("[DDSwiftTesting] Please check: https://docs.datadoghq.com/continuous_integration/troubleshooting")
+            Log.print("Please check: https://docs.datadoghq.com/continuous_integration/troubleshooting")
         }
     }
 
@@ -674,7 +689,7 @@ internal struct DDEnvironmentValues {
         while !FileManager.default.fileExists(atPath: rootFolder.appendingPathComponent(".git")) {
             if rootFolder.isEqual(to: rootFolder.deletingLastPathComponent) {
                 // We reached to the top
-                print("[DDSwiftTesting] could not find .git folder at \(rootFolder)")
+                Log.print("could not find .git folder at \(rootFolder)")
                 break
             }
             rootFolder = rootFolder.deletingLastPathComponent as NSString

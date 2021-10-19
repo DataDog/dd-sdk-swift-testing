@@ -14,9 +14,12 @@ class DDNetworkInstrumentationTests: XCTestCase {
     let testSpanProcessor = SpySpanProcessor()
 
     override func setUp() {
+        XCTAssertNil(DDTracer.activeSpan)
         DDEnvironmentValues.environment["DATADOG_CLIENT_TOKEN"] = "fakeToken"
+        DDEnvironmentValues.environment["DD_DISABLE_TEST_INSTRUMENTING"] = "1"
+        DDTestMonitor.env = DDEnvironmentValues()
         DDTestMonitor.instance = DDTestMonitor()
-        let tracer = DDTestMonitor.instance!.tracer
+        let tracer = DDTestMonitor.tracer
         OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(testSpanProcessor)
         DDTestMonitor.instance?.networkInstrumentation = DDNetworkInstrumentation()
         DDTestMonitor.instance?.injectHeaders = true // This is the default
@@ -26,6 +29,7 @@ class DDNetworkInstrumentationTests: XCTestCase {
 
     override func tearDown() {
         containerSpan?.end()
+        XCTAssertNil(DDTracer.activeSpan)
     }
 
     func testItInterceptsDataTaskWithURL() {

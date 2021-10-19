@@ -37,7 +37,7 @@ struct GitInfo {
                let last = fetchHead[fetchHead.index(after: first)...].firstIndex(of: "'")
             {
                 let auxBranch = fetchHead[fetchHead.index(after: first) ... fetchHead.index(before: last)]
-                if auxBranch.count > 0 {
+                if !auxBranch.isEmpty {
                     self.branch = String(auxBranch)
                 }
             }
@@ -218,7 +218,9 @@ struct GitInfo {
             indexData = indexData.advanced(by: 8)
 
             // First layer: 256 4-byte elements, with number of elements per folder
-            let folderIndex = Int(folder, radix: 16)!
+            guard let folderIndex = Int(folder, radix: 16) else {
+                return
+            }
 
             var numberOfObjectsInIndex: Int
             var numberOfPreviousObjects = 0
@@ -358,11 +360,11 @@ struct CommitInfo {
                 } else if line.contains("--END PGP SIGNATURE--") {
                     foundPGP = false
                 } else if foundPGP == false {
-                    if message.count > 0 {
+                    if !message.isEmpty {
                         message += "\n"
                     }
                     let messageline = line.trimmingCharacters(in: .whitespaces)
-                    if messageline.count > 0 {
+                    if !messageline.isEmpty {
                         message += messageline
                     }
                 }

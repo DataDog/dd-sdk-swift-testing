@@ -4,8 +4,8 @@
  * Copyright 2020-2021 Datadog, Inc.
  */
 
-import OpenTelemetryApi
-import OpenTelemetrySdk
+@_implementationOnly import OpenTelemetryApi
+@_implementationOnly import OpenTelemetrySdk
 import XCTest
 
 class TestRunner: XCTestCase {
@@ -142,24 +142,26 @@ class TestRunner: XCTestCase {
         XCTAssertEqual(attrib[DDTestTags.testSuite], "Benchmark")
         XCTAssertEqual(attrib[DDTestTags.testType], "benchmark")
 
-        XCTAssertGreaterThan(Int(attrib[DDBenchmarkTags.benchmarkRuns] ?? "0") ?? 0, 0)
-        XCTAssertNotNil(attrib[DDBenchmarkTags.durationMean])
-        XCTAssertGreaterThan(Int(attrib[DDBenchmarkTags.statisticsN] ?? "0") ?? 0, 0)
-        XCTAssertNotNil(attrib[DDBenchmarkTags.statisticsMax])
-        XCTAssertNotNil(attrib[DDBenchmarkTags.statisticsMin])
-        XCTAssertNotNil(attrib[DDBenchmarkTags.statisticsMean])
-        XCTAssertNotNil(attrib[DDBenchmarkTags.statisticsMedian])
-        XCTAssertNotNil(attrib[DDBenchmarkTags.statisticsStdDev])
-        XCTAssertNotNil(attrib[DDBenchmarkTags.statisticsStdErr])
-        XCTAssertNotNil(attrib[DDBenchmarkTags.statisticsKurtosis])
-        XCTAssertNotNil(attrib[DDBenchmarkTags.statisticsSkewness])
-        XCTAssertNotNil(attrib[DDBenchmarkTags.statisticsP99])
-        XCTAssertNotNil(attrib[DDBenchmarkTags.statisticsP95])
-        XCTAssertNotNil(attrib[DDBenchmarkTags.statisticsP90])
+        let durationBenchmark = DDBenchmarkTags.benchmark + "." + DDBenchmarkMeasuresTags.duration + "."
+
+        XCTAssertGreaterThan(Int(attrib[durationBenchmark + DDBenchmarkTags.benchmarkRun] ?? "0") ?? 0, 0)
+        XCTAssertNotNil(attrib[durationBenchmark + DDBenchmarkTags.benchmarkMean])
+        XCTAssertGreaterThan(Int(attrib[durationBenchmark + DDBenchmarkTags.statisticsN] ?? "0") ?? 0, 0)
+        XCTAssertNotNil(attrib[durationBenchmark + DDBenchmarkTags.statisticsMax])
+        XCTAssertNotNil(attrib[durationBenchmark + DDBenchmarkTags.statisticsMin])
+        XCTAssertNotNil(attrib[durationBenchmark + DDBenchmarkTags.statisticsMean])
+        XCTAssertNotNil(attrib[durationBenchmark + DDBenchmarkTags.statisticsMedian])
+        XCTAssertNotNil(attrib[durationBenchmark + DDBenchmarkTags.statisticsStdDev])
+        XCTAssertNotNil(attrib[durationBenchmark + DDBenchmarkTags.statisticsStdErr])
+        XCTAssertNotNil(attrib[durationBenchmark + DDBenchmarkTags.statisticsKurtosis])
+        XCTAssertNotNil(attrib[durationBenchmark + DDBenchmarkTags.statisticsSkewness])
+        XCTAssertNotNil(attrib[durationBenchmark + DDBenchmarkTags.statisticsP99])
+        XCTAssertNotNil(attrib[durationBenchmark + DDBenchmarkTags.statisticsP95])
+        XCTAssertNotNil(attrib[durationBenchmark + DDBenchmarkTags.statisticsP90])
     }
 
     func validateGenericAttributes() {
-        XCTAssertEqual(attrib[DDGenericTags.language], "swift")
+        XCTAssertEqual(attrib[DDCILibraryTags.ciLibraryLanguage], "swift")
         XCTAssertEqual(attrib[DDGenericTags.type], "test")
         XCTAssertEqual(attrib[DDTestTags.testBundle], "IntegrationTests")
         XCTAssertEqual(attrib[DDTestTags.testFramework], "XCTest")
@@ -172,7 +174,6 @@ class TestRunner: XCTestCase {
         XCTAssertEqual(attrib[DDOSTags.osArchitecture], PlatformUtils.getPlatformArchitecture())
         XCTAssertEqual(attrib[DDOSTags.osVersion], PlatformUtils.getDeviceVersion())
         XCTAssertEqual(attrib[DDRuntimeTags.runtimeName], "Xcode")
-        XCTAssertEqual(attrib[DDRuntimeTags.runtimeVersion], PlatformUtils.getXcodeVersion())
         XCTAssertEqual(attrib[DDDeviceTags.deviceName], PlatformUtils.getDeviceName())
         XCTAssertEqual(attrib[DDDeviceTags.deviceModel], PlatformUtils.getDeviceModel())
         XCTAssertNotNil(attrib[DDGitTags.gitRepository])

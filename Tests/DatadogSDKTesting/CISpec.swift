@@ -10,24 +10,25 @@ import OpenTelemetrySdk
 import XCTest
 
 class CISpec: XCTestCase {
-    var testObserver: DDTestObserver!
     var testEnvironment = [String: String]()
     var previousEnvironment = [String: String]()
 
     private func setEnvVariables() {
         DDEnvironmentValues.environment = testEnvironment
         DDEnvironmentValues.environment["DD_DONT_EXPORT"] = "true"
+        DDEnvironmentValues.environment["DD_DISABLE_TEST_INSTRUMENTING"] = "1"
         testEnvironment = [String: String]()
+        DDTestMonitor.env = DDEnvironmentValues()
     }
 
     override func setUp() {
+        XCTAssertNil(DDTracer.activeSpan)
         testEnvironment = [String: String]()
         previousEnvironment = DDEnvironmentValues.environment
     }
 
     override func tearDown() {
-        XCTestObservationCenter.shared.removeTestObserver(testObserver)
-        testObserver = nil
+        XCTAssertNil(DDTracer.activeSpan)
         DDEnvironmentValues.environment = previousEnvironment
     }
 
@@ -49,17 +50,12 @@ class CISpec: XCTestCase {
         testEnvironment["CI_JOB_STAGE"] = "gitlab-stage-name"
         setEnvVariables()
 
-        testObserver = DDTestObserver(tracer: DDTracer())
-        testObserver.startObserving()
-        testObserver.testBundleWillStart(Bundle(for: CISpec.self))
-
-        testObserver.testCaseWillStart(self)
-
-        measure {
-            _ = 2 + 2
-        }
+        let testSession = DDTestSession.start(bundleName: Bundle(for: CISpec.self).bundleURL.deletingPathExtension().lastPathComponent)
+        let suite = testSession.suiteStart(name: "CISpec")
+        let test = suite.testStart(name: "testGenerateSpecJson")
+        test.addBenchmark(name: "duration", samples: [1, 2, 3, 4, 5], info: "")
         let span = OpenTelemetry.instance.contextProvider.activeSpan as! RecordEventsReadableSpan
-        testObserver.testCaseDidFinish(self)
+        test.end(status: .pass)
 
         let spanData = span.toSpanData()
 

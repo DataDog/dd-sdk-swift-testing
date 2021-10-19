@@ -48,7 +48,7 @@ struct CodeOwners {
             if let path = lineComponents.first,
                !owners.isEmpty
             {
-                ownerEntries.append(CodeOwnerEntry(path: path, codeowners: owners.map{String($0)}))
+                ownerEntries.append(CodeOwnerEntry(path: path, codeowners: owners.map { String($0) }))
             }
         }
     }

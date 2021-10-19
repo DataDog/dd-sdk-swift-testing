@@ -11,18 +11,20 @@ import XCTest
 class StderrCaptureTests: XCTestCase {
     override func setUp() {
         DDEnvironmentValues.environment["DATADOG_CLIENT_TOKEN"] = "fakeToken"
+        DDEnvironmentValues.environment["DD_DISABLE_TEST_INSTRUMENTING"] = "1"
+        DDTestMonitor.env = DDEnvironmentValues()
     }
 
     override func tearDown() {}
 
     func testWhenWhenErrorHappens_errorIsCapturedAndConvertedToEvents() {
         DDTestMonitor.instance = DDTestMonitor()
-        let tracer = DDTestMonitor.instance!.tracer
+        let tracer = DDTestMonitor.tracer
         let stringToCapture = "2020-10-22 12:01:33.161546+0200 xctest[91153:14310375] This should be captured"
         let capturer = StderrCapture()
 
         let span = tracer.startSpan(name: "Unnamed", attributes: [:]) as! RecordEventsReadableSpan
-        DDTestMonitor.instance?.testObserver?.currentTestSpan = span
+        DDTestMonitor.instance?.currentTest?.span = span
         capturer.stderrMessage(tracer: tracer, string: stringToCapture)
         Thread.sleep(forTimeInterval: 0.5)
         span.status = .ok
@@ -38,13 +40,13 @@ class StderrCaptureTests: XCTestCase {
 
     func testWhenWhenUIStepHappens_messageIsCapturedAndConvertedToEvents() {
         DDTestMonitor.instance = DDTestMonitor()
-        let tracer = DDTestMonitor.instance!.tracer
+        let tracer = DDTestMonitor.tracer
         let stringToCapture = "    t =     0.50s Open com.datadoghq.DemoSwift"
         let capturer = StderrCapture()
 
         let date = Date()
-        let span = tracer.startSpan(name: "Unnamed", attributes: [:], date: date) as! RecordEventsReadableSpan
-        DDTestMonitor.instance?.testObserver?.currentTestSpan = span
+        let span = tracer.startSpan(name: "Unnamed", attributes: [:], startTime: date) as! RecordEventsReadableSpan
+        DDTestMonitor.instance?.currentTest?.span = span
         capturer.stderrMessage(tracer: tracer, string: stringToCapture)
         Thread.sleep(forTimeInterval: 0.6)
         span.status = .ok

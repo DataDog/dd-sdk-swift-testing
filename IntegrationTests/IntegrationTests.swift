@@ -4,7 +4,7 @@
  * Copyright 2020-2021 Datadog, Inc.
  */
 
-import OpenTelemetrySdk
+@_implementationOnly import OpenTelemetrySdk
 import XCTest
 
 let tracer = OpenTelemetrySDK.instance.tracerProvider.get(instrumentationName: "Custom Tracer")

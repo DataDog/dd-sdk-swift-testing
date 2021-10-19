@@ -5,7 +5,7 @@
  */
 
 import Foundation
-import OpenTelemetrySdk
+@_implementationOnly import OpenTelemetrySdk
 
 class FileTraceExporter: SpanExporter {
     private var outputURL: URL
@@ -25,7 +25,7 @@ class FileTraceExporter: SpanExporter {
 
     func flush() -> SpanExporterResultCode {
         do {
-            var outputData = try JSONEncoder().encode(sampledSpans)
+            let outputData = try JSONEncoder().encode(sampledSpans)
             try outputData.write(to: outputURL, options: .atomicWrite)
         } catch {
             return .failure

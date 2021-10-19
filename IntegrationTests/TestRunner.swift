@@ -174,7 +174,6 @@ class TestRunner: XCTestCase {
         XCTAssertEqual(attrib[DDOSTags.osArchitecture], PlatformUtils.getPlatformArchitecture())
         XCTAssertEqual(attrib[DDOSTags.osVersion], PlatformUtils.getDeviceVersion())
         XCTAssertEqual(attrib[DDRuntimeTags.runtimeName], "Xcode")
-        XCTAssertEqual(attrib[DDRuntimeTags.runtimeVersion], PlatformUtils.getXcodeVersion())
         XCTAssertEqual(attrib[DDDeviceTags.deviceName], PlatformUtils.getDeviceName())
         XCTAssertEqual(attrib[DDDeviceTags.deviceModel], PlatformUtils.getDeviceModel())
         XCTAssertNotNil(attrib[DDGitTags.gitRepository])

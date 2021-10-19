@@ -46,17 +46,28 @@ public class DDTestSession: NSObject {
     case skip
 }
 
+/// Public interface for DDTestSession
 public extension DDTestSession {
-    // Public interface for DDTestSession
+    /// Starts the session
+    /// - Parameters:
+    ///   - bundleName: name of the module or bundle to test.
+    ///   - startTime: Optional, the time where the session started
     @objc static func start(bundleName: String, startTime: Date? = nil) -> DDTestSession {
         let session = DDTestSession(bundleName: bundleName, startTime: startTime)
         return session
     }
 
+    /// Ends the session
+    /// - Parameters:
+    ///   - endTime: Optional, the time where the session ended
     @objc(endWithTime:) func end(endTime: Date? = nil) {
         internalEnd(endTime: endTime)
     }
 
+    /// Starts a suite in this session
+    /// - Parameters:
+    ///   - name: name of the suite
+    ///   - startTime: Optional, the time where the suite started
     @objc func suiteStart(name: String, startTime: Date? = nil) -> DDTestSuite {
         let suite = DDTestSuite(name: name, session: self)
         return suite
@@ -72,8 +83,15 @@ public class DDTestSuite: NSObject {
         self.session = session
     }
 
+    /// Ends the test suite
+    /// - Parameters:
+    ///   - endTime: Optional, the time where the suite ended
     @objc(endWithTime:) public func end(endTime: Date? = nil) {}
 
+    /// Starts a test in this suite
+    /// - Parameters:
+    ///   - name: name of the suite
+    ///   - startTime: Optional, the time where the test started
     @objc public func testStart(name: String, startTime: Date? = nil) -> DDTest {
         return DDTest(name: name, suite: self, session: session, startTime: startTime)
     }
@@ -150,10 +168,20 @@ public class DDTest: NSObject {
         }
     }
 
+    /// Adds a extra atribute or tag to the test, any number of attributes can be reported
+    /// - Parameters:
+    ///   - key: The name of the attribute, if an atrtribute exists with the name it will be
+    ///     replaced with the new value
+    ///   - value: The value of the attibute, can be a number or a string.
     @objc public func setAttribute(key: String, value: Any) {
         span.setAttribute(key: key, value: AttributeValue(value))
     }
 
+    /// Adds error information to the test, only one erros info can  be reported by a test
+    /// - Parameters:
+    ///   - type: The type of error to be reported
+    ///   - message: The message associated with the error
+    ///   - callstack: (Optional) The callstack associated with the error
     @objc public func setErrorInfo(type: String, message: String, callstack: String?) {
         span.setAttribute(key: DDTags.errorType, value: AttributeValue.string(type))
         span.setAttribute(key: DDTags.errorMessage, value: AttributeValue.string(message))
@@ -162,6 +190,10 @@ public class DDTest: NSObject {
         }
     }
 
+    /// Ends the test
+    /// - Parameters:
+    ///   - status: the status reported for this test
+    ///   - endTime: Optional, the time where the test ended
     @objc public func end(status: DDTestStatus, endTime: Date? = nil) {
         let testStatus: String
         switch status {
@@ -187,6 +219,12 @@ public class DDTest: NSObject {
         DDTestMonitor.instance?.networkInstrumentation?.endAndCleanAliveSpans()
     }
 
+    /// Adds benchmark information to the test, it also changes the test to be of type
+    /// benchmark
+    /// - Parameters:
+    ///   - name: Name of the measure benchmarked
+    ///   - samples: Array for values sampled for the measure
+    ///   - info: (Optional) Extra information about the benchmark
     @objc public func addBenchmark(name: String, samples: [Double], info: String?) {
         span.setAttribute(key: DDTestTags.testType, value: DDTagValues.typeBenchmark)
 

@@ -57,6 +57,10 @@ public extension DDTestSession {
         return session
     }
 
+    @objc static func start(bundleName: String) -> DDTestSession {
+        return start(bundleName: bundleName, startTime: nil)
+    }
+
     /// Ends the session
     /// - Parameters:
     ///   - endTime: Optional, the time where the session ended
@@ -64,13 +68,21 @@ public extension DDTestSession {
         internalEnd(endTime: endTime)
     }
 
+    @objc func end() {
+        return end(endTime: nil)
+    }
+
     /// Starts a suite in this session
     /// - Parameters:
     ///   - name: name of the suite
     ///   - startTime: Optional, the time where the suite started
     @objc func suiteStart(name: String, startTime: Date? = nil) -> DDTestSuite {
-        let suite = DDTestSuite(name: name, session: self)
+        let suite = DDTestSuite(name: name, session: self, startTime: startTime)
         return suite
+    }
+
+    @objc func suiteStart(name: String) -> DDTestSuite {
+        return suiteStart(name: name, startTime: nil)
     }
 }
 
@@ -87,6 +99,8 @@ public class DDTestSuite: NSObject {
     /// - Parameters:
     ///   - endTime: Optional, the time where the suite ended
     @objc(endWithTime:) public func end(endTime: Date? = nil) {}
+    @objc public func end() {}
+
 
     /// Starts a test in this suite
     /// - Parameters:
@@ -94,6 +108,9 @@ public class DDTestSuite: NSObject {
     ///   - startTime: Optional, the time where the test started
     @objc public func testStart(name: String, startTime: Date? = nil) -> DDTest {
         return DDTest(name: name, suite: self, session: session, startTime: startTime)
+    }
+    @objc public func testStart(name: String) -> DDTest {
+        return testStart(name: name, startTime: nil)
     }
 }
 
@@ -217,6 +234,10 @@ public class DDTest: NSObject {
         DDTestMonitor.tracer.backgroundWorkQueue.sync {}
         DDTestMonitor.instance?.currentTest = nil
         DDTestMonitor.instance?.networkInstrumentation?.endAndCleanAliveSpans()
+    }
+
+    @objc public func end(status: DDTestStatus) {
+        self.end(status: status, endTime: nil)
     }
 
     /// Adds benchmark information to the test, it also changes the test to be of type

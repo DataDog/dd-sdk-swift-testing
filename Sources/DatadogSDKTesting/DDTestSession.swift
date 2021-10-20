@@ -59,6 +59,10 @@ public extension DDTestSession {
         return session
     }
 
+    @objc static func start(bundleName: String) -> DDTestSession {
+        return start(bundleName: bundleName, startTime: nil)
+    }
+
     /// Ends the session
     /// - Parameters:
     ///   - endTime: Optional, the time where the session ended
@@ -66,13 +70,21 @@ public extension DDTestSession {
         internalEnd(endTime: endTime)
     }
 
+    @objc func end() {
+        return end(endTime: nil)
+    }
+
     /// Starts a suite in this session
     /// - Parameters:
     ///   - name: name of the suite
     ///   - startTime: Optional, the time where the suite started
     @objc func suiteStart(name: String, startTime: Date? = nil) -> DDTestSuite {
-        let suite = DDTestSuite(name: name, session: self)
+        let suite = DDTestSuite(name: name, session: self, startTime: startTime)
         return suite
+    }
+
+    @objc func suiteStart(name: String) -> DDTestSuite {
+        return suiteStart(name: name, startTime: nil)
     }
 }
 
@@ -89,6 +101,8 @@ public class DDTestSuite: NSObject {
     /// - Parameters:
     ///   - endTime: Optional, the time where the suite ended
     @objc(endWithTime:) public func end(endTime: Date? = nil) {}
+    @objc public func end() {}
+
 
     /// Starts a test in this suite
     /// - Parameters:
@@ -96,6 +110,9 @@ public class DDTestSuite: NSObject {
     ///   - startTime: Optional, the time where the test started
     @objc public func testStart(name: String, startTime: Date? = nil) -> DDTest {
         return DDTest(name: name, suite: self, session: session, startTime: startTime)
+    }
+    @objc public func testStart(name: String) -> DDTest {
+        return testStart(name: name, startTime: nil)
     }
 }
 
@@ -115,7 +132,7 @@ public class DDTest: NSObject {
         currentTestExecutionOrder = currentTestExecutionOrder + 1
         let attributes: [String: String] = [
             DDGenericTags.type: DDTagValues.typeTest,
-            DDGenericTags.resourceName: "\(session.bundleName).\(suite.name).\(name)",
+            DDGenericTags.resourceName: "\(suite.name).\(name)",
             DDTestTags.testName: name,
             DDTestTags.testSuite: suite.name,
             DDTestTags.testFramework: session.testFramework,
@@ -134,7 +151,7 @@ public class DDTest: NSObject {
             DDCILibraryTags.ciLibraryVersion: DDTestObserver.tracerVersion
         ]
 
-        span = DDTestMonitor.tracer.startSpan(name: "\(suite.name).\(name)()", attributes: attributes, startTime: startTime)
+        span = DDTestMonitor.tracer.startSpan(name: "\(session.testFramework).test", attributes: attributes, startTime: startTime)
 
         super.init()
         DDTestMonitor.instance?.currentTest = self
@@ -225,6 +242,10 @@ public class DDTest: NSObject {
         DDCoverageHelper.instance?.writeProfile()
         DDTestMonitor.instance?.currentTest = nil
         DDTestMonitor.instance?.networkInstrumentation?.endAndCleanAliveSpans()
+    }
+
+    @objc public func end(status: DDTestStatus) {
+        self.end(status: status, endTime: nil)
     }
 
     /// Adds benchmark information to the test, it also changes the test to be of type

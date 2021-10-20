@@ -87,10 +87,12 @@ enum DDSymbolicator {
 
     /// It symbolicates using atos a given crashLog replacing all addresses by its respective symbol
     static func symbolicate(crashLog: String) -> String {
+        let symbolicatorQueue = DispatchQueue(label: "com.otel.datadog.symbolicator")
+
         var lines: [String] = crashLog.components(separatedBy: "\n").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
 
-        DispatchQueue.concurrentPerform(iterations: lines.count) {
-            let line = lines[$0]
+        DispatchQueue.concurrentPerform(iterations: lines.count) { lineNumber in
+            let line = lines[lineNumber]
             if let match = crashLineRegex.firstMatch(in: line, options: [], range: NSRange(location: 0, length: line.count)) {
                 guard let libraryRange = Range(match.range(at: 3), in: line),
                       let libraryAddressRange = Range(match.range(at: 7), in: line),
@@ -107,14 +109,18 @@ enum DDSymbolicator {
                     if let dsymPath = dSYMFiles.first(where: { $0.lastPathComponent == library })?.path {
                         let symbol = symbolWithAtos(objectPath: dsymPath, libraryAdress: libraryAddress, callAddress: callAddress)
                         if !symbol.isEmpty {
-                            lines[$0] = crashLineRegex.replacementString(for: match, in: line, offset: 0, template: "$1$2$3$4$5$6\(symbol)")
+                            symbolicatorQueue.sync {
+                                lines[lineNumber] = crashLineRegex.replacementString(for: match, in: line, offset: 0, template: "$1$2$3$4$5$6\(symbol)")
+                            }
                             return
                         }
                     } else {
                         if let symbolFilePath = BinaryImages.imageAddresses[library]?.path {
                             let symbol = symbolWithAtos(objectPath: symbolFilePath, libraryAdress: libraryAddress, callAddress: callAddress)
                             if !symbol.isEmpty {
-                                lines[$0] = crashLineRegex.replacementString(for: match, in: line, offset: 0, template: "$1$2$3$4$5$6\(symbol)")
+                                symbolicatorQueue.sync {
+                                    lines[lineNumber] = crashLineRegex.replacementString(for: match, in: line, offset: 0, template: "$1$2$3$4$5$6\(symbol)")
+                                }
                                 return
                             }
                         }
@@ -143,7 +149,9 @@ enum DDSymbolicator {
                 let result = dladdr(ptr, &info)
                 if result != 0 {
                     let symbolName = info.dli_sname != nil ? demangleName(String(cString: info.dli_sname)) : ""
-                    lines[$0] = crashLineRegex.replacementString(for: match, in: line, offset: 0, template: "$1$2$3$4$5$6\(symbolName)")
+                    symbolicatorQueue.sync {
+                        lines[lineNumber] = crashLineRegex.replacementString(for: match, in: line, offset: 0, template: "$1$2$3$4$5$6\(symbolName)")
+                    }
                 }
                 return
             }

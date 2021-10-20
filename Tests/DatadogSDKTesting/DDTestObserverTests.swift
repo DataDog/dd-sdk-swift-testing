@@ -49,10 +49,10 @@ internal class DDTestObserverTests: XCTestCase {
         let span = OpenTelemetry.instance.contextProvider.activeSpan as! RecordEventsReadableSpan
         let spanData = span.toSpanData()
 
-        XCTAssertEqual(spanData.name, "DDTestObserverTests.testWhenTestCaseWillStartIsCalled_testSpanIsCreated()")
+        XCTAssertEqual(spanData.name, "XCTest.test")
         XCTAssertEqual(spanData.attributes[DDCILibraryTags.ciLibraryLanguage]?.description, "swift")
         XCTAssertEqual(spanData.attributes[DDGenericTags.type]?.description, DDTagValues.typeTest)
-        XCTAssertEqual(spanData.attributes[DDGenericTags.resourceName]?.description, "\(testBundle ?? "").\(testSuite).\(testName)")
+        XCTAssertEqual(spanData.attributes[DDGenericTags.resourceName]?.description, "\(testSuite).\(testName)")
         XCTAssertEqual(spanData.attributes[DDTestTags.testName]?.description, testName)
         XCTAssertEqual(spanData.attributes[DDTestTags.testSuite]?.description, testSuite)
         XCTAssertEqual(spanData.attributes[DDTestTags.testFramework]?.description, "XCTest")

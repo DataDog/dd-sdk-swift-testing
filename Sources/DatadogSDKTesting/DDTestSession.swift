@@ -130,7 +130,7 @@ public class DDTest: NSObject {
         currentTestExecutionOrder = currentTestExecutionOrder + 1
         let attributes: [String: String] = [
             DDGenericTags.type: DDTagValues.typeTest,
-            DDGenericTags.resourceName: "\(session.bundleName).\(suite.name).\(name)",
+            DDGenericTags.resourceName: "\(suite.name).\(name)",
             DDTestTags.testName: name,
             DDTestTags.testSuite: suite.name,
             DDTestTags.testFramework: session.testFramework,
@@ -149,7 +149,7 @@ public class DDTest: NSObject {
             DDCILibraryTags.ciLibraryVersion: DDTestObserver.tracerVersion
         ]
 
-        span = DDTestMonitor.tracer.startSpan(name: "\(suite.name).\(name)()", attributes: attributes, startTime: startTime)
+        span = DDTestMonitor.tracer.startSpan(name: "\(session.testFramework).test", attributes: attributes, startTime: startTime)
 
         super.init()
         DDTestMonitor.instance?.currentTest = self

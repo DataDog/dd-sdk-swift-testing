@@ -49,6 +49,10 @@ struct BinaryImages {
                 imageAddresses[name] = MachOImage(header: header, slide: Int(bitPattern: header), path: path)
             }
 
+            if name == "DatadogSDKTesting" {
+                // We dont want our own libray profiling information
+                continue
+            }
             if let write_file_symbol = FindSymbolInImage("___llvm_profile_write_file", header, slide),
                let begin_counters_symbol = FindSymbolInImage("___llvm_profile_begin_counters", header, slide),
                let end_counters_symbol = FindSymbolInImage("___llvm_profile_end_counters", header, slide),

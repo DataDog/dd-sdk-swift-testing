@@ -42,7 +42,7 @@ public class DDInstrumentationControl: NSObject {
         DDTestMonitor.instance?.stopStderrCapture()
     }
 
-    public static var openTelemetryTracerSdk: AnyObject? {
+    public static var openTelemetryTracer: AnyObject? {
         return DDTestMonitor.tracer.tracerSdk
     }
 }

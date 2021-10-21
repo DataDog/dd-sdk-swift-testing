@@ -199,7 +199,7 @@ public class DDTest: NSObject {
     ///   - type: The type of error to be reported
     ///   - message: The message associated with the error
     ///   - callstack: (Optional) The callstack associated with the error
-    @objc public func setErrorInfo(type: String, message: String, callstack: String?) {
+    @objc public func setErrorInfo(type: String, message: String, callstack: String? = nil) {
         span.setAttribute(key: DDTags.errorType, value: AttributeValue.string(type))
         span.setAttribute(key: DDTags.errorMessage, value: AttributeValue.string(message))
         if let callstack = callstack {

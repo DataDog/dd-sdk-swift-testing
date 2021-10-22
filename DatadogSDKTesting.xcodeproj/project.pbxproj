@@ -137,6 +137,9 @@
 		E15AC987272031EC007327FA /* DatadogSDKTesting.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = E1ABA04A25231E2500ED8AEF /* DatadogSDKTesting.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		E15AC989272031F0007327FA /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E157A785256E9D3300CBCA52 /* DatadogSDKTesting.framework */; };
 		E15AC98A272031F0007327FA /* DatadogSDKTesting.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = E157A785256E9D3300CBCA52 /* DatadogSDKTesting.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		E15C79682722AD0500E9DBAD /* DDCoverageConversor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E15C79672722AD0500E9DBAD /* DDCoverageConversor.swift */; };
+		E15C79692722AD0500E9DBAD /* DDCoverageConversor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E15C79672722AD0500E9DBAD /* DDCoverageConversor.swift */; };
+		E15C796A2722AD0500E9DBAD /* DDCoverageConversor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E15C79672722AD0500E9DBAD /* DDCoverageConversor.swift */; };
 		E1665A7325D12D7500BA53CD /* Spawn.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1665A7225D12D7500BA53CD /* Spawn.swift */; };
 		E1665A7425D12D7500BA53CD /* Spawn.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1665A7225D12D7500BA53CD /* Spawn.swift */; };
 		E1665A7525D12D7500BA53CD /* Spawn.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1665A7225D12D7500BA53CD /* Spawn.swift */; };
@@ -478,6 +481,7 @@
 		E157A7A3256EB0F000CBCA52 /* DatadogSDKTestingTests_macOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DatadogSDKTestingTests_macOS.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E157A7BD256EB0F200CBCA52 /* DatadogSDKTestingTests_tvOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DatadogSDKTestingTests_tvOS.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E158E2DB25471DA000DBCD6C /* DDInstrumentationControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDInstrumentationControl.swift; sourceTree = "<group>"; };
+		E15C79672722AD0500E9DBAD /* DDCoverageConversor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDCoverageConversor.swift; sourceTree = "<group>"; };
 		E15DD03826C185AB00F60B60 /* usersupplied.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = usersupplied.json; sourceTree = "<group>"; };
 		E160A11125275CC1003121A5 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		E1665A7225D12D7500BA53CD /* Spawn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spawn.swift; sourceTree = "<group>"; };
@@ -1164,6 +1168,7 @@
 			isa = PBXGroup;
 			children = (
 				E1C8DEF4268363EC005B5411 /* DDCoverageHelper.swift */,
+				E15C79672722AD0500E9DBAD /* DDCoverageConversor.swift */,
 			);
 			path = CodeCoverage;
 			sourceTree = "<group>";
@@ -1817,6 +1822,7 @@
 				E1A63F5D26789915002F48FA /* CodeOwners.swift in Sources */,
 				E157A724256E9D1D00CBCA52 /* DDTestMonitor.swift in Sources */,
 				E14405A725D6AA9500FE3D3C /* GitInfo.swift in Sources */,
+				E15C79692722AD0500E9DBAD /* DDCoverageConversor.swift in Sources */,
 				E157A725256E9D1D00CBCA52 /* DDEnvironmentValues.swift in Sources */,
 				E157A726256E9D1D00CBCA52 /* LibraryInitializer.m in Sources */,
 				E157A728256E9D1D00CBCA52 /* DDInstrumentationControl.swift in Sources */,
@@ -1856,6 +1862,7 @@
 				E1A63F5E26789915002F48FA /* CodeOwners.swift in Sources */,
 				E157A75C256E9D3300CBCA52 /* DDTestMonitor.swift in Sources */,
 				E14405A825D6AA9600FE3D3C /* GitInfo.swift in Sources */,
+				E15C796A2722AD0500E9DBAD /* DDCoverageConversor.swift in Sources */,
 				E157A75D256E9D3300CBCA52 /* DDEnvironmentValues.swift in Sources */,
 				E157A75E256E9D3300CBCA52 /* LibraryInitializer.m in Sources */,
 				E157A760256E9D3300CBCA52 /* DDInstrumentationControl.swift in Sources */,
@@ -1947,6 +1954,7 @@
 				E1A63F5C26789915002F48FA /* CodeOwners.swift in Sources */,
 				E1665A8525D1524100BA53CD /* DDSymbolicator.swift in Sources */,
 				E1ABA08B252341EA00ED8AEF /* DDTestMonitor.swift in Sources */,
+				E15C79682722AD0500E9DBAD /* DDCoverageConversor.swift in Sources */,
 				E14405A625D6AA9500FE3D3C /* GitInfo.swift in Sources */,
 				E1ABA07725231F4700ED8AEF /* DDEnvironmentValues.swift in Sources */,
 				E158E2DC25471DA000DBCD6C /* DDInstrumentationControl.swift in Sources */,
@@ -2273,7 +2281,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.9.6-beta.3;
+				MARKETING_VERSION = "0.9.6-beta.3";
 				OTHER_LDFLAGS = "-weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
@@ -2301,7 +2309,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.9.6-beta.3;
+				MARKETING_VERSION = "0.9.6-beta.3";
 				OTHER_LDFLAGS = "-weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
@@ -2328,7 +2336,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.9.6-beta.3;
+				MARKETING_VERSION = "0.9.6-beta.3";
 				OTHER_LDFLAGS = "-weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
@@ -2357,7 +2365,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.9.6-beta.3;
+				MARKETING_VERSION = "0.9.6-beta.3";
 				OTHER_LDFLAGS = "-weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
@@ -2508,7 +2516,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 0.9.6-beta.3;
+				MARKETING_VERSION = "0.9.6-beta.3";
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -2571,7 +2579,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 0.9.6-beta.3;
+				MARKETING_VERSION = "0.9.6-beta.3";
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
@@ -2601,7 +2609,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.9.6-beta.3;
+				MARKETING_VERSION = "0.9.6-beta.3";
 				OTHER_LDFLAGS = " -weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
@@ -2628,7 +2636,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.9.6-beta.3;
+				MARKETING_VERSION = "0.9.6-beta.3";
 				OTHER_LDFLAGS = " -weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;

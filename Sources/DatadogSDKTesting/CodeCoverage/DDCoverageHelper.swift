@@ -26,8 +26,8 @@ class DDCoverageHelper {
         llvmProfileURL = URL(fileURLWithPath: profilePath)
         storageProfileURL = llvmProfileURL.deletingLastPathComponent()
             .deletingLastPathComponent()
-            .appendingPathComponent("profile")
-        print(storageProfileURL.path)
+            .appendingPathComponent("DDTestingCoverage")
+        Log.print("DDTestingCoverage: \(storageProfileURL.path)")
         initialCoverageSaved = false
     }
 
@@ -47,12 +47,16 @@ class DDCoverageHelper {
             initialCoverageSaved = true
         }
 
-        let finalName = spanId + "__" + traceId + "__" + name
         if !FileManager.default.fileExists(atPath: storageProfileURL.path) {
             try? FileManager.default.createDirectory(at: storageProfileURL, withIntermediateDirectories: true, attributes: nil)
         }
-        let saveURL = storageProfileURL.appendingPathComponent(finalName).appendingPathExtension("profraw")
+        let saveURL = getPathForTest(name: name, spanId: spanId, traceId: traceId)
         profileSetFilename(url: saveURL)
+    }
+
+    func getPathForTest(name: String, spanId: String, traceId: String) -> URL {
+        let finalName = spanId + "__" + traceId + "__" + name
+        return storageProfileURL.appendingPathComponent(finalName).appendingPathExtension("profraw")
     }
 
     func writeProfile() {

@@ -15,6 +15,7 @@ struct MachOImage {
 
 struct ProfileInfoImage {
     let name: String
+    var path: String
     let writeFileFuncPtr: UnsafeMutableRawPointer
     let beginCountersFuncPtr: UnsafeMutableRawPointer
     let endCountersFuncPtr: UnsafeMutableRawPointer
@@ -61,6 +62,7 @@ struct BinaryImages {
                let profile_initialize_symbol = FindSymbolInImage("___llvm_profile_initialize", header, slide)
             {
                 let profileImage = ProfileInfoImage(name: name,
+                                                    path: path,
                                                     writeFileFuncPtr: write_file_symbol,
                                                     beginCountersFuncPtr: begin_counters_symbol,
                                                     endCountersFuncPtr: end_counters_symbol,

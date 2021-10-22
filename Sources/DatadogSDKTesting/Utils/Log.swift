@@ -8,7 +8,7 @@
 import Foundation
 
 struct Log {
-    static var debugTracer = DDTestMonitor.env.extraDebug
+    private static var debugTracer = DDTestMonitor.env.extraDebug
 
     static func debug(_ string: String) {
         if debugTracer {

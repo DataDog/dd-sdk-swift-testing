@@ -15,6 +15,19 @@ public class DDTestSession: NSObject {
     var codeOwners: CodeOwners?
     var testFramework = "Swift API"
 
+    private var executionLock = NSLock()
+    private var privateCurrentExecutionOrder = 0
+    var currentExecutionOrder: Int {
+        get {
+            executionLock.lock()
+            defer {
+                privateCurrentExecutionOrder += 1
+                executionLock.unlock()
+            }
+            return privateCurrentExecutionOrder
+        }
+    }
+
     init(bundleName: String, startTime: Date?) {
         if DDTestMonitor.instance == nil {
             DDTestMonitor.installTestMonitor()
@@ -117,7 +130,7 @@ public class DDTestSuite: NSObject {
 public class DDTest: NSObject {
     static let testNameRegex = try! NSRegularExpression(pattern: "([\\w]+) ([\\w]+)", options: .caseInsensitive)
     static let supportsSkipping = NSClassFromString("XCTSkippedTestContext") != nil
-    var currentTestExecutionOrder = 0
+    var currentTestExecutionOrder: Int
     var initialProcessId = Int(ProcessInfo.processInfo.processIdentifier)
 
     var span: Span
@@ -127,7 +140,8 @@ public class DDTest: NSObject {
     init(name: String, suite: DDTestSuite, session: DDTestSession, startTime: Date? = nil) {
         self.session = session
 
-        currentTestExecutionOrder = currentTestExecutionOrder + 1
+        currentTestExecutionOrder = session.currentExecutionOrder
+
         let attributes: [String: String] = [
             DDGenericTags.type: DDTagValues.typeTest,
             DDGenericTags.resourceName: "\(suite.name).\(name)",

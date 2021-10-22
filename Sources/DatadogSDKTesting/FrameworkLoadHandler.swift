@@ -45,6 +45,8 @@ public class FrameworkLoadHandler: NSObject {
                 testObserver?.startObserving()
             } else if DDTestMonitor.tracer.isBinaryUnderUITesting {
                 print("[DatadogSDKTesting] Application launched from UITest while being instrumented")
+                DDTestMonitor.instance = DDTestMonitor()
+                DDTestMonitor.instance?.startInstrumenting()
             }
         }
     }

@@ -17,11 +17,11 @@
       "BUILD_REQUESTEDFOREMAIL": "azure-pipelines-commit-author-email@datadoghq.com"
     },
     {
-      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "git.branch": "master",
       "ci.workspace_path": "/foo/bar",
       "git.commit.sha": "commit",
       "git.repository_url": "sample",
+      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "ci.provider.name": "azurepipelines",
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
@@ -51,11 +51,11 @@
       "BUILD_REQUESTEDFOREMAIL": "azure-pipelines-commit-author-email@datadoghq.com"
     },
     {
-      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "git.branch": "master",
       "ci.workspace_path": "/foo/bar",
       "git.commit.sha": "commit",
       "git.repository_url": "sample2",
+      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "ci.provider.name": "azurepipelines",
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
@@ -84,11 +84,11 @@
       "BUILD_REQUESTEDFOREMAIL": "azure-pipelines-commit-author-email@datadoghq.com"
     },
     {
-      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "git.branch": "master",
       "ci.workspace_path": "foo/bar",
       "git.commit.sha": "commit",
       "git.repository_url": "sample",
+      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "ci.provider.name": "azurepipelines",
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
@@ -119,11 +119,11 @@
       "BUILD_REQUESTEDFOREMAIL": "azure-pipelines-commit-author-email@datadoghq.com"
     },
     {
-      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "git.branch": "master",
       "ci.workspace_path": "/foo/bar~",
       "git.commit.sha": "commit",
       "git.repository_url": "sample",
+      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "ci.provider.name": "azurepipelines",
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
@@ -154,11 +154,11 @@
       "BUILD_REQUESTEDFOREMAIL": "azure-pipelines-commit-author-email@datadoghq.com"
     },
     {
-      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "git.branch": "master",
       "ci.workspace_path": "/foo/~/bar",
       "git.commit.sha": "commit",
       "git.repository_url": "sample",
+      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "ci.provider.name": "azurepipelines",
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
@@ -189,11 +189,11 @@
       "BUILD_REQUESTEDFOREMAIL": "azure-pipelines-commit-author-email@datadoghq.com"
     },
     {
-      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "git.branch": "master",
       "ci.workspace_path": "/not-my-home/foo/bar",
       "git.commit.sha": "commit",
       "git.repository_url": "sample",
+      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "ci.provider.name": "azurepipelines",
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
@@ -224,11 +224,11 @@
       "BUILD_REQUESTEDFOREMAIL": "azure-pipelines-commit-author-email@datadoghq.com"
     },
     {
-      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "git.branch": "master",
       "ci.workspace_path": "~foo/bar",
       "git.commit.sha": "commit",
       "git.repository_url": "sample",
+      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "ci.provider.name": "azurepipelines",
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
@@ -259,11 +259,11 @@
       "BUILD_REQUESTEDFOREMAIL": "azure-pipelines-commit-author-email@datadoghq.com"
     },
     {
-      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "git.branch": "master",
       "ci.workspace_path": "/not-my-home",
       "git.commit.sha": "commit",
       "git.repository_url": "sample",
+      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "ci.provider.name": "azurepipelines",
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
@@ -292,11 +292,11 @@
       "BUILD_REQUESTEDFOREMAIL": "azure-pipelines-commit-author-email@datadoghq.com"
     },
     {
-      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "git.branch": "master",
       "ci.workspace_path": "/foo/bar",
       "git.commit.sha": "commit",
       "git.repository_url": "sample",
+      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "ci.provider.name": "azurepipelines",
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
@@ -325,11 +325,11 @@
       "BUILD_REQUESTEDFOREMAIL": "azure-pipelines-commit-author-email@datadoghq.com"
     },
     {
-      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "git.branch": "master",
       "ci.workspace_path": "/foo/bar",
       "git.commit.sha": "commit",
       "git.repository_url": "sample",
+      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "ci.provider.name": "azurepipelines",
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
@@ -358,11 +358,11 @@
       "BUILD_REQUESTEDFOREMAIL": "azure-pipelines-commit-author-email@datadoghq.com"
     },
     {
-      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "git.branch": "feature/one",
       "ci.workspace_path": "/foo/bar",
       "git.commit.sha": "commit",
       "git.repository_url": "sample",
+      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "ci.provider.name": "azurepipelines",
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
@@ -391,11 +391,11 @@
       "BUILD_REQUESTEDFOREMAIL": "azure-pipelines-commit-author-email@datadoghq.com"
     },
     {
-      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "git.tag": "0.1.0",
       "ci.workspace_path": "/foo/bar",
       "git.commit.sha": "commit",
       "git.repository_url": "sample",
+      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "ci.provider.name": "azurepipelines",
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
@@ -424,11 +424,11 @@
       "BUILD_REQUESTEDFOREMAIL": "azure-pipelines-commit-author-email@datadoghq.com"
     },
     {
-      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "git.tag": "0.1.0",
       "ci.workspace_path": "/foo/bar",
       "git.commit.sha": "commit",
       "git.repository_url": "sample",
+      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "ci.provider.name": "azurepipelines",
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
@@ -459,11 +459,11 @@
       "BUILD_REQUESTEDFOREMAIL": "azure-pipelines-commit-author-email@datadoghq.com"
     },
     {
-      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "git.branch": "pr",
       "ci.workspace_path": "/foo/bar",
       "git.commit.sha": "commitPR",
       "git.repository_url": "sample",
+      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "ci.provider.name": "azurepipelines",
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
@@ -495,12 +495,12 @@
       "BUILD_REQUESTEDFOREMAIL": "azure-pipelines-commit-author-email@datadoghq.com"
     },
     {
-      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "git.branch": "pr",
       "ci.workspace_path": "/foo/bar",
       "git.commit.sha": "commitPR",
       "git.repository_url": "sample",
       "ci.stage.name": "azure-pipelines-stage-name",
+      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "ci.provider.name": "azurepipelines",
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
@@ -532,12 +532,12 @@
       "BUILD_REQUESTEDFOREMAIL": "azure-pipelines-commit-author-email@datadoghq.com"
     },
     {
-      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "git.branch": "pr",
       "ci.workspace_path": "/foo/bar",
       "git.commit.sha": "commitPR",
       "git.repository_url": "sample",
       "ci.job.name": "azure-pipelines-job-name",
+      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "ci.provider.name": "azurepipelines",
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
@@ -582,6 +582,7 @@
       "git.commit.committer.name": "usersupplied-comittername",
       "git.commit.committer.email": "usersupplied-comitteremail",
       "git.commit.committer.date": "usersupplied-comitterdate",
+      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "ci.provider.name": "azurepipelines",
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",
@@ -623,6 +624,7 @@
       "git.commit.committer.name": "usersupplied-comittername",
       "git.commit.committer.email": "usersupplied-comitteremail",
       "git.commit.committer.date": "usersupplied-comitterdate",
+      "ci.job.url": "azure-pipelines-server-uri/azure-pipelines-project-id/_build/results?buildId=azure-pipelines-build-id&view=logs&j=azure-pipelines-job-id&t=azure-pipelines-task-id",
       "ci.provider.name": "azurepipelines",
       "ci.pipeline.id": "azure-pipelines-build-id",
       "ci.pipeline.name": "azure-pipelines-name",

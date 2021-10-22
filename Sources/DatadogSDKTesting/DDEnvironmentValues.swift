@@ -272,10 +272,6 @@ internal struct DDEnvironmentValues {
             jobName = nil
             stageName = nil
             branchEnv = DDEnvironmentValues.getEnvVariable("GIT_BRANCH")
-            if branchEnv?.contains("tags") ?? false {
-                tagEnv = branchEnv
-                branchEnv = nil
-            }
 
         } else if DDEnvironmentValues.getEnvVariable("GITLAB_CI") != nil {
             isCi = true
@@ -356,11 +352,6 @@ internal struct DDEnvironmentValues {
             if branchEnv?.isEmpty ?? true {
                 branchEnv = DDEnvironmentValues.getEnvVariable("BUILD_SOURCEBRANCH")
             }
-
-            if branchEnv?.contains("tags") ?? false {
-                tagEnv = branchEnv
-                branchEnv = nil
-            }
             commitMessage = DDEnvironmentValues.getEnvVariable("BUILD_SOURCEVERSIONMESSAGE")
             authorName = DDEnvironmentValues.getEnvVariable("BUILD_REQUESTEDFORID")
             authorEmail = DDEnvironmentValues.getEnvVariable("BUILD_REQUESTEDFOREMAIL")
@@ -397,10 +388,6 @@ internal struct DDEnvironmentValues {
             branchEnv = DDEnvironmentValues.getEnvVariable("GITHUB_HEAD_REF")
             if branchEnv?.isEmpty ?? true {
                 branchEnv = DDEnvironmentValues.getEnvVariable("GITHUB_REF")
-            }
-            if branchEnv?.contains("tags") ?? false {
-                tagEnv = branchEnv
-                branchEnv = nil
             }
         } else if DDEnvironmentValues.getEnvVariable("BUILDKITE") != nil {
             isCi = true
@@ -503,8 +490,14 @@ internal struct DDEnvironmentValues {
             committerDate = committerDate ?? gitInfo?.committerDate
         }
 
-        branch = DDEnvironmentValues.getEnvVariable("DD_GIT_BRANCH") ?? DDEnvironmentValues.normalizedBranchOrTag(branchEnv)
-        tag = DDEnvironmentValues.getEnvVariable("DD_GIT_TAG") ?? DDEnvironmentValues.normalizedBranchOrTag(tagEnv)
+        branchEnv = DDEnvironmentValues.getEnvVariable("DD_GIT_BRANCH") ?? branchEnv
+        tagEnv = DDEnvironmentValues.getEnvVariable("DD_GIT_TAG") ?? tagEnv
+        if branchEnv?.contains("tags") ?? false {
+            tagEnv = branchEnv
+            branchEnv = nil
+        }
+        branch = DDEnvironmentValues.normalizedBranchOrTag(branchEnv)
+        tag =  DDEnvironmentValues.normalizedBranchOrTag(tagEnv)
         repository = DDEnvironmentValues.getEnvVariable("DD_GIT_REPOSITORY_URL") ?? repository
         commit = DDEnvironmentValues.getEnvVariable("DD_GIT_COMMIT_SHA") ?? commit
         commitMessage = DDEnvironmentValues.getEnvVariable("DD_GIT_COMMIT_MESSAGE") ?? commitMessage

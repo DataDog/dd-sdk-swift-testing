@@ -134,12 +134,13 @@ public class DDTest: NSObject {
     static let supportsSkipping = NSClassFromString("XCTSkippedTestContext") != nil
     var currentTestExecutionOrder: Int
     var initialProcessId = Int(ProcessInfo.processInfo.processIdentifier)
-
-    var span: Span
+    let name: String
+    let span: Span
 
     var session: DDTestSession
 
     init(name: String, suite: DDTestSuite, session: DDTestSession, startTime: Date? = nil) {
+        self.name = name
         self.session = session
 
         currentTestExecutionOrder = session.currentExecutionOrder
@@ -256,6 +257,12 @@ public class DDTest: NSObject {
         DDCoverageHelper.instance?.writeProfile()
         DDTestMonitor.instance?.currentTest = nil
         DDTestMonitor.instance?.networkInstrumentation?.endAndCleanAliveSpans()
+
+        guard let coverageFileURL = DDCoverageHelper.instance?.getPathForTest(name: name, spanId: span.context.spanId.hexString, traceId: span.context.traceId.hexString) else {
+            return
+        }
+        let profData = DDCoverageConversor.generateProfData(profrawFile: coverageFileURL)
+        let covJson = DDCoverageConversor.getCoverageJson(profdataFile: profData, saveToFile: true)
     }
 
     @objc public func end(status: DDTestStatus) {

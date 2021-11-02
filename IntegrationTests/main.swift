@@ -7,39 +7,67 @@
 @_implementationOnly import OpenTelemetrySdk
 import XCTest
 
-guard let testClass = ProcessInfo.processInfo.environment["TEST_CLASS"],
-      let outputPath = ProcessInfo.processInfo.environment["TEST_OUTPUT_FILE"],
-      let theClass: AnyClass = Bundle.main.classNamed(testClass)
-else {
-    print("No test class passed")
-    exit(1)
-}
 
+guard let outputPath = ProcessInfo.processInfo.environment["TEST_OUTPUT_FILE"] else {
+    exit(0)
+}
 // Create a exporter to export the spans to the desired file
 let exporter = FileTraceExporter(outputURL: URL(fileURLWithPath: outputPath))
+
 OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(SimpleSpanProcessor(spanExporter: exporter))
 
-// Force a testBundleWillStart using the app bundle
-let observer = (XCTestObservationCenter.shared.value(forKey: "_observers") as! NSMutableArray).lastObject as! XCTestObservation
-let currentBundleName = Bundle.main.bundleURL.deletingPathExtension().lastPathComponent
-observer.testBundleWillStart?(Bundle.main)
+if let testClass = ProcessInfo.processInfo.environment["TEST_CLASS"],
+   let theClass: AnyClass = Bundle.main.classNamed(testClass)
+{
+    // Force a testBundleWillStart using the app bundle
+    let observer = (XCTestObservationCenter.shared.value(forKey: "_observers") as! NSMutableArray).lastObject as! XCTestObservation
+   // let currentBundleName = Bundle.main.bundleURL.deletingPathExtension().lastPathComponent
+    observer.testBundleWillStart?(Bundle.main)
 
-// Run the desired test
-let testSuite = XCTestSuite(forTestCaseClass: theClass)
-testSuite.run()
+    // Run the desired test
+    let testSuite = XCTestSuite(forTestCaseClass: theClass)
+    testSuite.run()
 
-// Force flushing the results
-OpenTelemetrySDK.instance.tracerProvider.forceFlush()
+    // Force flushing the results
+    OpenTelemetrySDK.instance.tracerProvider.forceFlush()
+    startApp()
+}
+else {
+    createNetworkRequest()
+    OpenTelemetrySDK.instance.tracerProvider.forceFlush()
+    startApp()
+}
 
 // Start the app in the standard way so all events are launched. It will be closed just after starting
 #if os(macOS)
 import Cocoa
-let app = NSApplicationMain(CommandLine.argc,
-                            CommandLine.unsafeArgv)
+func startApp() {
+    _ = NSApplicationMain(CommandLine.argc,
+                          CommandLine.unsafeArgv)
+}
 #else
 import UIKit
-UIApplicationMain(CommandLine.argc,
-                  CommandLine.unsafeArgv,
-                  nil,
-                  nil)
+func startApp() {
+    UIApplicationMain(CommandLine.argc,
+                      CommandLine.unsafeArgv,
+                      nil,
+                      nil)
+}
 #endif
+
+// Simple network request that we will validate is generated in the test output
+func createNetworkRequest() {
+    let url = URL(string: "http://httpbin.org/get")!
+    let request = URLRequest(url: url)
+    let semaphore = DispatchSemaphore(value: 0)
+
+    let task = URLSession.shared.dataTask(with: request) { data, _, _ in
+        if let data = data {
+            let string = String(data: data, encoding: .utf8)
+            print(string ?? "")
+        }
+        semaphore.signal()
+    }
+    task.resume()
+    semaphore.wait()
+}

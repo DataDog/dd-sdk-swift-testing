@@ -110,7 +110,7 @@ internal struct DDEnvironmentValues {
 
         ddApikeyOrClientToken = clientToken
         ddEnvironment = DDEnvironmentValues.getEnvVariable("DD_ENV")
-        tracerUnderTesting = (DDEnvironmentValues.getEnvVariable("TEST_CLASS") != nil)
+        tracerUnderTesting = (DDEnvironmentValues.getEnvVariable("TEST_OUTPUT_FILE") != nil)
         let service = DDEnvironmentValues.getEnvVariable("DD_SERVICE")
         if let service = service, tracerUnderTesting {
             ddService = service + "-internal-tests"

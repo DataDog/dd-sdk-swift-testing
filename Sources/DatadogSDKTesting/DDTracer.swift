@@ -305,7 +305,7 @@ internal class DDTracer {
             return headers
         }
 
-        tracerSdk.textFormat.inject(spanContext: propagationContext, carrier: &headers, setter: HeaderSetter())
+        OpenTelemetry.instance.propagators.textMapPropagator.inject(spanContext: propagationContext, carrier: &headers, setter: HeaderSetter())
         headers.merge(datadogHeaders(forContext: propagationContext)) { current, _ in current }
         return headers
     }

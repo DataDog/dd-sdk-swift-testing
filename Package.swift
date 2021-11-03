@@ -27,9 +27,9 @@ let package = Package(
         .target(
             name: "DatadogSDKTesting",
             dependencies: [
-                .product(name: "libDatadogExporter", package: "opentelemetry-swift"),
-                .product(name: "libURLSessionInstrumentation", package: "opentelemetry-swift"),
-                .product(name: "libInMemoryExporter", package: "opentelemetry-swift"),
+                .product(name: "DatadogExporter", package: "opentelemetry-swift"),
+                .product(name: "URLSessionInstrumentation", package: "opentelemetry-swift"),
+                .product(name: "InMemoryExporter", package: "opentelemetry-swift"),
                 .product(name: "CrashReporter", package: "PLCrashReporter"),
                 .product(name: "SigmaSwiftStatistics", package: "SigmaSwiftStatistics"),
                 .product(name: "Kronos", package: "Kronos"),

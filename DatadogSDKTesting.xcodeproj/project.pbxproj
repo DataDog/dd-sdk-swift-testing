@@ -26,15 +26,6 @@
 		E12248CB2644037B00305968 /* FileLocatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12248CA2644037B00305968 /* FileLocatorTests.swift */; };
 		E12248CC2644037B00305968 /* FileLocatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12248CA2644037B00305968 /* FileLocatorTests.swift */; };
 		E12248CD2644037B00305968 /* FileLocatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12248CA2644037B00305968 /* FileLocatorTests.swift */; };
-		E12248DC26455DEB00305968 /* libURLSessionInstrumentation in Frameworks */ = {isa = PBXBuildFile; productRef = E12248DB26455DEB00305968 /* libURLSessionInstrumentation */; };
-		E12248DE26455DEB00305968 /* libDatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E12248DD26455DEB00305968 /* libDatadogExporter */; };
-		E12248E026455DF700305968 /* libDatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E12248DF26455DF700305968 /* libDatadogExporter */; };
-		E12248E226455E0300305968 /* libURLSessionInstrumentation in Frameworks */ = {isa = PBXBuildFile; productRef = E12248E126455E0300305968 /* libURLSessionInstrumentation */; };
-		E12248E426455E0B00305968 /* libDatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E12248E326455E0B00305968 /* libDatadogExporter */; };
-		E12248E626455E1300305968 /* libURLSessionInstrumentation in Frameworks */ = {isa = PBXBuildFile; productRef = E12248E526455E1300305968 /* libURLSessionInstrumentation */; };
-		E12248E826455ED100305968 /* libInMemoryExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E12248E726455ED100305968 /* libInMemoryExporter */; };
-		E12248EA26455ED800305968 /* libInMemoryExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E12248E926455ED800305968 /* libInMemoryExporter */; };
-		E12248EC26455EDE00305968 /* libInMemoryExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E12248EB26455EDE00305968 /* libInMemoryExporter */; };
 		E1224A6B264ABCD000305968 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1224A43264ABCCE00305968 /* main.swift */; };
 		E1224A6C264ABCD000305968 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1224A43264ABCCE00305968 /* main.swift */; };
 		E1224A89264ADA6000305968 /* IntegrationTestsRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1224A5D264ABCD000305968 /* IntegrationTestsRunner.swift */; };
@@ -179,6 +170,15 @@
 		E1BE9B07273134CA00B92AD4 /* UIIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1193F8C272C24F900E4154E /* UIIntegrationTests.swift */; };
 		E1BE9B08273134CB00B92AD4 /* UIIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1193F8C272C24F900E4154E /* UIIntegrationTests.swift */; };
 		E1BE9B09273134CB00B92AD4 /* UIIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1193F8C272C24F900E4154E /* UIIntegrationTests.swift */; };
+		E1BE9B542732B27900B92AD4 /* DatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E1BE9B532732B27900B92AD4 /* DatadogExporter */; };
+		E1BE9B562732B27900B92AD4 /* InMemoryExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E1BE9B552732B27900B92AD4 /* InMemoryExporter */; };
+		E1BE9B582732B27900B92AD4 /* URLSessionInstrumentation in Frameworks */ = {isa = PBXBuildFile; productRef = E1BE9B572732B27900B92AD4 /* URLSessionInstrumentation */; };
+		E1BE9B5A2732B2A300B92AD4 /* DatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E1BE9B592732B2A300B92AD4 /* DatadogExporter */; };
+		E1BE9B5C2732B2A300B92AD4 /* InMemoryExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E1BE9B5B2732B2A300B92AD4 /* InMemoryExporter */; };
+		E1BE9B5E2732B2A300B92AD4 /* URLSessionInstrumentation in Frameworks */ = {isa = PBXBuildFile; productRef = E1BE9B5D2732B2A300B92AD4 /* URLSessionInstrumentation */; };
+		E1BE9B602732B2BA00B92AD4 /* DatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E1BE9B5F2732B2BA00B92AD4 /* DatadogExporter */; };
+		E1BE9B622732B2BA00B92AD4 /* InMemoryExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E1BE9B612732B2BA00B92AD4 /* InMemoryExporter */; };
+		E1BE9B642732B2BA00B92AD4 /* URLSessionInstrumentation in Frameworks */ = {isa = PBXBuildFile; productRef = E1BE9B632732B2BA00B92AD4 /* URLSessionInstrumentation */; };
 		E1C189B9270F193F00188C0E /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C189B8270F193F00188C0E /* Log.swift */; };
 		E1C189BA270F193F00188C0E /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C189B8270F193F00188C0E /* Log.swift */; };
 		E1C189BB270F193F00188C0E /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C189B8270F193F00188C0E /* Log.swift */; };
@@ -570,13 +570,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E1BE9B5E2732B2A300B92AD4 /* URLSessionInstrumentation in Frameworks */,
 				E157A742256E9D1D00CBCA52 /* CrashReporter in Frameworks */,
 				E1503260271860E0000CD6C5 /* Kronos in Frameworks */,
-				E12248E226455E0300305968 /* libURLSessionInstrumentation in Frameworks */,
 				E157A744256E9D1D00CBCA52 /* SigmaSwiftStatistics in Frameworks */,
-				E12248EA26455ED800305968 /* libInMemoryExporter in Frameworks */,
-				E12248E026455DF700305968 /* libDatadogExporter in Frameworks */,
+				E1BE9B5A2732B2A300B92AD4 /* DatadogExporter in Frameworks */,
 				E157A745256E9D1D00CBCA52 /* XCTest.framework in Frameworks */,
+				E1BE9B5C2732B2A300B92AD4 /* InMemoryExporter in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -584,13 +584,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E1BE9B642732B2BA00B92AD4 /* URLSessionInstrumentation in Frameworks */,
 				E157A77A256E9D3300CBCA52 /* CrashReporter in Frameworks */,
 				E1503262271860E7000CD6C5 /* Kronos in Frameworks */,
-				E12248E626455E1300305968 /* libURLSessionInstrumentation in Frameworks */,
 				E157A77C256E9D3300CBCA52 /* SigmaSwiftStatistics in Frameworks */,
-				E12248EC26455EDE00305968 /* libInMemoryExporter in Frameworks */,
-				E12248E426455E0B00305968 /* libDatadogExporter in Frameworks */,
+				E1BE9B602732B2BA00B92AD4 /* DatadogExporter in Frameworks */,
 				E157A77D256E9D3300CBCA52 /* XCTest.framework in Frameworks */,
+				E1BE9B622732B2BA00B92AD4 /* InMemoryExporter in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -614,12 +614,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E12248DE26455DEB00305968 /* libDatadogExporter in Frameworks */,
 				E150325A271860A8000CD6C5 /* Kronos in Frameworks */,
 				E1FB483B253891650083B263 /* CrashReporter in Frameworks */,
 				E17B7AA8253F02580081D7F3 /* SigmaSwiftStatistics in Frameworks */,
-				E12248E826455ED100305968 /* libInMemoryExporter in Frameworks */,
-				E12248DC26455DEB00305968 /* libURLSessionInstrumentation in Frameworks */,
+				E1BE9B542732B27900B92AD4 /* DatadogExporter in Frameworks */,
+				E1BE9B562732B27900B92AD4 /* InMemoryExporter in Frameworks */,
+				E1BE9B582732B27900B92AD4 /* URLSessionInstrumentation in Frameworks */,
 				E1ABA08025231F8E00ED8AEF /* XCTest.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1355,10 +1355,10 @@
 			packageProductDependencies = (
 				E157A718256E9D1D00CBCA52 /* CrashReporter */,
 				E157A71A256E9D1D00CBCA52 /* SigmaSwiftStatistics */,
-				E12248DF26455DF700305968 /* libDatadogExporter */,
-				E12248E126455E0300305968 /* libURLSessionInstrumentation */,
-				E12248E926455ED800305968 /* libInMemoryExporter */,
 				E150325F271860E0000CD6C5 /* Kronos */,
+				E1BE9B592732B2A300B92AD4 /* DatadogExporter */,
+				E1BE9B5B2732B2A300B92AD4 /* InMemoryExporter */,
+				E1BE9B5D2732B2A300B92AD4 /* URLSessionInstrumentation */,
 			);
 			productName = DatadogSDKTesting;
 			productReference = E157A74D256E9D1D00CBCA52 /* DatadogSDKTesting.framework */;
@@ -1382,10 +1382,10 @@
 			packageProductDependencies = (
 				E157A750256E9D3300CBCA52 /* CrashReporter */,
 				E157A752256E9D3300CBCA52 /* SigmaSwiftStatistics */,
-				E12248E326455E0B00305968 /* libDatadogExporter */,
-				E12248E526455E1300305968 /* libURLSessionInstrumentation */,
-				E12248EB26455EDE00305968 /* libInMemoryExporter */,
 				E1503261271860E7000CD6C5 /* Kronos */,
+				E1BE9B5F2732B2BA00B92AD4 /* DatadogExporter */,
+				E1BE9B612732B2BA00B92AD4 /* InMemoryExporter */,
+				E1BE9B632732B2BA00B92AD4 /* URLSessionInstrumentation */,
 			);
 			productName = DatadogSDKTesting;
 			productReference = E157A785256E9D3300CBCA52 /* DatadogSDKTesting.framework */;
@@ -1453,10 +1453,10 @@
 			packageProductDependencies = (
 				E1FB483A253891650083B263 /* CrashReporter */,
 				E17B7AA7253F02580081D7F3 /* SigmaSwiftStatistics */,
-				E12248DB26455DEB00305968 /* libURLSessionInstrumentation */,
-				E12248DD26455DEB00305968 /* libDatadogExporter */,
-				E12248E726455ED100305968 /* libInMemoryExporter */,
 				E1503259271860A8000CD6C5 /* Kronos */,
+				E1BE9B532732B27900B92AD4 /* DatadogExporter */,
+				E1BE9B552732B27900B92AD4 /* InMemoryExporter */,
+				E1BE9B572732B27900B92AD4 /* URLSessionInstrumentation */,
 			);
 			productName = DatadogSDKTesting;
 			productReference = E1ABA04A25231E2500ED8AEF /* DatadogSDKTesting.framework */;
@@ -2866,8 +2866,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/open-telemetry/opentelemetry-swift";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.7;
+				kind = revision;
+				revision = 905d013fb10d8bbd64038efbe89e2f5b68aee9be;
 			};
 		};
 		E1503258271860A8000CD6C5 /* XCRemoteSwiftPackageReference "Kronos" */ = {
@@ -2929,51 +2929,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		E12248DB26455DEB00305968 /* libURLSessionInstrumentation */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
-			productName = libURLSessionInstrumentation;
-		};
-		E12248DD26455DEB00305968 /* libDatadogExporter */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
-			productName = libDatadogExporter;
-		};
-		E12248DF26455DF700305968 /* libDatadogExporter */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
-			productName = libDatadogExporter;
-		};
-		E12248E126455E0300305968 /* libURLSessionInstrumentation */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
-			productName = libURLSessionInstrumentation;
-		};
-		E12248E326455E0B00305968 /* libDatadogExporter */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
-			productName = libDatadogExporter;
-		};
-		E12248E526455E1300305968 /* libURLSessionInstrumentation */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
-			productName = libURLSessionInstrumentation;
-		};
-		E12248E726455ED100305968 /* libInMemoryExporter */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
-			productName = libInMemoryExporter;
-		};
-		E12248E926455ED800305968 /* libInMemoryExporter */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
-			productName = libInMemoryExporter;
-		};
-		E12248EB26455EDE00305968 /* libInMemoryExporter */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
-			productName = libInMemoryExporter;
-		};
 		E1503259271860A8000CD6C5 /* Kronos */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = E1503258271860A8000CD6C5 /* XCRemoteSwiftPackageReference "Kronos" */;
@@ -3013,6 +2968,51 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E17B7AA6253F02580081D7F3 /* XCRemoteSwiftPackageReference "SigmaSwiftStatistics" */;
 			productName = SigmaSwiftStatistics;
+		};
+		E1BE9B532732B27900B92AD4 /* DatadogExporter */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			productName = DatadogExporter;
+		};
+		E1BE9B552732B27900B92AD4 /* InMemoryExporter */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			productName = InMemoryExporter;
+		};
+		E1BE9B572732B27900B92AD4 /* URLSessionInstrumentation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			productName = URLSessionInstrumentation;
+		};
+		E1BE9B592732B2A300B92AD4 /* DatadogExporter */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			productName = DatadogExporter;
+		};
+		E1BE9B5B2732B2A300B92AD4 /* InMemoryExporter */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			productName = InMemoryExporter;
+		};
+		E1BE9B5D2732B2A300B92AD4 /* URLSessionInstrumentation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			productName = URLSessionInstrumentation;
+		};
+		E1BE9B5F2732B2BA00B92AD4 /* DatadogExporter */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			productName = DatadogExporter;
+		};
+		E1BE9B612732B2BA00B92AD4 /* InMemoryExporter */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			productName = InMemoryExporter;
+		};
+		E1BE9B632732B2BA00B92AD4 /* URLSessionInstrumentation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			productName = URLSessionInstrumentation;
 		};
 		E1FB483A253891650083B263 /* CrashReporter */ = {
 			isa = XCSwiftPackageProductDependency;

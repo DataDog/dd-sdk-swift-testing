@@ -250,9 +250,9 @@ class DDTracerTests: XCTestCase {
         let spanData = span.toSpanData()
         let environmentValues = tracer.environmentPropagationHTTPHeaders()
 
-        XCTAssertNotNil(environmentValues["OTEL_TRACE_PARENT"])
-        XCTAssert(environmentValues["OTEL_TRACE_PARENT"]?.contains(spanData.traceId.hexString) ?? false)
-        XCTAssertTrue(environmentValues["OTEL_TRACE_PARENT"]?.contains(spanData.spanId.hexString) ?? false)
+        XCTAssertNotNil(environmentValues["TRACEPARENT"])
+        XCTAssert(environmentValues["TRACEPARENT"]?.contains(spanData.traceId.hexString) ?? false)
+        XCTAssertTrue(environmentValues["TRACEPARENT"]?.contains(spanData.spanId.hexString) ?? false)
         span.end()
     }
 

@@ -27,5 +27,5 @@ class SpySpanProcessor: SpanProcessor {
 
     func shutdown() {}
 
-    func forceFlush() {}
+    func forceFlush(timeout: TimeInterval?) {}
 }

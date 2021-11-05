@@ -22,7 +22,7 @@ internal class DDTracer {
     let tracerSdk: TracerSdk
     var datadogExporter: DatadogExporter?
     private var launchSpanContext: SpanContext?
-    let backgroundWorkQueue = DispatchQueue(label: "com.otel.datadog.logswriter")
+    let backgroundWorkQueue = DispatchQueue(label: "com.datadog.logswriter")
 
     static var activeSpan: Span? {
         return OpenTelemetrySDK.instance.contextProvider.activeSpan ??

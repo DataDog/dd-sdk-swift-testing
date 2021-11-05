@@ -8,6 +8,7 @@ import Foundation
 
 class StderrCapture {
     var isCapturing = false
+    var tracer: DDTracer?
     private let inputPipe = Pipe()
     private let outputPipe = Pipe()
     private var originalDescriptor = FileHandle.standardError.fileDescriptor
@@ -32,6 +33,7 @@ class StderrCapture {
             // Write input back to stderr
             strongSelf.outputPipe.fileHandleForWriting.write(data)
         }
+        setvbuf(stderr, nil, _IONBF, 0)
 
         // Copy STDERR file descriptor to outputPipe for writing strings back to STDERR
         dup2(FileHandle.standardError.fileDescriptor, outputPipe.fileHandleForWriting.fileDescriptor)
@@ -39,7 +41,33 @@ class StderrCapture {
         // Intercept STDERR with inputPipe
         dup2(inputPipe.fileHandleForWriting.fileDescriptor, FileHandle.standardError.fileDescriptor)
 
+        self.tracer = tracer
         isCapturing = true
+    }
+
+    func syncData() {
+        guard inputPipe.fileHandleForReading.isReadable else {
+            return
+        }
+
+        var synchronizeData: DispatchWorkItem!
+        synchronizeData = DispatchWorkItem(block: {
+            let auxData = self.inputPipe.fileHandleForReading.availableData
+            if synchronizeData.isCancelled {
+                return
+            }
+            if !auxData.isEmpty,
+               let tracer = self.tracer,
+               let string = String(data: auxData, encoding: String.Encoding.utf8)
+            {
+                self.stderrMessage(tracer: tracer, string: string)
+            }
+        })
+        DispatchQueue.global().async {
+            synchronizeData.perform()
+        }
+        _ = synchronizeData.wait(timeout: .now() + .milliseconds(10))
+        synchronizeData.cancel()
     }
 
     func stopCapturing() {

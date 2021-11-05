@@ -49,12 +49,6 @@
 		E14405DB25DBC3A800FE3D3C /* GitInfoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14405D825DBC3A800FE3D3C /* GitInfoTests.swift */; };
 		E14AA0C12555AA61003FA711 /* DDNetworkInstrumentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14AA0BF2555A9A1003FA711 /* DDNetworkInstrumentationTests.swift */; };
 		E14AA0CA255AE8D3003FA711 /* SignalUtilsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14AA0C9255AE8D3003FA711 /* SignalUtilsTests.swift */; };
-		E150325A271860A8000CD6C5 /* Kronos in Frameworks */ = {isa = PBXBuildFile; productRef = E1503259271860A8000CD6C5 /* Kronos */; };
-		E150325C271860BF000CD6C5 /* NTPClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = E150325B271860BF000CD6C5 /* NTPClock.swift */; };
-		E150325D271860BF000CD6C5 /* NTPClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = E150325B271860BF000CD6C5 /* NTPClock.swift */; };
-		E150325E271860BF000CD6C5 /* NTPClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = E150325B271860BF000CD6C5 /* NTPClock.swift */; };
-		E1503260271860E0000CD6C5 /* Kronos in Frameworks */ = {isa = PBXBuildFile; productRef = E150325F271860E0000CD6C5 /* Kronos */; };
-		E1503262271860E7000CD6C5 /* Kronos in Frameworks */ = {isa = PBXBuildFile; productRef = E1503261271860E7000CD6C5 /* Kronos */; };
 		E15264AF25FA3C16008B8665 /* DDSymbolicatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E15264AE25FA3C16008B8665 /* DDSymbolicatorTests.swift */; };
 		E15264B025FA3C16008B8665 /* DDSymbolicatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E15264AE25FA3C16008B8665 /* DDSymbolicatorTests.swift */; };
 		E15264B125FA3C16008B8665 /* DDSymbolicatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E15264AE25FA3C16008B8665 /* DDSymbolicatorTests.swift */; };
@@ -469,7 +463,6 @@
 		E14405D825DBC3A800FE3D3C /* GitInfoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitInfoTests.swift; sourceTree = "<group>"; };
 		E14AA0BF2555A9A1003FA711 /* DDNetworkInstrumentationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDNetworkInstrumentationTests.swift; sourceTree = "<group>"; };
 		E14AA0C9255AE8D3003FA711 /* SignalUtilsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalUtilsTests.swift; sourceTree = "<group>"; };
-		E150325B271860BF000CD6C5 /* NTPClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NTPClock.swift; sourceTree = "<group>"; };
 		E15264AE25FA3C16008B8665 /* DDSymbolicatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDSymbolicatorTests.swift; sourceTree = "<group>"; };
 		E157A74D256E9D1D00CBCA52 /* DatadogSDKTesting.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = DatadogSDKTesting.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E157A785256E9D3300CBCA52 /* DatadogSDKTesting.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = DatadogSDKTesting.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -572,7 +565,6 @@
 			files = (
 				E1BE9B5E2732B2A300B92AD4 /* URLSessionInstrumentation in Frameworks */,
 				E157A742256E9D1D00CBCA52 /* CrashReporter in Frameworks */,
-				E1503260271860E0000CD6C5 /* Kronos in Frameworks */,
 				E157A744256E9D1D00CBCA52 /* SigmaSwiftStatistics in Frameworks */,
 				E1BE9B5A2732B2A300B92AD4 /* DatadogExporter in Frameworks */,
 				E157A745256E9D1D00CBCA52 /* XCTest.framework in Frameworks */,
@@ -586,7 +578,6 @@
 			files = (
 				E1BE9B642732B2BA00B92AD4 /* URLSessionInstrumentation in Frameworks */,
 				E157A77A256E9D3300CBCA52 /* CrashReporter in Frameworks */,
-				E1503262271860E7000CD6C5 /* Kronos in Frameworks */,
 				E157A77C256E9D3300CBCA52 /* SigmaSwiftStatistics in Frameworks */,
 				E1BE9B602732B2BA00B92AD4 /* DatadogExporter in Frameworks */,
 				E157A77D256E9D3300CBCA52 /* XCTest.framework in Frameworks */,
@@ -614,7 +605,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E150325A271860A8000CD6C5 /* Kronos in Frameworks */,
 				E1FB483B253891650083B263 /* CrashReporter in Frameworks */,
 				E17B7AA8253F02580081D7F3 /* SigmaSwiftStatistics in Frameworks */,
 				E1BE9B542732B27900B92AD4 /* DatadogExporter in Frameworks */,
@@ -667,7 +657,6 @@
 				E12515E4254892C500670D23 /* XCUIApplicationSwizzler.swift */,
 				E11295BA25F2483D002719E7 /* FileLocator.swift */,
 				E1A63F5B26789915002F48FA /* CodeOwners.swift */,
-				E150325B271860BF000CD6C5 /* NTPClock.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -1355,7 +1344,6 @@
 			packageProductDependencies = (
 				E157A718256E9D1D00CBCA52 /* CrashReporter */,
 				E157A71A256E9D1D00CBCA52 /* SigmaSwiftStatistics */,
-				E150325F271860E0000CD6C5 /* Kronos */,
 				E1BE9B592732B2A300B92AD4 /* DatadogExporter */,
 				E1BE9B5B2732B2A300B92AD4 /* InMemoryExporter */,
 				E1BE9B5D2732B2A300B92AD4 /* URLSessionInstrumentation */,
@@ -1382,7 +1370,6 @@
 			packageProductDependencies = (
 				E157A750256E9D3300CBCA52 /* CrashReporter */,
 				E157A752256E9D3300CBCA52 /* SigmaSwiftStatistics */,
-				E1503261271860E7000CD6C5 /* Kronos */,
 				E1BE9B5F2732B2BA00B92AD4 /* DatadogExporter */,
 				E1BE9B612732B2BA00B92AD4 /* InMemoryExporter */,
 				E1BE9B632732B2BA00B92AD4 /* URLSessionInstrumentation */,
@@ -1453,7 +1440,6 @@
 			packageProductDependencies = (
 				E1FB483A253891650083B263 /* CrashReporter */,
 				E17B7AA7253F02580081D7F3 /* SigmaSwiftStatistics */,
-				E1503259271860A8000CD6C5 /* Kronos */,
 				E1BE9B532732B27900B92AD4 /* DatadogExporter */,
 				E1BE9B552732B27900B92AD4 /* InMemoryExporter */,
 				E1BE9B572732B27900B92AD4 /* URLSessionInstrumentation */,
@@ -1529,7 +1515,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1250;
-				LastUpgradeCheck = 1300;
+				LastUpgradeCheck = 1310;
 				TargetAttributes = {
 					E1224A49264ABCCF00305968 = {
 						CreatedOnToolsVersion = 12.5;
@@ -1575,7 +1561,6 @@
 				E1FB4839253891650083B263 /* XCRemoteSwiftPackageReference "plcrashreporter" */,
 				E17B7AA6253F02580081D7F3 /* XCRemoteSwiftPackageReference "SigmaSwiftStatistics" */,
 				E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */,
-				E1503258271860A8000CD6C5 /* XCRemoteSwiftPackageReference "Kronos" */,
 			);
 			productRefGroup = E1ABA04B25231E2500ED8AEF /* Products */;
 			projectDirPath = "";
@@ -1806,7 +1791,6 @@
 				E157A72B256E9D1D00CBCA52 /* FrameworkLoadHandler.swift in Sources */,
 				E157A72C256E9D1D00CBCA52 /* DDTags.swift in Sources */,
 				E1665A7425D12D7500BA53CD /* Spawn.swift in Sources */,
-				E150325D271860BF000CD6C5 /* NTPClock.swift in Sources */,
 				E157A730256E9D1D00CBCA52 /* SignalUtils.swift in Sources */,
 				E157A731256E9D1D00CBCA52 /* XCUIApplicationSwizzler.swift in Sources */,
 				E157A732256E9D1D00CBCA52 /* InternalError.swift in Sources */,
@@ -1843,7 +1827,6 @@
 				E157A763256E9D3300CBCA52 /* FrameworkLoadHandler.swift in Sources */,
 				E157A764256E9D3300CBCA52 /* DDTags.swift in Sources */,
 				E1665A7525D12D7500BA53CD /* Spawn.swift in Sources */,
-				E150325E271860BF000CD6C5 /* NTPClock.swift in Sources */,
 				E157A768256E9D3300CBCA52 /* SignalUtils.swift in Sources */,
 				E157A769256E9D3300CBCA52 /* XCUIApplicationSwizzler.swift in Sources */,
 				E157A76A256E9D3300CBCA52 /* InternalError.swift in Sources */,
@@ -1932,7 +1915,6 @@
 				E1ABA07625231F4700ED8AEF /* FrameworkLoadHandler.swift in Sources */,
 				E1ABA07525231F4700ED8AEF /* DDTags.swift in Sources */,
 				E1665A7325D12D7500BA53CD /* Spawn.swift in Sources */,
-				E150325C271860BF000CD6C5 /* NTPClock.swift in Sources */,
 				E13D0BCA2546E29C00C37D56 /* SignalUtils.swift in Sources */,
 				E12515E5254892C600670D23 /* XCUIApplicationSwizzler.swift in Sources */,
 				E1AD07A9252F5CB8003705C1 /* InternalError.swift in Sources */,
@@ -2866,16 +2848,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/open-telemetry/opentelemetry-swift";
 			requirement = {
-				kind = revision;
-				revision = 905d013fb10d8bbd64038efbe89e2f5b68aee9be;
-			};
-		};
-		E1503258271860A8000CD6C5 /* XCRemoteSwiftPackageReference "Kronos" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/MobileNativeFoundation/Kronos";
-			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 4.0.0;
+				minimumVersion = 1.1.0;
 			};
 		};
 		E157A719256E9D1D00CBCA52 /* XCRemoteSwiftPackageReference "plcrashreporter" */ = {
@@ -2929,21 +2903,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		E1503259271860A8000CD6C5 /* Kronos */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E1503258271860A8000CD6C5 /* XCRemoteSwiftPackageReference "Kronos" */;
-			productName = Kronos;
-		};
-		E150325F271860E0000CD6C5 /* Kronos */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E1503258271860A8000CD6C5 /* XCRemoteSwiftPackageReference "Kronos" */;
-			productName = Kronos;
-		};
-		E1503261271860E7000CD6C5 /* Kronos */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E1503258271860A8000CD6C5 /* XCRemoteSwiftPackageReference "Kronos" */;
-			productName = Kronos;
-		};
 		E157A718256E9D1D00CBCA52 /* CrashReporter */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = E157A719256E9D1D00CBCA52 /* XCRemoteSwiftPackageReference "plcrashreporter" */;

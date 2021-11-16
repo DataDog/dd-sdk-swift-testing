@@ -13,7 +13,8 @@
       "BUILDKITE_COMMIT": "buildkite-git-commit",
       "BUILDKITE_MESSAGE": "buildkite-git-commit-message",
       "BUILDKITE_BUILD_AUTHOR": "buildkite-git-commit-author-name",
-      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com"
+      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com",
+      "BUILDKITE_TAG": ""
     },
     {
       "ci.workspace_path": "/foo/bar",
@@ -45,7 +46,8 @@
       "BUILDKITE_COMMIT": "buildkite-git-commit",
       "BUILDKITE_MESSAGE": "buildkite-git-commit-message",
       "BUILDKITE_BUILD_AUTHOR": "buildkite-git-commit-author-name",
-      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com"
+      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com",
+      "BUILDKITE_TAG": ""
     },
     {
       "ci.workspace_path": "foo/bar",
@@ -77,7 +79,8 @@
       "BUILDKITE_COMMIT": "buildkite-git-commit",
       "BUILDKITE_MESSAGE": "buildkite-git-commit-message",
       "BUILDKITE_BUILD_AUTHOR": "buildkite-git-commit-author-name",
-      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com"
+      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com",
+      "BUILDKITE_TAG": ""
     },
     {
       "ci.workspace_path": "/foo/bar~",
@@ -109,7 +112,8 @@
       "BUILDKITE_COMMIT": "buildkite-git-commit",
       "BUILDKITE_MESSAGE": "buildkite-git-commit-message",
       "BUILDKITE_BUILD_AUTHOR": "buildkite-git-commit-author-name",
-      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com"
+      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com",
+      "BUILDKITE_TAG": ""
     },
     {
       "ci.workspace_path": "/foo/~/bar",
@@ -143,7 +147,8 @@
       "BUILDKITE_COMMIT": "buildkite-git-commit",
       "BUILDKITE_MESSAGE": "buildkite-git-commit-message",
       "BUILDKITE_BUILD_AUTHOR": "buildkite-git-commit-author-name",
-      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com"
+      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com",
+      "BUILDKITE_TAG": ""
     },
     {
       "ci.workspace_path": "/not-my-home/foo/bar",
@@ -177,7 +182,8 @@
       "BUILDKITE_COMMIT": "buildkite-git-commit",
       "BUILDKITE_MESSAGE": "buildkite-git-commit-message",
       "BUILDKITE_BUILD_AUTHOR": "buildkite-git-commit-author-name",
-      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com"
+      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com",
+      "BUILDKITE_TAG": ""
     },
     {
       "ci.workspace_path": "~foo/bar",
@@ -211,7 +217,8 @@
       "BUILDKITE_COMMIT": "buildkite-git-commit",
       "BUILDKITE_MESSAGE": "buildkite-git-commit-message",
       "BUILDKITE_BUILD_AUTHOR": "buildkite-git-commit-author-name",
-      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com"
+      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com",
+      "BUILDKITE_TAG": ""
     },
     {
       "ci.workspace_path": "/not-my-home",
@@ -243,7 +250,8 @@
       "BUILDKITE_COMMIT": "buildkite-git-commit",
       "BUILDKITE_MESSAGE": "buildkite-git-commit-message",
       "BUILDKITE_BUILD_AUTHOR": "buildkite-git-commit-author-name",
-      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com"
+      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com",
+      "BUILDKITE_TAG": ""
     },
     {
       "ci.workspace_path": "/foo/bar",
@@ -275,7 +283,8 @@
       "BUILDKITE_COMMIT": "buildkite-git-commit",
       "BUILDKITE_MESSAGE": "buildkite-git-commit-message",
       "BUILDKITE_BUILD_AUTHOR": "buildkite-git-commit-author-name",
-      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com"
+      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com",
+      "BUILDKITE_TAG": ""
     },
     {
       "ci.workspace_path": "/foo/bar",
@@ -307,7 +316,8 @@
       "BUILDKITE_COMMIT": "buildkite-git-commit",
       "BUILDKITE_MESSAGE": "buildkite-git-commit-message",
       "BUILDKITE_BUILD_AUTHOR": "buildkite-git-commit-author-name",
-      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com"
+      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com",
+      "BUILDKITE_TAG": ""
     },
     {
       "ci.workspace_path": "/foo/bar",
@@ -339,7 +349,8 @@
       "BUILDKITE_COMMIT": "buildkite-git-commit",
       "BUILDKITE_MESSAGE": "buildkite-git-commit-message",
       "BUILDKITE_BUILD_AUTHOR": "buildkite-git-commit-author-name",
-      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com"
+      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com",
+      "BUILDKITE_TAG": ""
     },
     {
       "ci.workspace_path": "/foo/bar",
@@ -371,7 +382,8 @@
       "BUILDKITE_COMMIT": "buildkite-git-commit",
       "BUILDKITE_MESSAGE": "buildkite-git-commit-message",
       "BUILDKITE_BUILD_AUTHOR": "buildkite-git-commit-author-name",
-      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com"
+      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com",
+      "BUILDKITE_TAG": ""
     },
     {
       "ci.workspace_path": "/foo/bar",
@@ -403,7 +415,8 @@
       "BUILDKITE_COMMIT": "buildkite-git-commit",
       "BUILDKITE_MESSAGE": "buildkite-git-commit-message",
       "BUILDKITE_BUILD_AUTHOR": "buildkite-git-commit-author-name",
-      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com"
+      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com",
+      "BUILDKITE_TAG": ""
     },
     {
       "ci.workspace_path": "/foo/bar",
@@ -435,7 +448,8 @@
       "BUILDKITE_COMMIT": "buildkite-git-commit",
       "BUILDKITE_MESSAGE": "buildkite-git-commit-message",
       "BUILDKITE_BUILD_AUTHOR": "buildkite-git-commit-author-name",
-      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com"
+      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com",
+      "BUILDKITE_TAG": ""
     },
     {
       "ci.workspace_path": "/foo/bar",
@@ -467,7 +481,8 @@
       "BUILDKITE_COMMIT": "buildkite-git-commit",
       "BUILDKITE_MESSAGE": "buildkite-git-commit-message",
       "BUILDKITE_BUILD_AUTHOR": "buildkite-git-commit-author-name",
-      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com"
+      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com",
+      "BUILDKITE_BRANCH": ""
     },
     {
       "ci.workspace_path": "/foo/bar",
@@ -499,7 +514,8 @@
       "BUILDKITE_COMMIT": "buildkite-git-commit",
       "BUILDKITE_MESSAGE": "buildkite-git-commit-message",
       "BUILDKITE_BUILD_AUTHOR": "buildkite-git-commit-author-name",
-      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com"
+      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com",
+      "BUILDKITE_BRANCH": ""
     },
     {
       "ci.workspace_path": "/foo/bar",
@@ -531,7 +547,8 @@
       "BUILDKITE_COMMIT": "buildkite-git-commit",
       "BUILDKITE_MESSAGE": "buildkite-git-commit-message",
       "BUILDKITE_BUILD_AUTHOR": "buildkite-git-commit-author-name",
-      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com"
+      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com",
+      "BUILDKITE_BRANCH": ""
     },
     {
       "ci.workspace_path": "/foo/bar",
@@ -570,7 +587,9 @@
       "BUILDKITE_COMMIT": "buildkite-git-commit",
       "BUILDKITE_MESSAGE": "buildkite-git-commit-message",
       "BUILDKITE_BUILD_AUTHOR": "buildkite-git-commit-author-name",
-      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com"
+      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com",
+      "BUILDKITE_BRANCH": "",
+      "BUILDKITE_TAG": ""
     },
     {
       "git.repository_url": "usersupplied-repo",
@@ -612,7 +631,9 @@
       "BUILDKITE_COMMIT": "buildkite-git-commit",
       "BUILDKITE_MESSAGE": "buildkite-git-commit-message",
       "BUILDKITE_BUILD_AUTHOR": "buildkite-git-commit-author-name",
-      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com"
+      "BUILDKITE_BUILD_AUTHOR_EMAIL": "buildkite-git-commit-author-email@datadoghq.com",
+      "BUILDKITE_BRANCH": "",
+      "BUILDKITE_TAG": ""
     },
     {
       "git.repository_url": "usersupplied-repo",

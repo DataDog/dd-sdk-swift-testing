@@ -1,6 +1,7 @@
 # Datadog SDK for Swift testing
 
-This SDK is part of Datadog's [CI Visibility](https://docs.datadoghq.com/continuous_integration/) product, currently in beta.
+This SDK is part of Datadog's [CI Visibility](https://docs.datadoghq.com/continuous_integration/) product.
+A more comprehensive and updated documentation can be found at [CI Visibility - Swift Tests](https://docs.datadoghq.com/continuous_integration/setup_tests/swift) 
 
 ## Getting Started
 
@@ -32,9 +33,6 @@ BITRISE_BUILD_SLUG=$(BITRISE_BUILD_SLUG)
 BITRISE_BUILD_NUMBER=$(BITRISE_BUILD_NUMBER)
 BITRISE_BUILD_URL=$(BITRISE_BUILD_URL)
 ```
-
-A more comprehensive and updated documentation can be found at [CI Visibility - Swift Tests](https://docs.datadoghq.com/continuous_integration/setup_tests/swift) 
-
 
 ## UITests
 

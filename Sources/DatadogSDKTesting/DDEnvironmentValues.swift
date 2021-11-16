@@ -370,15 +370,24 @@ internal struct DDEnvironmentValues {
         } else if DDEnvironmentValues.getEnvVariable("GITHUB_WORKSPACE") != nil {
             isCi = true
             provider = "github"
-            let repositoryEnv = DDEnvironmentValues.getEnvVariable("GITHUB_REPOSITORY")
-            repository = "https://github.com/\(repositoryEnv ?? "").git"
+            let repositoryEnv = DDEnvironmentValues.getEnvVariable("GITHUB_REPOSITORY") ?? ""
+            let githubServerEnv = DDEnvironmentValues.getEnvVariable("GITHUB_SERVER_URL") ?? "https://github.com"
+            repository = "\(githubServerEnv)/\(repositoryEnv).git"
             commit = DDEnvironmentValues.getEnvVariable("GITHUB_SHA")
             workspaceEnv = DDEnvironmentValues.getEnvVariable("GITHUB_WORKSPACE")
-            pipelineId = DDEnvironmentValues.getEnvVariable("GITHUB_RUN_ID")
+            let envRunId = DDEnvironmentValues.getEnvVariable("GITHUB_RUN_ID")
+            pipelineId = envRunId
             pipelineNumber = DDEnvironmentValues.getEnvVariable("GITHUB_RUN_NUMBER")
-            pipelineURL = "https://github.com/\(repositoryEnv ?? "")/commit/\(commit ?? "")/checks"
+            let envRunAttempt = DDEnvironmentValues.getEnvVariable("GITHUB_RUN_ATTEMPT")
+            var attemptsString: String
+            if let attempt = envRunAttempt {
+                attemptsString = "/attempts/\(attempt)"
+            } else {
+                attemptsString = ""
+            }
+            pipelineURL = "\(githubServerEnv)/\(repositoryEnv)/actions/runs/\(envRunId ?? "")" + attemptsString
             pipelineName = DDEnvironmentValues.getEnvVariable("GITHUB_WORKFLOW")
-            jobURL = pipelineURL
+            jobURL = "\(githubServerEnv)/\(repositoryEnv)/commit/\(commit ?? "")/checks"
             jobName = nil
             stageName = nil
             branchEnv = DDEnvironmentValues.getEnvVariable("GITHUB_HEAD_REF")
@@ -493,7 +502,7 @@ internal struct DDEnvironmentValues {
             branchEnv = nil
         }
         branch = DDEnvironmentValues.normalizedBranchOrTag(branchEnv)
-        tag =  DDEnvironmentValues.normalizedBranchOrTag(tagEnv)
+        tag = DDEnvironmentValues.normalizedBranchOrTag(tagEnv)
         repository = DDEnvironmentValues.getEnvVariable("DD_GIT_REPOSITORY_URL") ?? repository
         commit = DDEnvironmentValues.getEnvVariable("DD_GIT_COMMIT_SHA") ?? commit
         commitMessage = DDEnvironmentValues.getEnvVariable("DD_GIT_COMMIT_MESSAGE") ?? commitMessage

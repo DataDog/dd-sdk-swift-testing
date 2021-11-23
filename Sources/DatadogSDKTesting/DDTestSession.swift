@@ -308,9 +308,3 @@ public class DDTest: NSObject {
         }
     }
 }
-
-private func setAttributeIfExist(toSpan span: Span, key: String, value: String?) {
-    if let value = value {
-        span.setAttribute(key: key, value: value)
-    }
-}

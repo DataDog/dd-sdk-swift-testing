@@ -62,6 +62,12 @@ internal enum DDDeviceTags {
     static let deviceModel = "device.model"
 }
 
+internal enum DDUISettingsTags {
+    static let uiSettingsAppearance = "ui.appearance"
+    static let uiSettingsOrientation = "ui.orientation"
+    static let uiSettingsLocalization = "ui.localization"
+}
+
 internal enum DDRuntimeTags {
     static let runtimeName = "runtime.name"
     static let runtimeVersion = "runtime.version"

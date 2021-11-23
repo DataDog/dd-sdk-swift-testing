@@ -18,14 +18,12 @@ public class DDTestSession: NSObject {
     private var executionLock = NSLock()
     private var privateCurrentExecutionOrder = 0
     var currentExecutionOrder: Int {
-        get {
-            executionLock.lock()
-            defer {
-                privateCurrentExecutionOrder += 1
-                executionLock.unlock()
-            }
-            return privateCurrentExecutionOrder
+        executionLock.lock()
+        defer {
+            privateCurrentExecutionOrder += 1
+            executionLock.unlock()
         }
+        return privateCurrentExecutionOrder
     }
 
     init(bundleName: String, startTime: Date?) {
@@ -114,7 +112,6 @@ public class DDTestSuite: NSObject {
     @objc(endWithTime:) public func end(endTime: Date? = nil) {}
     @objc public func end() {}
 
-
     /// Starts a test in this suite
     /// - Parameters:
     ///   - name: name of the suite
@@ -122,6 +119,7 @@ public class DDTestSuite: NSObject {
     @objc public func testStart(name: String, startTime: Date? = nil) -> DDTest {
         return DDTest(name: name, suite: self, session: session, startTime: startTime)
     }
+
     @objc public func testStart(name: String) -> DDTest {
         return testStart(name: name, startTime: nil)
     }
@@ -240,6 +238,7 @@ public class DDTest: NSObject {
         }
 
         span.setAttribute(key: DDTestTags.testStatus, value: testStatus)
+
         DDTestMonitor.instance?.stderrCapturer.syncData()
         if let endTime = endTime {
             span.end(time: endTime)
@@ -307,5 +306,11 @@ public class DDTest: NSObject {
         if let percentile90 = Sigma.percentile(samples, percentile: 0.90) {
             span.setAttribute(key: tag + DDBenchmarkTags.statisticsP90, value: percentile90)
         }
+    }
+}
+
+private func setAttributeIfExist(toSpan span: Span, key: String, value: String?) {
+    if let value = value {
+        span.setAttribute(key: key, value: value)
     }
 }

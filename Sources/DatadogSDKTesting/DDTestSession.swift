@@ -85,6 +85,15 @@ public extension DDTestSession {
         return end(endTime: nil)
     }
 
+
+    /// Adds a extra tag or attribute to the test session, any number of tags can be reported
+    /// - Parameters:
+    ///   - key: The name of the tag, if a tag exists with the name it will be
+    ///     replaced with the new value
+    ///   - value: The value of the tag, can be a number or a string.
+    @objc func setTag(key: String, value: Any) {
+    }
+
     /// Starts a suite in this session
     /// - Parameters:
     ///   - name: name of the suite
@@ -113,6 +122,15 @@ public class DDTestSuite: NSObject {
     ///   - endTime: Optional, the time where the suite ended
     @objc(endWithTime:) public func end(endTime: Date? = nil) {}
     @objc public func end() {}
+
+
+    /// Adds a extra tag or attribute to the test suite, any number of tags can be reported
+    /// - Parameters:
+    ///   - key: The name of the tag, if a tag exists with the name it will be
+    ///     replaced with the new value
+    ///   - value: The value of the tag, can be a number or a string.
+    @objc public func setTag(key: String, value: Any) {
+    }
 
 
     /// Starts a test in this suite
@@ -199,12 +217,12 @@ public class DDTest: NSObject {
         }
     }
 
-    /// Adds a extra atribute or tag to the test, any number of attributes can be reported
+    /// Adds a extra tag or attribute to the test, any number of tags can be reported
     /// - Parameters:
-    ///   - key: The name of the attribute, if an atrtribute exists with the name it will be
+    ///   - key: The name of the tag, if a tag exists with the name it will be
     ///     replaced with the new value
-    ///   - value: The value of the attibute, can be a number or a string.
-    @objc public func setAttribute(key: String, value: Any) {
+    ///   - value: The value of the tag, can be a number or a string.
+    @objc public func setTag(key: String, value: Any) {
         span.setAttribute(key: key, value: AttributeValue(value))
     }
 
@@ -261,7 +279,7 @@ public class DDTest: NSObject {
     ///   - name: Name of the measure benchmarked
     ///   - samples: Array for values sampled for the measure
     ///   - info: (Optional) Extra information about the benchmark
-    @objc public func addBenchmark(name: String, samples: [Double], info: String?) {
+    @objc func addBenchmark(name: String, samples: [Double], info: String?) {
         span.setAttribute(key: DDTestTags.testType, value: DDTagValues.typeBenchmark)
 
         let tag = DDBenchmarkTags.benchmark + "." + name + "."

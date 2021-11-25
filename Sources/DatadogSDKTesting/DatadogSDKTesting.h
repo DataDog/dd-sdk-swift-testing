@@ -13,3 +13,4 @@ FOUNDATION_EXPORT double DatadogSDKTestingVersionNumber;
 FOUNDATION_EXPORT const unsigned char DatadogSDKTestingVersionString[];
 
 #import <DatadogSDKTesting/DDSymbolAddress.h>
+#import <DatadogSDKTesting/NTPServer.h>

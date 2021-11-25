@@ -162,7 +162,7 @@ internal class DDTestMonitor {
             if let data = data as Data? {
                 let decoded = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
                 decoded?.forEach {
-                    DDTestMonitor.instance?.currentTest?.setAttribute(key: $0.key, value: $0.value)
+                    DDTestMonitor.instance?.currentTest?.setTag(key: $0.key, value: $0.value)
                 }
             }
 

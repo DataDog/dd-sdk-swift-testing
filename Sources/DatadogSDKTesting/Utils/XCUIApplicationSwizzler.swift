@@ -61,6 +61,7 @@ extension XCUIApplication {
                 "DD_DONT_EXPORT"
             ].forEach(addProcessEnvironmentToLaunch)
         }
+        DDTestMonitor.instance?.startAttributeListener()
         swizzled_launch()
     }
 }

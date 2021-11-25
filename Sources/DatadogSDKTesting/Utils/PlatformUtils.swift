@@ -8,6 +8,7 @@ import Foundation
 #if os(iOS) || os(tvOS) || os(watchOS)
     import UIKit
 #else
+    import Cocoa
     import SystemConfiguration
 #endif
 struct PlatformUtils {
@@ -86,5 +87,74 @@ struct PlatformUtils {
         } else {
             return (ProcessInfo.processInfo.processName, (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "")
         }
+    }
+
+    static func getAppearance() -> String {
+        #if os(iOS) || os(tvOS) || os(watchOS)
+            let appearance: String
+            if #available(iOS 13.0, tvOS 13.0, *) {
+                switch UITraitCollection.current.userInterfaceStyle {
+                    case .unspecified:
+                        appearance = "unspecified"
+                    case .light:
+                        appearance = "light"
+                    case .dark:
+                        appearance = "dark"
+                    @unknown default:
+                        appearance = "unknown"
+                }
+            } else if #available(iOS 12.0, tvOS 12.0, *) {
+                switch UIScreen.main.traitCollection.userInterfaceStyle {
+                    case .dark:
+                        appearance = "dark"
+                    case .light:
+                        appearance = "light"
+                    case .unspecified:
+                        appearance = "unspecified"
+                    @unknown default:
+                        appearance = "unknown"
+                }
+            } else {
+                appearance = "light"
+            }
+
+            return appearance
+        #else
+            if #available(OSX 10.14, *) {
+                return NSApp.effectiveAppearance.name.rawValue
+            } else {
+                return "light"
+            }
+        #endif
+    }
+
+    #if os(iOS)
+        static func getOrientation() -> String {
+            let orientation = UIApplication.shared.keyWindow?.rootViewController?.interfaceOrientation
+            switch orientation {
+                case .unknown:
+                    return "unknown"
+                case .portrait:
+                    return "portrait"
+                case .portraitUpsideDown:
+                    return "portraitUpsideDown"
+                case .landscapeLeft:
+                    return "landscapeRight"
+                case .landscapeRight:
+                    return "landscapeLeft"
+                case .none:
+                    return "unknown"
+                @unknown default:
+                    return "unknown"
+            }
+        }
+    #endif
+
+    static func getLocalization() -> String? {
+        #if os(iOS) || os(tvOS) || os(watchOS)
+            return Locale.current.languageCode
+        #else
+            return NSLocale.current.languageCode
+        #endif
     }
 }

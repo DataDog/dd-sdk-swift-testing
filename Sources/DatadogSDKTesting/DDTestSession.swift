@@ -18,14 +18,12 @@ public class DDTestSession: NSObject {
     private var executionLock = NSLock()
     private var privateCurrentExecutionOrder = 0
     var currentExecutionOrder: Int {
-        get {
-            executionLock.lock()
-            defer {
-                privateCurrentExecutionOrder += 1
-                executionLock.unlock()
-            }
-            return privateCurrentExecutionOrder
+        executionLock.lock()
+        defer {
+            privateCurrentExecutionOrder += 1
+            executionLock.unlock()
         }
+        return privateCurrentExecutionOrder
     }
 
     init(bundleName: String, startTime: Date?) {
@@ -123,7 +121,6 @@ public class DDTestSuite: NSObject {
     @objc(endWithTime:) public func end(endTime: Date? = nil) {}
     @objc public func end() {}
 
-
     /// Adds a extra tag or attribute to the test suite, any number of tags can be reported
     /// - Parameters:
     ///   - key: The name of the tag, if a tag exists with the name it will be
@@ -132,7 +129,6 @@ public class DDTestSuite: NSObject {
     @objc public func setTag(key: String, value: Any) {
     }
 
-
     /// Starts a test in this suite
     /// - Parameters:
     ///   - name: name of the suite
@@ -140,6 +136,7 @@ public class DDTestSuite: NSObject {
     @objc public func testStart(name: String, startTime: Date? = nil) -> DDTest {
         return DDTest(name: name, suite: self, session: session, startTime: startTime)
     }
+
     @objc public func testStart(name: String) -> DDTest {
         return testStart(name: name, startTime: nil)
     }
@@ -258,6 +255,7 @@ public class DDTest: NSObject {
         }
 
         span.setAttribute(key: DDTestTags.testStatus, value: testStatus)
+
         DDTestMonitor.instance?.stderrCapturer.syncData()
         if let endTime = endTime {
             span.end(time: endTime)

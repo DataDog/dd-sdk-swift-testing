@@ -14,7 +14,14 @@ class NTPClock: Clock {
         let ntpServer = NTPServer.default
         do {
             try ntpServer.sync()
-            ntpOffset = ntpServer.offset
+            let serverOffset = ntpServer.offset
+            if serverOffset.isFinite {
+                ntpOffset = serverOffset
+            } else {
+                ntpOffset = 0
+                Log.debug("NTP server invalid time")
+            }
+
         } catch {
             ntpOffset = 0
             Log.debug("NTP server fail to connect")

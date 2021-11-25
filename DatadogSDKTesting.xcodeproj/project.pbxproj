@@ -16,6 +16,18 @@
 		E11295C825F63BA8002719E7 /* DDSymbolAddress.c in Sources */ = {isa = PBXBuildFile; fileRef = E11295C725F63BA8002719E7 /* DDSymbolAddress.c */; };
 		E11295C925F63BA8002719E7 /* DDSymbolAddress.c in Sources */ = {isa = PBXBuildFile; fileRef = E11295C725F63BA8002719E7 /* DDSymbolAddress.c */; };
 		E11295CA25F63BA8002719E7 /* DDSymbolAddress.c in Sources */ = {isa = PBXBuildFile; fileRef = E11295C725F63BA8002719E7 /* DDSymbolAddress.c */; };
+		E114C131274F8A0000B57E08 /* NTPServer.h in Headers */ = {isa = PBXBuildFile; fileRef = E114C12D274F8A0000B57E08 /* NTPServer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		E114C132274F8A0000B57E08 /* NTPServer.m in Sources */ = {isa = PBXBuildFile; fileRef = E114C12E274F8A0000B57E08 /* NTPServer.m */; };
+		E114C133274F8A0000B57E08 /* NTPTypes.c in Sources */ = {isa = PBXBuildFile; fileRef = E114C12F274F8A0000B57E08 /* NTPTypes.c */; };
+		E114C134274F8A0000B57E08 /* NTPTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = E114C130274F8A0000B57E08 /* NTPTypes.h */; };
+		E114C135274F8A1200B57E08 /* NTPServer.m in Sources */ = {isa = PBXBuildFile; fileRef = E114C12E274F8A0000B57E08 /* NTPServer.m */; };
+		E114C136274F8A1200B57E08 /* NTPServer.h in Headers */ = {isa = PBXBuildFile; fileRef = E114C12D274F8A0000B57E08 /* NTPServer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		E114C137274F8A1200B57E08 /* NTPTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = E114C130274F8A0000B57E08 /* NTPTypes.h */; };
+		E114C138274F8A1200B57E08 /* NTPTypes.c in Sources */ = {isa = PBXBuildFile; fileRef = E114C12F274F8A0000B57E08 /* NTPTypes.c */; };
+		E114C139274F8A1400B57E08 /* NTPServer.m in Sources */ = {isa = PBXBuildFile; fileRef = E114C12E274F8A0000B57E08 /* NTPServer.m */; };
+		E114C13A274F8A1400B57E08 /* NTPServer.h in Headers */ = {isa = PBXBuildFile; fileRef = E114C12D274F8A0000B57E08 /* NTPServer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		E114C13B274F8A1400B57E08 /* NTPTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = E114C130274F8A0000B57E08 /* NTPTypes.h */; };
+		E114C13C274F8A1400B57E08 /* NTPTypes.c in Sources */ = {isa = PBXBuildFile; fileRef = E114C12F274F8A0000B57E08 /* NTPTypes.c */; };
 		E117CFC526306BB200ACE977 /* DDNetworkInstrumentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14AA0BF2555A9A1003FA711 /* DDNetworkInstrumentationTests.swift */; };
 		E117CFC726307B9A00ACE977 /* SpySpanProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E117CFC626307B9A00ACE977 /* SpySpanProcessor.swift */; };
 		E117CFC826307B9A00ACE977 /* SpySpanProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E117CFC626307B9A00ACE977 /* SpySpanProcessor.swift */; };
@@ -50,6 +62,9 @@
 		E15264AF25FA3C16008B8665 /* DDSymbolicatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E15264AE25FA3C16008B8665 /* DDSymbolicatorTests.swift */; };
 		E15264B025FA3C16008B8665 /* DDSymbolicatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E15264AE25FA3C16008B8665 /* DDSymbolicatorTests.swift */; };
 		E15264B125FA3C16008B8665 /* DDSymbolicatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E15264AE25FA3C16008B8665 /* DDSymbolicatorTests.swift */; };
+		E1550C45274F7FF700006F11 /* NTPClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1550C44274F7FF700006F11 /* NTPClock.swift */; };
+		E1550C46274F7FF700006F11 /* NTPClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1550C44274F7FF700006F11 /* NTPClock.swift */; };
+		E1550C47274F7FF700006F11 /* NTPClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1550C44274F7FF700006F11 /* NTPClock.swift */; };
 		E157A721256E9D1D00CBCA52 /* DatadogSDKTesting.h in Headers */ = {isa = PBXBuildFile; fileRef = E1ABA04D25231E2500ED8AEF /* DatadogSDKTesting.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E157A723256E9D1D00CBCA52 /* SwiftExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E116D7DA25248C390022779D /* SwiftExtensions.swift */; };
 		E157A724256E9D1D00CBCA52 /* DDTestMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA08A252341EA00ED8AEF /* DDTestMonitor.swift */; };
@@ -400,6 +415,11 @@
 		E10034D92703599D00439C9C /* DDTestSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTestSession.swift; sourceTree = "<group>"; };
 		E11295BA25F2483D002719E7 /* FileLocator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileLocator.swift; sourceTree = "<group>"; };
 		E11295C725F63BA8002719E7 /* DDSymbolAddress.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = DDSymbolAddress.c; sourceTree = "<group>"; };
+		E114C12D274F8A0000B57E08 /* NTPServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NTPServer.h; sourceTree = "<group>"; };
+		E114C12E274F8A0000B57E08 /* NTPServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NTPServer.m; sourceTree = "<group>"; };
+		E114C12F274F8A0000B57E08 /* NTPTypes.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = NTPTypes.c; sourceTree = "<group>"; };
+		E114C130274F8A0000B57E08 /* NTPTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NTPTypes.h; sourceTree = "<group>"; };
+		E114C13D274F8A2600B57E08 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		E116D7DA25248C390022779D /* SwiftExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftExtensions.swift; sourceTree = "<group>"; };
 		E117CFC626307B9A00ACE977 /* SpySpanProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpySpanProcessor.swift; sourceTree = "<group>"; };
 		E1193F8C272C24F900E4154E /* UIIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIIntegrationTests.swift; sourceTree = "<group>"; };
@@ -457,6 +477,7 @@
 		E14AA0BF2555A9A1003FA711 /* DDNetworkInstrumentationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDNetworkInstrumentationTests.swift; sourceTree = "<group>"; };
 		E14AA0C9255AE8D3003FA711 /* SignalUtilsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalUtilsTests.swift; sourceTree = "<group>"; };
 		E15264AE25FA3C16008B8665 /* DDSymbolicatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDSymbolicatorTests.swift; sourceTree = "<group>"; };
+		E1550C44274F7FF700006F11 /* NTPClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NTPClock.swift; sourceTree = "<group>"; };
 		E157A74D256E9D1D00CBCA52 /* DatadogSDKTesting.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = DatadogSDKTesting.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E157A785256E9D3300CBCA52 /* DatadogSDKTesting.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = DatadogSDKTesting.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E157A7A3256EB0F000CBCA52 /* DatadogSDKTestingTests_macOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DatadogSDKTestingTests_macOS.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -642,6 +663,7 @@
 				E12515E4254892C500670D23 /* XCUIApplicationSwizzler.swift */,
 				E11295BA25F2483D002719E7 /* FileLocator.swift */,
 				E1A63F5B26789915002F48FA /* CodeOwners.swift */,
+				E1550C44274F7FF700006F11 /* NTPClock.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -952,6 +974,18 @@
 			path = heads;
 			sourceTree = "<group>";
 		};
+		E1550C32274F7E7900006F11 /* NTPKit */ = {
+			isa = PBXGroup;
+			children = (
+				E114C13D274F8A2600B57E08 /* LICENSE */,
+				E114C12D274F8A0000B57E08 /* NTPServer.h */,
+				E114C12E274F8A0000B57E08 /* NTPServer.m */,
+				E114C12F274F8A0000B57E08 /* NTPTypes.c */,
+				E114C130274F8A0000B57E08 /* NTPTypes.h */,
+			);
+			path = NTPKit;
+			sourceTree = "<group>";
+		};
 		E160A113252B3A6B003121A5 /* include */ = {
 			isa = PBXGroup;
 			children = (
@@ -1053,6 +1087,7 @@
 		E1ABA06B25231F3200ED8AEF /* Objc */ = {
 			isa = PBXGroup;
 			children = (
+				E1550C32274F7E7900006F11 /* NTPKit */,
 				E160A113252B3A6B003121A5 /* include */,
 				E1ABA06C25231F3200ED8AEF /* LibraryInitializer.m */,
 				E11295C725F63BA8002719E7 /* DDSymbolAddress.c */,
@@ -1205,7 +1240,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				E157A721256E9D1D00CBCA52 /* DatadogSDKTesting.h in Headers */,
+				E114C136274F8A1200B57E08 /* NTPServer.h in Headers */,
 				E1D6EFA325F6631E00E8C3AE /* DDSymbolAddress.h in Headers */,
+				E114C137274F8A1200B57E08 /* NTPTypes.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1214,7 +1251,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				E157A759256E9D3300CBCA52 /* DatadogSDKTesting.h in Headers */,
+				E114C13A274F8A1400B57E08 /* NTPServer.h in Headers */,
 				E1D6EFA425F6632B00E8C3AE /* DDSymbolAddress.h in Headers */,
+				E114C13B274F8A1400B57E08 /* NTPTypes.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1223,7 +1262,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				E1ABA05B25231E2500ED8AEF /* DatadogSDKTesting.h in Headers */,
+				E114C131274F8A0000B57E08 /* NTPServer.h in Headers */,
 				E1D6EFA225F6631200E8C3AE /* DDSymbolAddress.h in Headers */,
+				E114C134274F8A0000B57E08 /* NTPTypes.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1757,10 +1798,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				E11295BC25F2483D002719E7 /* FileLocator.swift in Sources */,
+				E114C135274F8A1200B57E08 /* NTPServer.m in Sources */,
+				E114C138274F8A1200B57E08 /* NTPTypes.c in Sources */,
 				E157A723256E9D1D00CBCA52 /* SwiftExtensions.swift in Sources */,
 				E10034DE27035A7800439C9C /* DDTestSession.swift in Sources */,
 				E1F422A82654F28200233B75 /* OriginSpanProcessor.swift in Sources */,
 				E1665A8225D13BBB00BA53CD /* DDSymbolicator.swift in Sources */,
+				E1550C46274F7FF700006F11 /* NTPClock.swift in Sources */,
 				E1C189BA270F193F00188C0E /* Log.swift in Sources */,
 				E1A63F5D26789915002F48FA /* CodeOwners.swift in Sources */,
 				E157A724256E9D1D00CBCA52 /* DDTestMonitor.swift in Sources */,
@@ -1793,10 +1837,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				E11295BD25F2483D002719E7 /* FileLocator.swift in Sources */,
+				E114C139274F8A1400B57E08 /* NTPServer.m in Sources */,
+				E114C13C274F8A1400B57E08 /* NTPTypes.c in Sources */,
 				E157A75B256E9D3300CBCA52 /* SwiftExtensions.swift in Sources */,
 				E10034E027035A7900439C9C /* DDTestSession.swift in Sources */,
 				E1F422A92654F28200233B75 /* OriginSpanProcessor.swift in Sources */,
 				E1665A8125D13BBB00BA53CD /* DDSymbolicator.swift in Sources */,
+				E1550C47274F7FF700006F11 /* NTPClock.swift in Sources */,
 				E1C189BB270F193F00188C0E /* Log.swift in Sources */,
 				E1A63F5E26789915002F48FA /* CodeOwners.swift in Sources */,
 				E157A75C256E9D3300CBCA52 /* DDTestMonitor.swift in Sources */,
@@ -1881,10 +1928,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				E11295BB25F2483D002719E7 /* FileLocator.swift in Sources */,
+				E114C132274F8A0000B57E08 /* NTPServer.m in Sources */,
+				E114C133274F8A0000B57E08 /* NTPTypes.c in Sources */,
 				E1AD079F252F5B00003705C1 /* SwiftExtensions.swift in Sources */,
 				E10034DC27035A7700439C9C /* DDTestSession.swift in Sources */,
 				E1F422A72654F28200233B75 /* OriginSpanProcessor.swift in Sources */,
 				E1D6EFA525F6647F00E8C3AE /* LibraryInitializer.m in Sources */,
+				E1550C45274F7FF700006F11 /* NTPClock.swift in Sources */,
 				E1C189B9270F193F00188C0E /* Log.swift in Sources */,
 				E1A63F5C26789915002F48FA /* CodeOwners.swift in Sources */,
 				E1665A8525D1524100BA53CD /* DDSymbolicator.swift in Sources */,

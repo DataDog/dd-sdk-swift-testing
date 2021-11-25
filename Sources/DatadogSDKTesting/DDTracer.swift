@@ -54,8 +54,7 @@ internal class DDTracer {
         tracerProvider.updateActiveSampler(Samplers.alwaysOn)
         let spanLimits = tracerProvider.getActiveSpanLimits().settingAttributeCountLimit(1024)
         tracerProvider.updateActiveSpanLimits(spanLimits)
-        // This is currently not working as expected, reports duration 0 sometimes
-        // tracerProvider.updateActiveClock(NTPClock())
+        tracerProvider.updateActiveClock(NTPClock())
 
         let bundle = Bundle.main
         let identifier = bundle.bundleIdentifier ?? "com.datadoghq.DatadogSDKTesting"

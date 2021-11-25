@@ -2,3 +2,4 @@ Component,Origin,License,Copyright
 import,opentelemetry-swift,Apache-2.0,Copyright 2020 - OpenTelemetry Authors
 import,PLCrashReporter,MIT,Copyright Microsoft Corporation
 import,SigmaSwiftStatistics,MIT,Copyright 2015 - Evgenii Neumerzhitckii
+import,NTPKit,BSD 2-Clause,Copyright 2016 - Nicholas Cvitak

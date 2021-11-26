@@ -1,17 +1,17 @@
 .PHONY: clean release tests
 
 build/DatadogSDKTesting/ios:
-	xcodebuild archive -scheme DatadogSDKTesting_iOS -destination="iOS" -archivePath build/DatadogSDKTesting/iphoneos.xcarchive -sdk iphoneos SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES
-	xcodebuild archive -scheme DatadogSDKTesting_iOS -destination="iOS Simulator" -archivePath build/DatadogSDKTesting/iphonesimulator.xcarchive -sdk iphonesimulator SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES
+	xcodebuild archive -scheme DatadogSDKTesting_iOS -destination "generic/platform=iOS" -archivePath build/DatadogSDKTesting/iphoneos.xcarchive -sdk iphoneos SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES
+	xcodebuild archive -scheme DatadogSDKTesting_iOS -destination "generic/platform=iOS Simulator" -archivePath build/DatadogSDKTesting/iphonesimulator.xcarchive -sdk iphonesimulator SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES
 
 build/DatadogSDKTesting/mac:
-	xcodebuild archive -scheme DatadogSDKTesting_macOS -archivePath build/DatadogSDKTesting/macos.xcarchive -sdk macosx SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES
-	xcodebuild archive -scheme DatadogSDKTesting_iOS -destination 'platform=macOS,arch=x86_64,variant=Mac Catalyst' -archivePath build/DatadogSDKTesting/maccatalyst.xcarchive -sdk macosx SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES
+	xcodebuild archive -scheme DatadogSDKTesting_macOS -destination "generic/platform=macOS" -archivePath build/DatadogSDKTesting/macos.xcarchive -sdk macosx SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES
+	xcodebuild archive -scheme DatadogSDKTesting_iOS -destination "generic/platform=macOS,variant=Mac Catalyst" -archivePath build/DatadogSDKTesting/maccatalyst.xcarchive -sdk macosx SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES
 
 
 build/DatadogSDKTesting/tvos:
-	xcodebuild archive -scheme DatadogSDKTesting_tvOS -destination="tvOS" -archivePath build/DatadogSDKTesting/appletvos.xcarchive -sdk appletvos SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES
-	xcodebuild archive -scheme DatadogSDKTesting_tvOS -destination="tvOS Simulator" -archivePath build/DatadogSDKTesting/appletvsimulator.xcarchive -sdk appletvsimulator SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES
+	xcodebuild archive -scheme DatadogSDKTesting_tvOS -destination "generic/platform=tvOS" -archivePath build/DatadogSDKTesting/appletvos.xcarchive -sdk appletvos SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES
+	xcodebuild archive -scheme DatadogSDKTesting_tvOS -destination "generic/platform=tvOS Simulator" -archivePath build/DatadogSDKTesting/appletvsimulator.xcarchive -sdk appletvsimulator SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES
 
 build/DatadogSDKTesting.xcframework: build/DatadogSDKTesting/ios build/DatadogSDKTesting/mac build/DatadogSDKTesting/tvos
 	mkdir -p $(PWD)/build/xcframework

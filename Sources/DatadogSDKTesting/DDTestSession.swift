@@ -83,14 +83,12 @@ public extension DDTestSession {
         return end(endTime: nil)
     }
 
-
     /// Adds a extra tag or attribute to the test session, any number of tags can be reported
     /// - Parameters:
     ///   - key: The name of the tag, if a tag exists with the name it will be
     ///     replaced with the new value
     ///   - value: The value of the tag, can be a number or a string.
-    @objc func setTag(key: String, value: Any) {
-    }
+    @objc func setTag(key: String, value: Any) {}
 
     /// Starts a suite in this session
     /// - Parameters:
@@ -126,8 +124,7 @@ public class DDTestSuite: NSObject {
     ///   - key: The name of the tag, if a tag exists with the name it will be
     ///     replaced with the new value
     ///   - value: The value of the tag, can be a number or a string.
-    @objc public func setTag(key: String, value: Any) {
-    }
+    @objc public func setTag(key: String, value: Any) {}
 
     /// Starts a test in this suite
     /// - Parameters:
@@ -186,9 +183,7 @@ public class DDTest: NSObject {
         // Is not a UITest until a XCUIApplication is launched
         span.setAttribute(key: DDTestTags.testIsUITest, value: false)
 
-        if !DDTestMonitor.env.disableDDSDKIOSIntegration {
-            DDTestMonitor.tracer.addPropagationsHeadersToEnvironment()
-        }
+        DDTestMonitor.tracer.addPropagationsHeadersToEnvironment()
 
         let functionName = suite.name + "." + name
         if let functionInfo = session.bundleFunctionInfo[functionName] {

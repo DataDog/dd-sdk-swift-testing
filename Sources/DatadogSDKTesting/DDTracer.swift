@@ -76,6 +76,11 @@ internal class DDTracer {
                 endpoint = Endpoint.us1
         }
 
+        // Staging endpoint, disable only for testing in staging
+//        endpoint = Endpoint.custom(tracesURL: URL(string: "https://trace.browser-intake-datad0g.com/api/v2/spans")!,
+//                                   logsURL: URL(string: "https://logs.browser-intake-datad0g.com/api/v2/logs")!,
+//                                   metricsURL: URL(string: "https://api.datad0g.com/api/v2/series")!)
+
         var payloadCompression = true
         // When reporting tests to local server
         if let localPort = env.localTestEnvironmentPort {
@@ -305,7 +310,9 @@ internal class DDTracer {
         }
 
         OpenTelemetry.instance.propagators.textMapPropagator.inject(spanContext: propagationContext, carrier: &headers, setter: HeaderSetter())
-        headers.merge(datadogHeaders(forContext: propagationContext)) { current, _ in current }
+        if !DDTestMonitor.env.disableDDSDKIOSIntegration {
+            headers.merge(datadogHeaders(forContext: propagationContext)) { current, _ in current }
+        }
         return headers
     }
 
@@ -323,7 +330,9 @@ internal class DDTracer {
         }
 
         EnvironmentContextPropagator().inject(spanContext: propagationContext, carrier: &headers, setter: HeaderSetter())
-        headers.merge(datadogHeaders(forContext: propagationContext)) { current, _ in current }
+        if !DDTestMonitor.env.disableDDSDKIOSIntegration {
+            headers.merge(datadogHeaders(forContext: propagationContext)) { current, _ in current }
+        }
         return headers
     }
 

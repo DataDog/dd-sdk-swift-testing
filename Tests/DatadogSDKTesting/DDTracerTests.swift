@@ -290,6 +290,7 @@ class DDTracerTests: XCTestCase {
         XCTAssertNil(environmentValues[DDHeaders.parentSpanIDField.rawValue])
 
         span.end()
-    }
 
+        DDEnvironmentValues.environment["DD_DISABLE_SDKIOS_INTEGRATION"] = nil
+    }
 }

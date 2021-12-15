@@ -15,7 +15,7 @@ public class DDTestSession: NSObject {
     var codeOwners: CodeOwners?
     var testFramework = "Swift API"
 
-    private var executionLock = NSLock()
+    private let executionLock = NSLock()
     private var privateCurrentExecutionOrder = 0
     var currentExecutionOrder: Int {
         executionLock.lock()

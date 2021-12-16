@@ -145,6 +145,16 @@ class DDTracerTests: XCTestCase {
         DDEnvironmentValues.environment["DD_ENDPOINT"] = nil
     }
 
+    func testEndpointChangeToUS5() {
+        DDEnvironmentValues.environment["DD_ENDPOINT"] = "us5"
+        resetEnvironmentVariables()
+
+        let tracer = DDTracer()
+        XCTAssertTrue(tracer.endpointURLs().contains("https://trace.browser-intake-us5-datadoghq.com/api/v2/spans"))
+        XCTAssertTrue(tracer.endpointURLs().contains("https://logs.browser-intake-us5-datadoghq.com/api/v2/logs"))
+        DDEnvironmentValues.environment["DD_ENDPOINT"] = nil
+    }
+
     func testEndpointChangeToEU() {
         DDEnvironmentValues.environment["DD_ENDPOINT"] = "eu"
         resetEnvironmentVariables()

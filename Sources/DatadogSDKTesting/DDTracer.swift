@@ -68,6 +68,11 @@ internal class DDTracer {
                 endpoint = Endpoint.us1
             case "us3", "US3", "https://us3.datadoghq.com", "us3.datadoghq.com":
                 endpoint = Endpoint.us3
+            case "us5", "US5", "https://us5.datadoghq.com", "us5.datadoghq.com":
+                //endpoint = Endpoint.us5
+                endpoint = Endpoint.custom(tracesURL: URL(string: "https://trace.browser-intake-us5-datadoghq.com/api/v2/spans")!,
+                                           logsURL: URL(string: "https://logs.browser-intake-us5-datadoghq.com/api/v2/logs")!,
+                                           metricsURL: URL(string: "https://api.us5.datadoghq.com/api/v1/series")!)
             case "eu", "EU", "eu1", "EU1", "https://app.datadoghq.eu", "app.datadoghq.eu", "datadoghq.eu":
                 endpoint = Endpoint.eu1
             case "gov", "GOV", "us1_fed", "US1_FED", "https://app.ddog-gov.com", "app.ddog-gov.com", "ddog-gov.com":
@@ -76,10 +81,10 @@ internal class DDTracer {
                 endpoint = Endpoint.us1
         }
 
-        // Staging endpoint, disable only for testing in staging
+//        // Staging endpoint, disable only for testing in staging
 //        endpoint = Endpoint.custom(tracesURL: URL(string: "https://trace.browser-intake-datad0g.com/api/v2/spans")!,
 //                                   logsURL: URL(string: "https://logs.browser-intake-datad0g.com/api/v2/logs")!,
-//                                   metricsURL: URL(string: "https://api.datad0g.com/api/v2/series")!)
+//                                   metricsURL: URL(string: "https://api.datad0g.com/api/v1/series")!)
 
         var payloadCompression = true
         // When reporting tests to local server

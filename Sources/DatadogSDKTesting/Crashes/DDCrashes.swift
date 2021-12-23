@@ -61,6 +61,7 @@ internal enum DDCrashes {
                             errorType += "\nException Code: \(code)"
                         }
                     }
+
                     DDTestMonitor.tracer.createSpanFromCrash(spanData: spanData,
                                                              crashDate: crashReport.systemInfo.timestamp,
                                                              errorType: errorType,

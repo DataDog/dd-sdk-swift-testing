@@ -17,6 +17,7 @@ internal enum DDTags {
     static let errorType = "error.type"
     static let errorMessage = "error.message"
     static let errorStack = "error.stack"
+    static let errorCrashLog = "error.crash_log"
 
     /// Default span type for spans created without a specifying a type. In general all spans should use this type.
     static let defaultSpanType = "custom"

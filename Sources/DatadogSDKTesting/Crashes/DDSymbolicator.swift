@@ -375,6 +375,20 @@ enum DDSymbolicator {
             return mangledName
         }
     }
+
+    static func calculateCrashedThread(stack: String) -> String {
+        var charIndex = 0
+        for line in stack.components(separatedBy: "\n").lazy {
+            if line.hasPrefix("Thread"), line.contains("Crashed:") {
+                break
+            }
+            charIndex += line.count + 1
+        }
+
+        let start = stack.index(stack.startIndex, offsetBy: charIndex)
+        let end = stack.index(start, offsetBy: 5000)
+        return String(stack[start ... end])
+    }
 }
 
 @_silgen_name("swift_demangle")

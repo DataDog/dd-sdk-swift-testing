@@ -6,7 +6,6 @@
 
 import Foundation
 @_implementationOnly import OpenTelemetryApi
-@_implementationOnly import OpenTelemetrySdk
 @_implementationOnly import URLSessionInstrumentation
 
 class DDNetworkInstrumentation {

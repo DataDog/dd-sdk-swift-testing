@@ -5,7 +5,6 @@
  */
 
 import Foundation
-@_implementationOnly import OpenTelemetrySdk
 
 public class DDInstrumentationControl: NSObject {
     override private init() {}

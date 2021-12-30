@@ -251,7 +251,7 @@ public class DDTest: NSObject {
 
         span.setAttribute(key: DDTestTags.testStatus, value: testStatus)
 
-        DDTestMonitor.instance?.stderrCapturer.syncData()
+        StderrCapture.syncData()
         if let endTime = endTime {
             span.end(time: endTime)
         } else {

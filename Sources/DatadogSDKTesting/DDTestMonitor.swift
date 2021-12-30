@@ -23,7 +23,6 @@ internal class DDTestMonitor {
     static var env = DDEnvironmentValues()
 
     var networkInstrumentation: DDNetworkInstrumentation?
-    var stderrCapturer: StderrCapture
     var injectHeaders: Bool = false
     var recordPayload: Bool = false
     var maxPayloadSize: Int = defaultPayloadSize
@@ -59,7 +58,6 @@ internal class DDTestMonitor {
     }
 
     init() {
-        stderrCapturer = StderrCapture()
         if DDTestMonitor.tracer.isBinaryUnderUITesting {
             /// If the library is being loaded in a binary launched from a UITest, dont start test observing,
             /// except if testing the tracer itself
@@ -147,7 +145,7 @@ internal class DDTestMonitor {
     }
 
     func startStdoutCapture() {
-        StdoutCapture.startCapturing(tracer: DDTestMonitor.tracer)
+        StdoutCapture.startCapturing()
     }
 
     func stopStdoutCapture() {
@@ -155,11 +153,11 @@ internal class DDTestMonitor {
     }
 
     func startStderrCapture() {
-        stderrCapturer.startCapturing(tracer: DDTestMonitor.tracer)
+        StderrCapture.startCapturing()
     }
 
     func stopStderrCapture() {
-        stderrCapturer.stopCapturing()
+        StderrCapture.stopCapturing()
     }
 
     func startAttributeListener() {

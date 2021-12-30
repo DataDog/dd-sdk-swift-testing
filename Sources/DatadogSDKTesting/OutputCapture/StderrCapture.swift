@@ -6,12 +6,11 @@
 
 import Foundation
 
-class StderrCapture {
-    var isCapturing = false
-    var tracer: DDTracer?
-    private let inputPipe = Pipe()
-    private let outputPipe = Pipe()
-    private var originalDescriptor = FileHandle.standardError.fileDescriptor
+enum StderrCapture {
+    static var isCapturing = false
+    static private let inputPipe = Pipe()
+    static private let outputPipe = Pipe()
+    static private var originalDescriptor = FileHandle.standardError.fileDescriptor
 
     static var logDateFormatter: DateFormatter {
         let formatter = DateFormatter()
@@ -21,17 +20,18 @@ class StderrCapture {
         return formatter
     }
 
-    func startCapturing(tracer: DDTracer) {
-        inputPipe.fileHandleForReading.readabilityHandler = { [weak self] fileHandle in
-            guard let strongSelf = self else { return }
-
+    static func startCapturing() {
+        guard !isCapturing else {
+            return
+        }
+        inputPipe.fileHandleForReading.readabilityHandler = { fileHandle in
             let data = fileHandle.availableData
             if let string = String(data: data, encoding: String.Encoding.utf8) {
-                strongSelf.stderrMessage(tracer: tracer, string: string)
+                StderrCapture.stderrMessage(string: string)
             }
 
             // Write input back to stderr
-            strongSelf.outputPipe.fileHandleForWriting.write(data)
+            outputPipe.fileHandleForWriting.write(data)
         }
         setvbuf(stderr, nil, _IONBF, 0)
 
@@ -41,12 +41,11 @@ class StderrCapture {
         // Intercept STDERR with inputPipe
         dup2(inputPipe.fileHandleForWriting.fileDescriptor, FileHandle.standardError.fileDescriptor)
 
-        self.tracer = tracer
         isCapturing = true
     }
 
-    func syncData() {
-        guard inputPipe.fileHandleForReading.isReadable else {
+    static func syncData() {
+        guard isCapturing, inputPipe.fileHandleForReading.isReadable else {
             return
         }
 
@@ -57,10 +56,9 @@ class StderrCapture {
                 return
             }
             if !auxData.isEmpty,
-               let tracer = self.tracer,
                let string = String(data: auxData, encoding: String.Encoding.utf8)
             {
-                self.stderrMessage(tracer: tracer, string: string)
+                StderrCapture.stderrMessage(string: string)
             }
         })
         DispatchQueue.global().async {
@@ -70,28 +68,31 @@ class StderrCapture {
         synchronizeData.cancel()
     }
 
-    func stopCapturing() {
+    static func stopCapturing() {
+        guard isCapturing else {
+            return
+        }
         isCapturing = false
         freopen("/dev/stderr", "a", stderr)
     }
 
-    func stderrMessage(tracer: DDTracer, string: String) {
+    static func stderrMessage(string: String) {
         guard DDTracer.activeSpan != nil ||
-            tracer.isBinaryUnderUITesting
+            DDTestMonitor.tracer.isBinaryUnderUITesting
         else {
             return
         }
 
         string.enumerateLines { line, _ in
             if line.prefix(8) == "    t = " {
-                self.logUIStep(tracer: tracer, string: line)
+                self.logUIStep(string: line)
             } else {
-                self.logTimedErrOutput(tracer: tracer, string: line)
+                self.logTimedErrOutput(string: line)
             }
         }
     }
 
-    func logTimedErrOutput(tracer: DDTracer, string: String) {
+    static func logTimedErrOutput(string: String) {
         let scanner = Scanner(string: string)
         let space = CharacterSet.whitespaces
         var message: String?
@@ -109,7 +110,7 @@ class StderrCapture {
             }
 
             if let message = message {
-                tracer.logString(string: message, date: date)
+                DDTestMonitor.tracer.logString(string: message, date: date)
             }
 
         } else {
@@ -132,12 +133,12 @@ class StderrCapture {
             }
 
             if let message = message {
-                tracer.logString(string: message, date: date)
+                DDTestMonitor.tracer.logString(string: message, date: date)
             }
         }
     }
 
-    func logUIStep(tracer: DDTracer, string: String) {
+    static func logUIStep(string: String) {
         let scanner = Scanner(string: string)
         let space = CharacterSet.whitespaces
         var message: String?
@@ -163,7 +164,7 @@ class StderrCapture {
         }
 
         if let message = message {
-            tracer.logString(string: message, timeIntervalSinceSpanStart: timeFromStart)
+            DDTestMonitor.tracer.logString(string: message, timeIntervalSinceSpanStart: timeFromStart)
         }
     }
 }

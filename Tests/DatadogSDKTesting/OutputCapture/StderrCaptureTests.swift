@@ -21,11 +21,10 @@ class StderrCaptureTests: XCTestCase {
         DDTestMonitor.instance = DDTestMonitor()
         let tracer = DDTestMonitor.tracer
         let stringToCapture = "2020-10-22 12:01:33.161546+0200 xctest[91153:14310375] This should be captured"
-        let capturer = StderrCapture()
 
         let span = tracer.startSpan(name: "Unnamed", attributes: [:]) as! RecordEventsReadableSpan
         DDTestMonitor.instance?.currentTest?.span = span
-        capturer.stderrMessage(tracer: tracer, string: stringToCapture)
+        StderrCapture.stderrMessage(string: stringToCapture)
         Thread.sleep(forTimeInterval: 0.5)
         span.status = .ok
         span.end()
@@ -42,12 +41,11 @@ class StderrCaptureTests: XCTestCase {
         DDTestMonitor.instance = DDTestMonitor()
         let tracer = DDTestMonitor.tracer
         let stringToCapture = "    t =     0.50s Open com.datadoghq.DemoSwift"
-        let capturer = StderrCapture()
 
         let date = Date()
         let span = tracer.startSpan(name: "Unnamed", attributes: [:], startTime: date) as! RecordEventsReadableSpan
         DDTestMonitor.instance?.currentTest?.span = span
-        capturer.stderrMessage(tracer: tracer, string: stringToCapture)
+        StderrCapture.stderrMessage(string: stringToCapture)
         Thread.sleep(forTimeInterval: 0.6)
         span.status = .ok
         span.end()

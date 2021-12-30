@@ -36,15 +36,26 @@ jobs:
     - name: Unit tests
       run: make tests
 
-
-  test-Integration-run:
+  test-Integration-macOS:
     runs-on: macos-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v2
     - name: tests macOS
       run: xcodebuild -scheme 'IntegrationTests (macOS)' test
+
+  test-Integration-iOS:
+    runs-on: macos-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
     - name: tests iOS
       run: xcodebuild -scheme 'IntegrationTests (iOS)' -destination 'platform=iOS Simulator,name=iPhone 8' test
+
+  test-Integration-tvOS:
+    runs-on: macos-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
     - name: tests tvOS
       run: xcodebuild -scheme 'IntegrationTests (tvOS)' -destination 'platform=tvOS Simulator,name=Apple TV' test

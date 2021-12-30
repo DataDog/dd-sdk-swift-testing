@@ -60,6 +60,11 @@
             isEnabled = "YES">
          </EnvironmentVariable>
          <EnvironmentVariable
+            key = "DD_ENV"
+            value = "internal-tests"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
             key = "GITHUB_WORKSPACE"
             value = "$(GITHUB_WORKSPACE)"
             isEnabled = "YES">

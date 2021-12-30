@@ -126,10 +126,10 @@ internal class DDTestMonitor {
                 maxPayloadSize = maxPayload
             }
         }
-        if !DDTestMonitor.env.disableStdoutInstrumentation {
+        if DDTestMonitor.env.enableStdoutInstrumentation {
             startStdoutCapture()
         }
-        if !DDTestMonitor.env.disableStderrInstrumentation {
+        if DDTestMonitor.env.enableStderrInstrumentation {
             startStderrCapture()
         }
     }

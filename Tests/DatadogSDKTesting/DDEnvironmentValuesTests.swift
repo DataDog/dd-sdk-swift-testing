@@ -101,8 +101,8 @@ class DDEnvironmentValuesTests: XCTestCase {
     func testWhenNoConfigurationEnvironmentAreSet_DefaultValuesAreUsed() {
         let env = DDEnvironmentValues()
         XCTAssertEqual(env.disableNetworkInstrumentation, false)
-        XCTAssertEqual(env.disableStdoutInstrumentation, false)
-        XCTAssertEqual(env.disableStderrInstrumentation, false)
+        XCTAssertEqual(env.enableStdoutInstrumentation, false)
+        XCTAssertEqual(env.enableStderrInstrumentation, false)
         XCTAssertEqual(env.disableHeadersInjection, false)
         XCTAssertEqual(env.extraHTTPHeaders, nil)
         XCTAssertEqual(env.excludedURLS, nil)
@@ -112,8 +112,8 @@ class DDEnvironmentValuesTests: XCTestCase {
 
     func testWhenConfigurationEnvironmentAreSet_TheyAreStoredCorrectly() {
         testEnvironment["DD_DISABLE_NETWORK_INSTRUMENTATION"] = "1"
-        testEnvironment["DD_DISABLE_STDOUT_INSTRUMENTATION"] = "yes"
-        testEnvironment["DD_DISABLE_STDERR_INSTRUMENTATION"] = "true"
+        testEnvironment["DD_ENABLE_STDOUT_INSTRUMENTATION"] = "yes"
+        testEnvironment["DD_ENABLE_STDERR_INSTRUMENTATION"] = "true"
         testEnvironment["DD_DISABLE_HEADERS_INJECTION"] = "YES"
         testEnvironment["DD_INSTRUMENTATION_EXTRA_HEADERS"] = "header1,header2;header3 header4"
         testEnvironment["DD_EXCLUDED_URLS"] = "http://www.google"
@@ -124,8 +124,8 @@ class DDEnvironmentValuesTests: XCTestCase {
 
         let env = DDEnvironmentValues()
         XCTAssertEqual(env.disableNetworkInstrumentation, true)
-        XCTAssertEqual(env.disableStdoutInstrumentation, true)
-        XCTAssertEqual(env.disableStderrInstrumentation, true)
+        XCTAssertEqual(env.enableStdoutInstrumentation, true)
+        XCTAssertEqual(env.enableStderrInstrumentation, true)
         XCTAssertEqual(env.disableHeadersInjection, true)
         XCTAssertEqual(env.extraHTTPHeaders?.count, 4)
         XCTAssertEqual(env.excludedURLS?.count, 1)
@@ -135,8 +135,8 @@ class DDEnvironmentValuesTests: XCTestCase {
 
     func testWhenConfigurationPListAreSet_TheyAreStoredCorrectly() {
         testInfoDictionary["DD_DISABLE_NETWORK_INSTRUMENTATION"] = "1"
-        testInfoDictionary["DD_DISABLE_STDOUT_INSTRUMENTATION"] = "yes"
-        testInfoDictionary["DD_DISABLE_STDERR_INSTRUMENTATION"] = "true"
+        testInfoDictionary["DD_ENABLE_STDOUT_INSTRUMENTATION"] = "yes"
+        testInfoDictionary["DD_ENABLE_STDERR_INSTRUMENTATION"] = "true"
         testInfoDictionary["DD_DISABLE_HEADERS_INJECTION"] = "YES"
         testInfoDictionary["DD_INSTRUMENTATION_EXTRA_HEADERS"] = "header1,header2;header3 header4"
         testInfoDictionary["DD_EXCLUDED_URLS"] = "http://www.google"
@@ -147,8 +147,8 @@ class DDEnvironmentValuesTests: XCTestCase {
 
         let env = DDEnvironmentValues()
         XCTAssertEqual(env.disableNetworkInstrumentation, true)
-        XCTAssertEqual(env.disableStdoutInstrumentation, true)
-        XCTAssertEqual(env.disableStderrInstrumentation, true)
+        XCTAssertEqual(env.enableStdoutInstrumentation, true)
+        XCTAssertEqual(env.enableStderrInstrumentation, true)
         XCTAssertEqual(env.disableHeadersInjection, true)
         XCTAssertEqual(env.extraHTTPHeaders?.count, 4)
         XCTAssertEqual(env.excludedURLS?.count, 1)
@@ -158,8 +158,8 @@ class DDEnvironmentValuesTests: XCTestCase {
 
     func testWhenConfigurationEnvironmentAndPListAreSet_EnvironmentTakesPrecedence() {
         testEnvironment["DD_DISABLE_NETWORK_INSTRUMENTATION"] = "1"
-        testEnvironment["DD_DISABLE_STDOUT_INSTRUMENTATION"] = "yes"
-        testEnvironment["DD_DISABLE_STDERR_INSTRUMENTATION"] = "true"
+        testEnvironment["DD_ENABLE_STDOUT_INSTRUMENTATION"] = "yes"
+        testEnvironment["DD_ENABLE_STDERR_INSTRUMENTATION"] = "true"
         testEnvironment["DD_DISABLE_HEADERS_INJECTION"] = "YES"
         testEnvironment["DD_INSTRUMENTATION_EXTRA_HEADERS"] = "header1,header2;header3 header4"
         testEnvironment["DD_EXCLUDED_URLS"] = "http://www.google"
@@ -168,8 +168,8 @@ class DDEnvironmentValuesTests: XCTestCase {
         setEnvVariables()
 
         testInfoDictionary["DD_DISABLE_NETWORK_INSTRUMENTATION"] = "0"
-        testInfoDictionary["DD_DISABLE_STDOUT_INSTRUMENTATION"] = "no"
-        testInfoDictionary["DD_DISABLE_STDERR_INSTRUMENTATION"] = "false"
+        testInfoDictionary["DD_ENABLE_STDOUT_INSTRUMENTATION"] = "no"
+        testInfoDictionary["DD_ENABLE_STDERR_INSTRUMENTATION"] = "false"
         testInfoDictionary["DD_DISABLE_HEADERS_INJECTION"] = "NO"
         testInfoDictionary["DD_INSTRUMENTATION_EXTRA_HEADERS"] = "header1,header2"
         testInfoDictionary["DD_EXCLUDED_URLS"] = "http://www.microsoft.com"
@@ -179,8 +179,8 @@ class DDEnvironmentValuesTests: XCTestCase {
 
         let env = DDEnvironmentValues()
         XCTAssertEqual(env.disableNetworkInstrumentation, true)
-        XCTAssertEqual(env.disableStdoutInstrumentation, true)
-        XCTAssertEqual(env.disableStderrInstrumentation, true)
+        XCTAssertEqual(env.enableStdoutInstrumentation, true)
+        XCTAssertEqual(env.enableStderrInstrumentation, true)
         XCTAssertEqual(env.disableHeadersInjection, true)
         XCTAssertEqual(env.extraHTTPHeaders?.count, 4)
         XCTAssertEqual(env.excludedURLS?.count, 1)

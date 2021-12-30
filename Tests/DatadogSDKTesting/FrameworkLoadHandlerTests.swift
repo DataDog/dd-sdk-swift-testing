@@ -17,7 +17,7 @@ class FrameworkLoadHandlerTests: XCTestCase {
         FrameworkLoadHandler.environment = [String: String]()
         DDTestMonitor.instance = nil
         previousEnvironment = DDEnvironmentValues.environment
-        testEnvironment["DD_DISABLE_STDERR_INSTRUMENTATION"] = "1"
+        testEnvironment["DD_ENABLE_STDERR_INSTRUMENTATION"] = "1"
         testEnvironment["DD_DISABLE_NETWORK_INSTRUMENTATION"] = "1"
     }
 
@@ -47,7 +47,7 @@ class FrameworkLoadHandlerTests: XCTestCase {
     func testWhenTestRunnerIsConfiguredAndIsInOtherTestingMode_ItIsInitialised() {
         testEnvironment["DD_TEST_RUNNER"] = "1"
         testEnvironment["DD_API_KEY"] = "fakeKey"
-        testEnvironment["DD_DISABLE_STDERR_INSTRUMENTATION"] = "1"
+        testEnvironment["DD_ENABLE_STDERR_INSTRUMENTATION"] = "1"
         testEnvironment["XCInjectBundleInto"] = "/Users/user/Library/tmp/xx.xctestconfiguration"
         setEnvVariables()
 

@@ -19,8 +19,8 @@ internal struct DDEnvironmentValues {
     let disableHeadersInjection: Bool
     let enableRecordPayload: Bool
     let maxPayloadSize: Int?
-    let disableStdoutInstrumentation: Bool
-    let disableStderrInstrumentation: Bool
+    let enableStdoutInstrumentation: Bool
+    let enableStderrInstrumentation: Bool
     let extraHTTPHeaders: Set<String>?
     let excludedURLS: Set<String>?
     let disableDDSDKIOSIntegration: Bool
@@ -159,11 +159,11 @@ internal struct DDEnvironmentValues {
         let envMaxPayloadSize = DDEnvironmentValues.getEnvVariable("DD_MAX_PAYLOAD_SIZE") as NSString?
         maxPayloadSize = envMaxPayloadSize?.integerValue
 
-        let envStdout = DDEnvironmentValues.getEnvVariable("DD_DISABLE_STDOUT_INSTRUMENTATION") as NSString?
-        disableStdoutInstrumentation = envStdout?.boolValue ?? false
+        let envStdout = DDEnvironmentValues.getEnvVariable("DD_ENABLE_STDOUT_INSTRUMENTATION") as NSString?
+        enableStdoutInstrumentation = envStdout?.boolValue ?? false
 
-        let envStderr = DDEnvironmentValues.getEnvVariable("DD_DISABLE_STDERR_INSTRUMENTATION") as NSString?
-        disableStderrInstrumentation = envStderr?.boolValue ?? false
+        let envStderr = DDEnvironmentValues.getEnvVariable("DD_ENABLE_STDERR_INSTRUMENTATION") as NSString?
+        enableStderrInstrumentation = envStderr?.boolValue ?? false
 
         let envDisableDDSDKIOSIntegration = DDEnvironmentValues.getEnvVariable("DD_DISABLE_SDKIOS_INTEGRATION") as NSString?
         disableDDSDKIOSIntegration = envDisableDDSDKIOSIntegration?.boolValue ?? false

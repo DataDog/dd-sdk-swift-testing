@@ -19,6 +19,7 @@ struct MachImage {
 
 enum DDSymbolicator {
     private static let crashLineRegex = try! NSRegularExpression(pattern: "^([0-9]+)([ \t]+)([^ \t]+)([ \t]+)(0x[0-9a-fA-F]+)([ \t]+)(0x[0-9a-fA-F]+)([ \t]+\\+[ \t]+[0-9]+)$?", options: .anchorsMatchLines)
+    private static let callStackRegex = try! NSRegularExpression(pattern: "^([0-9]+)([ \t]+)([^ \t]+)([ \t]+)(0x[0-9a-fA-F]+)", options: .anchorsMatchLines)
 
     private static var dSYMFiles: [URL] = {
         var dSYMFiles = [URL]()
@@ -138,26 +139,15 @@ enum DDSymbolicator {
                 let callAddress = String(line[callAddressRange])
 
                 #if os(iOS) || os(macOS)
-                    if let dsymPath = dSYMFiles.first(where: { $0.lastPathComponent == library })?.path {
-                        let symbol = symbolWithAtos(objectPath: dsymPath, libraryAdress: libraryAddress, callAddress: callAddress)
+                    if let objectPath = dSYMFiles.first(where: { $0.lastPathComponent == library })?.path ?? imageAddresses[library]?.path {
+                        let symbol = symbolWithAtos(objectPath: objectPath, libraryAdress: libraryAddress, callAddress: callAddress)
                         if !symbol.isEmpty {
                             linesLock.lock()
                             lines[lineNumber] = crashLineRegex.replacementString(for: match, in: line, offset: 0, template: "$1$2$3$4$5$6\(symbol)")
                             linesLock.unlock()
                             return
                         }
-                    } else {
-                        if let symbolFilePath = imageAddresses[library]?.path {
-                            let symbol = symbolWithAtos(objectPath: symbolFilePath, libraryAdress: libraryAddress, callAddress: callAddress)
-                            if !symbol.isEmpty {
-                                linesLock.lock()
-                                lines[lineNumber] = crashLineRegex.replacementString(for: match, in: line, offset: 0, template: "$1$2$3$4$5$6\(symbol)")
-                                linesLock.unlock()
-                                return
-                            }
-                        }
                     }
-
                 #endif
                 /// No dSYM to symbolicate this line, write symbol Information
                 guard let originalCallAdress = Float64(callAddress) else {
@@ -173,51 +163,21 @@ enum DDSymbolicator {
                     callAddressInt = UInt(libraryOffset) + callOffset
                 }
 
-                guard let ptr = UnsafeRawPointer(bitPattern: UInt(callAddressInt)) else {
+                guard let symbolName = demangleAddress(callAddress: callAddressInt) else {
                     return
                 }
 
-                var info = Dl_info()
-                let result = dladdr(ptr, &info)
-                if result != 0 {
-                    let symbolName = info.dli_sname != nil ? demangleName(String(cString: info.dli_sname)) : ""
-                    linesLock.lock()
-                    lines[lineNumber] = crashLineRegex.replacementString(for: match, in: line, offset: 0, template: "$1$2$3$4$5$6\(symbolName)")
-                    linesLock.unlock()
-                }
-                return
+                linesLock.lock()
+                lines[lineNumber] = crashLineRegex.replacementString(for: match, in: line, offset: 0, template: "$1$2$3$4$5$6\(symbolName)")
+                linesLock.unlock()
             }
         }
         return lines.joined(separator: "\n")
     }
 
-    /// Locates a symbol based on its adress and the name of the library where it belongs,
-    /// the result is the atos return information, it must be processed later
-    #if os(tvOS)
-        static func atosSymbol(forAddress callAddress: String, library: String) -> String? {
-            return nil
-        }
-    #else
-        static func atosSymbol(forAddress callAddress: String, library: String) -> String? {
-            guard let imageAddress = imageAddresses[library],
-                  let imagePath = dSYMFiles.first(where: { $0.lastPathComponent == library })?.path ?? imageAddresses[library]?.path
-            else { return nil }
-
-            let libraryAddress = String(format: "%016llx", imageAddress.slide)
-            let symbol = Spawn.commandWithResult("/usr/bin/atos --fullPath -o \"\(imagePath)\" -l \(libraryAddress) \(callAddress)")
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-
-            return symbol
-        }
-    #endif
-
     /// Generates a dSYM symbol file from a binary if possible
     /// and adds it to the dSYMFiles for the future
-    #if os(tvOS)
-        static func generateDSYMFile(forImageName imageName: String) -> String? {
-            return nil
-        }
-    #else
+    #if os(iOS) || os(macOS)
         static func generateDSYMFile(forImageName imageName: String) -> String? {
             guard let binaryPath = imageAddresses[imageName]?.path else {
                 return nil
@@ -236,10 +196,14 @@ enum DDSymbolicator {
     #endif
 
     static func createDSYMFileIfNeeded(forImageName imageName: String) {
-        let dSYMFile = DDSymbolicator.dSYMFiles.first(where: { $0.lastPathComponent == imageName })
-        if dSYMFile == nil {
-            _ = DDSymbolicator.generateDSYMFile(forImageName: imageName)
-        }
+        #if os(tvOS)
+            return
+        #else
+            let dSYMFile = DDSymbolicator.dSYMFiles.first(where: { $0.lastPathComponent == imageName })
+            if dSYMFile == nil {
+                _ = DDSymbolicator.generateDSYMFile(forImageName: imageName)
+            }
+        #endif
     }
 
     /// Manually creates the symbol of a swift test with a given name, this is the name we will locate in the mach image
@@ -332,15 +296,31 @@ enum DDSymbolicator {
             }
             return symbol
         }
+
+        static func atosSymbol(forAddress callAddress: String, library: String) -> String? {
+            guard let imageAddress = imageAddresses[library],
+                  let imagePath = dSYMFiles.first(where: { $0.lastPathComponent == library })?.path
+            else { return nil }
+
+            let libraryAddress = String(format: "%016llx", imageAddress.slide)
+            var symbol = Spawn.commandWithResult("/usr/bin/atos --fullPath -o \"\(imagePath)\" -l \(libraryAddress) \(callAddress)")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+
+            if symbol.hasPrefix("atos cannot load") || symbol == callAddress {
+                return nil
+            } else if symbol.hasPrefix("Invalid connection: com.apple.coresymbolicationd\n") {
+                symbol = String(symbol.dropFirst("Invalid connection: com.apple.coresymbolicationd\n".count))
+            }
+            return symbol
+        }
+
     #endif
 
     /// Dumps symbols output for a given libraryName , it must be processed later
-    #if os(tvOS)
-        static func symbolsInfo(forLibrary library: String) -> String? {
+    static func symbolsInfo(forLibrary library: String) -> String? {
+        #if os(tvOS)
             return nil
-        }
-    #else
-        static func symbolsInfo(forLibrary library: String) -> String? {
+        #else
             guard let imagePath = dSYMFiles.first(where: { $0.lastPathComponent == library })?.path else {
                 return nil
             }
@@ -352,8 +332,68 @@ enum DDSymbolicator {
             defer { try? FileManager.default.removeItem(at: symbolsOutputURL) }
             let outputData = try? String(contentsOf: symbolsOutputURL)
             return outputData
+        #endif
+    }
+
+    static func getCallStack() -> [String] {
+        let callStackSymbols = Thread.callStackSymbols
+        let index = callStackSymbols.firstIndex { !$0.contains(exactWord: "DatadogSDKTesting") } ?? 0
+        let currentAddresses = Thread.callStackReturnAddresses
+
+        let demangled = currentAddresses.dropFirst(index)
+            .map { DDSymbolicator.demangleAddress(callAddress: UInt(truncating: $0)) ?? "<Unknown>" }
+
+        let enumeratedCallstack = zip(demangled.indices, demangled).map { "\($0) \($1)" }
+
+        return enumeratedCallstack
+    }
+
+    static func getCallStackSymbolicated() -> [String] {
+        #if os(tvOS)
+            return getCallStack()
+        #else
+            let callStackSymbols = Thread.callStackSymbols
+            let index = callStackSymbols.firstIndex { !$0.contains(exactWord: "DatadogSDKTesting") } ?? 0
+
+            let symbolicated: [String] = callStackSymbols.dropFirst(index)
+                .compactMap {
+                    guard let match = callStackRegex.firstMatch(in: $0, options: [], range: NSRange(location: 0, length: $0.count)),
+                          let libraryRange = Range(match.range(at: 3), in: $0),
+                          let callAddressRange = Range(match.range(at: 5), in: $0)
+                    else {
+                        return nil
+                    }
+                    let library = String($0[libraryRange])
+                    let callAddress = String($0[callAddressRange])
+
+                    if let symbol = atosSymbol(forAddress: callAddress, library: library) {
+                        return symbol
+                    }
+
+                    guard let originalCallAdress = Float64(callAddress) else {
+                        return nil
+                    }
+                    return DDSymbolicator.demangleAddress(callAddress: UInt(originalCallAdress)) ?? "<Unknown>"
+                }
+            let enumeratedCallstack = zip(symbolicated.indices, symbolicated).map { "\($0) \($1)" }
+            return enumeratedCallstack
+
+        #endif
+    }
+
+    static func demangleAddress(callAddress: UInt) -> String? {
+        guard let ptr = UnsafeRawPointer(bitPattern: callAddress) else {
+            return nil
         }
-    #endif
+
+        var info = Dl_info()
+        let result = dladdr(ptr, &info)
+        if result != 0, info.dli_sname != nil {
+            return demangleName(String(cString: info.dli_sname))
+        } else {
+            return nil
+        }
+    }
 
     private static func demangleName(_ mangledName: String) -> String {
         return mangledName.utf8CString.withUnsafeBufferPointer {

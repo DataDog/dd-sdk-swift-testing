@@ -42,6 +42,10 @@ extension String {
 
         return My.regex.stringByReplacingMatches(in: self, range: NSRange(0 ..< self.utf16.count), withTemplate: " $0").trimmingCharacters(in: CharacterSet(charactersIn: " "))
     }
+
+    func contains(exactWord: String) -> Bool {
+        return self.range(of: "\\b\(exactWord)\\b", options: .regularExpression) != nil
+    }
 }
 
 extension Data {

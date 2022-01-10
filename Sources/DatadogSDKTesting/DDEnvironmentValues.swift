@@ -18,6 +18,8 @@ internal struct DDEnvironmentValues {
     let disableNetworkInstrumentation: Bool
     let disableHeadersInjection: Bool
     let enableRecordPayload: Bool
+    let disableNetworkCallStack: Bool
+    let enableNetworkCallStackSymbolicated: Bool
     let maxPayloadSize: Int?
     let enableStdoutInstrumentation: Bool
     let enableStderrInstrumentation: Bool
@@ -155,6 +157,12 @@ internal struct DDEnvironmentValues {
 
         let envRecordPayload = DDEnvironmentValues.getEnvVariable("DD_ENABLE_RECORD_PAYLOAD") as NSString?
         enableRecordPayload = envRecordPayload?.boolValue ?? false
+
+        let envNetworkCallStack = DDEnvironmentValues.getEnvVariable("DD_DISABLE_NETWORK_CALL_STACK") as NSString?
+        disableNetworkCallStack = envNetworkCallStack?.boolValue ?? false
+
+        let envNetworkCallStackSymbolicated = DDEnvironmentValues.getEnvVariable("DD_ENABLE_NETWORK_CALL_STACK_SYMBOLICATED") as NSString?
+        enableNetworkCallStackSymbolicated = envNetworkCallStackSymbolicated?.boolValue ?? false
 
         let envMaxPayloadSize = DDEnvironmentValues.getEnvVariable("DD_MAX_PAYLOAD_SIZE") as NSString?
         maxPayloadSize = envMaxPayloadSize?.integerValue

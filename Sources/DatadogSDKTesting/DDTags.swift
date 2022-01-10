@@ -28,6 +28,10 @@ internal enum DDTags {
     static let httpStatusCode = "http.status_code"
     /// Expected value: `String`
     static let httpUrl = "http.url"
+
+    /// Expected value: `String`
+    static let callStack = "call_stack"
+
 }
 
 internal enum DDGenericTags {

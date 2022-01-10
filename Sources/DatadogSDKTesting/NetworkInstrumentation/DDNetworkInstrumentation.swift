@@ -25,10 +25,6 @@ class DDNetworkInstrumentation {
     static let responsePayloadKey = "http.response.payload"
     static let unfinishedKey = "http.unfinished"
 
-    var recordPayload: Bool {
-        return DDTestMonitor.instance?.recordPayload ?? false
-    }
-
     private var injectHeaders: Bool {
         return DDTestMonitor.instance?.injectHeaders ?? false
     }
@@ -36,7 +32,7 @@ class DDNetworkInstrumentation {
     var excludedURLs = Set<String>()
 
     func shouldRecordPayload(session: URLSession) -> Bool {
-        return self.recordPayload
+        return DDTestMonitor.instance?.recordPayload ?? false
     }
 
     private func excludes(_ url: URL?) -> Bool {
@@ -92,6 +88,7 @@ class DDNetworkInstrumentation {
         span.setAttribute(key: DDNetworkInstrumentation.requestHeadersKey, value: headersString)
 
         storePayloadInSpan(dataOrFile: request.httpBody, span: span, attributeKey: DDNetworkInstrumentation.requestPayloadKey)
+        storeCallStackInSpan(span: span)
     }
 
     func receivedResponse(response: URLResponse, dataOrFile: DataOrFile?, span: Span) {
@@ -112,7 +109,7 @@ class DDNetworkInstrumentation {
     }
 
     private func storePayloadInSpan(dataOrFile: DataOrFile?, span: Span, attributeKey: String) {
-        if DDTestMonitor.instance?.networkInstrumentation?.recordPayload ?? false {
+        if DDTestMonitor.instance?.recordPayload ?? false {
             if let data = dataOrFile as? Data, !data.isEmpty {
                 let dataSample = data.subdata(in: 0 ..< min(data.count, 512))
                 let payload = String(data: dataSample, encoding: .ascii) ?? "<unknown>"
@@ -125,6 +122,21 @@ class DDNetworkInstrumentation {
         } else {
             span.setAttribute(key: attributeKey, value: "<disabled>")
         }
+    }
+
+    private func storeCallStackInSpan(span: Span) {
+        guard DDTestMonitor.env.disableNetworkCallStack == false else {
+            return
+        }
+        let callsStack: [String]
+        if DDTestMonitor.env.enableNetworkCallStackSymbolicated {
+            callsStack = DDSymbolicator.getCallStackSymbolicated()
+        } else {
+            callsStack = DDSymbolicator.getCallStack()
+        }
+
+        let trace = callsStack.joined(separator: "\n")
+        span.setAttribute(key: DDTags.callStack, value: trace)
     }
 
     func endAndCleanAliveSpans() {

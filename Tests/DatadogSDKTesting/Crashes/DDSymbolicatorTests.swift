@@ -30,7 +30,7 @@ class DDSymbolicatorTests: XCTestCase {
 #else
         XCTAssert(callStack[0].contains("(in DatadogSDKTestingTests_iOS)"))
 #endif
-        XCTAssert(callStack[0].contains("(/Users/nacho.bonafontearruga/projects/dd-sdk-swift-testing/Tests/DatadogSDKTesting/Crashes/DDSymbolicatorTests.swift:21)"))
+        XCTAssert(callStack[0].contains("DDSymbolicatorTests.swift:21"))
 
 #endif
     }

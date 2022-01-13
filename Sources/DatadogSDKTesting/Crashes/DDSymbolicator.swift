@@ -292,6 +292,10 @@ enum DDSymbolicator {
             } else if symbol.hasPrefix("Invalid connection: com.apple.coresymbolicationd\n") {
                 symbol = String(symbol.dropFirst("Invalid connection: com.apple.coresymbolicationd\n".count))
             }
+
+            if let workspacePath = DDTestMonitor.env.workspacePath {
+                symbol = symbol.replacingOccurrences(of: workspacePath + "/", with: "")
+            }
             return symbol
         }
 
@@ -308,6 +312,9 @@ enum DDSymbolicator {
                 return nil
             } else if symbol.hasPrefix("Invalid connection: com.apple.coresymbolicationd\n") {
                 symbol = String(symbol.dropFirst("Invalid connection: com.apple.coresymbolicationd\n".count))
+            }
+            if let workspacePath = DDTestMonitor.env.workspacePath {
+                symbol = symbol.replacingOccurrences(of: workspacePath + "/", with: "")
             }
             return symbol
         }

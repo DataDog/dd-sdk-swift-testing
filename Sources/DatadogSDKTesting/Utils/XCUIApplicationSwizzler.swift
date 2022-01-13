@@ -56,7 +56,9 @@ extension XCUIApplication {
                 "DD_DISABLE_CRASH_HANDLER",
                 "DD_SITE",
                 "DD_ENDPOINT",
-                "DD_DONT_EXPORT"
+                "DD_DONT_EXPORT",
+                "DD_DISABLE_NETWORK_CALL_STACK",
+                "DD_ENABLE_NETWORK_CALL_STACK_SYMBOLICATED",
             ].forEach(addProcessEnvironmentToLaunch)
         }
         DDTestMonitor.instance?.startAttributeListener()

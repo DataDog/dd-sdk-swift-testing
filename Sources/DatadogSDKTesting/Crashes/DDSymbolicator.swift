@@ -41,9 +41,7 @@ enum DDSymbolicator {
                                                                 })
             {
                 for case let fileURL as URL in dSYMFilesEnumerator {
-                    if fileURL.pathExtension.compare("dSYM", options: .caseInsensitive) != .orderedSame {
-                        dSYMFiles.append(fileURL)
-                    }
+                    dSYMFiles.append(fileURL)
                 }
             }
         }
@@ -299,11 +297,11 @@ enum DDSymbolicator {
 
         static func atosSymbol(forAddress callAddress: String, library: String) -> String? {
             guard let imageAddress = imageAddresses[library],
-                  let imagePath = dSYMFiles.first(where: { $0.lastPathComponent == library })?.path
+                  let imagePath = dSYMFiles.first(where: { $0.lastPathComponent == library })?.path ?? imageAddresses[library]?.path
             else { return nil }
 
-            let libraryAddress = String(format: "%016llx", imageAddress.slide)
-            var symbol = Spawn.commandWithResult("/usr/bin/atos --fullPath -o \"\(imagePath)\" -l \(libraryAddress) \(callAddress)")
+            let librarySlide = String(format: "%016llx", imageAddress.slide)
+            var symbol = Spawn.commandWithResult("/usr/bin/atos --fullPath -o \"\(imagePath)\" -s \(librarySlide) \(callAddress)")
                 .trimmingCharacters(in: .whitespacesAndNewlines)
 
             if symbol.hasPrefix("atos cannot load") || symbol == callAddress {

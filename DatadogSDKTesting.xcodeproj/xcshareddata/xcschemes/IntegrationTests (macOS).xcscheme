@@ -44,6 +44,11 @@
             isEnabled = "YES">
          </EnvironmentVariable>
          <EnvironmentVariable
+            key = "DD_ENABLE_NETWORK_CALL_STACK_SYMBOLICATED"
+            value = "1"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
             key = "SRCROOT"
             value = "$(SRCROOT)"
             isEnabled = "YES">
@@ -104,11 +109,6 @@
                BlueprintName = "Tests macOS"
                ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
             </BuildableReference>
-            <SkippedTests>
-               <Test
-                  Identifier = "IntegrationTestsRunner">
-               </Test>
-            </SkippedTests>
          </TestableReference>
       </Testables>
    </TestAction>

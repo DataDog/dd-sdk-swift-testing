@@ -189,7 +189,7 @@ internal class DDTracer {
 
             let splitted = errorStack.split(by: 5000)
             for i in 0 ..< splitted.count {
-                attributes.updateValue(value: AttributeValue.string(splitted[i]), forKey: "\(DDTags.errorCrashLog).\(String(format: "%d", i))")
+                attributes.updateValue(value: AttributeValue.string(splitted[i]), forKey: "\(DDTags.errorCrashLog).\(String(format: "%02d", i))")
             }
         }
 

@@ -45,7 +45,7 @@
          </EnvironmentVariable>
          <EnvironmentVariable
             key = "DD_ENABLE_NETWORK_CALL_STACK_SYMBOLICATED"
-            value = "1"
+            value = "0"
             isEnabled = "YES">
          </EnvironmentVariable>
          <EnvironmentVariable

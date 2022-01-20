@@ -6,6 +6,8 @@
 
 #import <Foundation/Foundation.h>
 #import <objc/runtime.h>
+#import <mach/mach_init.h>
+#import <mach/task.h>   // for mach_ports_register
 
 // This code will run when the framework is loaded in memory and before the application
 // or tests start.

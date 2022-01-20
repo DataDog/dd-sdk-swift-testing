@@ -30,8 +30,10 @@ internal enum DDTags {
     static let httpUrl = "http.url"
 
     /// Expected value: `String`
-    static let callStack = "call_stack"
-
+    static let contextCallStack = "context.call_stack"
+    static let contextThreadNumber = "context.thread_number"
+    static let contextQueueName = "context.queue_name"
+    static let contextTaskHashValue = "context.task_hashValue"
 }
 
 internal enum DDGenericTags {

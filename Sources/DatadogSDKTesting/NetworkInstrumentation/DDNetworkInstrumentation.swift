@@ -88,7 +88,7 @@ class DDNetworkInstrumentation {
         span.setAttribute(key: DDNetworkInstrumentation.requestHeadersKey, value: headersString)
 
         storePayloadInSpan(dataOrFile: request.httpBody, span: span, attributeKey: DDNetworkInstrumentation.requestPayloadKey)
-        storeCallStackInSpan(span: span)
+        storeContextInSpan(span: span)
     }
 
     func receivedResponse(response: URLResponse, dataOrFile: DataOrFile?, span: Span) {
@@ -124,7 +124,7 @@ class DDNetworkInstrumentation {
         }
     }
 
-    private func storeCallStackInSpan(span: Span) {
+    private func storeContextInSpan(span: Span) {
         guard DDTestMonitor.env.disableNetworkCallStack == false else {
             return
         }
@@ -135,8 +135,34 @@ class DDNetworkInstrumentation {
             callsStack = DDSymbolicator.getCallStack()
         }
 
-        let trace = callsStack.joined(separator: "\n")
-        span.setAttribute(key: DDTags.callStack, value: trace)
+        let completeStack = callsStack.joined(separator: "\n")
+
+        if completeStack.count < 5000 {
+            span.setAttribute(key: DDTags.contextCallStack, value: completeStack)
+        } else {
+            let splitted = completeStack.split(by: 5000)
+            let numericFormat = splitted.count > 9 ? "%d" : "%02d"
+            for i in 0 ..< splitted.count {
+                span.setAttribute(key: "\(DDTags.contextCallStack).\(String(format: numericFormat, i))", value: AttributeValue.string(splitted[i]))
+            }
+        }
+
+        if let number = Thread.current.value(forKeyPath: "private.seqNum") as? Int {
+            span.setAttribute(key: DDTags.contextThreadNumber, value: number)
+        }
+
+        if let name = String(cString: __dispatch_queue_get_label(nil), encoding: .utf8) {
+            span.setAttribute(key: DDTags.contextQueueName, value: name)
+        }
+#if swift(>=5.5.2)
+        if #available(macOS 10.15, iOS 13.0, tvOS 13.0, *) {
+            withUnsafeCurrentTask { task in
+                if let hash = task?.hashValue {
+                    span.setAttribute(key: DDTags.contextTaskHashValue, value: hash)
+                }
+            }
+        }
+#endif
     }
 
     func endAndCleanAliveSpans() {

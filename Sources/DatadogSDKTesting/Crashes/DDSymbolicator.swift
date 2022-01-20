@@ -308,7 +308,7 @@ enum DDSymbolicator {
             var symbol = Spawn.commandWithResult("/usr/bin/atos --fullPath -o \"\(imagePath)\" -s \(librarySlide) \(callAddress)")
                 .trimmingCharacters(in: .whitespacesAndNewlines)
 
-            if symbol.hasPrefix("atos cannot load") || symbol == callAddress {
+            if symbol.isEmpty || symbol.hasPrefix("atos cannot load") || symbol == callAddress {
                 return nil
             } else if symbol.hasPrefix("Invalid connection: com.apple.coresymbolicationd\n") {
                 symbol = String(symbol.dropFirst("Invalid connection: com.apple.coresymbolicationd\n".count))
@@ -343,12 +343,18 @@ enum DDSymbolicator {
     static func getCallStack() -> [String] {
         let callStackSymbols = Thread.callStackSymbols
         let index = callStackSymbols.firstIndex { !$0.contains(exactWord: "DatadogSDKTesting") } ?? 0
-        let currentAddresses = Thread.callStackReturnAddresses
 
-        let demangled = currentAddresses.dropFirst(index)
-            .map { DDSymbolicator.demangleAddress(callAddress: UInt(truncating: $0)) ?? "<Unknown>" }
+        let demangled: [String] = callStackSymbols.dropFirst(index)
+            .map {
+                guard let match = callStackRegex.firstMatch(in: $0, options: [], range: NSRange(location: 0, length: $0.count)),
+                      let callAddressRange = Range(match.range(at: 5), in: $0),
+                      let callAddress = Float64(String($0[callAddressRange])) else { return "<Unknown>" }
 
-        let enumeratedCallstack = zip(demangled.indices, demangled).map { "\($0) \($1)" }
+                let symbol = DDSymbolicator.demangleAddress(callAddress: UInt(callAddress)) ?? "<Unknown>"
+                return callStackRegex.replacementString(for: match, in: String($0), offset: 0, template: "$3\t\(symbol)")
+            }
+
+        let enumeratedCallstack = zip(demangled.indices, demangled).map { "\($0)\t\($1)" }
 
         return enumeratedCallstack
     }

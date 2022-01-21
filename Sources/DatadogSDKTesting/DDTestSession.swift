@@ -147,7 +147,7 @@ public class DDTest: NSObject {
     var currentTestExecutionOrder: Int
     var initialProcessId = Int(ProcessInfo.processInfo.processIdentifier)
     let name: String
-    let span: Span
+    var span: Span
 
     var session: DDTestSession
 

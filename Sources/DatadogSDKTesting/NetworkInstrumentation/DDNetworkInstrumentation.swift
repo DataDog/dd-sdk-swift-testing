@@ -6,7 +6,6 @@
 
 import Foundation
 @_implementationOnly import OpenTelemetryApi
-@_implementationOnly import OpenTelemetrySdk
 @_implementationOnly import URLSessionInstrumentation
 
 class DDNetworkInstrumentation {
@@ -26,10 +25,6 @@ class DDNetworkInstrumentation {
     static let responsePayloadKey = "http.response.payload"
     static let unfinishedKey = "http.unfinished"
 
-    var recordPayload: Bool {
-        return DDTestMonitor.instance?.recordPayload ?? false
-    }
-
     private var injectHeaders: Bool {
         return DDTestMonitor.instance?.injectHeaders ?? false
     }
@@ -37,7 +32,7 @@ class DDNetworkInstrumentation {
     var excludedURLs = Set<String>()
 
     func shouldRecordPayload(session: URLSession) -> Bool {
-        return self.recordPayload
+        return DDTestMonitor.instance?.recordPayload ?? false
     }
 
     private func excludes(_ url: URL?) -> Bool {
@@ -93,6 +88,7 @@ class DDNetworkInstrumentation {
         span.setAttribute(key: DDNetworkInstrumentation.requestHeadersKey, value: headersString)
 
         storePayloadInSpan(dataOrFile: request.httpBody, span: span, attributeKey: DDNetworkInstrumentation.requestPayloadKey)
+        storeContextInSpan(span: span)
     }
 
     func receivedResponse(response: URLResponse, dataOrFile: DataOrFile?, span: Span) {
@@ -113,7 +109,7 @@ class DDNetworkInstrumentation {
     }
 
     private func storePayloadInSpan(dataOrFile: DataOrFile?, span: Span, attributeKey: String) {
-        if DDTestMonitor.instance?.networkInstrumentation?.recordPayload ?? false {
+        if DDTestMonitor.instance?.recordPayload ?? false {
             if let data = dataOrFile as? Data, !data.isEmpty {
                 let dataSample = data.subdata(in: 0 ..< min(data.count, 512))
                 let payload = String(data: dataSample, encoding: .ascii) ?? "<unknown>"
@@ -126,6 +122,47 @@ class DDNetworkInstrumentation {
         } else {
             span.setAttribute(key: attributeKey, value: "<disabled>")
         }
+    }
+
+    private func storeContextInSpan(span: Span) {
+        guard DDTestMonitor.env.disableNetworkCallStack == false else {
+            return
+        }
+        let callsStack: [String]
+        if DDTestMonitor.env.enableNetworkCallStackSymbolicated {
+            callsStack = DDSymbolicator.getCallStackSymbolicated()
+        } else {
+            callsStack = DDSymbolicator.getCallStack()
+        }
+
+        let completeStack = callsStack.joined(separator: "\n")
+
+        if completeStack.count < 5000 {
+            span.setAttribute(key: DDTags.contextCallStack, value: completeStack)
+        } else {
+            let splitted = completeStack.split(by: 5000)
+            let numericFormat = splitted.count > 9 ? "%d" : "%02d"
+            for i in 0 ..< splitted.count {
+                span.setAttribute(key: "\(DDTags.contextCallStack).\(String(format: numericFormat, i))", value: AttributeValue.string(splitted[i]))
+            }
+        }
+
+        if let number = Thread.current.value(forKeyPath: "private.seqNum") as? Int {
+            span.setAttribute(key: DDTags.contextThreadNumber, value: number)
+        }
+
+        if let name = String(cString: __dispatch_queue_get_label(nil), encoding: .utf8) {
+            span.setAttribute(key: DDTags.contextQueueName, value: name)
+        }
+#if swift(>=5.5.2)
+        if #available(macOS 10.15, iOS 13.0, tvOS 13.0, *) {
+            withUnsafeCurrentTask { task in
+                if let hash = task?.hashValue {
+                    span.setAttribute(key: DDTags.contextTaskHashValue, value: hash)
+                }
+            }
+        }
+#endif
     }
 
     func endAndCleanAliveSpans() {

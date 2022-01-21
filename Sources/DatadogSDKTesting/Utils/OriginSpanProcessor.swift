@@ -19,5 +19,5 @@ internal struct OriginSpanProcessor: SpanProcessor {
 
     mutating func onEnd(span: ReadableSpan) {}
     func shutdown() {}
-    func forceFlush() {}
+    func forceFlush(timeout: TimeInterval?) {}
 }

@@ -48,7 +48,7 @@ public class FrameworkLoadHandler: NSObject {
             let envDisableTestInstrumenting = DDEnvironmentValues.getEnvVariable("DD_DISABLE_TEST_INSTRUMENTING") as NSString?
             let disableTestInstrumenting = envDisableTestInstrumenting?.boolValue ?? false
 
-            let needsTestObserver = !DDTestMonitor.tracer.isBinaryUnderUITesting || DDTestMonitor.env.tracerUnderTesting
+            let needsTestObserver = !DDTestMonitor.tracer.isBinaryUnderUITesting || environment["TEST_CLASS"] != nil
 
             if needsTestObserver, !disableTestInstrumenting {
                 testObserver = DDTestObserver()

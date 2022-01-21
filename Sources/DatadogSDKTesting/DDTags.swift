@@ -17,6 +17,7 @@ internal enum DDTags {
     static let errorType = "error.type"
     static let errorMessage = "error.message"
     static let errorStack = "error.stack"
+    static let errorCrashLog = "error.crash_log"
 
     /// Default span type for spans created without a specifying a type. In general all spans should use this type.
     static let defaultSpanType = "custom"
@@ -27,6 +28,12 @@ internal enum DDTags {
     static let httpStatusCode = "http.status_code"
     /// Expected value: `String`
     static let httpUrl = "http.url"
+
+    /// Expected value: `String`
+    static let contextCallStack = "context.call_stack"
+    static let contextThreadNumber = "context.thread_number"
+    static let contextQueueName = "context.queue_name"
+    static let contextTaskHashValue = "context.task_hashValue"
 }
 
 internal enum DDGenericTags {
@@ -60,6 +67,12 @@ internal enum DDOSTags {
 internal enum DDDeviceTags {
     static let deviceName = "device.name"
     static let deviceModel = "device.model"
+}
+
+internal enum DDUISettingsTags {
+    static let uiSettingsAppearance = "ui.appearance"
+    static let uiSettingsOrientation = "ui.orientation"
+    static let uiSettingsLocalization = "ui.localization"
 }
 
 internal enum DDRuntimeTags {

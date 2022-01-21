@@ -31,9 +31,7 @@ extension XCUIApplication {
         if let testSpanContext = DDTracer.activeSpan?.context {
             self.launchEnvironment["ENVIRONMENT_TRACER_SPANID"] = testSpanContext.spanId.hexString
             self.launchEnvironment["ENVIRONMENT_TRACER_TRACEID"] = testSpanContext.traceId.hexString
-            if !DDTestMonitor.env.disableDDSDKIOSIntegration {
-                addPropagationsHeadersToEnvironment(tracer: DDTestMonitor.tracer)
-            }
+            addPropagationsHeadersToEnvironment(tracer: DDTestMonitor.tracer)
             [
                 "DD_TEST_RUNNER",
                 "DATADOG_CLIENT_TOKEN",
@@ -52,15 +50,18 @@ extension XCUIApplication {
                 "DD_EXCLUDED_URLS",
                 "DD_ENABLE_RECORD_PAYLOAD",
                 "DD_MAX_PAYLOAD_SIZE",
-                "DD_DISABLE_STDOUT_INSTRUMENTATION",
-                "DD_DISABLE_STDERR_INSTRUMENTATION",
+                "DD_ENABLE_STDOUT_INSTRUMENTATION",
+                "DD_ENABLE_STDERR_INSTRUMENTATION",
                 "DD_DISABLE_SDKIOS_INTEGRATION",
                 "DD_DISABLE_CRASH_HANDLER",
                 "DD_SITE",
                 "DD_ENDPOINT",
-                "DD_DONT_EXPORT"
+                "DD_DONT_EXPORT",
+                "DD_DISABLE_NETWORK_CALL_STACK",
+                "DD_ENABLE_NETWORK_CALL_STACK_SYMBOLICATED",
             ].forEach(addProcessEnvironmentToLaunch)
         }
+        DDTestMonitor.instance?.startAttributeListener()
         swizzled_launch()
     }
 }

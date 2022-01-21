@@ -5,8 +5,6 @@
  */
 
 import Foundation
-@_implementationOnly import OpenTelemetryApi
-@_implementationOnly import OpenTelemetrySdk
 
 internal enum SimpleSpanSerializer {
     static func serializeSpan(simpleSpan: SimpleSpanData) -> Data {

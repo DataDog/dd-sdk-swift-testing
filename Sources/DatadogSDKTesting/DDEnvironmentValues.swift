@@ -18,9 +18,11 @@ internal struct DDEnvironmentValues {
     let disableNetworkInstrumentation: Bool
     let disableHeadersInjection: Bool
     let enableRecordPayload: Bool
+    let disableNetworkCallStack: Bool
+    let enableNetworkCallStackSymbolicated: Bool
     let maxPayloadSize: Int?
-    let disableStdoutInstrumentation: Bool
-    let disableStderrInstrumentation: Bool
+    let enableStdoutInstrumentation: Bool
+    let enableStderrInstrumentation: Bool
     let extraHTTPHeaders: Set<String>?
     let excludedURLS: Set<String>?
     let disableDDSDKIOSIntegration: Bool
@@ -111,7 +113,7 @@ internal struct DDEnvironmentValues {
 
         ddApikeyOrClientToken = clientToken
         ddEnvironment = DDEnvironmentValues.getEnvVariable("DD_ENV")
-        tracerUnderTesting = (DDEnvironmentValues.getEnvVariable("TEST_CLASS") != nil)
+        tracerUnderTesting = (DDEnvironmentValues.getEnvVariable("TEST_OUTPUT_FILE") != nil)
         let service = DDEnvironmentValues.getEnvVariable("DD_SERVICE")
         if let service = service, tracerUnderTesting {
             ddService = service + "-internal-tests"
@@ -157,14 +159,20 @@ internal struct DDEnvironmentValues {
         let envRecordPayload = DDEnvironmentValues.getEnvVariable("DD_ENABLE_RECORD_PAYLOAD") as NSString?
         enableRecordPayload = envRecordPayload?.boolValue ?? false
 
+        let envNetworkCallStack = DDEnvironmentValues.getEnvVariable("DD_DISABLE_NETWORK_CALL_STACK") as NSString?
+        disableNetworkCallStack = envNetworkCallStack?.boolValue ?? false
+
+        let envNetworkCallStackSymbolicated = DDEnvironmentValues.getEnvVariable("DD_ENABLE_NETWORK_CALL_STACK_SYMBOLICATED") as NSString?
+        enableNetworkCallStackSymbolicated = envNetworkCallStackSymbolicated?.boolValue ?? false
+
         let envMaxPayloadSize = DDEnvironmentValues.getEnvVariable("DD_MAX_PAYLOAD_SIZE") as NSString?
         maxPayloadSize = envMaxPayloadSize?.integerValue
 
-        let envStdout = DDEnvironmentValues.getEnvVariable("DD_DISABLE_STDOUT_INSTRUMENTATION") as NSString?
-        disableStdoutInstrumentation = envStdout?.boolValue ?? false
+        let envStdout = DDEnvironmentValues.getEnvVariable("DD_ENABLE_STDOUT_INSTRUMENTATION") as NSString?
+        enableStdoutInstrumentation = envStdout?.boolValue ?? false
 
-        let envStderr = DDEnvironmentValues.getEnvVariable("DD_DISABLE_STDERR_INSTRUMENTATION") as NSString?
-        disableStderrInstrumentation = envStderr?.boolValue ?? false
+        let envStderr = DDEnvironmentValues.getEnvVariable("DD_ENABLE_STDERR_INSTRUMENTATION") as NSString?
+        enableStderrInstrumentation = envStderr?.boolValue ?? false
 
         let envDisableDDSDKIOSIntegration = DDEnvironmentValues.getEnvVariable("DD_DISABLE_SDKIOS_INTEGRATION") as NSString?
         disableDDSDKIOSIntegration = envDisableDDSDKIOSIntegration?.boolValue ?? false
@@ -374,15 +382,24 @@ internal struct DDEnvironmentValues {
         } else if DDEnvironmentValues.getEnvVariable("GITHUB_WORKSPACE") != nil {
             isCi = true
             provider = "github"
-            let repositoryEnv = DDEnvironmentValues.getEnvVariable("GITHUB_REPOSITORY")
-            repository = "https://github.com/\(repositoryEnv ?? "").git"
+            let repositoryEnv = DDEnvironmentValues.getEnvVariable("GITHUB_REPOSITORY") ?? ""
+            let githubServerEnv = DDEnvironmentValues.getEnvVariable("GITHUB_SERVER_URL") ?? "https://github.com"
+            repository = "\(githubServerEnv)/\(repositoryEnv).git"
             commit = DDEnvironmentValues.getEnvVariable("GITHUB_SHA")
             workspaceEnv = DDEnvironmentValues.getEnvVariable("GITHUB_WORKSPACE")
-            pipelineId = DDEnvironmentValues.getEnvVariable("GITHUB_RUN_ID")
+            let envRunId = DDEnvironmentValues.getEnvVariable("GITHUB_RUN_ID")
+            pipelineId = envRunId
             pipelineNumber = DDEnvironmentValues.getEnvVariable("GITHUB_RUN_NUMBER")
-            pipelineURL = "https://github.com/\(repositoryEnv ?? "")/commit/\(commit ?? "")/checks"
+            let envRunAttempt = DDEnvironmentValues.getEnvVariable("GITHUB_RUN_ATTEMPT")
+            var attemptsString: String
+            if let attempt = envRunAttempt {
+                attemptsString = "/attempts/\(attempt)"
+            } else {
+                attemptsString = ""
+            }
+            pipelineURL = "\(githubServerEnv)/\(repositoryEnv)/actions/runs/\(envRunId ?? "")" + attemptsString
             pipelineName = DDEnvironmentValues.getEnvVariable("GITHUB_WORKFLOW")
-            jobURL = pipelineURL
+            jobURL = "\(githubServerEnv)/\(repositoryEnv)/commit/\(commit ?? "")/checks"
             jobName = nil
             stageName = nil
             branchEnv = DDEnvironmentValues.getEnvVariable("GITHUB_HEAD_REF")
@@ -497,7 +514,7 @@ internal struct DDEnvironmentValues {
             branchEnv = nil
         }
         branch = DDEnvironmentValues.normalizedBranchOrTag(branchEnv)
-        tag =  DDEnvironmentValues.normalizedBranchOrTag(tagEnv)
+        tag = DDEnvironmentValues.normalizedBranchOrTag(tagEnv)
         repository = DDEnvironmentValues.getEnvVariable("DD_GIT_REPOSITORY_URL") ?? repository
         commit = DDEnvironmentValues.getEnvVariable("DD_GIT_COMMIT_SHA") ?? commit
         commitMessage = DDEnvironmentValues.getEnvVariable("DD_GIT_COMMIT_MESSAGE") ?? commitMessage

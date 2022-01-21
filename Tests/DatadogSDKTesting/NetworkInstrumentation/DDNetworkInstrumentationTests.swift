@@ -32,8 +32,8 @@ class DDNetworkInstrumentationTests: XCTestCase {
         XCTAssertNil(DDTracer.activeSpan)
     }
 
-    func testItInterceptsDataTaskWithURL() {
-        var testSpan: RecordEventsReadableSpan?
+    func testItInterceptsDataTaskWithURL() throws {
+        var testSpan: RecordEventsReadableSpan
 
         let url = URL(string: "http://httpbin.org/get")!
         let expec = expectation(description: "GET \(url)")
@@ -46,8 +46,8 @@ class DDNetworkInstrumentationTests: XCTestCase {
             task.cancel()
         }
 
-        testSpan = testSpanProcessor.lastProcessedSpan
-        let spanData = testSpan!.toSpanData()
+        testSpan = try XCTUnwrap(testSpanProcessor.lastProcessedSpan)
+        let spanData = testSpan.toSpanData()
         XCTAssertEqual(spanData.name, "HTTP GET")
         XCTAssertEqual(spanData.attributes["http.status_code"]?.description, "200")
         XCTAssertEqual(spanData.attributes["http.scheme"]?.description, "http")
@@ -62,8 +62,8 @@ class DDNetworkInstrumentationTests: XCTestCase {
         XCTAssertEqual(spanData.attributes["_dd.origin"]?.description, "ciapp-test")
     }
 
-    func testItInterceptsDataTaskWithURLRequest() {
-        var testSpan: RecordEventsReadableSpan?
+    func testItInterceptsDataTaskWithURLRequest() throws {
+        var testSpan: RecordEventsReadableSpan
         DDInstrumentationControl.startPayloadCapture()
         DDInstrumentationControl.stopInjectingHeaders()
 
@@ -79,8 +79,8 @@ class DDNetworkInstrumentationTests: XCTestCase {
             task.cancel()
         }
 
-        testSpan = testSpanProcessor.lastProcessedSpan
-        let spanData = testSpan!.toSpanData()
+        testSpan = try XCTUnwrap(testSpanProcessor.lastProcessedSpan)
+        let spanData = testSpan.toSpanData()
         XCTAssertEqual(spanData.name, "HTTP GET")
         XCTAssertEqual(spanData.attributes["http.status_code"]?.description, "200")
         XCTAssertEqual(spanData.attributes["http.scheme"]?.description, "http")

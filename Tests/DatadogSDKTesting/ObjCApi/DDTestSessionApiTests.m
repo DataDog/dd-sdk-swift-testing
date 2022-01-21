@@ -18,8 +18,7 @@
     DDTestSession *session = [DDTestSession startWithBundleName:@"ManualObjcTestingSession" startTime:nil];
     DDTestSuite *suite = [session suiteStartWithName:@"ManualObjcTestingSuite" startTime:nil];
     DDTest *test = [suite testStartWithName:@"ManualObjcTestingTest" startTime:nil];
-    [test setAttributeWithKey:@"key" value:@"value"];
-    [test addBenchmarkWithName:@"BenchmarkName" samples:@[@1,@2,@3,@4,@5] info:nil];
+    [test setTagWithKey:@"key" value:@"value"];
     [test setErrorInfoWithType:@"errorType" message:@"error Message" callstack:nil];
     [test endWithStatus:DDTestStatusPass endTime:nil];
     [suite endWithTime:nil];

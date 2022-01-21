@@ -6,13 +6,11 @@
 
 import Foundation
 
-class StdoutCapture {
+enum StdoutCapture {
     static var originalStdoutWriter: ((UnsafeMutableRawPointer?, UnsafePointer<Int8>?, Int32) -> Int32)?
     static var stdoutBuffer = ""
-    weak static var tracer: DDTracer?
 
-    static func startCapturing(tracer: DDTracer) {
-        StdoutCapture.tracer = tracer
+    static func startCapturing() {
         if StdoutCapture.originalStdoutWriter == nil {
             StdoutCapture.originalStdoutWriter = stdout.pointee._write
         }
@@ -31,7 +29,7 @@ class StdoutCapture {
            newlineChar.contains(lastCharacter)
         {
             if !self.stdoutBuffer.trimmingCharacters(in: newlineChar).isEmpty {
-                tracer?.logString(string: self.stdoutBuffer)
+                DDTestMonitor.tracer.logString(string: self.stdoutBuffer)
             }
             self.stdoutBuffer = ""
         }

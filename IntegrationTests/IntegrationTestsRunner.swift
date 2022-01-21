@@ -8,7 +8,7 @@
 @_implementationOnly import OpenTelemetrySdk
 import XCTest
 
-class TestRunner: XCTestCase {
+class IntegrationTestsRunner: XCTestCase {
     var testOutputFile: URL!
     var app: XCUIApplication!
     var recoveredSpans: [SimpleSpanData]!
@@ -20,7 +20,7 @@ class TestRunner: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
 
-        guard let namematch = TestRunner.testNameRegex.firstMatch(in: self.name, range: NSRange(location: 0, length: self.name.count)),
+        guard let namematch = IntegrationTestsRunner.testNameRegex.firstMatch(in: self.name, range: NSRange(location: 0, length: self.name.count)),
               let nameRange = Range(namematch.range(at: 2), in: self.name)
         else {
             return

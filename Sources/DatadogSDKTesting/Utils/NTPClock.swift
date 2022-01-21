@@ -5,30 +5,31 @@
  */
 
 import Foundation
-@_implementationOnly import Kronos
 @_implementationOnly import OpenTelemetrySdk
 
-class NTPClock: OpenTelemetrySdk.Clock {
-    private var lastOffset: TimeInterval
+class NTPClock: Clock {
+    let ntpOffset: TimeInterval
+
     init() {
-        Kronos.Clock.sync()
-        let currentDate = Date()
-        if let date = Kronos.Clock.now {
-            lastOffset = date.timeIntervalSince(currentDate)
-        } else {
-            lastOffset = 0
+        let ntpServer = NTPServer.default
+        do {
+            try ntpServer.sync()
+            let serverOffset = ntpServer.offset
+            if serverOffset.isFinite {
+                ntpOffset = serverOffset
+            } else {
+                ntpOffset = 0
+                Log.debug("NTP server invalid time")
+            }
+
+        } catch {
+            ntpOffset = 0
+            Log.debug("NTP server fail to connect")
         }
     }
 
     var now: Date {
-        if Thread.isMainThread {
-            let currentDate = Date()
-            if let date = Kronos.Clock.now {
-                lastOffset = date.timeIntervalSince(currentDate)
-            } else {
-                lastOffset = 0
-            }
-        }
-        return Date().addingTimeInterval(lastOffset)
+        let current = Date()
+        return current.addingTimeInterval(ntpOffset)
     }
 }

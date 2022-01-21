@@ -21,18 +21,16 @@ let package = Package(
         .package(name: "opentelemetry-swift", url: "https://github.com/open-telemetry/opentelemetry-swift", from: "1.0.7"),
         .package(name: "PLCrashReporter", url: "https://github.com/microsoft/plcrashreporter.git", from: "1.9.0"),
         .package(name: "SigmaSwiftStatistics", url: "https://github.com/evgenyneu/SigmaSwiftStatistics.git", from: "9.0.2"),
-        .package(name: "Kronos", url: "https://github.com/MobileNativeFoundation/Kronos", from: "4.0.0"),
     ],
     targets: [
         .target(
             name: "DatadogSDKTesting",
             dependencies: [
-                .product(name: "libDatadogExporter", package: "opentelemetry-swift"),
-                .product(name: "libURLSessionInstrumentation", package: "opentelemetry-swift"),
-                .product(name: "libInMemoryExporter", package: "opentelemetry-swift"),
+                .product(name: "DatadogExporter", package: "opentelemetry-swift"),
+                .product(name: "URLSessionInstrumentation", package: "opentelemetry-swift"),
+                .product(name: "InMemoryExporter", package: "opentelemetry-swift"),
                 .product(name: "CrashReporter", package: "PLCrashReporter"),
                 .product(name: "SigmaSwiftStatistics", package: "SigmaSwiftStatistics"),
-                .product(name: "Kronos", package: "Kronos"),
                 .target(name: "DatadogSDKTestingObjc"),
             ],
             exclude: [

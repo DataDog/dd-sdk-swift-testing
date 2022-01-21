@@ -20,7 +20,7 @@ class StdoutCaptureTests: XCTestCase {
         let tracer = DDTracer()
         let stringToCapture = "This should be captured"
 
-        StdoutCapture.startCapturing(tracer: tracer)
+        StdoutCapture.startCapturing()
         let span = tracer.startSpan(name: "Unnamed", attributes: [:]) as! RecordEventsReadableSpan
         print(stringToCapture)
         span.status = .ok
@@ -50,10 +50,10 @@ class StdoutCaptureTests: XCTestCase {
     }
 
     func testWhenSomeCharactersAreWrittenToStdoutWithoutNewLines_charactersAreCapturedButNotConvertedToEvents() {
-        let tracer = DDTracer()
+        let tracer = DDTestMonitor.tracer
         let stringToCapture = "This should  not be captured"
 
-        StdoutCapture.startCapturing(tracer: tracer)
+        StdoutCapture.startCapturing()
         let span = tracer.startSpan(name: "Unnamed", attributes: [:]) as! RecordEventsReadableSpan
         fputs(stringToCapture, stdout)
         let spanData = span.toSpanData()

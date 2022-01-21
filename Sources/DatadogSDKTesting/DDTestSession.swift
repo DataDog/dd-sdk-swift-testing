@@ -15,17 +15,15 @@ public class DDTestSession: NSObject {
     var codeOwners: CodeOwners?
     var testFramework = "Swift API"
 
-    private var executionLock = NSLock()
+    private let executionLock = NSLock()
     private var privateCurrentExecutionOrder = 0
     var currentExecutionOrder: Int {
-        get {
-            executionLock.lock()
-            defer {
-                privateCurrentExecutionOrder += 1
-                executionLock.unlock()
-            }
-            return privateCurrentExecutionOrder
+        executionLock.lock()
+        defer {
+            privateCurrentExecutionOrder += 1
+            executionLock.unlock()
         }
+        return privateCurrentExecutionOrder
     }
 
     init(bundleName: String, startTime: Date?) {
@@ -87,6 +85,13 @@ public extension DDTestSession {
         return end(endTime: nil)
     }
 
+    /// Adds a extra tag or attribute to the test session, any number of tags can be reported
+    /// - Parameters:
+    ///   - key: The name of the tag, if a tag exists with the name it will be
+    ///     replaced with the new value
+    ///   - value: The value of the tag, can be a number or a string.
+    @objc func setTag(key: String, value: Any) {}
+
     /// Starts a suite in this session
     /// - Parameters:
     ///   - name: name of the suite
@@ -116,6 +121,12 @@ public class DDTestSuite: NSObject {
     @objc(endWithTime:) public func end(endTime: Date? = nil) {}
     @objc public func end() {}
 
+    /// Adds a extra tag or attribute to the test suite, any number of tags can be reported
+    /// - Parameters:
+    ///   - key: The name of the tag, if a tag exists with the name it will be
+    ///     replaced with the new value
+    ///   - value: The value of the tag, can be a number or a string.
+    @objc public func setTag(key: String, value: Any) {}
 
     /// Starts a test in this suite
     /// - Parameters:
@@ -124,6 +135,7 @@ public class DDTestSuite: NSObject {
     @objc public func testStart(name: String, startTime: Date? = nil) -> DDTest {
         return DDTest(name: name, suite: self, session: session, startTime: startTime)
     }
+
     @objc public func testStart(name: String) -> DDTest {
         return testStart(name: name, startTime: nil)
     }
@@ -174,9 +186,7 @@ public class DDTest: NSObject {
         // Is not a UITest until a XCUIApplication is launched
         span.setAttribute(key: DDTestTags.testIsUITest, value: false)
 
-        if !DDTestMonitor.env.disableDDSDKIOSIntegration {
-            DDTestMonitor.tracer.addPropagationsHeadersToEnvironment()
-        }
+        DDTestMonitor.tracer.addPropagationsHeadersToEnvironment()
 
         let functionName = suite.name + "." + name
         if let functionInfo = session.bundleFunctionInfo[functionName] {
@@ -207,12 +217,12 @@ public class DDTest: NSObject {
         DDCoverageHelper.instance?.clearCounters()
     }
 
-    /// Adds a extra atribute or tag to the test, any number of attributes can be reported
+    /// Adds a extra tag or attribute to the test, any number of tags can be reported
     /// - Parameters:
-    ///   - key: The name of the attribute, if an atrtribute exists with the name it will be
+    ///   - key: The name of the tag, if a tag exists with the name it will be
     ///     replaced with the new value
-    ///   - value: The value of the attibute, can be a number or a string.
-    @objc public func setAttribute(key: String, value: Any) {
+    ///   - value: The value of the tag, can be a number or a string.
+    @objc public func setTag(key: String, value: Any) {
         span.setAttribute(key: key, value: AttributeValue(value))
     }
 
@@ -248,6 +258,8 @@ public class DDTest: NSObject {
         }
 
         span.setAttribute(key: DDTestTags.testStatus, value: testStatus)
+
+        StderrCapture.syncData()
         if let endTime = endTime {
             span.end(time: endTime)
         } else {
@@ -275,7 +287,7 @@ public class DDTest: NSObject {
     ///   - name: Name of the measure benchmarked
     ///   - samples: Array for values sampled for the measure
     ///   - info: (Optional) Extra information about the benchmark
-    @objc public func addBenchmark(name: String, samples: [Double], info: String?) {
+    @objc func addBenchmark(name: String, samples: [Double], info: String?) {
         span.setAttribute(key: DDTestTags.testType, value: DDTagValues.typeBenchmark)
 
         let tag = DDBenchmarkTags.benchmark + "." + name + "."

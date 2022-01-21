@@ -22,7 +22,7 @@ internal class DDTracer {
     let tracerSdk: TracerSdk
     var datadogExporter: DatadogExporter?
     private var launchSpanContext: SpanContext?
-    let backgroundWorkQueue = DispatchQueue(label: "com.otel.datadog.logswriter")
+    let backgroundWorkQueue = DispatchQueue(label: "com.datadog.logswriter")
 
     static var activeSpan: Span? {
         return OpenTelemetrySDK.instance.contextProvider.activeSpan ??
@@ -54,8 +54,7 @@ internal class DDTracer {
         tracerProvider.updateActiveSampler(Samplers.alwaysOn)
         let spanLimits = tracerProvider.getActiveSpanLimits().settingAttributeCountLimit(1024)
         tracerProvider.updateActiveSpanLimits(spanLimits)
-        // This is currently not working as expected, reports duration 0 sometimes
-        // tracerProvider.updateActiveClock(NTPClock())
+        tracerProvider.updateActiveClock(NTPClock())
 
         let bundle = Bundle.main
         let identifier = bundle.bundleIdentifier ?? "com.datadoghq.DatadogSDKTesting"
@@ -69,6 +68,8 @@ internal class DDTracer {
                 endpoint = Endpoint.us1
             case "us3", "US3", "https://us3.datadoghq.com", "us3.datadoghq.com":
                 endpoint = Endpoint.us3
+            case "us5", "US5", "https://us5.datadoghq.com", "us5.datadoghq.com":
+                endpoint = Endpoint.us5
             case "eu", "EU", "eu1", "EU1", "https://app.datadoghq.eu", "app.datadoghq.eu", "datadoghq.eu":
                 endpoint = Endpoint.eu1
             case "gov", "GOV", "us1_fed", "US1_FED", "https://app.ddog-gov.com", "app.ddog-gov.com", "ddog-gov.com":
@@ -76,6 +77,11 @@ internal class DDTracer {
             default:
                 endpoint = Endpoint.us1
         }
+
+//        // Staging endpoint, disable only for testing in staging
+//        endpoint = Endpoint.custom(tracesURL: URL(string: "https://trace.browser-intake-datad0g.com/api/v2/spans")!,
+//                                   logsURL: URL(string: "https://logs.browser-intake-datad0g.com/api/v2/logs")!,
+//                                   metricsURL: URL(string: "https://api.datad0g.com/api/v1/series")!)
 
         var payloadCompression = true
         // When reporting tests to local server
@@ -123,8 +129,9 @@ internal class DDTracer {
         attributes.forEach {
             spanBuilder.setAttribute(key: $0.key, value: $0.value)
         }
-        spanBuilder.setStartTime(time: startTime ?? Date())
-
+        if let startTime = startTime {
+            spanBuilder.setStartTime(time: startTime)
+        }
         /// launchSpanContext will only be available when running in the app launched from UITest, so assign this as the parent
         /// when there is no one
         if let launchContext = launchSpanContext {
@@ -132,9 +139,8 @@ internal class DDTracer {
         } else {
             spanBuilder.setNoParent()
         }
-
+        spanBuilder.setActive(true)
         let span = spanBuilder.startSpan()
-        OpenTelemetrySDK.instance.contextProvider.setActiveSpan(span)
         return span
     }
 
@@ -176,10 +182,14 @@ internal class DDTracer {
             attributes.updateValue(value: AttributeValue.string(errorMessage), forKey: DDTags.errorMessage)
             attributes.updateValue(value: AttributeValue.string(errorStack), forKey: DDTags.errorStack)
         } else {
-            attributes.updateValue(value: AttributeValue.string(errorMessage + ". Check error.stack for the full crash log."), forKey: DDTags.errorMessage)
+            attributes.updateValue(value: AttributeValue.string(errorMessage + ". Check error.crash_log for the full crash log."), forKey: DDTags.errorMessage)
+
+            let crashedThread = DDSymbolicator.calculateCrashedThread(stack: errorStack)
+            attributes.updateValue(value: AttributeValue.string(crashedThread), forKey: "\(DDTags.errorStack)")
+
             let splitted = errorStack.split(by: 5000)
             for i in 0 ..< splitted.count {
-                attributes.updateValue(value: AttributeValue.string(splitted[i]), forKey: "\(DDTags.errorStack).\(String(format: "%d", i))")
+                attributes.updateValue(value: AttributeValue.string(splitted[i]), forKey: "\(DDTags.errorCrashLog).\(String(format: "%02d", i))")
             }
         }
 
@@ -215,7 +225,7 @@ internal class DDTracer {
         let spanProcessor = MultiSpanProcessor(spanProcessors: tracerProvider.getActiveSpanProcessors())
 
         let span = RecordEventsReadableSpan.startSpan(context: launchSpanContext!,
-                                                      name: "ApplicationSpan",
+                                                      name: "ApplicationUnderTest",
                                                       instrumentationLibraryInfo: tracerSdk.instrumentationLibraryInfo,
                                                       kind: .internal,
                                                       parentContext: nil,
@@ -305,8 +315,10 @@ internal class DDTracer {
             return headers
         }
 
-        tracerSdk.textFormat.inject(spanContext: propagationContext, carrier: &headers, setter: HeaderSetter())
-        headers.merge(datadogHeaders(forContext: propagationContext)) { current, _ in current }
+        OpenTelemetry.instance.propagators.textMapPropagator.inject(spanContext: propagationContext, carrier: &headers, setter: HeaderSetter())
+        if !DDTestMonitor.env.disableDDSDKIOSIntegration {
+            headers.merge(datadogHeaders(forContext: propagationContext)) { current, _ in current }
+        }
         return headers
     }
 
@@ -324,7 +336,9 @@ internal class DDTracer {
         }
 
         EnvironmentContextPropagator().inject(spanContext: propagationContext, carrier: &headers, setter: HeaderSetter())
-        headers.merge(datadogHeaders(forContext: propagationContext)) { current, _ in current }
+        if !DDTestMonitor.env.disableDDSDKIOSIntegration {
+            headers.merge(datadogHeaders(forContext: propagationContext)) { current, _ in current }
+        }
         return headers
     }
 

@@ -145,6 +145,16 @@ class DDTracerTests: XCTestCase {
         DDEnvironmentValues.environment["DD_ENDPOINT"] = nil
     }
 
+    func testEndpointChangeToUS5() {
+        DDEnvironmentValues.environment["DD_ENDPOINT"] = "us5"
+        resetEnvironmentVariables()
+
+        let tracer = DDTracer()
+        XCTAssertTrue(tracer.endpointURLs().contains("https://trace.browser-intake-us5-datadoghq.com/api/v2/spans"))
+        XCTAssertTrue(tracer.endpointURLs().contains("https://logs.browser-intake-us5-datadoghq.com/api/v2/logs"))
+        DDEnvironmentValues.environment["DD_ENDPOINT"] = nil
+    }
+
     func testEndpointChangeToEU() {
         DDEnvironmentValues.environment["DD_ENDPOINT"] = "eu"
         resetEnvironmentVariables()
@@ -250,9 +260,15 @@ class DDTracerTests: XCTestCase {
         let spanData = span.toSpanData()
         let environmentValues = tracer.environmentPropagationHTTPHeaders()
 
-        XCTAssertNotNil(environmentValues["OTEL_TRACE_PARENT"])
-        XCTAssert(environmentValues["OTEL_TRACE_PARENT"]?.contains(spanData.traceId.hexString) ?? false)
-        XCTAssertTrue(environmentValues["OTEL_TRACE_PARENT"]?.contains(spanData.spanId.hexString) ?? false)
+        XCTAssertNotNil(environmentValues["TRACEPARENT"])
+        XCTAssert(environmentValues["TRACEPARENT"]?.contains(spanData.traceId.hexString) ?? false)
+        XCTAssertTrue(environmentValues["TRACEPARENT"]?.contains(spanData.spanId.hexString) ?? false)
+
+        XCTAssertNotNil(environmentValues[DDHeaders.traceIDField.rawValue])
+        XCTAssertEqual(environmentValues[DDHeaders.traceIDField.rawValue], String(spanData.traceId.rawLowerLong))
+        XCTAssertNotNil(environmentValues[DDHeaders.parentSpanIDField.rawValue])
+        XCTAssertEqual(environmentValues[DDHeaders.parentSpanIDField.rawValue], String(spanData.spanId.rawValue))
+
         span.end()
     }
 
@@ -263,5 +279,28 @@ class DDTracerTests: XCTestCase {
 
         XCTAssertTrue(environmentValues.isEmpty)
         XCTAssertTrue(datadogHeaders.isEmpty)
+    }
+
+    func testEnvironmentConstantPropagationWithRUMIntegrationDisabled() {
+        DDEnvironmentValues.environment["DD_DISABLE_SDKIOS_INTEGRATION"] = "1"
+        resetEnvironmentVariables()
+
+        let tracer = DDTracer()
+        let spanName = "myName"
+
+        let span = tracer.startSpan(name: spanName, attributes: [:]) as! RecordEventsReadableSpan
+        let spanData = span.toSpanData()
+        let environmentValues = tracer.environmentPropagationHTTPHeaders()
+
+        XCTAssertNotNil(environmentValues["TRACEPARENT"])
+        XCTAssert(environmentValues["TRACEPARENT"]?.contains(spanData.traceId.hexString) ?? false)
+        XCTAssertTrue(environmentValues["TRACEPARENT"]?.contains(spanData.spanId.hexString) ?? false)
+
+        XCTAssertNil(environmentValues[DDHeaders.traceIDField.rawValue])
+        XCTAssertNil(environmentValues[DDHeaders.parentSpanIDField.rawValue])
+
+        span.end()
+
+        DDEnvironmentValues.environment["DD_DISABLE_SDKIOS_INTEGRATION"] = nil
     }
 }

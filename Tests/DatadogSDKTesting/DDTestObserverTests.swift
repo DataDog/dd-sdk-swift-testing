@@ -101,13 +101,13 @@ internal class DDTestObserverTests: XCTestCase {
         testObserver.testCase(self, didRecord: issue)
 
         let testSpan = OpenTelemetry.instance.contextProvider.activeSpan as! RecordEventsReadableSpan
+        testObserver.testCaseDidFinish(self)
         let spanData = testSpan.toSpanData()
 
         XCTAssertNotNil(spanData.attributes[DDTags.errorType])
         XCTAssertNotNil(spanData.attributes[DDTags.errorMessage])
         XCTAssertNil(spanData.attributes[DDTags.errorStack])
 
-        testObserver.testCaseDidFinish(self)
         testObserver.testSuiteDidFinish(theSuite)
         testObserver.testBundleDidFinish(Bundle.main)
     }

@@ -57,4 +57,11 @@ class StderrCaptureTests: XCTestCase {
         let timeToCheck = date.addingTimeInterval(0.5)
         XCTAssertEqual(spanData.events.first?.timestamp, timeToCheck)
     }
+
+    func testStderrInitialises() {
+        StderrCapture.startCapturing()
+        NSLog("This string should be captured")
+        StderrCapture.syncData()
+        StderrCapture.stopCapturing()
+    }
 }

@@ -278,6 +278,20 @@ internal class DDTracer {
         }
     }
 
+    private func attributesForError(_ string: String) -> [String: AttributeValue] {
+        return ["message": AttributeValue.string(string),
+                "status": AttributeValue.string("error"),
+                DDGenericTags.origin: AttributeValue.string(DDTagValues.originCiApp)]
+    }
+
+    /// This method is only currently used when logging with an app being launched from a UITest, and no span has been created in the App.
+    func logError(string: String, date: Date? = nil) {
+        guard DDTestMonitor.env.enableStderrInstrumentation || DDTestMonitor.env.enableStdoutInstrumentation else {
+            return
+        }
+        DDTracer.activeSpan?.addEvent(name: "logString", attributes: attributesForError(string), timestamp: date ?? Date())
+    }
+
     func flush() {
         backgroundWorkQueue.sync {
             OpenTelemetrySDK.instance.tracerProvider.forceFlush()

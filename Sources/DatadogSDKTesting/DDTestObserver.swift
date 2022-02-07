@@ -78,7 +78,7 @@ class DDTestObserver: NSObject, XCTestObservation {
         else {
             return
         }
-        test.setErrorInfo(type: issue.compactDescription, message: issue.description, callstack: issue.detailedDescription)
+        test.setErrorInfo(type: issue.compactDescription, message: issue.description, callstack: nil)
     }
     #else
     func testCase(_ testCase: XCTestCase, didFailWithDescription description: String, inFile filePath: String?, atLine lineNumber: Int) {

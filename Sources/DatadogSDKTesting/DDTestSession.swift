@@ -174,6 +174,7 @@ public class DDTest: NSObject {
         let attributes: [String: String] = [
             DDGenericTags.type: DDTagValues.typeTest,
             DDGenericTags.resourceName: "\(suite.name).\(name)",
+            DDGenericTags.language: "swift",
             DDTestTags.testName: name,
             DDTestTags.testSuite: suite.name,
             DDTestTags.testFramework: session.testFramework,
@@ -189,7 +190,7 @@ public class DDTest: NSObject {
             DDRuntimeTags.runtimeName: DDTestMonitor.env.runtimeName,
             DDRuntimeTags.runtimeVersion: DDTestMonitor.env.runtimeVersion,
             DDCILibraryTags.ciLibraryLanguage: "swift",
-            DDCILibraryTags.ciLibraryVersion: DDTestObserver.tracerVersion
+            DDCILibraryTags.ciLibraryVersion: DDTestObserver.tracerVersion,
         ]
 
         span = DDTestMonitor.tracer.startSpan(name: "\(session.testFramework).test", attributes: attributes, startTime: startTime)

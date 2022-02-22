@@ -57,6 +57,7 @@ internal enum DDTestTags {
     static let testExecutionProcessId = "test.execution.processId"
     static let testCodeowners = "test.codeowners"
     static let testIsUITest = "test.is_ui_test"
+    static let testIsRUMActive = "test.is_rum_active"
 }
 
 internal enum DDOSTags {
@@ -167,4 +168,10 @@ internal enum DDTagValues {
     static let statusPass = "pass"
     static let statusFail = "fail"
     static let statusSkip = "skip"
+}
+
+internal enum DDCFMessageID {
+    static let customTags: Int32 = 0x1111
+    static let enableRUM: Int32 = 0x2222
+    static let forceFlush: Int32 = 0x3333
 }

@@ -101,16 +101,17 @@ internal struct DDEnvironmentValues {
 
     init() {
         /// Datatog configuration values
-        var clientToken: String?
-        clientToken = DDEnvironmentValues.getEnvVariable("DATADOG_CLIENT_TOKEN")
+        var apiKey = DDEnvironmentValues.getEnvVariable("DD_API_KEY")
+        if apiKey == nil {
+            apiKey = DDEnvironmentValues.infoDictionary["DatadogApiKey"] as? String
+        }
+
+        var clientToken = DDEnvironmentValues.getEnvVariable("DATADOG_CLIENT_TOKEN")
         if clientToken == nil {
             clientToken = DDEnvironmentValues.infoDictionary["DatadogClientToken"] as? String
         }
-        if clientToken == nil {
-            clientToken = DDEnvironmentValues.getEnvVariable("DD_API_KEY")
-        }
 
-        ddApikeyOrClientToken = clientToken
+        ddApikeyOrClientToken = apiKey ?? clientToken
         ddEnvironment = DDEnvironmentValues.getEnvVariable("DD_ENV")
         tracerUnderTesting = (DDEnvironmentValues.getEnvVariable("TEST_OUTPUT_FILE") != nil)
         let service = DDEnvironmentValues.getEnvVariable("DD_SERVICE")

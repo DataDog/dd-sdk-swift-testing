@@ -46,7 +46,7 @@ internal class DDTestMonitor {
 
     static func installTestMonitor() {
         guard DDEnvironmentValues.getEnvVariable("DATADOG_CLIENT_TOKEN") != nil || DDEnvironmentValues.getEnvVariable("DD_API_KEY") != nil else {
-            Log.print("DATADOG_CLIENT_TOKEN or DD_API_KEY are missing.")
+            Log.print("DD_API_KEY or DATADOG_CLIENT_TOKEN are missing.")
             return
         }
         if DDEnvironmentValues.getEnvVariable("SRCROOT") == nil {

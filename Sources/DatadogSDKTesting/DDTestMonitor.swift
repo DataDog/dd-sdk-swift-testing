@@ -92,7 +92,7 @@ internal class DDTestMonitor {
                             return
                         }
                         let status = CFMessagePortSendRequest(remotePort,
-                                                              DDCFMessageID.customTags,
+                                                              DDCFMessageID.setCustomTags,
                                                               encoded as CFData?,
                                                               timeout,
                                                               timeout,
@@ -164,7 +164,7 @@ internal class DDTestMonitor {
     func startAttributeListener() {
             func attributeCallback(port: CFMessagePort?, msgid: Int32, data: CFData?, info: UnsafeMutableRawPointer?) -> Unmanaged<CFData>? {
                 switch msgid {
-                    case DDCFMessageID.customTags:
+                    case DDCFMessageID.setCustomTags:
                         if let data = data as Data? {
                             let decoded = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
                             decoded?.forEach {

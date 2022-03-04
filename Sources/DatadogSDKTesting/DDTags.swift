@@ -171,7 +171,7 @@ internal enum DDTagValues {
 }
 
 internal enum DDCFMessageID {
-    static let customTags: Int32 = 0x1111
+    static let setCustomTags: Int32 = 0x1111
     static let enableRUM: Int32 = 0x2222
     static let forceFlush: Int32 = 0x3333
 }

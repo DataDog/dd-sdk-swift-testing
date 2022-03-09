@@ -48,11 +48,103 @@
 		E1224A91264ADFC200305968 /* IntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1224A7D264AC06900305968 /* IntegrationTests.swift */; };
 		E1224A94264BCED700305968 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E157A74D256E9D1D00CBCA52 /* DatadogSDKTesting.framework */; };
 		E1224A96264D59E600305968 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1ABA04A25231E2500ED8AEF /* DatadogSDKTesting.framework */; };
+		E123D0C127D7B2C700B85B37 /* OpenTelemetrySdk in Frameworks */ = {isa = PBXBuildFile; productRef = E123D0C027D7B2C700B85B37 /* OpenTelemetrySdk */; };
+		E123D0C327D7B2DA00B85B37 /* OpenTelemetrySdk in Frameworks */ = {isa = PBXBuildFile; productRef = E123D0C227D7B2DA00B85B37 /* OpenTelemetrySdk */; };
 		E12515E5254892C600670D23 /* XCUIApplicationSwizzler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12515E4254892C500670D23 /* XCUIApplicationSwizzler.swift */; };
 		E126DD2D253F366200700A40 /* StdoutCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E126DD2C253F366200700A40 /* StdoutCapture.swift */; };
 		E126DD2F253F367600700A40 /* StderrCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E126DD2E253F367600700A40 /* StderrCapture.swift */; };
 		E13D0BCA2546E29C00C37D56 /* SignalUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E13D0BC92546E29C00C37D56 /* SignalUtils.swift */; };
 		E141CF60256FD513008B6B70 /* PlatformUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141CF5F256FD513008B6B70 /* PlatformUtils.swift */; };
+		E143CF2B27D7790300F4018A /* SpansExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CEFE27D7790200F4018A /* SpansExporter.swift */; };
+		E143CF2C27D7790300F4018A /* SpansExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CEFE27D7790200F4018A /* SpansExporter.swift */; };
+		E143CF2D27D7790300F4018A /* SpansExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CEFE27D7790200F4018A /* SpansExporter.swift */; };
+		E143CF2E27D7790300F4018A /* SpanEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CEFF27D7790200F4018A /* SpanEncoder.swift */; };
+		E143CF2F27D7790300F4018A /* SpanEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CEFF27D7790200F4018A /* SpanEncoder.swift */; };
+		E143CF3027D7790300F4018A /* SpanEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CEFF27D7790200F4018A /* SpanEncoder.swift */; };
+		E143CF3127D7790300F4018A /* PerformancePreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0127D7790200F4018A /* PerformancePreset.swift */; };
+		E143CF3227D7790300F4018A /* PerformancePreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0127D7790200F4018A /* PerformancePreset.swift */; };
+		E143CF3327D7790300F4018A /* PerformancePreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0127D7790200F4018A /* PerformancePreset.swift */; };
+		E143CF3427D7790300F4018A /* JSONEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0227D7790200F4018A /* JSONEncoder.swift */; };
+		E143CF3527D7790300F4018A /* JSONEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0227D7790200F4018A /* JSONEncoder.swift */; };
+		E143CF3627D7790300F4018A /* JSONEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0227D7790200F4018A /* JSONEncoder.swift */; };
+		E143CF3727D7790300F4018A /* Feature.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0327D7790200F4018A /* Feature.swift */; };
+		E143CF3827D7790300F4018A /* Feature.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0327D7790200F4018A /* Feature.swift */; };
+		E143CF3927D7790300F4018A /* Feature.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0327D7790200F4018A /* Feature.swift */; };
+		E143CF3A27D7790300F4018A /* DateProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0427D7790200F4018A /* DateProvider.swift */; };
+		E143CF3B27D7790300F4018A /* DateProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0427D7790200F4018A /* DateProvider.swift */; };
+		E143CF3C27D7790300F4018A /* DateProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0427D7790200F4018A /* DateProvider.swift */; };
+		E143CF3D27D7790300F4018A /* DateFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0527D7790200F4018A /* DateFormatting.swift */; };
+		E143CF3E27D7790300F4018A /* DateFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0527D7790200F4018A /* DateFormatting.swift */; };
+		E143CF3F27D7790300F4018A /* DateFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0527D7790200F4018A /* DateFormatting.swift */; };
+		E143CF4027D7790300F4018A /* EncodableValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0627D7790200F4018A /* EncodableValue.swift */; };
+		E143CF4127D7790300F4018A /* EncodableValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0627D7790200F4018A /* EncodableValue.swift */; };
+		E143CF4227D7790300F4018A /* EncodableValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0627D7790200F4018A /* EncodableValue.swift */; };
+		E143CF4327D7790300F4018A /* DataCompression.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0827D7790200F4018A /* DataCompression.swift */; };
+		E143CF4427D7790300F4018A /* DataCompression.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0827D7790200F4018A /* DataCompression.swift */; };
+		E143CF4527D7790300F4018A /* DataCompression.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0827D7790200F4018A /* DataCompression.swift */; };
+		E143CF4627D7790300F4018A /* Device.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0927D7790200F4018A /* Device.swift */; };
+		E143CF4727D7790300F4018A /* Device.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0927D7790200F4018A /* Device.swift */; };
+		E143CF4827D7790300F4018A /* Device.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0927D7790200F4018A /* Device.swift */; };
+		E143CF4927D7790300F4018A /* ExporterConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0C27D7790300F4018A /* ExporterConfiguration.swift */; };
+		E143CF4A27D7790300F4018A /* ExporterConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0C27D7790300F4018A /* ExporterConfiguration.swift */; };
+		E143CF4B27D7790300F4018A /* ExporterConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0C27D7790300F4018A /* ExporterConfiguration.swift */; };
+		E143CF4C27D7790300F4018A /* LogEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0E27D7790300F4018A /* LogEncoder.swift */; };
+		E143CF4D27D7790300F4018A /* LogEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0E27D7790300F4018A /* LogEncoder.swift */; };
+		E143CF4E27D7790300F4018A /* LogEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0E27D7790300F4018A /* LogEncoder.swift */; };
+		E143CF4F27D7790300F4018A /* LogSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0F27D7790300F4018A /* LogSanitizer.swift */; };
+		E143CF5027D7790300F4018A /* LogSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0F27D7790300F4018A /* LogSanitizer.swift */; };
+		E143CF5127D7790300F4018A /* LogSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0F27D7790300F4018A /* LogSanitizer.swift */; };
+		E143CF5227D7790300F4018A /* LogsExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1027D7790300F4018A /* LogsExporter.swift */; };
+		E143CF5327D7790300F4018A /* LogsExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1027D7790300F4018A /* LogsExporter.swift */; };
+		E143CF5427D7790300F4018A /* LogsExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1027D7790300F4018A /* LogsExporter.swift */; };
+		E143CF5527D7790300F4018A /* FileWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1227D7790300F4018A /* FileWriter.swift */; };
+		E143CF5627D7790300F4018A /* FileWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1227D7790300F4018A /* FileWriter.swift */; };
+		E143CF5727D7790300F4018A /* FileWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1227D7790300F4018A /* FileWriter.swift */; };
+		E143CF5827D7790300F4018A /* FilesOrchestrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1327D7790300F4018A /* FilesOrchestrator.swift */; };
+		E143CF5927D7790300F4018A /* FilesOrchestrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1327D7790300F4018A /* FilesOrchestrator.swift */; };
+		E143CF5A27D7790300F4018A /* FilesOrchestrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1327D7790300F4018A /* FilesOrchestrator.swift */; };
+		E143CF5B27D7790300F4018A /* DataFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1427D7790300F4018A /* DataFormat.swift */; };
+		E143CF5C27D7790300F4018A /* DataFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1427D7790300F4018A /* DataFormat.swift */; };
+		E143CF5D27D7790300F4018A /* DataFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1427D7790300F4018A /* DataFormat.swift */; };
+		E143CF5E27D7790300F4018A /* FileReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1527D7790300F4018A /* FileReader.swift */; };
+		E143CF5F27D7790300F4018A /* FileReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1527D7790300F4018A /* FileReader.swift */; };
+		E143CF6027D7790300F4018A /* FileReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1527D7790300F4018A /* FileReader.swift */; };
+		E143CF6127D7790300F4018A /* Directory.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1727D7790300F4018A /* Directory.swift */; };
+		E143CF6227D7790300F4018A /* Directory.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1727D7790300F4018A /* Directory.swift */; };
+		E143CF6327D7790300F4018A /* Directory.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1727D7790300F4018A /* Directory.swift */; };
+		E143CF6427D7790300F4018A /* File.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1827D7790300F4018A /* File.swift */; };
+		E143CF6527D7790300F4018A /* File.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1827D7790300F4018A /* File.swift */; };
+		E143CF6627D7790300F4018A /* File.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1827D7790300F4018A /* File.swift */; };
+		E143CF6727D7790300F4018A /* OpenTelemetryExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1927D7790300F4018A /* OpenTelemetryExporter.swift */; };
+		E143CF6827D7790300F4018A /* OpenTelemetryExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1927D7790300F4018A /* OpenTelemetryExporter.swift */; };
+		E143CF6927D7790300F4018A /* OpenTelemetryExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1927D7790300F4018A /* OpenTelemetryExporter.swift */; };
+		E143CF6A27D7790300F4018A /* RequestBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1B27D7790300F4018A /* RequestBuilder.swift */; };
+		E143CF6B27D7790300F4018A /* RequestBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1B27D7790300F4018A /* RequestBuilder.swift */; };
+		E143CF6C27D7790300F4018A /* RequestBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1B27D7790300F4018A /* RequestBuilder.swift */; };
+		E143CF6D27D7790300F4018A /* DataUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1C27D7790300F4018A /* DataUploader.swift */; };
+		E143CF6E27D7790300F4018A /* DataUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1C27D7790300F4018A /* DataUploader.swift */; };
+		E143CF6F27D7790300F4018A /* DataUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1C27D7790300F4018A /* DataUploader.swift */; };
+		E143CF7027D7790300F4018A /* DatadogEndpoints.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1D27D7790300F4018A /* DatadogEndpoints.swift */; };
+		E143CF7127D7790300F4018A /* DatadogEndpoints.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1D27D7790300F4018A /* DatadogEndpoints.swift */; };
+		E143CF7227D7790300F4018A /* DatadogEndpoints.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1D27D7790300F4018A /* DatadogEndpoints.swift */; };
+		E143CF7327D7790300F4018A /* DataUploadWorker.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1E27D7790300F4018A /* DataUploadWorker.swift */; };
+		E143CF7427D7790300F4018A /* DataUploadWorker.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1E27D7790300F4018A /* DataUploadWorker.swift */; };
+		E143CF7527D7790300F4018A /* DataUploadWorker.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1E27D7790300F4018A /* DataUploadWorker.swift */; };
+		E143CF7627D7790300F4018A /* HTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1F27D7790300F4018A /* HTTPClient.swift */; };
+		E143CF7727D7790300F4018A /* HTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1F27D7790300F4018A /* HTTPClient.swift */; };
+		E143CF7827D7790300F4018A /* HTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1F27D7790300F4018A /* HTTPClient.swift */; };
+		E143CF7927D7790300F4018A /* DataUploadDelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF2027D7790300F4018A /* DataUploadDelay.swift */; };
+		E143CF7A27D7790300F4018A /* DataUploadDelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF2027D7790300F4018A /* DataUploadDelay.swift */; };
+		E143CF7B27D7790300F4018A /* DataUploadDelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF2027D7790300F4018A /* DataUploadDelay.swift */; };
+		E143CF7C27D7790300F4018A /* DataUploadStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF2127D7790300F4018A /* DataUploadStatus.swift */; };
+		E143CF7D27D7790300F4018A /* DataUploadStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF2127D7790300F4018A /* DataUploadStatus.swift */; };
+		E143CF7E27D7790300F4018A /* DataUploadStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF2127D7790300F4018A /* DataUploadStatus.swift */; };
+		E143CF7F27D7791300F4018A /* libOpenTelemetryExporter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E143CED927D7786D00F4018A /* libOpenTelemetryExporter.a */; };
+		E143CF8227D7791B00F4018A /* libOpenTelemetryExporter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E143CEE427D7789300F4018A /* libOpenTelemetryExporter.a */; };
+		E143CF8527D7792100F4018A /* libOpenTelemetryExporter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E143CEF127D778AC00F4018A /* libOpenTelemetryExporter.a */; };
+		E143CF8A27D77E1900F4018A /* Atomics in Frameworks */ = {isa = PBXBuildFile; productRef = E143CF8927D77E1900F4018A /* Atomics */; };
+		E143CF8C27D77ED000F4018A /* Atomics in Frameworks */ = {isa = PBXBuildFile; productRef = E143CF8B27D77ED000F4018A /* Atomics */; };
+		E143CF8E27D77ED900F4018A /* Atomics in Frameworks */ = {isa = PBXBuildFile; productRef = E143CF8D27D77ED900F4018A /* Atomics */; };
 		E14405A625D6AA9500FE3D3C /* GitInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14405A225D6A80800FE3D3C /* GitInfo.swift */; };
 		E14405A725D6AA9500FE3D3C /* GitInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14405A225D6A80800FE3D3C /* GitInfo.swift */; };
 		E14405A825D6AA9600FE3D3C /* GitInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14405A225D6A80800FE3D3C /* GitInfo.swift */; };
@@ -176,13 +268,10 @@
 		E1BE9B07273134CA00B92AD4 /* UIIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1193F8C272C24F900E4154E /* UIIntegrationTests.swift */; };
 		E1BE9B08273134CB00B92AD4 /* UIIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1193F8C272C24F900E4154E /* UIIntegrationTests.swift */; };
 		E1BE9B09273134CB00B92AD4 /* UIIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1193F8C272C24F900E4154E /* UIIntegrationTests.swift */; };
-		E1BE9B542732B27900B92AD4 /* DatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E1BE9B532732B27900B92AD4 /* DatadogExporter */; };
 		E1BE9B562732B27900B92AD4 /* InMemoryExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E1BE9B552732B27900B92AD4 /* InMemoryExporter */; };
 		E1BE9B582732B27900B92AD4 /* URLSessionInstrumentation in Frameworks */ = {isa = PBXBuildFile; productRef = E1BE9B572732B27900B92AD4 /* URLSessionInstrumentation */; };
-		E1BE9B5A2732B2A300B92AD4 /* DatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E1BE9B592732B2A300B92AD4 /* DatadogExporter */; };
 		E1BE9B5C2732B2A300B92AD4 /* InMemoryExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E1BE9B5B2732B2A300B92AD4 /* InMemoryExporter */; };
 		E1BE9B5E2732B2A300B92AD4 /* URLSessionInstrumentation in Frameworks */ = {isa = PBXBuildFile; productRef = E1BE9B5D2732B2A300B92AD4 /* URLSessionInstrumentation */; };
-		E1BE9B602732B2BA00B92AD4 /* DatadogExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E1BE9B5F2732B2BA00B92AD4 /* DatadogExporter */; };
 		E1BE9B622732B2BA00B92AD4 /* InMemoryExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E1BE9B612732B2BA00B92AD4 /* InMemoryExporter */; };
 		E1BE9B642732B2BA00B92AD4 /* URLSessionInstrumentation in Frameworks */ = {isa = PBXBuildFile; productRef = E1BE9B632732B2BA00B92AD4 /* URLSessionInstrumentation */; };
 		E1C189B9270F193F00188C0E /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C189B8270F193F00188C0E /* Log.swift */; };
@@ -245,6 +334,27 @@
 			proxyType = 1;
 			remoteGlobalIDString = E1224A50264ABCCF00305968;
 			remoteInfo = "TestRunner (macOS)";
+		};
+		E143CF8027D7791300F4018A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E1ABA04125231E2500ED8AEF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E143CED827D7786D00F4018A;
+			remoteInfo = OpenTelemetryExporter_iOS;
+		};
+		E143CF8327D7791C00F4018A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E1ABA04125231E2500ED8AEF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E143CEE327D7789300F4018A;
+			remoteInfo = OpenTelemetryExporter_macOS;
+		};
+		E143CF8627D7792100F4018A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E1ABA04125231E2500ED8AEF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E143CEF027D778AC00F4018A;
+			remoteInfo = OpenTelemetryExporter_tvOS;
 		};
 		E157A7C9256EB39F00CBCA52 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -319,6 +429,24 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		E143CED727D7786D00F4018A /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "include/$(PRODUCT_NAME)";
+			dstSubfolderSpec = 16;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E143CEEF27D778AC00F4018A /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "include/$(PRODUCT_NAME)";
+			dstSubfolderSpec = 16;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E157A747256E9D1D00CBCA52 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -463,6 +591,39 @@
 		E12E506525A363A400B92F3A /* bitrise.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = bitrise.json; sourceTree = "<group>"; };
 		E13D0BC92546E29C00C37D56 /* SignalUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalUtils.swift; sourceTree = "<group>"; };
 		E141CF5F256FD513008B6B70 /* PlatformUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformUtils.swift; sourceTree = "<group>"; };
+		E143CED927D7786D00F4018A /* libOpenTelemetryExporter.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libOpenTelemetryExporter.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		E143CEE427D7789300F4018A /* libOpenTelemetryExporter.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libOpenTelemetryExporter.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		E143CEF127D778AC00F4018A /* libOpenTelemetryExporter.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libOpenTelemetryExporter.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		E143CEFE27D7790200F4018A /* SpansExporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpansExporter.swift; sourceTree = "<group>"; };
+		E143CEFF27D7790200F4018A /* SpanEncoder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpanEncoder.swift; sourceTree = "<group>"; };
+		E143CF0127D7790200F4018A /* PerformancePreset.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PerformancePreset.swift; sourceTree = "<group>"; };
+		E143CF0227D7790200F4018A /* JSONEncoder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JSONEncoder.swift; sourceTree = "<group>"; };
+		E143CF0327D7790200F4018A /* Feature.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Feature.swift; sourceTree = "<group>"; };
+		E143CF0427D7790200F4018A /* DateProvider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DateProvider.swift; sourceTree = "<group>"; };
+		E143CF0527D7790200F4018A /* DateFormatting.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DateFormatting.swift; sourceTree = "<group>"; };
+		E143CF0627D7790200F4018A /* EncodableValue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EncodableValue.swift; sourceTree = "<group>"; };
+		E143CF0827D7790200F4018A /* DataCompression.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataCompression.swift; sourceTree = "<group>"; };
+		E143CF0927D7790200F4018A /* Device.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Device.swift; sourceTree = "<group>"; };
+		E143CF0A27D7790300F4018A /* NOTICE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = NOTICE; sourceTree = "<group>"; };
+		E143CF0B27D7790300F4018A /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		E143CF0C27D7790300F4018A /* ExporterConfiguration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExporterConfiguration.swift; sourceTree = "<group>"; };
+		E143CF0E27D7790300F4018A /* LogEncoder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogEncoder.swift; sourceTree = "<group>"; };
+		E143CF0F27D7790300F4018A /* LogSanitizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogSanitizer.swift; sourceTree = "<group>"; };
+		E143CF1027D7790300F4018A /* LogsExporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogsExporter.swift; sourceTree = "<group>"; };
+		E143CF1227D7790300F4018A /* FileWriter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileWriter.swift; sourceTree = "<group>"; };
+		E143CF1327D7790300F4018A /* FilesOrchestrator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FilesOrchestrator.swift; sourceTree = "<group>"; };
+		E143CF1427D7790300F4018A /* DataFormat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataFormat.swift; sourceTree = "<group>"; };
+		E143CF1527D7790300F4018A /* FileReader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileReader.swift; sourceTree = "<group>"; };
+		E143CF1727D7790300F4018A /* Directory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Directory.swift; sourceTree = "<group>"; };
+		E143CF1827D7790300F4018A /* File.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = File.swift; sourceTree = "<group>"; };
+		E143CF1927D7790300F4018A /* OpenTelemetryExporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OpenTelemetryExporter.swift; sourceTree = "<group>"; };
+		E143CF1B27D7790300F4018A /* RequestBuilder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RequestBuilder.swift; sourceTree = "<group>"; };
+		E143CF1C27D7790300F4018A /* DataUploader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataUploader.swift; sourceTree = "<group>"; };
+		E143CF1D27D7790300F4018A /* DatadogEndpoints.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DatadogEndpoints.swift; sourceTree = "<group>"; };
+		E143CF1E27D7790300F4018A /* DataUploadWorker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataUploadWorker.swift; sourceTree = "<group>"; };
+		E143CF1F27D7790300F4018A /* HTTPClient.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HTTPClient.swift; sourceTree = "<group>"; };
+		E143CF2027D7790300F4018A /* DataUploadDelay.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataUploadDelay.swift; sourceTree = "<group>"; };
+		E143CF2127D7790300F4018A /* DataUploadStatus.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataUploadStatus.swift; sourceTree = "<group>"; };
 		E14405A225D6A80800FE3D3C /* GitInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitInfo.swift; sourceTree = "<group>"; };
 		E14405B925DBC32900FE3D3C /* dummy.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = dummy.txt; sourceTree = "<group>"; };
 		E14405BD25DBC32900FE3D3C /* 3f93d12768105fa9bd1a548c767c4ea11f75d7 */ = {isa = PBXFileReference; lastKnownFileType = file; path = 3f93d12768105fa9bd1a548c767c4ea11f75d7; sourceTree = "<group>"; };
@@ -577,14 +738,40 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E143CED627D7786D00F4018A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E143CF8A27D77E1900F4018A /* Atomics in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E143CEE227D7789300F4018A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E123D0C127D7B2C700B85B37 /* OpenTelemetrySdk in Frameworks */,
+				E143CF8C27D77ED000F4018A /* Atomics in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E143CEEE27D778AC00F4018A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E143CF8E27D77ED900F4018A /* Atomics in Frameworks */,
+				E123D0C327D7B2DA00B85B37 /* OpenTelemetrySdk in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E157A740256E9D1D00CBCA52 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				E1BE9B5E2732B2A300B92AD4 /* URLSessionInstrumentation in Frameworks */,
 				E157A742256E9D1D00CBCA52 /* CrashReporter in Frameworks */,
+				E143CF8227D7791B00F4018A /* libOpenTelemetryExporter.a in Frameworks */,
 				E157A744256E9D1D00CBCA52 /* SigmaSwiftStatistics in Frameworks */,
-				E1BE9B5A2732B2A300B92AD4 /* DatadogExporter in Frameworks */,
 				E157A745256E9D1D00CBCA52 /* XCTest.framework in Frameworks */,
 				E1BE9B5C2732B2A300B92AD4 /* InMemoryExporter in Frameworks */,
 			);
@@ -594,10 +781,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E143CF8527D7792100F4018A /* libOpenTelemetryExporter.a in Frameworks */,
 				E1BE9B642732B2BA00B92AD4 /* URLSessionInstrumentation in Frameworks */,
 				E157A77A256E9D3300CBCA52 /* CrashReporter in Frameworks */,
 				E157A77C256E9D3300CBCA52 /* SigmaSwiftStatistics in Frameworks */,
-				E1BE9B602732B2BA00B92AD4 /* DatadogExporter in Frameworks */,
 				E157A77D256E9D3300CBCA52 /* XCTest.framework in Frameworks */,
 				E1BE9B622732B2BA00B92AD4 /* InMemoryExporter in Frameworks */,
 			);
@@ -623,9 +810,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E143CF7F27D7791300F4018A /* libOpenTelemetryExporter.a in Frameworks */,
 				E1FB483B253891650083B263 /* CrashReporter in Frameworks */,
 				E17B7AA8253F02580081D7F3 /* SigmaSwiftStatistics in Frameworks */,
-				E1BE9B542732B27900B92AD4 /* DatadogExporter in Frameworks */,
 				E1BE9B562732B27900B92AD4 /* InMemoryExporter in Frameworks */,
 				E1BE9B582732B27900B92AD4 /* URLSessionInstrumentation in Frameworks */,
 				E1ABA08025231F8E00ED8AEF /* XCTest.framework in Frameworks */,
@@ -809,6 +996,99 @@
 				E126DD2E253F367600700A40 /* StderrCapture.swift */,
 			);
 			path = OutputCapture;
+			sourceTree = "<group>";
+		};
+		E143CEF827D7790200F4018A /* OpenTelemetryExporter */ = {
+			isa = PBXGroup;
+			children = (
+				E143CEFD27D7790200F4018A /* Spans */,
+				E143CF0027D7790200F4018A /* Utils */,
+				E143CF0A27D7790300F4018A /* NOTICE */,
+				E143CF0B27D7790300F4018A /* README.md */,
+				E143CF0C27D7790300F4018A /* ExporterConfiguration.swift */,
+				E143CF0D27D7790300F4018A /* Logs */,
+				E143CF1127D7790300F4018A /* Persistence */,
+				E143CF1627D7790300F4018A /* Files */,
+				E143CF1927D7790300F4018A /* OpenTelemetryExporter.swift */,
+				E143CF1A27D7790300F4018A /* Upload */,
+			);
+			path = OpenTelemetryExporter;
+			sourceTree = "<group>";
+		};
+		E143CEFD27D7790200F4018A /* Spans */ = {
+			isa = PBXGroup;
+			children = (
+				E143CEFE27D7790200F4018A /* SpansExporter.swift */,
+				E143CEFF27D7790200F4018A /* SpanEncoder.swift */,
+			);
+			path = Spans;
+			sourceTree = "<group>";
+		};
+		E143CF0027D7790200F4018A /* Utils */ = {
+			isa = PBXGroup;
+			children = (
+				E143CF0127D7790200F4018A /* PerformancePreset.swift */,
+				E143CF0227D7790200F4018A /* JSONEncoder.swift */,
+				E143CF0327D7790200F4018A /* Feature.swift */,
+				E143CF0427D7790200F4018A /* DateProvider.swift */,
+				E143CF0527D7790200F4018A /* DateFormatting.swift */,
+				E143CF0627D7790200F4018A /* EncodableValue.swift */,
+				E143CF0727D7790200F4018A /* DataCompression */,
+				E143CF0927D7790200F4018A /* Device.swift */,
+			);
+			path = Utils;
+			sourceTree = "<group>";
+		};
+		E143CF0727D7790200F4018A /* DataCompression */ = {
+			isa = PBXGroup;
+			children = (
+				E143CF0827D7790200F4018A /* DataCompression.swift */,
+			);
+			path = DataCompression;
+			sourceTree = "<group>";
+		};
+		E143CF0D27D7790300F4018A /* Logs */ = {
+			isa = PBXGroup;
+			children = (
+				E143CF0E27D7790300F4018A /* LogEncoder.swift */,
+				E143CF0F27D7790300F4018A /* LogSanitizer.swift */,
+				E143CF1027D7790300F4018A /* LogsExporter.swift */,
+			);
+			path = Logs;
+			sourceTree = "<group>";
+		};
+		E143CF1127D7790300F4018A /* Persistence */ = {
+			isa = PBXGroup;
+			children = (
+				E143CF1227D7790300F4018A /* FileWriter.swift */,
+				E143CF1327D7790300F4018A /* FilesOrchestrator.swift */,
+				E143CF1427D7790300F4018A /* DataFormat.swift */,
+				E143CF1527D7790300F4018A /* FileReader.swift */,
+			);
+			path = Persistence;
+			sourceTree = "<group>";
+		};
+		E143CF1627D7790300F4018A /* Files */ = {
+			isa = PBXGroup;
+			children = (
+				E143CF1727D7790300F4018A /* Directory.swift */,
+				E143CF1827D7790300F4018A /* File.swift */,
+			);
+			path = Files;
+			sourceTree = "<group>";
+		};
+		E143CF1A27D7790300F4018A /* Upload */ = {
+			isa = PBXGroup;
+			children = (
+				E143CF1B27D7790300F4018A /* RequestBuilder.swift */,
+				E143CF1C27D7790300F4018A /* DataUploader.swift */,
+				E143CF1D27D7790300F4018A /* DatadogEndpoints.swift */,
+				E143CF1E27D7790300F4018A /* DataUploadWorker.swift */,
+				E143CF1F27D7790300F4018A /* HTTPClient.swift */,
+				E143CF2027D7790300F4018A /* DataUploadDelay.swift */,
+				E143CF2127D7790300F4018A /* DataUploadStatus.swift */,
+			);
+			path = Upload;
 			sourceTree = "<group>";
 		};
 		E14405B725DBC32900FE3D3C /* git */ = {
@@ -1074,6 +1354,9 @@
 				E1224A64264ABCD000305968 /* Tests macOS.xctest */,
 				E1F4217B2652CFEB00233B75 /* IntegrationTests.app */,
 				E1F421CC26539FAB00233B75 /* Tests tvOS.xctest */,
+				E143CED927D7786D00F4018A /* libOpenTelemetryExporter.a */,
+				E143CEE427D7789300F4018A /* libOpenTelemetryExporter.a */,
+				E143CEF127D778AC00F4018A /* libOpenTelemetryExporter.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1082,6 +1365,7 @@
 			isa = PBXGroup;
 			children = (
 				E1798E0925260BC4008DEBB9 /* DatadogSDKTesting */,
+				E143CEF827D7790200F4018A /* OpenTelemetryExporter */,
 				E1ABA04E25231E2500ED8AEF /* Info.plist */,
 			);
 			path = Sources;
@@ -1250,6 +1534,13 @@
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
+		E143CEE027D7789300F4018A /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E157A720256E9D1D00CBCA52 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
@@ -1364,6 +1655,68 @@
 			productReference = E1224A64264ABCD000305968 /* Tests macOS.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		E143CED827D7786D00F4018A /* OpenTelemetryExporter_iOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E143CEDD27D7786D00F4018A /* Build configuration list for PBXNativeTarget "OpenTelemetryExporter_iOS" */;
+			buildPhases = (
+				E143CED527D7786D00F4018A /* Sources */,
+				E143CED627D7786D00F4018A /* Frameworks */,
+				E143CED727D7786D00F4018A /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = OpenTelemetryExporter_iOS;
+			packageProductDependencies = (
+				E143CF8927D77E1900F4018A /* Atomics */,
+			);
+			productName = OpenTelemetryExporter_iOS;
+			productReference = E143CED927D7786D00F4018A /* libOpenTelemetryExporter.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		E143CEE327D7789300F4018A /* OpenTelemetryExporter_macOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E143CEEA27D7789400F4018A /* Build configuration list for PBXNativeTarget "OpenTelemetryExporter_macOS" */;
+			buildPhases = (
+				E143CEE027D7789300F4018A /* Headers */,
+				E143CEE127D7789300F4018A /* Sources */,
+				E143CEE227D7789300F4018A /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = OpenTelemetryExporter_macOS;
+			packageProductDependencies = (
+				E143CF8B27D77ED000F4018A /* Atomics */,
+				E123D0C027D7B2C700B85B37 /* OpenTelemetrySdk */,
+			);
+			productName = OpenTelemetryExporter_macOS;
+			productReference = E143CEE427D7789300F4018A /* libOpenTelemetryExporter.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		E143CEF027D778AC00F4018A /* OpenTelemetryExporter_tvOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E143CEF527D778AC00F4018A /* Build configuration list for PBXNativeTarget "OpenTelemetryExporter_tvOS" */;
+			buildPhases = (
+				E143CEED27D778AC00F4018A /* Sources */,
+				E143CEEE27D778AC00F4018A /* Frameworks */,
+				E143CEEF27D778AC00F4018A /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = OpenTelemetryExporter_tvOS;
+			packageProductDependencies = (
+				E143CF8D27D77ED900F4018A /* Atomics */,
+				E123D0C227D7B2DA00B85B37 /* OpenTelemetrySdk */,
+			);
+			productName = OpenTelemetryExporter_tvOS;
+			productReference = E143CEF127D778AC00F4018A /* libOpenTelemetryExporter.a */;
+			productType = "com.apple.product-type.library.static";
+		};
 		E157A717256E9D1D00CBCA52 /* DatadogSDKTesting_macOS */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = E157A74A256E9D1D00CBCA52 /* Build configuration list for PBXNativeTarget "DatadogSDKTesting_macOS" */;
@@ -1377,12 +1730,12 @@
 			buildRules = (
 			);
 			dependencies = (
+				E143CF8427D7791C00F4018A /* PBXTargetDependency */,
 			);
 			name = DatadogSDKTesting_macOS;
 			packageProductDependencies = (
 				E157A718256E9D1D00CBCA52 /* CrashReporter */,
 				E157A71A256E9D1D00CBCA52 /* SigmaSwiftStatistics */,
-				E1BE9B592732B2A300B92AD4 /* DatadogExporter */,
 				E1BE9B5B2732B2A300B92AD4 /* InMemoryExporter */,
 				E1BE9B5D2732B2A300B92AD4 /* URLSessionInstrumentation */,
 			);
@@ -1403,12 +1756,12 @@
 			buildRules = (
 			);
 			dependencies = (
+				E143CF8727D7792100F4018A /* PBXTargetDependency */,
 			);
 			name = DatadogSDKTesting_tvOS;
 			packageProductDependencies = (
 				E157A750256E9D3300CBCA52 /* CrashReporter */,
 				E157A752256E9D3300CBCA52 /* SigmaSwiftStatistics */,
-				E1BE9B5F2732B2BA00B92AD4 /* DatadogExporter */,
 				E1BE9B612732B2BA00B92AD4 /* InMemoryExporter */,
 				E1BE9B632732B2BA00B92AD4 /* URLSessionInstrumentation */,
 			);
@@ -1473,12 +1826,12 @@
 			buildRules = (
 			);
 			dependencies = (
+				E143CF8127D7791300F4018A /* PBXTargetDependency */,
 			);
 			name = DatadogSDKTesting_iOS;
 			packageProductDependencies = (
 				E1FB483A253891650083B263 /* CrashReporter */,
 				E17B7AA7253F02580081D7F3 /* SigmaSwiftStatistics */,
-				E1BE9B532732B27900B92AD4 /* DatadogExporter */,
 				E1BE9B552732B27900B92AD4 /* InMemoryExporter */,
 				E1BE9B572732B27900B92AD4 /* URLSessionInstrumentation */,
 			);
@@ -1552,7 +1905,7 @@
 		E1ABA04125231E2500ED8AEF /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 1250;
+				LastSwiftUpdateCheck = 1320;
 				LastUpgradeCheck = 1320;
 				TargetAttributes = {
 					E1224A49264ABCCF00305968 = {
@@ -1568,6 +1921,15 @@
 					E1224A63264ABCD000305968 = {
 						CreatedOnToolsVersion = 12.5;
 						TestTargetID = E1224A50264ABCCF00305968;
+					};
+					E143CED827D7786D00F4018A = {
+						CreatedOnToolsVersion = 13.2.1;
+					};
+					E143CEE327D7789300F4018A = {
+						CreatedOnToolsVersion = 13.2.1;
+					};
+					E143CEF027D778AC00F4018A = {
+						CreatedOnToolsVersion = 13.2.1;
 					};
 					E1ABA04925231E2500ED8AEF = {
 						CreatedOnToolsVersion = 12.0.1;
@@ -1599,15 +1961,19 @@
 				E1FB4839253891650083B263 /* XCRemoteSwiftPackageReference "plcrashreporter" */,
 				E17B7AA6253F02580081D7F3 /* XCRemoteSwiftPackageReference "SigmaSwiftStatistics" */,
 				E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */,
+				E143CF8827D77E1900F4018A /* XCRemoteSwiftPackageReference "swift-atomics" */,
 			);
 			productRefGroup = E1ABA04B25231E2500ED8AEF /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
+				E143CED827D7786D00F4018A /* OpenTelemetryExporter_iOS */,
 				E1ABA04925231E2500ED8AEF /* DatadogSDKTesting_iOS */,
 				E1ABA05225231E2500ED8AEF /* DatadogSDKTestingTests_iOS */,
+				E143CEE327D7789300F4018A /* OpenTelemetryExporter_macOS */,
 				E157A717256E9D1D00CBCA52 /* DatadogSDKTesting_macOS */,
 				E157A78B256EB0F000CBCA52 /* DatadogSDKTestingTests_macOS */,
+				E143CEF027D778AC00F4018A /* OpenTelemetryExporter_tvOS */,
 				E157A74F256E9D3300CBCA52 /* DatadogSDKTesting_tvOS */,
 				E157A7A5256EB0F200CBCA52 /* DatadogSDKTestingTests_tvOS */,
 				E1224A49264ABCCF00305968 /* IntegrationTests (iOS) */,
@@ -1805,6 +2171,111 @@
 				E1F4209C2652752400233B75 /* DDTags.swift in Sources */,
 				E1224A8A264ADA6000305968 /* IntegrationTestsRunner.swift in Sources */,
 				E1F4208D264D752C00233B75 /* SimpleSpanData.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E143CED527D7786D00F4018A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E143CF5227D7790300F4018A /* LogsExporter.swift in Sources */,
+				E143CF6A27D7790300F4018A /* RequestBuilder.swift in Sources */,
+				E143CF3D27D7790300F4018A /* DateFormatting.swift in Sources */,
+				E143CF4927D7790300F4018A /* ExporterConfiguration.swift in Sources */,
+				E143CF2E27D7790300F4018A /* SpanEncoder.swift in Sources */,
+				E143CF4627D7790300F4018A /* Device.swift in Sources */,
+				E143CF6127D7790300F4018A /* Directory.swift in Sources */,
+				E143CF2B27D7790300F4018A /* SpansExporter.swift in Sources */,
+				E143CF6727D7790300F4018A /* OpenTelemetryExporter.swift in Sources */,
+				E143CF5827D7790300F4018A /* FilesOrchestrator.swift in Sources */,
+				E143CF5527D7790300F4018A /* FileWriter.swift in Sources */,
+				E143CF5B27D7790300F4018A /* DataFormat.swift in Sources */,
+				E143CF6D27D7790300F4018A /* DataUploader.swift in Sources */,
+				E143CF6427D7790300F4018A /* File.swift in Sources */,
+				E143CF3A27D7790300F4018A /* DateProvider.swift in Sources */,
+				E143CF3727D7790300F4018A /* Feature.swift in Sources */,
+				E143CF7C27D7790300F4018A /* DataUploadStatus.swift in Sources */,
+				E143CF7327D7790300F4018A /* DataUploadWorker.swift in Sources */,
+				E143CF4F27D7790300F4018A /* LogSanitizer.swift in Sources */,
+				E143CF7027D7790300F4018A /* DatadogEndpoints.swift in Sources */,
+				E143CF5E27D7790300F4018A /* FileReader.swift in Sources */,
+				E143CF4027D7790300F4018A /* EncodableValue.swift in Sources */,
+				E143CF3427D7790300F4018A /* JSONEncoder.swift in Sources */,
+				E143CF7627D7790300F4018A /* HTTPClient.swift in Sources */,
+				E143CF4C27D7790300F4018A /* LogEncoder.swift in Sources */,
+				E143CF7927D7790300F4018A /* DataUploadDelay.swift in Sources */,
+				E143CF4327D7790300F4018A /* DataCompression.swift in Sources */,
+				E143CF3127D7790300F4018A /* PerformancePreset.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E143CEE127D7789300F4018A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E143CF5327D7790300F4018A /* LogsExporter.swift in Sources */,
+				E143CF6B27D7790300F4018A /* RequestBuilder.swift in Sources */,
+				E143CF3E27D7790300F4018A /* DateFormatting.swift in Sources */,
+				E143CF4A27D7790300F4018A /* ExporterConfiguration.swift in Sources */,
+				E143CF2F27D7790300F4018A /* SpanEncoder.swift in Sources */,
+				E143CF4727D7790300F4018A /* Device.swift in Sources */,
+				E143CF6227D7790300F4018A /* Directory.swift in Sources */,
+				E143CF2C27D7790300F4018A /* SpansExporter.swift in Sources */,
+				E143CF6827D7790300F4018A /* OpenTelemetryExporter.swift in Sources */,
+				E143CF5927D7790300F4018A /* FilesOrchestrator.swift in Sources */,
+				E143CF5627D7790300F4018A /* FileWriter.swift in Sources */,
+				E143CF5C27D7790300F4018A /* DataFormat.swift in Sources */,
+				E143CF6E27D7790300F4018A /* DataUploader.swift in Sources */,
+				E143CF6527D7790300F4018A /* File.swift in Sources */,
+				E143CF3B27D7790300F4018A /* DateProvider.swift in Sources */,
+				E143CF3827D7790300F4018A /* Feature.swift in Sources */,
+				E143CF7D27D7790300F4018A /* DataUploadStatus.swift in Sources */,
+				E143CF7427D7790300F4018A /* DataUploadWorker.swift in Sources */,
+				E143CF5027D7790300F4018A /* LogSanitizer.swift in Sources */,
+				E143CF7127D7790300F4018A /* DatadogEndpoints.swift in Sources */,
+				E143CF5F27D7790300F4018A /* FileReader.swift in Sources */,
+				E143CF4127D7790300F4018A /* EncodableValue.swift in Sources */,
+				E143CF3527D7790300F4018A /* JSONEncoder.swift in Sources */,
+				E143CF7727D7790300F4018A /* HTTPClient.swift in Sources */,
+				E143CF4D27D7790300F4018A /* LogEncoder.swift in Sources */,
+				E143CF7A27D7790300F4018A /* DataUploadDelay.swift in Sources */,
+				E143CF4427D7790300F4018A /* DataCompression.swift in Sources */,
+				E143CF3227D7790300F4018A /* PerformancePreset.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E143CEED27D778AC00F4018A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E143CF5427D7790300F4018A /* LogsExporter.swift in Sources */,
+				E143CF6C27D7790300F4018A /* RequestBuilder.swift in Sources */,
+				E143CF3F27D7790300F4018A /* DateFormatting.swift in Sources */,
+				E143CF4B27D7790300F4018A /* ExporterConfiguration.swift in Sources */,
+				E143CF3027D7790300F4018A /* SpanEncoder.swift in Sources */,
+				E143CF4827D7790300F4018A /* Device.swift in Sources */,
+				E143CF6327D7790300F4018A /* Directory.swift in Sources */,
+				E143CF2D27D7790300F4018A /* SpansExporter.swift in Sources */,
+				E143CF6927D7790300F4018A /* OpenTelemetryExporter.swift in Sources */,
+				E143CF5A27D7790300F4018A /* FilesOrchestrator.swift in Sources */,
+				E143CF5727D7790300F4018A /* FileWriter.swift in Sources */,
+				E143CF5D27D7790300F4018A /* DataFormat.swift in Sources */,
+				E143CF6F27D7790300F4018A /* DataUploader.swift in Sources */,
+				E143CF6627D7790300F4018A /* File.swift in Sources */,
+				E143CF3C27D7790300F4018A /* DateProvider.swift in Sources */,
+				E143CF3927D7790300F4018A /* Feature.swift in Sources */,
+				E143CF7E27D7790300F4018A /* DataUploadStatus.swift in Sources */,
+				E143CF7527D7790300F4018A /* DataUploadWorker.swift in Sources */,
+				E143CF5127D7790300F4018A /* LogSanitizer.swift in Sources */,
+				E143CF7227D7790300F4018A /* DatadogEndpoints.swift in Sources */,
+				E143CF6027D7790300F4018A /* FileReader.swift in Sources */,
+				E143CF4227D7790300F4018A /* EncodableValue.swift in Sources */,
+				E143CF3627D7790300F4018A /* JSONEncoder.swift in Sources */,
+				E143CF7827D7790300F4018A /* HTTPClient.swift in Sources */,
+				E143CF4E27D7790300F4018A /* LogEncoder.swift in Sources */,
+				E143CF7B27D7790300F4018A /* DataUploadDelay.swift in Sources */,
+				E143CF4527D7790300F4018A /* DataCompression.swift in Sources */,
+				E143CF3327D7790300F4018A /* PerformancePreset.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2036,6 +2507,21 @@
 			target = E1224A50264ABCCF00305968 /* IntegrationTests (macOS) */;
 			targetProxy = E1224A65264ABCD000305968 /* PBXContainerItemProxy */;
 		};
+		E143CF8127D7791300F4018A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E143CED827D7786D00F4018A /* OpenTelemetryExporter_iOS */;
+			targetProxy = E143CF8027D7791300F4018A /* PBXContainerItemProxy */;
+		};
+		E143CF8427D7791C00F4018A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E143CEE327D7789300F4018A /* OpenTelemetryExporter_macOS */;
+			targetProxy = E143CF8327D7791C00F4018A /* PBXContainerItemProxy */;
+		};
+		E143CF8727D7792100F4018A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E143CEF027D778AC00F4018A /* OpenTelemetryExporter_tvOS */;
+			targetProxy = E143CF8627D7792100F4018A /* PBXContainerItemProxy */;
+		};
 		E157A7CA256EB39F00CBCA52 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = E157A74F256E9D3300CBCA52 /* DatadogSDKTesting_tvOS */;
@@ -2256,6 +2742,98 @@
 				SDKROOT = macosx;
 				SWIFT_VERSION = 5.0;
 				TEST_TARGET_NAME = "IntegrationTests (macOS)";
+			};
+			name = Release;
+		};
+		E143CEDE27D7786D00F4018A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CODE_SIGN_STYLE = Automatic;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = OpenTelemetryExporter;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		E143CEDF27D7786D00F4018A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CODE_SIGN_STYLE = Automatic;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = OpenTelemetryExporter;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		E143CEEB27D7789400F4018A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CODE_SIGN_STYLE = Automatic;
+				EXECUTABLE_PREFIX = lib;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				PRODUCT_NAME = OpenTelemetryExporter;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		E143CEEC27D7789400F4018A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CODE_SIGN_STYLE = Automatic;
+				EXECUTABLE_PREFIX = lib;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				PRODUCT_NAME = OpenTelemetryExporter;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		E143CEF627D778AC00F4018A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CODE_SIGN_STYLE = Automatic;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = OpenTelemetryExporter;
+				SDKROOT = appletvos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 11.0;
+			};
+			name = Debug;
+		};
+		E143CEF727D778AC00F4018A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CODE_SIGN_STYLE = Automatic;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = OpenTelemetryExporter;
+				SDKROOT = appletvos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 11.0;
 			};
 			name = Release;
 		};
@@ -2805,6 +3383,33 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		E143CEDD27D7786D00F4018A /* Build configuration list for PBXNativeTarget "OpenTelemetryExporter_iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E143CEDE27D7786D00F4018A /* Debug */,
+				E143CEDF27D7786D00F4018A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E143CEEA27D7789400F4018A /* Build configuration list for PBXNativeTarget "OpenTelemetryExporter_macOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E143CEEB27D7789400F4018A /* Debug */,
+				E143CEEC27D7789400F4018A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E143CEF527D778AC00F4018A /* Build configuration list for PBXNativeTarget "OpenTelemetryExporter_tvOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E143CEF627D778AC00F4018A /* Debug */,
+				E143CEF727D778AC00F4018A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		E157A74A256E9D1D00CBCA52 /* Build configuration list for PBXNativeTarget "DatadogSDKTesting_macOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -2897,6 +3502,14 @@
 				minimumVersion = 1.1.2;
 			};
 		};
+		E143CF8827D77E1900F4018A /* XCRemoteSwiftPackageReference "swift-atomics" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-atomics.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
 		E157A719256E9D1D00CBCA52 /* XCRemoteSwiftPackageReference "plcrashreporter" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/microsoft/plcrashreporter.git";
@@ -2948,6 +3561,31 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		E123D0C027D7B2C700B85B37 /* OpenTelemetrySdk */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			productName = OpenTelemetrySdk;
+		};
+		E123D0C227D7B2DA00B85B37 /* OpenTelemetrySdk */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			productName = OpenTelemetrySdk;
+		};
+		E143CF8927D77E1900F4018A /* Atomics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E143CF8827D77E1900F4018A /* XCRemoteSwiftPackageReference "swift-atomics" */;
+			productName = Atomics;
+		};
+		E143CF8B27D77ED000F4018A /* Atomics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E143CF8827D77E1900F4018A /* XCRemoteSwiftPackageReference "swift-atomics" */;
+			productName = Atomics;
+		};
+		E143CF8D27D77ED900F4018A /* Atomics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E143CF8827D77E1900F4018A /* XCRemoteSwiftPackageReference "swift-atomics" */;
+			productName = Atomics;
+		};
 		E157A718256E9D1D00CBCA52 /* CrashReporter */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = E157A719256E9D1D00CBCA52 /* XCRemoteSwiftPackageReference "plcrashreporter" */;
@@ -2973,11 +3611,6 @@
 			package = E17B7AA6253F02580081D7F3 /* XCRemoteSwiftPackageReference "SigmaSwiftStatistics" */;
 			productName = SigmaSwiftStatistics;
 		};
-		E1BE9B532732B27900B92AD4 /* DatadogExporter */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
-			productName = DatadogExporter;
-		};
 		E1BE9B552732B27900B92AD4 /* InMemoryExporter */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
@@ -2988,11 +3621,6 @@
 			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
 			productName = URLSessionInstrumentation;
 		};
-		E1BE9B592732B2A300B92AD4 /* DatadogExporter */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
-			productName = DatadogExporter;
-		};
 		E1BE9B5B2732B2A300B92AD4 /* InMemoryExporter */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
@@ -3002,11 +3630,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
 			productName = URLSessionInstrumentation;
-		};
-		E1BE9B5F2732B2BA00B92AD4 /* DatadogExporter */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
-			productName = DatadogExporter;
 		};
 		E1BE9B612732B2BA00B92AD4 /* InMemoryExporter */ = {
 			isa = XCSwiftPackageProductDependency;

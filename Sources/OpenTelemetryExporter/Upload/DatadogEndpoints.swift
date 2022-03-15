@@ -20,16 +20,12 @@ public enum Endpoint {
     case eu1
     /// Gov servers.
     /// Sends data to [app.ddog-gov.com](https://app.ddog-gov.com/).
-    case us1_fed
+ //   case us1_fed
+    /// Staging servers.
+    /// Sends data to [app.datadoghq.eu](https://dd.datad0g.com/).
+    case staging
     /// User-defined server.
-    case custom(tracesURL: URL, logsURL: URL, metricsURL: URL)
-
-    @available(*, deprecated, message: "Renamed to us1")
-    public static let us: Endpoint = .us1
-    @available(*, deprecated, message: "Renamed to eu1")
-    public static let eu: Endpoint = .eu1
-    @available(*, deprecated, message: "Renamed to us1_fed")
-    public static let gov: Endpoint = .us1_fed
+    case custom(testsURL: URL, logsURL: URL)
 
     internal var logsURL: URL {
         let endpoint = "api/v2/logs"
@@ -38,32 +34,22 @@ public enum Endpoint {
             case .us3: return URL(string: "https://logs.browser-intake-us3-datadoghq.com/" + endpoint)!
             case .us5: return URL(string: "https://logs.browser-intake-us5-datadoghq.com/" + endpoint)!
             case .eu1: return URL(string: "https://mobile-http-intake.logs.datadoghq.eu/" + endpoint)!
-            case .us1_fed: return URL(string: "https://logs.browser-intake-ddog-gov.com/" + endpoint)!
-            case let .custom(_, logsURL: logsUrl, _): return logsUrl
+            //case .us1_fed: return URL(string: "https://logs.browser-intake-ddog-gov.com/" + endpoint)!
+            case .staging: return URL(string: "https://logs.browser-intake-datad0g.com/" + endpoint)!
+            case let .custom(_, logsURL: logsUrl): return logsUrl
         }
     }
 
-    internal var tracesURL: URL {
-        let endpoint = "api/v2/spans"
+    internal var spansURL: URL {
+        let endpoint = "api/v2/citestcycle"
         switch self {
-            case .us1: return URL(string: "https://trace.browser-intake-datadoghq.com/" + endpoint)!
-            case .us3: return URL(string: "https://trace.browser-intake-us3-datadoghq.com/" + endpoint)!
-            case .us5: return URL(string: "https://trace.browser-intake-us5-datadoghq.com/" + endpoint)!
-            case .eu1: return URL(string: "https:/public-trace-http-intake.logs.datadoghq.eu/" + endpoint)!
-            case .us1_fed: return URL(string: "https://trace.browser-intake-ddog-gov.com/" + endpoint)!
-            case let .custom(tracesURL: tracesUrl, _, _): return tracesUrl
-        }
-    }
-
-    internal var metricsURL: URL {
-        let endpoint = "api/v1/series"
-        switch self {
-            case .us1: return URL(string: "https://api.datadoghq.com/" + endpoint)!
-            case .us3: return URL(string: "https://api.us3.datadoghq.com/" + endpoint)!
-            case .us5: return URL(string: "https://api.us5.datadoghq.com/" + endpoint)!
-            case .eu1: return URL(string: "https://api.datadoghq.eu/" + endpoint)!
-            case .us1_fed: return URL(string: "https://api.ddog-gov.com/" + endpoint)!
-            case let .custom(_, _, metricsURL: metricsURL): return metricsURL
+            case .us1: return URL(string: "https://citestcycle-intake.datadoghq.com/" + endpoint)!
+            case .us3: return URL(string: "https://citestcycle-intake.us3.datadoghq.com/" + endpoint)!
+            case .us5: return URL(string: "https://citestcycle-intake.us5.datadoghq.com/" + endpoint)!
+            case .eu1: return URL(string: "https://citestcycle-intake.datadoghq.eu/" + endpoint)!
+            //case .us1_fed: return URL(string: "https://trace.browser-intake-ddog-gov.com/" + endpoint)!
+            case .staging: return URL(string: "https://citestcycle-intake.datad0g.com/" + endpoint)!
+            case let .custom(testsURL: testsURL, _): return testsURL
         }
     }
 }

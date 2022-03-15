@@ -18,8 +18,6 @@ internal class DataUploadWorker: DataUploadWorkerType {
     private let fileReader: FileReader
     /// Data uploader sending data to server.
     private let dataUploader: DataUploaderType
-    /// Variable system conditions determining if upload should be performed.
-    private let uploadCondition: () -> Bool
 
     /// Name of the feature this worker is performing uploads for.
     private let featureName: String
@@ -33,12 +31,10 @@ internal class DataUploadWorker: DataUploadWorkerType {
     init(
         fileReader: FileReader,
         dataUploader: DataUploaderType,
-        uploadCondition: @escaping () -> Bool,
         delay: Delay,
         featureName: String
     ) {
         self.fileReader = fileReader
-        self.uploadCondition = uploadCondition
         self.dataUploader = dataUploader
         self.delay = delay
         self.featureName = featureName
@@ -48,9 +44,7 @@ internal class DataUploadWorker: DataUploadWorkerType {
                 return
             }
 
-            let isSystemReady = self.uploadCondition()
-            let nextBatch = isSystemReady ? self.fileReader.readNextBatch() : nil
-            if let batch = nextBatch {
+            if let batch = self.fileReader.readNextBatch() {
                 // Upload batch
                 let uploadStatus = self.dataUploader.upload(data: batch.data)
 

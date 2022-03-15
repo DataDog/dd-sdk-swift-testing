@@ -604,8 +604,6 @@
 		E143CF0627D7790200F4018A /* EncodableValue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EncodableValue.swift; sourceTree = "<group>"; };
 		E143CF0827D7790200F4018A /* DataCompression.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataCompression.swift; sourceTree = "<group>"; };
 		E143CF0927D7790200F4018A /* Device.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Device.swift; sourceTree = "<group>"; };
-		E143CF0A27D7790300F4018A /* NOTICE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = NOTICE; sourceTree = "<group>"; };
-		E143CF0B27D7790300F4018A /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		E143CF0C27D7790300F4018A /* ExporterConfiguration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExporterConfiguration.swift; sourceTree = "<group>"; };
 		E143CF0E27D7790300F4018A /* LogEncoder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogEncoder.swift; sourceTree = "<group>"; };
 		E143CF0F27D7790300F4018A /* LogSanitizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogSanitizer.swift; sourceTree = "<group>"; };
@@ -1003,8 +1001,6 @@
 			children = (
 				E143CEFD27D7790200F4018A /* Spans */,
 				E143CF0027D7790200F4018A /* Utils */,
-				E143CF0A27D7790300F4018A /* NOTICE */,
-				E143CF0B27D7790300F4018A /* README.md */,
 				E143CF0C27D7790300F4018A /* ExporterConfiguration.swift */,
 				E143CF0D27D7790300F4018A /* Logs */,
 				E143CF1127D7790300F4018A /* Persistence */,

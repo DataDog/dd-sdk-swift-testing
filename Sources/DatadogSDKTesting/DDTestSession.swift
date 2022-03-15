@@ -189,8 +189,6 @@ public class DDTest: NSObject {
             DDDeviceTags.deviceModel: DDTestMonitor.env.deviceModel,
             DDRuntimeTags.runtimeName: DDTestMonitor.env.runtimeName,
             DDRuntimeTags.runtimeVersion: DDTestMonitor.env.runtimeVersion,
-            DDCILibraryTags.ciLibraryLanguage: "swift",
-            DDCILibraryTags.ciLibraryVersion: DDTestObserver.tracerVersion,
         ]
 
         span = DDTestMonitor.tracer.startSpan(name: "\(session.testFramework).test", attributes: attributes, startTime: startTime)
@@ -199,7 +197,7 @@ public class DDTest: NSObject {
         DDTestMonitor.instance?.currentTest = self
 
         // Is not a UITest until a XCUIApplication is launched
-        span.setAttribute(key: DDTestTags.testIsUITest, value: false)
+        span.setAttribute(key: DDTestTags.testIsUITest, value: "false")
 
         DDTestMonitor.tracer.addPropagationsHeadersToEnvironment()
 

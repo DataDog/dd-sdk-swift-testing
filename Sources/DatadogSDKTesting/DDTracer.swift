@@ -63,7 +63,7 @@ internal class DDTracer {
         tracerSdk = tracerProvider.get(instrumentationName: identifier, instrumentationVersion: version) as! TracerSdk
 
         var endpoint: Endpoint
-        switch env.tracesEndpoint {
+        switch env.ddEndpoint {
             case "us", "US", "us1", "US1", "https://app.datadoghq.com", "app.datadoghq.com", "datadoghq.com":
                 endpoint = Endpoint.us1
             case "us3", "US3", "https://us3.datadoghq.com", "us3.datadoghq.com":
@@ -72,39 +72,35 @@ internal class DDTracer {
                 endpoint = Endpoint.us5
             case "eu", "EU", "eu1", "EU1", "https://app.datadoghq.eu", "app.datadoghq.eu", "datadoghq.eu":
                 endpoint = Endpoint.eu1
-            case "gov", "GOV", "us1_fed", "US1_FED", "https://app.ddog-gov.com", "app.ddog-gov.com", "ddog-gov.com":
-                endpoint = Endpoint.us1_fed
+//            case "gov", "GOV", "us1_fed", "US1_FED", "https://app.ddog-gov.com", "app.ddog-gov.com", "ddog-gov.com":
+//                endpoint = Endpoint.us1_fed
+            case "staging", "Staging", "https://dd.datad0g.com", "dd.datad0g.com", "datad0g.com":
+                endpoint = Endpoint.staging
             default:
                 endpoint = Endpoint.us1
         }
-
-//        // Staging endpoint, disable only for testing in staging
-//        endpoint = Endpoint.custom(tracesURL: URL(string: "https://trace.browser-intake-datad0g.com/api/v2/spans")!,
-//                                   logsURL: URL(string: "https://logs.browser-intake-datad0g.com/api/v2/logs")!,
-//                                   metricsURL: URL(string: "https://api.datad0g.com/api/v1/series")!)
 
         var payloadCompression = true
         // When reporting tests to local server
         if let localPort = env.localTestEnvironmentPort {
             let localURL = URL(string: "http://localhost:\(localPort)/")!
-            endpoint = Endpoint.custom(tracesURL: localURL, logsURL: localURL, metricsURL: localURL)
+            endpoint = Endpoint.custom(testsURL: localURL, logsURL: localURL)
             Log.print("Reporting tests to \(localURL.absoluteURL)")
             payloadCompression = false
         }
 
         let exporterConfiguration = ExporterConfiguration(
+            runtimeName: DDTestMonitor.env.runtimeName,
+            runtimeVersion: DDTestMonitor.env.runtimeVersion,
+            libraryVersion: DDTestObserver.tracerVersion,
             serviceName: env.ddService ?? env.getRepositoryName() ?? "unknown-swift-repo",
-            resource: "Resource",
             applicationName: identifier,
             applicationVersion: version,
             environment: env.ddEnvironment ?? (env.isCi ? "ci" : "none"),
             apiKey: env.ddApikeyOrClientToken ?? "",
             endpoint: endpoint,
             payloadCompression: payloadCompression,
-            uploadCondition: { true },
-            performancePreset: .instantDataDelivery,
-            exportUnsampledSpans: false,
-            exportUnsampledLogs: true
+            performancePreset: .instantDataDelivery
         )
         opentelemetryExporter = try? OpenTelemetryExporter(config: exporterConfiguration)
 

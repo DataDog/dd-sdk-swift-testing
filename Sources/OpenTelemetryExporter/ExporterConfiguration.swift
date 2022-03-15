@@ -10,9 +10,13 @@ internal struct ExporterError: Error, CustomStringConvertible {
 }
 
 public struct ExporterConfiguration {
+    var runtimeName: String
+    var runtimeVersion: String
+    var libraryVersion: String
+
     /// The name of the service, resource, version,... that will be reported to the backend.
     var serviceName: String
-    var resource: String
+    //var resource: String
     var applicationName: String
     var version: String
     var environment: String
@@ -26,23 +30,14 @@ public struct ExporterConfiguration {
     var payloadCompression: Bool
 
     var source: String
-    /// This conditon will be evaluated before trying to upload data
-    /// Can be used to avoid reporting when no connection
-    var uploadCondition: () -> Bool
     /// Performance preset for reporting
     var performancePreset: PerformancePreset
-    /// Option to export spans that have TraceFlag off, true by default
-    var exportUnsampledSpans: Bool
-    /// Option to export logs from spans that have TraceFlag off, true by default
-    var exportUnsampledLogs: Bool
-    /// Option to add a host name to all the metrics sent by the exporter
-    var hostName: String?
-    /// Option to add a custom prefix to all the metrics sent by the exporter
-    var metricsNamePrefix: String?
 
-    public init(serviceName: String, resource: String, applicationName: String, applicationVersion: String, environment: String, apiKey: String, endpoint: Endpoint, payloadCompression: Bool = true, source: String = "ios", uploadCondition: @escaping () -> Bool, performancePreset: PerformancePreset = .default, exportUnsampledSpans: Bool = true, exportUnsampledLogs: Bool = true, hostName: String? = nil, metricsNamePrefix: String? = "otel") {
+    public init( runtimeName: String, runtimeVersion: String, libraryVersion: String,serviceName: String, applicationName: String, applicationVersion: String, environment: String, apiKey: String, endpoint: Endpoint, payloadCompression: Bool = true, source: String = "ios", performancePreset: PerformancePreset = .default) {
+        self.runtimeName = runtimeName
+        self.runtimeVersion = runtimeVersion
+        self.libraryVersion = libraryVersion
         self.serviceName = serviceName
-        self.resource = resource
         self.applicationName = applicationName
         self.version = applicationVersion
         self.environment = environment
@@ -50,11 +45,6 @@ public struct ExporterConfiguration {
         self.endpoint = endpoint
         self.payloadCompression = payloadCompression
         self.source = source
-        self.uploadCondition = uploadCondition
         self.performancePreset = performancePreset
-        self.exportUnsampledSpans = exportUnsampledSpans
-        self.exportUnsampledLogs = exportUnsampledLogs
-        self.hostName = hostName
-        self.metricsNamePrefix = metricsNamePrefix
     }
 }

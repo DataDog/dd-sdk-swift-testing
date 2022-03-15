@@ -12,25 +12,22 @@ internal enum Constants {
 }
 
 /// `SpanEnvelope` allows encoding multiple spans sharing the same `traceID` to a single payload.
-internal struct SpanEnvelope: Encodable {
+internal struct CITestEnvelope: Encodable {
     enum CodingKeys: String, CodingKey {
-        case spans
-        case environment = "env"
+        case spanType = "type"
+        case version
+        case content
     }
 
-    let spans: [DDSpan]
-    let environment: String
+    let version: Int = 1
+
+    let spanType: String
+    let content: DDSpan
 
     /// The initializer to encode single `Span` within an envelope.
-    init(span: DDSpan, environment: String) {
-        self.init(spans: [span], environment: environment)
-    }
-
-    /// This initializer is `private` now, as we don't yet
-    /// support batching multiple spans sharing the same `traceID` within a single payload.
-    private init(spans: [DDSpan], environment: String) {
-        self.spans = spans
-        self.environment = environment
+    init(spanType: String, content: DDSpan) {
+        self.spanType = spanType
+        self.content = content
     }
 }
 
@@ -146,11 +143,12 @@ internal struct SpanEncoder {
 
     func encode(_ span: DDSpan, to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: StaticCodingKeys.self)
-        try container.encode(String(format: "%016llx", span.traceID.rawLowerLong), forKey: .traceID)
-        try container.encode(span.spanID.hexString, forKey: .spanID)
+
+        try container.encode(String(span.traceID.rawLowerLong), forKey: .traceID)
+        try container.encode(String(span.spanID.rawValue), forKey: .spanID)
 
         let parentSpanID = span.parentID ?? SpanId.invalid // 0 is a reserved ID for a root span (ref: DDTracer.java#L600)
-        try container.encode(parentSpanID.hexString, forKey: .parentID)
+        try container.encode(String(parentSpanID.rawValue), forKey: .parentID)
 
         try container.encode(span.name, forKey: .name)
         try container.encode(span.serviceName, forKey: .service)

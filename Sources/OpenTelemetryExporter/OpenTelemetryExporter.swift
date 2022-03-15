@@ -19,10 +19,10 @@ public class OpenTelemetryExporter: SpanExporter {
 
     public func export(spans: [SpanData]) -> SpanExporterResultCode {
         spans.forEach {
-            if $0.traceFlags.sampled || configuration.exportUnsampledSpans {
+            if $0.traceFlags.sampled {
                 spansExporter?.exportSpan(span: $0)
             }
-            if $0.traceFlags.sampled || configuration.exportUnsampledLogs {
+            if $0.traceFlags.sampled {
                 logsExporter?.exportLogs(fromSpan: $0)
             }
         }
@@ -30,11 +30,11 @@ public class OpenTelemetryExporter: SpanExporter {
     }
 
     public func flush() -> SpanExporterResultCode {
-        spansExporter?.tracesStorage.writer.queue.sync {}
+        spansExporter?.spansStorage.writer.queue.sync {}
         logsExporter?.logsStorage.writer.queue.sync {}
 
         _ = logsExporter?.logsUpload.uploader.flush()
-        _ = spansExporter?.tracesUpload.uploader.flush()
+        _ = spansExporter?.spansUpload.uploader.flush()
         return .success
     }
 
@@ -44,6 +44,6 @@ public class OpenTelemetryExporter: SpanExporter {
 
     public func endpointURLs() -> Set<String> {
         return [configuration.endpoint.logsURL.absoluteString,
-                configuration.endpoint.tracesURL.absoluteString]
+                configuration.endpoint.spansURL.absoluteString]
     }
 }

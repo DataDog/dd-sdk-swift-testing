@@ -7,21 +7,37 @@ import Foundation
 import OpenTelemetrySdk
 
 internal class SpansExporter {
-    let tracesDirectory = "com.datadog.civisibility/traces/v1"
+    let spansDirectory = "com.datadog.civisibility/spans/v1"
     let configuration: ExporterConfiguration
-    let tracesStorage: FeatureStorage
-    let tracesUpload: FeatureUpload
+    let spansStorage: FeatureStorage
+    let spansUpload: FeatureUpload
 
     init(config: ExporterConfiguration) throws {
         self.configuration = config
 
         let filesOrchestrator = FilesOrchestrator(
-            directory: try Directory(withSubdirectoryPath: tracesDirectory),
+            directory: try Directory(withSubdirectoryPath: spansDirectory),
             performance: configuration.performancePreset,
             dateProvider: SystemDateProvider()
         )
 
-        let dataFormat = DataFormat(prefix: "", suffix: "", separator: "\n")
+        let metadataInfo = """
+        "runtime_id": "\(UUID().uuidString)",
+        "language": "swift",
+        "runtime.name": "\(configuration.runtimeName)",
+        "runtime.version": "\(configuration.runtimeVersion)",
+        "library_version": "\(configuration.libraryVersion)",
+        "env": "\(configuration.environment)",
+        "service": "\(configuration.serviceName)"
+        """
+
+        let prefix = """
+        {"version": 1, "metadata": { \(metadataInfo)}, "events": [
+        """
+
+        let suffix = "]}"
+
+        let dataFormat = DataFormat(prefix: prefix, suffix: suffix, separator: ",")
 
         let spanFileWriter = FileWriter(
             dataFormat: dataFormat,
@@ -33,13 +49,13 @@ internal class SpansExporter {
             orchestrator: filesOrchestrator
         )
 
-        tracesStorage = FeatureStorage(writer: spanFileWriter, reader: spanFileReader)
+        spansStorage = FeatureStorage(writer: spanFileWriter, reader: spanFileReader)
 
         let requestBuilder = RequestBuilder(
-            url: configuration.endpoint.tracesURL,
+            url: configuration.endpoint.spansURL,
             queryItems: [],
             headers: [
-                .contentTypeHeader(contentType: .textPlainUTF8),
+                .contentTypeHeader(contentType: .applicationJSON),
                 .userAgentHeader(
                     appName: configuration.applicationName,
                     appVersion: configuration.version,
@@ -52,19 +68,26 @@ internal class SpansExporter {
             ] + (configuration.payloadCompression ? [RequestBuilder.HTTPHeader.contentEncodingHeader(contentEncoding: .deflate)] : [])
         )
 
-        tracesUpload = FeatureUpload(featureName: "tracesUpload",
-                                     storage: tracesStorage,
-                                     requestBuilder: requestBuilder,
-                                     performance: configuration.performancePreset,
-                                     uploadCondition: configuration.uploadCondition)
+        spansUpload = FeatureUpload(featureName: "spansUpload",
+                                    storage: spansStorage,
+                                    requestBuilder: requestBuilder,
+                                    performance: configuration.performancePreset)
     }
 
     func exportSpan(span: SpanData) {
-        let envelope = SpanEnvelope(span: DDSpan(spanData: span, configuration: configuration), environment: configuration.environment)
-        if configuration.performancePreset.synchronousWrite {
-            tracesStorage.writer.writeSync(value: envelope)
+        let ciTestEnvelope: CITestEnvelope
+        if let spanType = span.attributes["type"] {
+            ciTestEnvelope = CITestEnvelope(spanType: spanType.description,
+                                            content: DDSpan(spanData: span, configuration: configuration))
         } else {
-            tracesStorage.writer.write(value: envelope)
+            ciTestEnvelope = CITestEnvelope(spanType: "span",
+                                            content: DDSpan(spanData: span, configuration: configuration))
+        }
+
+        if configuration.performancePreset.synchronousWrite {
+            spansStorage.writer.writeSync(value: ciTestEnvelope)
+        } else {
+            spansStorage.writer.write(value: ciTestEnvelope)
         }
     }
 }

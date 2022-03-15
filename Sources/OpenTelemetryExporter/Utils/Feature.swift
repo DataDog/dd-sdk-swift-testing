@@ -33,8 +33,7 @@ internal struct FeatureUpload {
         featureName: String,
         storage: FeatureStorage,
         requestBuilder: RequestBuilder,
-        performance: PerformancePreset,
-        uploadCondition: @escaping () -> Bool
+        performance: PerformancePreset
     ) {
         let dataUploader = DataUploader(
             httpClient: HTTPClient(),
@@ -45,7 +44,6 @@ internal struct FeatureUpload {
             uploader: DataUploadWorker(
                 fileReader: storage.reader,
                 dataUploader: dataUploader,
-                uploadCondition: uploadCondition,
                 delay: DataUploadDelay(performance: performance),
                 featureName: featureName
             )

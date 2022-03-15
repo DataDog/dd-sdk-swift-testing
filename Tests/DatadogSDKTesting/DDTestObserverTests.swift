@@ -66,8 +66,6 @@ internal class DDTestObserverTests: XCTestCase {
         XCTAssertEqual(spanData.attributes[DDRuntimeTags.runtimeName]?.description, "Xcode")
         XCTAssertEqual(spanData.attributes[DDRuntimeTags.runtimeVersion]?.description, PlatformUtils.getXcodeVersion())
         XCTAssertNotNil(spanData.attributes[DDCITags.ciWorkspacePath])
-        XCTAssertEqual(spanData.attributes[DDCILibraryTags.ciLibraryLanguage]?.description, "swift")
-        XCTAssertNotNil(spanData.attributes[DDCILibraryTags.ciLibraryVersion])
 
         testObserver.testCaseDidFinish(self)
         testObserver.testSuiteDidFinish(theSuite)

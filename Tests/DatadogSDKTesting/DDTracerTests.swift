@@ -268,6 +268,8 @@ class DDTracerTests: XCTestCase {
         XCTAssertEqual(environmentValues[DDHeaders.traceIDField.rawValue], String(spanData.traceId.rawLowerLong))
         XCTAssertNotNil(environmentValues[DDHeaders.parentSpanIDField.rawValue])
         XCTAssertEqual(environmentValues[DDHeaders.parentSpanIDField.rawValue], String(spanData.spanId.rawValue))
+        XCTAssertNotNil(environmentValues["CI_VISIBILITY_TEST_EXECUTION_ID"])
+        XCTAssertEqual(environmentValues["CI_VISIBILITY_TEST_EXECUTION_ID"], String(spanData.traceId.rawLowerLong))
 
         span.end()
     }

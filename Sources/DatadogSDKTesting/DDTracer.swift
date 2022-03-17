@@ -293,6 +293,26 @@ internal class DDTracer {
     }
 
     func flush() {
+        if DDTestMonitor.instance?.isRumActive ?? false,
+           let remotePort = CFMessagePortCreateRemote(nil, "DatadogRUMTestingPort" as CFString)
+        {
+            let timeout: CFTimeInterval = 10.0
+            let status = CFMessagePortSendRequest(
+                remotePort,
+                DDCFMessageID.forceFlush, // Message ID for asking RUM to flush all data
+                nil,
+                timeout,
+                timeout,
+                "kCFRunLoopDefaultMode" as CFString,
+                nil
+            )
+            if status == kCFMessagePortSuccess {
+            } else {
+                Log.debug("CFMessagePortCreateRemote request to DatadogRUMTestingPort failed")
+            }
+        }
+        Log.debug("DDCFMessageID.forceFlush finished")
+
         backgroundWorkQueue.sync {
             OpenTelemetrySDK.instance.tracerProvider.forceFlush()
         }
@@ -330,7 +350,7 @@ internal class DDTracer {
         }
 
         OpenTelemetry.instance.propagators.textMapPropagator.inject(spanContext: propagationContext, carrier: &headers, setter: HeaderSetter())
-        if !DDTestMonitor.env.disableDDSDKIOSIntegration {
+        if !DDTestMonitor.env.disableRUMIntegration {
             headers.merge(datadogHeaders(forContext: propagationContext)) { current, _ in current }
         }
         return headers
@@ -350,8 +370,9 @@ internal class DDTracer {
         }
 
         EnvironmentContextPropagator().inject(spanContext: propagationContext, carrier: &headers, setter: HeaderSetter())
-        if !DDTestMonitor.env.disableDDSDKIOSIntegration {
+        if !DDTestMonitor.env.disableRUMIntegration {
             headers.merge(datadogHeaders(forContext: propagationContext)) { current, _ in current }
+            headers["CI_VISIBILITY_TEST_EXECUTION_ID"] = String(propagationContext.traceId.rawLowerLong)
         }
         return headers
     }

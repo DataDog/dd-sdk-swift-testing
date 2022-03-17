@@ -173,8 +173,12 @@ internal struct DDEnvironmentValues {
         let envStderr = DDEnvironmentValues.getEnvVariable("DD_ENABLE_STDERR_INSTRUMENTATION") as NSString?
         enableStderrInstrumentation = envStderr?.boolValue ?? false
 
-        let envDisableRUMIntegration = DDEnvironmentValues.getEnvVariable("DD_DISABLE_RUM_INTEGRATION") as NSString?
-        disableRUMIntegration = envDisableRUMIntegration?.boolValue ?? false
+        if let envDisableRUMIntegration = DDEnvironmentValues.getEnvVariable("DD_DISABLE_RUM_INTEGRATION") as? NSString {
+            disableRUMIntegration = envDisableRUMIntegration.boolValue
+        } else {
+            let envDisableDDSDKIOSIntegration = DDEnvironmentValues.getEnvVariable("DD_DISABLE_SDKIOS_INTEGRATION") as NSString?
+            disableRUMIntegration = envDisableDDSDKIOSIntegration?.boolValue ?? false
+        }
 
         let envDisableCrashReporting = DDEnvironmentValues.getEnvVariable("DD_DISABLE_CRASH_HANDLER") as NSString?
         disableCrashHandler = envDisableCrashReporting?.boolValue ?? false

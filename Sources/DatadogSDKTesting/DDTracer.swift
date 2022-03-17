@@ -371,6 +371,7 @@ internal class DDTracer {
 
         EnvironmentContextPropagator().inject(spanContext: propagationContext, carrier: &headers, setter: HeaderSetter())
         if !DDTestMonitor.env.disableRUMIntegration {
+            headers.merge(datadogHeaders(forContext: propagationContext)) { current, _ in current }
             headers["CI_VISIBILITY_TEST_EXECUTION_ID"] = String(propagationContext.traceId.rawLowerLong)
         }
         return headers

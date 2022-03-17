@@ -296,7 +296,7 @@ internal class DDTracer {
         if DDTestMonitor.instance?.isRumActive ?? false,
            let remotePort = CFMessagePortCreateRemote(nil, "DatadogRUMTestingPort" as CFString)
         {
-            let timeout: CFTimeInterval = 1000.0
+            let timeout: CFTimeInterval = 10.0
             let status = CFMessagePortSendRequest(
                 remotePort,
                 DDCFMessageID.forceFlush, // Message ID for asking RUM to flush all data
@@ -311,7 +311,7 @@ internal class DDTracer {
                 Log.debug("CFMessagePortCreateRemote request to DatadogRUMTestingPort failed")
             }
         }
-        print("DDCFMessageID.forceFlush finished")
+        Log.debug("DDCFMessageID.forceFlush finished")
 
         backgroundWorkQueue.sync {
             OpenTelemetrySDK.instance.tracerProvider.forceFlush()

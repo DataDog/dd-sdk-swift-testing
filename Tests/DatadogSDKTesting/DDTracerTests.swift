@@ -160,7 +160,7 @@ class DDTracerTests: XCTestCase {
         resetEnvironmentVariables()
 
         let tracer = DDTracer()
-        XCTAssertTrue(tracer.endpointURLs().contains("https:/public-trace-http-intake.logs.datadoghq.eu/api/v2/spans"))
+        XCTAssertTrue(tracer.endpointURLs().contains("https://public-trace-http-intake.logs.datadoghq.eu/api/v2/spans"))
         XCTAssertTrue(tracer.endpointURLs().contains("https://mobile-http-intake.logs.datadoghq.eu/api/v2/logs"))
         DDEnvironmentValues.environment["DD_ENDPOINT"] = nil
     }

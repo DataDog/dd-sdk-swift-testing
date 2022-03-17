@@ -71,7 +71,11 @@ internal class DDTracer {
             case "us5", "US5", "https://us5.datadoghq.com", "us5.datadoghq.com":
                 endpoint = Endpoint.us5
             case "eu", "EU", "eu1", "EU1", "https://app.datadoghq.eu", "app.datadoghq.eu", "datadoghq.eu":
-                endpoint = Endpoint.eu1
+                // endpoint = Endpoint.eu1
+                // Exported eu endpoint contains an error, fix it locally until the library is updated
+                endpoint = Endpoint.custom(tracesURL: URL(string: "https://public-trace-http-intake.logs.datadoghq.eu/api/v2/spans")!,
+                                           logsURL: URL(string: "https://mobile-http-intake.logs.datadoghq.eu/api/v2/logs")!,
+                                           metricsURL: URL(string: "https://api.datadoghq.eu/api/v1/series")!)
             case "gov", "GOV", "us1_fed", "US1_FED", "https://app.ddog-gov.com", "app.ddog-gov.com", "ddog-gov.com":
                 endpoint = Endpoint.us1_fed
             default:

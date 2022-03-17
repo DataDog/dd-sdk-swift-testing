@@ -21,9 +21,12 @@ struct CodeOwners {
         if !FileManager.default.fileExists(atPath: location.path) {
             location = workspacePath.appendingPathComponent(".github").appendingPathComponent("CODEOWNERS")
             if !FileManager.default.fileExists(atPath: location.path) {
-                location = workspacePath.appendingPathComponent(".docs").appendingPathComponent("CODEOWNERS")
+                location = workspacePath.appendingPathComponent(".gitlab").appendingPathComponent("CODEOWNERS")
                 if !FileManager.default.fileExists(atPath: location.path) {
-                    return nil
+                    location = workspacePath.appendingPathComponent(".docs").appendingPathComponent("CODEOWNERS")
+                    if !FileManager.default.fileExists(atPath: location.path) {
+                        return nil
+                    }
                 }
             }
         }

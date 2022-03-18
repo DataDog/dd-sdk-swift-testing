@@ -51,12 +51,22 @@ extension String {
 extension Data {
     func zlibDecompress(minimumSize: Int = 0) -> String {
         let expectedSize = minimumSize < 0x10000 ? 0x10000 : 0x10000
+        let result: String
+#if swift(>=5.6)
+        result = withUnsafeTemporaryAllocation(of: UInt8.self, capacity: expectedSize) { buffer in
+            self.subdata(in: 2 ..< self.count).withUnsafeBytes {
+                let read = compression_decode_buffer(buffer.baseAddress!, expectedSize, $0.baseAddress!.bindMemory(to: UInt8.self, capacity: 1), self.count - 2, nil, COMPRESSION_ZLIB)
+                return String(decoding: Data(bytes: buffer.baseAddress!, count: read), as: UTF8.self)
+            } as String
+        }
+#else
         let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: expectedSize)
-        let result = self.subdata(in: 2 ..< self.count).withUnsafeBytes {
+        result = self.subdata(in: 2 ..< self.count).withUnsafeBytes {
             let read = compression_decode_buffer(buffer, expectedSize, $0.baseAddress!.bindMemory(to: UInt8.self, capacity: 1), self.count - 2, nil, COMPRESSION_ZLIB)
             return String(decoding: Data(bytes: buffer, count: read), as: UTF8.self)
         } as String
         buffer.deallocate()
+#endif
         return result
     }
 

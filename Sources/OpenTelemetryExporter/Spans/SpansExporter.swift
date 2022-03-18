@@ -22,7 +22,7 @@ internal class SpansExporter {
         )
 
         let metadataInfo = """
-        "runtime_id": "\(UUID().uuidString)",
+        "runtime-id": "\(UUID().uuidString)",
         "language": "swift",
         "runtime.name": "\(configuration.runtimeName)",
         "runtime.version": "\(configuration.runtimeVersion)",

@@ -173,7 +173,7 @@ internal class DDTestMonitor {
                         }
                     case DDCFMessageID.enableRUM:
                         DDTestMonitor.instance?.isRumActive = true
-                        DDTestMonitor.instance?.currentTest?.setTag(key: DDTestTags.testIsRUMActive, value: true)
+                        DDTestMonitor.instance?.currentTest?.setTag(key: DDTestTags.testIsRUMActive, value: String("true"))
                     case DDCFMessageID.forceFlush:
                         Log.debug("CFMessagePort forceFlush")
                     default:

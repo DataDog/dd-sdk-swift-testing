@@ -57,9 +57,9 @@ internal class LogsExporter {
                     device: Device.current
                 ),
                 .ddAPIKeyHeader(apiKey: configuration.apiKey),
-                .ddEVPOriginHeader(source: configuration.source),
-                .ddEVPOriginVersionHeader(version: configuration.version),
-                .ddRequestIDHeader()
+//                .ddEVPOriginHeader(source: configuration.source),
+//                .ddEVPOriginVersionHeader(version: configuration.version),
+//                .ddRequestIDHeader()
             ] + (configuration.payloadCompression ? [RequestBuilder.HTTPHeader.contentEncodingHeader(contentEncoding: .deflate)] : [])
         )
 

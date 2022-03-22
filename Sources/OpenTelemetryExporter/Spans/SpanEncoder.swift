@@ -144,11 +144,11 @@ internal struct SpanEncoder {
     func encode(_ span: DDSpan, to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: StaticCodingKeys.self)
 
-        try container.encode(String(span.traceID.rawLowerLong), forKey: .traceID)
-        try container.encode(String(span.spanID.rawValue), forKey: .spanID)
+        try container.encode(span.traceID.rawLowerLong, forKey: .traceID)
+        try container.encode(span.spanID.rawValue, forKey: .spanID)
 
         let parentSpanID = span.parentID ?? SpanId.invalid // 0 is a reserved ID for a root span (ref: DDTracer.java#L600)
-        try container.encode(String(parentSpanID.rawValue), forKey: .parentID)
+        try container.encode(parentSpanID.rawValue, forKey: .parentID)
 
         try container.encode(span.name, forKey: .name)
         try container.encode(span.serviceName, forKey: .service)

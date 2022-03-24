@@ -1,6 +1,7 @@
 /*
- * Copyright The OpenTelemetry Authors
- * SPDX-License-Identifier: Apache-2.0
+ * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
+ * This product includes software developed at Datadog (https://www.datadoghq.com/).
+ * Copyright 2020-2021 Datadog, Inc.
  */
 
 import Foundation
@@ -29,7 +30,7 @@ internal struct RequestBuilder {
     }
 
     enum ContentEncoding: String {
-        case deflate = "deflate"
+        case deflate
     }
 
     struct HTTPHeader {
@@ -37,10 +38,6 @@ internal struct RequestBuilder {
         static let contentEncodingHeaderField = "Content-Encoding"
         static let userAgentHeaderField = "User-Agent"
         static let ddAPIKeyHeaderField = "DD-API-KEY"
-        static let ddEVPOriginHeaderField = "DD-EVP-ORIGIN"
-        static let ddEVPOriginVersionHeaderField = "DD-EVP-ORIGIN-VERSION"
-        static let ddRequestIDHeaderField = "DD-REQUEST-ID"
-
 
         enum Value {
             /// If the header's value is constant.
@@ -77,21 +74,6 @@ internal struct RequestBuilder {
         /// Datadog request authentication header.
         static func ddAPIKeyHeader(apiKey: String) -> HTTPHeader {
             return HTTPHeader(field: ddAPIKeyHeaderField, value: .constant(apiKey))
-        }
-
-        /// An observability and troubleshooting Datadog header for tracking the origin which is sending the request.
-        static func ddEVPOriginHeader(source: String) -> HTTPHeader {
-            return HTTPHeader(field: ddEVPOriginHeaderField, value: .constant(source))
-        }
-
-        /// An observability and troubleshooting Datadog header for tracking the origin which is sending the request.
-        static func ddEVPOriginVersionHeader(version: String) -> HTTPHeader {
-            return HTTPHeader(field: ddEVPOriginVersionHeaderField, value: .constant(version))
-        }
-
-        /// An optional Datadog header for debugging Intake requests by their ID.
-        static func ddRequestIDHeader() -> HTTPHeader {
-            return HTTPHeader(field: ddRequestIDHeaderField, value: .dynamic { UUID().uuidString })
         }
     }
 
@@ -137,7 +119,7 @@ internal struct RequestBuilder {
 
         request.httpMethod = "POST"
         request.allHTTPHeaderFields = headers
-        request.httpBody = headers["Content-Encoding"] != nil ? data.deflate() : data
+        request.httpBody = headers["Content-Encoding"] != nil ? data.deflated : data
         return request
     }
 }

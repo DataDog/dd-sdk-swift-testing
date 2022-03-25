@@ -6,6 +6,9 @@
 
 import Foundation
 @_implementationOnly import OpenTelemetrySdk
+#if SWIFT_PACKAGE
+import DatadogSDKTestingObjc
+#endif
 
 class NTPClock: Clock {
     let ntpOffset: TimeInterval

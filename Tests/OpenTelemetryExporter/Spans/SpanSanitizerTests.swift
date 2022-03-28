@@ -48,12 +48,9 @@ class SpanSanitizerTests: XCTestCase {
     }
 
     func testWhenNumberOfAttributesExceedsLimit_itDropsExtraOnes() {
-        let halfTheLimit = Int(Double(AttributesSanitizer.Constraints.maxNumberOfAttributes) * 0.5)
         let twiceTheLimit = AttributesSanitizer.Constraints.maxNumberOfAttributes * 2
 
-        let numberOfTags: Int = .random(in: halfTheLimit...twiceTheLimit)
-
-        let mockTags = (0..<numberOfTags).map { index in
+        let mockTags = (0..<twiceTheLimit).map { index in
             ("tag-\(index)", AttributeValue(String.mockAny())!)
         }
 

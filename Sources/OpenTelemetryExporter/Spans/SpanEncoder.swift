@@ -53,17 +53,18 @@ internal struct DDSpan: Encodable {
     let applicationVersion: String
 
     /// Custom tags, received from user
-    let tags: [String: AttributeValue]
+    var tags: [String: AttributeValue]
 
     static let filteredTagKeys: Set<String> = [
         "error.message", "error.type", "error.stack", "resource.name"
     ]
 
     func encode(to encoder: Encoder) throws {
-        try SpanEncoder().encode(self, to: encoder)
+        let sanitizedSpan = SpanSanitizer().sanitize(span: self)
+        try SpanEncoder().encode(sanitizedSpan, to: encoder)
     }
 
-    internal init(spanData: SpanData, configuration: ExporterConfiguration) {
+    internal init(spanData: SpanData, serviceName: String, applicationVersion: String) {
         self.traceID = spanData.traceId
         self.spanID = spanData.spanId
         self.parentID = spanData.parentSpanId
@@ -74,7 +75,7 @@ internal struct DDSpan: Encodable {
             self.name = spanData.name + "." + spanData.kind.rawValue
         }
 
-        self.serviceName = configuration.serviceName
+        self.serviceName = serviceName
         self.resource = spanData.attributes["resource.name"]?.description ?? spanData.name
         self.startTime = spanData.startTime.timeIntervalSince1970.toNanoseconds
         self.duration = spanData.endTime.timeIntervalSince(spanData.startTime).toNanoseconds
@@ -95,7 +96,7 @@ internal struct DDSpan: Encodable {
         let spanType = spanData.attributes["type"] ?? spanData.attributes["db.type"]
         self.type = spanType?.description ?? spanData.kind.rawValue
 
-        self.applicationVersion = configuration.version
+        self.applicationVersion = applicationVersion
         self.tags = spanData.attributes.filter {
             !DDSpan.filteredTagKeys.contains($0.key)
         }.mapValues { $0 }

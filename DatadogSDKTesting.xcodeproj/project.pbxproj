@@ -368,9 +368,6 @@
 		E1BE9B5E2732B2A300B92AD4 /* URLSessionInstrumentation in Frameworks */ = {isa = PBXBuildFile; productRef = E1BE9B5D2732B2A300B92AD4 /* URLSessionInstrumentation */; };
 		E1BE9B622732B2BA00B92AD4 /* InMemoryExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E1BE9B612732B2BA00B92AD4 /* InMemoryExporter */; };
 		E1BE9B642732B2BA00B92AD4 /* URLSessionInstrumentation in Frameworks */ = {isa = PBXBuildFile; productRef = E1BE9B632732B2BA00B92AD4 /* URLSessionInstrumentation */; };
-		E1C189B9270F193F00188C0E /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C189B8270F193F00188C0E /* Log.swift */; };
-		E1C189BA270F193F00188C0E /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C189B8270F193F00188C0E /* Log.swift */; };
-		E1C189BB270F193F00188C0E /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C189B8270F193F00188C0E /* Log.swift */; };
 		E1D476A625DD369F00832592 /* BinaryParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1D476A525DD369F00832592 /* BinaryParser.swift */; };
 		E1D476A725DD369F00832592 /* BinaryParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1D476A525DD369F00832592 /* BinaryParser.swift */; };
 		E1D476A825DD369F00832592 /* BinaryParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1D476A525DD369F00832592 /* BinaryParser.swift */; };
@@ -380,6 +377,18 @@
 		E1D6EFA525F6647F00E8C3AE /* LibraryInitializer.m in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA06C25231F3200ED8AEF /* LibraryInitializer.m */; };
 		E1DFF0EA257010E700344895 /* PlatformUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141CF5F256FD513008B6B70 /* PlatformUtils.swift */; };
 		E1DFF0EB257010E800344895 /* PlatformUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141CF5F256FD513008B6B70 /* PlatformUtils.swift */; };
+		E1EBBD4727F1FFE70059BC3E /* SpanSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EBBD4627F1FFE70059BC3E /* SpanSanitizer.swift */; };
+		E1EBBD4827F1FFE70059BC3E /* SpanSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EBBD4627F1FFE70059BC3E /* SpanSanitizer.swift */; };
+		E1EBBD4927F1FFE70059BC3E /* SpanSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EBBD4627F1FFE70059BC3E /* SpanSanitizer.swift */; };
+		E1EBBD4B27F200210059BC3E /* AttributesSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EBBD4A27F200210059BC3E /* AttributesSanitizer.swift */; };
+		E1EBBD4C27F200210059BC3E /* AttributesSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EBBD4A27F200210059BC3E /* AttributesSanitizer.swift */; };
+		E1EBBD4D27F200210059BC3E /* AttributesSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EBBD4A27F200210059BC3E /* AttributesSanitizer.swift */; };
+		E1EBBD5227F202A60059BC3E /* SpanSanitizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EBBD4E27F200A50059BC3E /* SpanSanitizerTests.swift */; };
+		E1EBBD5327F202A70059BC3E /* SpanSanitizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EBBD4E27F200A50059BC3E /* SpanSanitizerTests.swift */; };
+		E1EBBD5427F202A90059BC3E /* SpanSanitizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EBBD4E27F200A50059BC3E /* SpanSanitizerTests.swift */; };
+		E1EBBD5B27F2040C0059BC3E /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C189B8270F193F00188C0E /* Log.swift */; };
+		E1EBBD5C27F2040E0059BC3E /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C189B8270F193F00188C0E /* Log.swift */; };
+		E1EBBD5D27F2040F0059BC3E /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C189B8270F193F00188C0E /* Log.swift */; };
 		E1F42084264D6B7500233B75 /* FileTraceExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F42083264D6B7500233B75 /* FileTraceExporter.swift */; };
 		E1F42086264D6C2A00233B75 /* SimpleSpanData.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FB483F253891CE0083B263 /* SimpleSpanData.swift */; };
 		E1F42088264D6C2B00233B75 /* SimpleSpanData.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FB483F253891CE0083B263 /* SimpleSpanData.swift */; };
@@ -810,6 +819,9 @@
 		E1D4769525DC2B8E00832592 /* master */ = {isa = PBXFileReference; lastKnownFileType = text; path = master; sourceTree = "<group>"; };
 		E1D476A525DD369F00832592 /* BinaryParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinaryParser.swift; sourceTree = "<group>"; };
 		E1D6EFA125F6563000E8C3AE /* DDSymbolAddress.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DDSymbolAddress.h; sourceTree = "<group>"; };
+		E1EBBD4627F1FFE70059BC3E /* SpanSanitizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpanSanitizer.swift; sourceTree = "<group>"; };
+		E1EBBD4A27F200210059BC3E /* AttributesSanitizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AttributesSanitizer.swift; sourceTree = "<group>"; };
+		E1EBBD4E27F200A50059BC3E /* SpanSanitizerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpanSanitizerTests.swift; sourceTree = "<group>"; };
 		E1F42083264D6B7500233B75 /* FileTraceExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileTraceExporter.swift; sourceTree = "<group>"; };
 		E1F4217B2652CFEB00233B75 /* IntegrationTests.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IntegrationTests.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E1F421892652CFEC00233B75 /* tvOS-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "tvOS-Info.plist"; sourceTree = "<group>"; };
@@ -981,11 +993,11 @@
 				E1F422A62654F28200233B75 /* OriginSpanProcessor.swift */,
 				E1AD07A8252F5CB8003705C1 /* InternalError.swift */,
 				E1D476A525DD369F00832592 /* BinaryParser.swift */,
-				E1C189B8270F193F00188C0E /* Log.swift */,
 				E14405A225D6A80800FE3D3C /* GitInfo.swift */,
 				E141CF5F256FD513008B6B70 /* PlatformUtils.swift */,
 				E13D0BC92546E29C00C37D56 /* SignalUtils.swift */,
 				E116D7DA25248C390022779D /* SwiftExtensions.swift */,
+				E1C189B8270F193F00188C0E /* Log.swift */,
 				E1665A7225D12D7500BA53CD /* Spawn.swift */,
 				E12515E4254892C500670D23 /* XCUIApplicationSwizzler.swift */,
 				E11295BA25F2483D002719E7 /* FileLocator.swift */,
@@ -1144,6 +1156,7 @@
 		E141EADC27EB3B9E0057D747 /* Spans */ = {
 			isa = PBXGroup;
 			children = (
+				E1EBBD4E27F200A50059BC3E /* SpanSanitizerTests.swift */,
 				E141EADD27EB3B9E0057D747 /* SpansExporterTests.swift */,
 			);
 			path = Spans;
@@ -1238,6 +1251,7 @@
 			children = (
 				E143CEFE27D7790200F4018A /* SpansExporter.swift */,
 				E143CEFF27D7790200F4018A /* SpanEncoder.swift */,
+				E1EBBD4627F1FFE70059BC3E /* SpanSanitizer.swift */,
 			);
 			path = Spans;
 			sourceTree = "<group>";
@@ -1245,6 +1259,7 @@
 		E143CF0027D7790200F4018A /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				E1EBBD4A27F200210059BC3E /* AttributesSanitizer.swift */,
 				E143CF0827D7790200F4018A /* DataCompression.swift */,
 				E143CF0127D7790200F4018A /* PerformancePreset.swift */,
 				E143CF0227D7790200F4018A /* JSONEncoder.swift */,
@@ -2398,6 +2413,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E143CF5227D7790300F4018A /* LogsExporter.swift in Sources */,
+				E1EBBD4727F1FFE70059BC3E /* SpanSanitizer.swift in Sources */,
 				E143CF6A27D7790300F4018A /* RequestBuilder.swift in Sources */,
 				E143CF3D27D7790300F4018A /* DateFormatting.swift in Sources */,
 				E143CF4927D7790300F4018A /* ExporterConfiguration.swift in Sources */,
@@ -2420,6 +2436,7 @@
 				E143CF5E27D7790300F4018A /* FileReader.swift in Sources */,
 				E143CF4027D7790300F4018A /* EncodableValue.swift in Sources */,
 				E143CF3427D7790300F4018A /* JSONEncoder.swift in Sources */,
+				E1EBBD4B27F200210059BC3E /* AttributesSanitizer.swift in Sources */,
 				E143CF7627D7790300F4018A /* HTTPClient.swift in Sources */,
 				E143CF4C27D7790300F4018A /* LogEncoder.swift in Sources */,
 				E143CF7927D7790300F4018A /* DataUploadDelay.swift in Sources */,
@@ -2433,6 +2450,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E143CF5327D7790300F4018A /* LogsExporter.swift in Sources */,
+				E1EBBD4827F1FFE70059BC3E /* SpanSanitizer.swift in Sources */,
 				E143CF6B27D7790300F4018A /* RequestBuilder.swift in Sources */,
 				E143CF3E27D7790300F4018A /* DateFormatting.swift in Sources */,
 				E143CF4A27D7790300F4018A /* ExporterConfiguration.swift in Sources */,
@@ -2455,6 +2473,7 @@
 				E143CF5F27D7790300F4018A /* FileReader.swift in Sources */,
 				E143CF4127D7790300F4018A /* EncodableValue.swift in Sources */,
 				E143CF3527D7790300F4018A /* JSONEncoder.swift in Sources */,
+				E1EBBD4C27F200210059BC3E /* AttributesSanitizer.swift in Sources */,
 				E143CF7727D7790300F4018A /* HTTPClient.swift in Sources */,
 				E143CF4D27D7790300F4018A /* LogEncoder.swift in Sources */,
 				E143CF7A27D7790300F4018A /* DataUploadDelay.swift in Sources */,
@@ -2468,6 +2487,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E143CF5427D7790300F4018A /* LogsExporter.swift in Sources */,
+				E1EBBD4927F1FFE70059BC3E /* SpanSanitizer.swift in Sources */,
 				E143CF6C27D7790300F4018A /* RequestBuilder.swift in Sources */,
 				E143CF3F27D7790300F4018A /* DateFormatting.swift in Sources */,
 				E143CF4B27D7790300F4018A /* ExporterConfiguration.swift in Sources */,
@@ -2490,6 +2510,7 @@
 				E143CF6027D7790300F4018A /* FileReader.swift in Sources */,
 				E143CF4227D7790300F4018A /* EncodableValue.swift in Sources */,
 				E143CF3627D7790300F4018A /* JSONEncoder.swift in Sources */,
+				E1EBBD4D27F200210059BC3E /* AttributesSanitizer.swift in Sources */,
 				E143CF7827D7790300F4018A /* HTTPClient.swift in Sources */,
 				E143CF4E27D7790300F4018A /* LogEncoder.swift in Sources */,
 				E143CF7B27D7790300F4018A /* DataUploadDelay.swift in Sources */,
@@ -2508,9 +2529,9 @@
 				E157A723256E9D1D00CBCA52 /* SwiftExtensions.swift in Sources */,
 				E10034DE27035A7800439C9C /* DDTestSession.swift in Sources */,
 				E1F422A82654F28200233B75 /* OriginSpanProcessor.swift in Sources */,
+				E1EBBD5C27F2040E0059BC3E /* Log.swift in Sources */,
 				E1665A8225D13BBB00BA53CD /* DDSymbolicator.swift in Sources */,
 				E1550C46274F7FF700006F11 /* NTPClock.swift in Sources */,
-				E1C189BA270F193F00188C0E /* Log.swift in Sources */,
 				E1A63F5D26789915002F48FA /* CodeOwners.swift in Sources */,
 				E157A724256E9D1D00CBCA52 /* DDTestMonitor.swift in Sources */,
 				E14405A725D6AA9500FE3D3C /* GitInfo.swift in Sources */,
@@ -2547,9 +2568,9 @@
 				E157A75B256E9D3300CBCA52 /* SwiftExtensions.swift in Sources */,
 				E10034E027035A7900439C9C /* DDTestSession.swift in Sources */,
 				E1F422A92654F28200233B75 /* OriginSpanProcessor.swift in Sources */,
+				E1EBBD5D27F2040F0059BC3E /* Log.swift in Sources */,
 				E1665A8125D13BBB00BA53CD /* DDSymbolicator.swift in Sources */,
 				E1550C47274F7FF700006F11 /* NTPClock.swift in Sources */,
-				E1C189BB270F193F00188C0E /* Log.swift in Sources */,
 				E1A63F5E26789915002F48FA /* CodeOwners.swift in Sources */,
 				E157A75C256E9D3300CBCA52 /* DDTestMonitor.swift in Sources */,
 				E14405A825D6AA9600FE3D3C /* GitInfo.swift in Sources */,
@@ -2597,6 +2618,7 @@
 				E1A63F612678C49F002F48FA /* CodeOwnersTests.swift in Sources */,
 				E141EB8827EB62E60057D747 /* SpansExporterTests.swift in Sources */,
 				E157A793256EB0F000CBCA52 /* StdoutCaptureTests.swift in Sources */,
+				E1EBBD5327F202A70059BC3E /* SpanSanitizerTests.swift in Sources */,
 				E141EB9C27EB62E60057D747 /* DeviceMock.swift in Sources */,
 				E141EB8727EB62E60057D747 /* FileWriterTests.swift in Sources */,
 				E141EB9327EB62E60057D747 /* LoggingFeatureMocks.swift in Sources */,
@@ -2651,6 +2673,7 @@
 				E1A63F622678C4A0002F48FA /* CodeOwnersTests.swift in Sources */,
 				E141EBA527EB62E70057D747 /* SpansExporterTests.swift in Sources */,
 				E157A7AE256EB0F200CBCA52 /* NSURLSessionBridge.m in Sources */,
+				E1EBBD5427F202A90059BC3E /* SpanSanitizerTests.swift in Sources */,
 				E141EBB927EB62E70057D747 /* DeviceMock.swift in Sources */,
 				E141EBA427EB62E70057D747 /* FileWriterTests.swift in Sources */,
 				E141EBB027EB62E70057D747 /* LoggingFeatureMocks.swift in Sources */,
@@ -2694,9 +2717,9 @@
 				E1AD079F252F5B00003705C1 /* SwiftExtensions.swift in Sources */,
 				E10034DC27035A7700439C9C /* DDTestSession.swift in Sources */,
 				E1F422A72654F28200233B75 /* OriginSpanProcessor.swift in Sources */,
+				E1EBBD5B27F2040C0059BC3E /* Log.swift in Sources */,
 				E1D6EFA525F6647F00E8C3AE /* LibraryInitializer.m in Sources */,
 				E1550C45274F7FF700006F11 /* NTPClock.swift in Sources */,
-				E1C189B9270F193F00188C0E /* Log.swift in Sources */,
 				E1A63F5C26789915002F48FA /* CodeOwners.swift in Sources */,
 				E1665A8525D1524100BA53CD /* DDSymbolicator.swift in Sources */,
 				E1ABA08B252341EA00ED8AEF /* DDTestMonitor.swift in Sources */,
@@ -2744,6 +2767,7 @@
 				E1A63F602678C1FD002F48FA /* CodeOwnersTests.swift in Sources */,
 				E141EB6B27EB62E40057D747 /* SpansExporterTests.swift in Sources */,
 				E1AD074B252E1FBC003705C1 /* NSURLSessionBridge.m in Sources */,
+				E1EBBD5227F202A60059BC3E /* SpanSanitizerTests.swift in Sources */,
 				E141EB7F27EB62E40057D747 /* DeviceMock.swift in Sources */,
 				E141EB6A27EB62E40057D747 /* FileWriterTests.swift in Sources */,
 				E141EB7627EB62E40057D747 /* LoggingFeatureMocks.swift in Sources */,

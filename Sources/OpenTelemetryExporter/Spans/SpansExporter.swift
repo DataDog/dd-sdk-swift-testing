@@ -76,10 +76,10 @@ internal class SpansExporter {
         let ciTestEnvelope: CITestEnvelope
         if let spanType = span.attributes["type"] {
             ciTestEnvelope = CITestEnvelope(spanType: spanType.description,
-                                            content: DDSpan(spanData: span, configuration: configuration))
+                                            content: DDSpan(spanData: span, serviceName: configuration.serviceName, applicationVersion: configuration.version))
         } else {
             ciTestEnvelope = CITestEnvelope(spanType: "span",
-                                            content: DDSpan(spanData: span, configuration: configuration))
+                                            content: DDSpan(spanData: span, serviceName: configuration.serviceName, applicationVersion: configuration.version))
         }
 
         if configuration.performancePreset.synchronousWrite {

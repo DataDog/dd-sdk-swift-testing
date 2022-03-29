@@ -13,7 +13,7 @@ struct CodeOwnerEntry {
 }
 
 struct CodeOwners {
-    var ownerEntries = [CodeOwnerEntry]()
+    var section = [String: [CodeOwnerEntry]]()
 
     init?(workspacePath: URL) {
         // Search on the possible locations CODEOWNER can exist
@@ -40,29 +40,53 @@ struct CodeOwners {
 
     init(content: String) {
         // Parse all lines that include information
+        var currentSectionName = "[empty]"
         content.components(separatedBy: .newlines).forEach {
             let line = $0.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
             if line.isEmpty || line.hasPrefix("#") {
                 return
             }
+
+            if line.hasPrefix("["), line.hasSuffix("]") {
+                let sectionName = String(String(line.dropFirst()).dropLast()).lowercased()
+                if !sectionName.isEmpty {
+                    currentSectionName = sectionName
+                }
+                return
+            }
+
             let lineComponents = line.components(separatedBy: .whitespaces).filter { !$0.isEmpty }
 
             let owners = lineComponents.dropFirst()
             if let path = lineComponents.first,
                !owners.isEmpty
             {
-                ownerEntries.append(CodeOwnerEntry(path: path, codeowners: owners.map { String($0) }))
+                var currentSection = section[currentSectionName]
+                if currentSection == nil {
+                    section[currentSectionName] = [CodeOwnerEntry]()
+                    currentSection = section[currentSectionName]
+                }
+                section[currentSectionName]?.append(CodeOwnerEntry(path: path, codeowners: owners.map { String($0) }))
             }
         }
     }
 
     func ownersForPath(_ path: String) -> String? {
-        for owner in ownerEntries.reversed() {
-            if codeOwnersWildcard(path, pattern: owner.path) {
-                return "[\"" + owner.codeowners.joined(separator: "\",\"") + "\"]"
+        var totalCodeowners = [String]()
+        for section in section.values {
+            for owner in section.reversed() {
+                if codeOwnersWildcard(path, pattern: owner.path) {
+                    totalCodeowners += owner.codeowners
+                    break
+                }
             }
         }
-        return nil
+
+        if totalCodeowners.isEmpty {
+            return nil
+        } else {
+            return "[\"" + totalCodeowners.joined(separator: "\",\"") + "\"]"
+        }
     }
 
     private func codeOwnersWildcard(_ string: String, pattern: String) -> Bool {

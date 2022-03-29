@@ -269,7 +269,7 @@ internal struct DDEnvironmentValues {
         } else if DDEnvironmentValues.getEnvVariable("JENKINS_URL") != nil {
             isCi = true
             provider = "jenkins"
-            repository = DDEnvironmentValues.removingUserPassword(DDEnvironmentValues.getEnvVariable("GIT_URL") ?? DDEnvironmentValues.getEnvVariable("GIT_URL_1"))
+            repository = DDEnvironmentValues.removingUserPassword(DDEnvironmentValues.getEnvVariable("GIT_URL") ?? DDEnvironmentValues.removingUserPassword(DDEnvironmentValues.getEnvVariable("GIT_URL_1")))
             commit = DDEnvironmentValues.getEnvVariable("GIT_COMMIT")
             workspaceEnv = DDEnvironmentValues.getEnvVariable("WORKSPACE")
             pipelineId = DDEnvironmentValues.getEnvVariable("BUILD_TAG")
@@ -368,7 +368,7 @@ internal struct DDEnvironmentValues {
         } else if DDEnvironmentValues.getEnvVariable("BITBUCKET_BUILD_NUMBER") != nil {
             isCi = true
             provider = "bitbucket"
-            repository = DDEnvironmentValues.getEnvVariable("BITBUCKET_GIT_SSH_ORIGIN")
+            repository = DDEnvironmentValues.removingUserPassword(DDEnvironmentValues.getEnvVariable("BITBUCKET_GIT_SSH_ORIGIN"))
             commit = DDEnvironmentValues.getEnvVariable("BITBUCKET_COMMIT")
             workspaceEnv = DDEnvironmentValues.getEnvVariable("BITBUCKET_CLONE_DIR")
             pipelineId = DDEnvironmentValues.getEnvVariable("BITBUCKET_PIPELINE_UUID")?.replacingOccurrences(of: "[{}]", with: "", options: .regularExpression)

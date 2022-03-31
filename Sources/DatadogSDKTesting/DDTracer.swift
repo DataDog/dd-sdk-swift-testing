@@ -71,7 +71,7 @@ internal class DDTracer {
             case "us5", "US5", "https://us5.datadoghq.com", "us5.datadoghq.com":
                 endpoint = Endpoint.us5
             case "eu", "EU", "eu1", "EU1", "https://app.datadoghq.eu", "app.datadoghq.eu", "datadoghq.eu":
-                 endpoint = Endpoint.eu1
+                endpoint = Endpoint.eu1
 //            case "gov", "GOV", "us1_fed", "US1_FED", "https://app.ddog-gov.com", "app.ddog-gov.com", "ddog-gov.com":
 //                endpoint = Endpoint.us1_fed
             case "staging", "Staging", "https://dd.datad0g.com", "dd.datad0g.com", "datad0g.com":
@@ -90,9 +90,6 @@ internal class DDTracer {
         }
 
         let exporterConfiguration = ExporterConfiguration(
-            runtimeName: DDTestMonitor.env.runtimeName,
-            runtimeVersion: DDTestMonitor.env.runtimeVersion,
-            libraryVersion: DDTestObserver.tracerVersion,
             serviceName: env.ddService ?? env.getRepositoryName() ?? "unknown-swift-repo",
             applicationName: identifier,
             applicationVersion: version,

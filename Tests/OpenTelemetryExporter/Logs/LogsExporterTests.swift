@@ -37,10 +37,7 @@ class LogsExporterTests: XCTestCase {
             }
         }
 
-        let configuration = ExporterConfiguration(runtimeName: "runtimeName",
-                                                  runtimeVersion: "runtimeVersion",
-                                                  libraryVersion: "libraryVersion",
-                                                  serviceName: "serviceName",
+        let configuration = ExporterConfiguration(serviceName: "serviceName",
                                                   applicationName: "applicationName",
                                                   applicationVersion: "applicationVersion",
                                                   environment: "environment",

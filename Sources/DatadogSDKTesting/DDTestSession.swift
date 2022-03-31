@@ -189,6 +189,7 @@ public class DDTest: NSObject {
             DDDeviceTags.deviceModel: DDTestMonitor.env.deviceModel,
             DDRuntimeTags.runtimeName: DDTestMonitor.env.runtimeName,
             DDRuntimeTags.runtimeVersion: DDTestMonitor.env.runtimeVersion,
+            DDGenericTags.library_version: DDTestObserver.tracerVersion,
         ]
 
         span = DDTestMonitor.tracer.startSpan(name: "\(session.testFramework).test", attributes: attributes, startTime: startTime)

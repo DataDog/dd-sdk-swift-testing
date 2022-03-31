@@ -11,13 +11,9 @@ internal struct ExporterError: Error, CustomStringConvertible {
 }
 
 public struct ExporterConfiguration {
-    var runtimeName: String
-    var runtimeVersion: String
-    var libraryVersion: String
-
     /// The name of the service, resource, version,... that will be reported to the backend.
     var serviceName: String
-    //var resource: String
+    // var resource: String
     var applicationName: String
     var version: String
     var environment: String
@@ -34,10 +30,7 @@ public struct ExporterConfiguration {
     /// Performance preset for reporting
     var performancePreset: PerformancePreset
 
-    public init( runtimeName: String, runtimeVersion: String, libraryVersion: String,serviceName: String, applicationName: String, applicationVersion: String, environment: String, apiKey: String, endpoint: Endpoint, payloadCompression: Bool = true, source: String = "ios", performancePreset: PerformancePreset = .default) {
-        self.runtimeName = runtimeName
-        self.runtimeVersion = runtimeVersion
-        self.libraryVersion = libraryVersion
+    public init(serviceName: String, applicationName: String, applicationVersion: String, environment: String, apiKey: String, endpoint: Endpoint, payloadCompression: Bool = true, source: String = "ios", performancePreset: PerformancePreset = .default) {
         self.serviceName = serviceName
         self.applicationName = applicationName
         self.version = applicationVersion

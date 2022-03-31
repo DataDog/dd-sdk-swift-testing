@@ -48,10 +48,7 @@ class OpenTelemetryExporterTests: XCTestCase {
 
         let tracer = OpenTelemetrySDK.instance.tracerProvider.get(instrumentationName: instrumentationLibraryName, instrumentationVersion: instrumentationLibraryVersion) as! TracerSdk
 
-        let exporterConfiguration = ExporterConfiguration(runtimeName: "runtimeName",
-                                                          runtimeVersion: "runtimeVersion",
-                                                          libraryVersion: "libraryVersion",
-                                                          serviceName: "serviceName",
+        let exporterConfiguration = ExporterConfiguration(serviceName: "serviceName",
                                                           applicationName: "applicationName",
                                                           applicationVersion: "applicationVersion",
                                                           environment: "environment",

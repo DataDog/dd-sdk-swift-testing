@@ -22,18 +22,16 @@ internal class SpansExporter {
             dateProvider: SystemDateProvider()
         )
 
-        let metadataInfo = """
+        let genericMetadata = """
+        "*": {
         "runtime-id": "\(UUID().uuidString)",
         "language": "swift",
-        "runtime.name": "\(configuration.runtimeName)",
-        "runtime.version": "\(configuration.runtimeVersion)",
-        "library_version": "\(configuration.libraryVersion)",
-        "env": "\(configuration.environment)",
-        "service": "\(configuration.serviceName)"
+        "env": "\(configuration.environment)"
+        }
         """
 
         let prefix = """
-        {"version": 1, "metadata": { \(metadataInfo)}, "events": [
+        {"version": 1, "metadata": { \(genericMetadata) }, "events": [
         """
 
         let suffix = "]}"

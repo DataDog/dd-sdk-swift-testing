@@ -54,16 +54,16 @@
       <CodeCoverageTargets>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "E157A7A5256EB0F200CBCA52"
-            BuildableName = "DatadogSDKTestingTests_tvOS.xctest"
-            BlueprintName = "DatadogSDKTestingTests_tvOS"
+            BlueprintIdentifier = "E157A74F256E9D3300CBCA52"
+            BuildableName = "DatadogSDKTesting.framework"
+            BlueprintName = "DatadogSDKTesting_tvOS"
             ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
          </BuildableReference>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "E157A74F256E9D3300CBCA52"
-            BuildableName = "DatadogSDKTesting.framework"
-            BlueprintName = "DatadogSDKTesting_tvOS"
+            BlueprintIdentifier = "E143CEF027D778AC00F4018A"
+            BuildableName = "libOpenTelemetryExporter.a"
+            BlueprintName = "OpenTelemetryExporter_tvOS"
             ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
          </BuildableReference>
       </CodeCoverageTargets>

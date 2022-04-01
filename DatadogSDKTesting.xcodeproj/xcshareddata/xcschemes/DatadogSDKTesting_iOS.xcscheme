@@ -61,9 +61,9 @@
          </BuildableReference>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "E1ABA05225231E2500ED8AEF"
-            BuildableName = "DatadogSDKTestingTests_iOS.xctest"
-            BlueprintName = "DatadogSDKTestingTests_iOS"
+            BlueprintIdentifier = "E143CED827D7786D00F4018A"
+            BuildableName = "libOpenTelemetryExporter.a"
+            BlueprintName = "OpenTelemetryExporter_iOS"
             ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
          </BuildableReference>
       </CodeCoverageTargets>

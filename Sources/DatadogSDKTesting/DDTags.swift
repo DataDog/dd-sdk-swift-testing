@@ -23,13 +23,6 @@ internal enum DDTags {
     static let defaultSpanType = "custom"
 
     /// Expected value: `String`
-    static let httpMethod = "http.method"
-    /// Expected value: `Int`
-    static let httpStatusCode = "http.status_code"
-    /// Expected value: `String`
-    static let httpUrl = "http.url"
-
-    /// Expected value: `String`
     static let contextCallStack = "context.call_stack"
     static let contextThreadNumber = "context.thread_number"
     static let contextQueueName = "context.queue_name"
@@ -41,6 +34,7 @@ internal enum DDGenericTags {
     static let resourceName = "resource.name"
     static let origin = "_dd.origin"
     static let language = "language"
+    static let library_version = "library_version"
 }
 
 internal enum DDTestTags {
@@ -80,11 +74,6 @@ internal enum DDUISettingsTags {
 internal enum DDRuntimeTags {
     static let runtimeName = "runtime.name"
     static let runtimeVersion = "runtime.version"
-}
-
-internal enum DDCILibraryTags {
-    static let ciLibraryLanguage = "ci_library.language"
-    static let ciLibraryVersion = "ci_library.version"
 }
 
 internal enum DDGitTags {

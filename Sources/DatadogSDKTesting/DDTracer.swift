@@ -4,10 +4,10 @@
  * Copyright 2020-2021 Datadog, Inc.
  */
 
-@_implementationOnly import DatadogExporter
 import Foundation
 @_implementationOnly import InMemoryExporter
 @_implementationOnly import OpenTelemetryApi
+@_implementationOnly import OpenTelemetryExporter
 @_implementationOnly import OpenTelemetrySdk
 
 enum DDHeaders: String, CaseIterable {
@@ -20,7 +20,7 @@ enum DDHeaders: String, CaseIterable {
 
 internal class DDTracer {
     let tracerSdk: TracerSdk
-    var datadogExporter: DatadogExporter?
+    var opentelemetryExporter: OpenTelemetryExporter?
     private var launchSpanContext: SpanContext?
     let backgroundWorkQueue = DispatchQueue(label: "com.datadog.logswriter")
 
@@ -63,7 +63,7 @@ internal class DDTracer {
         tracerSdk = tracerProvider.get(instrumentationName: identifier, instrumentationVersion: version) as! TracerSdk
 
         var endpoint: Endpoint
-        switch env.tracesEndpoint {
+        switch env.ddEndpoint {
             case "us", "US", "us1", "US1", "https://app.datadoghq.com", "app.datadoghq.com", "datadoghq.com":
                 endpoint = Endpoint.us1
             case "us3", "US3", "https://us3.datadoghq.com", "us3.datadoghq.com":
@@ -71,48 +71,43 @@ internal class DDTracer {
             case "us5", "US5", "https://us5.datadoghq.com", "us5.datadoghq.com":
                 endpoint = Endpoint.us5
             case "eu", "EU", "eu1", "EU1", "https://app.datadoghq.eu", "app.datadoghq.eu", "datadoghq.eu":
-                // endpoint = Endpoint.eu1
-                // Exported eu endpoint contains an error, fix it locally until the library is updated
-                endpoint = Endpoint.custom(tracesURL: URL(string: "https://public-trace-http-intake.logs.datadoghq.eu/api/v2/spans")!,
-                                           logsURL: URL(string: "https://mobile-http-intake.logs.datadoghq.eu/api/v2/logs")!,
-                                           metricsURL: URL(string: "https://api.datadoghq.eu/api/v1/series")!)
-            case "gov", "GOV", "us1_fed", "US1_FED", "https://app.ddog-gov.com", "app.ddog-gov.com", "ddog-gov.com":
-                endpoint = Endpoint.us1_fed
+                endpoint = Endpoint.eu1
+//            case "gov", "GOV", "us1_fed", "US1_FED", "https://app.ddog-gov.com", "app.ddog-gov.com", "ddog-gov.com":
+//                endpoint = Endpoint.us1_fed
+            case "staging", "Staging", "https://dd.datad0g.com", "dd.datad0g.com", "datad0g.com":
+                endpoint = Endpoint.staging
             default:
                 endpoint = Endpoint.us1
         }
-
-//        // Staging endpoint, disable only for testing in staging
-//        endpoint = Endpoint.custom(tracesURL: URL(string: "https://trace.browser-intake-datad0g.com/api/v2/spans")!,
-//                                   logsURL: URL(string: "https://logs.browser-intake-datad0g.com/api/v2/logs")!,
-//                                   metricsURL: URL(string: "https://api.datad0g.com/api/v1/series")!)
 
         var payloadCompression = true
         // When reporting tests to local server
         if let localPort = env.localTestEnvironmentPort {
             let localURL = URL(string: "http://localhost:\(localPort)/")!
-            endpoint = Endpoint.custom(tracesURL: localURL, logsURL: localURL, metricsURL: localURL)
+            endpoint = Endpoint.custom(testsURL: localURL, logsURL: localURL)
             Log.print("Reporting tests to \(localURL.absoluteURL)")
             payloadCompression = false
         }
 
         let exporterConfiguration = ExporterConfiguration(
             serviceName: env.ddService ?? env.getRepositoryName() ?? "unknown-swift-repo",
-            resource: "Resource",
             applicationName: identifier,
             applicationVersion: version,
             environment: env.ddEnvironment ?? (env.isCi ? "ci" : "none"),
             apiKey: env.ddApikeyOrClientToken ?? "",
             endpoint: endpoint,
             payloadCompression: payloadCompression,
-            uploadCondition: { true },
-            performancePreset: .instantDataDelivery,
-            exportUnsampledSpans: false,
-            exportUnsampledLogs: true
+            performancePreset: .instantDataDelivery
         )
-        datadogExporter = try? DatadogExporter(config: exporterConfiguration)
+        opentelemetryExporter = try? OpenTelemetryExporter(config: exporterConfiguration)
 
-        guard let exporterToUse: SpanExporter = env.disableTracesExporting ? InMemoryExporter() : datadogExporter else {
+        let exporterToUse: SpanExporter
+
+        if env.disableTracesExporting {
+            exporterToUse = InMemoryExporter()
+        } else if let exporter = opentelemetryExporter {
+            exporterToUse = exporter as SpanExporter
+        } else {
             Log.print("Failed creating Datadog exporter.")
             return
         }
@@ -382,6 +377,6 @@ internal class DDTracer {
     }
 
     func endpointURLs() -> Set<String> {
-        return datadogExporter?.endpointURLs() ?? Set<String>()
+        return opentelemetryExporter?.endpointURLs() ?? Set<String>()
     }
 }

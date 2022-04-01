@@ -74,8 +74,8 @@ internal struct DDEnvironmentValues {
     let launchEnvironmentTraceId: String?
     let launchEnvironmentSpanId: String?
 
-    /// Datadog Endpoint for traces
-    let tracesEndpoint: String?
+    /// Datadog Endpoint
+    let ddEndpoint: String?
 
     /// Avoids configuring the traces exporter
     let disableTracesExporting: Bool
@@ -174,7 +174,7 @@ internal struct DDEnvironmentValues {
         let envStderr = DDEnvironmentValues.getEnvVariable("DD_ENABLE_STDERR_INSTRUMENTATION") as NSString?
         enableStderrInstrumentation = envStderr?.boolValue ?? false
 
-        if let envDisableRUMIntegration = DDEnvironmentValues.getEnvVariable("DD_DISABLE_RUM_INTEGRATION") as? NSString {
+        if let envDisableRUMIntegration = DDEnvironmentValues.getEnvVariable("DD_DISABLE_RUM_INTEGRATION") as NSString? {
             disableRUMIntegration = envDisableRUMIntegration.boolValue
         } else {
             let envDisableDDSDKIOSIntegration = DDEnvironmentValues.getEnvVariable("DD_DISABLE_SDKIOS_INTEGRATION") as NSString?
@@ -198,7 +198,7 @@ internal struct DDEnvironmentValues {
         launchEnvironmentTraceId = DDEnvironmentValues.getEnvVariable("ENVIRONMENT_TRACER_TRACEID")
         launchEnvironmentSpanId = DDEnvironmentValues.getEnvVariable("ENVIRONMENT_TRACER_SPANID")
 
-        tracesEndpoint = DDEnvironmentValues.getEnvVariable("DD_SITE") ?? DDEnvironmentValues.getEnvVariable("DD_ENDPOINT")
+        ddEndpoint = DDEnvironmentValues.getEnvVariable("DD_SITE") ?? DDEnvironmentValues.getEnvVariable("DD_ENDPOINT")
 
         let envDisableTracesExporting = DDEnvironmentValues.getEnvVariable("DD_DONT_EXPORT") as NSString?
         disableTracesExporting = envDisableTracesExporting?.boolValue ?? false

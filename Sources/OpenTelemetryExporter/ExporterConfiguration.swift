@@ -18,8 +18,7 @@ public struct ExporterConfiguration {
     var version: String
     var environment: String
 
-    /// Either the API key or a regular client token
-    /// For metrics reporting API key is needed
+    /// Either the API key
     var apiKey: String
     /// Endpoint that will be used for reporting.
     var endpoint: Endpoint

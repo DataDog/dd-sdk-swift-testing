@@ -34,7 +34,6 @@ extension XCUIApplication {
             addPropagationsHeadersToEnvironment(tracer: DDTestMonitor.tracer)
             [
                 "DD_TEST_RUNNER",
-                "DATADOG_CLIENT_TOKEN",
                 "DD_API_KEY",
                 "XCTestConfigurationFilePath",
                 "XCInjectBundleInto",

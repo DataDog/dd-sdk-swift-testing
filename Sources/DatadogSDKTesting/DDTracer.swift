@@ -94,7 +94,7 @@ internal class DDTracer {
             applicationName: identifier,
             applicationVersion: version,
             environment: env.ddEnvironment ?? (env.isCi ? "ci" : "none"),
-            apiKey: env.ddApikeyOrClientToken ?? "",
+            apiKey: env.ddApiKey ?? "",
             endpoint: endpoint,
             payloadCompression: payloadCompression,
             performancePreset: .instantDataDelivery

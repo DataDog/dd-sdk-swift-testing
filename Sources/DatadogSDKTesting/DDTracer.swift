@@ -120,7 +120,6 @@ internal class DDTracer {
         }
 
         OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(spanProcessor)
-        OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(OriginSpanProcessor())
     }
 
     func startSpan(name: String, attributes: [String: String], startTime: Date? = nil) -> Span {
@@ -242,8 +241,7 @@ internal class DDTracer {
     }
 
     private func attributesForString(_ string: String) -> [String: AttributeValue] {
-        return ["message": AttributeValue.string(string),
-                DDGenericTags.origin: AttributeValue.string(DDTagValues.originCiApp)]
+        return ["message": AttributeValue.string(string)]
     }
 
     func logString(string: String, date: Date? = nil) {
@@ -279,8 +277,7 @@ internal class DDTracer {
 
     private func attributesForError(_ string: String) -> [String: AttributeValue] {
         return ["message": AttributeValue.string(string),
-                "status": AttributeValue.string("error"),
-                DDGenericTags.origin: AttributeValue.string(DDTagValues.originCiApp)]
+                "status": AttributeValue.string("error")]
     }
 
     /// This method is only currently used when logging with an app being launched from a UITest, and no span has been created in the App.

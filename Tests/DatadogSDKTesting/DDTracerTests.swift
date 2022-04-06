@@ -36,7 +36,6 @@ class DDTracerTests: XCTestCase {
         let spanData = span.toSpanData()
         XCTAssertEqual(spanData.name, spanName)
         XCTAssertEqual(spanData.attributes.count, 2)
-        XCTAssertEqual(spanData.attributes["_dd.origin"]?.description, "ciapp-test")
         XCTAssertEqual(spanData.attributes["myKey"]?.description, "myValue")
 
         span.end()
@@ -52,7 +51,6 @@ class DDTracerTests: XCTestCase {
 
         XCTAssertEqual(spanData.name, spanName)
         XCTAssertEqual(spanData.attributes.count, 1)
-        XCTAssertEqual(spanData.attributes["_dd.origin"]?.description, "ciapp-test")
 
         span.end()
     }

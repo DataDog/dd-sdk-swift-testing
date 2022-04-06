@@ -126,7 +126,6 @@ internal struct SpanEncoder {
         // MARK: - Metrics
 
         case isRootSpan = "metrics._top_level"
-        case samplingPriority = "metrics._sampling_priority_v1"
 
         // MARK: - Meta
 
@@ -182,7 +181,6 @@ internal struct SpanEncoder {
         if span.parentID == nil {
             try container.encode(1, forKey: .isRootSpan)
         }
-        try container.encode(1, forKey: .samplingPriority)
     }
 
     /// Encodes default `meta.*` attributes

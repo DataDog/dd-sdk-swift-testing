@@ -32,7 +32,6 @@ internal enum DDTags {
 internal enum DDGenericTags {
     static let type = "type"
     static let resourceName = "resource.name"
-    static let origin = "_dd.origin"
     static let language = "language"
     static let library_version = "library_version"
 }

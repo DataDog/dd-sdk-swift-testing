@@ -49,8 +49,8 @@
             isEnabled = "YES">
          </EnvironmentVariable>
          <EnvironmentVariable
-            key = "DATADOG_CLIENT_TOKEN"
-            value = "pub1b624b2f4389b17c43cbb8b9dfd234d4"
+            key = "DD_API_KEY"
+            value = "$(DD_API_KEY)"
             isEnabled = "YES">
          </EnvironmentVariable>
          <EnvironmentVariable

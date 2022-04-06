@@ -35,22 +35,8 @@ class DDTracerTests: XCTestCase {
 
         let spanData = span.toSpanData()
         XCTAssertEqual(spanData.name, spanName)
-        XCTAssertEqual(spanData.attributes.count, 2)
-        XCTAssertEqual(spanData.attributes["myKey"]?.description, "myValue")
-
-        span.end()
-    }
-
-    func testWhenCalledStartSpanWithoutAttributes_spanIsCreatedWithJustOriginAttributes() {
-        let tracer = DDTracer()
-        let spanName = "myName"
-
-        let span = tracer.startSpan(name: spanName, attributes: [:]) as! RecordEventsReadableSpan
-
-        let spanData = span.toSpanData()
-
-        XCTAssertEqual(spanData.name, spanName)
         XCTAssertEqual(spanData.attributes.count, 1)
+        XCTAssertEqual(spanData.attributes["myKey"]?.description, "myValue")
 
         span.end()
     }

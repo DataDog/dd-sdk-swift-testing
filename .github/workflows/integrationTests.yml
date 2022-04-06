@@ -42,20 +42,24 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
     - name: tests macOS
-      run: xcodebuild -scheme 'IntegrationTests (macOS)' test
+      run: DD_API_KEY=${{ secrets.DD_API_KEY }} xcodebuild -scheme 'IntegrationTests (macOS)' test
 
   test-Integration-iOS:
     runs-on: macos-latest
+    env: 
+      DD_API_KEY: ${{ secrets.DD_API_KEY }}
     steps:
     - name: Checkout
       uses: actions/checkout@v2
     - name: tests iOS
-      run: xcodebuild -scheme 'IntegrationTests (iOS)' -destination 'platform=iOS Simulator,name=iPhone 8' test
+      run: DD_API_KEY=${{ secrets.DD_API_KEY }} xcodebuild -scheme 'IntegrationTests (iOS)' -destination 'platform=iOS Simulator,name=iPhone 8' test
 
   test-Integration-tvOS:
     runs-on: macos-latest
+    env: 
+      DD_API_KEY: ${{ secrets.DD_API_KEY }}
     steps:
     - name: Checkout
       uses: actions/checkout@v2
     - name: tests tvOS
-      run: xcodebuild -scheme 'IntegrationTests (tvOS)' -destination 'platform=tvOS Simulator,name=Apple TV' test
+      run: DD_API_KEY=${{ secrets.DD_API_KEY }} xcodebuild -scheme 'IntegrationTests (tvOS)' -destination 'platform=tvOS Simulator,name=Apple TV' test

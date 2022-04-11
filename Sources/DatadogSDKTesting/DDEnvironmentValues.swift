@@ -163,11 +163,13 @@ internal struct DDEnvironmentValues {
         let envMaxPayloadSize = DDEnvironmentValues.getEnvVariable("DD_MAX_PAYLOAD_SIZE") as NSString?
         maxPayloadSize = envMaxPayloadSize?.integerValue
 
+        let envLogsEnabled = DDEnvironmentValues.getEnvVariable("DD_CIVISIBILITY_LOGS_ENABLED") as NSString?
+
         let envStdout = DDEnvironmentValues.getEnvVariable("DD_ENABLE_STDOUT_INSTRUMENTATION") as NSString?
-        enableStdoutInstrumentation = envStdout?.boolValue ?? false
+        enableStdoutInstrumentation = envLogsEnabled?.boolValue ?? envStdout?.boolValue ?? false
 
         let envStderr = DDEnvironmentValues.getEnvVariable("DD_ENABLE_STDERR_INSTRUMENTATION") as NSString?
-        enableStderrInstrumentation = envStderr?.boolValue ?? false
+        enableStderrInstrumentation = envLogsEnabled?.boolValue ?? envStderr?.boolValue ?? false
 
         if let envDisableRUMIntegration = DDEnvironmentValues.getEnvVariable("DD_DISABLE_RUM_INTEGRATION") as NSString? {
             disableRUMIntegration = envDisableRUMIntegration.boolValue

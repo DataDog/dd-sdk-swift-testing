@@ -141,6 +141,21 @@ public class DDTestSuite: NSObject {
     }
 }
 
+private struct ErrorInfo {
+    var type: String
+    var message: String
+    var callstack: String?
+    var errorCount = 1
+
+    mutating func addExtraError(message newMessage: String) {
+        if errorCount == 1 {
+            message.insert("\n", at: message.startIndex)
+        }
+        message.append("\n" + newMessage)
+        errorCount += 1
+    }
+}
+
 public class DDTest: NSObject {
     static let testNameRegex = try! NSRegularExpression(pattern: "([\\w]+) ([\\w]+)", options: .caseInsensitive)
     static let supportsSkipping = NSClassFromString("XCTSkippedTestContext") != nil
@@ -151,6 +166,8 @@ public class DDTest: NSObject {
 
     var session: DDTestSession
 
+    private var errorInfo: ErrorInfo?
+
     init(name: String, suite: DDTestSuite, session: DDTestSession, startTime: Date? = nil) {
         self.name = name
         self.session = session
@@ -160,6 +177,7 @@ public class DDTest: NSObject {
         let attributes: [String: String] = [
             DDGenericTags.type: DDTagValues.typeTest,
             DDGenericTags.resourceName: "\(suite.name).\(name)",
+            DDGenericTags.language: "swift",
             DDTestTags.testName: name,
             DDTestTags.testSuite: suite.name,
             DDTestTags.testFramework: session.testFramework,
@@ -174,8 +192,7 @@ public class DDTest: NSObject {
             DDDeviceTags.deviceModel: DDTestMonitor.env.deviceModel,
             DDRuntimeTags.runtimeName: DDTestMonitor.env.runtimeName,
             DDRuntimeTags.runtimeVersion: DDTestMonitor.env.runtimeVersion,
-            DDCILibraryTags.ciLibraryLanguage: "swift",
-            DDCILibraryTags.ciLibraryVersion: DDTestObserver.tracerVersion
+            DDGenericTags.library_version: DDTestObserver.tracerVersion,
         ]
 
         span = DDTestMonitor.tracer.startSpan(name: "\(session.testFramework).test", attributes: attributes, startTime: startTime)
@@ -184,7 +201,7 @@ public class DDTest: NSObject {
         DDTestMonitor.instance?.currentTest = self
 
         // Is not a UITest until a XCUIApplication is launched
-        span.setAttribute(key: DDTestTags.testIsUITest, value: false)
+        span.setAttribute(key: DDTestTags.testIsUITest, value: "false")
 
         DDTestMonitor.tracer.addPropagationsHeadersToEnvironment()
 
@@ -226,15 +243,26 @@ public class DDTest: NSObject {
         span.setAttribute(key: key, value: AttributeValue(value))
     }
 
-    /// Adds error information to the test, only one erros info can  be reported by a test
+    /// Adds error information to the test, several errors can be added. Only first will set the error type, but all error messages
+    /// will be shown in the error messages. If stdout or stderr instrumentation is enabled, errors will also be logged.
     /// - Parameters:
     ///   - type: The type of error to be reported
     ///   - message: The message associated with the error
     ///   - callstack: (Optional) The callstack associated with the error
     @objc public func setErrorInfo(type: String, message: String, callstack: String? = nil) {
-        span.setAttribute(key: DDTags.errorType, value: AttributeValue.string(type))
-        span.setAttribute(key: DDTags.errorMessage, value: AttributeValue.string(message))
-        if let callstack = callstack {
+        if errorInfo == nil {
+            errorInfo = ErrorInfo(type: type, message: message, callstack: callstack)
+        } else {
+            errorInfo?.addExtraError(message: message)
+        }
+        DDTestMonitor.tracer.logError(string: "\(type): \(message)")
+    }
+
+    private func setErrorInformation() {
+        guard let errorInfo = errorInfo else { return }
+        span.setAttribute(key: DDTags.errorType, value: AttributeValue.string(errorInfo.type))
+        span.setAttribute(key: DDTags.errorMessage, value: AttributeValue.string(errorInfo.message))
+        if let callstack = errorInfo.callstack {
             span.setAttribute(key: DDTags.errorStack, value: AttributeValue.string(callstack))
         }
     }
@@ -252,6 +280,7 @@ public class DDTest: NSObject {
             case .fail:
                 testStatus = DDTagValues.statusFail
                 span.status = .error(description: "Test failed")
+                setErrorInformation()
             case .skip:
                 testStatus = DDTagValues.statusSkip
                 span.status = .ok

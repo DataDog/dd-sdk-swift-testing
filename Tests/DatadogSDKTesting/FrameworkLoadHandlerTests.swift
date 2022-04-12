@@ -35,7 +35,7 @@ class FrameworkLoadHandlerTests: XCTestCase {
 
     func testWhenTestRunnerIsConfiguredAndIsInTestingMode_ItIsInitialised() {
         testEnvironment["DD_TEST_RUNNER"] = "1"
-        testEnvironment["DATADOG_CLIENT_TOKEN"] = "fakeToken"
+        testEnvironment["DD_API_KEY"] = "fakeToken"
         testEnvironment["XCTestConfigurationFilePath"] = "/Users/user/Library/tmp/xx.xctestconfiguration"
         setEnvVariables()
 

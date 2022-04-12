@@ -141,9 +141,9 @@ class DDNetworkInstrumentation {
             span.setAttribute(key: DDTags.contextCallStack, value: completeStack)
         } else {
             let splitted = completeStack.split(by: 5000)
-            let numericFormat = splitted.count > 9 ? "%d" : "%02d"
             for i in 0 ..< splitted.count {
-                span.setAttribute(key: "\(DDTags.contextCallStack).\(String(format: numericFormat, i))", value: AttributeValue.string(splitted[i]))
+                let character = Character(UnicodeScalar("a".unicodeScalars.first!.value + UInt32(i))!)
+                span.setAttribute(key: "\(DDTags.contextCallStack).\(character)", value: AttributeValue.string(splitted[i]))
             }
         }
 

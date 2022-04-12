@@ -23,13 +23,6 @@ internal enum DDTags {
     static let defaultSpanType = "custom"
 
     /// Expected value: `String`
-    static let httpMethod = "http.method"
-    /// Expected value: `Int`
-    static let httpStatusCode = "http.status_code"
-    /// Expected value: `String`
-    static let httpUrl = "http.url"
-
-    /// Expected value: `String`
     static let contextCallStack = "context.call_stack"
     static let contextThreadNumber = "context.thread_number"
     static let contextQueueName = "context.queue_name"
@@ -39,7 +32,8 @@ internal enum DDTags {
 internal enum DDGenericTags {
     static let type = "type"
     static let resourceName = "resource.name"
-    static let origin = "_dd.origin"
+    static let language = "language"
+    static let library_version = "library_version"
 }
 
 internal enum DDTestTags {
@@ -56,6 +50,7 @@ internal enum DDTestTags {
     static let testExecutionProcessId = "test.execution.processId"
     static let testCodeowners = "test.codeowners"
     static let testIsUITest = "test.is_ui_test"
+    static let testIsRUMActive = "test.is_rum_active"
 }
 
 internal enum DDOSTags {
@@ -78,11 +73,6 @@ internal enum DDUISettingsTags {
 internal enum DDRuntimeTags {
     static let runtimeName = "runtime.name"
     static let runtimeVersion = "runtime.version"
-}
-
-internal enum DDCILibraryTags {
-    static let ciLibraryLanguage = "ci_library.language"
-    static let ciLibraryVersion = "ci_library.version"
 }
 
 internal enum DDGitTags {
@@ -166,4 +156,10 @@ internal enum DDTagValues {
     static let statusPass = "pass"
     static let statusFail = "fail"
     static let statusSkip = "skip"
+}
+
+internal enum DDCFMessageID {
+    static let setCustomTags: Int32 = 0x1111
+    static let enableRUM: Int32 = 0x2222
+    static let forceFlush: Int32 = 0x3333
 }

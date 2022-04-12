@@ -4,10 +4,10 @@
  * Copyright 2020-2021 Datadog, Inc.
  */
 
-@_implementationOnly import DatadogExporter
 import Foundation
 @_implementationOnly import InMemoryExporter
 @_implementationOnly import OpenTelemetryApi
+@_implementationOnly import OpenTelemetryExporter
 @_implementationOnly import OpenTelemetrySdk
 
 enum DDHeaders: String, CaseIterable {
@@ -20,7 +20,7 @@ enum DDHeaders: String, CaseIterable {
 
 internal class DDTracer {
     let tracerSdk: TracerSdk
-    var datadogExporter: DatadogExporter?
+    var opentelemetryExporter: OpenTelemetryExporter?
     private var launchSpanContext: SpanContext?
     let backgroundWorkQueue = DispatchQueue(label: "com.datadog.logswriter")
 
@@ -63,7 +63,7 @@ internal class DDTracer {
         tracerSdk = tracerProvider.get(instrumentationName: identifier, instrumentationVersion: version) as! TracerSdk
 
         var endpoint: Endpoint
-        switch env.tracesEndpoint {
+        switch env.ddEndpoint {
             case "us", "US", "us1", "US1", "https://app.datadoghq.com", "app.datadoghq.com", "datadoghq.com":
                 endpoint = Endpoint.us1
             case "us3", "US3", "https://us3.datadoghq.com", "us3.datadoghq.com":
@@ -72,43 +72,42 @@ internal class DDTracer {
                 endpoint = Endpoint.us5
             case "eu", "EU", "eu1", "EU1", "https://app.datadoghq.eu", "app.datadoghq.eu", "datadoghq.eu":
                 endpoint = Endpoint.eu1
-            case "gov", "GOV", "us1_fed", "US1_FED", "https://app.ddog-gov.com", "app.ddog-gov.com", "ddog-gov.com":
-                endpoint = Endpoint.us1_fed
+//            case "gov", "GOV", "us1_fed", "US1_FED", "https://app.ddog-gov.com", "app.ddog-gov.com", "ddog-gov.com":
+//                endpoint = Endpoint.us1_fed
+            case "staging", "Staging", "https://dd.datad0g.com", "dd.datad0g.com", "datad0g.com":
+                endpoint = Endpoint.staging
             default:
                 endpoint = Endpoint.us1
         }
-
-//        // Staging endpoint, disable only for testing in staging
-//        endpoint = Endpoint.custom(tracesURL: URL(string: "https://trace.browser-intake-datad0g.com/api/v2/spans")!,
-//                                   logsURL: URL(string: "https://logs.browser-intake-datad0g.com/api/v2/logs")!,
-//                                   metricsURL: URL(string: "https://api.datad0g.com/api/v1/series")!)
 
         var payloadCompression = true
         // When reporting tests to local server
         if let localPort = env.localTestEnvironmentPort {
             let localURL = URL(string: "http://localhost:\(localPort)/")!
-            endpoint = Endpoint.custom(tracesURL: localURL, logsURL: localURL, metricsURL: localURL)
+            endpoint = Endpoint.custom(testsURL: localURL, logsURL: localURL)
             Log.print("Reporting tests to \(localURL.absoluteURL)")
             payloadCompression = false
         }
 
         let exporterConfiguration = ExporterConfiguration(
             serviceName: env.ddService ?? env.getRepositoryName() ?? "unknown-swift-repo",
-            resource: "Resource",
             applicationName: identifier,
             applicationVersion: version,
             environment: env.ddEnvironment ?? (env.isCi ? "ci" : "none"),
-            apiKey: env.ddApikeyOrClientToken ?? "",
+            apiKey: env.ddApiKey ?? "",
             endpoint: endpoint,
             payloadCompression: payloadCompression,
-            uploadCondition: { true },
-            performancePreset: .instantDataDelivery,
-            exportUnsampledSpans: false,
-            exportUnsampledLogs: true
+            performancePreset: .instantDataDelivery
         )
-        datadogExporter = try? DatadogExporter(config: exporterConfiguration)
+        opentelemetryExporter = try? OpenTelemetryExporter(config: exporterConfiguration)
 
-        guard let exporterToUse: SpanExporter = env.disableTracesExporting ? InMemoryExporter() : datadogExporter else {
+        let exporterToUse: SpanExporter
+
+        if env.disableTracesExporting {
+            exporterToUse = InMemoryExporter()
+        } else if let exporter = opentelemetryExporter {
+            exporterToUse = exporter as SpanExporter
+        } else {
             Log.print("Failed creating Datadog exporter.")
             return
         }
@@ -121,7 +120,6 @@ internal class DDTracer {
         }
 
         OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(spanProcessor)
-        OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(OriginSpanProcessor())
     }
 
     func startSpan(name: String, attributes: [String: String], startTime: Date? = nil) -> Span {
@@ -243,8 +241,7 @@ internal class DDTracer {
     }
 
     private func attributesForString(_ string: String) -> [String: AttributeValue] {
-        return ["message": AttributeValue.string(string),
-                DDGenericTags.origin: AttributeValue.string(DDTagValues.originCiApp)]
+        return ["message": AttributeValue.string(string)]
     }
 
     func logString(string: String, date: Date? = nil) {
@@ -278,7 +275,40 @@ internal class DDTracer {
         }
     }
 
+    private func attributesForError(_ string: String) -> [String: AttributeValue] {
+        return ["message": AttributeValue.string(string),
+                "status": AttributeValue.string("error")]
+    }
+
+    /// This method is only currently used when logging with an app being launched from a UITest, and no span has been created in the App.
+    func logError(string: String, date: Date? = nil) {
+        guard DDTestMonitor.env.enableStderrInstrumentation || DDTestMonitor.env.enableStdoutInstrumentation else {
+            return
+        }
+        DDTracer.activeSpan?.addEvent(name: "logString", attributes: attributesForError(string), timestamp: date ?? Date())
+    }
+
     func flush() {
+        if DDTestMonitor.instance?.isRumActive ?? false,
+           let remotePort = CFMessagePortCreateRemote(nil, "DatadogRUMTestingPort" as CFString)
+        {
+            let timeout: CFTimeInterval = 10.0
+            let status = CFMessagePortSendRequest(
+                remotePort,
+                DDCFMessageID.forceFlush, // Message ID for asking RUM to flush all data
+                nil,
+                timeout,
+                timeout,
+                "kCFRunLoopDefaultMode" as CFString,
+                nil
+            )
+            if status == kCFMessagePortSuccess {
+            } else {
+                Log.debug("CFMessagePortCreateRemote request to DatadogRUMTestingPort failed")
+            }
+        }
+        Log.debug("DDCFMessageID.forceFlush finished")
+
         backgroundWorkQueue.sync {
             OpenTelemetrySDK.instance.tracerProvider.forceFlush()
         }
@@ -316,7 +346,7 @@ internal class DDTracer {
         }
 
         OpenTelemetry.instance.propagators.textMapPropagator.inject(spanContext: propagationContext, carrier: &headers, setter: HeaderSetter())
-        if !DDTestMonitor.env.disableDDSDKIOSIntegration {
+        if !DDTestMonitor.env.disableRUMIntegration {
             headers.merge(datadogHeaders(forContext: propagationContext)) { current, _ in current }
         }
         return headers
@@ -336,13 +366,14 @@ internal class DDTracer {
         }
 
         EnvironmentContextPropagator().inject(spanContext: propagationContext, carrier: &headers, setter: HeaderSetter())
-        if !DDTestMonitor.env.disableDDSDKIOSIntegration {
+        if !DDTestMonitor.env.disableRUMIntegration {
             headers.merge(datadogHeaders(forContext: propagationContext)) { current, _ in current }
+            headers["CI_VISIBILITY_TEST_EXECUTION_ID"] = String(propagationContext.traceId.rawLowerLong)
         }
         return headers
     }
 
     func endpointURLs() -> Set<String> {
-        return datadogExporter?.endpointURLs() ?? Set<String>()
+        return opentelemetryExporter?.endpointURLs() ?? Set<String>()
     }
 }

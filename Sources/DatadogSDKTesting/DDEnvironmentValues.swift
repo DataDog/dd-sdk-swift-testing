@@ -9,7 +9,7 @@ import Foundation
 
 internal struct DDEnvironmentValues {
     /// Datatog Configuration values
-    let ddApikeyOrClientToken: String?
+    let ddApiKey: String?
     let ddEnvironment: String?
     let ddService: String?
     var ddTags = [String: String]()
@@ -25,7 +25,7 @@ internal struct DDEnvironmentValues {
     let enableStderrInstrumentation: Bool
     let extraHTTPHeaders: Set<String>?
     let excludedURLS: Set<String>?
-    let disableDDSDKIOSIntegration: Bool
+    let disableRUMIntegration: Bool
     let disableCrashHandler: Bool
     let disableTestInstrumenting: Bool
     let disableCodeCoverage: Bool
@@ -75,8 +75,8 @@ internal struct DDEnvironmentValues {
     let launchEnvironmentTraceId: String?
     let launchEnvironmentSpanId: String?
 
-    /// Datadog Endpoint for traces
-    let tracesEndpoint: String?
+    /// Datadog Endpoint
+    let ddEndpoint: String?
 
     /// Avoids configuring the traces exporter
     let disableTracesExporting: Bool
@@ -102,16 +102,12 @@ internal struct DDEnvironmentValues {
 
     init() {
         /// Datatog configuration values
-        var clientToken: String?
-        clientToken = DDEnvironmentValues.getEnvVariable("DATADOG_CLIENT_TOKEN")
-        if clientToken == nil {
-            clientToken = DDEnvironmentValues.infoDictionary["DatadogClientToken"] as? String
-        }
-        if clientToken == nil {
-            clientToken = DDEnvironmentValues.getEnvVariable("DD_API_KEY")
+        var apiKey = DDEnvironmentValues.getEnvVariable("DD_API_KEY")
+        if apiKey == nil {
+            apiKey = DDEnvironmentValues.infoDictionary["DatadogApiKey"] as? String
         }
 
-        ddApikeyOrClientToken = clientToken
+        ddApiKey = apiKey
         ddEnvironment = DDEnvironmentValues.getEnvVariable("DD_ENV")
         tracerUnderTesting = (DDEnvironmentValues.getEnvVariable("TEST_OUTPUT_FILE") != nil)
         let service = DDEnvironmentValues.getEnvVariable("DD_SERVICE")
@@ -168,14 +164,20 @@ internal struct DDEnvironmentValues {
         let envMaxPayloadSize = DDEnvironmentValues.getEnvVariable("DD_MAX_PAYLOAD_SIZE") as NSString?
         maxPayloadSize = envMaxPayloadSize?.integerValue
 
+        let envLogsEnabled = DDEnvironmentValues.getEnvVariable("DD_CIVISIBILITY_LOGS_ENABLED") as NSString?
+
         let envStdout = DDEnvironmentValues.getEnvVariable("DD_ENABLE_STDOUT_INSTRUMENTATION") as NSString?
-        enableStdoutInstrumentation = envStdout?.boolValue ?? false
+        enableStdoutInstrumentation = envLogsEnabled?.boolValue ?? envStdout?.boolValue ?? false
 
         let envStderr = DDEnvironmentValues.getEnvVariable("DD_ENABLE_STDERR_INSTRUMENTATION") as NSString?
-        enableStderrInstrumentation = envStderr?.boolValue ?? false
+        enableStderrInstrumentation = envLogsEnabled?.boolValue ?? envStderr?.boolValue ?? false
 
-        let envDisableDDSDKIOSIntegration = DDEnvironmentValues.getEnvVariable("DD_DISABLE_SDKIOS_INTEGRATION") as NSString?
-        disableDDSDKIOSIntegration = envDisableDDSDKIOSIntegration?.boolValue ?? false
+        if let envDisableRUMIntegration = DDEnvironmentValues.getEnvVariable("DD_DISABLE_RUM_INTEGRATION") as NSString? {
+            disableRUMIntegration = envDisableRUMIntegration.boolValue
+        } else {
+            let envDisableDDSDKIOSIntegration = DDEnvironmentValues.getEnvVariable("DD_DISABLE_SDKIOS_INTEGRATION") as NSString?
+            disableRUMIntegration = envDisableDDSDKIOSIntegration?.boolValue ?? false
+        }
 
         let envDisableCrashReporting = DDEnvironmentValues.getEnvVariable("DD_DISABLE_CRASH_HANDLER") as NSString?
         disableCrashHandler = envDisableCrashReporting?.boolValue ?? false
@@ -197,7 +199,7 @@ internal struct DDEnvironmentValues {
         launchEnvironmentTraceId = DDEnvironmentValues.getEnvVariable("ENVIRONMENT_TRACER_TRACEID")
         launchEnvironmentSpanId = DDEnvironmentValues.getEnvVariable("ENVIRONMENT_TRACER_SPANID")
 
-        tracesEndpoint = DDEnvironmentValues.getEnvVariable("DD_SITE") ?? DDEnvironmentValues.getEnvVariable("DD_ENDPOINT")
+        ddEndpoint = DDEnvironmentValues.getEnvVariable("DD_SITE") ?? DDEnvironmentValues.getEnvVariable("DD_ENDPOINT")
 
         let envDisableTracesExporting = DDEnvironmentValues.getEnvVariable("DD_DONT_EXPORT") as NSString?
         disableTracesExporting = envDisableTracesExporting?.boolValue ?? false
@@ -268,7 +270,7 @@ internal struct DDEnvironmentValues {
         } else if DDEnvironmentValues.getEnvVariable("JENKINS_URL") != nil {
             isCi = true
             provider = "jenkins"
-            repository = DDEnvironmentValues.removingUserPassword(DDEnvironmentValues.getEnvVariable("GIT_URL") ?? DDEnvironmentValues.getEnvVariable("GIT_URL_1"))
+            repository = DDEnvironmentValues.removingUserPassword(DDEnvironmentValues.getEnvVariable("GIT_URL") ?? DDEnvironmentValues.removingUserPassword(DDEnvironmentValues.getEnvVariable("GIT_URL_1")))
             commit = DDEnvironmentValues.getEnvVariable("GIT_COMMIT")
             workspaceEnv = DDEnvironmentValues.getEnvVariable("WORKSPACE")
             pipelineId = DDEnvironmentValues.getEnvVariable("BUILD_TAG")
@@ -367,7 +369,7 @@ internal struct DDEnvironmentValues {
         } else if DDEnvironmentValues.getEnvVariable("BITBUCKET_BUILD_NUMBER") != nil {
             isCi = true
             provider = "bitbucket"
-            repository = DDEnvironmentValues.getEnvVariable("BITBUCKET_GIT_SSH_ORIGIN")
+            repository = DDEnvironmentValues.removingUserPassword(DDEnvironmentValues.getEnvVariable("BITBUCKET_GIT_SSH_ORIGIN"))
             commit = DDEnvironmentValues.getEnvVariable("BITBUCKET_COMMIT")
             workspaceEnv = DDEnvironmentValues.getEnvVariable("BITBUCKET_CLONE_DIR")
             pipelineId = DDEnvironmentValues.getEnvVariable("BITBUCKET_PIPELINE_UUID")?.replacingOccurrences(of: "[{}]", with: "", options: .regularExpression)

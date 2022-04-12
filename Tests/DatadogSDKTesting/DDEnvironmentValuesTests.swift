@@ -56,14 +56,14 @@ class DDEnvironmentValuesTests: XCTestCase {
     }
 
     func testWhenDatadogSettingsAreSetInEnvironment_TheyAreStoredCorrectly() {
-        testEnvironment["DATADOG_CLIENT_TOKEN"] = "token5a101f16"
+        testEnvironment["DD_API_KEY"] = "token5a101f16"
         testEnvironment["DD_SERVICE"] = "testService"
         testEnvironment["DD_ENV"] = "testEnv"
 
         setEnvVariables()
 
         let env = DDEnvironmentValues()
-        XCTAssertEqual(env.ddApikeyOrClientToken, "token5a101f16")
+        XCTAssertEqual(env.ddApiKey, "token5a101f16")
         XCTAssertEqual(env.ddEnvironment, "testEnv")
         XCTAssertEqual(env.ddService, "testService")
     }
@@ -76,24 +76,24 @@ class DDEnvironmentValuesTests: XCTestCase {
         setInfoDictionary()
 
         let env = DDEnvironmentValues()
-        XCTAssertEqual(env.ddApikeyOrClientToken, "token5a101f16")
+        XCTAssertEqual(env.ddApiKey, "token5a101f16")
         XCTAssertEqual(env.ddEnvironment, "testEnv")
         XCTAssertEqual(env.ddService, "testService")
     }
 
     func testWhenDatadogSettingsAreSetInEnvironmentAndPlist_EnvironmentTakesPrecedence() {
-        testEnvironment["DATADOG_CLIENT_TOKEN"] = "token5a101f16"
+        testEnvironment["DD_API_KEY"] = "token5a101f16"
         testEnvironment["DD_SERVICE"] = "testService"
         testEnvironment["DD_ENV"] = "testEnv"
         setEnvVariables()
 
-        testInfoDictionary["DATADOG_CLIENT_TOKEN"] = "token5a101f162"
+        testInfoDictionary["DD_API_KEY"] = "token5a101f162"
         testInfoDictionary["DD_SERVICE"] = "testService2"
         testInfoDictionary["DD_ENV"] = "testEnv2"
         setInfoDictionary()
 
         let env = DDEnvironmentValues()
-        XCTAssertEqual(env.ddApikeyOrClientToken, "token5a101f16")
+        XCTAssertEqual(env.ddApiKey, "token5a101f16")
         XCTAssertEqual(env.ddEnvironment, "testEnv")
         XCTAssertEqual(env.ddService, "testService")
     }

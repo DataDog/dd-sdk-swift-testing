@@ -12,7 +12,7 @@ import XCTest
 class DDTracerTests: XCTestCase {
     override func setUp() {
         XCTAssertNil(DDTracer.activeSpan)
-        DDEnvironmentValues.environment["DATADOG_CLIENT_TOKEN"] = "fakeToken"
+        DDEnvironmentValues.environment["DD_API_KEY"] = "fakeToken"
         DDEnvironmentValues.environment["DD_DISABLE_TEST_INSTRUMENTING"] = "1"
         DDTestMonitor.env = DDEnvironmentValues()
     }
@@ -35,24 +35,8 @@ class DDTracerTests: XCTestCase {
 
         let spanData = span.toSpanData()
         XCTAssertEqual(spanData.name, spanName)
-        XCTAssertEqual(spanData.attributes.count, 2)
-        XCTAssertEqual(spanData.attributes["_dd.origin"]?.description, "ciapp-test")
-        XCTAssertEqual(spanData.attributes["myKey"]?.description, "myValue")
-
-        span.end()
-    }
-
-    func testWhenCalledStartSpanWithoutAttributes_spanIsCreatedWithJustOriginAttributes() {
-        let tracer = DDTracer()
-        let spanName = "myName"
-
-        let span = tracer.startSpan(name: spanName, attributes: [:]) as! RecordEventsReadableSpan
-
-        let spanData = span.toSpanData()
-
-        XCTAssertEqual(spanData.name, spanName)
         XCTAssertEqual(spanData.attributes.count, 1)
-        XCTAssertEqual(spanData.attributes["_dd.origin"]?.description, "ciapp-test")
+        XCTAssertEqual(spanData.attributes["myKey"]?.description, "myValue")
 
         span.end()
     }
@@ -121,7 +105,7 @@ class DDTracerTests: XCTestCase {
 
     func testEndpointIsUSByDefault() {
         let tracer = DDTracer()
-        XCTAssertTrue(tracer.endpointURLs().contains("https://trace.browser-intake-datadoghq.com/api/v2/spans"))
+        XCTAssertTrue(tracer.endpointURLs().contains("https://citestcycle-intake.datadoghq.com/api/v2/citestcycle"))
         XCTAssertTrue(tracer.endpointURLs().contains("https://logs.browser-intake-datadoghq.com/api/v2/logs"))
     }
 
@@ -130,7 +114,7 @@ class DDTracerTests: XCTestCase {
         resetEnvironmentVariables()
 
         let tracer = DDTracer()
-        XCTAssertTrue(tracer.endpointURLs().contains("https://trace.browser-intake-datadoghq.com/api/v2/spans"))
+        XCTAssertTrue(tracer.endpointURLs().contains("https://citestcycle-intake.datadoghq.com/api/v2/citestcycle"))
         XCTAssertTrue(tracer.endpointURLs().contains("https://logs.browser-intake-datadoghq.com/api/v2/logs"))
         DDEnvironmentValues.environment["DD_ENDPOINT"] = nil
     }
@@ -140,7 +124,7 @@ class DDTracerTests: XCTestCase {
         resetEnvironmentVariables()
 
         let tracer = DDTracer()
-        XCTAssertTrue(tracer.endpointURLs().contains("https://trace.browser-intake-us3-datadoghq.com/api/v2/spans"))
+        XCTAssertTrue(tracer.endpointURLs().contains("https://citestcycle-intake.us3.datadoghq.com/api/v2/citestcycle"))
         XCTAssertTrue(tracer.endpointURLs().contains("https://logs.browser-intake-us3-datadoghq.com/api/v2/logs"))
         DDEnvironmentValues.environment["DD_ENDPOINT"] = nil
     }
@@ -150,7 +134,7 @@ class DDTracerTests: XCTestCase {
         resetEnvironmentVariables()
 
         let tracer = DDTracer()
-        XCTAssertTrue(tracer.endpointURLs().contains("https://trace.browser-intake-us5-datadoghq.com/api/v2/spans"))
+        XCTAssertTrue(tracer.endpointURLs().contains("https://citestcycle-intake.us5.datadoghq.com/api/v2/citestcycle"))
         XCTAssertTrue(tracer.endpointURLs().contains("https://logs.browser-intake-us5-datadoghq.com/api/v2/logs"))
         DDEnvironmentValues.environment["DD_ENDPOINT"] = nil
     }
@@ -160,20 +144,20 @@ class DDTracerTests: XCTestCase {
         resetEnvironmentVariables()
 
         let tracer = DDTracer()
-        XCTAssertTrue(tracer.endpointURLs().contains("https:/public-trace-http-intake.logs.datadoghq.eu/api/v2/spans"))
+        XCTAssertTrue(tracer.endpointURLs().contains("https://citestcycle-intake.datadoghq.eu/api/v2/citestcycle"))
         XCTAssertTrue(tracer.endpointURLs().contains("https://mobile-http-intake.logs.datadoghq.eu/api/v2/logs"))
         DDEnvironmentValues.environment["DD_ENDPOINT"] = nil
     }
 
-    func testEndpointChangeToGov() {
-        DDEnvironmentValues.environment["DD_ENDPOINT"] = "GOV"
-        resetEnvironmentVariables()
-
-        let tracer = DDTracer()
-        XCTAssertTrue(tracer.endpointURLs().contains("https://trace.browser-intake-ddog-gov.com/api/v2/spans"))
-        XCTAssertTrue(tracer.endpointURLs().contains("https://logs.browser-intake-ddog-gov.com/api/v2/logs"))
-        DDEnvironmentValues.environment["DD_ENDPOINT"] = nil
-    }
+//    func testEndpointChangeToGov() {
+//        DDEnvironmentValues.environment["DD_ENDPOINT"] = "GOV"
+//        resetEnvironmentVariables()
+//
+//        let tracer = DDTracer()
+//        XCTAssertTrue(tracer.endpointURLs().contains("https://trace.browser-intake-ddog-gov.com/api/v2/spans"))
+//        XCTAssertTrue(tracer.endpointURLs().contains("https://logs.browser-intake-ddog-gov.com/api/v2/logs"))
+//        DDEnvironmentValues.environment["DD_ENDPOINT"] = nil
+//    }
 
     func testEnvironmentContext() {
         let testTraceId = TraceId(fromHexString: "ff000000000000000000000000000041")
@@ -268,6 +252,8 @@ class DDTracerTests: XCTestCase {
         XCTAssertEqual(environmentValues[DDHeaders.traceIDField.rawValue], String(spanData.traceId.rawLowerLong))
         XCTAssertNotNil(environmentValues[DDHeaders.parentSpanIDField.rawValue])
         XCTAssertEqual(environmentValues[DDHeaders.parentSpanIDField.rawValue], String(spanData.spanId.rawValue))
+        XCTAssertNotNil(environmentValues["CI_VISIBILITY_TEST_EXECUTION_ID"])
+        XCTAssertEqual(environmentValues["CI_VISIBILITY_TEST_EXECUTION_ID"], String(spanData.traceId.rawLowerLong))
 
         span.end()
     }

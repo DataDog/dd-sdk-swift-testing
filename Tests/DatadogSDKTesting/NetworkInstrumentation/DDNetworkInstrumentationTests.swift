@@ -15,7 +15,7 @@ class DDNetworkInstrumentationTests: XCTestCase {
 
     override func setUp() {
         XCTAssertNil(DDTracer.activeSpan)
-        DDEnvironmentValues.environment["DATADOG_CLIENT_TOKEN"] = "fakeToken"
+        DDEnvironmentValues.environment["DD_API_KEY"] = "fakeToken"
         DDEnvironmentValues.environment["DD_DISABLE_TEST_INSTRUMENTING"] = "1"
         DDTestMonitor.env = DDEnvironmentValues()
         DDTestMonitor.instance = DDTestMonitor()
@@ -59,7 +59,6 @@ class DDNetworkInstrumentationTests: XCTestCase {
         XCTAssertEqual(spanData.attributes["http.request.payload"]?.description, "<disabled>")
         XCTAssertEqual(spanData.attributes["http.response.payload"]?.description, "<disabled>")
         XCTAssertFalse(spanData.attributes["http.response.headers"]?.description.isEmpty ?? true)
-        XCTAssertEqual(spanData.attributes["_dd.origin"]?.description, "ciapp-test")
     }
 
     func testItInterceptsDataTaskWithURLRequest() throws {
@@ -91,7 +90,6 @@ class DDNetworkInstrumentationTests: XCTestCase {
         XCTAssertTrue(spanData.attributes["http.request.headers"]?.description.isEmpty ?? true)
         XCTAssertEqual(spanData.attributes["http.request.payload"]!.description, "<empty>")
         XCTAssert(spanData.attributes["http.response.payload"]!.description.count > 20)
-        XCTAssertEqual(spanData.attributes["_dd.origin"]?.description, "ciapp-test")
 
         DDInstrumentationControl.stopPayloadCapture()
         DDInstrumentationControl.startInjectingHeaders()

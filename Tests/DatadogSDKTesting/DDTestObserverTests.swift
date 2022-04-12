@@ -50,7 +50,7 @@ internal class DDTestObserverTests: XCTestCase {
         let spanData = span.toSpanData()
 
         XCTAssertEqual(spanData.name, "XCTest.test")
-        XCTAssertEqual(spanData.attributes[DDCILibraryTags.ciLibraryLanguage]?.description, "swift")
+        XCTAssertEqual(spanData.attributes[DDGenericTags.language]?.description, "swift")
         XCTAssertEqual(spanData.attributes[DDGenericTags.type]?.description, DDTagValues.typeTest)
         XCTAssertEqual(spanData.attributes[DDGenericTags.resourceName]?.description, "\(testSuite).\(testName)")
         XCTAssertEqual(spanData.attributes[DDTestTags.testName]?.description, testName)
@@ -66,8 +66,6 @@ internal class DDTestObserverTests: XCTestCase {
         XCTAssertEqual(spanData.attributes[DDRuntimeTags.runtimeName]?.description, "Xcode")
         XCTAssertEqual(spanData.attributes[DDRuntimeTags.runtimeVersion]?.description, PlatformUtils.getXcodeVersion())
         XCTAssertNotNil(spanData.attributes[DDCITags.ciWorkspacePath])
-        XCTAssertEqual(spanData.attributes[DDCILibraryTags.ciLibraryLanguage]?.description, "swift")
-        XCTAssertNotNil(spanData.attributes[DDCILibraryTags.ciLibraryVersion])
 
         testObserver.testCaseDidFinish(self)
         testObserver.testSuiteDidFinish(theSuite)
@@ -101,13 +99,13 @@ internal class DDTestObserverTests: XCTestCase {
         testObserver.testCase(self, didRecord: issue)
 
         let testSpan = OpenTelemetry.instance.contextProvider.activeSpan as! RecordEventsReadableSpan
+        testObserver.testCaseDidFinish(self)
         let spanData = testSpan.toSpanData()
 
         XCTAssertNotNil(spanData.attributes[DDTags.errorType])
         XCTAssertNotNil(spanData.attributes[DDTags.errorMessage])
         XCTAssertNil(spanData.attributes[DDTags.errorStack])
 
-        testObserver.testCaseDidFinish(self)
         testObserver.testSuiteDidFinish(theSuite)
         testObserver.testBundleDidFinish(Bundle.main)
     }

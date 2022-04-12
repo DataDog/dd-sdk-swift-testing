@@ -65,7 +65,19 @@ enum Spawn {
 
         close(outputPipe[1])
         var output = ""
-        let bufferSize: size_t = 1024 * 8
+        let bufferSize: size_t = 1024 * 64
+#if swift(>=5.6)
+        withUnsafeTemporaryAllocation(of: UInt8.self, capacity: bufferSize) { dynamicBuffer in
+            while true {
+                memset(dynamicBuffer.baseAddress!, 0, bufferSize)
+                let amtRead = read(outputPipe[0], dynamicBuffer.baseAddress!, bufferSize - 1)
+                output += String(cString: dynamicBuffer.baseAddress!)
+                if amtRead < bufferSize - 1 {
+                    break
+                }
+            }
+        }
+#else
         let dynamicBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
         while true {
             memset(dynamicBuffer, 0, bufferSize)
@@ -76,6 +88,7 @@ enum Spawn {
             }
         }
         dynamicBuffer.deallocate()
+#endif
         posix_spawn_file_actions_destroy(&childActions)
         return output
     }

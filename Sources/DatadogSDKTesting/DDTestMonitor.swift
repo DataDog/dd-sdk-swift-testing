@@ -28,6 +28,7 @@ internal class DDTestMonitor {
     var maxPayloadSize: Int = defaultPayloadSize
     var launchNotificationObserver: NSObjectProtocol?
     var didBecomeActiveNotificationObserver: NSObjectProtocol?
+    var isRumActive: Bool = false
 
     var rLock = NSRecursiveLock()
     private var privateCurrentTest: DDTest?
@@ -45,8 +46,8 @@ internal class DDTestMonitor {
     }
 
     static func installTestMonitor() {
-        guard DDEnvironmentValues.getEnvVariable("DATADOG_CLIENT_TOKEN") != nil || DDEnvironmentValues.getEnvVariable("DD_API_KEY") != nil else {
-            Log.print("DATADOG_CLIENT_TOKEN or DD_API_KEY are missing.")
+        guard DDEnvironmentValues.getEnvVariable("DD_API_KEY") != nil else {
+            Log.print("DD_API_KEY is missing.")
             return
         }
         if DDEnvironmentValues.getEnvVariable("SRCROOT") == nil {
@@ -91,7 +92,7 @@ internal class DDTestMonitor {
                             return
                         }
                         let status = CFMessagePortSendRequest(remotePort,
-                                                              0x1111, // Arbitrary
+                                                              DDCFMessageID.setCustomTags,
                                                               encoded as CFData?,
                                                               timeout,
                                                               timeout,
@@ -161,13 +162,22 @@ internal class DDTestMonitor {
     }
 
     func startAttributeListener() {
-        #if targetEnvironment(simulator) || os(macOS)
             func attributeCallback(port: CFMessagePort?, msgid: Int32, data: CFData?, info: UnsafeMutableRawPointer?) -> Unmanaged<CFData>? {
-                if let data = data as Data? {
-                    let decoded = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
-                    decoded?.forEach {
-                        DDTestMonitor.instance?.currentTest?.setTag(key: $0.key, value: $0.value)
-                    }
+                switch msgid {
+                    case DDCFMessageID.setCustomTags:
+                        if let data = data as Data? {
+                            let decoded = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
+                            decoded?.forEach {
+                                DDTestMonitor.instance?.currentTest?.setTag(key: $0.key, value: $0.value)
+                            }
+                        }
+                    case DDCFMessageID.enableRUM:
+                        DDTestMonitor.instance?.isRumActive = true
+                        DDTestMonitor.instance?.currentTest?.setTag(key: DDTestTags.testIsRUMActive, value: String("true"))
+                    case DDCFMessageID.forceFlush:
+                        Log.debug("CFMessagePort forceFlush")
+                    default:
+                        Log.debug("CFMessagePort unknown message")
                 }
 
                 return nil
@@ -180,6 +190,5 @@ internal class DDTestMonitor {
             }
             let runLoopSource = CFMessagePortCreateRunLoopSource(nil, port, 0)
             CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, CFRunLoopMode.commonModes)
-        #endif
     }
 }

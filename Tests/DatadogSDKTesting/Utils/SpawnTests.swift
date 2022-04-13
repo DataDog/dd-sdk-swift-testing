@@ -2,8 +2,6 @@
 import XCTest
 
 class SpawnTests: XCTestCase {
-    #if !os(tvOS)
-
     func testSpawnCommandRuns() {
         Spawn.command("echo $VALUE", environment: ["VALUE": "Hello World"])
     }
@@ -20,6 +18,4 @@ class SpawnTests: XCTestCase {
         let writtenData = try String(contentsOf: tempURL, encoding: .ascii)
         XCTAssertEqual(writtenData, "Hello World\n")
     }
-
-    #endif
 }

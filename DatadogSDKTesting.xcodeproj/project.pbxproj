@@ -10,6 +10,9 @@
 		E10034DC27035A7700439C9C /* DDTestSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10034D92703599D00439C9C /* DDTestSession.swift */; };
 		E10034DE27035A7800439C9C /* DDTestSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10034D92703599D00439C9C /* DDTestSession.swift */; };
 		E10034E027035A7900439C9C /* DDTestSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10034D92703599D00439C9C /* DDTestSession.swift */; };
+		E10A7E0E2806D69000B464C9 /* LLVMCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10A7E0D2806D68F00B464C9 /* LLVMCoverageFormat.swift */; };
+		E10A7E0F2806D69000B464C9 /* LLVMCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10A7E0D2806D68F00B464C9 /* LLVMCoverageFormat.swift */; };
+		E10A7E102806D69000B464C9 /* LLVMCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10A7E0D2806D68F00B464C9 /* LLVMCoverageFormat.swift */; };
 		E11295BB25F2483D002719E7 /* FileLocator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E11295BA25F2483D002719E7 /* FileLocator.swift */; };
 		E11295BC25F2483D002719E7 /* FileLocator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E11295BA25F2483D002719E7 /* FileLocator.swift */; };
 		E11295BD25F2483D002719E7 /* FileLocator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E11295BA25F2483D002719E7 /* FileLocator.swift */; };
@@ -653,6 +656,7 @@
 
 /* Begin PBXFileReference section */
 		E10034D92703599D00439C9C /* DDTestSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTestSession.swift; sourceTree = "<group>"; };
+		E10A7E0D2806D68F00B464C9 /* LLVMCoverageFormat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LLVMCoverageFormat.swift; sourceTree = "<group>"; };
 		E11295BA25F2483D002719E7 /* FileLocator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileLocator.swift; sourceTree = "<group>"; };
 		E11295C725F63BA8002719E7 /* DDSymbolAddress.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = DDSymbolAddress.c; sourceTree = "<group>"; };
 		E114C12E274F8A0000B57E08 /* NTPServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NTPServer.m; sourceTree = "<group>"; };
@@ -1700,6 +1704,7 @@
 			children = (
 				E1C8DEF4268363EC005B5411 /* DDCoverageHelper.swift */,
 				E15C79672722AD0500E9DBAD /* DDCoverageConversor.swift */,
+				E10A7E0D2806D68F00B464C9 /* LLVMCoverageFormat.swift */,
 			);
 			path = CodeCoverage;
 			sourceTree = "<group>";
@@ -2576,6 +2581,7 @@
 				E157A734256E9D1D00CBCA52 /* StdoutCapture.swift in Sources */,
 				E1D476A725DD369F00832592 /* BinaryParser.swift in Sources */,
 				E11295C825F63BA8002719E7 /* DDSymbolAddress.c in Sources */,
+				E10A7E0F2806D69000B464C9 /* LLVMCoverageFormat.swift in Sources */,
 				E157A735256E9D1D00CBCA52 /* SimpleSpanSerializer.swift in Sources */,
 				E1DFF0EA257010E700344895 /* PlatformUtils.swift in Sources */,
 				E157A736256E9D1D00CBCA52 /* DDCrashes.swift in Sources */,
@@ -2617,6 +2623,7 @@
 				E157A76C256E9D3300CBCA52 /* StdoutCapture.swift in Sources */,
 				E1D476A825DD369F00832592 /* BinaryParser.swift in Sources */,
 				E11295C925F63BA8002719E7 /* DDSymbolAddress.c in Sources */,
+				E10A7E102806D69000B464C9 /* LLVMCoverageFormat.swift in Sources */,
 				E157A76D256E9D3300CBCA52 /* SimpleSpanSerializer.swift in Sources */,
 				E1DFF0EB257010E800344895 /* PlatformUtils.swift in Sources */,
 				E157A76E256E9D3300CBCA52 /* DDCrashes.swift in Sources */,
@@ -2768,6 +2775,7 @@
 				E126DD2D253F366200700A40 /* StdoutCapture.swift in Sources */,
 				E1D476A625DD369F00832592 /* BinaryParser.swift in Sources */,
 				E11295CA25F63BA8002719E7 /* DDSymbolAddress.c in Sources */,
+				E10A7E0E2806D69000B464C9 /* LLVMCoverageFormat.swift in Sources */,
 				E1FB4840253891CE0083B263 /* SimpleSpanSerializer.swift in Sources */,
 				E1FB4841253891CE0083B263 /* DDCrashes.swift in Sources */,
 				E1ABA07425231F4700ED8AEF /* DDTestObserver.swift in Sources */,

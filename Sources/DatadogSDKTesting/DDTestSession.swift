@@ -304,6 +304,8 @@ public class DDTest: NSObject {
         }
         let profData = DDCoverageConversor.generateProfData(profrawFile: coverageFileURL)
         let covJson = DDCoverageConversor.getCoverageJson(profdataFile: profData, saveToFile: true)
+        let llvmCoverage = LLVMCoverageFormat(covJson)
+        print("")
     }
 
     @objc public func end(status: DDTestStatus) {

@@ -9,7 +9,6 @@ import Foundation
 import XCTest
 
 internal class FileLocatorTests: XCTestCase {
-    #if !os(tvOS)
         func testThisTestLocation() {
             let testName = "FileLocatorTests.testThisTestLocation"
             let bundleName = Bundle(for: FileLocatorTests.self).bundleURL.deletingPathExtension().lastPathComponent
@@ -18,8 +17,7 @@ internal class FileLocatorTests: XCTestCase {
             let bundleFunctionInfo = FileLocator.testFunctionsInModule(bundleName)
             let functionInfo = bundleFunctionInfo[testName]
             XCTAssertEqual(#file, functionInfo?.file)
-            XCTAssertEqual(13, functionInfo?.startLine)
-            XCTAssertEqual(23, functionInfo?.endLine)
+            XCTAssertEqual(12, functionInfo?.startLine)
+            XCTAssertEqual(22, functionInfo?.endLine)
         }
-    #endif
 }

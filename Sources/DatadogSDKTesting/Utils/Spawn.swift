@@ -6,10 +6,6 @@
 
 import Foundation
 
-#if os(tvOS)
-/// posix_spawn is not accessible in tvOS
-#else
-
 enum Spawn {
     static func command(_ command: String, environment: [String: String]? = nil) {
         let arguments = ["/bin/sh", "-c", command]
@@ -24,7 +20,7 @@ enum Spawn {
         }
 
         var pid: pid_t = 0
-        let ret = posix_spawn(&pid, command, nil, nil, args, env)
+        let ret = _stdlib_posix_spawn(&pid, command, nil, nil, args, env)
         guard ret == 0 else {
             return
         }
@@ -47,15 +43,15 @@ enum Spawn {
         var outputPipe: [Int32] = [-1, -1]
         pipe(&outputPipe)
         var childActions: posix_spawn_file_actions_t?
-        posix_spawn_file_actions_init(&childActions)
-        posix_spawn_file_actions_adddup2(&childActions, outputPipe[1], 1)
-        posix_spawn_file_actions_adddup2(&childActions, outputPipe[1], 2)
-        posix_spawn_file_actions_addclose(&childActions, outputPipe[0])
-        posix_spawn_file_actions_addclose(&childActions, outputPipe[1])
+        _stdlib_posix_spawn_file_actions_init(&childActions)
+        _stdlib_posix_spawn_file_actions_adddup2(&childActions, outputPipe[1], 1)
+        _stdlib_posix_spawn_file_actions_adddup2(&childActions, outputPipe[1], 2)
+        _stdlib_posix_spawn_file_actions_addclose(&childActions, outputPipe[0])
+        _stdlib_posix_spawn_file_actions_addclose(&childActions, outputPipe[1])
 
         var pid: pid_t = 0
 
-        let ret = posix_spawn(&pid, command, &childActions, nil, args, env)
+        let ret = _stdlib_posix_spawn(&pid, command, &childActions, nil, args, env)
         guard ret == 0 else {
             return ""
         }
@@ -89,7 +85,7 @@ enum Spawn {
         }
         dynamicBuffer.deallocate()
 #endif
-        posix_spawn_file_actions_destroy(&childActions)
+        _stdlib_posix_spawn_file_actions_destroy(&childActions)
         return output
     }
 
@@ -106,19 +102,58 @@ enum Spawn {
         }
 
         var childActions: posix_spawn_file_actions_t?
-        posix_spawn_file_actions_init(&childActions)
-        posix_spawn_file_actions_addopen(&childActions, 1, outputPath, O_RDWR | O_CREAT | O_TRUNC, 0644)
-        posix_spawn_file_actions_adddup2(&childActions, 1, 2)
+        _stdlib_posix_spawn_file_actions_init(&childActions)
+        _stdlib_posix_spawn_file_actions_addopen(&childActions, 1, outputPath, O_RDWR | O_CREAT | O_TRUNC, 0644)
+        _stdlib_posix_spawn_file_actions_adddup2(&childActions, 1, 2)
         var pid: pid_t = 0
 
-        let ret = posix_spawn(&pid, command, &childActions, nil, args, env)
+        let ret = _stdlib_posix_spawn(&pid, command, &childActions, nil, args, env)
         guard ret == 0 else {
             return
         }
 
         var status: Int32 = 0
         waitpid(pid, &status, 0)
-        posix_spawn_file_actions_destroy(&childActions)
+        _stdlib_posix_spawn_file_actions_destroy(&childActions)
     }
 }
-#endif
+
+typealias _stdlib_posix_spawn_file_actions_t = posix_spawn_file_actions_t?
+
+@_silgen_name("_stdlib_posix_spawn_file_actions_init")
+@discardableResult internal func _stdlib_posix_spawn_file_actions_init(
+    _ file_actions: UnsafeMutablePointer<_stdlib_posix_spawn_file_actions_t>
+) -> CInt
+
+@_silgen_name("_stdlib_posix_spawn_file_actions_destroy")
+@discardableResult internal func _stdlib_posix_spawn_file_actions_destroy(
+    _ file_actions: UnsafeMutablePointer<_stdlib_posix_spawn_file_actions_t>
+) -> CInt
+
+@_silgen_name("_stdlib_posix_spawn_file_actions_addclose")
+@discardableResult internal func _stdlib_posix_spawn_file_actions_addclose(
+    _ file_actions: UnsafeMutablePointer<_stdlib_posix_spawn_file_actions_t>,
+    _ filedes: CInt) -> CInt
+
+@_silgen_name("_stdlib_posix_spawn_file_actions_adddup2")
+@discardableResult internal func _stdlib_posix_spawn_file_actions_adddup2(
+    _ file_actions: UnsafeMutablePointer<_stdlib_posix_spawn_file_actions_t>,
+    _ filedes: CInt,
+    _ newfiledes: CInt) -> CInt
+
+@_silgen_name("_stdlib_posix_spawn_file_actions_addopen")
+@discardableResult internal func _stdlib_posix_spawn_file_actions_addopen(
+    _ file_actions: UnsafeMutablePointer<_stdlib_posix_spawn_file_actions_t>,
+    _ filedes: CInt,
+    _ path: UnsafePointer<CChar>,
+    _ oflag: Int32,
+    _ mode: mode_t) -> CInt
+
+@_silgen_name("_stdlib_posix_spawn")
+internal func _stdlib_posix_spawn(
+    _ pid: UnsafeMutablePointer<pid_t>?,
+    _ file: UnsafePointer<Int8>,
+    _ file_actions: UnsafePointer<_stdlib_posix_spawn_file_actions_t>?,
+    _ attrp: UnsafePointer<posix_spawnattr_t>?,
+    _ argv: UnsafePointer<UnsafeMutablePointer<Int8>?>,
+    _ envp: UnsafePointer<UnsafeMutablePointer<Int8>?>?) -> CInt

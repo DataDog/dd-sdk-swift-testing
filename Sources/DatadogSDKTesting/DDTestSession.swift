@@ -32,7 +32,7 @@ public class DDTestSession: NSObject {
         }
 
         self.bundleName = bundleName
-#if !os(tvOS) && (targetEnvironment(simulator) || os(macOS))
+#if (targetEnvironment(simulator) || os(macOS))
         DDSymbolicator.createDSYMFileIfNeeded(forImageName: bundleName)
         bundleFunctionInfo = FileLocator.testFunctionsInModule(bundleName)
 #endif

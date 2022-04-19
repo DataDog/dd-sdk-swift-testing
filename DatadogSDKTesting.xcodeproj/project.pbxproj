@@ -56,6 +56,9 @@
 		E12515E5254892C600670D23 /* XCUIApplicationSwizzler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12515E4254892C500670D23 /* XCUIApplicationSwizzler.swift */; };
 		E126DD2D253F366200700A40 /* StdoutCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E126DD2C253F366200700A40 /* StdoutCapture.swift */; };
 		E126DD2F253F367600700A40 /* StderrCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E126DD2E253F367600700A40 /* StderrCapture.swift */; };
+		E12C5839280D809900A31763 /* DDCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12C5838280D809900A31763 /* DDCoverageFormat.swift */; };
+		E12C583A280D809900A31763 /* DDCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12C5838280D809900A31763 /* DDCoverageFormat.swift */; };
+		E12C583B280D809900A31763 /* DDCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12C5838280D809900A31763 /* DDCoverageFormat.swift */; };
 		E13BD580279AAFAE00105856 /* InternalError.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1AD07A8252F5CB8003705C1 /* InternalError.swift */; };
 		E13BD581279AAFAF00105856 /* InternalError.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1AD07A8252F5CB8003705C1 /* InternalError.swift */; };
 		E13D0BCA2546E29C00C37D56 /* SignalUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E13D0BC92546E29C00C37D56 /* SignalUtils.swift */; };
@@ -704,6 +707,7 @@
 		E12515E4254892C500670D23 /* XCUIApplicationSwizzler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XCUIApplicationSwizzler.swift; sourceTree = "<group>"; };
 		E126DD2C253F366200700A40 /* StdoutCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StdoutCapture.swift; sourceTree = "<group>"; };
 		E126DD2E253F367600700A40 /* StderrCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StderrCapture.swift; sourceTree = "<group>"; };
+		E12C5838280D809900A31763 /* DDCoverageFormat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DDCoverageFormat.swift; sourceTree = "<group>"; };
 		E12E506525A363A400B92F3A /* bitrise.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = bitrise.json; sourceTree = "<group>"; };
 		E13B5F3627ECD08B006F8E2D /* NTPServer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NTPServer.h; sourceTree = "<group>"; };
 		E13D0BC92546E29C00C37D56 /* SignalUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalUtils.swift; sourceTree = "<group>"; };
@@ -1707,8 +1711,9 @@
 		E1C8DEF326836386005B5411 /* CodeCoverage */ = {
 			isa = PBXGroup;
 			children = (
-				E1C8DEF4268363EC005B5411 /* DDCoverageHelper.swift */,
 				E15C79672722AD0500E9DBAD /* DDCoverageConversor.swift */,
+				E12C5838280D809900A31763 /* DDCoverageFormat.swift */,
+				E1C8DEF4268363EC005B5411 /* DDCoverageHelper.swift */,
 				E10A7E0D2806D68F00B464C9 /* LLVMCoverageFormat.swift */,
 			);
 			path = CodeCoverage;
@@ -2594,6 +2599,7 @@
 				E1C8DEFB268372C3005B5411 /* DDCoverageHelper.swift in Sources */,
 				E157A738256E9D1D00CBCA52 /* DDTestObserver.swift in Sources */,
 				E157A73A256E9D1D00CBCA52 /* DDTracer.swift in Sources */,
+				E12C583A280D809900A31763 /* DDCoverageFormat.swift in Sources */,
 				E157A73E256E9D1D00CBCA52 /* StderrCapture.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2637,6 +2643,7 @@
 				E1C8DEFC268372C4005B5411 /* DDCoverageHelper.swift in Sources */,
 				E157A770256E9D3300CBCA52 /* DDTestObserver.swift in Sources */,
 				E157A772256E9D3300CBCA52 /* DDTracer.swift in Sources */,
+				E12C583B280D809900A31763 /* DDCoverageFormat.swift in Sources */,
 				E157A776256E9D3300CBCA52 /* StderrCapture.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2790,6 +2797,7 @@
 				E1C8DEF9268367AB005B5411 /* BinaryImages.swift in Sources */,
 				E1798CC62524B9BD008DEBB9 /* DDTracer.swift in Sources */,
 				E141CF60256FD513008B6B70 /* PlatformUtils.swift in Sources */,
+				E12C5839280D809900A31763 /* DDCoverageFormat.swift in Sources */,
 				E126DD2F253F367600700A40 /* StderrCapture.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

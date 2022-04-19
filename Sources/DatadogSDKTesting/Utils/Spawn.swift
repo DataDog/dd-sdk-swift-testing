@@ -103,7 +103,7 @@ enum Spawn {
 
         var childActions: posix_spawn_file_actions_t?
         _stdlib_posix_spawn_file_actions_init(&childActions)
-        _stdlib_posix_spawn_file_actions_addopen(&childActions, 1, outputPath, O_RDWR | O_CREAT | O_TRUNC, 0644)
+        _stdlib_posix_spawn_file_actions_addopen(&childActions, 1, outputPath, O_WRONLY | O_CREAT | O_TRUNC, 0444)
         _stdlib_posix_spawn_file_actions_adddup2(&childActions, 1, 2)
         var pid: pid_t = 0
 

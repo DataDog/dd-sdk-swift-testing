@@ -107,15 +107,15 @@ enum DDSymbolicator {
                 let libraryAddress = String(line[libraryAddressRange])
                 let callAddress = String(line[callAddressRange])
 
-                    if let objectPath = dSYMFiles.first(where: { $0.lastPathComponent == library })?.path ?? BinaryImages.imageAddresses[library]?.path {
-                        let symbol = symbolWithAtos(objectPath: objectPath, libraryAdress: libraryAddress, callAddress: callAddress)
-                        if !symbol.isEmpty {
-                            linesLock.lock()
-                            lines[lineNumber] = crashLineRegex.replacementString(for: match, in: line, offset: 0, template: "$1$2$3$4$5$6\(symbol)")
-                            linesLock.unlock()
-                            return
-                        }
+                if let objectPath = dSYMFiles.first(where: { $0.lastPathComponent == library })?.path ?? BinaryImages.imageAddresses[library]?.path {
+                    let symbol = symbolWithAtos(objectPath: objectPath, libraryAdress: libraryAddress, callAddress: callAddress)
+                    if !symbol.isEmpty {
+                        linesLock.lock()
+                        lines[lineNumber] = crashLineRegex.replacementString(for: match, in: line, offset: 0, template: "$1$2$3$4$5$6\(symbol)")
+                        linesLock.unlock()
+                        return
                     }
+                }
                 /// No dSYM to symbolicate this line, write symbol Information
                 guard let originalCallAdress = Float64(callAddress) else {
                     return
@@ -144,13 +144,13 @@ enum DDSymbolicator {
 
     /// Generates a dSYM symbol file from a binary if possible
     /// and adds it to the dSYMFiles for the future
-        static func generateDSYMFile(forImageName imageName: String) -> String? {
-            guard let binaryPath = BinaryImages.imageAddresses[imageName]?.path else {
-                return nil
-            }
-            let binaryURL = URL(fileURLWithPath: binaryPath)
-            let dSYMFileURL = URL(fileURLWithPath: NSTemporaryDirectory())
-                .appendingPathComponent(binaryURL.lastPathComponent)
+    static func generateDSYMFile(forImageName imageName: String) -> String? {
+        guard let binaryPath = BinaryImages.imageAddresses[imageName]?.path else {
+            return nil
+        }
+        let binaryURL = URL(fileURLWithPath: binaryPath)
+        let dSYMFileURL = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent(binaryURL.lastPathComponent)
 
         Spawn.command("/usr/bin/dsymutil --minimize --flat \"\(binaryPath)\" --out \"\(dSYMFileURL.path)\"")
         if FileManager.default.fileExists(atPath: dSYMFileURL.path) {

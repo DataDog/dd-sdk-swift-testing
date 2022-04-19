@@ -26,7 +26,7 @@ extension LLVMCoverageFormat {
             let me = try JSONDecoder().decode(LLVMCoverageFormat.self, from: data)
             self = me
         } catch {
-            print("[Scope] [process-coverage] Unexpected error: \(error).")
+            Log.print("[process-coverage] Unexpected error: \(error).")
             return nil
         }
     }

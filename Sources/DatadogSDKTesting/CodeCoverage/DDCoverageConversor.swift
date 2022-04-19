@@ -18,17 +18,16 @@ struct DDCoverageConversor {
         return outputURL
     }
 
-    static func getCoverageJson(profdataFile: URL, saveToFile: Bool = false) -> String {
+    static func getCoverageJson(profdataFile: URL, saveToFile: Bool = false) -> URL {
         let input = profdataFile.path
         let binaryImagePaths = BinaryImages.profileImages.map{ return $0.path }
         let binariesPath =  binaryImagePaths.joined(separator: " -object ")
 
         let commandToRun = #"xcrun llvm-cov export -skip-functions -skip-expansions -instr-profile "\#(input)" -object \#(binariesPath)"#
 
-        let result = Spawn.commandWithResult(commandToRun)
-        if (saveToFile) {
-            try? result.write(to: profdataFile.appendingPathExtension("json"), atomically: true, encoding: .utf8)
-        }
-        return result
+        let outputURL = profdataFile.appendingPathExtension("llvm-json")
+        Spawn.commandToFile(commandToRun, outputPath: outputURL.path)
+
+        return outputURL
     }
 }

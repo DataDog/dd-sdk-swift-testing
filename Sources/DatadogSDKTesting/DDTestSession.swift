@@ -32,7 +32,7 @@ public class DDTestSession: NSObject {
         }
 
         self.bundleName = bundleName
-#if (targetEnvironment(simulator) || os(macOS))
+#if targetEnvironment(simulator) || os(macOS)
         DDSymbolicator.createDSYMFileIfNeeded(forImageName: bundleName)
         bundleFunctionInfo = FileLocator.testFunctionsInModule(bundleName)
 #endif
@@ -229,7 +229,6 @@ public class DDTest: NSObject {
         }
 
         DDCoverageHelper.instance?.setTest(name: name,
-                                           spanId: span.context.spanId.hexString,
                                            traceId: span.context.traceId.hexString)
         DDCoverageHelper.instance?.clearCounters()
     }
@@ -288,6 +287,38 @@ public class DDTest: NSObject {
 
         span.setAttribute(key: DDTestTags.testStatus, value: testStatus)
 
+        let endTime: Date? = Date()
+
+        var start, llvmProfDataTime, llvmCovTime, llvmTime, ddCoverageTime: DispatchTime
+
+        DDCoverageHelper.instance?.writeProfile()
+        if let coverageFileURL = DDCoverageHelper.instance?.getPathForTest(name: name, traceId: span.context.traceId.hexString) {
+            start = DispatchTime.now()
+            let profData = DDCoverageConversor.generateProfData(profrawFile: coverageFileURL)
+            llvmProfDataTime = DispatchTime.now()
+            let covJson = DDCoverageConversor.getCoverageJson(profdataFile: profData, saveToFile: true)
+            llvmCovTime = DispatchTime.now()
+            if let llvmCoverage = LLVMCoverageFormat(fromURL: covJson) {
+                llvmTime = DispatchTime.now()
+                if let ddCoverage = DDCoverageFormat(llvmFormat: llvmCoverage, testId: span.context.traceId.hexString) {
+                    ddCoverageTime = DispatchTime.now()
+                    try? ddCoverage.jsonData?.write(to: coverageFileURL.deletingPathExtension().appendingPathExtension("json"))
+
+                    let llvmProf = Double(llvmProfDataTime.uptimeNanoseconds - start.uptimeNanoseconds) / 1_000_000
+                    let llvmCov = Double(llvmCovTime.uptimeNanoseconds - llvmProfDataTime.uptimeNanoseconds) / 1_000_000
+                    let llvmJson = Double(llvmTime.uptimeNanoseconds - llvmCovTime.uptimeNanoseconds) / 1_000_000
+                    let ddCov = Double(ddCoverageTime.uptimeNanoseconds - llvmTime.uptimeNanoseconds) / 1_000_000
+
+                    span.setAttribute(key: "performance.llvmProf", value: llvmProf)
+                    span.setAttribute(key: "performance.llvmCov", value: llvmCov)
+                    span.setAttribute(key: "performance.llvmJson", value: llvmJson)
+                    span.setAttribute(key: "performance.ddCov", value: ddCov)
+                }
+            }
+
+
+        }
+
         StderrCapture.syncData()
         if let endTime = endTime {
             span.end(time: endTime)
@@ -295,17 +326,8 @@ public class DDTest: NSObject {
             span.end()
         }
         DDTestMonitor.tracer.backgroundWorkQueue.sync {}
-        DDCoverageHelper.instance?.writeProfile()
         DDTestMonitor.instance?.currentTest = nil
         DDTestMonitor.instance?.networkInstrumentation?.endAndCleanAliveSpans()
-
-        guard let coverageFileURL = DDCoverageHelper.instance?.getPathForTest(name: name, spanId: span.context.spanId.hexString, traceId: span.context.traceId.hexString) else {
-            return
-        }
-        let profData = DDCoverageConversor.generateProfData(profrawFile: coverageFileURL)
-        let covJson = DDCoverageConversor.getCoverageJson(profdataFile: profData, saveToFile: true)
-        let llvmCoverage = LLVMCoverageFormat(covJson)
-        print("")
     }
 
     @objc public func end(status: DDTestStatus) {

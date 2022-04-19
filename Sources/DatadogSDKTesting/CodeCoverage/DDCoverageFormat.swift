@@ -1,16 +1,16 @@
 import Foundation
 
-struct DDCoverageFormat: Codable {
+struct DDCoverageFormat: Encodable {
     var type: String = "coverage"
     var version: String = "1"
     var content: CoverageContent
 
-    struct CoverageContent: Codable {
+    struct CoverageContent: Encodable {
         var testId: String
         var files = [File]()
     }
 
-    struct File: Codable {
+    struct File: Encodable {
         let filename: String
         let segments: [Segment]
     }
@@ -32,23 +32,6 @@ struct DDCoverageFormat: Codable {
         }
 
         init() {}
-
-        init(from decoder: Decoder) throws {
-            var container = try decoder.unkeyedContainer()
-            do {
-                try self.startLine = container.decode(Int.self)
-                try self.startColumn = container.decode(Int.self)
-                try self.endLine = container.decode(Int.self)
-                try self.endColumn = container.decode(Int.self)
-                try self.count = container.decode(Int.self)
-            } catch {
-                throw DecodingError.typeMismatch(DDCoverageFormat.Segment.self, DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Wrong type for Segment"))
-            }
-        }
-
-        var arrayValue: [Int] {
-            return [startLine, startColumn, endLine, endColumn, count]
-        }
     }
 
     init?(llvmFormat: LLVMCoverageFormat, testId: String) {
@@ -61,9 +44,9 @@ struct DDCoverageFormat: Codable {
             var currentSegment = Segment()
             var previousCount = 0
             for segment in llvmFile.segments {
-                let line = segment[0].intValue
-                let column = segment[1].intValue
-                let count = segment[2].intValue
+                let line = segment.line
+                let column = segment.column
+                let count = segment.count
                 if previousCount == 0 {
                     if count == 0 {
                         continue

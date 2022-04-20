@@ -20,24 +20,24 @@ struct LLVMCoverageFormat: Decodable {
 }
 
 extension LLVMCoverageFormat {
-    init?(data: Data) {
-        do {
-            let me = try JSONDecoder().decode(LLVMCoverageFormat.self, from: data)
-            self = me
-        } catch {
-            Log.print("[process-coverage] Unexpected error: \(error).")
-            return nil
-        }
+    init(data: Data) throws {
+        let me = try JSONDecoder().decode(LLVMCoverageFormat.self, from: data)
+        self = me
     }
 
     init?(_ json: String, using encoding: String.Encoding = .utf8) {
         guard let data = json.data(using: encoding) else { return nil }
-        self.init(data: data)
+        try? self.init(data: data)
     }
 
     init?(fromURL url: URL) {
         guard let data = try? Data(contentsOf: url, options: Data.ReadingOptions.mappedIfSafe) else { return nil }
-        self.init(data: data)
+        do {
+            try self.init(data: data)
+        } catch {
+            Log.print("[process-coverage] Unexpected error in File: \n\(url.path)\nError: \(error)\n")
+            return nil
+        }
     }
 }
 

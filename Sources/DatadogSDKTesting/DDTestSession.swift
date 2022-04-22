@@ -271,6 +271,8 @@ public class DDTest: NSObject {
     ///   - status: the status reported for this test
     ///   - endTime: Optional, the time where the test ended
     @objc public func end(status: DDTestStatus, endTime: Date? = nil) {
+
+        let testEndTime = endTime ?? Date()
         let testStatus: String
         switch status {
             case .pass:
@@ -287,7 +289,6 @@ public class DDTest: NSObject {
 
         span.setAttribute(key: DDTestTags.testStatus, value: testStatus)
 
-        let endTime: Date? = Date()
 
         var start, llvmProfDataTime, llvmCovTime, llvmTime, ddCoverageTime: DispatchTime
 
@@ -315,16 +316,11 @@ public class DDTest: NSObject {
                     span.setAttribute(key: "performance.ddCov", value: ddCov)
                 }
             }
-
-
         }
 
         StderrCapture.syncData()
-        if let endTime = endTime {
-            span.end(time: endTime)
-        } else {
-            span.end()
-        }
+        span.end(time: testEndTime)
+
         DDTestMonitor.tracer.backgroundWorkQueue.sync {}
         DDTestMonitor.instance?.currentTest = nil
         DDTestMonitor.instance?.networkInstrumentation?.endAndCleanAliveSpans()

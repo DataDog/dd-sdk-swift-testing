@@ -20,6 +20,7 @@ enum DDHeaders: String, CaseIterable {
 
 internal class DDTracer {
     let tracerSdk: TracerSdk
+    let ntpClock = NTPClock()
     var opentelemetryExporter: OpenTelemetryExporter?
     private var launchSpanContext: SpanContext?
     let backgroundWorkQueue = DispatchQueue(label: "com.datadog.logswriter")
@@ -54,7 +55,7 @@ internal class DDTracer {
         tracerProvider.updateActiveSampler(Samplers.alwaysOn)
         let spanLimits = tracerProvider.getActiveSpanLimits().settingAttributeCountLimit(1024)
         tracerProvider.updateActiveSpanLimits(spanLimits)
-        tracerProvider.updateActiveClock(NTPClock())
+        tracerProvider.updateActiveClock(ntpClock)
 
         let bundle = Bundle.main
         let identifier = bundle.bundleIdentifier ?? "com.datadoghq.DatadogSDKTesting"

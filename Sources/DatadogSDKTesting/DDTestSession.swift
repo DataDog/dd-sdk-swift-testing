@@ -272,7 +272,7 @@ public class DDTest: NSObject {
     ///   - endTime: Optional, the time where the test ended
     @objc public func end(status: DDTestStatus, endTime: Date? = nil) {
 
-        let testEndTime = endTime ?? Date()
+        let testEndTime = endTime ?? DDTestMonitor.tracer.ntpClock.now
         let testStatus: String
         switch status {
             case .pass:

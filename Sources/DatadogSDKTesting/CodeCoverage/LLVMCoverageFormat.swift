@@ -1,16 +1,22 @@
+/*
+ * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
+ * This product includes software developed at Datadog (https://www.datadoghq.com/).
+ * Copyright 2020-2021 Datadog, Inc.
+ */
+
 import Foundation
 
-struct LLVMCoverageFormat: Decodable {
-    struct Datum: Codable {
+struct LLVMCoverageFormat {
+    struct Datum {
         let files: [File]
     }
 
-    struct File: Codable {
+    struct File {
         let filename: String
         let segments: [Segment]
     }
 
-    struct Segment: Codable {
+    struct Segment {
         let line: Int
         let column: Int
         let count: Int
@@ -21,8 +27,35 @@ struct LLVMCoverageFormat: Decodable {
 
 extension LLVMCoverageFormat {
     init(data: Data) throws {
-        let me = try JSONDecoder().decode(LLVMCoverageFormat.self, from: data)
-        self = me
+        // Use ObjC parser to avoid reserving memory, and parse only really needed bytes. Keep
+        // the ObjC types as long as possible to avoid extra conversions
+        guard let object = try JSONSerialization.jsonObject(with: data) as? NSDictionary,
+              let data = object["data"] as? NSArray,
+              let firstElement = data.firstObject as? NSDictionary,
+              let jsonFiles = firstElement["files"] as? [NSDictionary]
+        else {
+            self.data = [Datum]()
+            return
+        }
+
+        let files: [File] = jsonFiles.filter { file in
+            let segments = file["segments"] as? [NSArray]
+            return segments?.contains { ($0[2] as! NSNumber).intValue != 0 } ?? false
+        }.map { file in
+            let segments = file["segments"] as! [NSArray]
+            return File(filename: file["filename"] as! String,
+                        segments: segments.map { segment in
+                            Segment(line: (segment[0] as! NSNumber).intValue,
+                                    column: (segment[1] as! NSNumber).intValue,
+                                    count: (segment[2] as! NSNumber).intValue)
+                        })
+        }
+
+        if files.count > 0 {
+            self.data = [Datum(files: files)]
+        } else {
+            self.data = [Datum]()
+        }
     }
 
     init?(_ json: String, using encoding: String.Encoding = .utf8) {
@@ -37,19 +70,6 @@ extension LLVMCoverageFormat {
         } catch {
             Log.print("[process-coverage] Unexpected error in File: \n\(url.path)\nError: \(error)\n")
             return nil
-        }
-    }
-}
-
-extension LLVMCoverageFormat.Segment {
-    init(from decoder: Decoder) throws {
-        var container = try decoder.unkeyedContainer()
-        do {
-            try self.line = container.decode(Int.self)
-            try self.column = container.decode(Int.self)
-            try self.count = container.decode(Int.self)
-        } catch {
-            throw DecodingError.typeMismatch(LLVMCoverageFormat.Segment.self, DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Wrong type for Segment"))
         }
     }
 }

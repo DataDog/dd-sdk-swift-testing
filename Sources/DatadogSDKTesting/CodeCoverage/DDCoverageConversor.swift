@@ -7,6 +7,7 @@
 
 import Foundation
 
+
 struct DDCoverageConversor {
 
     static func generateProfData(profrawFile: URL) -> URL {
@@ -18,16 +19,15 @@ struct DDCoverageConversor {
         return outputURL
     }
 
-    static func getCoverageJson(profdataFile: URL, saveToFile: Bool = false) -> URL {
-        let input = profdataFile.path
+    static func getCoverageJson(profdataFile: URL, testId:String) -> URL {
         let binaryImagePaths = BinaryImages.profileImages.map{ return $0.path }
-        let binariesPath =  binaryImagePaths.joined(separator: "\" -object \"")
-
-        let commandToRun = #"xcrun llvm-cov export -skip-functions -skip-expansions -instr-profile "\#(input)" -object "\#(binariesPath)""#
-
-        let outputURL = profdataFile.appendingPathExtension("llvm-json")
-        Spawn.commandToFile(commandToRun, outputPath: outputURL.path)
-
+        let outputURL = profdataFile.appendingPathExtension("json")
+        let llvmJSON = LLVMCodeCoverageBridge.coverageInfo(forProfile: profdataFile.path, images: binaryImagePaths)
+        guard let llvmCov = LLVMCoverageFormat(llvmJSON) else {
+            return outputURL
+        }
+        let json = DDCoverageFormat(llvmFormat: llvmCov, testId: testId)
+        try? json?.jsonData?.write(to: outputURL, options: .atomic)
         return outputURL
     }
 }

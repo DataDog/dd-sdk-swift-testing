@@ -271,7 +271,6 @@ public class DDTest: NSObject {
     ///   - status: the status reported for this test
     ///   - endTime: Optional, the time where the test ended
     @objc public func end(status: DDTestStatus, endTime: Date? = nil) {
-
         let testEndTime = endTime ?? DDTestMonitor.tracer.ntpClock.now
         let testStatus: String
         switch status {
@@ -289,33 +288,18 @@ public class DDTest: NSObject {
 
         span.setAttribute(key: DDTestTags.testStatus, value: testStatus)
 
-
-        var start, llvmProfDataTime, llvmCovTime, llvmTime, ddCoverageTime: DispatchTime
-
         DDCoverageHelper.instance?.writeProfile()
         if let coverageFileURL = DDCoverageHelper.instance?.getPathForTest(name: name, traceId: span.context.traceId.hexString) {
-            start = DispatchTime.now()
+            let start = DispatchTime.now()
             let profData = DDCoverageConversor.generateProfData(profrawFile: coverageFileURL)
-            llvmProfDataTime = DispatchTime.now()
-            let covJson = DDCoverageConversor.getCoverageJson(profdataFile: profData, saveToFile: true)
-            llvmCovTime = DispatchTime.now()
-            if let llvmCoverage = LLVMCoverageFormat(fromURL: covJson) {
-                llvmTime = DispatchTime.now()
-                if let ddCoverage = DDCoverageFormat(llvmFormat: llvmCoverage, testId: span.context.traceId.hexString) {
-                    ddCoverageTime = DispatchTime.now()
-                    try? ddCoverage.jsonData?.write(to: coverageFileURL.deletingPathExtension().appendingPathExtension("json"))
+            let llvmProfDataTime = DispatchTime.now()
+            _ = DDCoverageConversor.getCoverageJson(profdataFile: profData, testId: span.context.traceId.hexString)
+            let ddCoverageTime = DispatchTime.now()
 
-                    let llvmProf = Double(llvmProfDataTime.uptimeNanoseconds - start.uptimeNanoseconds) / 1_000_000
-                    let llvmCov = Double(llvmCovTime.uptimeNanoseconds - llvmProfDataTime.uptimeNanoseconds) / 1_000_000
-                    let llvmJson = Double(llvmTime.uptimeNanoseconds - llvmCovTime.uptimeNanoseconds) / 1_000_000
-                    let ddCov = Double(ddCoverageTime.uptimeNanoseconds - llvmTime.uptimeNanoseconds) / 1_000_000
-
-                    span.setAttribute(key: "performance.llvmProf", value: llvmProf)
-                    span.setAttribute(key: "performance.llvmCov", value: llvmCov)
-                    span.setAttribute(key: "performance.llvmJson", value: llvmJson)
-                    span.setAttribute(key: "performance.ddCov", value: ddCov)
-                }
-            }
+            let llvmProf = Double(llvmProfDataTime.uptimeNanoseconds - start.uptimeNanoseconds) / 1_000_000
+            let ddCov = Double(ddCoverageTime.uptimeNanoseconds - llvmProfDataTime.uptimeNanoseconds) / 1_000_000
+            span.setAttribute(key: "performance.llvmProf", value: llvmProf)
+            span.setAttribute(key: "performance.ddCov", value: ddCov)
         }
 
         StderrCapture.syncData()

@@ -12,7 +12,7 @@
 @interface LLVMCodeCoverageBridge : NSObject
 
 + (nonnull NSString *)coverageInfoForProfile:(nonnull NSString*)profData
-                                      images:(nonnull NSArray*)objectArray;
+        images:(nonnull NSArray*)objectArray;
 
 @end
 

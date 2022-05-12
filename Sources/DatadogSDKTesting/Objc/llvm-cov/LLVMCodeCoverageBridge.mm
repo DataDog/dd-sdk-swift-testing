@@ -16,17 +16,17 @@ std::string getCoverage(std::string profdata, std::vector<std::string> covFilena
 @implementation LLVMCodeCoverageBridge
 
 + (nonnull NSString *)coverageInfoForProfile:(nonnull NSString*)profData
-                                      images:(nonnull NSArray*)objectArray {
+        images:(nonnull NSArray*)objectArray {
 
-    __block std::vector<std::string> vectorList;
-    vectorList.reserve([objectArray count]);
-    [objectArray enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-        vectorList.push_back([obj cStringUsingEncoding:NSUTF8StringEncoding]);
-    }];
+	__block std::vector<std::string> vectorList;
+	vectorList.reserve([objectArray count]);
+	[objectArray enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+	         vectorList.push_back([obj cStringUsingEncoding:NSUTF8StringEncoding]);
+	 }];
 
-    std::string coverage = getCoverage([profData cStringUsingEncoding:NSUTF8StringEncoding], vectorList);
+	std::string coverage = getCoverage([profData cStringUsingEncoding:NSUTF8StringEncoding], vectorList);
 
-    return [NSString stringWithUTF8String:coverage.c_str()];
+	return [NSString stringWithUTF8String:coverage.c_str()];
 }
 
 @end /* implementation LLVMCodeCoverageBridge */

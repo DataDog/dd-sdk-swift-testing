@@ -13,11 +13,11 @@
 // or tests start.
 // Reference: https://developer.apple.com/documentation/objectivec/nsobject/1418815-load
 __attribute__((constructor)) static void initialize_FrameworkLoadHandler() {
-    Class frameworkLoadHandlerClass = objc_getClass("DatadogSDKTesting.FrameworkLoadHandler");
-    SEL handleLoadSelector = NSSelectorFromString(@"handleLoad");
-    NSMethodSignature *methodSignature = [frameworkLoadHandlerClass methodSignatureForSelector:handleLoadSelector];
-    NSInvocation *myInvocation = [NSInvocation invocationWithMethodSignature:methodSignature];
-    [myInvocation setTarget:frameworkLoadHandlerClass];
-    [myInvocation setSelector:handleLoadSelector];
-    [myInvocation invoke];
+	Class frameworkLoadHandlerClass = objc_getClass("DatadogSDKTesting.FrameworkLoadHandler");
+	SEL handleLoadSelector = NSSelectorFromString(@"handleLoad");
+	NSMethodSignature *methodSignature = [frameworkLoadHandlerClass methodSignatureForSelector:handleLoadSelector];
+	NSInvocation *myInvocation = [NSInvocation invocationWithMethodSignature:methodSignature];
+	[myInvocation setTarget:frameworkLoadHandlerClass];
+	[myInvocation setSelector:handleLoadSelector];
+	[myInvocation invoke];
 }

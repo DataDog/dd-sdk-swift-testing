@@ -16,7 +16,7 @@ internal class DDTestObserverTests: XCTestCase {
 
     override func setUp() {
         XCTAssertNil(DDTracer.activeSpan)
-        DDEnvironmentValues.environment["DD_API_KEY"] = "fakeKey"
+        DDEnvironmentValues.environment[ConfigurationValues.DD_API_KEY.rawValue] = "fakeKey"
         DDEnvironmentValues.environment["DD_DISABLE_TEST_INSTRUMENTING"] = "1"
         DDTestMonitor.env = DDEnvironmentValues()
         testObserver = DDTestObserver()

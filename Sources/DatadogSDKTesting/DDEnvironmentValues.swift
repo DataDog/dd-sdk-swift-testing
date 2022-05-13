@@ -7,6 +7,38 @@
 import Foundation
 @_implementationOnly import OpenTelemetryApi
 
+internal enum ConfigurationValues: String, CaseIterable {
+    case DD_TEST_RUNNER
+    case DD_API_KEY
+    case XCTestConfigurationFilePath
+    case XCInjectBundleInto
+    case XCTestBundlePath
+    case SDKROOT
+    case DD_ENV
+    case DD_SERVICE
+    case SRCROOT
+    case DD_TAGS
+    case DD_DISABLE_TEST_INSTRUMENTING
+    case DD_DISABLE_NETWORK_INSTRUMENTATION
+    case DD_DISABLE_HEADERS_INJECTION
+    case DD_INSTRUMENTATION_EXTRA_HEADERS
+    case DD_EXCLUDED_URLS
+    case DD_ENABLE_RECORD_PAYLOAD
+    case DD_DISABLE_NETWORK_CALL_STACK
+    case DD_ENABLE_NETWORK_CALL_STACK_SYMBOLICATED
+    case DD_DISABLE_RUM_INTEGRATION
+    case DD_MAX_PAYLOAD_SIZE
+    case DD_CIVISIBILITY_LOGS_ENABLED
+    case DD_ENABLE_STDOUT_INSTRUMENTATION
+    case DD_ENABLE_STDERR_INSTRUMENTATION
+    case DD_DISABLE_SDKIOS_INTEGRATION
+    case DD_DISABLE_CRASH_HANDLER
+    case DD_SITE
+    case DD_ENDPOINT
+    case DD_DONT_EXPORT
+    case DD_TRACE_DEBUG
+}
+
 internal struct DDEnvironmentValues {
     /// Datatog Configuration values
     let ddApiKey: String?
@@ -101,15 +133,15 @@ internal struct DDEnvironmentValues {
 
     init() {
         /// Datatog configuration values
-        var apiKey = DDEnvironmentValues.getEnvVariable("DD_API_KEY")
+        var apiKey = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_API_KEY.rawValue)
         if apiKey == nil {
             apiKey = DDEnvironmentValues.infoDictionary["DatadogApiKey"] as? String
         }
 
         ddApiKey = apiKey
-        ddEnvironment = DDEnvironmentValues.getEnvVariable("DD_ENV")
+        ddEnvironment = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_ENV.rawValue)
         tracerUnderTesting = (DDEnvironmentValues.getEnvVariable("TEST_OUTPUT_FILE") != nil)
-        let service = DDEnvironmentValues.getEnvVariable("DD_SERVICE")
+        let service = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_SERVICE.rawValue)
         if let service = service, tracerUnderTesting {
             ddService = service + "-internal-tests"
         } else {
@@ -119,9 +151,9 @@ internal struct DDEnvironmentValues {
         let envLocalTestEnvironmentPort = DDEnvironmentValues.getEnvVariable("DD_LOCAL_TEST_ENVIRONMENT_PORT") as NSString?
         localTestEnvironmentPort = envLocalTestEnvironmentPort?.integerValue
 
-        sourceRoot = DDEnvironmentValues.getEnvVariable("SRCROOT")
+        sourceRoot = DDEnvironmentValues.getEnvVariable(ConfigurationValues.SRCROOT.rawValue)
 
-        if let envDDTags = DDEnvironmentValues.getEnvVariable("DD_TAGS") {
+        if let envDDTags = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_TAGS.rawValue) {
             let ddtagsEntries = envDDTags.components(separatedBy: " ")
             for entry in ddtagsEntries {
                 let entryPair = entry.components(separatedBy: ":")
@@ -133,55 +165,55 @@ internal struct DDEnvironmentValues {
         }
 
         /// Instrumentation configuration values
-        let envNetwork = DDEnvironmentValues.getEnvVariable("DD_DISABLE_NETWORK_INSTRUMENTATION") as NSString?
+        let envNetwork = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_DISABLE_NETWORK_INSTRUMENTATION.rawValue) as NSString?
         disableNetworkInstrumentation = envNetwork?.boolValue ?? false
 
-        let envHeaders = DDEnvironmentValues.getEnvVariable("DD_DISABLE_HEADERS_INJECTION") as NSString?
+        let envHeaders = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_DISABLE_HEADERS_INJECTION.rawValue) as NSString?
         disableHeadersInjection = envHeaders?.boolValue ?? false
 
-        if let envExtraHTTPHeaders = DDEnvironmentValues.getEnvVariable("DD_INSTRUMENTATION_EXTRA_HEADERS") as String? {
+        if let envExtraHTTPHeaders = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_INSTRUMENTATION_EXTRA_HEADERS.rawValue) as String? {
             extraHTTPHeaders = Set(envExtraHTTPHeaders.components(separatedBy: CharacterSet(charactersIn: ",; ")))
         } else {
             extraHTTPHeaders = nil
         }
 
-        if let envExcludedURLs = DDEnvironmentValues.getEnvVariable("DD_EXCLUDED_URLS") as String? {
+        if let envExcludedURLs = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_EXCLUDED_URLS.rawValue) as String? {
             excludedURLS = Set(envExcludedURLs.components(separatedBy: CharacterSet(charactersIn: ",; ")))
         } else {
             excludedURLS = nil
         }
 
-        let envRecordPayload = DDEnvironmentValues.getEnvVariable("DD_ENABLE_RECORD_PAYLOAD") as NSString?
+        let envRecordPayload = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_ENABLE_RECORD_PAYLOAD.rawValue) as NSString?
         enableRecordPayload = envRecordPayload?.boolValue ?? false
 
-        let envNetworkCallStack = DDEnvironmentValues.getEnvVariable("DD_DISABLE_NETWORK_CALL_STACK") as NSString?
+        let envNetworkCallStack = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_DISABLE_NETWORK_CALL_STACK.rawValue) as NSString?
         disableNetworkCallStack = envNetworkCallStack?.boolValue ?? false
 
-        let envNetworkCallStackSymbolicated = DDEnvironmentValues.getEnvVariable("DD_ENABLE_NETWORK_CALL_STACK_SYMBOLICATED") as NSString?
+        let envNetworkCallStackSymbolicated = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_ENABLE_NETWORK_CALL_STACK_SYMBOLICATED.rawValue) as NSString?
         enableNetworkCallStackSymbolicated = envNetworkCallStackSymbolicated?.boolValue ?? false
 
-        let envMaxPayloadSize = DDEnvironmentValues.getEnvVariable("DD_MAX_PAYLOAD_SIZE") as NSString?
+        let envMaxPayloadSize = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_MAX_PAYLOAD_SIZE.rawValue) as NSString?
         maxPayloadSize = envMaxPayloadSize?.integerValue
 
-        let envLogsEnabled = DDEnvironmentValues.getEnvVariable("DD_CIVISIBILITY_LOGS_ENABLED") as NSString?
+        let envLogsEnabled = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_CIVISIBILITY_LOGS_ENABLED.rawValue) as NSString?
 
-        let envStdout = DDEnvironmentValues.getEnvVariable("DD_ENABLE_STDOUT_INSTRUMENTATION") as NSString?
+        let envStdout = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_ENABLE_STDOUT_INSTRUMENTATION.rawValue) as NSString?
         enableStdoutInstrumentation = envLogsEnabled?.boolValue ?? envStdout?.boolValue ?? false
 
-        let envStderr = DDEnvironmentValues.getEnvVariable("DD_ENABLE_STDERR_INSTRUMENTATION") as NSString?
+        let envStderr = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_ENABLE_STDERR_INSTRUMENTATION.rawValue) as NSString?
         enableStderrInstrumentation = envLogsEnabled?.boolValue ?? envStderr?.boolValue ?? false
 
-        if let envDisableRUMIntegration = DDEnvironmentValues.getEnvVariable("DD_DISABLE_RUM_INTEGRATION") as NSString? {
+        if let envDisableRUMIntegration = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_DISABLE_RUM_INTEGRATION.rawValue) as NSString? {
             disableRUMIntegration = envDisableRUMIntegration.boolValue
         } else {
-            let envDisableDDSDKIOSIntegration = DDEnvironmentValues.getEnvVariable("DD_DISABLE_SDKIOS_INTEGRATION") as NSString?
+            let envDisableDDSDKIOSIntegration = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_DISABLE_SDKIOS_INTEGRATION.rawValue) as NSString?
             disableRUMIntegration = envDisableDDSDKIOSIntegration?.boolValue ?? false
         }
 
-        let envDisableCrashReporting = DDEnvironmentValues.getEnvVariable("DD_DISABLE_CRASH_HANDLER") as NSString?
+        let envDisableCrashReporting = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_DISABLE_CRASH_HANDLER.rawValue) as NSString?
         disableCrashHandler = envDisableCrashReporting?.boolValue ?? false
 
-        let envDisableTestInstrumenting = DDEnvironmentValues.getEnvVariable("DD_DISABLE_TEST_INSTRUMENTING") as NSString?
+        let envDisableTestInstrumenting = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_DISABLE_TEST_INSTRUMENTING.rawValue) as NSString?
         disableTestInstrumenting = envDisableTestInstrumenting?.boolValue ?? false
 
         /// Device Information
@@ -195,12 +227,12 @@ internal struct DDEnvironmentValues {
         launchEnvironmentTraceId = DDEnvironmentValues.getEnvVariable("ENVIRONMENT_TRACER_TRACEID")
         launchEnvironmentSpanId = DDEnvironmentValues.getEnvVariable("ENVIRONMENT_TRACER_SPANID")
 
-        ddEndpoint = DDEnvironmentValues.getEnvVariable("DD_SITE") ?? DDEnvironmentValues.getEnvVariable("DD_ENDPOINT")
+        ddEndpoint = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_SITE.rawValue) ?? DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_ENDPOINT.rawValue)
 
-        let envDisableTracesExporting = DDEnvironmentValues.getEnvVariable("DD_DONT_EXPORT") as NSString?
+        let envDisableTracesExporting = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_DONT_EXPORT.rawValue) as NSString?
         disableTracesExporting = envDisableTracesExporting?.boolValue ?? false
 
-        let envExtraDebug = DDEnvironmentValues.getEnvVariable("DD_TRACE_DEBUG") as NSString?
+        let envExtraDebug = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_TRACE_DEBUG.rawValue) as NSString?
         extraDebug = envExtraDebug?.boolValue ?? false
 
         /// CI  values

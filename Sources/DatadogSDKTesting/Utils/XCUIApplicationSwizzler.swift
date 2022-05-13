@@ -32,38 +32,9 @@ extension XCUIApplication {
             self.launchEnvironment["ENVIRONMENT_TRACER_SPANID"] = testSpanContext.spanId.hexString
             self.launchEnvironment["ENVIRONMENT_TRACER_TRACEID"] = testSpanContext.traceId.hexString
             addPropagationsHeadersToEnvironment(tracer: DDTestMonitor.tracer)
-            [
-                "DD_TEST_RUNNER",
-                "DD_API_KEY",
-                "XCTestConfigurationFilePath",
-                "XCInjectBundleInto",
-                "XCTestBundlePath",
-                "SDKROOT",
-                "DD_ENV",
-                "DD_SERVICE",
-                "SRCROOT",
-                "DD_TAGS",
-                "DD_DISABLE_NETWORK_INSTRUMENTATION",
-                "DD_DISABLE_HEADERS_INJECTION",
-                "DD_INSTRUMENTATION_EXTRA_HEADERS",
-                "DD_EXCLUDED_URLS",
-                "DD_ENABLE_RECORD_PAYLOAD",
-                "DD_DISABLE_NETWORK_CALL_STACK",
-                "DD_ENABLE_NETWORK_CALL_STACK_SYMBOLICATED",
-                "DD_DISABLE_RUM_INTEGRATION",
-                "DD_MAX_PAYLOAD_SIZE",
-                "DD_CIVISIBILITY_LOGS_ENABLED",
-                "DD_ENABLE_STDOUT_INSTRUMENTATION",
-                "DD_ENABLE_STDERR_INSTRUMENTATION",
-                "DD_DISABLE_SDKIOS_INTEGRATION",
-                "DD_DISABLE_CRASH_HANDLER",
-                "DD_SITE",
-                "DD_ENDPOINT",
-                "DD_DONT_EXPORT",
-                "DD_TRACE_DEBUG",
-                "DD_DISABLE_NETWORK_CALL_STACK",
-                "DD_ENABLE_NETWORK_CALL_STACK_SYMBOLICATED",
-            ].forEach(addProcessEnvironmentToLaunch)
+            for value in ConfigurationValues.allCases {
+                addProcessEnvironmentToLaunch(value.rawValue)
+            }
         }
         DDTestMonitor.instance?.startAttributeListener()
         swizzled_launch()

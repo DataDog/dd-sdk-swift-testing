@@ -35,7 +35,7 @@ class FrameworkLoadHandlerTests: XCTestCase {
 
     func testWhenTestRunnerIsConfiguredAndIsInTestingMode_ItIsInitialised() {
         testEnvironment["DD_TEST_RUNNER"] = "1"
-        testEnvironment["DD_API_KEY"] = "fakeToken"
+        testEnvironment[ConfigurationValues.DD_API_KEY.rawValue] = "fakeToken"
         testEnvironment["XCTestConfigurationFilePath"] = "/Users/user/Library/tmp/xx.xctestconfiguration"
         setEnvVariables()
 
@@ -46,7 +46,7 @@ class FrameworkLoadHandlerTests: XCTestCase {
 
     func testWhenTestRunnerIsConfiguredAndIsInOtherTestingMode_ItIsInitialised() {
         testEnvironment["DD_TEST_RUNNER"] = "1"
-        testEnvironment["DD_API_KEY"] = "fakeKey"
+        testEnvironment[ConfigurationValues.DD_API_KEY.rawValue] = "fakeKey"
         testEnvironment["DD_ENABLE_STDERR_INSTRUMENTATION"] = "1"
         testEnvironment["XCInjectBundleInto"] = "/Users/user/Library/tmp/xx.xctestconfiguration"
         setEnvVariables()

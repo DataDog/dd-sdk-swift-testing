@@ -47,8 +47,8 @@ internal class DDTestMonitor {
 
     static func installTestMonitor() {
         guard DDEnvironmentValues.getEnvVariable("DD_API_KEY") != nil else {
-            Log.print("DD_API_KEY is missing.")
-            return
+            Log.print("A Datadog API key is required. DD_API_KEY environment value is missing.")
+            exit(1)
         }
         if DDEnvironmentValues.getEnvVariable("SRCROOT") == nil {
             Log.print("SRCROOT is not properly set")

@@ -32,7 +32,7 @@ public class DDTestSession: NSObject {
         }
 
         self.bundleName = bundleName
-#if (targetEnvironment(simulator) || os(macOS))
+#if targetEnvironment(simulator) || os(macOS)
         DDSymbolicator.createDSYMFileIfNeeded(forImageName: bundleName)
         bundleFunctionInfo = FileLocator.testFunctionsInModule(bundleName)
 #endif
@@ -193,7 +193,6 @@ public class DDTest: NSObject {
             DDDeviceTags.deviceModel: DDTestMonitor.env.deviceModel,
             DDRuntimeTags.runtimeName: DDTestMonitor.env.runtimeName,
             DDRuntimeTags.runtimeVersion: DDTestMonitor.env.runtimeVersion,
-            DDGenericTags.library_version: DDTestObserver.tracerVersion,
         ]
 
         span = DDTestMonitor.tracer.startSpan(name: "\(session.testFramework).test", attributes: attributes, startTime: startTime)

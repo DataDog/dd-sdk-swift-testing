@@ -160,13 +160,17 @@ public class DDTest: NSObject {
     var currentTestExecutionOrder: Int
     var initialProcessId = Int(ProcessInfo.processInfo.processIdentifier)
 
+    var name: String
     var span: Span
 
     var session: DDTestSession
+    var suite: DDTestSuite
 
     private var errorInfo: ErrorInfo?
 
     init(name: String, suite: DDTestSuite, session: DDTestSession, startTime: Date? = nil) {
+        self.name = name
+        self.suite = suite
         self.session = session
 
         currentTestExecutionOrder = session.currentExecutionOrder

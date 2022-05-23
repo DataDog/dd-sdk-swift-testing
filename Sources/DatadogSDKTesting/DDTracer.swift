@@ -240,8 +240,22 @@ internal class DDTracer {
         return span
     }
 
+    private func testAttributes() -> [String: AttributeValue] {
+        guard let currentTest = DDTestMonitor.instance?.currentTest else {
+            return [:]
+        }
+        return [DDTestTags.testName: AttributeValue.string(currentTest.name),
+                DDTestTags.testSuite: AttributeValue.string(currentTest.suite.name),
+                DDTestTags.testBundle: AttributeValue.string(currentTest.session.bundleName)]
+    }
+
     private func attributesForString(_ string: String) -> [String: AttributeValue] {
-        return ["message": AttributeValue.string(string)]
+        return testAttributes().merging(["message": AttributeValue.string(string)]) { _, other in other }
+    }
+
+    private func attributesForError(_ string: String) -> [String: AttributeValue] {
+        return testAttributes().merging(["message": AttributeValue.string(string),
+                                         "status": AttributeValue.string("error")]) { _, other in other }
     }
 
     func logString(string: String, date: Date? = nil) {
@@ -273,11 +287,6 @@ internal class DDTracer {
             auxSpan.end()
             OpenTelemetrySDK.instance.tracerProvider.forceFlush()
         }
-    }
-
-    private func attributesForError(_ string: String) -> [String: AttributeValue] {
-        return ["message": AttributeValue.string(string),
-                "status": AttributeValue.string("error")]
     }
 
     /// This method is only currently used when logging with an app being launched from a UITest, and no span has been created in the App.

@@ -10,7 +10,7 @@ import XCTest
 
 class StdoutCaptureTests: XCTestCase {
     override func setUp() {
-        DDEnvironmentValues.environment["DD_API_KEY"] = "fakeKey"
+        DDEnvironmentValues.environment[ConfigurationValues.DD_API_KEY.rawValue] = "fakeKey"
         DDTestMonitor.env = DDEnvironmentValues()
     }
 

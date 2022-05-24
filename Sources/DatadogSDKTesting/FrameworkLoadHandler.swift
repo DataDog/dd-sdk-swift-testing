@@ -19,7 +19,7 @@ public class FrameworkLoadHandler: NSObject {
 
     static func libraryLoaded() {
         /// Only initialize test observer if user configured so and is running tests
-        guard let enabled = environment["DD_TEST_RUNNER"] as NSString? else {
+        guard let enabled = environment[ConfigurationValues.DD_TEST_RUNNER.rawValue] as NSString? else {
             print("[DatadogSDKTesting] Library loaded but not active, DD_TEST_RUNNER is missing")
             return
         }
@@ -45,7 +45,7 @@ public class FrameworkLoadHandler: NSObject {
                 setenv("LLVM_PROFILE_FILE", newEnv, 1)
             }
 
-            let envDisableTestInstrumenting = DDEnvironmentValues.getEnvVariable("DD_DISABLE_TEST_INSTRUMENTING") as NSString?
+            let envDisableTestInstrumenting = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_DISABLE_TEST_INSTRUMENTING.rawValue) as NSString?
             let disableTestInstrumenting = envDisableTestInstrumenting?.boolValue ?? false
 
             let needsTestObserver = !DDTestMonitor.tracer.isBinaryUnderUITesting || environment["TEST_CLASS"] != nil

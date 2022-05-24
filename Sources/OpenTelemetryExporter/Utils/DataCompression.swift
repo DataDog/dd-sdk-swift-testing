@@ -13,19 +13,19 @@ extension Data {
             let ubp: UnsafeBufferPointer<UInt8> = urbp.bindMemory(to: UInt8.self)
             let up: UnsafePointer<UInt8> = ubp.baseAddress!
             let count = self.count
-#if swift(>=5.6)
-            return withUnsafeTemporaryAllocation(of: UInt8.self, capacity: count) { destBuffer in
-                let destBytes = compression_encode_buffer(destBuffer.baseAddress!, count, up, count, nil, COMPRESSION_ZLIB)
-                guard destBytes != 0 else { return nil } // Error, or not enough size.
-                return Data(bytes: destBuffer.baseAddress!, count: destBytes)
-            }
-#else
+//#if swift(>=5.6)
+//            return withUnsafeTemporaryAllocation(of: UInt8.self, capacity: count) { destBuffer in
+//                let destBytes = compression_encode_buffer(destBuffer.baseAddress!, count, up, count, nil, COMPRESSION_ZLIB)
+//                guard destBytes != 0 else { return nil } // Error, or not enough size.
+//                return Data(bytes: destBuffer.baseAddress!, count: destBytes)
+//            }
+//#else
             let destBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: count)
             defer { destBuffer.deallocate() }
             let destBytes = compression_encode_buffer(destBuffer, count, up, count, nil, COMPRESSION_ZLIB)
             guard destBytes != 0 else { return nil } // Error, or not enough size.
             return Data(bytes: destBuffer, count: destBytes)
-#endif
+//#endif
         }
     }
 }

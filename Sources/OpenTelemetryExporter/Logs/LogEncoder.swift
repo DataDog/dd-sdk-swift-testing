@@ -42,6 +42,7 @@ internal struct DDLog: Encodable {
     let applicationVersion: String
     let attributes: LogAttributes
     let tags: [String]?
+    let hostname: String = ProcessInfo.processInfo.hostName
 
     func encode(to encoder: Encoder) throws {
         let sanitizedLog = LogSanitizer().sanitize(log: self)
@@ -115,6 +116,7 @@ internal struct LogEncoder {
         case message
         case serviceName = "service"
         case tags = "ddtags"
+        case hostname
 
         // MARK: - Application info
 
@@ -142,6 +144,7 @@ internal struct LogEncoder {
         try container.encode(log.status, forKey: .status)
         try container.encode(log.message, forKey: .message)
         try container.encode(log.serviceName, forKey: .serviceName)
+        try container.encode(log.hostname, forKey: .hostname)
 
         // Encode logger info
         try container.encode(log.loggerName, forKey: .loggerName)

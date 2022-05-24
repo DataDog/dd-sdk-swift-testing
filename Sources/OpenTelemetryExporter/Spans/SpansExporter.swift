@@ -23,11 +23,7 @@ internal class SpansExporter {
         )
 
         let genericMetadata = """
-        "*": {
-        "runtime-id": "\(UUID().uuidString)",
-        "language": "swift",
-        "env": "\(configuration.environment)"
-        }
+        "*": { "env": "\(configuration.environment)", "runtime-id": "\(UUID().uuidString)", "language": "swift", "library_version": "\(configuration.libraryVersion)"}
         """
 
         let prefix = """

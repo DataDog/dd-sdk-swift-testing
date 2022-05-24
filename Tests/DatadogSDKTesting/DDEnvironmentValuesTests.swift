@@ -56,7 +56,7 @@ class DDEnvironmentValuesTests: XCTestCase {
     }
 
     func testWhenDatadogSettingsAreSetInEnvironment_TheyAreStoredCorrectly() {
-        testEnvironment["DD_API_KEY"] = "token5a101f16"
+        testEnvironment[ConfigurationValues.DD_API_KEY.rawValue] = "token5a101f16"
         testEnvironment["DD_SERVICE"] = "testService"
         testEnvironment["DD_ENV"] = "testEnv"
 
@@ -69,7 +69,7 @@ class DDEnvironmentValuesTests: XCTestCase {
     }
 
     func testWhenDatadogSettingsAreSetInInfoPlist_TheyAreStoredCorrectly() {
-        testInfoDictionary["DD_API_KEY"] = "token5a101f16"
+        testInfoDictionary[ConfigurationValues.DD_API_KEY.rawValue] = "token5a101f16"
         testInfoDictionary["DD_SERVICE"] = "testService"
         testInfoDictionary["DD_ENV"] = "testEnv"
 
@@ -82,12 +82,12 @@ class DDEnvironmentValuesTests: XCTestCase {
     }
 
     func testWhenDatadogSettingsAreSetInEnvironmentAndPlist_EnvironmentTakesPrecedence() {
-        testEnvironment["DD_API_KEY"] = "token5a101f16"
+        testEnvironment[ConfigurationValues.DD_API_KEY.rawValue] = "token5a101f16"
         testEnvironment["DD_SERVICE"] = "testService"
         testEnvironment["DD_ENV"] = "testEnv"
         setEnvVariables()
 
-        testInfoDictionary["DD_API_KEY"] = "token5a101f162"
+        testInfoDictionary[ConfigurationValues.DD_API_KEY.rawValue] = "token5a101f162"
         testInfoDictionary["DD_SERVICE"] = "testService2"
         testInfoDictionary["DD_ENV"] = "testEnv2"
         setInfoDictionary()

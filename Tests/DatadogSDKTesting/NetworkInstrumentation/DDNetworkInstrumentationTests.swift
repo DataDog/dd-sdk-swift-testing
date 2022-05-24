@@ -15,8 +15,8 @@ class DDNetworkInstrumentationTests: XCTestCase {
 
     override func setUp() {
         XCTAssertNil(DDTracer.activeSpan)
-        DDEnvironmentValues.environment["DD_API_KEY"] = "fakeToken"
-        DDEnvironmentValues.environment["DD_DISABLE_TEST_INSTRUMENTING"] = "1"
+        DDEnvironmentValues.environment[ConfigurationValues.DD_API_KEY.rawValue] = "fakeToken"
+        DDEnvironmentValues.environment[ConfigurationValues.DD_DISABLE_TEST_INSTRUMENTING.rawValue] = "1"
         DDTestMonitor.env = DDEnvironmentValues()
         DDTestMonitor.instance = DDTestMonitor()
         let tracer = DDTestMonitor.tracer

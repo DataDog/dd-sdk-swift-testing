@@ -161,15 +161,18 @@ public class DDTest: NSObject {
     static let supportsSkipping = NSClassFromString("XCTSkippedTestContext") != nil
     var currentTestExecutionOrder: Int
     var initialProcessId = Int(ProcessInfo.processInfo.processIdentifier)
-    let name: String
+
+    var name: String
     var span: Span
 
     var session: DDTestSession
+    var suite: DDTestSuite
 
     private var errorInfo: ErrorInfo?
 
     init(name: String, suite: DDTestSuite, session: DDTestSession, startTime: Date? = nil) {
         self.name = name
+        self.suite = suite
         self.session = session
 
         currentTestExecutionOrder = session.currentExecutionOrder
@@ -192,7 +195,6 @@ public class DDTest: NSObject {
             DDDeviceTags.deviceModel: DDTestMonitor.env.deviceModel,
             DDRuntimeTags.runtimeName: DDTestMonitor.env.runtimeName,
             DDRuntimeTags.runtimeVersion: DDTestMonitor.env.runtimeVersion,
-            DDGenericTags.library_version: DDTestObserver.tracerVersion,
         ]
 
         span = DDTestMonitor.tracer.startSpan(name: "\(session.testFramework).test", attributes: attributes, startTime: startTime)

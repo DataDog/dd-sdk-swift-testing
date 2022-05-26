@@ -131,6 +131,9 @@ internal struct DDEnvironmentValues {
 
     static let environmentCharset = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_")
 
+    static var gitAttributes = [String: String]()
+    static var ciAttributes = [String: String]()
+
     init() {
         /// Datatog configuration values
         var apiKey = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_API_KEY.rawValue)
@@ -570,6 +573,45 @@ internal struct DDEnvironmentValues {
         if commit == nil || repository == nil || (branch == nil && tag == nil) {
             Log.print("Please check: https://docs.datadoghq.com/continuous_integration/troubleshooting")
         }
+
+        initGitAttributes()
+        initCiAttributes()
+    }
+
+    func initGitAttributes() {
+        var attributes = [String: String]()
+        let disableGit = (DDEnvironmentValues.getEnvVariable("DD_DISABLE_GIT_INFORMATION") as NSString?)?.boolValue ?? false
+        guard !disableGit else {
+            return
+        }
+        attributes[DDGitTags.gitRepository] = repository
+        attributes[DDGitTags.gitCommit] = commit
+        attributes[DDGitTags.gitBranch] = branch
+        attributes[DDGitTags.gitTag] = tag
+        attributes[DDGitTags.gitCommitMessage] = commitMessage
+        attributes[DDGitTags.gitAuthorName] = authorName
+        attributes[DDGitTags.gitAuthorEmail] = authorEmail
+        attributes[DDGitTags.gitAuthorDate] = authorDate
+        attributes[DDGitTags.gitCommitterName] = committerName
+        attributes[DDGitTags.gitCommitterEmail] = committerEmail
+        attributes[DDGitTags.gitCommitterDate] = committerDate
+        DDEnvironmentValues.gitAttributes = attributes
+    }
+
+    func initCiAttributes() {
+        var attributes = [String: String]()
+        guard isCi else {
+            return
+        }
+        attributes[DDCITags.ciProvider] = provider
+        attributes[DDCITags.ciPipelineId] = pipelineId
+        attributes[DDCITags.ciPipelineNumber] = pipelineNumber
+        attributes[DDCITags.ciPipelineURL] = pipelineURL
+        attributes[DDCITags.ciPipelineName] = pipelineName
+        attributes[DDCITags.ciStageName] = stageName
+        attributes[DDCITags.ciJobName] = jobName
+        attributes[DDCITags.ciJobURL] = jobURL
+        DDEnvironmentValues.ciAttributes = attributes
     }
 
     func addTagsToSpan(span: Span) {
@@ -595,34 +637,16 @@ internal struct DDEnvironmentValues {
 
         setAttributeIfExist(toSpan: span, key: DDCITags.ciWorkspacePath, value: workspacePath)
 
-        let disableGit = (DDEnvironmentValues.getEnvVariable("DD_DISABLE_GIT_INFORMATION") as NSString?)?.boolValue ?? false
-        if !disableGit {
-            setAttributeIfExist(toSpan: span, key: DDGitTags.gitRepository, value: repository)
-            setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommit, value: commit)
-            setAttributeIfExist(toSpan: span, key: DDGitTags.gitBranch, value: branch)
-            setAttributeIfExist(toSpan: span, key: DDGitTags.gitTag, value: tag)
-
-            setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommitMessage, value: commitMessage)
-            setAttributeIfExist(toSpan: span, key: DDGitTags.gitAuthorName, value: authorName)
-            setAttributeIfExist(toSpan: span, key: DDGitTags.gitAuthorEmail, value: authorEmail)
-            setAttributeIfExist(toSpan: span, key: DDGitTags.gitAuthorDate, value: authorDate)
-            setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommitterName, value: committerName)
-            setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommitterEmail, value: committerEmail)
-            setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommitterDate, value: committerDate)
+        DDEnvironmentValues.gitAttributes.forEach {
+            span.setAttribute(key: $0.key, value: $0.value)
         }
 
+        DDEnvironmentValues.ciAttributes.forEach {
+            span.setAttribute(key: $0.key, value: $0.value)
+        }
         if !isCi {
             return
         }
-
-        setAttributeIfExist(toSpan: span, key: DDCITags.ciProvider, value: provider ?? "local development")
-        setAttributeIfExist(toSpan: span, key: DDCITags.ciPipelineId, value: pipelineId)
-        setAttributeIfExist(toSpan: span, key: DDCITags.ciPipelineNumber, value: pipelineNumber)
-        setAttributeIfExist(toSpan: span, key: DDCITags.ciPipelineURL, value: pipelineURL)
-        setAttributeIfExist(toSpan: span, key: DDCITags.ciPipelineName, value: pipelineName)
-        setAttributeIfExist(toSpan: span, key: DDCITags.ciStageName, value: stageName)
-        setAttributeIfExist(toSpan: span, key: DDCITags.ciJobName, value: jobName)
-        setAttributeIfExist(toSpan: span, key: DDCITags.ciJobURL, value: jobURL)
     }
 
     private func setAttributeIfExist(toSpan span: Span, key: String, value: String?) {

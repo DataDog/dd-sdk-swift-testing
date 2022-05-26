@@ -9,8 +9,8 @@ import OpenTelemetrySdk
 
 public class OpenTelemetryExporter: SpanExporter {
     let configuration: ExporterConfiguration
-    var spansExporter: SpansExporter?
-    var logsExporter: LogsExporter?
+    var spansExporter: SpansExporter
+    var logsExporter: LogsExporter
 
     public init(config: ExporterConfiguration) throws {
         self.configuration = config
@@ -21,21 +21,29 @@ public class OpenTelemetryExporter: SpanExporter {
     public func export(spans: [SpanData]) -> SpanExporterResultCode {
         spans.forEach {
             if $0.traceFlags.sampled {
-                spansExporter?.exportSpan(span: $0)
+                spansExporter.exportSpan(span: $0)
             }
             if $0.traceFlags.sampled {
-                logsExporter?.exportLogs(fromSpan: $0)
+                logsExporter.exportLogs(fromSpan: $0)
             }
         }
         return .success
     }
 
-    public func flush() -> SpanExporterResultCode {
-        spansExporter?.spansStorage.writer.queue.sync {}
-        logsExporter?.logsStorage.writer.queue.sync {}
+    public func exportEvent<T: Encodable>(event: T) {
+        if configuration.performancePreset.synchronousWrite {
+            spansExporter.spansStorage.writer.writeSync(value: event)
+        } else {
+            spansExporter.spansStorage.writer.write(value: event)
+        }
+    }
 
-        _ = logsExporter?.logsUpload.uploader.flush()
-        _ = spansExporter?.spansUpload.uploader.flush()
+    public func flush() -> SpanExporterResultCode {
+        spansExporter.spansStorage.writer.queue.sync {}
+        logsExporter.logsStorage.writer.queue.sync {}
+
+        _ = logsExporter.logsUpload.uploader.flush()
+        _ = spansExporter.spansUpload.uploader.flush()
         return .success
     }
 

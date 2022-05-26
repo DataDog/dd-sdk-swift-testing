@@ -16,6 +16,7 @@
 
 internal class DDTestMonitor {
     static var instance: DDTestMonitor?
+    static var clock = NTPClock()
 
     static let defaultPayloadSize = 1024
 
@@ -162,33 +163,33 @@ internal class DDTestMonitor {
     }
 
     func startAttributeListener() {
-            func attributeCallback(port: CFMessagePort?, msgid: Int32, data: CFData?, info: UnsafeMutableRawPointer?) -> Unmanaged<CFData>? {
-                switch msgid {
-                    case DDCFMessageID.setCustomTags:
-                        if let data = data as Data? {
-                            let decoded = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
-                            decoded?.forEach {
-                                DDTestMonitor.instance?.currentTest?.setTag(key: $0.key, value: $0.value)
-                            }
+        func attributeCallback(port: CFMessagePort?, msgid: Int32, data: CFData?, info: UnsafeMutableRawPointer?) -> Unmanaged<CFData>? {
+            switch msgid {
+                case DDCFMessageID.setCustomTags:
+                    if let data = data as Data? {
+                        let decoded = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
+                        decoded?.forEach {
+                            DDTestMonitor.instance?.currentTest?.setTag(key: $0.key, value: $0.value)
                         }
-                    case DDCFMessageID.enableRUM:
-                        DDTestMonitor.instance?.isRumActive = true
-                        DDTestMonitor.instance?.currentTest?.setTag(key: DDTestTags.testIsRUMActive, value: String("true"))
-                    case DDCFMessageID.forceFlush:
-                        Log.debug("CFMessagePort forceFlush")
-                    default:
-                        Log.debug("CFMessagePort unknown message")
-                }
-
-                return nil
+                    }
+                case DDCFMessageID.enableRUM:
+                    DDTestMonitor.instance?.isRumActive = true
+                    DDTestMonitor.instance?.currentTest?.setTag(key: DDTestTags.testIsRUMActive, value: String("true"))
+                case DDCFMessageID.forceFlush:
+                    Log.debug("CFMessagePort forceFlush")
+                default:
+                    Log.debug("CFMessagePort unknown message")
             }
 
-            let port = CFMessagePortCreateLocal(nil, "DatadogTestingPort" as CFString, attributeCallback, nil, nil)
-            if port == nil {
-                Log.debug("DatadogTestingPort CFMessagePortCreateLocal failed")
-                return
-            }
-            let runLoopSource = CFMessagePortCreateRunLoopSource(nil, port, 0)
-            CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, CFRunLoopMode.commonModes)
+            return nil
+        }
+
+        let port = CFMessagePortCreateLocal(nil, "DatadogTestingPort" as CFString, attributeCallback, nil, nil)
+        if port == nil {
+            Log.debug("DatadogTestingPort CFMessagePortCreateLocal failed")
+            return
+        }
+        let runLoopSource = CFMessagePortCreateRunLoopSource(nil, port, 0)
+        CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, CFRunLoopMode.commonModes)
     }
 }

@@ -12,7 +12,6 @@ internal enum Constants {
     static let ddsource = "ios"
 }
 
-/// `SpanEnvelope` allows encoding multiple spans sharing the same `traceID` to a single payload.
 internal struct CITestEnvelope: Encodable {
     enum CodingKeys: String, CodingKey {
         case spanType = "type"

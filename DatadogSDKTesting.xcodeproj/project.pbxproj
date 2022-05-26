@@ -334,6 +334,12 @@
 		E171DC92270DBCAB00A12B79 /* DDTestSessionApiTests.m in Sources */ = {isa = PBXBuildFile; fileRef = E171DC91270DBCAB00A12B79 /* DDTestSessionApiTests.m */; };
 		E171DC93270DBCAB00A12B79 /* DDTestSessionApiTests.m in Sources */ = {isa = PBXBuildFile; fileRef = E171DC91270DBCAB00A12B79 /* DDTestSessionApiTests.m */; };
 		E171DC94270DBCAB00A12B79 /* DDTestSessionApiTests.m in Sources */ = {isa = PBXBuildFile; fileRef = E171DC91270DBCAB00A12B79 /* DDTestSessionApiTests.m */; };
+		E1743F4E283E7E3E006CBFF8 /* DDTestSuite.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1743F4C283E7D9E006CBFF8 /* DDTestSuite.swift */; };
+		E1743F4F283E7E3E006CBFF8 /* DDTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1743F4D283E7DAE006CBFF8 /* DDTest.swift */; };
+		E1743F50283E7E40006CBFF8 /* DDTestSuite.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1743F4C283E7D9E006CBFF8 /* DDTestSuite.swift */; };
+		E1743F51283E7E40006CBFF8 /* DDTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1743F4D283E7DAE006CBFF8 /* DDTest.swift */; };
+		E1743F52283E7E41006CBFF8 /* DDTestSuite.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1743F4C283E7D9E006CBFF8 /* DDTestSuite.swift */; };
+		E1743F53283E7E41006CBFF8 /* DDTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1743F4D283E7DAE006CBFF8 /* DDTest.swift */; };
 		E1798CC62524B9BD008DEBB9 /* DDTracer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1798CC52524B9BD008DEBB9 /* DDTracer.swift */; };
 		E17B7AA8253F02580081D7F3 /* SigmaSwiftStatistics in Frameworks */ = {isa = PBXBuildFile; productRef = E17B7AA7253F02580081D7F3 /* SigmaSwiftStatistics */; };
 		E18C35F027EDD47500E0BC08 /* NTPServer.h in Headers */ = {isa = PBXBuildFile; fileRef = E13B5F3627ECD08B006F8E2D /* NTPServer.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -784,6 +790,8 @@
 		E1665A7225D12D7500BA53CD /* Spawn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spawn.swift; sourceTree = "<group>"; };
 		E1665A8025D13BBB00BA53CD /* DDSymbolicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDSymbolicator.swift; sourceTree = "<group>"; };
 		E171DC91270DBCAB00A12B79 /* DDTestSessionApiTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DDTestSessionApiTests.m; sourceTree = "<group>"; };
+		E1743F4C283E7D9E006CBFF8 /* DDTestSuite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTestSuite.swift; sourceTree = "<group>"; };
+		E1743F4D283E7DAE006CBFF8 /* DDTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTest.swift; sourceTree = "<group>"; };
 		E1798CC52524B9BD008DEBB9 /* DDTracer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTracer.swift; sourceTree = "<group>"; };
 		E17B7AA5253F010C0081D7F3 /* LICENSE-3rdparty.csv */ = {isa = PBXFileReference; lastKnownFileType = text; path = "LICENSE-3rdparty.csv"; sourceTree = "<group>"; };
 		E18F2169278C980800F77910 /* IntegrationTests (macOS)Debug.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "IntegrationTests (macOS)Debug.entitlements"; sourceTree = "<group>"; };
@@ -1538,6 +1546,8 @@
 				E1ABA07325231F4700ED8AEF /* DDEnvironmentValues.swift */,
 				E158E2DB25471DA000DBCD6C /* DDInstrumentationControl.swift */,
 				E10034D92703599D00439C9C /* DDTestSession.swift */,
+				E1743F4C283E7D9E006CBFF8 /* DDTestSuite.swift */,
+				E1743F4D283E7DAE006CBFF8 /* DDTest.swift */,
 				E1ABA07025231F4700ED8AEF /* DDTestObserver.swift */,
 				E1ABA07125231F4700ED8AEF /* DDTags.swift */,
 				E1ABA08A252341EA00ED8AEF /* DDTestMonitor.swift */,
@@ -2532,7 +2542,9 @@
 				E10A7E17280701CA00B464C9 /* Subprocess.c in Sources */,
 				E1665A8225D13BBB00BA53CD /* DDSymbolicator.swift in Sources */,
 				E1550C46274F7FF700006F11 /* NTPClock.swift in Sources */,
+				E1743F50283E7E40006CBFF8 /* DDTestSuite.swift in Sources */,
 				E1A63F5D26789915002F48FA /* CodeOwners.swift in Sources */,
+				E1743F51283E7E40006CBFF8 /* DDTest.swift in Sources */,
 				E157A724256E9D1D00CBCA52 /* DDTestMonitor.swift in Sources */,
 				E14405A725D6AA9500FE3D3C /* GitInfo.swift in Sources */,
 				E157A725256E9D1D00CBCA52 /* DDEnvironmentValues.swift in Sources */,
@@ -2571,7 +2583,9 @@
 				E10A7E18280701CA00B464C9 /* Subprocess.c in Sources */,
 				E1665A8125D13BBB00BA53CD /* DDSymbolicator.swift in Sources */,
 				E1550C47274F7FF700006F11 /* NTPClock.swift in Sources */,
+				E1743F52283E7E41006CBFF8 /* DDTestSuite.swift in Sources */,
 				E1A63F5E26789915002F48FA /* CodeOwners.swift in Sources */,
+				E1743F53283E7E41006CBFF8 /* DDTest.swift in Sources */,
 				E157A75C256E9D3300CBCA52 /* DDTestMonitor.swift in Sources */,
 				E14405A825D6AA9600FE3D3C /* GitInfo.swift in Sources */,
 				E157A75D256E9D3300CBCA52 /* DDEnvironmentValues.swift in Sources */,
@@ -2720,7 +2734,9 @@
 				E10A7E16280701CA00B464C9 /* Subprocess.c in Sources */,
 				E1D6EFA525F6647F00E8C3AE /* LibraryInitializer.m in Sources */,
 				E1550C45274F7FF700006F11 /* NTPClock.swift in Sources */,
+				E1743F4E283E7E3E006CBFF8 /* DDTestSuite.swift in Sources */,
 				E1A63F5C26789915002F48FA /* CodeOwners.swift in Sources */,
+				E1743F4F283E7E3E006CBFF8 /* DDTest.swift in Sources */,
 				E1665A8525D1524100BA53CD /* DDSymbolicator.swift in Sources */,
 				E1ABA08B252341EA00ED8AEF /* DDTestMonitor.swift in Sources */,
 				E14405A625D6AA9500FE3D3C /* GitInfo.swift in Sources */,

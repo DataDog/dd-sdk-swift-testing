@@ -75,6 +75,11 @@ internal enum DDRuntimeTags {
     static let runtimeVersion = "runtime.version"
 }
 
+internal enum DDTestSessionTags {
+    static let testSessionId = "_dd.ci.parent_test_session_id"
+    static let testSuiteId = "_dd.ci.parent_test_suite_id"
+}
+
 internal enum DDGitTags {
     static let gitRepository = "git.repository_url"
     static let gitBranch = "git.branch"

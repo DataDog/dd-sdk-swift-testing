@@ -37,11 +37,17 @@ class DDTestObserver: NSObject, XCTestObservation {
     }
 
     func testSuiteWillStart(_ testSuite: XCTestSuite) {
-        suite = session?.suiteStart(name: testSuite.name)
+        if let tests = testSuite.value(forKey: "_mutableTests") as? NSArray,
+           tests.firstObject is XCTestCase {
+            suite = session?.suiteStart(name: testSuite.name)
+        }
     }
 
     func testSuiteDidFinish(_ testSuite: XCTestSuite) {
-        suite?.end()
+        if let tests = testSuite.value(forKey: "_mutableTests") as? NSArray,
+           tests.firstObject is XCTestCase {
+            suite?.end()
+        }
     }
 
     func testCaseWillStart(_ testCase: XCTestCase) {
@@ -52,7 +58,6 @@ class DDTestObserver: NSObject, XCTestObservation {
             return
         }
         let testName = String(testCase.name[nameRange])
-
         test = suite.testStart(name: testName)
     }
 

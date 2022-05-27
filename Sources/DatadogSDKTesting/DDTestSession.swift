@@ -21,7 +21,7 @@ public class DDTestSession: NSObject, Encodable {
     let id: SpanId
     let command: String
     let startTime: Date
-    var duration: TimeInterval
+    var duration: UInt64
     var attributes: [String: String] = [:]
     var status: String = "pass"
 
@@ -61,7 +61,7 @@ public class DDTestSession: NSObject, Encodable {
     }
 
     func internalEnd(endTime: Date? = nil) {
-        duration = (endTime ?? DDTestMonitor.clock.now).timeIntervalSince(startTime)
+        duration = (endTime ?? DDTestMonitor.clock.now).timeIntervalSince(startTime).toNanoseconds
         /// Export session event
         attributes["env"] = DDTestMonitor.env.ddEnvironment ?? (DDTestMonitor.env.isCi ? "ci" : "none")
         attributes["test_session.status"] = status
@@ -131,7 +131,7 @@ extension DDTestSession {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: StaticCodingKeys.self)
         try container.encode(id.rawValue, forKey: .test_session_id)
-        try container.encode(startTime.timeIntervalSince1970, forKey: .start)
+        try container.encode(startTime.timeIntervalSince1970.toNanoseconds, forKey: .start)
         try container.encode(duration, forKey: .duration)
         try container.encode(attributes, forKey: .attributes)
     }

@@ -21,6 +21,7 @@ internal class DDTestObserverTests: XCTestCase {
         DDTestMonitor.env = DDEnvironmentValues()
         testObserver = DDTestObserver()
         testObserver.startObserving()
+        theSuite.setValue([self], forKey: "_mutableTests")
     }
 
     override func tearDown() {

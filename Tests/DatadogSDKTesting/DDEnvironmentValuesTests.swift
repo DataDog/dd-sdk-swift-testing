@@ -40,6 +40,8 @@ class DDEnvironmentValuesTests: XCTestCase {
         DDEnvironmentValues.environment = previousEnvironment
         DDEnvironmentValues.infoDictionary = previousInfoDictionary
         XCTAssertNil(DDTracer.activeSpan)
+        DDEnvironmentValues.gitAttributes = [String: String]()
+        DDEnvironmentValues.ciAttributes = [String: String]()
     }
 
     private func setEnvVariables() {

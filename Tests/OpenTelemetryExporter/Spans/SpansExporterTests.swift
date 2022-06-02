@@ -39,6 +39,7 @@ class SpansExporterTests: XCTestCase {
         }
 
         let configuration = ExporterConfiguration(serviceName: "serviceName",
+                                                  libraryVersion: "0.0",
                                                   applicationName: "applicationName",
                                                   applicationVersion: "applicationVersion",
                                                   environment: "environment",

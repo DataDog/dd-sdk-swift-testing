@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "E157A74F256E9D3300CBCA52"
-               BuildableName = "DatadogSDKTesting.framework"
-               BlueprintName = "DatadogSDKTesting_tvOS"
+               BlueprintIdentifier = "E1DCAF2E284A1F0D00F44BE3"
+               BuildableName = "EventsExporter.framework"
+               BlueprintName = "EventsExporter_iOS"
                ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -26,55 +26,15 @@
       buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      shouldUseLaunchSchemeArgsEnv = "NO"
-      enableThreadSanitizer = "YES"
-      codeCoverageEnabled = "YES"
-      onlyGenerateCoverageForSpecifiedTargets = "YES">
-      <MacroExpansion>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "E157A74F256E9D3300CBCA52"
-            BuildableName = "DatadogSDKTesting.framework"
-            BlueprintName = "DatadogSDKTesting_tvOS"
-            ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
-         </BuildableReference>
-      </MacroExpansion>
-      <EnvironmentVariables>
-         <EnvironmentVariable
-            key = "DD_DONT_EXPORT"
-            value = "1"
-            isEnabled = "YES">
-         </EnvironmentVariable>
-         <EnvironmentVariable
-            key = "SRCROOT"
-            value = "$(SRCROOT)"
-            isEnabled = "YES">
-         </EnvironmentVariable>
-      </EnvironmentVariables>
-      <CodeCoverageTargets>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "E157A74F256E9D3300CBCA52"
-            BuildableName = "DatadogSDKTesting.framework"
-            BlueprintName = "DatadogSDKTesting_tvOS"
-            ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
-         </BuildableReference>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "E143CEF027D778AC00F4018A"
-            BuildableName = "libOpenTelemetryExporter.a"
-            BlueprintName = "OpenTelemetryExporter_tvOS"
-            ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
-         </BuildableReference>
-      </CodeCoverageTargets>
+      shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
          <TestableReference
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "E157A7A5256EB0F200CBCA52"
-               BuildableName = "DatadogSDKTestingTests_tvOS.xctest"
-               BlueprintName = "DatadogSDKTestingTests_tvOS"
+               BlueprintIdentifier = "E1DCAF35284A1F0D00F44BE3"
+               BuildableName = "EventsExporter_iOSTests.xctest"
+               BlueprintName = "EventsExporter_iOSTests"
                ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -100,9 +60,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "E157A74F256E9D3300CBCA52"
-            BuildableName = "DatadogSDKTesting.framework"
-            BlueprintName = "DatadogSDKTesting_tvOS"
+            BlueprintIdentifier = "E1DCAF2E284A1F0D00F44BE3"
+            BuildableName = "EventsExporter.framework"
+            BlueprintName = "EventsExporter_iOS"
             ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

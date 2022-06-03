@@ -10,9 +10,6 @@
 		E10034DC27035A7700439C9C /* DDTestSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10034D92703599D00439C9C /* DDTestSession.swift */; };
 		E10034DE27035A7800439C9C /* DDTestSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10034D92703599D00439C9C /* DDTestSession.swift */; };
 		E10034E027035A7900439C9C /* DDTestSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10034D92703599D00439C9C /* DDTestSession.swift */; };
-		E10A7E0E2806D69000B464C9 /* LLVMCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10A7E0D2806D68F00B464C9 /* LLVMCoverageFormat.swift */; };
-		E10A7E0F2806D69000B464C9 /* LLVMCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10A7E0D2806D68F00B464C9 /* LLVMCoverageFormat.swift */; };
-		E10A7E102806D69000B464C9 /* LLVMCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10A7E0D2806D68F00B464C9 /* LLVMCoverageFormat.swift */; };
 		E10A7E16280701CA00B464C9 /* Subprocess.c in Sources */ = {isa = PBXBuildFile; fileRef = E10A7E15280701CA00B464C9 /* Subprocess.c */; };
 		E10A7E17280701CA00B464C9 /* Subprocess.c in Sources */ = {isa = PBXBuildFile; fileRef = E10A7E15280701CA00B464C9 /* Subprocess.c */; };
 		E10A7E18280701CA00B464C9 /* Subprocess.c in Sources */ = {isa = PBXBuildFile; fileRef = E10A7E15280701CA00B464C9 /* Subprocess.c */; };
@@ -51,39 +48,13 @@
 		E1224A91264ADFC200305968 /* IntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1224A7D264AC06900305968 /* IntegrationTests.swift */; };
 		E1224A94264BCED700305968 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E157A74D256E9D1D00CBCA52 /* DatadogSDKTesting.framework */; };
 		E1224A96264D59E600305968 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1ABA04A25231E2500ED8AEF /* DatadogSDKTesting.framework */; };
-		E123D0C127D7B2C700B85B37 /* OpenTelemetrySdk in Frameworks */ = {isa = PBXBuildFile; productRef = E123D0C027D7B2C700B85B37 /* OpenTelemetrySdk */; };
-		E123D0C327D7B2DA00B85B37 /* OpenTelemetrySdk in Frameworks */ = {isa = PBXBuildFile; productRef = E123D0C227D7B2DA00B85B37 /* OpenTelemetrySdk */; };
 		E12515E5254892C600670D23 /* XCUIApplicationSwizzler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12515E4254892C500670D23 /* XCUIApplicationSwizzler.swift */; };
 		E126DD2D253F366200700A40 /* StdoutCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E126DD2C253F366200700A40 /* StdoutCapture.swift */; };
 		E126DD2F253F367600700A40 /* StderrCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E126DD2E253F367600700A40 /* StderrCapture.swift */; };
-		E12C5839280D809900A31763 /* DDCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12C5838280D809900A31763 /* DDCoverageFormat.swift */; };
-		E12C583A280D809900A31763 /* DDCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12C5838280D809900A31763 /* DDCoverageFormat.swift */; };
-		E12C583B280D809900A31763 /* DDCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12C5838280D809900A31763 /* DDCoverageFormat.swift */; };
-		E131592E281A7DDB00B29123 /* Error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E131592D281A7DDB00B29123 /* Error.cpp */; };
 		E1315930281A9CCA00B29123 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = E131592F281A9CB100B29123 /* libz.tbd */; };
 		E13BD580279AAFAE00105856 /* InternalError.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1AD07A8252F5CB8003705C1 /* InternalError.swift */; };
 		E13BD581279AAFAF00105856 /* InternalError.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1AD07A8252F5CB8003705C1 /* InternalError.swift */; };
 		E13D0BCA2546E29C00C37D56 /* SignalUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E13D0BC92546E29C00C37D56 /* SignalUtils.swift */; };
-		E13DB9A828241BD900409105 /* CoverageReport.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D784128182BDA00758E2A /* CoverageReport.cpp */; };
-		E13DB9A928241BD900409105 /* Error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E131592D281A7DDB00B29123 /* Error.cpp */; };
-		E13DB9AA28241BD900409105 /* CodeCoverage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D7848281838D200758E2A /* CodeCoverage.cpp */; };
-		E13DB9AB28241BD900409105 /* CoverageSummaryInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D78452818364A00758E2A /* CoverageSummaryInfo.cpp */; };
-		E13DB9AC28241BD900409105 /* CoverageSummaryInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = E15D78442818364A00758E2A /* CoverageSummaryInfo.h */; };
-		E13DB9AD28241BD900409105 /* CoverageReport.h in Headers */ = {isa = PBXBuildFile; fileRef = E15D784028182BDA00758E2A /* CoverageReport.h */; };
-		E13DB9AE28241BD900409105 /* LLVMCodeCoverageBridge.mm in Sources */ = {isa = PBXBuildFile; fileRef = E15D7851281972BA00758E2A /* LLVMCodeCoverageBridge.mm */; };
-		E13DB9AF28241BD900409105 /* CoverageExporter.h in Headers */ = {isa = PBXBuildFile; fileRef = E15D783D2818263600758E2A /* CoverageExporter.h */; };
-		E13DB9B028241BD900409105 /* CoverageExporterJson.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D78392818262500758E2A /* CoverageExporterJson.cpp */; };
-		E13DB9B128241BD900409105 /* LLVMCodeCoverageBridge.h in Headers */ = {isa = PBXBuildFile; fileRef = E15D7850281972BA00758E2A /* LLVMCodeCoverageBridge.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		E13DB9B228241BDB00409105 /* CoverageReport.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D784128182BDA00758E2A /* CoverageReport.cpp */; };
-		E13DB9B328241BDB00409105 /* Error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E131592D281A7DDB00B29123 /* Error.cpp */; };
-		E13DB9B428241BDB00409105 /* CodeCoverage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D7848281838D200758E2A /* CodeCoverage.cpp */; };
-		E13DB9B528241BDB00409105 /* CoverageSummaryInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D78452818364A00758E2A /* CoverageSummaryInfo.cpp */; };
-		E13DB9B628241BDB00409105 /* CoverageSummaryInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = E15D78442818364A00758E2A /* CoverageSummaryInfo.h */; };
-		E13DB9B728241BDB00409105 /* CoverageReport.h in Headers */ = {isa = PBXBuildFile; fileRef = E15D784028182BDA00758E2A /* CoverageReport.h */; };
-		E13DB9B828241BDB00409105 /* LLVMCodeCoverageBridge.mm in Sources */ = {isa = PBXBuildFile; fileRef = E15D7851281972BA00758E2A /* LLVMCodeCoverageBridge.mm */; };
-		E13DB9B928241BDB00409105 /* CoverageExporter.h in Headers */ = {isa = PBXBuildFile; fileRef = E15D783D2818263600758E2A /* CoverageExporter.h */; };
-		E13DB9BA28241BDB00409105 /* CoverageExporterJson.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D78392818262500758E2A /* CoverageExporterJson.cpp */; };
-		E13DB9BB28241BDB00409105 /* LLVMCodeCoverageBridge.h in Headers */ = {isa = PBXBuildFile; fileRef = E15D7850281972BA00758E2A /* LLVMCodeCoverageBridge.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E13DB9BE28241C2B00409105 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = E131592F281A9CB100B29123 /* libz.tbd */; };
 		E13DB9C028241C3700409105 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = E13DB9BF28241C3700409105 /* libz.tbd */; };
 		E141CF60256FD513008B6B70 /* PlatformUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141CF5F256FD513008B6B70 /* PlatformUtils.swift */; };
@@ -95,7 +66,7 @@
 		E141EB6327EB5E940057D747 /* NIOHTTP1 in Frameworks */ = {isa = PBXBuildFile; productRef = E141EB6227EB5E940057D747 /* NIOHTTP1 */; };
 		E141EB6427EB62E40057D747 /* JSONEncoderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAE027EB3B9E0057D747 /* JSONEncoderTests.swift */; };
 		E141EB6527EB62E40057D747 /* DataUploaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAFE27EB3B9E0057D747 /* DataUploaderTests.swift */; };
-		E141EB6627EB62E40057D747 /* OpenTelemetryExporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAE727EB3B9E0057D747 /* OpenTelemetryExporterTests.swift */; };
+		E141EB6627EB62E40057D747 /* EventsExporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAE727EB3B9E0057D747 /* EventsExporterTests.swift */; };
 		E141EB6727EB62E40057D747 /* ServerMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAF627EB3B9E0057D747 /* ServerMock.swift */; };
 		E141EB6827EB62E40057D747 /* Encoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAF027EB3B9E0057D747 /* Encoding.swift */; };
 		E141EB6927EB62E40057D747 /* DirectoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAEE27EB3B9E0057D747 /* DirectoryTests.swift */; };
@@ -124,7 +95,7 @@
 		E141EB8027EB62E40057D747 /* HTTPClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAFF27EB3B9E0057D747 /* HTTPClientTests.swift */; };
 		E141EB8127EB62E60057D747 /* JSONEncoderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAE027EB3B9E0057D747 /* JSONEncoderTests.swift */; };
 		E141EB8227EB62E60057D747 /* DataUploaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAFE27EB3B9E0057D747 /* DataUploaderTests.swift */; };
-		E141EB8327EB62E60057D747 /* OpenTelemetryExporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAE727EB3B9E0057D747 /* OpenTelemetryExporterTests.swift */; };
+		E141EB8327EB62E60057D747 /* EventsExporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAE727EB3B9E0057D747 /* EventsExporterTests.swift */; };
 		E141EB8427EB62E60057D747 /* ServerMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAF627EB3B9E0057D747 /* ServerMock.swift */; };
 		E141EB8527EB62E60057D747 /* Encoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAF027EB3B9E0057D747 /* Encoding.swift */; };
 		E141EB8627EB62E60057D747 /* DirectoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAEE27EB3B9E0057D747 /* DirectoryTests.swift */; };
@@ -153,7 +124,7 @@
 		E141EB9D27EB62E60057D747 /* HTTPClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAFF27EB3B9E0057D747 /* HTTPClientTests.swift */; };
 		E141EB9E27EB62E70057D747 /* JSONEncoderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAE027EB3B9E0057D747 /* JSONEncoderTests.swift */; };
 		E141EB9F27EB62E70057D747 /* DataUploaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAFE27EB3B9E0057D747 /* DataUploaderTests.swift */; };
-		E141EBA027EB62E70057D747 /* OpenTelemetryExporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAE727EB3B9E0057D747 /* OpenTelemetryExporterTests.swift */; };
+		E141EBA027EB62E70057D747 /* EventsExporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAE727EB3B9E0057D747 /* EventsExporterTests.swift */; };
 		E141EBA127EB62E70057D747 /* ServerMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAF627EB3B9E0057D747 /* ServerMock.swift */; };
 		E141EBA227EB62E70057D747 /* Encoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAF027EB3B9E0057D747 /* Encoding.swift */; };
 		E141EBA327EB62E70057D747 /* DirectoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAEE27EB3B9E0057D747 /* DirectoryTests.swift */; };
@@ -180,97 +151,6 @@
 		E141EBB827EB62E70057D747 /* FileTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAED27EB3B9E0057D747 /* FileTests.swift */; };
 		E141EBB927EB62E70057D747 /* DeviceMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAFA27EB3B9E0057D747 /* DeviceMock.swift */; };
 		E141EBBA27EB62E70057D747 /* HTTPClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAFF27EB3B9E0057D747 /* HTTPClientTests.swift */; };
-		E141EBBD27ECADC30057D747 /* OpenTelemetrySdk in Frameworks */ = {isa = PBXBuildFile; productRef = E141EBBC27ECADC30057D747 /* OpenTelemetrySdk */; };
-		E143CF2B27D7790300F4018A /* SpansExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CEFE27D7790200F4018A /* SpansExporter.swift */; };
-		E143CF2C27D7790300F4018A /* SpansExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CEFE27D7790200F4018A /* SpansExporter.swift */; };
-		E143CF2D27D7790300F4018A /* SpansExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CEFE27D7790200F4018A /* SpansExporter.swift */; };
-		E143CF2E27D7790300F4018A /* SpanEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CEFF27D7790200F4018A /* SpanEncoder.swift */; };
-		E143CF2F27D7790300F4018A /* SpanEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CEFF27D7790200F4018A /* SpanEncoder.swift */; };
-		E143CF3027D7790300F4018A /* SpanEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CEFF27D7790200F4018A /* SpanEncoder.swift */; };
-		E143CF3127D7790300F4018A /* PerformancePreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0127D7790200F4018A /* PerformancePreset.swift */; };
-		E143CF3227D7790300F4018A /* PerformancePreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0127D7790200F4018A /* PerformancePreset.swift */; };
-		E143CF3327D7790300F4018A /* PerformancePreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0127D7790200F4018A /* PerformancePreset.swift */; };
-		E143CF3427D7790300F4018A /* JSONEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0227D7790200F4018A /* JSONEncoder.swift */; };
-		E143CF3527D7790300F4018A /* JSONEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0227D7790200F4018A /* JSONEncoder.swift */; };
-		E143CF3627D7790300F4018A /* JSONEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0227D7790200F4018A /* JSONEncoder.swift */; };
-		E143CF3727D7790300F4018A /* Feature.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0327D7790200F4018A /* Feature.swift */; };
-		E143CF3827D7790300F4018A /* Feature.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0327D7790200F4018A /* Feature.swift */; };
-		E143CF3927D7790300F4018A /* Feature.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0327D7790200F4018A /* Feature.swift */; };
-		E143CF3A27D7790300F4018A /* DateProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0427D7790200F4018A /* DateProvider.swift */; };
-		E143CF3B27D7790300F4018A /* DateProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0427D7790200F4018A /* DateProvider.swift */; };
-		E143CF3C27D7790300F4018A /* DateProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0427D7790200F4018A /* DateProvider.swift */; };
-		E143CF3D27D7790300F4018A /* DateFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0527D7790200F4018A /* DateFormatting.swift */; };
-		E143CF3E27D7790300F4018A /* DateFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0527D7790200F4018A /* DateFormatting.swift */; };
-		E143CF3F27D7790300F4018A /* DateFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0527D7790200F4018A /* DateFormatting.swift */; };
-		E143CF4027D7790300F4018A /* EncodableValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0627D7790200F4018A /* EncodableValue.swift */; };
-		E143CF4127D7790300F4018A /* EncodableValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0627D7790200F4018A /* EncodableValue.swift */; };
-		E143CF4227D7790300F4018A /* EncodableValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0627D7790200F4018A /* EncodableValue.swift */; };
-		E143CF4327D7790300F4018A /* DataCompression.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0827D7790200F4018A /* DataCompression.swift */; };
-		E143CF4427D7790300F4018A /* DataCompression.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0827D7790200F4018A /* DataCompression.swift */; };
-		E143CF4527D7790300F4018A /* DataCompression.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0827D7790200F4018A /* DataCompression.swift */; };
-		E143CF4627D7790300F4018A /* Device.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0927D7790200F4018A /* Device.swift */; };
-		E143CF4727D7790300F4018A /* Device.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0927D7790200F4018A /* Device.swift */; };
-		E143CF4827D7790300F4018A /* Device.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0927D7790200F4018A /* Device.swift */; };
-		E143CF4927D7790300F4018A /* ExporterConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0C27D7790300F4018A /* ExporterConfiguration.swift */; };
-		E143CF4A27D7790300F4018A /* ExporterConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0C27D7790300F4018A /* ExporterConfiguration.swift */; };
-		E143CF4B27D7790300F4018A /* ExporterConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0C27D7790300F4018A /* ExporterConfiguration.swift */; };
-		E143CF4C27D7790300F4018A /* LogEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0E27D7790300F4018A /* LogEncoder.swift */; };
-		E143CF4D27D7790300F4018A /* LogEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0E27D7790300F4018A /* LogEncoder.swift */; };
-		E143CF4E27D7790300F4018A /* LogEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0E27D7790300F4018A /* LogEncoder.swift */; };
-		E143CF4F27D7790300F4018A /* LogSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0F27D7790300F4018A /* LogSanitizer.swift */; };
-		E143CF5027D7790300F4018A /* LogSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0F27D7790300F4018A /* LogSanitizer.swift */; };
-		E143CF5127D7790300F4018A /* LogSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0F27D7790300F4018A /* LogSanitizer.swift */; };
-		E143CF5227D7790300F4018A /* LogsExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1027D7790300F4018A /* LogsExporter.swift */; };
-		E143CF5327D7790300F4018A /* LogsExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1027D7790300F4018A /* LogsExporter.swift */; };
-		E143CF5427D7790300F4018A /* LogsExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1027D7790300F4018A /* LogsExporter.swift */; };
-		E143CF5527D7790300F4018A /* FileWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1227D7790300F4018A /* FileWriter.swift */; };
-		E143CF5627D7790300F4018A /* FileWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1227D7790300F4018A /* FileWriter.swift */; };
-		E143CF5727D7790300F4018A /* FileWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1227D7790300F4018A /* FileWriter.swift */; };
-		E143CF5827D7790300F4018A /* FilesOrchestrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1327D7790300F4018A /* FilesOrchestrator.swift */; };
-		E143CF5927D7790300F4018A /* FilesOrchestrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1327D7790300F4018A /* FilesOrchestrator.swift */; };
-		E143CF5A27D7790300F4018A /* FilesOrchestrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1327D7790300F4018A /* FilesOrchestrator.swift */; };
-		E143CF5B27D7790300F4018A /* DataFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1427D7790300F4018A /* DataFormat.swift */; };
-		E143CF5C27D7790300F4018A /* DataFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1427D7790300F4018A /* DataFormat.swift */; };
-		E143CF5D27D7790300F4018A /* DataFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1427D7790300F4018A /* DataFormat.swift */; };
-		E143CF5E27D7790300F4018A /* FileReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1527D7790300F4018A /* FileReader.swift */; };
-		E143CF5F27D7790300F4018A /* FileReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1527D7790300F4018A /* FileReader.swift */; };
-		E143CF6027D7790300F4018A /* FileReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1527D7790300F4018A /* FileReader.swift */; };
-		E143CF6127D7790300F4018A /* Directory.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1727D7790300F4018A /* Directory.swift */; };
-		E143CF6227D7790300F4018A /* Directory.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1727D7790300F4018A /* Directory.swift */; };
-		E143CF6327D7790300F4018A /* Directory.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1727D7790300F4018A /* Directory.swift */; };
-		E143CF6427D7790300F4018A /* File.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1827D7790300F4018A /* File.swift */; };
-		E143CF6527D7790300F4018A /* File.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1827D7790300F4018A /* File.swift */; };
-		E143CF6627D7790300F4018A /* File.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1827D7790300F4018A /* File.swift */; };
-		E143CF6727D7790300F4018A /* OpenTelemetryExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1927D7790300F4018A /* OpenTelemetryExporter.swift */; };
-		E143CF6827D7790300F4018A /* OpenTelemetryExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1927D7790300F4018A /* OpenTelemetryExporter.swift */; };
-		E143CF6927D7790300F4018A /* OpenTelemetryExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1927D7790300F4018A /* OpenTelemetryExporter.swift */; };
-		E143CF6A27D7790300F4018A /* RequestBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1B27D7790300F4018A /* RequestBuilder.swift */; };
-		E143CF6B27D7790300F4018A /* RequestBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1B27D7790300F4018A /* RequestBuilder.swift */; };
-		E143CF6C27D7790300F4018A /* RequestBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1B27D7790300F4018A /* RequestBuilder.swift */; };
-		E143CF6D27D7790300F4018A /* DataUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1C27D7790300F4018A /* DataUploader.swift */; };
-		E143CF6E27D7790300F4018A /* DataUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1C27D7790300F4018A /* DataUploader.swift */; };
-		E143CF6F27D7790300F4018A /* DataUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1C27D7790300F4018A /* DataUploader.swift */; };
-		E143CF7027D7790300F4018A /* DatadogEndpoints.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1D27D7790300F4018A /* DatadogEndpoints.swift */; };
-		E143CF7127D7790300F4018A /* DatadogEndpoints.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1D27D7790300F4018A /* DatadogEndpoints.swift */; };
-		E143CF7227D7790300F4018A /* DatadogEndpoints.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1D27D7790300F4018A /* DatadogEndpoints.swift */; };
-		E143CF7327D7790300F4018A /* DataUploadWorker.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1E27D7790300F4018A /* DataUploadWorker.swift */; };
-		E143CF7427D7790300F4018A /* DataUploadWorker.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1E27D7790300F4018A /* DataUploadWorker.swift */; };
-		E143CF7527D7790300F4018A /* DataUploadWorker.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1E27D7790300F4018A /* DataUploadWorker.swift */; };
-		E143CF7627D7790300F4018A /* HTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1F27D7790300F4018A /* HTTPClient.swift */; };
-		E143CF7727D7790300F4018A /* HTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1F27D7790300F4018A /* HTTPClient.swift */; };
-		E143CF7827D7790300F4018A /* HTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1F27D7790300F4018A /* HTTPClient.swift */; };
-		E143CF7927D7790300F4018A /* DataUploadDelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF2027D7790300F4018A /* DataUploadDelay.swift */; };
-		E143CF7A27D7790300F4018A /* DataUploadDelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF2027D7790300F4018A /* DataUploadDelay.swift */; };
-		E143CF7B27D7790300F4018A /* DataUploadDelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF2027D7790300F4018A /* DataUploadDelay.swift */; };
-		E143CF7C27D7790300F4018A /* DataUploadStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF2127D7790300F4018A /* DataUploadStatus.swift */; };
-		E143CF7D27D7790300F4018A /* DataUploadStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF2127D7790300F4018A /* DataUploadStatus.swift */; };
-		E143CF7E27D7790300F4018A /* DataUploadStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF2127D7790300F4018A /* DataUploadStatus.swift */; };
-		E143CF7F27D7791300F4018A /* libOpenTelemetryExporter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E143CED927D7786D00F4018A /* libOpenTelemetryExporter.a */; };
-		E143CF8227D7791B00F4018A /* libOpenTelemetryExporter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E143CEE427D7789300F4018A /* libOpenTelemetryExporter.a */; };
-		E143CF8527D7792100F4018A /* libOpenTelemetryExporter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E143CEF127D778AC00F4018A /* libOpenTelemetryExporter.a */; };
-		E143CF8A27D77E1900F4018A /* Atomics in Frameworks */ = {isa = PBXBuildFile; productRef = E143CF8927D77E1900F4018A /* Atomics */; };
-		E143CF8C27D77ED000F4018A /* Atomics in Frameworks */ = {isa = PBXBuildFile; productRef = E143CF8B27D77ED000F4018A /* Atomics */; };
-		E143CF8E27D77ED900F4018A /* Atomics in Frameworks */ = {isa = PBXBuildFile; productRef = E143CF8D27D77ED900F4018A /* Atomics */; };
 		E14405A625D6AA9500FE3D3C /* GitInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14405A225D6A80800FE3D3C /* GitInfo.swift */; };
 		E14405A725D6AA9500FE3D3C /* GitInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14405A225D6A80800FE3D3C /* GitInfo.swift */; };
 		E14405A825D6AA9600FE3D3C /* GitInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14405A225D6A80800FE3D3C /* GitInfo.swift */; };
@@ -355,22 +235,6 @@
 		E15AC987272031EC007327FA /* DatadogSDKTesting.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = E1ABA04A25231E2500ED8AEF /* DatadogSDKTesting.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		E15AC989272031F0007327FA /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E157A785256E9D3300CBCA52 /* DatadogSDKTesting.framework */; };
 		E15AC98A272031F0007327FA /* DatadogSDKTesting.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = E157A785256E9D3300CBCA52 /* DatadogSDKTesting.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		E15C79682722AD0500E9DBAD /* DDCoverageConversor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E15C79672722AD0500E9DBAD /* DDCoverageConversor.swift */; };
-		E15C79692722AD0500E9DBAD /* DDCoverageConversor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E15C79672722AD0500E9DBAD /* DDCoverageConversor.swift */; };
-		E15C796A2722AD0500E9DBAD /* DDCoverageConversor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E15C79672722AD0500E9DBAD /* DDCoverageConversor.swift */; };
-		E15D783C2818262500758E2A /* CoverageExporterJson.h in Headers */ = {isa = PBXBuildFile; fileRef = E15D783A2818262500758E2A /* CoverageExporterJson.h */; };
-		E15D783E2818263600758E2A /* CoverageExporter.h in Headers */ = {isa = PBXBuildFile; fileRef = E15D783D2818263600758E2A /* CoverageExporter.h */; };
-		E15D783F2818276800758E2A /* CoverageExporterJson.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D78392818262500758E2A /* CoverageExporterJson.cpp */; };
-		E15D784228182BDA00758E2A /* CoverageReport.h in Headers */ = {isa = PBXBuildFile; fileRef = E15D784028182BDA00758E2A /* CoverageReport.h */; };
-		E15D784328182BDA00758E2A /* CoverageReport.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D784128182BDA00758E2A /* CoverageReport.cpp */; };
-		E15D78462818364B00758E2A /* CoverageSummaryInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = E15D78442818364A00758E2A /* CoverageSummaryInfo.h */; };
-		E15D78472818364B00758E2A /* CoverageSummaryInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D78452818364A00758E2A /* CoverageSummaryInfo.cpp */; };
-		E15D7849281838D200758E2A /* CodeCoverage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D7848281838D200758E2A /* CodeCoverage.cpp */; };
-		E15D7852281972BA00758E2A /* LLVMCodeCoverageBridge.mm in Sources */ = {isa = PBXBuildFile; fileRef = E15D7851281972BA00758E2A /* LLVMCodeCoverageBridge.mm */; };
-		E15D78542819800700758E2A /* LLVMCodeCoverageBridge.h in Headers */ = {isa = PBXBuildFile; fileRef = E15D7850281972BA00758E2A /* LLVMCodeCoverageBridge.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		E1665A7325D12D7500BA53CD /* Spawn.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1665A7225D12D7500BA53CD /* Spawn.swift */; };
-		E1665A7425D12D7500BA53CD /* Spawn.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1665A7225D12D7500BA53CD /* Spawn.swift */; };
-		E1665A7525D12D7500BA53CD /* Spawn.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1665A7225D12D7500BA53CD /* Spawn.swift */; };
 		E1665A8125D13BBB00BA53CD /* DDSymbolicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1665A8025D13BBB00BA53CD /* DDSymbolicator.swift */; };
 		E1665A8225D13BBB00BA53CD /* DDSymbolicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1665A8025D13BBB00BA53CD /* DDSymbolicator.swift */; };
 		E1665A8525D1524100BA53CD /* DDSymbolicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1665A8025D13BBB00BA53CD /* DDSymbolicator.swift */; };
@@ -378,6 +242,9 @@
 		E171DC93270DBCAB00A12B79 /* DDTestSessionApiTests.m in Sources */ = {isa = PBXBuildFile; fileRef = E171DC91270DBCAB00A12B79 /* DDTestSessionApiTests.m */; };
 		E171DC94270DBCAB00A12B79 /* DDTestSessionApiTests.m in Sources */ = {isa = PBXBuildFile; fileRef = E171DC91270DBCAB00A12B79 /* DDTestSessionApiTests.m */; };
 		E172E96D271F069600CBA95C /* InternalError.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1AD07A8252F5CB8003705C1 /* InternalError.swift */; };
+		E1743F8128490DA8006CBFF8 /* DDCoverageHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C8DEF4268363EC005B5411 /* DDCoverageHelper.swift */; };
+		E1743F8228490DA9006CBFF8 /* DDCoverageHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C8DEF4268363EC005B5411 /* DDCoverageHelper.swift */; };
+		E1743F8328490DA9006CBFF8 /* DDCoverageHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C8DEF4268363EC005B5411 /* DDCoverageHelper.swift */; };
 		E1798CC62524B9BD008DEBB9 /* DDTracer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1798CC52524B9BD008DEBB9 /* DDTracer.swift */; };
 		E17B7AA8253F02580081D7F3 /* SigmaSwiftStatistics in Frameworks */ = {isa = PBXBuildFile; productRef = E17B7AA7253F02580081D7F3 /* SigmaSwiftStatistics */; };
 		E18C35F027EDD47500E0BC08 /* NTPServer.h in Headers */ = {isa = PBXBuildFile; fileRef = E13B5F3627ECD08B006F8E2D /* NTPServer.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -414,12 +281,9 @@
 		E1BE9B5E2732B2A300B92AD4 /* URLSessionInstrumentation in Frameworks */ = {isa = PBXBuildFile; productRef = E1BE9B5D2732B2A300B92AD4 /* URLSessionInstrumentation */; };
 		E1BE9B622732B2BA00B92AD4 /* InMemoryExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E1BE9B612732B2BA00B92AD4 /* InMemoryExporter */; };
 		E1BE9B642732B2BA00B92AD4 /* URLSessionInstrumentation in Frameworks */ = {isa = PBXBuildFile; productRef = E1BE9B632732B2BA00B92AD4 /* URLSessionInstrumentation */; };
-		E1C8DEF5268363EC005B5411 /* DDCoverageHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C8DEF4268363EC005B5411 /* DDCoverageHelper.swift */; };
 		E1C8DEF8268367AB005B5411 /* BinaryImages.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C8DEF7268367AB005B5411 /* BinaryImages.swift */; };
 		E1C8DEF9268367AB005B5411 /* BinaryImages.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C8DEF7268367AB005B5411 /* BinaryImages.swift */; };
 		E1C8DEFA268367AB005B5411 /* BinaryImages.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C8DEF7268367AB005B5411 /* BinaryImages.swift */; };
-		E1C8DEFB268372C3005B5411 /* DDCoverageHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C8DEF4268363EC005B5411 /* DDCoverageHelper.swift */; };
-		E1C8DEFC268372C4005B5411 /* DDCoverageHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C8DEF4268363EC005B5411 /* DDCoverageHelper.swift */; };
 		E1D476A625DD369F00832592 /* BinaryParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1D476A525DD369F00832592 /* BinaryParser.swift */; };
 		E1D476A725DD369F00832592 /* BinaryParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1D476A525DD369F00832592 /* BinaryParser.swift */; };
 		E1D476A825DD369F00832592 /* BinaryParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1D476A525DD369F00832592 /* BinaryParser.swift */; };
@@ -427,14 +291,149 @@
 		E1D6EFA325F6631E00E8C3AE /* DDSymbolAddress.h in Headers */ = {isa = PBXBuildFile; fileRef = E1D6EFA125F6563000E8C3AE /* DDSymbolAddress.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E1D6EFA425F6632B00E8C3AE /* DDSymbolAddress.h in Headers */ = {isa = PBXBuildFile; fileRef = E1D6EFA125F6563000E8C3AE /* DDSymbolAddress.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E1D6EFA525F6647F00E8C3AE /* LibraryInitializer.m in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA06C25231F3200ED8AEF /* LibraryInitializer.m */; };
+		E1DCAF3D284A1F0D00F44BE3 /* EventsExporter.h in Headers */ = {isa = PBXBuildFile; fileRef = E1DCAF31284A1F0D00F44BE3 /* EventsExporter.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		E1DCAF44284A1F4900F44BE3 /* CoverageSummaryInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D78452818364A00758E2A /* CoverageSummaryInfo.cpp */; };
+		E1DCAF45284A1F4900F44BE3 /* LLVMCodeCoverageBridge.mm in Sources */ = {isa = PBXBuildFile; fileRef = E15D7851281972BA00758E2A /* LLVMCodeCoverageBridge.mm */; };
+		E1DCAF46284A1F4900F44BE3 /* Error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E131592D281A7DDB00B29123 /* Error.cpp */; };
+		E1DCAF47284A1F4900F44BE3 /* CodeCoverage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D7848281838D200758E2A /* CodeCoverage.cpp */; };
+		E1DCAF48284A1F4900F44BE3 /* CoverageExporterJson.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D78392818262500758E2A /* CoverageExporterJson.cpp */; };
+		E1DCAF49284A1F4900F44BE3 /* LLVMCodeCoverageBridge.h in Headers */ = {isa = PBXBuildFile; fileRef = E15D7850281972BA00758E2A /* LLVMCodeCoverageBridge.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		E1DCAF4A284A1F4900F44BE3 /* CoverageReport.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D784128182BDA00758E2A /* CoverageReport.cpp */; };
+		E1DCAF4B284A1F4F00F44BE3 /* CoverageExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1743F5628490141006CBFF8 /* CoverageExporter.swift */; };
+		E1DCAF4C284A1F5500F44BE3 /* SpanEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CEFF27D7790200F4018A /* SpanEncoder.swift */; };
+		E1DCAF4D284A1F5500F44BE3 /* SpanSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EBBD4627F1FFE70059BC3E /* SpanSanitizer.swift */; };
+		E1DCAF4E284A1F5500F44BE3 /* SpansExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CEFE27D7790200F4018A /* SpansExporter.swift */; };
+		E1DCAF4F284A1F5B00F44BE3 /* Device.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0927D7790200F4018A /* Device.swift */; };
+		E1DCAF50284A1F5B00F44BE3 /* PerformancePreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0127D7790200F4018A /* PerformancePreset.swift */; };
+		E1DCAF51284A1F5B00F44BE3 /* JSONEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0227D7790200F4018A /* JSONEncoder.swift */; };
+		E1DCAF52284A1F5B00F44BE3 /* DateProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0427D7790200F4018A /* DateProvider.swift */; };
+		E1DCAF53284A1F5B00F44BE3 /* EncodableValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0627D7790200F4018A /* EncodableValue.swift */; };
+		E1DCAF54284A1F5B00F44BE3 /* DataCompression.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0827D7790200F4018A /* DataCompression.swift */; };
+		E1DCAF55284A1F5B00F44BE3 /* AttributesSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EBBD4A27F200210059BC3E /* AttributesSanitizer.swift */; };
+		E1DCAF56284A1F5B00F44BE3 /* Feature.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0327D7790200F4018A /* Feature.swift */; };
+		E1DCAF57284A1F5B00F44BE3 /* DateFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0527D7790200F4018A /* DateFormatting.swift */; };
+		E1DCAF58284A1F5E00F44BE3 /* ExporterConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0C27D7790300F4018A /* ExporterConfiguration.swift */; };
+		E1DCAF59284A1F6400F44BE3 /* LogEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0E27D7790300F4018A /* LogEncoder.swift */; };
+		E1DCAF5A284A1F6400F44BE3 /* LogSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0F27D7790300F4018A /* LogSanitizer.swift */; };
+		E1DCAF5B284A1F6400F44BE3 /* LogsExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1027D7790300F4018A /* LogsExporter.swift */; };
+		E1DCAF5C284A1F6900F44BE3 /* DataFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1427D7790300F4018A /* DataFormat.swift */; };
+		E1DCAF5D284A1F6900F44BE3 /* FileReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1527D7790300F4018A /* FileReader.swift */; };
+		E1DCAF5E284A1F6900F44BE3 /* FileWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1227D7790300F4018A /* FileWriter.swift */; };
+		E1DCAF5F284A1F6900F44BE3 /* FilesOrchestrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1327D7790300F4018A /* FilesOrchestrator.swift */; };
+		E1DCAF60284A1F6E00F44BE3 /* Directory.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1727D7790300F4018A /* Directory.swift */; };
+		E1DCAF61284A1F6E00F44BE3 /* File.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1827D7790300F4018A /* File.swift */; };
+		E1DCAF62284A1F8300F44BE3 /* EventsExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1927D7790300F4018A /* EventsExporter.swift */; };
+		E1DCAF63284A1F8900F44BE3 /* DataUploadDelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF2027D7790300F4018A /* DataUploadDelay.swift */; };
+		E1DCAF64284A1F8900F44BE3 /* DataUploadWorker.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1E27D7790300F4018A /* DataUploadWorker.swift */; };
+		E1DCAF65284A1F8900F44BE3 /* HTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1F27D7790300F4018A /* HTTPClient.swift */; };
+		E1DCAF66284A1F8900F44BE3 /* DatadogEndpoints.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1D27D7790300F4018A /* DatadogEndpoints.swift */; };
+		E1DCAF67284A1F8900F44BE3 /* DataUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1C27D7790300F4018A /* DataUploader.swift */; };
+		E1DCAF68284A1F8900F44BE3 /* RequestBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1B27D7790300F4018A /* RequestBuilder.swift */; };
+		E1DCAF69284A1F8900F44BE3 /* DataUploadStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF2127D7790300F4018A /* DataUploadStatus.swift */; };
+		E1DCAF6B284A1FE000F44BE3 /* OpenTelemetrySdk in Frameworks */ = {isa = PBXBuildFile; productRef = E1DCAF6A284A1FE000F44BE3 /* OpenTelemetrySdk */; };
+		E1DCAF6D284A1FE600F44BE3 /* Atomics in Frameworks */ = {isa = PBXBuildFile; productRef = E1DCAF6C284A1FE600F44BE3 /* Atomics */; };
+		E1DCAF6E284A200800F44BE3 /* LLVMCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10A7E0D2806D68F00B464C9 /* LLVMCoverageFormat.swift */; };
+		E1DCAF6F284A200800F44BE3 /* DDCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12C5838280D809900A31763 /* DDCoverageFormat.swift */; };
+		E1DCAF70284A200800F44BE3 /* DDCoverageConversor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E15C79672722AD0500E9DBAD /* DDCoverageConversor.swift */; };
+		E1DCAF72284A203100F44BE3 /* Spawn.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1665A7225D12D7500BA53CD /* Spawn.swift */; };
+		E1DCAF73284A219700F44BE3 /* LLVM.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1F5C16A28295845003FF7E6 /* LLVM.xcframework */; };
+		E1DCAF74284A22C300F44BE3 /* EventsExporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1DCAF2F284A1F0D00F44BE3 /* EventsExporter.framework */; };
+		E1DCAF83284A280700F44BE3 /* EventsExporter.h in Headers */ = {isa = PBXBuildFile; fileRef = E1DCAF31284A1F0D00F44BE3 /* EventsExporter.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		E1DCAF84284A285D00F44BE3 /* FileReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1527D7790300F4018A /* FileReader.swift */; };
+		E1DCAF85284A285D00F44BE3 /* CoverageSummaryInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D78452818364A00758E2A /* CoverageSummaryInfo.cpp */; };
+		E1DCAF86284A285D00F44BE3 /* DataUploadDelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF2027D7790300F4018A /* DataUploadDelay.swift */; };
+		E1DCAF87284A285D00F44BE3 /* LLVMCodeCoverageBridge.mm in Sources */ = {isa = PBXBuildFile; fileRef = E15D7851281972BA00758E2A /* LLVMCodeCoverageBridge.mm */; };
+		E1DCAF88284A285D00F44BE3 /* DataCompression.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0827D7790200F4018A /* DataCompression.swift */; };
+		E1DCAF89284A285D00F44BE3 /* DataUploadWorker.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1E27D7790300F4018A /* DataUploadWorker.swift */; };
+		E1DCAF8A284A285D00F44BE3 /* Directory.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1727D7790300F4018A /* Directory.swift */; };
+		E1DCAF8B284A285D00F44BE3 /* Error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E131592D281A7DDB00B29123 /* Error.cpp */; };
+		E1DCAF8C284A285D00F44BE3 /* DataUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1C27D7790300F4018A /* DataUploader.swift */; };
+		E1DCAF8D284A285D00F44BE3 /* DatadogEndpoints.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1D27D7790300F4018A /* DatadogEndpoints.swift */; };
+		E1DCAF8E284A285D00F44BE3 /* DateProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0427D7790200F4018A /* DateProvider.swift */; };
+		E1DCAF8F284A285D00F44BE3 /* AttributesSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EBBD4A27F200210059BC3E /* AttributesSanitizer.swift */; };
+		E1DCAF90284A285D00F44BE3 /* CodeCoverage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D7848281838D200758E2A /* CodeCoverage.cpp */; };
+		E1DCAF91284A285D00F44BE3 /* Device.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0927D7790200F4018A /* Device.swift */; };
+		E1DCAF92284A285D00F44BE3 /* RequestBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1B27D7790300F4018A /* RequestBuilder.swift */; };
+		E1DCAF93284A285D00F44BE3 /* File.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1827D7790300F4018A /* File.swift */; };
+		E1DCAF94284A285D00F44BE3 /* CoverageExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1743F5628490141006CBFF8 /* CoverageExporter.swift */; };
+		E1DCAF95284A285D00F44BE3 /* JSONEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0227D7790200F4018A /* JSONEncoder.swift */; };
+		E1DCAF96284A285D00F44BE3 /* CoverageExporterJson.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D78392818262500758E2A /* CoverageExporterJson.cpp */; };
+		E1DCAF97284A285D00F44BE3 /* DateFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0527D7790200F4018A /* DateFormatting.swift */; };
+		E1DCAF98284A285D00F44BE3 /* DataFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1427D7790300F4018A /* DataFormat.swift */; };
+		E1DCAF99284A285D00F44BE3 /* DataUploadStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF2127D7790300F4018A /* DataUploadStatus.swift */; };
+		E1DCAF9A284A285D00F44BE3 /* FileWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1227D7790300F4018A /* FileWriter.swift */; };
+		E1DCAF9B284A285D00F44BE3 /* LogEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0E27D7790300F4018A /* LogEncoder.swift */; };
+		E1DCAF9C284A285D00F44BE3 /* LLVMCodeCoverageBridge.h in Headers */ = {isa = PBXBuildFile; fileRef = E15D7850281972BA00758E2A /* LLVMCodeCoverageBridge.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		E1DCAF9D284A285D00F44BE3 /* CoverageReport.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D784128182BDA00758E2A /* CoverageReport.cpp */; };
+		E1DCAF9E284A285D00F44BE3 /* PerformancePreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0127D7790200F4018A /* PerformancePreset.swift */; };
+		E1DCAF9F284A285D00F44BE3 /* SpanEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CEFF27D7790200F4018A /* SpanEncoder.swift */; };
+		E1DCAFA0284A285D00F44BE3 /* LogsExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1027D7790300F4018A /* LogsExporter.swift */; };
+		E1DCAFA1284A285D00F44BE3 /* HTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1F27D7790300F4018A /* HTTPClient.swift */; };
+		E1DCAFA2284A285D00F44BE3 /* EncodableValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0627D7790200F4018A /* EncodableValue.swift */; };
+		E1DCAFA3284A285D00F44BE3 /* SpansExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CEFE27D7790200F4018A /* SpansExporter.swift */; };
+		E1DCAFA4284A285D00F44BE3 /* SpanSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EBBD4627F1FFE70059BC3E /* SpanSanitizer.swift */; };
+		E1DCAFA5284A285D00F44BE3 /* Feature.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0327D7790200F4018A /* Feature.swift */; };
+		E1DCAFA6284A285D00F44BE3 /* FilesOrchestrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1327D7790300F4018A /* FilesOrchestrator.swift */; };
+		E1DCAFA7284A285D00F44BE3 /* LogSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0F27D7790300F4018A /* LogSanitizer.swift */; };
+		E1DCAFA8284A285D00F44BE3 /* EventsExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1927D7790300F4018A /* EventsExporter.swift */; };
+		E1DCAFA9284A285D00F44BE3 /* ExporterConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0C27D7790300F4018A /* ExporterConfiguration.swift */; };
+		E1DCAFAB284A28DE00F44BE3 /* OpenTelemetrySdk in Frameworks */ = {isa = PBXBuildFile; productRef = E1DCAFAA284A28DE00F44BE3 /* OpenTelemetrySdk */; };
+		E1DCAFAD284A28E600F44BE3 /* Atomics in Frameworks */ = {isa = PBXBuildFile; productRef = E1DCAFAC284A28E600F44BE3 /* Atomics */; };
+		E1DCAFAE284A294100F44BE3 /* DDCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12C5838280D809900A31763 /* DDCoverageFormat.swift */; };
+		E1DCAFB1284A294100F44BE3 /* DDCoverageConversor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E15C79672722AD0500E9DBAD /* DDCoverageConversor.swift */; };
+		E1DCAFB2284A294100F44BE3 /* LLVMCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10A7E0D2806D68F00B464C9 /* LLVMCoverageFormat.swift */; };
+		E1DCAFB5284A298C00F44BE3 /* LLVM.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1F5C16A28295845003FF7E6 /* LLVM.xcframework */; };
+		E1DCAFB8284A299A00F44BE3 /* EventsExporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1DCAF7C284A27DE00F44BE3 /* EventsExporter.framework */; };
+		E1DCAFBC284A29DD00F44BE3 /* Spawn.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1665A7225D12D7500BA53CD /* Spawn.swift */; };
+		E1DCAFCA284A2BA300F44BE3 /* OpenTelemetrySdk in Frameworks */ = {isa = PBXBuildFile; productRef = E1DCAFC9284A2BA300F44BE3 /* OpenTelemetrySdk */; };
+		E1DCAFCC284A2BA800F44BE3 /* Atomics in Frameworks */ = {isa = PBXBuildFile; productRef = E1DCAFCB284A2BA800F44BE3 /* Atomics */; };
+		E1DCAFCD284A2BAD00F44BE3 /* LLVM.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1F5C16A28295845003FF7E6 /* LLVM.xcframework */; };
+		E1DCAFCE284A2BED00F44BE3 /* CodeCoverage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D7848281838D200758E2A /* CodeCoverage.cpp */; };
+		E1DCAFCF284A2BED00F44BE3 /* DateFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0527D7790200F4018A /* DateFormatting.swift */; };
+		E1DCAFD0284A2BED00F44BE3 /* File.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1827D7790300F4018A /* File.swift */; };
+		E1DCAFD1284A2BED00F44BE3 /* DatadogEndpoints.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1D27D7790300F4018A /* DatadogEndpoints.swift */; };
+		E1DCAFD2284A2BED00F44BE3 /* DDCoverageConversor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E15C79672722AD0500E9DBAD /* DDCoverageConversor.swift */; };
+		E1DCAFD3284A2BED00F44BE3 /* SpanSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EBBD4627F1FFE70059BC3E /* SpanSanitizer.swift */; };
+		E1DCAFD4284A2BED00F44BE3 /* LogsExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1027D7790300F4018A /* LogsExporter.swift */; };
+		E1DCAFD5284A2BED00F44BE3 /* EventsExporter.h in Headers */ = {isa = PBXBuildFile; fileRef = E1DCAF31284A1F0D00F44BE3 /* EventsExporter.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		E1DCAFD6284A2BED00F44BE3 /* FilesOrchestrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1327D7790300F4018A /* FilesOrchestrator.swift */; };
+		E1DCAFD7284A2BED00F44BE3 /* DataUploadDelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF2027D7790300F4018A /* DataUploadDelay.swift */; };
+		E1DCAFD8284A2BED00F44BE3 /* DataUploadStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF2127D7790300F4018A /* DataUploadStatus.swift */; };
+		E1DCAFD9284A2BED00F44BE3 /* CoverageReport.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D784128182BDA00758E2A /* CoverageReport.cpp */; };
+		E1DCAFDA284A2BED00F44BE3 /* JSONEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0227D7790200F4018A /* JSONEncoder.swift */; };
+		E1DCAFDB284A2BED00F44BE3 /* DateProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0427D7790200F4018A /* DateProvider.swift */; };
+		E1DCAFDC284A2BED00F44BE3 /* EventsExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1927D7790300F4018A /* EventsExporter.swift */; };
+		E1DCAFDD284A2BED00F44BE3 /* CoverageSummaryInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D78452818364A00758E2A /* CoverageSummaryInfo.cpp */; };
+		E1DCAFDE284A2BED00F44BE3 /* Error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E131592D281A7DDB00B29123 /* Error.cpp */; };
+		E1DCAFDF284A2BED00F44BE3 /* DDCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12C5838280D809900A31763 /* DDCoverageFormat.swift */; };
+		E1DCAFE0284A2BED00F44BE3 /* Device.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0927D7790200F4018A /* Device.swift */; };
+		E1DCAFE1284A2BED00F44BE3 /* LLVMCodeCoverageBridge.mm in Sources */ = {isa = PBXBuildFile; fileRef = E15D7851281972BA00758E2A /* LLVMCodeCoverageBridge.mm */; };
+		E1DCAFE2284A2BED00F44BE3 /* LogSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0F27D7790300F4018A /* LogSanitizer.swift */; };
+		E1DCAFE3284A2BED00F44BE3 /* RequestBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1B27D7790300F4018A /* RequestBuilder.swift */; };
+		E1DCAFE4284A2BED00F44BE3 /* DataUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1C27D7790300F4018A /* DataUploader.swift */; };
+		E1DCAFE5284A2BED00F44BE3 /* SpansExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CEFE27D7790200F4018A /* SpansExporter.swift */; };
+		E1DCAFE6284A2BED00F44BE3 /* Feature.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0327D7790200F4018A /* Feature.swift */; };
+		E1DCAFE7284A2BED00F44BE3 /* CoverageExporterJson.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D78392818262500758E2A /* CoverageExporterJson.cpp */; };
+		E1DCAFE8284A2BED00F44BE3 /* LLVMCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10A7E0D2806D68F00B464C9 /* LLVMCoverageFormat.swift */; };
+		E1DCAFE9284A2BED00F44BE3 /* ExporterConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0C27D7790300F4018A /* ExporterConfiguration.swift */; };
+		E1DCAFEA284A2BED00F44BE3 /* AttributesSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EBBD4A27F200210059BC3E /* AttributesSanitizer.swift */; };
+		E1DCAFEB284A2BED00F44BE3 /* DataCompression.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0827D7790200F4018A /* DataCompression.swift */; };
+		E1DCAFEC284A2BED00F44BE3 /* EncodableValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0627D7790200F4018A /* EncodableValue.swift */; };
+		E1DCAFED284A2BED00F44BE3 /* FileReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1527D7790300F4018A /* FileReader.swift */; };
+		E1DCAFEE284A2BED00F44BE3 /* Directory.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1727D7790300F4018A /* Directory.swift */; };
+		E1DCAFEF284A2BED00F44BE3 /* FileWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1227D7790300F4018A /* FileWriter.swift */; };
+		E1DCAFF0284A2BED00F44BE3 /* LLVMCodeCoverageBridge.h in Headers */ = {isa = PBXBuildFile; fileRef = E15D7850281972BA00758E2A /* LLVMCodeCoverageBridge.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		E1DCAFF1284A2BED00F44BE3 /* SpanEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CEFF27D7790200F4018A /* SpanEncoder.swift */; };
+		E1DCAFF2284A2BED00F44BE3 /* LogEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0E27D7790300F4018A /* LogEncoder.swift */; };
+		E1DCAFF3284A2BED00F44BE3 /* DataUploadWorker.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1E27D7790300F4018A /* DataUploadWorker.swift */; };
+		E1DCAFF4284A2BED00F44BE3 /* CoverageExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1743F5628490141006CBFF8 /* CoverageExporter.swift */; };
+		E1DCAFF5284A2BED00F44BE3 /* HTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1F27D7790300F4018A /* HTTPClient.swift */; };
+		E1DCAFF6284A2BED00F44BE3 /* Spawn.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1665A7225D12D7500BA53CD /* Spawn.swift */; };
+		E1DCAFF7284A2BED00F44BE3 /* PerformancePreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0127D7790200F4018A /* PerformancePreset.swift */; };
+		E1DCAFF8284A2BED00F44BE3 /* DataFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1427D7790300F4018A /* DataFormat.swift */; };
+		E1DCAFF9284A2BFB00F44BE3 /* EventsExporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1DCAFC2284A2B7B00F44BE3 /* EventsExporter.framework */; };
 		E1DFF0EA257010E700344895 /* PlatformUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141CF5F256FD513008B6B70 /* PlatformUtils.swift */; };
 		E1DFF0EB257010E800344895 /* PlatformUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141CF5F256FD513008B6B70 /* PlatformUtils.swift */; };
-		E1EBBD4727F1FFE70059BC3E /* SpanSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EBBD4627F1FFE70059BC3E /* SpanSanitizer.swift */; };
-		E1EBBD4827F1FFE70059BC3E /* SpanSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EBBD4627F1FFE70059BC3E /* SpanSanitizer.swift */; };
-		E1EBBD4927F1FFE70059BC3E /* SpanSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EBBD4627F1FFE70059BC3E /* SpanSanitizer.swift */; };
-		E1EBBD4B27F200210059BC3E /* AttributesSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EBBD4A27F200210059BC3E /* AttributesSanitizer.swift */; };
-		E1EBBD4C27F200210059BC3E /* AttributesSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EBBD4A27F200210059BC3E /* AttributesSanitizer.swift */; };
-		E1EBBD4D27F200210059BC3E /* AttributesSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EBBD4A27F200210059BC3E /* AttributesSanitizer.swift */; };
 		E1EBBD5227F202A60059BC3E /* SpanSanitizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EBBD4E27F200A50059BC3E /* SpanSanitizerTests.swift */; };
 		E1EBBD5327F202A70059BC3E /* SpanSanitizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EBBD4E27F200A50059BC3E /* SpanSanitizerTests.swift */; };
 		E1EBBD5427F202A90059BC3E /* SpanSanitizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EBBD4E27F200A50059BC3E /* SpanSanitizerTests.swift */; };
@@ -464,9 +463,6 @@
 		E1F595D42609FC3000AE92B7 /* DDNetworkInstrumentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F595D32609FC3000AE92B7 /* DDNetworkInstrumentation.swift */; };
 		E1F595D52609FC3000AE92B7 /* DDNetworkInstrumentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F595D32609FC3000AE92B7 /* DDNetworkInstrumentation.swift */; };
 		E1F595D62609FC3000AE92B7 /* DDNetworkInstrumentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F595D32609FC3000AE92B7 /* DDNetworkInstrumentation.swift */; };
-		E1F5C16B28295845003FF7E6 /* LLVM.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1F5C16A28295845003FF7E6 /* LLVM.xcframework */; };
-		E1F5C16C28295845003FF7E6 /* LLVM.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1F5C16A28295845003FF7E6 /* LLVM.xcframework */; };
-		E1F5C16D28295845003FF7E6 /* LLVM.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1F5C16A28295845003FF7E6 /* LLVM.xcframework */; };
 		E1FB48312538909D0083B263 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1ABA04A25231E2500ED8AEF /* DatadogSDKTesting.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 		E1FB483B253891650083B263 /* CrashReporter in Frameworks */ = {isa = PBXBuildFile; productRef = E1FB483A253891650083B263 /* CrashReporter */; };
 		E1FB4840253891CE0083B263 /* SimpleSpanSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FB483D253891CE0083B263 /* SimpleSpanSerializer.swift */; };
@@ -490,27 +486,6 @@
 			remoteGlobalIDString = E1224A50264ABCCF00305968;
 			remoteInfo = "TestRunner (macOS)";
 		};
-		E143CF8027D7791300F4018A /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = E1ABA04125231E2500ED8AEF /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = E143CED827D7786D00F4018A;
-			remoteInfo = OpenTelemetryExporter_iOS;
-		};
-		E143CF8327D7791C00F4018A /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = E1ABA04125231E2500ED8AEF /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = E143CEE327D7789300F4018A;
-			remoteInfo = OpenTelemetryExporter_macOS;
-		};
-		E143CF8627D7792100F4018A /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = E1ABA04125231E2500ED8AEF /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = E143CEF027D778AC00F4018A;
-			remoteInfo = OpenTelemetryExporter_tvOS;
-		};
 		E157A7C9256EB39F00CBCA52 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = E1ABA04125231E2500ED8AEF /* Project object */;
@@ -531,6 +506,34 @@
 			proxyType = 1;
 			remoteGlobalIDString = E1ABA04925231E2500ED8AEF;
 			remoteInfo = DatadogSDKTesting;
+		};
+		E1DCAF75284A23BE00F44BE3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E1ABA04125231E2500ED8AEF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E1DCAF2E284A1F0D00F44BE3;
+			remoteInfo = EventsExporter_iOS;
+		};
+		E1DCAFB3284A296600F44BE3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E1ABA04125231E2500ED8AEF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E1DCAF7B284A27DE00F44BE3;
+			remoteInfo = EventsExporter_macOS;
+		};
+		E1DCAFBA284A299A00F44BE3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E1ABA04125231E2500ED8AEF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E1DCAF7B284A27DE00F44BE3;
+			remoteInfo = EventsExporter_macOS;
+		};
+		E1DCAFFA284A2C4B00F44BE3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E1ABA04125231E2500ED8AEF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E1DCAFC1284A2B7B00F44BE3;
+			remoteInfo = EventsExporter_tvOS;
 		};
 		E1F421D126539FAB00233B75 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -584,34 +587,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		E143CED727D7786D00F4018A /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "include/$(PRODUCT_NAME)";
-			dstSubfolderSpec = 16;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		E143CEEF27D778AC00F4018A /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "include/$(PRODUCT_NAME)";
-			dstSubfolderSpec = 16;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		E157A747256E9D1D00CBCA52 /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		E157A77F256E9D3300CBCA52 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -750,7 +725,7 @@
 		E141EAE327EB3B9E0057D747 /* DateFormattingTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DateFormattingTests.swift; sourceTree = "<group>"; };
 		E141EAE527EB3B9E0057D747 /* LogsExporterTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogsExporterTests.swift; sourceTree = "<group>"; };
 		E141EAE627EB3B9E0057D747 /* LogSanitizerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogSanitizerTests.swift; sourceTree = "<group>"; };
-		E141EAE727EB3B9E0057D747 /* OpenTelemetryExporterTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OpenTelemetryExporterTests.swift; sourceTree = "<group>"; };
+		E141EAE727EB3B9E0057D747 /* EventsExporterTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventsExporterTests.swift; sourceTree = "<group>"; };
 		E141EAE927EB3B9E0057D747 /* FileReaderTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileReaderTests.swift; sourceTree = "<group>"; };
 		E141EAEA27EB3B9E0057D747 /* FileWriterTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileWriterTests.swift; sourceTree = "<group>"; };
 		E141EAEB27EB3B9E0057D747 /* FilesOrchestratorTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FilesOrchestratorTests.swift; sourceTree = "<group>"; };
@@ -771,9 +746,6 @@
 		E141EAFD27EB3B9E0057D747 /* DataUploadDelayTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataUploadDelayTests.swift; sourceTree = "<group>"; };
 		E141EAFE27EB3B9E0057D747 /* DataUploaderTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataUploaderTests.swift; sourceTree = "<group>"; };
 		E141EAFF27EB3B9E0057D747 /* HTTPClientTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HTTPClientTests.swift; sourceTree = "<group>"; };
-		E143CED927D7786D00F4018A /* libOpenTelemetryExporter.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libOpenTelemetryExporter.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		E143CEE427D7789300F4018A /* libOpenTelemetryExporter.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libOpenTelemetryExporter.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		E143CEF127D778AC00F4018A /* libOpenTelemetryExporter.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libOpenTelemetryExporter.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		E143CEFE27D7790200F4018A /* SpansExporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpansExporter.swift; sourceTree = "<group>"; };
 		E143CEFF27D7790200F4018A /* SpanEncoder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpanEncoder.swift; sourceTree = "<group>"; };
 		E143CF0127D7790200F4018A /* PerformancePreset.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PerformancePreset.swift; sourceTree = "<group>"; };
@@ -794,7 +766,7 @@
 		E143CF1527D7790300F4018A /* FileReader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileReader.swift; sourceTree = "<group>"; };
 		E143CF1727D7790300F4018A /* Directory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Directory.swift; sourceTree = "<group>"; };
 		E143CF1827D7790300F4018A /* File.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = File.swift; sourceTree = "<group>"; };
-		E143CF1927D7790300F4018A /* OpenTelemetryExporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OpenTelemetryExporter.swift; sourceTree = "<group>"; };
+		E143CF1927D7790300F4018A /* EventsExporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventsExporter.swift; sourceTree = "<group>"; };
 		E143CF1B27D7790300F4018A /* RequestBuilder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RequestBuilder.swift; sourceTree = "<group>"; };
 		E143CF1C27D7790300F4018A /* DataUploader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataUploader.swift; sourceTree = "<group>"; };
 		E143CF1D27D7790300F4018A /* DatadogEndpoints.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DatadogEndpoints.swift; sourceTree = "<group>"; };
@@ -842,6 +814,7 @@
 		E1665A7225D12D7500BA53CD /* Spawn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spawn.swift; sourceTree = "<group>"; };
 		E1665A8025D13BBB00BA53CD /* DDSymbolicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDSymbolicator.swift; sourceTree = "<group>"; };
 		E171DC91270DBCAB00A12B79 /* DDTestSessionApiTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DDTestSessionApiTests.m; sourceTree = "<group>"; };
+		E1743F5628490141006CBFF8 /* CoverageExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoverageExporter.swift; sourceTree = "<group>"; };
 		E1798CC52524B9BD008DEBB9 /* DDTracer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTracer.swift; sourceTree = "<group>"; };
 		E17B7AA5253F010C0081D7F3 /* LICENSE-3rdparty.csv */ = {isa = PBXFileReference; lastKnownFileType = text; path = "LICENSE-3rdparty.csv"; sourceTree = "<group>"; };
 		E18F2169278C980800F77910 /* IntegrationTests (macOS)Debug.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "IntegrationTests (macOS)Debug.entitlements"; sourceTree = "<group>"; };
@@ -880,6 +853,10 @@
 		E1D4769525DC2B8E00832592 /* master */ = {isa = PBXFileReference; lastKnownFileType = text; path = master; sourceTree = "<group>"; };
 		E1D476A525DD369F00832592 /* BinaryParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinaryParser.swift; sourceTree = "<group>"; };
 		E1D6EFA125F6563000E8C3AE /* DDSymbolAddress.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DDSymbolAddress.h; sourceTree = "<group>"; };
+		E1DCAF2F284A1F0D00F44BE3 /* EventsExporter.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = EventsExporter.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		E1DCAF31284A1F0D00F44BE3 /* EventsExporter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EventsExporter.h; sourceTree = "<group>"; };
+		E1DCAF7C284A27DE00F44BE3 /* EventsExporter.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = EventsExporter.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		E1DCAFC2284A2B7B00F44BE3 /* EventsExporter.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = EventsExporter.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E1EBBD4627F1FFE70059BC3E /* SpanSanitizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpanSanitizer.swift; sourceTree = "<group>"; };
 		E1EBBD4A27F200210059BC3E /* AttributesSanitizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AttributesSanitizer.swift; sourceTree = "<group>"; };
 		E1EBBD4E27F200A50059BC3E /* SpanSanitizerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpanSanitizerTests.swift; sourceTree = "<group>"; };
@@ -932,43 +909,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		E143CED627D7786D00F4018A /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				E143CF8A27D77E1900F4018A /* Atomics in Frameworks */,
-				E141EBBD27ECADC30057D747 /* OpenTelemetrySdk in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		E143CEE227D7789300F4018A /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				E123D0C127D7B2C700B85B37 /* OpenTelemetrySdk in Frameworks */,
-				E143CF8C27D77ED000F4018A /* Atomics in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		E143CEEE27D778AC00F4018A /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				E143CF8E27D77ED900F4018A /* Atomics in Frameworks */,
-				E123D0C327D7B2DA00B85B37 /* OpenTelemetrySdk in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		E157A740256E9D1D00CBCA52 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				E13DB9BE28241C2B00409105 /* libz.tbd in Frameworks */,
 				E1BE9B5E2732B2A300B92AD4 /* URLSessionInstrumentation in Frameworks */,
-				E1F5C16C28295845003FF7E6 /* LLVM.xcframework in Frameworks */,
 				E157A742256E9D1D00CBCA52 /* CrashReporter in Frameworks */,
-				E143CF8227D7791B00F4018A /* libOpenTelemetryExporter.a in Frameworks */,
 				E157A744256E9D1D00CBCA52 /* SigmaSwiftStatistics in Frameworks */,
+				E1DCAFB8284A299A00F44BE3 /* EventsExporter.framework in Frameworks */,
 				E157A745256E9D1D00CBCA52 /* XCTest.framework in Frameworks */,
 				E1BE9B5C2732B2A300B92AD4 /* InMemoryExporter in Frameworks */,
 			);
@@ -978,9 +927,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E1DCAFF9284A2BFB00F44BE3 /* EventsExporter.framework in Frameworks */,
 				E13DB9C028241C3700409105 /* libz.tbd in Frameworks */,
-				E143CF8527D7792100F4018A /* libOpenTelemetryExporter.a in Frameworks */,
-				E1F5C16D28295845003FF7E6 /* LLVM.xcframework in Frameworks */,
 				E1BE9B642732B2BA00B92AD4 /* URLSessionInstrumentation in Frameworks */,
 				E157A77A256E9D3300CBCA52 /* CrashReporter in Frameworks */,
 				E157A77C256E9D3300CBCA52 /* SigmaSwiftStatistics in Frameworks */,
@@ -1013,9 +961,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E143CF7F27D7791300F4018A /* libOpenTelemetryExporter.a in Frameworks */,
+				E1DCAF74284A22C300F44BE3 /* EventsExporter.framework in Frameworks */,
 				E1315930281A9CCA00B29123 /* libz.tbd in Frameworks */,
-				E1F5C16B28295845003FF7E6 /* LLVM.xcframework in Frameworks */,
 				E1FB483B253891650083B263 /* CrashReporter in Frameworks */,
 				E17B7AA8253F02580081D7F3 /* SigmaSwiftStatistics in Frameworks */,
 				E1BE9B562732B27900B92AD4 /* InMemoryExporter in Frameworks */,
@@ -1031,6 +978,36 @@
 				E141EB5F27EB5E8C0057D747 /* NIOHTTP1 in Frameworks */,
 				E1FB48312538909D0083B263 /* DatadogSDKTesting.framework in Frameworks */,
 				E141EB5D27EB5E8C0057D747 /* NIO in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1DCAF2C284A1F0D00F44BE3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E1DCAF73284A219700F44BE3 /* LLVM.xcframework in Frameworks */,
+				E1DCAF6B284A1FE000F44BE3 /* OpenTelemetrySdk in Frameworks */,
+				E1DCAF6D284A1FE600F44BE3 /* Atomics in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1DCAF79284A27DE00F44BE3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E1DCAFB5284A298C00F44BE3 /* LLVM.xcframework in Frameworks */,
+				E1DCAFAB284A28DE00F44BE3 /* OpenTelemetrySdk in Frameworks */,
+				E1DCAFAD284A28E600F44BE3 /* Atomics in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1DCAFBF284A2B7B00F44BE3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E1DCAFCD284A2BAD00F44BE3 /* LLVM.xcframework in Frameworks */,
+				E1DCAFCA284A2BA300F44BE3 /* OpenTelemetrySdk in Frameworks */,
+				E1DCAFCC284A2BA800F44BE3 /* Atomics in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1057,6 +1034,7 @@
 		E116D7D925248C280022779D /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				E1C8DEF4268363EC005B5411 /* DDCoverageHelper.swift */,
 				E1AD07A8252F5CB8003705C1 /* InternalError.swift */,
 				E1D476A525DD369F00832592 /* BinaryParser.swift */,
 				E14405A225D6A80800FE3D3C /* GitInfo.swift */,
@@ -1064,7 +1042,6 @@
 				E13D0BC92546E29C00C37D56 /* SignalUtils.swift */,
 				E116D7DA25248C390022779D /* SwiftExtensions.swift */,
 				E1C189B8270F193F00188C0E /* Log.swift */,
-				E1665A7225D12D7500BA53CD /* Spawn.swift */,
 				E12515E4254892C500670D23 /* XCUIApplicationSwizzler.swift */,
 				E11295BA25F2483D002719E7 /* FileLocator.swift */,
 				E1A63F5B26789915002F48FA /* CodeOwners.swift */,
@@ -1204,19 +1181,19 @@
 			path = OutputCapture;
 			sourceTree = "<group>";
 		};
-		E141EADB27EB3B9E0057D747 /* OpenTelemetryExporter */ = {
+		E141EADB27EB3B9E0057D747 /* EventsExporter */ = {
 			isa = PBXGroup;
 			children = (
 				E141EADC27EB3B9E0057D747 /* Spans */,
 				E141EADE27EB3B9E0057D747 /* Utils */,
 				E141EAE427EB3B9E0057D747 /* Logs */,
-				E141EAE727EB3B9E0057D747 /* OpenTelemetryExporterTests.swift */,
+				E141EAE727EB3B9E0057D747 /* EventsExporterTests.swift */,
 				E141EAE827EB3B9E0057D747 /* Persistence */,
 				E141EAEC27EB3B9E0057D747 /* Files */,
 				E141EAEF27EB3B9E0057D747 /* Helpers */,
 				E141EAFB27EB3B9E0057D747 /* Upload */,
 			);
-			path = OpenTelemetryExporter;
+			path = EventsExporter;
 			sourceTree = "<group>";
 		};
 		E141EADC27EB3B9E0057D747 /* Spans */ = {
@@ -1236,6 +1213,7 @@
 				E141EADF27EB3B9E0057D747 /* EncodableValueTests.swift */,
 				E141EAE027EB3B9E0057D747 /* JSONEncoderTests.swift */,
 				E141EAE127EB3B9E0057D747 /* PerformancePresetTests.swift */,
+				E12248C62643EF4200305968 /* SpawnTests.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -1297,19 +1275,22 @@
 			path = Upload;
 			sourceTree = "<group>";
 		};
-		E143CEF827D7790200F4018A /* OpenTelemetryExporter */ = {
+		E143CEF827D7790200F4018A /* EventsExporter */ = {
 			isa = PBXGroup;
 			children = (
+				E1DCAF31284A1F0D00F44BE3 /* EventsExporter.h */,
+				E15D77FE281821B600758E2A /* llvm-cov */,
+				E1743F552849012A006CBFF8 /* Coverage */,
 				E143CEFD27D7790200F4018A /* Spans */,
 				E143CF0027D7790200F4018A /* Utils */,
 				E143CF0C27D7790300F4018A /* ExporterConfiguration.swift */,
 				E143CF0D27D7790300F4018A /* Logs */,
 				E143CF1127D7790300F4018A /* Persistence */,
 				E143CF1627D7790300F4018A /* Files */,
-				E143CF1927D7790300F4018A /* OpenTelemetryExporter.swift */,
+				E143CF1927D7790300F4018A /* EventsExporter.swift */,
 				E143CF1A27D7790300F4018A /* Upload */,
 			);
-			path = OpenTelemetryExporter;
+			path = EventsExporter;
 			sourceTree = "<group>";
 		};
 		E143CEFD27D7790200F4018A /* Spans */ = {
@@ -1325,6 +1306,7 @@
 		E143CF0027D7790200F4018A /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				E1665A7225D12D7500BA53CD /* Spawn.swift */,
 				E1EBBD4A27F200210059BC3E /* AttributesSanitizer.swift */,
 				E143CF0827D7790200F4018A /* DataCompression.swift */,
 				E143CF0127D7790200F4018A /* PerformancePreset.swift */,
@@ -1603,6 +1585,17 @@
 			path = ObjCApi;
 			sourceTree = "<group>";
 		};
+		E1743F552849012A006CBFF8 /* Coverage */ = {
+			isa = PBXGroup;
+			children = (
+				E15C79672722AD0500E9DBAD /* DDCoverageConversor.swift */,
+				E12C5838280D809900A31763 /* DDCoverageFormat.swift */,
+				E10A7E0D2806D68F00B464C9 /* LLVMCoverageFormat.swift */,
+				E1743F5628490141006CBFF8 /* CoverageExporter.swift */,
+			);
+			path = Coverage;
+			sourceTree = "<group>";
+		};
 		E1798CCA2524C1E2008DEBB9 /* NetworkInstrumentation */ = {
 			isa = PBXGroup;
 			children = (
@@ -1615,7 +1608,6 @@
 			isa = PBXGroup;
 			children = (
 				E1ABA04D25231E2500ED8AEF /* DatadogSDKTesting.h */,
-				E1C8DEF326836386005B5411 /* CodeCoverage */,
 				E1FB483C253891CE0083B263 /* Crashes */,
 				E1C8DEF626836783005B5411 /* ImageSymbols */,
 				E1798CCA2524C1E2008DEBB9 /* NetworkInstrumentation */,
@@ -1665,9 +1657,9 @@
 				E1224A64264ABCD000305968 /* Tests macOS.xctest */,
 				E1F4217B2652CFEB00233B75 /* IntegrationTests.app */,
 				E1F421CC26539FAB00233B75 /* Tests tvOS.xctest */,
-				E143CED927D7786D00F4018A /* libOpenTelemetryExporter.a */,
-				E143CEE427D7789300F4018A /* libOpenTelemetryExporter.a */,
-				E143CEF127D778AC00F4018A /* libOpenTelemetryExporter.a */,
+				E1DCAF2F284A1F0D00F44BE3 /* EventsExporter.framework */,
+				E1DCAF7C284A27DE00F44BE3 /* EventsExporter.framework */,
+				E1DCAFC2284A2B7B00F44BE3 /* EventsExporter.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1676,7 +1668,7 @@
 			isa = PBXGroup;
 			children = (
 				E1798E0925260BC4008DEBB9 /* DatadogSDKTesting */,
-				E143CEF827D7790200F4018A /* OpenTelemetryExporter */,
+				E143CEF827D7790200F4018A /* EventsExporter */,
 				E1ABA04E25231E2500ED8AEF /* Info.plist */,
 			);
 			path = Sources;
@@ -1688,7 +1680,7 @@
 				E121DEA9258CBD88009EA71E /* fixtures */,
 				E1AD0736252E1E1A003705C1 /* DatadogSDKTesting */,
 				E1ABA05A25231E2500ED8AEF /* Info.plist */,
-				E141EADB27EB3B9E0057D747 /* OpenTelemetryExporter */,
+				E141EADB27EB3B9E0057D747 /* EventsExporter */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -1696,7 +1688,6 @@
 		E1ABA06B25231F3200ED8AEF /* Objc */ = {
 			isa = PBXGroup;
 			children = (
-				E15D77FE281821B600758E2A /* llvm-cov */,
 				E1550C32274F7E7900006F11 /* NTPKit */,
 				E160A113252B3A6B003121A5 /* include */,
 				E1ABA06C25231F3200ED8AEF /* LibraryInitializer.m */,
@@ -1751,7 +1742,6 @@
 				E117CFC626307B9A00ACE977 /* SpySpanProcessor.swift */,
 				E14405D825DBC3A800FE3D3C /* GitInfoTests.swift */,
 				E14AA0C9255AE8D3003FA711 /* SignalUtilsTests.swift */,
-				E12248C62643EF4200305968 /* SpawnTests.swift */,
 				E1AD07A1252F5B02003705C1 /* SwiftExtensionsTests.swift */,
 				E1A63F5F2678C1FD002F48FA /* CodeOwnersTests.swift */,
 			);
@@ -1775,17 +1765,6 @@
 				E1BB54C325408E92007C2D93 /* StderrCaptureTests.swift */,
 			);
 			path = OutputCapture;
-			sourceTree = "<group>";
-		};
-		E1C8DEF326836386005B5411 /* CodeCoverage */ = {
-			isa = PBXGroup;
-			children = (
-				E15C79672722AD0500E9DBAD /* DDCoverageConversor.swift */,
-				E12C5838280D809900A31763 /* DDCoverageFormat.swift */,
-				E1C8DEF4268363EC005B5411 /* DDCoverageHelper.swift */,
-				E10A7E0D2806D68F00B464C9 /* LLVMCoverageFormat.swift */,
-			);
-			path = CodeCoverage;
 			sourceTree = "<group>";
 		};
 		E1C8DEF626836783005B5411 /* ImageSymbols */ = {
@@ -1870,25 +1849,14 @@
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
-		E143CEE027D7789300F4018A /* Headers */ = {
-			isa = PBXHeadersBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		E157A720256E9D1D00CBCA52 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				E157A721256E9D1D00CBCA52 /* DatadogSDKTesting.h in Headers */,
 				E1D6EFA325F6631E00E8C3AE /* DDSymbolAddress.h in Headers */,
-				E13DB9AD28241BD900409105 /* CoverageReport.h in Headers */,
-				E13DB9B128241BD900409105 /* LLVMCodeCoverageBridge.h in Headers */,
-				E13DB9AF28241BD900409105 /* CoverageExporter.h in Headers */,
 				E18C35F127EDD4A300E0BC08 /* NTPServer.h in Headers */,
 				E114C137274F8A1200B57E08 /* NTPTypes.h in Headers */,
-				E13DB9AC28241BD900409105 /* CoverageSummaryInfo.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1898,12 +1866,8 @@
 			files = (
 				E157A759256E9D3300CBCA52 /* DatadogSDKTesting.h in Headers */,
 				E1D6EFA425F6632B00E8C3AE /* DDSymbolAddress.h in Headers */,
-				E13DB9B728241BDB00409105 /* CoverageReport.h in Headers */,
-				E13DB9BB28241BDB00409105 /* LLVMCodeCoverageBridge.h in Headers */,
-				E13DB9B928241BDB00409105 /* CoverageExporter.h in Headers */,
 				E18C35F227EDD4B700E0BC08 /* NTPServer.h in Headers */,
 				E114C13B274F8A1400B57E08 /* NTPTypes.h in Headers */,
-				E13DB9B628241BDB00409105 /* CoverageSummaryInfo.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1911,15 +1875,37 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E15D783C2818262500758E2A /* CoverageExporterJson.h in Headers */,
-				E15D78462818364B00758E2A /* CoverageSummaryInfo.h in Headers */,
 				E1ABA05B25231E2500ED8AEF /* DatadogSDKTesting.h in Headers */,
-				E15D78542819800700758E2A /* LLVMCodeCoverageBridge.h in Headers */,
 				E1D6EFA225F6631200E8C3AE /* DDSymbolAddress.h in Headers */,
-				E15D783E2818263600758E2A /* CoverageExporter.h in Headers */,
 				E18C35F027EDD47500E0BC08 /* NTPServer.h in Headers */,
 				E114C134274F8A0000B57E08 /* NTPTypes.h in Headers */,
-				E15D784228182BDA00758E2A /* CoverageReport.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1DCAF2A284A1F0D00F44BE3 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E1DCAF3D284A1F0D00F44BE3 /* EventsExporter.h in Headers */,
+				E1DCAF49284A1F4900F44BE3 /* LLVMCodeCoverageBridge.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1DCAF77284A27DE00F44BE3 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E1DCAF83284A280700F44BE3 /* EventsExporter.h in Headers */,
+				E1DCAF9C284A285D00F44BE3 /* LLVMCodeCoverageBridge.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1DCAFBD284A2B7B00F44BE3 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E1DCAFF0284A2BED00F44BE3 /* LLVMCodeCoverageBridge.h in Headers */,
+				E1DCAFD5284A2BED00F44BE3 /* EventsExporter.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2004,69 +1990,6 @@
 			productReference = E1224A64264ABCD000305968 /* Tests macOS.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
-		E143CED827D7786D00F4018A /* OpenTelemetryExporter_iOS */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = E143CEDD27D7786D00F4018A /* Build configuration list for PBXNativeTarget "OpenTelemetryExporter_iOS" */;
-			buildPhases = (
-				E143CED527D7786D00F4018A /* Sources */,
-				E143CED627D7786D00F4018A /* Frameworks */,
-				E143CED727D7786D00F4018A /* CopyFiles */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = OpenTelemetryExporter_iOS;
-			packageProductDependencies = (
-				E143CF8927D77E1900F4018A /* Atomics */,
-				E141EBBC27ECADC30057D747 /* OpenTelemetrySdk */,
-			);
-			productName = OpenTelemetryExporter_iOS;
-			productReference = E143CED927D7786D00F4018A /* libOpenTelemetryExporter.a */;
-			productType = "com.apple.product-type.library.static";
-		};
-		E143CEE327D7789300F4018A /* OpenTelemetryExporter_macOS */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = E143CEEA27D7789400F4018A /* Build configuration list for PBXNativeTarget "OpenTelemetryExporter_macOS" */;
-			buildPhases = (
-				E143CEE027D7789300F4018A /* Headers */,
-				E143CEE127D7789300F4018A /* Sources */,
-				E143CEE227D7789300F4018A /* Frameworks */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = OpenTelemetryExporter_macOS;
-			packageProductDependencies = (
-				E143CF8B27D77ED000F4018A /* Atomics */,
-				E123D0C027D7B2C700B85B37 /* OpenTelemetrySdk */,
-			);
-			productName = OpenTelemetryExporter_macOS;
-			productReference = E143CEE427D7789300F4018A /* libOpenTelemetryExporter.a */;
-			productType = "com.apple.product-type.library.static";
-		};
-		E143CEF027D778AC00F4018A /* OpenTelemetryExporter_tvOS */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = E143CEF527D778AC00F4018A /* Build configuration list for PBXNativeTarget "OpenTelemetryExporter_tvOS" */;
-			buildPhases = (
-				E143CEED27D778AC00F4018A /* Sources */,
-				E143CEEE27D778AC00F4018A /* Frameworks */,
-				E143CEEF27D778AC00F4018A /* CopyFiles */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = OpenTelemetryExporter_tvOS;
-			packageProductDependencies = (
-				E143CF8D27D77ED900F4018A /* Atomics */,
-				E123D0C227D7B2DA00B85B37 /* OpenTelemetrySdk */,
-			);
-			productName = OpenTelemetryExporter_tvOS;
-			productReference = E143CEF127D778AC00F4018A /* libOpenTelemetryExporter.a */;
-			productType = "com.apple.product-type.library.static";
-		};
 		E157A717256E9D1D00CBCA52 /* DatadogSDKTesting_macOS */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = E157A74A256E9D1D00CBCA52 /* Build configuration list for PBXNativeTarget "DatadogSDKTesting_macOS" */;
@@ -2075,12 +1998,12 @@
 				E157A722256E9D1D00CBCA52 /* Sources */,
 				E157A740256E9D1D00CBCA52 /* Frameworks */,
 				E157A746256E9D1D00CBCA52 /* Resources */,
-				E157A747256E9D1D00CBCA52 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				E143CF8427D7791C00F4018A /* PBXTargetDependency */,
+				E1DCAFB4284A296600F44BE3 /* PBXTargetDependency */,
+				E1DCAFBB284A299A00F44BE3 /* PBXTargetDependency */,
 			);
 			name = DatadogSDKTesting_macOS;
 			packageProductDependencies = (
@@ -2106,7 +2029,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				E143CF8727D7792100F4018A /* PBXTargetDependency */,
+				E1DCAFFB284A2C4B00F44BE3 /* PBXTargetDependency */,
 			);
 			name = DatadogSDKTesting_tvOS;
 			packageProductDependencies = (
@@ -2179,7 +2102,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				E143CF8127D7791300F4018A /* PBXTargetDependency */,
+				E1DCAF76284A23BE00F44BE3 /* PBXTargetDependency */,
 			);
 			name = DatadogSDKTesting_iOS;
 			packageProductDependencies = (
@@ -2215,6 +2138,72 @@
 			productName = DatadogSDKTestingTests;
 			productReference = E1ABA05325231E2500ED8AEF /* DatadogSDKTestingTests_iOS.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		E1DCAF2E284A1F0D00F44BE3 /* EventsExporter_iOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E1DCAF3E284A1F0D00F44BE3 /* Build configuration list for PBXNativeTarget "EventsExporter_iOS" */;
+			buildPhases = (
+				E1DCAF2A284A1F0D00F44BE3 /* Headers */,
+				E1DCAF2B284A1F0D00F44BE3 /* Sources */,
+				E1DCAF2C284A1F0D00F44BE3 /* Frameworks */,
+				E1DCAF2D284A1F0D00F44BE3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = EventsExporter_iOS;
+			packageProductDependencies = (
+				E1DCAF6A284A1FE000F44BE3 /* OpenTelemetrySdk */,
+				E1DCAF6C284A1FE600F44BE3 /* Atomics */,
+			);
+			productName = EventsExporter_iOS;
+			productReference = E1DCAF2F284A1F0D00F44BE3 /* EventsExporter.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		E1DCAF7B284A27DE00F44BE3 /* EventsExporter_macOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E1DCAF80284A27DE00F44BE3 /* Build configuration list for PBXNativeTarget "EventsExporter_macOS" */;
+			buildPhases = (
+				E1DCAF77284A27DE00F44BE3 /* Headers */,
+				E1DCAF78284A27DE00F44BE3 /* Sources */,
+				E1DCAF79284A27DE00F44BE3 /* Frameworks */,
+				E1DCAF7A284A27DE00F44BE3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = EventsExporter_macOS;
+			packageProductDependencies = (
+				E1DCAFAA284A28DE00F44BE3 /* OpenTelemetrySdk */,
+				E1DCAFAC284A28E600F44BE3 /* Atomics */,
+			);
+			productName = EventsExporter_macOS;
+			productReference = E1DCAF7C284A27DE00F44BE3 /* EventsExporter.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		E1DCAFC1284A2B7B00F44BE3 /* EventsExporter_tvOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E1DCAFC6284A2B7B00F44BE3 /* Build configuration list for PBXNativeTarget "EventsExporter_tvOS" */;
+			buildPhases = (
+				E1DCAFBD284A2B7B00F44BE3 /* Headers */,
+				E1DCAFBE284A2B7B00F44BE3 /* Sources */,
+				E1DCAFBF284A2B7B00F44BE3 /* Frameworks */,
+				E1DCAFC0284A2B7B00F44BE3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = EventsExporter_tvOS;
+			packageProductDependencies = (
+				E1DCAFC9284A2BA300F44BE3 /* OpenTelemetrySdk */,
+				E1DCAFCB284A2BA800F44BE3 /* Atomics */,
+			);
+			productName = EventsExporter_tvOS;
+			productReference = E1DCAFC2284A2B7B00F44BE3 /* EventsExporter.framework */;
+			productType = "com.apple.product-type.framework";
 		};
 		E1F4217A2652CFEB00233B75 /* IntegrationTests (tvOS) */ = {
 			isa = PBXNativeTarget;
@@ -2260,8 +2249,8 @@
 		E1ABA04125231E2500ED8AEF /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 1320;
-				LastUpgradeCheck = 1320;
+				LastSwiftUpdateCheck = 1340;
+				LastUpgradeCheck = 1340;
 				TargetAttributes = {
 					E1224A49264ABCCF00305968 = {
 						CreatedOnToolsVersion = 12.5;
@@ -2277,15 +2266,6 @@
 						CreatedOnToolsVersion = 12.5;
 						TestTargetID = E1224A50264ABCCF00305968;
 					};
-					E143CED827D7786D00F4018A = {
-						CreatedOnToolsVersion = 13.2.1;
-					};
-					E143CEE327D7789300F4018A = {
-						CreatedOnToolsVersion = 13.2.1;
-					};
-					E143CEF027D778AC00F4018A = {
-						CreatedOnToolsVersion = 13.2.1;
-					};
 					E1ABA04925231E2500ED8AEF = {
 						CreatedOnToolsVersion = 12.0.1;
 						LastSwiftMigration = 1200;
@@ -2293,6 +2273,15 @@
 					E1ABA05225231E2500ED8AEF = {
 						CreatedOnToolsVersion = 12.0.1;
 						LastSwiftMigration = 1200;
+					};
+					E1DCAF2E284A1F0D00F44BE3 = {
+						CreatedOnToolsVersion = 13.4;
+					};
+					E1DCAF7B284A27DE00F44BE3 = {
+						CreatedOnToolsVersion = 13.4;
+					};
+					E1DCAFC1284A2B7B00F44BE3 = {
+						CreatedOnToolsVersion = 13.4;
 					};
 					E1F4217A2652CFEB00233B75 = {
 						CreatedOnToolsVersion = 12.5;
@@ -2323,14 +2312,14 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				E143CED827D7786D00F4018A /* OpenTelemetryExporter_iOS */,
+				E1DCAF2E284A1F0D00F44BE3 /* EventsExporter_iOS */,
+				E1DCAF7B284A27DE00F44BE3 /* EventsExporter_macOS */,
+				E1DCAFC1284A2B7B00F44BE3 /* EventsExporter_tvOS */,
 				E1ABA04925231E2500ED8AEF /* DatadogSDKTesting_iOS */,
-				E1ABA05225231E2500ED8AEF /* DatadogSDKTestingTests_iOS */,
-				E143CEE327D7789300F4018A /* OpenTelemetryExporter_macOS */,
 				E157A717256E9D1D00CBCA52 /* DatadogSDKTesting_macOS */,
-				E157A78B256EB0F000CBCA52 /* DatadogSDKTestingTests_macOS */,
-				E143CEF027D778AC00F4018A /* OpenTelemetryExporter_tvOS */,
 				E157A74F256E9D3300CBCA52 /* DatadogSDKTesting_tvOS */,
+				E1ABA05225231E2500ED8AEF /* DatadogSDKTestingTests_iOS */,
+				E157A78B256EB0F000CBCA52 /* DatadogSDKTestingTests_macOS */,
 				E157A7A5256EB0F200CBCA52 /* DatadogSDKTestingTests_tvOS */,
 				E1224A49264ABCCF00305968 /* IntegrationTests (iOS) */,
 				E1224A50264ABCCF00305968 /* IntegrationTests (macOS) */,
@@ -2407,6 +2396,27 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		E1ABA05125231E2500ED8AEF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1DCAF2D284A1F0D00F44BE3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1DCAF7A284A27DE00F44BE3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1DCAFC0284A2B7B00F44BE3 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -2530,117 +2540,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		E143CED527D7786D00F4018A /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				E143CF5227D7790300F4018A /* LogsExporter.swift in Sources */,
-				E1EBBD4727F1FFE70059BC3E /* SpanSanitizer.swift in Sources */,
-				E143CF6A27D7790300F4018A /* RequestBuilder.swift in Sources */,
-				E143CF3D27D7790300F4018A /* DateFormatting.swift in Sources */,
-				E143CF4927D7790300F4018A /* ExporterConfiguration.swift in Sources */,
-				E143CF2E27D7790300F4018A /* SpanEncoder.swift in Sources */,
-				E143CF4627D7790300F4018A /* Device.swift in Sources */,
-				E143CF6127D7790300F4018A /* Directory.swift in Sources */,
-				E143CF2B27D7790300F4018A /* SpansExporter.swift in Sources */,
-				E143CF6727D7790300F4018A /* OpenTelemetryExporter.swift in Sources */,
-				E143CF5827D7790300F4018A /* FilesOrchestrator.swift in Sources */,
-				E143CF5527D7790300F4018A /* FileWriter.swift in Sources */,
-				E143CF5B27D7790300F4018A /* DataFormat.swift in Sources */,
-				E143CF6D27D7790300F4018A /* DataUploader.swift in Sources */,
-				E143CF6427D7790300F4018A /* File.swift in Sources */,
-				E143CF3A27D7790300F4018A /* DateProvider.swift in Sources */,
-				E143CF3727D7790300F4018A /* Feature.swift in Sources */,
-				E143CF7C27D7790300F4018A /* DataUploadStatus.swift in Sources */,
-				E143CF7327D7790300F4018A /* DataUploadWorker.swift in Sources */,
-				E143CF4F27D7790300F4018A /* LogSanitizer.swift in Sources */,
-				E143CF7027D7790300F4018A /* DatadogEndpoints.swift in Sources */,
-				E143CF5E27D7790300F4018A /* FileReader.swift in Sources */,
-				E143CF4027D7790300F4018A /* EncodableValue.swift in Sources */,
-				E143CF3427D7790300F4018A /* JSONEncoder.swift in Sources */,
-				E1EBBD4B27F200210059BC3E /* AttributesSanitizer.swift in Sources */,
-				E143CF7627D7790300F4018A /* HTTPClient.swift in Sources */,
-				E143CF4C27D7790300F4018A /* LogEncoder.swift in Sources */,
-				E143CF7927D7790300F4018A /* DataUploadDelay.swift in Sources */,
-				E143CF4327D7790300F4018A /* DataCompression.swift in Sources */,
-				E143CF3127D7790300F4018A /* PerformancePreset.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		E143CEE127D7789300F4018A /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				E143CF5327D7790300F4018A /* LogsExporter.swift in Sources */,
-				E1EBBD4827F1FFE70059BC3E /* SpanSanitizer.swift in Sources */,
-				E143CF6B27D7790300F4018A /* RequestBuilder.swift in Sources */,
-				E143CF3E27D7790300F4018A /* DateFormatting.swift in Sources */,
-				E143CF4A27D7790300F4018A /* ExporterConfiguration.swift in Sources */,
-				E143CF2F27D7790300F4018A /* SpanEncoder.swift in Sources */,
-				E143CF4727D7790300F4018A /* Device.swift in Sources */,
-				E143CF6227D7790300F4018A /* Directory.swift in Sources */,
-				E143CF2C27D7790300F4018A /* SpansExporter.swift in Sources */,
-				E143CF6827D7790300F4018A /* OpenTelemetryExporter.swift in Sources */,
-				E143CF5927D7790300F4018A /* FilesOrchestrator.swift in Sources */,
-				E143CF5627D7790300F4018A /* FileWriter.swift in Sources */,
-				E143CF5C27D7790300F4018A /* DataFormat.swift in Sources */,
-				E143CF6E27D7790300F4018A /* DataUploader.swift in Sources */,
-				E143CF6527D7790300F4018A /* File.swift in Sources */,
-				E143CF3B27D7790300F4018A /* DateProvider.swift in Sources */,
-				E143CF3827D7790300F4018A /* Feature.swift in Sources */,
-				E143CF7D27D7790300F4018A /* DataUploadStatus.swift in Sources */,
-				E143CF7427D7790300F4018A /* DataUploadWorker.swift in Sources */,
-				E143CF5027D7790300F4018A /* LogSanitizer.swift in Sources */,
-				E143CF7127D7790300F4018A /* DatadogEndpoints.swift in Sources */,
-				E143CF5F27D7790300F4018A /* FileReader.swift in Sources */,
-				E143CF4127D7790300F4018A /* EncodableValue.swift in Sources */,
-				E143CF3527D7790300F4018A /* JSONEncoder.swift in Sources */,
-				E1EBBD4C27F200210059BC3E /* AttributesSanitizer.swift in Sources */,
-				E143CF7727D7790300F4018A /* HTTPClient.swift in Sources */,
-				E143CF4D27D7790300F4018A /* LogEncoder.swift in Sources */,
-				E143CF7A27D7790300F4018A /* DataUploadDelay.swift in Sources */,
-				E143CF4427D7790300F4018A /* DataCompression.swift in Sources */,
-				E143CF3227D7790300F4018A /* PerformancePreset.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		E143CEED27D778AC00F4018A /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				E143CF5427D7790300F4018A /* LogsExporter.swift in Sources */,
-				E1EBBD4927F1FFE70059BC3E /* SpanSanitizer.swift in Sources */,
-				E143CF6C27D7790300F4018A /* RequestBuilder.swift in Sources */,
-				E143CF3F27D7790300F4018A /* DateFormatting.swift in Sources */,
-				E143CF4B27D7790300F4018A /* ExporterConfiguration.swift in Sources */,
-				E143CF3027D7790300F4018A /* SpanEncoder.swift in Sources */,
-				E143CF4827D7790300F4018A /* Device.swift in Sources */,
-				E143CF6327D7790300F4018A /* Directory.swift in Sources */,
-				E143CF2D27D7790300F4018A /* SpansExporter.swift in Sources */,
-				E143CF6927D7790300F4018A /* OpenTelemetryExporter.swift in Sources */,
-				E143CF5A27D7790300F4018A /* FilesOrchestrator.swift in Sources */,
-				E143CF5727D7790300F4018A /* FileWriter.swift in Sources */,
-				E143CF5D27D7790300F4018A /* DataFormat.swift in Sources */,
-				E143CF6F27D7790300F4018A /* DataUploader.swift in Sources */,
-				E143CF6627D7790300F4018A /* File.swift in Sources */,
-				E143CF3C27D7790300F4018A /* DateProvider.swift in Sources */,
-				E143CF3927D7790300F4018A /* Feature.swift in Sources */,
-				E143CF7E27D7790300F4018A /* DataUploadStatus.swift in Sources */,
-				E143CF7527D7790300F4018A /* DataUploadWorker.swift in Sources */,
-				E143CF5127D7790300F4018A /* LogSanitizer.swift in Sources */,
-				E143CF7227D7790300F4018A /* DatadogEndpoints.swift in Sources */,
-				E143CF6027D7790300F4018A /* FileReader.swift in Sources */,
-				E143CF4227D7790300F4018A /* EncodableValue.swift in Sources */,
-				E143CF3627D7790300F4018A /* JSONEncoder.swift in Sources */,
-				E1EBBD4D27F200210059BC3E /* AttributesSanitizer.swift in Sources */,
-				E143CF7827D7790300F4018A /* HTTPClient.swift in Sources */,
-				E143CF4E27D7790300F4018A /* LogEncoder.swift in Sources */,
-				E143CF7B27D7790300F4018A /* DataUploadDelay.swift in Sources */,
-				E143CF4527D7790300F4018A /* DataCompression.swift in Sources */,
-				E143CF3327D7790300F4018A /* PerformancePreset.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		E157A722256E9D1D00CBCA52 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -2658,35 +2557,25 @@
 				E1A63F5D26789915002F48FA /* CodeOwners.swift in Sources */,
 				E157A724256E9D1D00CBCA52 /* DDTestMonitor.swift in Sources */,
 				E14405A725D6AA9500FE3D3C /* GitInfo.swift in Sources */,
-				E15C79692722AD0500E9DBAD /* DDCoverageConversor.swift in Sources */,
 				E157A725256E9D1D00CBCA52 /* DDEnvironmentValues.swift in Sources */,
 				E157A726256E9D1D00CBCA52 /* LibraryInitializer.m in Sources */,
-				E13DB9AB28241BD900409105 /* CoverageSummaryInfo.cpp in Sources */,
 				E157A728256E9D1D00CBCA52 /* DDInstrumentationControl.swift in Sources */,
 				E157A729256E9D1D00CBCA52 /* SimpleSpanData.swift in Sources */,
 				E1F595D52609FC3000AE92B7 /* DDNetworkInstrumentation.swift in Sources */,
 				E157A72B256E9D1D00CBCA52 /* FrameworkLoadHandler.swift in Sources */,
 				E157A72C256E9D1D00CBCA52 /* DDTags.swift in Sources */,
-				E13DB9AE28241BD900409105 /* LLVMCodeCoverageBridge.mm in Sources */,
-				E1665A7425D12D7500BA53CD /* Spawn.swift in Sources */,
 				E157A730256E9D1D00CBCA52 /* SignalUtils.swift in Sources */,
 				E157A731256E9D1D00CBCA52 /* XCUIApplicationSwizzler.swift in Sources */,
-				E13DB9AA28241BD900409105 /* CodeCoverage.cpp in Sources */,
 				E1C8DEF8268367AB005B5411 /* BinaryImages.swift in Sources */,
 				E157A734256E9D1D00CBCA52 /* StdoutCapture.swift in Sources */,
-				E13DB9B028241BD900409105 /* CoverageExporterJson.cpp in Sources */,
+				E1743F8228490DA9006CBFF8 /* DDCoverageHelper.swift in Sources */,
 				E1D476A725DD369F00832592 /* BinaryParser.swift in Sources */,
 				E11295C825F63BA8002719E7 /* DDSymbolAddress.c in Sources */,
-				E10A7E0F2806D69000B464C9 /* LLVMCoverageFormat.swift in Sources */,
 				E157A735256E9D1D00CBCA52 /* SimpleSpanSerializer.swift in Sources */,
 				E1DFF0EA257010E700344895 /* PlatformUtils.swift in Sources */,
 				E157A736256E9D1D00CBCA52 /* DDCrashes.swift in Sources */,
-				E1C8DEFB268372C3005B5411 /* DDCoverageHelper.swift in Sources */,
-				E13DB9A928241BD900409105 /* Error.cpp in Sources */,
 				E157A738256E9D1D00CBCA52 /* DDTestObserver.swift in Sources */,
 				E157A73A256E9D1D00CBCA52 /* DDTracer.swift in Sources */,
-				E13DB9A828241BD900409105 /* CoverageReport.cpp in Sources */,
-				E12C583A280D809900A31763 /* DDCoverageFormat.swift in Sources */,
 				E157A73E256E9D1D00CBCA52 /* StderrCapture.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2708,35 +2597,25 @@
 				E1A63F5E26789915002F48FA /* CodeOwners.swift in Sources */,
 				E157A75C256E9D3300CBCA52 /* DDTestMonitor.swift in Sources */,
 				E14405A825D6AA9600FE3D3C /* GitInfo.swift in Sources */,
-				E15C796A2722AD0500E9DBAD /* DDCoverageConversor.swift in Sources */,
 				E157A75D256E9D3300CBCA52 /* DDEnvironmentValues.swift in Sources */,
 				E157A75E256E9D3300CBCA52 /* LibraryInitializer.m in Sources */,
-				E13DB9B528241BDB00409105 /* CoverageSummaryInfo.cpp in Sources */,
 				E157A760256E9D3300CBCA52 /* DDInstrumentationControl.swift in Sources */,
 				E157A761256E9D3300CBCA52 /* SimpleSpanData.swift in Sources */,
 				E1F595D62609FC3000AE92B7 /* DDNetworkInstrumentation.swift in Sources */,
 				E157A763256E9D3300CBCA52 /* FrameworkLoadHandler.swift in Sources */,
 				E157A764256E9D3300CBCA52 /* DDTags.swift in Sources */,
-				E13DB9B828241BDB00409105 /* LLVMCodeCoverageBridge.mm in Sources */,
-				E1665A7525D12D7500BA53CD /* Spawn.swift in Sources */,
 				E157A768256E9D3300CBCA52 /* SignalUtils.swift in Sources */,
 				E157A769256E9D3300CBCA52 /* XCUIApplicationSwizzler.swift in Sources */,
-				E13DB9B428241BDB00409105 /* CodeCoverage.cpp in Sources */,
 				E1C8DEFA268367AB005B5411 /* BinaryImages.swift in Sources */,
 				E157A76C256E9D3300CBCA52 /* StdoutCapture.swift in Sources */,
-				E13DB9BA28241BDB00409105 /* CoverageExporterJson.cpp in Sources */,
+				E1743F8328490DA9006CBFF8 /* DDCoverageHelper.swift in Sources */,
 				E1D476A825DD369F00832592 /* BinaryParser.swift in Sources */,
 				E11295C925F63BA8002719E7 /* DDSymbolAddress.c in Sources */,
-				E10A7E102806D69000B464C9 /* LLVMCoverageFormat.swift in Sources */,
 				E157A76D256E9D3300CBCA52 /* SimpleSpanSerializer.swift in Sources */,
 				E1DFF0EB257010E800344895 /* PlatformUtils.swift in Sources */,
 				E157A76E256E9D3300CBCA52 /* DDCrashes.swift in Sources */,
-				E1C8DEFC268372C4005B5411 /* DDCoverageHelper.swift in Sources */,
-				E13DB9B328241BDB00409105 /* Error.cpp in Sources */,
 				E157A770256E9D3300CBCA52 /* DDTestObserver.swift in Sources */,
 				E157A772256E9D3300CBCA52 /* DDTracer.swift in Sources */,
-				E13DB9B228241BDB00409105 /* CoverageReport.cpp in Sources */,
-				E12C583B280D809900A31763 /* DDCoverageFormat.swift in Sources */,
 				E157A776256E9D3300CBCA52 /* StderrCapture.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2774,7 +2653,7 @@
 				E141EB9527EB62E60057D747 /* PerformancePresetTests.swift in Sources */,
 				E141EB9D27EB62E60057D747 /* HTTPClientTests.swift in Sources */,
 				E12248CB2644037B00305968 /* FileLocatorTests.swift in Sources */,
-				E141EB8327EB62E60057D747 /* OpenTelemetryExporterTests.swift in Sources */,
+				E141EB8327EB62E60057D747 /* EventsExporterTests.swift in Sources */,
 				E141EB8A27EB62E60057D747 /* CoreMocks.swift in Sources */,
 				E141EB9A27EB62E60057D747 /* DateFormattingTests.swift in Sources */,
 				E141EB8B27EB62E60057D747 /* HttpTestServer.swift in Sources */,
@@ -2829,7 +2708,7 @@
 				E141EBB227EB62E70057D747 /* PerformancePresetTests.swift in Sources */,
 				E141EBBA27EB62E70057D747 /* HTTPClientTests.swift in Sources */,
 				E12248CC2644037B00305968 /* FileLocatorTests.swift in Sources */,
-				E141EBA027EB62E70057D747 /* OpenTelemetryExporterTests.swift in Sources */,
+				E141EBA027EB62E70057D747 /* EventsExporterTests.swift in Sources */,
 				E141EBA727EB62E70057D747 /* CoreMocks.swift in Sources */,
 				E141EBB727EB62E70057D747 /* DateFormattingTests.swift in Sources */,
 				E141EBA827EB62E70057D747 /* HttpTestServer.swift in Sources */,
@@ -2867,36 +2746,26 @@
 				E1A63F5C26789915002F48FA /* CodeOwners.swift in Sources */,
 				E1665A8525D1524100BA53CD /* DDSymbolicator.swift in Sources */,
 				E1ABA08B252341EA00ED8AEF /* DDTestMonitor.swift in Sources */,
-				E15C79682722AD0500E9DBAD /* DDCoverageConversor.swift in Sources */,
 				E14405A625D6AA9500FE3D3C /* GitInfo.swift in Sources */,
 				E1ABA07725231F4700ED8AEF /* DDEnvironmentValues.swift in Sources */,
-				E15D7852281972BA00758E2A /* LLVMCodeCoverageBridge.mm in Sources */,
 				E158E2DC25471DA000DBCD6C /* DDInstrumentationControl.swift in Sources */,
 				E1FB4842253891CE0083B263 /* SimpleSpanData.swift in Sources */,
 				E1F595D42609FC3000AE92B7 /* DDNetworkInstrumentation.swift in Sources */,
 				E1ABA07625231F4700ED8AEF /* FrameworkLoadHandler.swift in Sources */,
 				E1ABA07525231F4700ED8AEF /* DDTags.swift in Sources */,
-				E1665A7325D12D7500BA53CD /* Spawn.swift in Sources */,
-				E15D7849281838D200758E2A /* CodeCoverage.cpp in Sources */,
 				E13D0BCA2546E29C00C37D56 /* SignalUtils.swift in Sources */,
 				E12515E5254892C600670D23 /* XCUIApplicationSwizzler.swift in Sources */,
-				E1C8DEF5268363EC005B5411 /* DDCoverageHelper.swift in Sources */,
 				E172E96D271F069600CBA95C /* InternalError.swift in Sources */,
 				E126DD2D253F366200700A40 /* StdoutCapture.swift in Sources */,
 				E1D476A625DD369F00832592 /* BinaryParser.swift in Sources */,
 				E11295CA25F63BA8002719E7 /* DDSymbolAddress.c in Sources */,
-				E10A7E0E2806D69000B464C9 /* LLVMCoverageFormat.swift in Sources */,
-				E131592E281A7DDB00B29123 /* Error.cpp in Sources */,
+				E1743F8128490DA8006CBFF8 /* DDCoverageHelper.swift in Sources */,
 				E1FB4840253891CE0083B263 /* SimpleSpanSerializer.swift in Sources */,
-				E15D78472818364B00758E2A /* CoverageSummaryInfo.cpp in Sources */,
 				E1FB4841253891CE0083B263 /* DDCrashes.swift in Sources */,
 				E1ABA07425231F4700ED8AEF /* DDTestObserver.swift in Sources */,
-				E15D783F2818276800758E2A /* CoverageExporterJson.cpp in Sources */,
 				E1C8DEF9268367AB005B5411 /* BinaryImages.swift in Sources */,
 				E1798CC62524B9BD008DEBB9 /* DDTracer.swift in Sources */,
 				E141CF60256FD513008B6B70 /* PlatformUtils.swift in Sources */,
-				E15D784328182BDA00758E2A /* CoverageReport.cpp in Sources */,
-				E12C5839280D809900A31763 /* DDCoverageFormat.swift in Sources */,
 				E126DD2F253F367600700A40 /* StderrCapture.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2934,7 +2803,7 @@
 				E141EB7827EB62E40057D747 /* PerformancePresetTests.swift in Sources */,
 				E141EB8027EB62E40057D747 /* HTTPClientTests.swift in Sources */,
 				E12248CD2644037B00305968 /* FileLocatorTests.swift in Sources */,
-				E141EB6627EB62E40057D747 /* OpenTelemetryExporterTests.swift in Sources */,
+				E141EB6627EB62E40057D747 /* EventsExporterTests.swift in Sources */,
 				E141EB6D27EB62E40057D747 /* CoreMocks.swift in Sources */,
 				E141EB7D27EB62E40057D747 /* DateFormattingTests.swift in Sources */,
 				E141EB6E27EB62E40057D747 /* HttpTestServer.swift in Sources */,
@@ -2953,6 +2822,150 @@
 				E141EB7927EB62E40057D747 /* SwiftExtensions.swift in Sources */,
 				E141EB6527EB62E40057D747 /* DataUploaderTests.swift in Sources */,
 				E141EB6927EB62E40057D747 /* DirectoryTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1DCAF2B284A1F0D00F44BE3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E1DCAF6F284A200800F44BE3 /* DDCoverageFormat.swift in Sources */,
+				E1DCAF69284A1F8900F44BE3 /* DataUploadStatus.swift in Sources */,
+				E1DCAF55284A1F5B00F44BE3 /* AttributesSanitizer.swift in Sources */,
+				E1DCAF53284A1F5B00F44BE3 /* EncodableValue.swift in Sources */,
+				E1DCAF72284A203100F44BE3 /* Spawn.swift in Sources */,
+				E1DCAF52284A1F5B00F44BE3 /* DateProvider.swift in Sources */,
+				E1DCAF68284A1F8900F44BE3 /* RequestBuilder.swift in Sources */,
+				E1DCAF58284A1F5E00F44BE3 /* ExporterConfiguration.swift in Sources */,
+				E1DCAF5E284A1F6900F44BE3 /* FileWriter.swift in Sources */,
+				E1DCAF67284A1F8900F44BE3 /* DataUploader.swift in Sources */,
+				E1DCAF70284A200800F44BE3 /* DDCoverageConversor.swift in Sources */,
+				E1DCAF61284A1F6E00F44BE3 /* File.swift in Sources */,
+				E1DCAF62284A1F8300F44BE3 /* EventsExporter.swift in Sources */,
+				E1DCAF5B284A1F6400F44BE3 /* LogsExporter.swift in Sources */,
+				E1DCAF4F284A1F5B00F44BE3 /* Device.swift in Sources */,
+				E1DCAF60284A1F6E00F44BE3 /* Directory.swift in Sources */,
+				E1DCAF64284A1F8900F44BE3 /* DataUploadWorker.swift in Sources */,
+				E1DCAF47284A1F4900F44BE3 /* CodeCoverage.cpp in Sources */,
+				E1DCAF5F284A1F6900F44BE3 /* FilesOrchestrator.swift in Sources */,
+				E1DCAF66284A1F8900F44BE3 /* DatadogEndpoints.swift in Sources */,
+				E1DCAF4D284A1F5500F44BE3 /* SpanSanitizer.swift in Sources */,
+				E1DCAF59284A1F6400F44BE3 /* LogEncoder.swift in Sources */,
+				E1DCAF56284A1F5B00F44BE3 /* Feature.swift in Sources */,
+				E1DCAF57284A1F5B00F44BE3 /* DateFormatting.swift in Sources */,
+				E1DCAF65284A1F8900F44BE3 /* HTTPClient.swift in Sources */,
+				E1DCAF5D284A1F6900F44BE3 /* FileReader.swift in Sources */,
+				E1DCAF5A284A1F6400F44BE3 /* LogSanitizer.swift in Sources */,
+				E1DCAF48284A1F4900F44BE3 /* CoverageExporterJson.cpp in Sources */,
+				E1DCAF4B284A1F4F00F44BE3 /* CoverageExporter.swift in Sources */,
+				E1DCAF5C284A1F6900F44BE3 /* DataFormat.swift in Sources */,
+				E1DCAF46284A1F4900F44BE3 /* Error.cpp in Sources */,
+				E1DCAF4A284A1F4900F44BE3 /* CoverageReport.cpp in Sources */,
+				E1DCAF51284A1F5B00F44BE3 /* JSONEncoder.swift in Sources */,
+				E1DCAF45284A1F4900F44BE3 /* LLVMCodeCoverageBridge.mm in Sources */,
+				E1DCAF4C284A1F5500F44BE3 /* SpanEncoder.swift in Sources */,
+				E1DCAF54284A1F5B00F44BE3 /* DataCompression.swift in Sources */,
+				E1DCAF4E284A1F5500F44BE3 /* SpansExporter.swift in Sources */,
+				E1DCAF63284A1F8900F44BE3 /* DataUploadDelay.swift in Sources */,
+				E1DCAF6E284A200800F44BE3 /* LLVMCoverageFormat.swift in Sources */,
+				E1DCAF44284A1F4900F44BE3 /* CoverageSummaryInfo.cpp in Sources */,
+				E1DCAF50284A1F5B00F44BE3 /* PerformancePreset.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1DCAF78284A27DE00F44BE3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E1DCAF94284A285D00F44BE3 /* CoverageExporter.swift in Sources */,
+				E1DCAF92284A285D00F44BE3 /* RequestBuilder.swift in Sources */,
+				E1DCAF8F284A285D00F44BE3 /* AttributesSanitizer.swift in Sources */,
+				E1DCAF8A284A285D00F44BE3 /* Directory.swift in Sources */,
+				E1DCAFBC284A29DD00F44BE3 /* Spawn.swift in Sources */,
+				E1DCAF95284A285D00F44BE3 /* JSONEncoder.swift in Sources */,
+				E1DCAFA1284A285D00F44BE3 /* HTTPClient.swift in Sources */,
+				E1DCAF87284A285D00F44BE3 /* LLVMCodeCoverageBridge.mm in Sources */,
+				E1DCAF86284A285D00F44BE3 /* DataUploadDelay.swift in Sources */,
+				E1DCAF93284A285D00F44BE3 /* File.swift in Sources */,
+				E1DCAFA6284A285D00F44BE3 /* FilesOrchestrator.swift in Sources */,
+				E1DCAF97284A285D00F44BE3 /* DateFormatting.swift in Sources */,
+				E1DCAF8E284A285D00F44BE3 /* DateProvider.swift in Sources */,
+				E1DCAF91284A285D00F44BE3 /* Device.swift in Sources */,
+				E1DCAF98284A285D00F44BE3 /* DataFormat.swift in Sources */,
+				E1DCAF89284A285D00F44BE3 /* DataUploadWorker.swift in Sources */,
+				E1DCAFB1284A294100F44BE3 /* DDCoverageConversor.swift in Sources */,
+				E1DCAF9B284A285D00F44BE3 /* LogEncoder.swift in Sources */,
+				E1DCAFAE284A294100F44BE3 /* DDCoverageFormat.swift in Sources */,
+				E1DCAFA2284A285D00F44BE3 /* EncodableValue.swift in Sources */,
+				E1DCAF9D284A285D00F44BE3 /* CoverageReport.cpp in Sources */,
+				E1DCAF8B284A285D00F44BE3 /* Error.cpp in Sources */,
+				E1DCAF90284A285D00F44BE3 /* CodeCoverage.cpp in Sources */,
+				E1DCAF96284A285D00F44BE3 /* CoverageExporterJson.cpp in Sources */,
+				E1DCAF9A284A285D00F44BE3 /* FileWriter.swift in Sources */,
+				E1DCAFA0284A285D00F44BE3 /* LogsExporter.swift in Sources */,
+				E1DCAF8D284A285D00F44BE3 /* DatadogEndpoints.swift in Sources */,
+				E1DCAFA9284A285D00F44BE3 /* ExporterConfiguration.swift in Sources */,
+				E1DCAFB2284A294100F44BE3 /* LLVMCoverageFormat.swift in Sources */,
+				E1DCAFA8284A285D00F44BE3 /* EventsExporter.swift in Sources */,
+				E1DCAF85284A285D00F44BE3 /* CoverageSummaryInfo.cpp in Sources */,
+				E1DCAF9E284A285D00F44BE3 /* PerformancePreset.swift in Sources */,
+				E1DCAFA4284A285D00F44BE3 /* SpanSanitizer.swift in Sources */,
+				E1DCAF99284A285D00F44BE3 /* DataUploadStatus.swift in Sources */,
+				E1DCAFA5284A285D00F44BE3 /* Feature.swift in Sources */,
+				E1DCAF8C284A285D00F44BE3 /* DataUploader.swift in Sources */,
+				E1DCAF84284A285D00F44BE3 /* FileReader.swift in Sources */,
+				E1DCAF88284A285D00F44BE3 /* DataCompression.swift in Sources */,
+				E1DCAFA3284A285D00F44BE3 /* SpansExporter.swift in Sources */,
+				E1DCAF9F284A285D00F44BE3 /* SpanEncoder.swift in Sources */,
+				E1DCAFA7284A285D00F44BE3 /* LogSanitizer.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1DCAFBE284A2B7B00F44BE3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E1DCAFF6284A2BED00F44BE3 /* Spawn.swift in Sources */,
+				E1DCAFF1284A2BED00F44BE3 /* SpanEncoder.swift in Sources */,
+				E1DCAFE3284A2BED00F44BE3 /* RequestBuilder.swift in Sources */,
+				E1DCAFF4284A2BED00F44BE3 /* CoverageExporter.swift in Sources */,
+				E1DCAFE7284A2BED00F44BE3 /* CoverageExporterJson.cpp in Sources */,
+				E1DCAFDB284A2BED00F44BE3 /* DateProvider.swift in Sources */,
+				E1DCAFE9284A2BED00F44BE3 /* ExporterConfiguration.swift in Sources */,
+				E1DCAFEA284A2BED00F44BE3 /* AttributesSanitizer.swift in Sources */,
+				E1DCAFEB284A2BED00F44BE3 /* DataCompression.swift in Sources */,
+				E1DCAFE1284A2BED00F44BE3 /* LLVMCodeCoverageBridge.mm in Sources */,
+				E1DCAFCF284A2BED00F44BE3 /* DateFormatting.swift in Sources */,
+				E1DCAFDC284A2BED00F44BE3 /* EventsExporter.swift in Sources */,
+				E1DCAFE2284A2BED00F44BE3 /* LogSanitizer.swift in Sources */,
+				E1DCAFE0284A2BED00F44BE3 /* Device.swift in Sources */,
+				E1DCAFD3284A2BED00F44BE3 /* SpanSanitizer.swift in Sources */,
+				E1DCAFF7284A2BED00F44BE3 /* PerformancePreset.swift in Sources */,
+				E1DCAFDE284A2BED00F44BE3 /* Error.cpp in Sources */,
+				E1DCAFD1284A2BED00F44BE3 /* DatadogEndpoints.swift in Sources */,
+				E1DCAFD0284A2BED00F44BE3 /* File.swift in Sources */,
+				E1DCAFEF284A2BED00F44BE3 /* FileWriter.swift in Sources */,
+				E1DCAFEC284A2BED00F44BE3 /* EncodableValue.swift in Sources */,
+				E1DCAFF8284A2BED00F44BE3 /* DataFormat.swift in Sources */,
+				E1DCAFCE284A2BED00F44BE3 /* CodeCoverage.cpp in Sources */,
+				E1DCAFE6284A2BED00F44BE3 /* Feature.swift in Sources */,
+				E1DCAFDF284A2BED00F44BE3 /* DDCoverageFormat.swift in Sources */,
+				E1DCAFD9284A2BED00F44BE3 /* CoverageReport.cpp in Sources */,
+				E1DCAFE5284A2BED00F44BE3 /* SpansExporter.swift in Sources */,
+				E1DCAFD6284A2BED00F44BE3 /* FilesOrchestrator.swift in Sources */,
+				E1DCAFD8284A2BED00F44BE3 /* DataUploadStatus.swift in Sources */,
+				E1DCAFE8284A2BED00F44BE3 /* LLVMCoverageFormat.swift in Sources */,
+				E1DCAFF3284A2BED00F44BE3 /* DataUploadWorker.swift in Sources */,
+				E1DCAFDD284A2BED00F44BE3 /* CoverageSummaryInfo.cpp in Sources */,
+				E1DCAFE4284A2BED00F44BE3 /* DataUploader.swift in Sources */,
+				E1DCAFF2284A2BED00F44BE3 /* LogEncoder.swift in Sources */,
+				E1DCAFD7284A2BED00F44BE3 /* DataUploadDelay.swift in Sources */,
+				E1DCAFD4284A2BED00F44BE3 /* LogsExporter.swift in Sources */,
+				E1DCAFED284A2BED00F44BE3 /* FileReader.swift in Sources */,
+				E1DCAFDA284A2BED00F44BE3 /* JSONEncoder.swift in Sources */,
+				E1DCAFD2284A2BED00F44BE3 /* DDCoverageConversor.swift in Sources */,
+				E1DCAFF5284A2BED00F44BE3 /* HTTPClient.swift in Sources */,
+				E1DCAFEE284A2BED00F44BE3 /* Directory.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2992,21 +3005,6 @@
 			target = E1224A50264ABCCF00305968 /* IntegrationTests (macOS) */;
 			targetProxy = E1224A65264ABCD000305968 /* PBXContainerItemProxy */;
 		};
-		E143CF8127D7791300F4018A /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = E143CED827D7786D00F4018A /* OpenTelemetryExporter_iOS */;
-			targetProxy = E143CF8027D7791300F4018A /* PBXContainerItemProxy */;
-		};
-		E143CF8427D7791C00F4018A /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = E143CEE327D7789300F4018A /* OpenTelemetryExporter_macOS */;
-			targetProxy = E143CF8327D7791C00F4018A /* PBXContainerItemProxy */;
-		};
-		E143CF8727D7792100F4018A /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = E143CEF027D778AC00F4018A /* OpenTelemetryExporter_tvOS */;
-			targetProxy = E143CF8627D7792100F4018A /* PBXContainerItemProxy */;
-		};
 		E157A7CA256EB39F00CBCA52 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = E157A74F256E9D3300CBCA52 /* DatadogSDKTesting_tvOS */;
@@ -3021,6 +3019,26 @@
 			isa = PBXTargetDependency;
 			target = E1ABA04925231E2500ED8AEF /* DatadogSDKTesting_iOS */;
 			targetProxy = E1ABA05525231E2500ED8AEF /* PBXContainerItemProxy */;
+		};
+		E1DCAF76284A23BE00F44BE3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E1DCAF2E284A1F0D00F44BE3 /* EventsExporter_iOS */;
+			targetProxy = E1DCAF75284A23BE00F44BE3 /* PBXContainerItemProxy */;
+		};
+		E1DCAFB4284A296600F44BE3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E1DCAF7B284A27DE00F44BE3 /* EventsExporter_macOS */;
+			targetProxy = E1DCAFB3284A296600F44BE3 /* PBXContainerItemProxy */;
+		};
+		E1DCAFBB284A299A00F44BE3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E1DCAF7B284A27DE00F44BE3 /* EventsExporter_macOS */;
+			targetProxy = E1DCAFBA284A299A00F44BE3 /* PBXContainerItemProxy */;
+		};
+		E1DCAFFB284A2C4B00F44BE3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E1DCAFC1284A2B7B00F44BE3 /* EventsExporter_tvOS */;
+			targetProxy = E1DCAFFA284A2C4B00F44BE3 /* PBXContainerItemProxy */;
 		};
 		E1F421D226539FAB00233B75 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -3227,98 +3245,6 @@
 				SDKROOT = macosx;
 				SWIFT_VERSION = 5.0;
 				TEST_TARGET_NAME = "IntegrationTests (macOS)";
-			};
-			name = Release;
-		};
-		E143CEDE27D7786D00F4018A /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
-				CODE_SIGN_STYLE = Automatic;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
-				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_NAME = OpenTelemetryExporter;
-				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		E143CEDF27D7786D00F4018A /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
-				CODE_SIGN_STYLE = Automatic;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
-				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_NAME = OpenTelemetryExporter;
-				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
-		E143CEEB27D7789400F4018A /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
-				CODE_SIGN_STYLE = Automatic;
-				EXECUTABLE_PREFIX = lib;
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				PRODUCT_NAME = OpenTelemetryExporter;
-				SDKROOT = macosx;
-				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 5.0;
-			};
-			name = Debug;
-		};
-		E143CEEC27D7789400F4018A /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
-				CODE_SIGN_STYLE = Automatic;
-				EXECUTABLE_PREFIX = lib;
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				PRODUCT_NAME = OpenTelemetryExporter;
-				SDKROOT = macosx;
-				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 5.0;
-			};
-			name = Release;
-		};
-		E143CEF627D778AC00F4018A /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
-				CODE_SIGN_STYLE = Automatic;
-				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_NAME = OpenTelemetryExporter;
-				SDKROOT = appletvos;
-				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 3;
-				TVOS_DEPLOYMENT_TARGET = 11.0;
-			};
-			name = Debug;
-		};
-		E143CEF727D778AC00F4018A /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
-				CODE_SIGN_STYLE = Automatic;
-				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_NAME = OpenTelemetryExporter;
-				SDKROOT = appletvos;
-				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 3;
-				TVOS_DEPLOYMENT_TARGET = 11.0;
 			};
 			name = Release;
 		};
@@ -3574,7 +3500,6 @@
 					"$(inherited)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
@@ -3643,7 +3568,6 @@
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = fast;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
@@ -3687,7 +3611,6 @@
 				OTHER_LDFLAGS = " -weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
-				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -3715,7 +3638,6 @@
 				OTHER_LDFLAGS = " -weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
-				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -3759,6 +3681,203 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Tests/DatadogSDKTesting/objc/DatadogSDKTestingTests-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		E1DCAF3F284A1F0D00F44BE3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_WARN_COMMA = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GCC_DYNAMIC_NO_PIC = NO;
+				"GCC_WARN_64_TO_32_BIT_CONVERSION[arch=*64]" = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.EventsExporter;
+				PRODUCT_NAME = EventsExporter;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		E1DCAF40284A1F0D00F44BE3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_WARN_COMMA = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				"GCC_WARN_64_TO_32_BIT_CONVERSION[arch=*64]" = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.EventsExporter;
+				PRODUCT_NAME = EventsExporter;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		E1DCAF81284A27DE00F44BE3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_WARN_COMMA = NO;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.EventsExporter;
+				PRODUCT_NAME = EventsExporter;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		E1DCAF82284A27DE00F44BE3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_WARN_COMMA = NO;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.EventsExporter;
+				PRODUCT_NAME = EventsExporter;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		E1DCAFC7284A2B7B00F44BE3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_WARN_COMMA = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GCC_DYNAMIC_NO_PIC = NO;
+				"GCC_WARN_64_TO_32_BIT_CONVERSION[arch=*64]" = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.datadoghq.EventsExporter-tvOS";
+				PRODUCT_NAME = EventsExporter;
+				SDKROOT = appletvos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
+			};
+			name = Debug;
+		};
+		E1DCAFC8284A2B7B00F44BE3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_WARN_COMMA = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				"GCC_WARN_64_TO_32_BIT_CONVERSION[arch=*64]" = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.datadoghq.EventsExporter-tvOS";
+				PRODUCT_NAME = EventsExporter;
+				SDKROOT = appletvos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
 			};
 			name = Release;
 		};
@@ -3885,33 +4004,6 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		E143CEDD27D7786D00F4018A /* Build configuration list for PBXNativeTarget "OpenTelemetryExporter_iOS" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				E143CEDE27D7786D00F4018A /* Debug */,
-				E143CEDF27D7786D00F4018A /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		E143CEEA27D7789400F4018A /* Build configuration list for PBXNativeTarget "OpenTelemetryExporter_macOS" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				E143CEEB27D7789400F4018A /* Debug */,
-				E143CEEC27D7789400F4018A /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		E143CEF527D778AC00F4018A /* Build configuration list for PBXNativeTarget "OpenTelemetryExporter_tvOS" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				E143CEF627D778AC00F4018A /* Debug */,
-				E143CEF727D778AC00F4018A /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		E157A74A256E9D1D00CBCA52 /* Build configuration list for PBXNativeTarget "DatadogSDKTesting_macOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -3971,6 +4063,33 @@
 			buildConfigurations = (
 				E1ABA06225231E2500ED8AEF /* Debug */,
 				E1ABA06325231E2500ED8AEF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E1DCAF3E284A1F0D00F44BE3 /* Build configuration list for PBXNativeTarget "EventsExporter_iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E1DCAF3F284A1F0D00F44BE3 /* Debug */,
+				E1DCAF40284A1F0D00F44BE3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E1DCAF80284A27DE00F44BE3 /* Build configuration list for PBXNativeTarget "EventsExporter_macOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E1DCAF81284A27DE00F44BE3 /* Debug */,
+				E1DCAF82284A27DE00F44BE3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E1DCAFC6284A2B7B00F44BE3 /* Build configuration list for PBXNativeTarget "EventsExporter_tvOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E1DCAFC7284A2B7B00F44BE3 /* Debug */,
+				E1DCAFC8284A2B7B00F44BE3 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -4072,16 +4191,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		E123D0C027D7B2C700B85B37 /* OpenTelemetrySdk */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
-			productName = OpenTelemetrySdk;
-		};
-		E123D0C227D7B2DA00B85B37 /* OpenTelemetrySdk */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
-			productName = OpenTelemetrySdk;
-		};
 		E141EB5827EB44400057D747 /* NIO */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = E141EB5727EB44400057D747 /* XCRemoteSwiftPackageReference "swift-nio" */;
@@ -4111,26 +4220,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E141EB5727EB44400057D747 /* XCRemoteSwiftPackageReference "swift-nio" */;
 			productName = NIOHTTP1;
-		};
-		E141EBBC27ECADC30057D747 /* OpenTelemetrySdk */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
-			productName = OpenTelemetrySdk;
-		};
-		E143CF8927D77E1900F4018A /* Atomics */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E143CF8827D77E1900F4018A /* XCRemoteSwiftPackageReference "swift-atomics" */;
-			productName = Atomics;
-		};
-		E143CF8B27D77ED000F4018A /* Atomics */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E143CF8827D77E1900F4018A /* XCRemoteSwiftPackageReference "swift-atomics" */;
-			productName = Atomics;
-		};
-		E143CF8D27D77ED900F4018A /* Atomics */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E143CF8827D77E1900F4018A /* XCRemoteSwiftPackageReference "swift-atomics" */;
-			productName = Atomics;
 		};
 		E157A718256E9D1D00CBCA52 /* CrashReporter */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -4186,6 +4275,36 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
 			productName = URLSessionInstrumentation;
+		};
+		E1DCAF6A284A1FE000F44BE3 /* OpenTelemetrySdk */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			productName = OpenTelemetrySdk;
+		};
+		E1DCAF6C284A1FE600F44BE3 /* Atomics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E143CF8827D77E1900F4018A /* XCRemoteSwiftPackageReference "swift-atomics" */;
+			productName = Atomics;
+		};
+		E1DCAFAA284A28DE00F44BE3 /* OpenTelemetrySdk */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			productName = OpenTelemetrySdk;
+		};
+		E1DCAFAC284A28E600F44BE3 /* Atomics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E143CF8827D77E1900F4018A /* XCRemoteSwiftPackageReference "swift-atomics" */;
+			productName = Atomics;
+		};
+		E1DCAFC9284A2BA300F44BE3 /* OpenTelemetrySdk */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			productName = OpenTelemetrySdk;
+		};
+		E1DCAFCB284A2BA800F44BE3 /* Atomics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E143CF8827D77E1900F4018A /* XCRemoteSwiftPackageReference "swift-atomics" */;
+			productName = Atomics;
 		};
 		E1FB483A253891650083B263 /* CrashReporter */ = {
 			isa = XCSwiftPackageProductDependency;

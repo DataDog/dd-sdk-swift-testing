@@ -231,7 +231,7 @@ public class DDTest: NSObject {
         }
 
         DDCoverageHelper.instance?.setTest(name: name,
-                                           traceId: span.context.traceId.hexString)
+                                           traceId: span.context.traceId.hexString, spanId: span.context.spanId.hexString)
         DDCoverageHelper.instance?.clearCounters()
     }
 
@@ -291,17 +291,9 @@ public class DDTest: NSObject {
         span.setAttribute(key: DDTestTags.testStatus, value: testStatus)
 
         DDCoverageHelper.instance?.writeProfile()
-        if let coverageFileURL = DDCoverageHelper.instance?.getPathForTest(name: name, traceId: span.context.traceId.hexString) {
-            let start = DispatchTime.now()
-            let profData = DDCoverageConversor.generateProfData(profrawFile: coverageFileURL)
-            let llvmProfDataTime = DispatchTime.now()
-            _ = DDCoverageConversor.getCoverageJson(profdataFile: profData, testId: span.context.traceId.hexString)
-            let ddCoverageTime = DispatchTime.now()
-
-            let llvmProf = Double(llvmProfDataTime.uptimeNanoseconds - start.uptimeNanoseconds) / 1_000_000
-            let ddCov = Double(ddCoverageTime.uptimeNanoseconds - llvmProfDataTime.uptimeNanoseconds) / 1_000_000
-            span.setAttribute(key: "performance.llvmProf", value: llvmProf)
-            span.setAttribute(key: "performance.ddCov", value: ddCov)
+        if let coverageFileURL = DDCoverageHelper.instance?.getURLForTest(name: name, traceId: span.context.traceId.hexString, spanId: span.context.spanId.hexString) {
+            let binaryImagePaths = BinaryImages.profileImages.map { $0.path }
+            DDTestMonitor.tracer.eventsExporter?.export(coverage: coverageFileURL, traceId: span.context.traceId.hexString, spanId: span.context.spanId.hexString, binaryImagePaths: binaryImagePaths)
         }
 
         StderrCapture.syncData()

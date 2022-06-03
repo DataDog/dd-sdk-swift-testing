@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "E143CEE327D7789300F4018A"
-               BuildableName = "libOpenTelemetryExporter.a"
-               BlueprintName = "OpenTelemetryExporter_macOS"
+               BlueprintIdentifier = "E1DCAF7B284A27DE00F44BE3"
+               BuildableName = "EventsExporter_macOS.framework"
+               BlueprintName = "EventsExporter_macOS"
                ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -50,9 +50,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "E143CEE327D7789300F4018A"
-            BuildableName = "libOpenTelemetryExporter.a"
-            BlueprintName = "OpenTelemetryExporter_macOS"
+            BlueprintIdentifier = "E1DCAF7B284A27DE00F44BE3"
+            BuildableName = "EventsExporter_macOS.framework"
+            BlueprintName = "EventsExporter_macOS"
             ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

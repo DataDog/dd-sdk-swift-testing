@@ -4,10 +4,10 @@
  * Copyright 2020-2021 Datadog, Inc.
  */
 
+@_implementationOnly import EventsExporter
 import Foundation
 @_implementationOnly import InMemoryExporter
 @_implementationOnly import OpenTelemetryApi
-@_implementationOnly import OpenTelemetryExporter
 @_implementationOnly import OpenTelemetrySdk
 
 enum DDHeaders: String, CaseIterable {
@@ -21,7 +21,7 @@ enum DDHeaders: String, CaseIterable {
 internal class DDTracer {
     let tracerSdk: TracerSdk
     let ntpClock = NTPClock()
-    var opentelemetryExporter: OpenTelemetryExporter?
+    var eventsExporter: EventsExporter?
     private var launchSpanContext: SpanContext?
     let backgroundWorkQueue = DispatchQueue(label: "com.datadog.logswriter")
 
@@ -101,13 +101,13 @@ internal class DDTracer {
             payloadCompression: payloadCompression,
             performancePreset: .instantDataDelivery
         )
-        opentelemetryExporter = try? OpenTelemetryExporter(config: exporterConfiguration)
+        eventsExporter = try? EventsExporter(config: exporterConfiguration)
 
         let exporterToUse: SpanExporter
 
         if env.disableTracesExporting {
             exporterToUse = InMemoryExporter()
-        } else if let exporter = opentelemetryExporter {
+        } else if let exporter = eventsExporter {
             exporterToUse = exporter as SpanExporter
         } else {
             Log.print("Failed creating Datadog exporter.")
@@ -385,6 +385,6 @@ internal class DDTracer {
     }
 
     func endpointURLs() -> Set<String> {
-        return opentelemetryExporter?.endpointURLs() ?? Set<String>()
+        return eventsExporter?.endpointURLs() ?? Set<String>()
     }
 }

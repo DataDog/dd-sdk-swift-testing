@@ -9,6 +9,7 @@ import MachO
 #if SWIFT_PACKAGE
     import DatadogSDKTestingObjc
 #endif
+@_implementationOnly import EventsExporter
 
 enum DDSymbolicator {
     private static let crashLineRegex = try! NSRegularExpression(pattern: "^([0-9]+)(\\s+)(\\S+ *\\S+)(\\s+)(0x[0-9a-fA-F]+)([ \t]+)(0x[0-9a-fA-F]+)([ \t]+\\+[ \t]+[0-9]+)$?", options: .anchorsMatchLines)

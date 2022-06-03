@@ -14,4 +14,3 @@ FOUNDATION_EXPORT const unsigned char DatadogSDKTestingVersionString[];
 
 #import <DatadogSDKTesting/DDSymbolAddress.h>
 #import <DatadogSDKTesting/NTPServer.h>
-#import <DatadogSDKTesting/LLVMCodeCoverageBridge.h>

@@ -45,7 +45,7 @@ internal class LogsExporter {
 
         logsStorage = FeatureStorage(writer: logsFileWriter, reader: logsFileReader)
 
-        let requestBuilder = RequestBuilder(
+        let requestBuilder = SingleRequestBuilder(
             url: configuration.endpoint.logsURL,
             queryItems: [
                 .ddsource(source: configuration.source)
@@ -58,7 +58,7 @@ internal class LogsExporter {
                     device: Device.current
                 ),
                 .ddAPIKeyHeader(apiKey: configuration.apiKey)
-            ] + (configuration.payloadCompression ? [RequestBuilder.HTTPHeader.contentEncodingHeader(contentEncoding: .deflate)] : [])
+            ] + (configuration.payloadCompression ? [HTTPHeader.contentEncodingHeader(contentEncoding: .deflate)] : [])
         )
 
         logsUpload = FeatureUpload(featureName: "logsUpload",

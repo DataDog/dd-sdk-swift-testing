@@ -250,6 +250,9 @@
 		E18C35F027EDD47500E0BC08 /* NTPServer.h in Headers */ = {isa = PBXBuildFile; fileRef = E13B5F3627ECD08B006F8E2D /* NTPServer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E18C35F127EDD4A300E0BC08 /* NTPServer.h in Headers */ = {isa = PBXBuildFile; fileRef = E13B5F3627ECD08B006F8E2D /* NTPServer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E18C35F227EDD4B700E0BC08 /* NTPServer.h in Headers */ = {isa = PBXBuildFile; fileRef = E13B5F3627ECD08B006F8E2D /* NTPServer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		E1913529284F7A92006480C9 /* HTTPHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1913528284F7A5F006480C9 /* HTTPHeader.swift */; };
+		E191352A284F7A93006480C9 /* HTTPHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1913528284F7A5F006480C9 /* HTTPHeader.swift */; };
+		E191352B284F7A93006480C9 /* HTTPHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1913528284F7A5F006480C9 /* HTTPHeader.swift */; };
 		E1A63F5C26789915002F48FA /* CodeOwners.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A63F5B26789915002F48FA /* CodeOwners.swift */; };
 		E1A63F5D26789915002F48FA /* CodeOwners.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A63F5B26789915002F48FA /* CodeOwners.swift */; };
 		E1A63F5E26789915002F48FA /* CodeOwners.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A63F5B26789915002F48FA /* CodeOwners.swift */; };
@@ -281,6 +284,9 @@
 		E1BE9B5E2732B2A300B92AD4 /* URLSessionInstrumentation in Frameworks */ = {isa = PBXBuildFile; productRef = E1BE9B5D2732B2A300B92AD4 /* URLSessionInstrumentation */; };
 		E1BE9B622732B2BA00B92AD4 /* InMemoryExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E1BE9B612732B2BA00B92AD4 /* InMemoryExporter */; };
 		E1BE9B642732B2BA00B92AD4 /* URLSessionInstrumentation in Frameworks */ = {isa = PBXBuildFile; productRef = E1BE9B632732B2BA00B92AD4 /* URLSessionInstrumentation */; };
+		E1C3F52A284E150C00A2C2F8 /* MultipartFormDataRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C3F529284E150C00A2C2F8 /* MultipartFormDataRequest.swift */; };
+		E1C3F52B284E150C00A2C2F8 /* MultipartFormDataRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C3F529284E150C00A2C2F8 /* MultipartFormDataRequest.swift */; };
+		E1C3F52C284E150C00A2C2F8 /* MultipartFormDataRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C3F529284E150C00A2C2F8 /* MultipartFormDataRequest.swift */; };
 		E1C8DEF8268367AB005B5411 /* BinaryImages.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C8DEF7268367AB005B5411 /* BinaryImages.swift */; };
 		E1C8DEF9268367AB005B5411 /* BinaryImages.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C8DEF7268367AB005B5411 /* BinaryImages.swift */; };
 		E1C8DEFA268367AB005B5411 /* BinaryImages.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C8DEF7268367AB005B5411 /* BinaryImages.swift */; };
@@ -818,6 +824,7 @@
 		E1798CC52524B9BD008DEBB9 /* DDTracer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTracer.swift; sourceTree = "<group>"; };
 		E17B7AA5253F010C0081D7F3 /* LICENSE-3rdparty.csv */ = {isa = PBXFileReference; lastKnownFileType = text; path = "LICENSE-3rdparty.csv"; sourceTree = "<group>"; };
 		E18F2169278C980800F77910 /* IntegrationTests (macOS)Debug.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "IntegrationTests (macOS)Debug.entitlements"; sourceTree = "<group>"; };
+		E1913528284F7A5F006480C9 /* HTTPHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPHeader.swift; sourceTree = "<group>"; };
 		E1A63F5B26789915002F48FA /* CodeOwners.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeOwners.swift; sourceTree = "<group>"; };
 		E1A63F5F2678C1FD002F48FA /* CodeOwnersTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeOwnersTests.swift; sourceTree = "<group>"; };
 		E1ABA04A25231E2500ED8AEF /* DatadogSDKTesting.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = DatadogSDKTesting.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -844,6 +851,7 @@
 		E1BB54AC25401E85007C2D93 /* StdoutCaptureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StdoutCaptureTests.swift; sourceTree = "<group>"; };
 		E1BB54C325408E92007C2D93 /* StderrCaptureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StderrCaptureTests.swift; sourceTree = "<group>"; };
 		E1C189B8270F193F00188C0E /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
+		E1C3F529284E150C00A2C2F8 /* MultipartFormDataRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipartFormDataRequest.swift; sourceTree = "<group>"; };
 		E1C8DEF4268363EC005B5411 /* DDCoverageHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDCoverageHelper.swift; sourceTree = "<group>"; };
 		E1C8DEF7268367AB005B5411 /* BinaryImages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinaryImages.swift; sourceTree = "<group>"; };
 		E1D4743625DBD8D900832592 /* config */ = {isa = PBXFileReference; lastKnownFileType = text; path = config; sourceTree = "<group>"; };
@@ -1353,7 +1361,9 @@
 		E143CF1A27D7790300F4018A /* Upload */ = {
 			isa = PBXGroup;
 			children = (
+				E1C3F529284E150C00A2C2F8 /* MultipartFormDataRequest.swift */,
 				E143CF1B27D7790300F4018A /* RequestBuilder.swift */,
+				E1913528284F7A5F006480C9 /* HTTPHeader.swift */,
 				E143CF1C27D7790300F4018A /* DataUploader.swift */,
 				E143CF1D27D7790300F4018A /* DatadogEndpoints.swift */,
 				E143CF1E27D7790300F4018A /* DataUploadWorker.swift */,
@@ -2845,6 +2855,7 @@
 				E1DCAF5B284A1F6400F44BE3 /* LogsExporter.swift in Sources */,
 				E1DCAF4F284A1F5B00F44BE3 /* Device.swift in Sources */,
 				E1DCAF60284A1F6E00F44BE3 /* Directory.swift in Sources */,
+				E1913529284F7A92006480C9 /* HTTPHeader.swift in Sources */,
 				E1DCAF64284A1F8900F44BE3 /* DataUploadWorker.swift in Sources */,
 				E1DCAF47284A1F4900F44BE3 /* CodeCoverage.cpp in Sources */,
 				E1DCAF5F284A1F6900F44BE3 /* FilesOrchestrator.swift in Sources */,
@@ -2855,6 +2866,7 @@
 				E1DCAF57284A1F5B00F44BE3 /* DateFormatting.swift in Sources */,
 				E1DCAF65284A1F8900F44BE3 /* HTTPClient.swift in Sources */,
 				E1DCAF5D284A1F6900F44BE3 /* FileReader.swift in Sources */,
+				E1C3F52A284E150C00A2C2F8 /* MultipartFormDataRequest.swift in Sources */,
 				E1DCAF5A284A1F6400F44BE3 /* LogSanitizer.swift in Sources */,
 				E1DCAF48284A1F4900F44BE3 /* CoverageExporterJson.cpp in Sources */,
 				E1DCAF4B284A1F4F00F44BE3 /* CoverageExporter.swift in Sources */,
@@ -2893,6 +2905,7 @@
 				E1DCAF91284A285D00F44BE3 /* Device.swift in Sources */,
 				E1DCAF98284A285D00F44BE3 /* DataFormat.swift in Sources */,
 				E1DCAF89284A285D00F44BE3 /* DataUploadWorker.swift in Sources */,
+				E191352A284F7A93006480C9 /* HTTPHeader.swift in Sources */,
 				E1DCAFB1284A294100F44BE3 /* DDCoverageConversor.swift in Sources */,
 				E1DCAF9B284A285D00F44BE3 /* LogEncoder.swift in Sources */,
 				E1DCAFAE284A294100F44BE3 /* DDCoverageFormat.swift in Sources */,
@@ -2903,6 +2916,7 @@
 				E1DCAF96284A285D00F44BE3 /* CoverageExporterJson.cpp in Sources */,
 				E1DCAF9A284A285D00F44BE3 /* FileWriter.swift in Sources */,
 				E1DCAFA0284A285D00F44BE3 /* LogsExporter.swift in Sources */,
+				E1C3F52B284E150C00A2C2F8 /* MultipartFormDataRequest.swift in Sources */,
 				E1DCAF8D284A285D00F44BE3 /* DatadogEndpoints.swift in Sources */,
 				E1DCAFA9284A285D00F44BE3 /* ExporterConfiguration.swift in Sources */,
 				E1DCAFB2284A294100F44BE3 /* LLVMCoverageFormat.swift in Sources */,
@@ -2941,6 +2955,7 @@
 				E1DCAFE0284A2BED00F44BE3 /* Device.swift in Sources */,
 				E1DCAFD3284A2BED00F44BE3 /* SpanSanitizer.swift in Sources */,
 				E1DCAFF7284A2BED00F44BE3 /* PerformancePreset.swift in Sources */,
+				E191352B284F7A93006480C9 /* HTTPHeader.swift in Sources */,
 				E1DCAFDE284A2BED00F44BE3 /* Error.cpp in Sources */,
 				E1DCAFD1284A2BED00F44BE3 /* DatadogEndpoints.swift in Sources */,
 				E1DCAFD0284A2BED00F44BE3 /* File.swift in Sources */,
@@ -2951,6 +2966,7 @@
 				E1DCAFE6284A2BED00F44BE3 /* Feature.swift in Sources */,
 				E1DCAFDF284A2BED00F44BE3 /* DDCoverageFormat.swift in Sources */,
 				E1DCAFD9284A2BED00F44BE3 /* CoverageReport.cpp in Sources */,
+				E1C3F52C284E150C00A2C2F8 /* MultipartFormDataRequest.swift in Sources */,
 				E1DCAFE5284A2BED00F44BE3 /* SpansExporter.swift in Sources */,
 				E1DCAFD6284A2BED00F44BE3 /* FilesOrchestrator.swift in Sources */,
 				E1DCAFD8284A2BED00F44BE3 /* DataUploadStatus.swift in Sources */,

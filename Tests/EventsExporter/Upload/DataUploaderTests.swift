@@ -17,7 +17,7 @@ class DataUploaderTests: XCTestCase {
         let server = ServerMock(delivery: .success(response: randomResponse))
         let uploader = DataUploader(
             httpClient: HTTPClient(session: server.getInterceptedURLSession()),
-            requestBuilder: .mockWith(headers: [])
+            requestBuilder: SingleRequestBuilder.mockWith(headers: [])
         )
 
         // When
@@ -38,7 +38,7 @@ class DataUploaderTests: XCTestCase {
         let server = ServerMock(delivery: .failure(error: randomError))
         let uploader = DataUploader(
             httpClient: HTTPClient(session: server.getInterceptedURLSession()),
-            requestBuilder: .mockAny()
+            requestBuilder: SingleRequestBuilder.mockAny()
         )
 
         // When

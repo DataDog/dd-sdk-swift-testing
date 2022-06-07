@@ -22,17 +22,7 @@ internal class CoverageExporter {
             dateProvider: SystemDateProvider()
         )
 
-        let genericMetadata = """
-        "*": { "env": "\(configuration.environment)", "runtime-id": "\(UUID().uuidString)", "language": "swift", "library_version": "\(configuration.libraryVersion)"}
-        """
-
-        let prefix = """
-        {"version": 1, "metadata": { \(genericMetadata) }, "events": [
-        """
-
-        let suffix = "]}"
-
-        let dataFormat = DataFormat(prefix: prefix, suffix: suffix, separator: ",")
+        let dataFormat = DataFormat(prefix: "", suffix: "", separator: "\n")
 
         let coverageFileWriter = FileWriter(
             dataFormat: dataFormat,
@@ -46,18 +36,17 @@ internal class CoverageExporter {
 
         coverageStorage = FeatureStorage(writer: coverageFileWriter, reader: coverageFileReader)
 
-        let requestBuilder = RequestBuilder(
+        let requestBuilder = MultipartRequestBuilder(
             url: configuration.endpoint.coverageURL,
             queryItems: [],
             headers: [
-                .contentTypeHeader(contentType: .applicationJSON),
                 .userAgentHeader(
                     appName: configuration.applicationName,
                     appVersion: configuration.version,
                     device: Device.current
                 ),
                 .ddAPIKeyHeader(apiKey: config.apiKey)
-            ] + (configuration.payloadCompression ? [RequestBuilder.HTTPHeader.contentEncodingHeader(contentEncoding: .deflate)] : [])
+            ] + (configuration.payloadCompression ? [HTTPHeader.contentEncodingHeader(contentEncoding: .deflate)] : [])
         )
 
         coverageUpload = FeatureUpload(featureName: "coverageUpload",
@@ -66,5 +55,9 @@ internal class CoverageExporter {
                                        performance: configuration.performancePreset)
     }
 
-    func exportCoverage(span: SpanData) {}
+    func exportCoverage(coverage: URL, traceId: String, spanId: String, binaryImagePaths: [String]) {
+        let profData = DDCoverageConversor.generateProfData(profrawFile: coverage)
+        let ddCoverage = DDCoverageConversor.getDatadogCoverage(profdataFile: profData, testId: traceId, binaryImagePaths: binaryImagePaths)
+        coverageStorage.writer.write(value: ddCoverage)
+    }
 }

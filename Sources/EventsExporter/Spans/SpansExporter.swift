@@ -46,7 +46,7 @@ internal class SpansExporter {
 
         spansStorage = FeatureStorage(writer: spanFileWriter, reader: spanFileReader)
 
-        let requestBuilder = RequestBuilder(
+        let requestBuilder = SingleRequestBuilder(
             url: configuration.endpoint.spansURL,
             queryItems: [],
             headers: [
@@ -57,7 +57,7 @@ internal class SpansExporter {
                     device: Device.current
                 ),
                 .ddAPIKeyHeader(apiKey: config.apiKey)
-            ] + (configuration.payloadCompression ? [RequestBuilder.HTTPHeader.contentEncodingHeader(contentEncoding: .deflate)] : [])
+            ] + (configuration.payloadCompression ? [HTTPHeader.contentEncodingHeader(contentEncoding: .deflate)] : [])
         )
 
         spansUpload = FeatureUpload(featureName: "spansUpload",

@@ -45,8 +45,7 @@ public class EventsExporter: SpanExporter {
     }
 
     public func export(coverage: URL, traceId: String, spanId: String, binaryImagePaths: [String]) {
-        let profData = DDCoverageConversor.generateProfData(profrawFile: coverage)
-        _ = DDCoverageConversor.getCoverageJson(profdataFile: profData, testId: traceId, binaryImagePaths: binaryImagePaths)
+        coverageExporter.exportCoverage(coverage: coverage, traceId: traceId, spanId: spanId, binaryImagePaths: binaryImagePaths)
     }
 
     public func shutdown() {

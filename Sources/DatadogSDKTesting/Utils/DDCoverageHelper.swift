@@ -50,7 +50,7 @@ class DDCoverageHelper {
         if !FileManager.default.fileExists(atPath: storageProfileURL.path) {
             try? FileManager.default.createDirectory(at: storageProfileURL, withIntermediateDirectories: true, attributes: nil)
         }
-        let saveURL = getURLForTest(name: name, traceId: traceId, spanId: traceId)
+        let saveURL = getURLForTest(name: name, traceId: traceId, spanId: spanId)
         profileSetFilename(url: saveURL)
     }
 

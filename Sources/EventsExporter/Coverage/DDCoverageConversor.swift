@@ -16,14 +16,11 @@ struct DDCoverageConversor {
         return outputURL
     }
 
-    static func getCoverageJson(profdataFile: URL, testId: String, binaryImagePaths: [String]) -> URL {
-        let outputURL = profdataFile.appendingPathExtension("json")
+    static func getDatadogCoverage(profdataFile: URL, testId: String, binaryImagePaths: [String]) -> DDCoverageFormat? {
         let llvmJSON = LLVMCodeCoverageBridge.coverageInfo(forProfile: profdataFile.path, images: binaryImagePaths)
         guard let llvmCov = LLVMCoverageFormat(llvmJSON) else {
-            return outputURL
+            return nil
         }
-        let json = DDCoverageFormat(llvmFormat: llvmCov, testId: testId)
-        try? json?.jsonData?.write(to: outputURL, options: .atomic)
-        return outputURL
+        return DDCoverageFormat(llvmFormat: llvmCov, testId: testId)
     }
 }

@@ -112,8 +112,8 @@ class RelativeDateProvider: DateProvider {
     }
 }
 
-extension RequestBuilder: AnyMockable {
-    static func mockAny() -> RequestBuilder {
+extension SingleRequestBuilder: AnyMockable {
+    static func mockAny() -> SingleRequestBuilder {
         return mockWith()
     }
 
@@ -121,8 +121,8 @@ extension RequestBuilder: AnyMockable {
         url: URL = .mockAny(),
         queryItems: [QueryItem] = [],
         headers: [HTTPHeader] = []
-    ) -> RequestBuilder {
-        return RequestBuilder(url: url, queryItems: queryItems, headers: headers)
+    ) -> SingleRequestBuilder {
+        return SingleRequestBuilder(url: url, queryItems: queryItems, headers: headers)
     }
 }
 

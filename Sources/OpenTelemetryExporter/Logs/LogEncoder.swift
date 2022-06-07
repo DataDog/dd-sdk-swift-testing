@@ -117,6 +117,7 @@ internal struct LogEncoder {
         case serviceName = "service"
         case tags = "ddtags"
         case hostname
+        case product = "datadog.product"
 
         // MARK: - Application info
 

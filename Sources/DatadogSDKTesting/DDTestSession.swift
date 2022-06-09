@@ -18,12 +18,12 @@ public class DDTestSession: NSObject, Encodable {
     var bundleFunctionInfo = FunctionMap()
     var codeOwners: CodeOwners?
     var testFramework = "Swift API"
-    let id: SpanId
+    var id: SpanId
     let command: String
     let startTime: Date
     var duration: UInt64
-    var attributes: [String: String] = [:]
-    var status: String = "pass"
+    var meta: [String: String] = [:]
+    var status: DDTestStatus
 
     private let executionLock = NSLock()
     private var privateCurrentExecutionOrder = 0
@@ -41,7 +41,7 @@ public class DDTestSession: NSObject, Encodable {
         self.startTime = startTime ?? DDTestMonitor.clock.now
         self.command = bundleName
         self.duration = 0
-
+        self.status = .pass
         if DDTestMonitor.instance == nil {
             DDTestMonitor.installTestMonitor()
         }
@@ -62,12 +62,39 @@ public class DDTestSession: NSObject, Encodable {
 
     func internalEnd(endTime: Date? = nil) {
         duration = (endTime ?? DDTestMonitor.clock.now).timeIntervalSince(startTime).toNanoseconds
+
+        let suiteStatus: String
+        switch status {
+            case .pass:
+                suiteStatus = DDTagValues.statusPass
+            case .fail:
+                suiteStatus = DDTagValues.statusFail
+            case .skip:
+                suiteStatus = DDTagValues.statusSkip
+        }
+
         /// Export session event
-        attributes["env"] = DDTestMonitor.env.ddEnvironment ?? (DDTestMonitor.env.isCi ? "ci" : "none")
-        attributes["test_session.status"] = status
-        attributes.merge(DDEnvironmentValues.gitAttributes) { _, new in new }
-        attributes.merge(DDEnvironmentValues.ciAttributes) { _, new in new }
-        DDTestMonitor.tracer.opentelemetryExporter?.exportEvent(event: DDTestSessionEnvelope(content: self))
+        let defaultAttributes: [String: String] = [
+            DDGenericTags.type: DDTagValues.typeSuiteEnd,
+            DDGenericTags.language: "swift",
+            DDTestTags.testSuite: bundleName,
+            DDTestTags.testFramework: testFramework,
+            DDTestTags.testBundle: bundleName,
+            DDTestTags.testStatus: suiteStatus,
+            DDOSTags.osPlatform: DDTestMonitor.env.osName,
+            DDOSTags.osArchitecture: DDTestMonitor.env.osArchitecture,
+            DDOSTags.osVersion: DDTestMonitor.env.osVersion,
+            DDDeviceTags.deviceName: DDTestMonitor.env.deviceName,
+            DDDeviceTags.deviceModel: DDTestMonitor.env.deviceModel,
+            DDRuntimeTags.runtimeName: DDTestMonitor.env.runtimeName,
+            DDRuntimeTags.runtimeVersion: DDTestMonitor.env.runtimeVersion,
+            DDTestSessionTags.testSessionId: String(id.rawValue)
+        ]
+
+        meta.merge(defaultAttributes) { _, new in new }
+        meta.merge(DDEnvironmentValues.gitAttributes) { _, new in new }
+        meta.merge(DDEnvironmentValues.ciAttributes) { _, new in new }
+        DDTestMonitor.tracer.opentelemetryExporter?.exportEvent(event: DDTestSessionEnvelope(self))
         /// We need to wait for all the traces to be written to the backend before exiting
         DDTestMonitor.tracer.flush()
     }
@@ -125,7 +152,11 @@ extension DDTestSession {
         case test_session_id
         case start
         case duration
-        case attributes
+        case meta
+        case error
+        case name
+        case resource
+        case service
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -133,7 +164,11 @@ extension DDTestSession {
         try container.encode(id.rawValue, forKey: .test_session_id)
         try container.encode(startTime.timeIntervalSince1970.toNanoseconds, forKey: .start)
         try container.encode(duration, forKey: .duration)
-        try container.encode(attributes, forKey: .attributes)
+        try container.encode(meta, forKey: .meta)
+        try container.encode(status == .fail ? 1 : 0, forKey: .error)
+        try container.encode("\(testFramework).session", forKey: .name)
+        try container.encode("\(bundleName)", forKey: .resource)
+        try container.encode(DDTestMonitor.env.ddService ?? DDTestMonitor.env.getRepositoryName() ?? "unknown-swift-repo", forKey: .service)
     }
 
     struct DDTestSessionEnvelope: Encodable {
@@ -145,10 +180,10 @@ extension DDTestSession {
 
         let version: Int = 1
 
-        let type: String = "test_session_end"
+        let type: String = DDTagValues.typeSessionEnd
         let content: DDTestSession
 
-        init(content: DDTestSession) {
+        init(_ content: DDTestSession) {
             self.content = content
         }
     }

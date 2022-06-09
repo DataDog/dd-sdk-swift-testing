@@ -19,14 +19,33 @@ internal struct CITestEnvelope: Encodable {
         case content
     }
 
+    let version: Int = 2
+
+    let spanType: String
+    let content: DDSpan
+
+    /// The initializer to encode single `Span` within an envelope.
+    init(_ content: DDSpan) {
+        self.spanType = "test"
+        self.content = content
+    }
+}
+
+internal struct SpanEnvelope: Encodable {
+    enum CodingKeys: String, CodingKey {
+        case spanType = "type"
+        case version
+        case content
+    }
+
     let version: Int = 1
 
     let spanType: String
     let content: DDSpan
 
     /// The initializer to encode single `Span` within an envelope.
-    init(spanType: String, content: DDSpan) {
-        self.spanType = spanType
+    init(_ content: DDSpan) {
+        self.spanType = "span"
         self.content = content
     }
 }
@@ -46,6 +65,8 @@ internal struct DDSpan: Encodable {
     let errorType: String?
     let errorStack: String?
     let type: String
+    let sessionID: UInt64?
+    let suiteID: UInt64?
 
     // MARK: - Meta
 
@@ -55,7 +76,7 @@ internal struct DDSpan: Encodable {
     var tags: [String: AttributeValue]
 
     static let filteredTagKeys: Set<String> = [
-        "error.message", "error.type", "error.stack", "resource.name"
+        "error.message", "error.type", "error.stack", "test_session_id", "test_suite_id"
     ]
 
     func encode(to encoder: Encoder) throws {
@@ -75,7 +96,7 @@ internal struct DDSpan: Encodable {
         }
 
         self.serviceName = serviceName
-        self.resource = spanData.attributes["resource.name"]?.description ?? spanData.name
+        self.resource = spanData.attributes["resource"]?.description ?? spanData.name
         self.startTime = spanData.startTime.timeIntervalSince1970.toNanoseconds
         self.duration = spanData.endTime.timeIntervalSince(spanData.startTime).toNanoseconds
 
@@ -95,6 +116,14 @@ internal struct DDSpan: Encodable {
         let spanType = spanData.attributes["type"] ?? spanData.attributes["db.type"]
         self.type = spanType?.description ?? spanData.kind.rawValue
 
+        if self.type == "test" {
+            self.sessionID = UInt64(spanData.attributes["test_session_id"]?.description ?? "0", radix: 16) ?? 0
+            self.suiteID = UInt64(spanData.attributes["test_suite_id"]?.description ?? "0", radix: 16) ?? 0
+        } else {
+            self.sessionID = nil
+            self.suiteID = nil
+        }
+
         self.applicationVersion = applicationVersion
         self.tags = spanData.attributes.filter {
             !DDSpan.filteredTagKeys.contains($0.key)
@@ -111,6 +140,8 @@ internal struct SpanEncoder {
         case traceID = "trace_id"
         case spanID = "span_id"
         case parentID = "parent_id"
+        case testSessionID = "test_session_id"
+        case testSuiteID = "test_suite_id"
         case name
         case service
         case resource
@@ -146,9 +177,11 @@ internal struct SpanEncoder {
 
         try container.encode(span.traceID.rawLowerLong, forKey: .traceID)
         try container.encode(span.spanID.rawValue, forKey: .spanID)
-
         let parentSpanID = span.parentID ?? SpanId.invalid // 0 is a reserved ID for a root span (ref: DDTracer.java#L600)
         try container.encode(parentSpanID.rawValue, forKey: .parentID)
+
+        try container.encode(span.sessionID, forKey: .testSessionID)
+        try container.encode(span.suiteID, forKey: .testSuiteID)
 
         try container.encode(span.name, forKey: .name)
         try container.encode(span.serviceName, forKey: .service)

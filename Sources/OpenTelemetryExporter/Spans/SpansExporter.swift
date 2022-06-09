@@ -67,19 +67,20 @@ internal class SpansExporter {
     }
 
     func exportSpan(span: SpanData) {
-        let ciTestEnvelope: CITestEnvelope
-        if let spanType = span.attributes["type"] {
-            ciTestEnvelope = CITestEnvelope(spanType: spanType.description,
-                                            content: DDSpan(spanData: span, serviceName: configuration.serviceName, applicationVersion: configuration.version))
+        if span.attributes["type"]?.description == "test" {
+            let ciTestEnvelope = CITestEnvelope(DDSpan(spanData: span, serviceName: configuration.serviceName, applicationVersion: configuration.version))
+            if configuration.performancePreset.synchronousWrite {
+                spansStorage.writer.writeSync(value: ciTestEnvelope)
+            } else {
+                spansStorage.writer.write(value: ciTestEnvelope)
+            }
         } else {
-            ciTestEnvelope = CITestEnvelope(spanType: "span",
-                                            content: DDSpan(spanData: span, serviceName: configuration.serviceName, applicationVersion: configuration.version))
-        }
-
-        if configuration.performancePreset.synchronousWrite {
-            spansStorage.writer.writeSync(value: ciTestEnvelope)
-        } else {
-            spansStorage.writer.write(value: ciTestEnvelope)
+            let spanEnvelope = SpanEnvelope(DDSpan(spanData: span, serviceName: configuration.serviceName, applicationVersion: configuration.version))
+            if configuration.performancePreset.synchronousWrite {
+                spansStorage.writer.writeSync(value: spanEnvelope)
+            } else {
+                spansStorage.writer.write(value: spanEnvelope)
+            }
         }
     }
 }

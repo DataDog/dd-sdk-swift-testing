@@ -22,6 +22,12 @@ internal enum DDTags {
     /// Default span type for spans created without a specifying a type. In general all spans should use this type.
     static let defaultSpanType = "custom"
 
+    ///
+    static let environment = "env"
+    static let name = "name"
+    static let service = "service"
+    static let error = "error"
+
     /// Expected value: `String`
     static let contextCallStack = "context.call_stack"
     static let contextThreadNumber = "context.thread_number"
@@ -31,7 +37,7 @@ internal enum DDTags {
 
 internal enum DDGenericTags {
     static let type = "type"
-    static let resourceName = "resource.name"
+    static let resource = "resource"
     static let language = "language"
     static let library_version = "library_version"
 }
@@ -76,8 +82,8 @@ internal enum DDRuntimeTags {
 }
 
 internal enum DDTestSessionTags {
-    static let testSessionId = "_dd.ci.parent_test_session_id"
-    static let testSuiteId = "_dd.ci.parent_test_suite_id"
+    static let testSessionId = "test_session_id"
+    static let testSuiteId = "test_suite_id"
 }
 
 internal enum DDGitTags {
@@ -157,6 +163,9 @@ internal enum DDTagValues {
 
     static let typeBenchmark = "benchmark"
     static let typeTest = "test"
+
+    static let typeSuiteEnd = "test_suite_end"
+    static let typeSessionEnd = "test_session_end"
 
     static let statusPass = "pass"
     static let statusFail = "fail"

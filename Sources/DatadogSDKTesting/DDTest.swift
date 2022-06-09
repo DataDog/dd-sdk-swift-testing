@@ -32,7 +32,7 @@ public class DDTest: NSObject {
 
         let attributes: [String: String] = [
             DDGenericTags.type: DDTagValues.typeTest,
-            DDGenericTags.resourceName: "\(suite.name).\(name)",
+            DDGenericTags.resource: "\(suite.name).\(name)",
             DDGenericTags.language: "swift",
             DDTestTags.testName: name,
             DDTestTags.testSuite: suite.name,
@@ -48,8 +48,8 @@ public class DDTest: NSObject {
             DDDeviceTags.deviceModel: DDTestMonitor.env.deviceModel,
             DDRuntimeTags.runtimeName: DDTestMonitor.env.runtimeName,
             DDRuntimeTags.runtimeVersion: DDTestMonitor.env.runtimeVersion,
-            DDTestSessionTags.testSessionId: String(session.id.rawValue),
-            DDTestSessionTags.testSuiteId: String(suite.id.rawValue)
+            DDTestSessionTags.testSessionId: session.id.hexString,
+            DDTestSessionTags.testSuiteId: suite.id.hexString
         ]
 
         span = DDTestMonitor.tracer.startSpan(name: "\(session.testFramework).test", attributes: attributes, startTime: startTime)
@@ -131,6 +131,8 @@ public class DDTest: NSObject {
                 span.status = .ok
             case .fail:
                 testStatus = DDTagValues.statusFail
+                suite.status = .fail
+                session.status = .fail
                 span.status = .error(description: "Test failed")
                 setErrorInformation()
             case .skip:

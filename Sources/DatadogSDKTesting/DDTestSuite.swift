@@ -19,10 +19,16 @@ public class DDTestSuite: NSObject, Encodable {
     init(name: String, session: DDTestSession, startTime: Date? = nil) {
         self.name = name
         self.session = session
-        self.id = SpanId.random()
         self.startTime = startTime ?? DDTestMonitor.clock.now
         self.duration = 0
         self.status = .pass
+
+        if DDTestMonitor.instance?.crashedSessionInfo?.crashedSuiteName == name {
+            self.id = DDTestMonitor.instance?.crashedSessionInfo?.crashedSuiteId ?? SpanId.random()
+            DDTestMonitor.instance?.crashedSessionInfo = nil
+        } else {
+            self.id = SpanId.random()
+        }
     }
 
     func internalEnd(endTime: Date? = nil) {

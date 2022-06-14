@@ -4,6 +4,8 @@
  * Copyright 2020-2021 Datadog, Inc.
  */
 
+@_implementationOnly import OpenTelemetryApi
+
 #if canImport(UIKit)
     import UIKit
     let launchNotificationName = UIApplication.didFinishLaunchingNotification
@@ -13,6 +15,12 @@
     let launchNotificationName = NSApplication.didFinishLaunchingNotification
     let didBecomeActiveNotificationName = NSApplication.didBecomeActiveNotification
 #endif
+
+struct CrashedSessionInformation {
+    var crashedSessionId: SpanId
+    var crashedSuiteId: SpanId
+    var crashedSuiteName: String
+}
 
 internal class DDTestMonitor {
     static var instance: DDTestMonitor?
@@ -30,6 +38,9 @@ internal class DDTestMonitor {
     var launchNotificationObserver: NSObjectProtocol?
     var didBecomeActiveNotificationObserver: NSObjectProtocol?
     var isRumActive: Bool = false
+
+    var crashedSessionInfo: CrashedSessionInformation?
+
 
     var rLock = NSRecursiveLock()
     private var privateCurrentTest: DDTest?

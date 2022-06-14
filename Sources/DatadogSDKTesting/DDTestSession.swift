@@ -37,7 +37,6 @@ public class DDTestSession: NSObject, Encodable {
     }
 
     init(bundleName: String, startTime: Date?) {
-        self.id = SpanId.random()
         self.startTime = startTime ?? DDTestMonitor.clock.now
         self.command = bundleName
         self.duration = 0
@@ -58,6 +57,7 @@ public class DDTestSession: NSObject, Encodable {
         if !DDTestMonitor.env.disableCrashHandler {
             DDCrashes.install()
         }
+        self.id = DDTestMonitor.instance?.crashedSessionInfo?.crashedSessionId ?? SpanId.random()
     }
 
     func internalEnd(endTime: Date? = nil) {

@@ -66,6 +66,7 @@ internal class DDTestObserverTests: XCTestCase {
         XCTAssertEqual(spanData.attributes[DDRuntimeTags.runtimeName]?.description, "Xcode")
         XCTAssertEqual(spanData.attributes[DDRuntimeTags.runtimeVersion]?.description, PlatformUtils.getXcodeVersion())
         XCTAssertNotNil(spanData.attributes[DDCITags.ciWorkspacePath])
+        XCTAssertNotNil(spanData.attributes[DDUISettingsTags.uiSettingsLocalization])
 
         testObserver.testCaseDidFinish(self)
         testObserver.testSuiteDidFinish(theSuite)
@@ -91,42 +92,42 @@ internal class DDTestObserverTests: XCTestCase {
     }
 
     #if swift(>=5.3)
-    func testWhenTestCaseDidRecordIssueIsCalled_testStatusIsSet() {
-        testObserver.testBundleWillStart(Bundle.main)
-        testObserver.testSuiteWillStart(theSuite)
-        testObserver.testCaseWillStart(self)
-        let issue = XCTIssue(type: .assertionFailure, compactDescription: "descrip", detailedDescription: nil, sourceCodeContext: XCTSourceCodeContext(), associatedError: nil, attachments: [])
-        testObserver.testCase(self, didRecord: issue)
+        func testWhenTestCaseDidRecordIssueIsCalled_testStatusIsSet() {
+            testObserver.testBundleWillStart(Bundle.main)
+            testObserver.testSuiteWillStart(theSuite)
+            testObserver.testCaseWillStart(self)
+            let issue = XCTIssue(type: .assertionFailure, compactDescription: "descrip", detailedDescription: nil, sourceCodeContext: XCTSourceCodeContext(), associatedError: nil, attachments: [])
+            testObserver.testCase(self, didRecord: issue)
 
-        let testSpan = OpenTelemetry.instance.contextProvider.activeSpan as! RecordEventsReadableSpan
-        testObserver.testCaseDidFinish(self)
-        let spanData = testSpan.toSpanData()
+            let testSpan = OpenTelemetry.instance.contextProvider.activeSpan as! RecordEventsReadableSpan
+            testObserver.testCaseDidFinish(self)
+            let spanData = testSpan.toSpanData()
 
-        XCTAssertNotNil(spanData.attributes[DDTags.errorType])
-        XCTAssertNotNil(spanData.attributes[DDTags.errorMessage])
-        XCTAssertNil(spanData.attributes[DDTags.errorStack])
+            XCTAssertNotNil(spanData.attributes[DDTags.errorType])
+            XCTAssertNotNil(spanData.attributes[DDTags.errorMessage])
+            XCTAssertNil(spanData.attributes[DDTags.errorStack])
 
-        testObserver.testSuiteDidFinish(theSuite)
-        testObserver.testBundleDidFinish(Bundle.main)
-    }
+            testObserver.testSuiteDidFinish(theSuite)
+            testObserver.testBundleDidFinish(Bundle.main)
+        }
     #else
-    func testWhenTestCaseDidFailWithDescriptionIsCalled_testStatusIsSet() {
-        testObserver.testBundleWillStart(Bundle.main)
-        testObserver.testSuiteWillStart(theSuite)
-        testObserver.testCaseWillStart(self)
-        testObserver.testCase(self, didFailWithDescription: "descrip", inFile: "samplefile", atLine: 239)
+        func testWhenTestCaseDidFailWithDescriptionIsCalled_testStatusIsSet() {
+            testObserver.testBundleWillStart(Bundle.main)
+            testObserver.testSuiteWillStart(theSuite)
+            testObserver.testCaseWillStart(self)
+            testObserver.testCase(self, didFailWithDescription: "descrip", inFile: "samplefile", atLine: 239)
 
-        let testSpan = OpenTelemetry.instance.contextProvider.activeSpan as! RecordEventsReadableSpan
-        let spanData = testSpan.toSpanData()
+            let testSpan = OpenTelemetry.instance.contextProvider.activeSpan as! RecordEventsReadableSpan
+            let spanData = testSpan.toSpanData()
 
-        XCTAssertNotNil(spanData.attributes[DDTags.errorType])
-        XCTAssertNotNil(spanData.attributes[DDTags.errorMessage])
-        XCTAssertNil(spanData.attributes[DDTags.errorStack])
+            XCTAssertNotNil(spanData.attributes[DDTags.errorType])
+            XCTAssertNotNil(spanData.attributes[DDTags.errorMessage])
+            XCTAssertNil(spanData.attributes[DDTags.errorStack])
 
-        testObserver.testCaseDidFinish(self)
-        testObserver.testSuiteDidFinish(theSuite)
-        testObserver.testBundleDidFinish(Bundle.main)
-    }
+            testObserver.testCaseDidFinish(self)
+            testObserver.testSuiteDidFinish(theSuite)
+            testObserver.testBundleDidFinish(Bundle.main)
+        }
     #endif
 
     func testWhenTestCaseDidFinishIsCalledAndTheTestIsABenchmark_benchmarkTagsAreAdded() {
@@ -157,29 +158,29 @@ internal class DDTestObserverTests: XCTestCase {
         testObserver.testBundleDidFinish(Bundle.main)
     }
 
-#if swift(>=5.3)
-    func testWhenTestCaseDidRecordIssueIsCalledTwice_twoErrorsAppear() {
-        testObserver.testBundleWillStart(Bundle.main)
-        testObserver.testSuiteWillStart(theSuite)
-        testObserver.testCaseWillStart(self)
+    #if swift(>=5.3)
+        func testWhenTestCaseDidRecordIssueIsCalledTwice_twoErrorsAppear() {
+            testObserver.testBundleWillStart(Bundle.main)
+            testObserver.testSuiteWillStart(theSuite)
+            testObserver.testCaseWillStart(self)
 
-        let error1Text = "error1"
-        let error2Text = "error2"
-        let issue = XCTIssue(type: .assertionFailure, compactDescription: error1Text, detailedDescription: nil, sourceCodeContext: XCTSourceCodeContext(), associatedError: nil, attachments: [])
-        testObserver.testCase(self, didRecord: issue)
+            let error1Text = "error1"
+            let error2Text = "error2"
+            let issue = XCTIssue(type: .assertionFailure, compactDescription: error1Text, detailedDescription: nil, sourceCodeContext: XCTSourceCodeContext(), associatedError: nil, attachments: [])
+            testObserver.testCase(self, didRecord: issue)
 
-        let issue2 = XCTIssue(type: .assertionFailure, compactDescription: error2Text, detailedDescription: nil, sourceCodeContext: XCTSourceCodeContext(), associatedError: nil, attachments: [])
-        testObserver.testCase(self, didRecord: issue2)
+            let issue2 = XCTIssue(type: .assertionFailure, compactDescription: error2Text, detailedDescription: nil, sourceCodeContext: XCTSourceCodeContext(), associatedError: nil, attachments: [])
+            testObserver.testCase(self, didRecord: issue2)
 
-        let testSpan = OpenTelemetry.instance.contextProvider.activeSpan as! RecordEventsReadableSpan
-        testObserver.testCaseDidFinish(self)
-        let spanData = testSpan.toSpanData()
+            let testSpan = OpenTelemetry.instance.contextProvider.activeSpan as! RecordEventsReadableSpan
+            testObserver.testCaseDidFinish(self)
+            let spanData = testSpan.toSpanData()
 
-        XCTAssertTrue(spanData.attributes[DDTags.errorMessage]?.description.contains(exactWord: error1Text) ?? false)
-        XCTAssertTrue(spanData.attributes[DDTags.errorMessage]?.description.contains(exactWord: error2Text) ?? false)
+            XCTAssertTrue(spanData.attributes[DDTags.errorMessage]?.description.contains(exactWord: error1Text) ?? false)
+            XCTAssertTrue(spanData.attributes[DDTags.errorMessage]?.description.contains(exactWord: error2Text) ?? false)
 
-        testObserver.testSuiteDidFinish(theSuite)
-        testObserver.testBundleDidFinish(Bundle.main)
-    }
+            testObserver.testSuiteDidFinish(theSuite)
+            testObserver.testBundleDidFinish(Bundle.main)
+        }
     #endif
 }

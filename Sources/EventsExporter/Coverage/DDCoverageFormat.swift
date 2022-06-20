@@ -12,7 +12,8 @@ struct DDCoverageFormat: Encodable {
     var content: CoverageContent
 
     struct CoverageContent: Encodable {
-        var testId: String
+        var trace_id: String
+        var span_id: String
         var files = [File]()
     }
 
@@ -40,10 +41,10 @@ struct DDCoverageFormat: Encodable {
         init() {}
     }
 
-    init?(llvmFormat: LLVMCoverageFormat, testId: String) {
+    init?(llvmFormat: LLVMCoverageFormat, traceId: String, spanId: String) {
         guard let llvmFiles = llvmFormat.data.first?.files else { return nil }
 
-        content = CoverageContent(testId: testId)
+        content = CoverageContent(trace_id: traceId, span_id: spanId)
 
         for llvmFile in llvmFiles {
             var segments = [Segment]()

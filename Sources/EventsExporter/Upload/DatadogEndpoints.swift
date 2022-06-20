@@ -57,12 +57,12 @@ public enum Endpoint {
     internal var coverageURL: URL {
         let endpoint = "api/v2/citestcov'"
         switch self {
-            case .us1: return URL(string: "https://citestcycle-intake.datadoghq.com/" + endpoint)!
-            case .us3: return URL(string: "https://citestcycle-intake.us3.datadoghq.com/" + endpoint)!
-            case .us5: return URL(string: "https://citestcycle-intake.us5.datadoghq.com/" + endpoint)!
-            case .eu1: return URL(string: "https://citestcycle-intake.datadoghq.eu/" + endpoint)!
+            case .us1: return URL(string: "https://event-platform-intake..datadoghq.com/" + endpoint)!
+            case .us3: return URL(string: "https://event-platform-intake.us3.datadoghq.com/" + endpoint)!
+            case .us5: return URL(string: "https://event-platform-intake.us5.datadoghq.com/" + endpoint)!
+            case .eu1: return URL(string: "https://event-platform-intake.datadoghq.eu/" + endpoint)!
             // case .us1_fed: return URL(string: "https://trace.browser-intake-ddog-gov.com/" + endpoint)!
-            case .staging: return URL(string: "https://citestcycle-intake.datad0g.com/" + endpoint)!
+            case .staging: return URL(string: "https://event-platform-intake.datad0g.com/" + endpoint)!
             case let .custom(testsURL: testsURL, _): return testsURL
         }
     }

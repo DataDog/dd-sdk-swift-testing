@@ -62,12 +62,12 @@ internal class FilesOrchestrator {
                 guard let lastFile = directory.file(named: lastFileName) else {
                     return nil
                 }
+                let fileCanBeUsedMoreTimes = (lastWritableFileUsesCount + 1) <= performance.maxObjectsInFile
                 let lastFileCreationDate = fileCreationDateFrom(fileName: lastFile.name)
                 let lastFileAge = dateProvider.currentDate().timeIntervalSince(lastFileCreationDate)
 
                 let fileIsRecentEnough = lastFileAge <= performance.maxFileAgeForWrite
                 let fileHasRoomForMore = (try lastFile.size() + writeSize) <= performance.maxFileSize
-                let fileCanBeUsedMoreTimes = (lastWritableFileUsesCount + 1) <= performance.maxObjectsInFile
 
                 if fileIsRecentEnough, fileHasRoomForMore, fileCanBeUsedMoreTimes {
                     return lastFile

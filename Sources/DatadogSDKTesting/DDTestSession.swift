@@ -291,15 +291,19 @@ public class DDTest: NSObject {
         span.setAttribute(key: DDTestTags.testStatus, value: testStatus)
 
         DDCoverageHelper.instance?.writeProfile()
-        if let coverageFileURL = DDCoverageHelper.instance?.getURLForTest(name: name, traceId: span.context.traceId.hexString, spanId: span.context.spanId.hexString) {
-            let binaryImagePaths = BinaryImages.profileImages.map { $0.path }
-            DDTestMonitor.tracer.eventsExporter?.export(coverage: coverageFileURL, traceId: span.context.traceId.hexString, spanId: span.context.spanId.hexString, binaryImagePaths: binaryImagePaths)
+        let traceId = span.context.traceId.hexString
+        let spanId = span.context.spanId.hexString
+        if let coverageFileURL = DDCoverageHelper.instance?.getURLForTest(name: name, traceId:traceId, spanId: spanId) {
+            DDTestMonitor.tracer.backgroundWorkQueue.addOperation {
+                let binaryImagePaths = BinaryImages.profileImages.map { $0.path }
+                DDTestMonitor.tracer.eventsExporter?.export(coverage: coverageFileURL, traceId: traceId, spanId: spanId, binaryImagePaths: binaryImagePaths)
+            }
         }
 
         StderrCapture.syncData()
         span.end(time: testEndTime)
 
-        DDTestMonitor.tracer.backgroundWorkQueue.sync {}
+        DDTestMonitor.tracer.backgroundWorkQueue.waitUntilAllOperationsAreFinished()
         DDTestMonitor.instance?.currentTest = nil
         DDTestMonitor.instance?.networkInstrumentation?.endAndCleanAliveSpans()
     }

@@ -23,7 +23,7 @@ internal class DDTracer {
     let ntpClock = NTPClock()
     var eventsExporter: EventsExporter?
     private var launchSpanContext: SpanContext?
-    let backgroundWorkQueue = DispatchQueue(label: "com.datadog.logswriter")
+    let backgroundWorkQueue = OperationQueue()
 
     static var activeSpan: Span? {
         return OpenTelemetrySDK.instance.contextProvider.activeSpan ??
@@ -284,7 +284,7 @@ internal class DDTracer {
     func logStringAppUITested(string: String, date: Date? = nil) {
         let auxSpan = createSpanFromLaunchContext()
         auxSpan.addEvent(name: "logString", attributes: attributesForString(string), timestamp: date ?? Date())
-        backgroundWorkQueue.async {
+        backgroundWorkQueue.addOperation {
             auxSpan.status = .ok
             auxSpan.end()
             OpenTelemetrySDK.instance.tracerProvider.forceFlush()
@@ -320,9 +320,10 @@ internal class DDTracer {
         }
         Log.debug("DDCFMessageID.forceFlush finished")
 
-        backgroundWorkQueue.sync {
+        backgroundWorkQueue.addOperation {
             OpenTelemetrySDK.instance.tracerProvider.forceFlush()
         }
+        backgroundWorkQueue.waitUntilAllOperationsAreFinished()
     }
 
     func addPropagationsHeadersToEnvironment() {

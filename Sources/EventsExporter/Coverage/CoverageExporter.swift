@@ -18,7 +18,7 @@ internal class CoverageExporter {
 
         let filesOrchestrator = FilesOrchestrator(
             directory: try Directory(withSubdirectoryPath: coverageDirectory),
-            performance: configuration.performancePreset,
+            performance: PerformancePreset.coverageDataDelivery,
             dateProvider: SystemDateProvider()
         )
 

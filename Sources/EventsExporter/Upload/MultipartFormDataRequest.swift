@@ -40,7 +40,7 @@ struct MultipartFormDataRequest {
         let fieldData = NSMutableData()
 
         fieldData.append("--\(boundary)\r\n")
-        fieldData.append("Content-Disposition: form-data; name=\"\(name)\"\r\n")
+        fieldData.append("Content-Disposition: form-data; name=\"\(name)\"; filename=\"file\(name).json\"\r\n")
         fieldData.append("Content-Type: \(mimeType)\r\n")
         fieldData.append("\r\n")
         fieldData.append(data)
@@ -56,7 +56,8 @@ struct MultipartFormDataRequest {
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
 
         httpBody.append("--\(boundary)--")
-        request.httpBody = httpBody as Data
+        let compressedBody = (httpBody as Data).deflated
+        request.httpBody = compressedBody
         return request
     }
 }

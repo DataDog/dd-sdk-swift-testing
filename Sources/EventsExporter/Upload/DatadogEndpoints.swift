@@ -55,9 +55,9 @@ public enum Endpoint {
     }
 
     internal var coverageURL: URL {
-        let endpoint = "api/v2/citestcov'"
+        let endpoint = "api/v2/citestcov"
         switch self {
-            case .us1: return URL(string: "https://event-platform-intake..datadoghq.com/" + endpoint)!
+            case .us1: return URL(string: "https://event-platform-intake.datadoghq.com/" + endpoint)!
             case .us3: return URL(string: "https://event-platform-intake.us3.datadoghq.com/" + endpoint)!
             case .us5: return URL(string: "https://event-platform-intake.us5.datadoghq.com/" + endpoint)!
             case .eu1: return URL(string: "https://event-platform-intake.datadoghq.eu/" + endpoint)!

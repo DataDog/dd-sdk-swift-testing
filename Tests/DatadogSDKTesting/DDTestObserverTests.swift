@@ -157,4 +157,30 @@ internal class DDTestObserverTests: XCTestCase {
         testObserver.testSuiteDidFinish(theSuite)
         testObserver.testBundleDidFinish(Bundle.main)
     }
+
+#if swift(>=5.3)
+    func testWhenTestCaseDidRecordIssueIsCalledTwice_twoErrorsAppear() {
+        testObserver.testBundleWillStart(Bundle.main)
+        testObserver.testSuiteWillStart(theSuite)
+        testObserver.testCaseWillStart(self)
+
+        let error1Text = "error1"
+        let error2Text = "error2"
+        let issue = XCTIssue(type: .assertionFailure, compactDescription: error1Text, detailedDescription: nil, sourceCodeContext: XCTSourceCodeContext(), associatedError: nil, attachments: [])
+        testObserver.testCase(self, didRecord: issue)
+
+        let issue2 = XCTIssue(type: .assertionFailure, compactDescription: error2Text, detailedDescription: nil, sourceCodeContext: XCTSourceCodeContext(), associatedError: nil, attachments: [])
+        testObserver.testCase(self, didRecord: issue2)
+
+        let testSpan = OpenTelemetry.instance.contextProvider.activeSpan as! RecordEventsReadableSpan
+        testObserver.testCaseDidFinish(self)
+        let spanData = testSpan.toSpanData()
+
+        XCTAssertTrue(spanData.attributes[DDTags.errorMessage]?.description.contains(exactWord: error1Text) ?? false)
+        XCTAssertTrue(spanData.attributes[DDTags.errorMessage]?.description.contains(exactWord: error2Text) ?? false)
+
+        testObserver.testSuiteDidFinish(theSuite)
+        testObserver.testBundleDidFinish(Bundle.main)
+    }
+    #endif
 }

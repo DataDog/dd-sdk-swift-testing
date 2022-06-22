@@ -60,6 +60,10 @@ public class DDTest: NSObject {
         // Is not a UITest until a XCUIApplication is launched
         span.setAttribute(key: DDTestTags.testIsUITest, value: "false")
 
+        if let localization = PlatformUtils.getLocalization(){
+            span.setAttribute(key:  DDUISettingsTags.uiSettingsLocalization, value: localization)
+        }
+
         DDTestMonitor.tracer.addPropagationsHeadersToEnvironment()
 
         let functionName = suite.name + "." + name

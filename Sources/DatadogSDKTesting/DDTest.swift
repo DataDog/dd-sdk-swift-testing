@@ -24,6 +24,7 @@ public class DDTest: NSObject {
     private var errorInfo: ErrorInfo?
 
     init(name: String, suite: DDTestSuite, session: DDTestSession, startTime: Date? = nil) {
+        let testStartTime = startTime ?? DDTestMonitor.clock.now
         self.name = name
         self.suite = suite
         self.session = session
@@ -52,7 +53,7 @@ public class DDTest: NSObject {
             DDTestSessionTags.testSuiteId: suite.id.hexString
         ]
 
-        span = DDTestMonitor.tracer.startSpan(name: "\(session.testFramework).test", attributes: attributes, startTime: startTime)
+        span = DDTestMonitor.tracer.startSpan(name: "\(session.testFramework).test", attributes: attributes, startTime: testStartTime)
 
         super.init()
         DDTestMonitor.instance?.currentTest = self
@@ -128,6 +129,7 @@ public class DDTest: NSObject {
     ///   - status: the status reported for this test
     ///   - endTime: Optional, the time where the test ended
     @objc public func end(status: DDTestStatus, endTime: Date? = nil) {
+        let testEndTime = endTime ?? DDTestMonitor.clock.now
         let testStatus: String
         switch status {
             case .pass:
@@ -147,11 +149,7 @@ public class DDTest: NSObject {
         span.setAttribute(key: DDTestTags.testStatus, value: testStatus)
 
         StderrCapture.syncData()
-        if let endTime = endTime {
-            span.end(time: endTime)
-        } else {
-            span.end()
-        }
+        span.end(time: testEndTime)
         DDTestMonitor.tracer.backgroundWorkQueue.sync {}
         DDTestMonitor.instance?.currentTest = nil
         DDTestMonitor.instance?.networkInstrumentation?.endAndCleanAliveSpans()

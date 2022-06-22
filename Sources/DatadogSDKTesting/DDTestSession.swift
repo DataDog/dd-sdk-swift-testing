@@ -38,7 +38,7 @@ public class DDTestSession: NSObject, Encodable {
     }
 
     init(bundleName: String, startTime: Date?) {
-        self.startTime = startTime ?? DDTestMonitor.clock.now
+        let sessionStartTime = startTime ?? DDTestMonitor.clock.now
         self.command = bundleName
         self.duration = 0
         self.status = .pass
@@ -59,6 +59,7 @@ public class DDTestSession: NSObject, Encodable {
             DDCrashes.install()
         }
         self.id = DDTestMonitor.instance?.crashedSessionInfo?.crashedSessionId ?? SpanId.random()
+        self.startTime = DDTestMonitor.instance?.crashedSessionInfo?.sessionStartTime ?? sessionStartTime
         self.localization = PlatformUtils.getLocalization()
     }
 

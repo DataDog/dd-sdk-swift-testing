@@ -20,7 +20,7 @@ public class DDTestSuite: NSObject, Encodable {
     init(name: String, session: DDTestSession, startTime: Date? = nil) {
         self.name = name
         self.session = session
-        self.startTime = startTime ?? DDTestMonitor.clock.now
+        self.startTime = DDTestMonitor.instance?.crashedSessionInfo?.suiteStartTime ?? startTime ?? DDTestMonitor.clock.now
         self.duration = 0
         self.status = .pass
 
@@ -31,6 +31,11 @@ public class DDTestSuite: NSObject, Encodable {
             self.id = SpanId.random()
         }
         self.localization = PlatformUtils.getLocalization()
+
+        //If we are recovering from a crash, clean the crash information
+        if DDTestMonitor.instance?.crashedSessionInfo != nil {
+            DDTestMonitor.instance?.crashedSessionInfo = nil
+        }
     }
 
     func internalEnd(endTime: Date? = nil) {

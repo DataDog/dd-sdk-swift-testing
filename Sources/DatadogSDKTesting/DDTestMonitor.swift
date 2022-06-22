@@ -20,6 +20,8 @@ struct CrashedSessionInformation {
     var crashedSessionId: SpanId
     var crashedSuiteId: SpanId
     var crashedSuiteName: String
+    var sessionStartTime: Date?
+    var suiteStartTime: Date?
 }
 
 internal class DDTestMonitor {

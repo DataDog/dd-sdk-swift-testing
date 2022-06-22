@@ -81,7 +81,9 @@ internal enum DDCrashes {
                         DDTestMonitor.instance?.crashedSessionInfo = CrashedSessionInformation(
                             crashedSessionId: SpanId(fromHexString: sessionID),
                             crashedSuiteId: SpanId(fromHexString: suiteID),
-                            crashedSuiteName: suiteName)
+                            crashedSuiteName: suiteName,
+                            sessionStartTime: spanData.sessionStartTime,
+                            suiteStartTime: spanData.suiteStartTime)
                     }
                 }
             }

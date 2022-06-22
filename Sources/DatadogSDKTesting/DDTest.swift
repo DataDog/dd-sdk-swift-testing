@@ -86,7 +86,7 @@ public class DDTest: NSObject {
         DDTestMonitor.env.addTagsToSpan(span: span)
 
         if let testSpan = span as? RecordEventsReadableSpan {
-            let simpleSpan = SimpleSpanData(spanData: testSpan.toSpanData())
+            let simpleSpan = SimpleSpanData(spanData: testSpan.toSpanData(), sessionStartTime: session.startTime, suiteStartTime: suite.startTime)
             DDCrashes.setCustomData(customData: SimpleSpanSerializer.serializeSpan(simpleSpan: simpleSpan))
         }
     }

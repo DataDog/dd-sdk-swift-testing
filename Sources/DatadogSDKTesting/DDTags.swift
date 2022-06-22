@@ -74,6 +74,8 @@ internal enum DDUISettingsTags {
     static let uiSettingsAppearance = "ui.appearance"
     static let uiSettingsOrientation = "ui.orientation"
     static let uiSettingsLocalization = "ui.localization"
+    static let uiSettingsSessionLocalization = "_dd.ci.test_session.ui.localization"
+    static let uiSettingsSuiteLocalization = "_dd.ci.test_suite.ui.localization"
 }
 
 internal enum DDRuntimeTags {

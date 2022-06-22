@@ -15,6 +15,7 @@ public class DDTestSuite: NSObject, Encodable {
     var duration: UInt64
     var meta: [String: String] = [:]
     var status: DDTestStatus
+    var localization: String
 
     init(name: String, session: DDTestSession, startTime: Date? = nil) {
         self.name = name
@@ -29,6 +30,7 @@ public class DDTestSuite: NSObject, Encodable {
         } else {
             self.id = SpanId.random()
         }
+        self.localization = PlatformUtils.getLocalization()
     }
 
     func internalEnd(endTime: Date? = nil) {
@@ -67,6 +69,8 @@ public class DDTestSuite: NSObject, Encodable {
         meta.merge(defaultAttributes) { _, new in new }
         meta.merge(DDEnvironmentValues.gitAttributes) { _, new in new }
         meta.merge(DDEnvironmentValues.ciAttributes) { _, new in new }
+        meta[DDUISettingsTags.uiSettingsSuiteLocalization] = localization
+        meta[DDUISettingsTags.uiSettingsSessionLocalization] = session.localization
         DDTestMonitor.tracer.opentelemetryExporter?.exportEvent(event: DDTestSuiteEnvelope(self))
         /// We need to wait for all the traces to be written to the backend before exiting
     }

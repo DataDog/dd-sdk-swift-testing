@@ -60,9 +60,9 @@ public class DDTest: NSObject {
         // Is not a UITest until a XCUIApplication is launched
         span.setAttribute(key: DDTestTags.testIsUITest, value: "false")
 
-        if let localization = PlatformUtils.getLocalization(){
-            span.setAttribute(key:  DDUISettingsTags.uiSettingsLocalization, value: localization)
-        }
+        span.setAttribute(key: DDUISettingsTags.uiSettingsLocalization, value: PlatformUtils.getLocalization())
+        span.setAttribute(key: DDUISettingsTags.uiSettingsSuiteLocalization, value: suite.localization)
+        span.setAttribute(key: DDUISettingsTags.uiSettingsSessionLocalization, value: session.localization)
 
         DDTestMonitor.tracer.addPropagationsHeadersToEnvironment()
 

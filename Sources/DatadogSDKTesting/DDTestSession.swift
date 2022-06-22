@@ -24,6 +24,7 @@ public class DDTestSession: NSObject, Encodable {
     var duration: UInt64
     var meta: [String: String] = [:]
     var status: DDTestStatus
+    var localization: String
 
     private let executionLock = NSLock()
     private var privateCurrentExecutionOrder = 0
@@ -58,6 +59,7 @@ public class DDTestSession: NSObject, Encodable {
             DDCrashes.install()
         }
         self.id = DDTestMonitor.instance?.crashedSessionInfo?.crashedSessionId ?? SpanId.random()
+        self.localization = PlatformUtils.getLocalization()
     }
 
     func internalEnd(endTime: Date? = nil) {
@@ -90,10 +92,10 @@ public class DDTestSession: NSObject, Encodable {
             DDRuntimeTags.runtimeVersion: DDTestMonitor.env.runtimeVersion,
             DDTestSessionTags.testSessionId: String(id.rawValue)
         ]
-
         meta.merge(defaultAttributes) { _, new in new }
         meta.merge(DDEnvironmentValues.gitAttributes) { _, new in new }
         meta.merge(DDEnvironmentValues.ciAttributes) { _, new in new }
+        meta[DDUISettingsTags.uiSettingsSessionLocalization] = localization
         DDTestMonitor.tracer.opentelemetryExporter?.exportEvent(event: DDTestSessionEnvelope(self))
         /// We need to wait for all the traces to be written to the backend before exiting
         DDTestMonitor.tracer.flush()

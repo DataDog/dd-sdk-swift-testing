@@ -55,9 +55,9 @@ internal class CoverageExporter {
                                        performance: configuration.performancePreset)
     }
 
-    func exportCoverage(coverage: URL, traceId: String, spanId: String, binaryImagePaths: [String]) {
+    func exportCoverage(coverage: URL, traceId: String, spanId: String, workspacePath: String?, binaryImagePaths: [String]) {
         let profData = DDCoverageConversor.generateProfData(profrawFile: coverage)
-        let ddCoverage = DDCoverageConversor.getDatadogCoverage(profdataFile: profData, traceId: traceId, spanId: spanId, binaryImagePaths: binaryImagePaths)
+        let ddCoverage = DDCoverageConversor.getDatadogCoverage(profdataFile: profData, traceId: traceId, spanId: spanId, workspacePath: workspacePath, binaryImagePaths: binaryImagePaths)
         coverageStorage.writer.write(value: ddCoverage)
     }
 }

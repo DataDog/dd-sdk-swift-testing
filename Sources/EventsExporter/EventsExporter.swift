@@ -44,8 +44,8 @@ public class EventsExporter: SpanExporter {
         return .success
     }
 
-    public func export(coverage: URL, traceId: String, spanId: String, binaryImagePaths: [String]) {
-        coverageExporter.exportCoverage(coverage: coverage, traceId: traceId, spanId: spanId, binaryImagePaths: binaryImagePaths)
+    public func export(coverage: URL, traceId: String, spanId: String, workspacePath: String?, binaryImagePaths: [String]) {
+        coverageExporter.exportCoverage(coverage: coverage, traceId: traceId, spanId: spanId, workspacePath: workspacePath, binaryImagePaths: binaryImagePaths)
     }
 
     public func shutdown() {

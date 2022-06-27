@@ -117,7 +117,7 @@ internal struct MultipartRequestBuilder: RequestBuilder {
         var headers = precomputedHeaders
         computedHeaders.forEach { field, value in headers[field] = value() }
         request.addDataField(named: "coverage1", data:data, mimeType: ContentType.applicationJSON.rawValue)
-        request.addDataField(named: "event", data:"{}".data(using: .utf8)!, mimeType: ContentType.applicationJSON.rawValue)
+        request.addDataField(named: "event", data:#"{"dummy": true}"#.data(using: .utf8)!, mimeType: ContentType.applicationJSON.rawValue)
         var urlRequest = request.asURLRequest()
         urlRequest.allHTTPHeaderFields = headers
         return urlRequest

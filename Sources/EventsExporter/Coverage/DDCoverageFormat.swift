@@ -7,15 +7,10 @@
 import Foundation
 
 struct DDCoverageFormat: Encodable {
-    var type: String = "coverage"
     var version: String = "1"
-    var content: CoverageContent
-
-    struct CoverageContent: Encodable {
-        var trace_id: String
-        var span_id: String
-        var files = [File]()
-    }
+    var trace_id: String
+    var span_id: String
+    var files = [File]()
 
     struct File: Encodable {
         let filename: String
@@ -41,10 +36,11 @@ struct DDCoverageFormat: Encodable {
         init() {}
     }
 
-    init?(llvmFormat: LLVMCoverageFormat, traceId: String, spanId: String) {
+    init?(llvmFormat: LLVMCoverageFormat, traceId: String, spanId: String, workspacePath: String?) {
         guard let llvmFiles = llvmFormat.data.first?.files else { return nil }
 
-        content = CoverageContent(trace_id: traceId, span_id: spanId)
+        self.trace_id = traceId
+        self.span_id = spanId
 
         for llvmFile in llvmFiles {
             var segments = [Segment]()
@@ -93,9 +89,12 @@ struct DDCoverageFormat: Encodable {
                 }
             }
             if segments.count > 0 {
-                let filename = llvmFile.filename
+                var filename = llvmFile.filename
+                if let workspacePath = workspacePath {
+                    filename = filename.replacingOccurrences(of: workspacePath + "/", with: "")
+                }
                 let file = File(filename: filename, segments: segments)
-                content.files.append(file)
+                files.append(file)
             }
         }
     }

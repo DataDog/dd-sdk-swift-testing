@@ -231,7 +231,8 @@ public class DDTest: NSObject {
         }
 
         DDCoverageHelper.instance?.setTest(name: name,
-                                           traceId: span.context.traceId.hexString, spanId: span.context.spanId.hexString)
+                                           traceId: String(span.context.traceId.rawLowerLong),
+                                           spanId: String(span.context.spanId.rawValue))
         DDCoverageHelper.instance?.clearCounters()
     }
 
@@ -291,12 +292,12 @@ public class DDTest: NSObject {
         span.setAttribute(key: DDTestTags.testStatus, value: testStatus)
 
         DDCoverageHelper.instance?.writeProfile()
-        let traceId = span.context.traceId.hexString
-        let spanId = span.context.spanId.hexString
+        let traceId = String(span.context.traceId.rawLowerLong)
+        let spanId = String(span.context.spanId.rawValue)
         if let coverageFileURL = DDCoverageHelper.instance?.getURLForTest(name: name, traceId:traceId, spanId: spanId) {
             DDTestMonitor.tracer.backgroundWorkQueue.addOperation {
                 let binaryImagePaths = BinaryImages.profileImages.map { $0.path }
-                DDTestMonitor.tracer.eventsExporter?.export(coverage: coverageFileURL, traceId: traceId, spanId: spanId, binaryImagePaths: binaryImagePaths)
+                DDTestMonitor.tracer.eventsExporter?.export(coverage: coverageFileURL, traceId: traceId, spanId: spanId, workspacePath: DDTestMonitor.env.workspacePath, binaryImagePaths: binaryImagePaths)
             }
         }
 

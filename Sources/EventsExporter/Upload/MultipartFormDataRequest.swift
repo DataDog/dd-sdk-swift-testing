@@ -6,13 +6,17 @@
 
 import Foundation
 
+typealias AddFields = (MultipartFormDataRequest, Data) -> Void
+
 struct MultipartFormDataRequest {
     private let boundary: String = UUID().uuidString
     private var httpBody = NSMutableData()
     let url: URL
+    let addFieldsCallback: AddFields?
 
-    init(url: URL) {
+    init(url: URL, addFieldsCallback: AddFields?) {
         self.url = url
+        self.addFieldsCallback = addFieldsCallback
     }
 
     func addTextField(named name: String, value: String) {
@@ -30,18 +34,23 @@ struct MultipartFormDataRequest {
         return fieldString
     }
 
-    func addDataField(named name: String, data: Data, mimeType: String) {
+    func addDataField(named name: String, data: Data, mimeType: ContentType) {
         httpBody.append(dataFormField(named: name, data: data, mimeType: mimeType))
     }
 
     private func dataFormField(named name: String,
                                data: Data,
-                               mimeType: String) -> Data {
+                               mimeType: ContentType) -> Data
+    {
         let fieldData = NSMutableData()
 
         fieldData.append("--\(boundary)\r\n")
-        fieldData.append("Content-Disposition: form-data; name=\"\(name)\"; filename=\"file\(name).json\"\r\n")
-        fieldData.append("Content-Type: \(mimeType)\r\n")
+        if mimeType == .applicationOctetStream {
+            fieldData.append("Content-Disposition: form-data; name=\"\(name)\"; filename=\"file\(name).pack\"\r\n")
+        } else {
+            fieldData.append("Content-Disposition: form-data; name=\"\(name)\"; filename=\"file\(name).json\"\r\n")
+        }
+        fieldData.append("Content-Type: \(mimeType.rawValue)\r\n")
         fieldData.append("\r\n")
         fieldData.append(data)
         fieldData.append("\r\n")
@@ -51,13 +60,11 @@ struct MultipartFormDataRequest {
 
     func asURLRequest() -> URLRequest {
         var request = URLRequest(url: url)
-
         request.httpMethod = "POST"
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-
         httpBody.append("--\(boundary)--")
-        let compressedBody = (httpBody as Data).deflated
-        request.httpBody = compressedBody
+        let data = (httpBody as Data)
+        request.httpBody = request.allHTTPHeaderFields?["Content-Encoding"] != nil ? data.deflated : data
         return request
     }
 }
@@ -73,7 +80,8 @@ extension NSMutableData {
 extension URLSession {
     func dataTask(with request: MultipartFormDataRequest,
                   completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void)
-    -> URLSessionDataTask {
+        -> URLSessionDataTask
+    {
         return dataTask(with: request.asURLRequest(), completionHandler: completionHandler)
     }
 }

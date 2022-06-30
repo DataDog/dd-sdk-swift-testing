@@ -157,6 +157,15 @@
 		E14405D925DBC3A800FE3D3C /* GitInfoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14405D825DBC3A800FE3D3C /* GitInfoTests.swift */; };
 		E14405DA25DBC3A800FE3D3C /* GitInfoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14405D825DBC3A800FE3D3C /* GitInfoTests.swift */; };
 		E14405DB25DBC3A800FE3D3C /* GitInfoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14405D825DBC3A800FE3D3C /* GitInfoTests.swift */; };
+		E146BC3A2869AEA80057C37B /* IntelligentTestRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E146BC392869AEA80057C37B /* IntelligentTestRunner.swift */; };
+		E146BC3B2869AEA80057C37B /* IntelligentTestRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E146BC392869AEA80057C37B /* IntelligentTestRunner.swift */; };
+		E146BC3C2869AEA80057C37B /* IntelligentTestRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E146BC392869AEA80057C37B /* IntelligentTestRunner.swift */; };
+		E146BC3F2869C70E0057C37B /* SearchCommitFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E146BC3E2869C3BB0057C37B /* SearchCommitFormat.swift */; };
+		E146BC402869C70F0057C37B /* SearchCommitFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E146BC3E2869C3BB0057C37B /* SearchCommitFormat.swift */; };
+		E146BC412869C70F0057C37B /* SearchCommitFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E146BC3E2869C3BB0057C37B /* SearchCommitFormat.swift */; };
+		E146BC84286AF34D0057C37B /* GitTreeExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E146BC372865D55A0057C37B /* GitTreeExporter.swift */; };
+		E146BC85286AF34E0057C37B /* GitTreeExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E146BC372865D55A0057C37B /* GitTreeExporter.swift */; };
+		E146BC86286AF34E0057C37B /* GitTreeExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E146BC372865D55A0057C37B /* GitTreeExporter.swift */; };
 		E14AA0C12555AA61003FA711 /* DDNetworkInstrumentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14AA0BF2555A9A1003FA711 /* DDNetworkInstrumentationTests.swift */; };
 		E14AA0CA255AE8D3003FA711 /* SignalUtilsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14AA0C9255AE8D3003FA711 /* SignalUtilsTests.swift */; };
 		E15264AF25FA3C16008B8665 /* DDSymbolicatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E15264AE25FA3C16008B8665 /* DDSymbolicatorTests.swift */; };
@@ -795,6 +804,9 @@
 		E14405D425DBC32A00FE3D3C /* HEAD */ = {isa = PBXFileReference; lastKnownFileType = text; path = HEAD; sourceTree = "<group>"; };
 		E14405D725DBC32A00FE3D3C /* master */ = {isa = PBXFileReference; lastKnownFileType = text; path = master; sourceTree = "<group>"; };
 		E14405D825DBC3A800FE3D3C /* GitInfoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitInfoTests.swift; sourceTree = "<group>"; };
+		E146BC372865D55A0057C37B /* GitTreeExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitTreeExporter.swift; sourceTree = "<group>"; };
+		E146BC392869AEA80057C37B /* IntelligentTestRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntelligentTestRunner.swift; sourceTree = "<group>"; };
+		E146BC3E2869C3BB0057C37B /* SearchCommitFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchCommitFormat.swift; sourceTree = "<group>"; };
 		E14AA0BF2555A9A1003FA711 /* DDNetworkInstrumentationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDNetworkInstrumentationTests.swift; sourceTree = "<group>"; };
 		E14AA0C9255AE8D3003FA711 /* SignalUtilsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalUtilsTests.swift; sourceTree = "<group>"; };
 		E15264AE25FA3C16008B8665 /* DDSymbolicatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDSymbolicatorTests.swift; sourceTree = "<group>"; };
@@ -1286,6 +1298,7 @@
 		E143CEF827D7790200F4018A /* EventsExporter */ = {
 			isa = PBXGroup;
 			children = (
+				E146BC362865D51E0057C37B /* GitTree */,
 				E1DCAF31284A1F0D00F44BE3 /* EventsExporter.h */,
 				E15D77FE281821B600758E2A /* llvm-cov */,
 				E1743F552849012A006CBFF8 /* Coverage */,
@@ -1549,6 +1562,23 @@
 			path = heads;
 			sourceTree = "<group>";
 		};
+		E146BC362865D51E0057C37B /* GitTree */ = {
+			isa = PBXGroup;
+			children = (
+				E146BC372865D55A0057C37B /* GitTreeExporter.swift */,
+				E146BC3E2869C3BB0057C37B /* SearchCommitFormat.swift */,
+			);
+			path = GitTree;
+			sourceTree = "<group>";
+		};
+		E146BC382869AE740057C37B /* IntelligentTestRunner */ = {
+			isa = PBXGroup;
+			children = (
+				E146BC392869AEA80057C37B /* IntelligentTestRunner.swift */,
+			);
+			path = IntelligentTestRunner;
+			sourceTree = "<group>";
+		};
 		E1550C32274F7E7900006F11 /* NTPKit */ = {
 			isa = PBXGroup;
 			children = (
@@ -1617,6 +1647,7 @@
 		E1798E0925260BC4008DEBB9 /* DatadogSDKTesting */ = {
 			isa = PBXGroup;
 			children = (
+				E146BC382869AE740057C37B /* IntelligentTestRunner */,
 				E1ABA04D25231E2500ED8AEF /* DatadogSDKTesting.h */,
 				E1FB483C253891CE0083B263 /* Crashes */,
 				E1C8DEF626836783005B5411 /* ImageSymbols */,
@@ -2563,6 +2594,7 @@
 				E1EBBD5C27F2040E0059BC3E /* Log.swift in Sources */,
 				E10A7E17280701CA00B464C9 /* Subprocess.c in Sources */,
 				E1665A8225D13BBB00BA53CD /* DDSymbolicator.swift in Sources */,
+				E146BC3B2869AEA80057C37B /* IntelligentTestRunner.swift in Sources */,
 				E1550C46274F7FF700006F11 /* NTPClock.swift in Sources */,
 				E1A63F5D26789915002F48FA /* CodeOwners.swift in Sources */,
 				E157A724256E9D1D00CBCA52 /* DDTestMonitor.swift in Sources */,
@@ -2603,6 +2635,7 @@
 				E1EBBD5D27F2040F0059BC3E /* Log.swift in Sources */,
 				E10A7E18280701CA00B464C9 /* Subprocess.c in Sources */,
 				E1665A8125D13BBB00BA53CD /* DDSymbolicator.swift in Sources */,
+				E146BC3C2869AEA80057C37B /* IntelligentTestRunner.swift in Sources */,
 				E1550C47274F7FF700006F11 /* NTPClock.swift in Sources */,
 				E1A63F5E26789915002F48FA /* CodeOwners.swift in Sources */,
 				E157A75C256E9D3300CBCA52 /* DDTestMonitor.swift in Sources */,
@@ -2753,6 +2786,7 @@
 				E10A7E16280701CA00B464C9 /* Subprocess.c in Sources */,
 				E1D6EFA525F6647F00E8C3AE /* LibraryInitializer.m in Sources */,
 				E1550C45274F7FF700006F11 /* NTPClock.swift in Sources */,
+				E146BC3A2869AEA80057C37B /* IntelligentTestRunner.swift in Sources */,
 				E1A63F5C26789915002F48FA /* CodeOwners.swift in Sources */,
 				E1665A8525D1524100BA53CD /* DDSymbolicator.swift in Sources */,
 				E1ABA08B252341EA00ED8AEF /* DDTestMonitor.swift in Sources */,
@@ -2853,6 +2887,8 @@
 				E1DCAF61284A1F6E00F44BE3 /* File.swift in Sources */,
 				E1DCAF62284A1F8300F44BE3 /* EventsExporter.swift in Sources */,
 				E1DCAF5B284A1F6400F44BE3 /* LogsExporter.swift in Sources */,
+				E146BC3F2869C70E0057C37B /* SearchCommitFormat.swift in Sources */,
+				E146BC84286AF34D0057C37B /* GitTreeExporter.swift in Sources */,
 				E1DCAF4F284A1F5B00F44BE3 /* Device.swift in Sources */,
 				E1DCAF60284A1F6E00F44BE3 /* Directory.swift in Sources */,
 				E1913529284F7A92006480C9 /* HTTPHeader.swift in Sources */,
@@ -2903,6 +2939,8 @@
 				E1DCAF97284A285D00F44BE3 /* DateFormatting.swift in Sources */,
 				E1DCAF8E284A285D00F44BE3 /* DateProvider.swift in Sources */,
 				E1DCAF91284A285D00F44BE3 /* Device.swift in Sources */,
+				E146BC402869C70F0057C37B /* SearchCommitFormat.swift in Sources */,
+				E146BC85286AF34E0057C37B /* GitTreeExporter.swift in Sources */,
 				E1DCAF98284A285D00F44BE3 /* DataFormat.swift in Sources */,
 				E1DCAF89284A285D00F44BE3 /* DataUploadWorker.swift in Sources */,
 				E191352A284F7A93006480C9 /* HTTPHeader.swift in Sources */,
@@ -2953,6 +2991,8 @@
 				E1DCAFDC284A2BED00F44BE3 /* EventsExporter.swift in Sources */,
 				E1DCAFE2284A2BED00F44BE3 /* LogSanitizer.swift in Sources */,
 				E1DCAFE0284A2BED00F44BE3 /* Device.swift in Sources */,
+				E146BC412869C70F0057C37B /* SearchCommitFormat.swift in Sources */,
+				E146BC86286AF34E0057C37B /* GitTreeExporter.swift in Sources */,
 				E1DCAFD3284A2BED00F44BE3 /* SpanSanitizer.swift in Sources */,
 				E1DCAFF7284A2BED00F44BE3 /* PerformancePreset.swift in Sources */,
 				E191352B284F7A93006480C9 /* HTTPHeader.swift in Sources */,

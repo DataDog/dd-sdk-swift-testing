@@ -31,6 +31,13 @@ internal final class HTTPClient {
         }
         task.resume()
     }
+
+    func sendWithResult(request: URLRequest, completion: @escaping (Result<Data, Error>) -> Void) {
+        let task = session.dataTask(with: request) { data, response, error in
+            completion(httpClientResultWithData(for: (data, response, error)))
+        }
+        task.resume()
+    }
 }
 
 /// An error returned if `URLSession` response state is inconsistent (like no data, no response and no error).
@@ -47,6 +54,22 @@ private func httpClientResult(for urlSessionTaskCompletion: (Data?, URLResponse?
     }
 
     if let httpResponse = response as? HTTPURLResponse {
+        return .success(httpResponse)
+    }
+
+    return .failure(URLSessionTransportInconsistencyException())
+}
+
+/// As `URLSession` returns 3-values-tuple for request execution, this function applies consistency constraints and turns
+/// it into only two possible states of `HTTPTransportResult`.
+private func httpClientResultWithData(for urlSessionTaskCompletion: (Data?, URLResponse?, Error?)) -> Result<Data, Error> {
+    let (data, _ , error) = urlSessionTaskCompletion
+
+    if let error = error {
+        return .failure(error)
+    }
+
+    if let httpResponse = data {
         return .success(httpResponse)
     }
 

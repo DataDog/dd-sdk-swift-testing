@@ -7,20 +7,20 @@
 import Foundation
 
 /// An abstraction over file system directory where SDK stores its files.
-internal struct Directory {
+ public struct Directory {
     let url: URL
 
     /// Creates subdirectory with given path under system caches directory.
-    init(withSubdirectoryPath path: String) throws {
+     public init(withSubdirectoryPath path: String) throws {
         self.init(url: try createCachesSubdirectoryIfNotExists(subdirectoryPath: path))
     }
 
-    init(url: URL) {
+     public init(url: URL) {
         self.url = url
     }
 
     /// Creates file with given name.
-    func createFile(named fileName: String) throws -> File {
+     public func createFile(named fileName: String) throws -> File {
         let fileURL = url.appendingPathComponent(fileName, isDirectory: false)
         guard FileManager.default.createFile(atPath: fileURL.path, contents: nil, attributes: nil) == true else {
             throw ExporterError(description: "Cannot create file at path: \(fileURL.path)")
@@ -29,7 +29,7 @@ internal struct Directory {
     }
 
     /// Returns file with given name.
-    func file(named fileName: String) -> File? {
+     public func file(named fileName: String) -> File? {
         let fileURL = url.appendingPathComponent(fileName, isDirectory: false)
         if FileManager.default.fileExists(atPath: fileURL.path) {
             return File(url: fileURL)
@@ -39,11 +39,15 @@ internal struct Directory {
     }
 
     /// Returns all files of this directory.
-    func files() throws -> [File] {
+     public func files() throws -> [File] {
         return try FileManager.default
             .contentsOfDirectory(at: url, includingPropertiesForKeys: [.isRegularFileKey, .canonicalPathKey])
             .map { url in File(url: url) }
     }
+
+     public func getURL() -> URL {
+         return url
+     }
 }
 
 /// Creates subdirectory at given path in `/Library/Caches` if it does not exist. Might throw `ExporterError` when it's not possible.

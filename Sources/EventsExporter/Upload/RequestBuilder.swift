@@ -39,7 +39,6 @@ internal struct SingleRequestBuilder: RequestBuilder {
 
     init(url: URL, queryItems: [QueryItem], headers: [HTTPHeader]) {
         var urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false)
-
         if !queryItems.isEmpty {
             urlComponents?.queryItems = queryItems.map { $0.urlQueryItem }
         }
@@ -76,13 +75,16 @@ internal struct SingleRequestBuilder: RequestBuilder {
 }
 
 /// Builds `URLRequest` for sending data to Datadog.
-internal struct MultipartRequestBuilder: RequestBuilder {
+internal class MultipartRequestBuilder: RequestBuilder {
     /// Upload `URL`.
     private let url: URL
     /// Pre-computed HTTP headers (they do not change in succeeding requests).
     private let precomputedHeaders: [String: String]
     /// Computed HTTP headers (their value is different in succeeding requests).
     private let computedHeaders: [String: () -> String]
+    /// Hook for users to add the multipart fields
+    var addFieldsCallback: AddFields?
+
 
     // MARK: - Initialization
 
@@ -113,11 +115,10 @@ internal struct MultipartRequestBuilder: RequestBuilder {
     /// - Parameter data: data to be uploaded
     /// - Returns: the `URLRequest` object.
     func uploadRequest(with data: Data) -> URLRequest {
-        let request = MultipartFormDataRequest(url: url)
+        let request = MultipartFormDataRequest(url: url, addFieldsCallback: addFieldsCallback)
+        request.addFieldsCallback?(request, data)
         var headers = precomputedHeaders
         computedHeaders.forEach { field, value in headers[field] = value() }
-        request.addDataField(named: "coverage1", data:data, mimeType: ContentType.applicationJSON.rawValue)
-        request.addDataField(named: "event", data:#"{"dummy": true}"#.data(using: .utf8)!, mimeType: ContentType.applicationJSON.rawValue)
         var urlRequest = request.asURLRequest()
         urlRequest.allHTTPHeaderFields = headers
         return urlRequest

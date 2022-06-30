@@ -18,8 +18,10 @@ public struct ExporterConfiguration {
     var version: String
     var environment: String
 
-    /// Either the API key
+    /// API key for authentication
     var apiKey: String
+    var applicationKey: String
+
     /// Endpoint that will be used for reporting.
     var endpoint: Endpoint
     /// Exporter will deflate payloads before sending
@@ -29,13 +31,14 @@ public struct ExporterConfiguration {
     /// Performance preset for reporting
     var performancePreset: PerformancePreset
 
-    public init(serviceName: String, libraryVersion: String, applicationName: String, applicationVersion: String, environment: String, apiKey: String, endpoint: Endpoint, payloadCompression: Bool = true, source: String = "ios", performancePreset: PerformancePreset = .default) {
+    public init(serviceName: String, libraryVersion: String, applicationName: String, applicationVersion: String, environment: String, apiKey: String, applicationKey: String, endpoint: Endpoint, payloadCompression: Bool = true, source: String = "ios", performancePreset: PerformancePreset = .default) {
         self.serviceName = serviceName
         self.libraryVersion = libraryVersion
         self.applicationName = applicationName
         self.version = applicationVersion
         self.environment = environment
         self.apiKey = apiKey
+        self.applicationKey = applicationKey
         self.endpoint = endpoint
         self.payloadCompression = payloadCompression
         self.source = source

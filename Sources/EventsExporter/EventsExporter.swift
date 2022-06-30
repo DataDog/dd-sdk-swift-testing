@@ -12,12 +12,14 @@ public class EventsExporter: SpanExporter {
     var spansExporter: SpansExporter
     var logsExporter: LogsExporter
     var coverageExporter: CoverageExporter
+    var gitTreeExporter: GitTreeExporter
 
     public init(config: ExporterConfiguration) throws {
         self.configuration = config
         spansExporter = try SpansExporter(config: configuration)
         logsExporter = try LogsExporter(config: configuration)
         coverageExporter = try CoverageExporter(config: configuration)
+        gitTreeExporter = try GitTreeExporter(config: configuration)
     }
 
     public func export(spans: [SpanData]) -> SpanExporterResultCode {
@@ -46,6 +48,16 @@ public class EventsExporter: SpanExporter {
 
     public func export(coverage: URL, traceId: String, spanId: String, workspacePath: String?, binaryImagePaths: [String]) {
         coverageExporter.exportCoverage(coverage: coverage, traceId: traceId, spanId: spanId, workspacePath: workspacePath, binaryImagePaths: binaryImagePaths)
+    }
+
+    public func searchCommits(repositoryURL: String, commits: [String]) -> [String] {
+        return gitTreeExporter.searchExistingCommits(repositoryURL: repositoryURL, commits: commits)
+    }
+
+    public func uploadPackFiles(packFilesDirectory: Directory, commit: String, repository: String) {
+        try? gitTreeExporter.uploadPackFiles(packFilesDirectory: packFilesDirectory,
+                                             commit: commit,
+                                             repository: repository)
     }
 
     public func shutdown() {

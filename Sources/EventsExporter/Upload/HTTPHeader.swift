@@ -10,6 +10,7 @@ enum ContentType: String {
     case applicationJSON = "application/json"
     case textPlainUTF8 = "text/plain;charset=UTF-8"
     case multipartFormData = "multipart/form-data"
+    case applicationOctetStream = "application/octet-stream"
 }
 
 enum ContentEncoding: String {
@@ -21,6 +22,8 @@ struct HTTPHeader {
     static let contentEncodingHeaderField = "Content-Encoding"
     static let userAgentHeaderField = "User-Agent"
     static let ddAPIKeyHeaderField = "DD-API-KEY"
+    static let ddApplicationKeyHeaderField = "DD-APPLICATION-KEY"
+
 
     enum Value {
         /// If the header's value is constant.
@@ -54,8 +57,13 @@ struct HTTPHeader {
 
     // MARK: - Datadog Headers
 
-    /// Datadog request authentication header.
+    /// Datadog request API Key authentication header.
     static func ddAPIKeyHeader(apiKey: String) -> HTTPHeader {
         return HTTPHeader(field: ddAPIKeyHeaderField, value: .constant(apiKey))
+    }
+
+    /// Datadog request Application Key authentication header.
+    static func ddApplicationKeyHeader(applicationKey: String) -> HTTPHeader {
+        return HTTPHeader(field: ddApplicationKeyHeaderField, value: .constant(applicationKey))
     }
 }

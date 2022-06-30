@@ -46,18 +46,25 @@ internal class CoverageExporter {
                     device: Device.current
                 ),
                 .ddAPIKeyHeader(apiKey: config.apiKey)
-            ] + (configuration.payloadCompression ? [HTTPHeader.contentEncodingHeader(contentEncoding: .deflate)] : [])
+            ] //+ (configuration.payloadCompression ? [HTTPHeader.contentEncodingHeader(contentEncoding: .deflate)] : [])
         )
 
         coverageUpload = FeatureUpload(featureName: "coverageUpload",
                                        storage: coverageStorage,
                                        requestBuilder: requestBuilder,
                                        performance: configuration.performancePreset)
+        requestBuilder.addFieldsCallback = addCoverage
     }
 
     func exportCoverage(coverage: URL, traceId: String, spanId: String, workspacePath: String?, binaryImagePaths: [String]) {
         let profData = DDCoverageConversor.generateProfData(profrawFile: coverage)
         let ddCoverage = DDCoverageConversor.getDatadogCoverage(profdataFile: profData, traceId: traceId, spanId: spanId, workspacePath: workspacePath, binaryImagePaths: binaryImagePaths)
         coverageStorage.writer.write(value: ddCoverage)
+    }
+
+    private func addCoverage(request: MultipartFormDataRequest, data: Data?) {
+        guard let data = data else { return }
+        request.addDataField(named: "coverage1", data: data, mimeType: .applicationJSON)
+        request.addDataField(named: "event", data: #"{"dummy": true}"#.data(using: .utf8)!, mimeType: .applicationJSON)
     }
 }

@@ -26,6 +26,9 @@ class DDTestObserver: NSObject, XCTestObservation {
     }
 
     func testBundleWillStart(_ testBundle: Bundle) {
+        let itr = try? IntelligentTestRunner()
+        itr?.start()
+
         let bundleName = testBundle.bundleURL.deletingPathExtension().lastPathComponent
         session = DDTestSession.start(bundleName: bundleName)
         session?.testFramework = "XCTest"

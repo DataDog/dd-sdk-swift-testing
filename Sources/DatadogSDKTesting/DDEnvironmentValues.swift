@@ -42,6 +42,7 @@ internal enum ConfigurationValues: String, CaseIterable {
 internal struct DDEnvironmentValues {
     /// Datatog Configuration values
     let ddApiKey: String?
+    let ddApplicationKey: String?
     let ddEnvironment: String?
     let ddService: String?
     var ddTags = [String: String]()
@@ -138,8 +139,14 @@ internal struct DDEnvironmentValues {
         if apiKey == nil {
             apiKey = DDEnvironmentValues.infoDictionary["DatadogApiKey"] as? String
         }
-
         ddApiKey = apiKey
+
+        var applicationKey = DDEnvironmentValues.getEnvVariable("DD_APPLICATION_KEY")
+        if applicationKey == nil {
+            applicationKey = DDEnvironmentValues.infoDictionary["DatadogApplicationKey"] as? String
+        }
+        ddApplicationKey = applicationKey
+
         ddEnvironment = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_ENV.rawValue)
         tracerUnderTesting = (DDEnvironmentValues.getEnvVariable("TEST_OUTPUT_FILE") != nil)
         let service = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_SERVICE.rawValue)

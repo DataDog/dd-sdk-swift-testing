@@ -48,6 +48,31 @@ internal final class DataUploader: DataUploaderType {
         return uploadStatus ?? DataUploader.unreachableUploadStatus
     }
 
+    /// Uploads data synchronously (will block current thread) and returns the response data
+    /// Uses timeout configured for `HTTPClient`.
+    func uploadWithResponse(data: Data) -> Data? {
+        let request = createRequest(with: data)
+        var returnData: Data?
+
+        let semaphore = DispatchSemaphore(value: 0)
+
+        
+        httpClient.sendWithResult(request: request) { result in
+            switch result {
+                case .success(let data):
+                    returnData = data
+                case .failure:
+                    returnData = nil
+            }
+
+            semaphore.signal()
+        }
+
+        _ = semaphore.wait(timeout: .distantFuture)
+
+        return returnData
+    }
+
     private func createRequest(with data: Data) -> URLRequest {
         return requestBuilder.uploadRequest(with: data)
     }

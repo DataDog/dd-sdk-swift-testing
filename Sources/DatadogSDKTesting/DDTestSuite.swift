@@ -9,7 +9,7 @@ import Foundation
 
 public class DDTestSuite: NSObject, Encodable {
     var name: String
-    var session: DDTestSession
+    var module: DDTestModule
     var id: SpanId
     let startTime: Date
     var duration: UInt64
@@ -17,39 +17,39 @@ public class DDTestSuite: NSObject, Encodable {
     var status: DDTestStatus
     var localization: String
 
-    init(name: String, session: DDTestSession, startTime: Date? = nil) {
+    init(name: String, module: DDTestModule, startTime: Date? = nil) {
         self.name = name
-        self.session = session
-        self.startTime = DDTestMonitor.instance?.crashedSessionInfo?.suiteStartTime ?? startTime ?? DDTestMonitor.clock.now
+        self.module = module
+        self.startTime = DDTestMonitor.instance?.crashedModuleInfo?.suiteStartTime ?? startTime ?? DDTestMonitor.clock.now
         self.duration = 0
         self.status = .pass
 
-        if DDTestMonitor.instance?.crashedSessionInfo?.crashedSuiteName == name {
-            self.id = DDTestMonitor.instance?.crashedSessionInfo?.crashedSuiteId ?? SpanId.random()
-            DDTestMonitor.instance?.crashedSessionInfo = nil
+        if DDTestMonitor.instance?.crashedModuleInfo?.crashedSuiteName == name {
+            self.id = DDTestMonitor.instance?.crashedModuleInfo?.crashedSuiteId ?? SpanId.random()
+            DDTestMonitor.instance?.crashedModuleInfo = nil
         } else {
             self.id = SpanId.random()
         }
         self.localization = PlatformUtils.getLocalization()
 
         //If we are recovering from a crash, clean the crash information
-        if DDTestMonitor.instance?.crashedSessionInfo != nil {
-            DDTestMonitor.instance?.crashedSessionInfo = nil
+        if DDTestMonitor.instance?.crashedModuleInfo != nil {
+            DDTestMonitor.instance?.crashedModuleInfo = nil
         }
     }
 
     func internalEnd(endTime: Date? = nil) {
         duration = (endTime ?? DDTestMonitor.clock.now).timeIntervalSince(startTime).toNanoseconds
-        /// Export session event
+        /// Export module event
 
-        let sessionStatus: String
+        let moduleStatus: String
         switch status {
             case .pass:
-                sessionStatus = DDTagValues.statusPass
+                moduleStatus = DDTagValues.statusPass
             case .fail:
-                sessionStatus = DDTagValues.statusFail
+                moduleStatus = DDTagValues.statusFail
             case .skip:
-                sessionStatus = DDTagValues.statusSkip
+                moduleStatus = DDTagValues.statusSkip
         }
 
         let defaultAttributes: [String: String] = [
@@ -57,9 +57,9 @@ public class DDTestSuite: NSObject, Encodable {
             DDGenericTags.type: DDTagValues.typeSuiteEnd,
             DDGenericTags.language: "swift",
             DDTestTags.testSuite: name,
-            DDTestTags.testFramework: session.testFramework,
-            DDTestTags.testBundle: session.bundleName,
-            DDTestTags.testStatus: sessionStatus,
+            DDTestTags.testFramework: module.testFramework,
+            DDTestTags.testBundle: module.bundleName,
+            DDTestTags.testStatus: moduleStatus,
             DDOSTags.osPlatform: DDTestMonitor.env.osName,
             DDOSTags.osArchitecture: DDTestMonitor.env.osArchitecture,
             DDOSTags.osVersion: DDTestMonitor.env.osVersion,
@@ -67,15 +67,15 @@ public class DDTestSuite: NSObject, Encodable {
             DDDeviceTags.deviceModel: DDTestMonitor.env.deviceModel,
             DDRuntimeTags.runtimeName: DDTestMonitor.env.runtimeName,
             DDRuntimeTags.runtimeVersion: DDTestMonitor.env.runtimeVersion,
-            DDTestSessionTags.testSessionId: String(session.id.rawValue),
-            DDTestSessionTags.testSuiteId: String(id.rawValue)
+            DDTestModuleTags.testModuleId: String(module.id.rawValue),
+            DDTestModuleTags.testSuiteId: String(id.rawValue)
         ]
 
         meta.merge(defaultAttributes) { _, new in new }
         meta.merge(DDEnvironmentValues.gitAttributes) { _, new in new }
         meta.merge(DDEnvironmentValues.ciAttributes) { _, new in new }
         meta[DDUISettingsTags.uiSettingsSuiteLocalization] = localization
-        meta[DDUISettingsTags.uiSettingsSessionLocalization] = session.localization
+        meta[DDUISettingsTags.uiSettingsModuleLocalization] = module.localization
         DDTestMonitor.tracer.opentelemetryExporter?.exportEvent(event: DDTestSuiteEnvelope(self))
         /// We need to wait for all the traces to be written to the backend before exiting
     }
@@ -98,7 +98,7 @@ public class DDTestSuite: NSObject, Encodable {
     ///   - name: name of the suite
     ///   - startTime: Optional, the time where the test started
     @objc public func testStart(name: String, startTime: Date? = nil) -> DDTest {
-        return DDTest(name: name, suite: self, session: session, startTime: startTime)
+        return DDTest(name: name, suite: self, module: module, startTime: startTime)
     }
 
     @objc public func testStart(name: String) -> DDTest {
@@ -108,7 +108,7 @@ public class DDTestSuite: NSObject, Encodable {
 
 extension DDTestSuite {
     enum StaticCodingKeys: String, CodingKey {
-        case test_session_id
+        case test_module_id
         case test_suite_id
         case start
         case duration
@@ -121,13 +121,13 @@ extension DDTestSuite {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: StaticCodingKeys.self)
-        try container.encode(session.id.rawValue, forKey: .test_session_id)
+        try container.encode(module.id.rawValue, forKey: .test_module_id)
         try container.encode(id.rawValue, forKey: .test_suite_id)
         try container.encode(startTime.timeIntervalSince1970.toNanoseconds, forKey: .start)
         try container.encode(duration, forKey: .duration)
         try container.encode(meta, forKey: .meta)
         try container.encode(status == .fail ? 1 : 0, forKey: .error)
-        try container.encode("\(session.testFramework).suite", forKey: .name)
+        try container.encode("\(module.testFramework).suite", forKey: .name)
         try container.encode("\(name)", forKey: .resource)
         try container.encode(DDTestMonitor.env.ddService ?? DDTestMonitor.env.getRepositoryName() ?? "unknown-swift-repo", forKey: .service)
     }

@@ -13,13 +13,12 @@ import Foundation
     case skip
 }
 
-public class DDTestSession: NSObject, Encodable {
+public class DDTestModule: NSObject, Encodable {
     var bundleName = ""
     var bundleFunctionInfo = FunctionMap()
     var codeOwners: CodeOwners?
     var testFramework = "Swift API"
     var id: SpanId
-    let command: String
     let startTime: Date
     var duration: UInt64
     var meta: [String: String] = [:]
@@ -38,8 +37,7 @@ public class DDTestSession: NSObject, Encodable {
     }
 
     init(bundleName: String, startTime: Date?) {
-        let sessionStartTime = startTime ?? DDTestMonitor.clock.now
-        self.command = bundleName
+        let moduleStartTime = startTime ?? DDTestMonitor.clock.now
         self.duration = 0
         self.status = .pass
         if DDTestMonitor.instance == nil {
@@ -58,8 +56,8 @@ public class DDTestSession: NSObject, Encodable {
         if !DDTestMonitor.env.disableCrashHandler {
             DDCrashes.install()
         }
-        self.id = DDTestMonitor.instance?.crashedSessionInfo?.crashedSessionId ?? SpanId.random()
-        self.startTime = DDTestMonitor.instance?.crashedSessionInfo?.sessionStartTime ?? sessionStartTime
+        self.id = DDTestMonitor.instance?.crashedModuleInfo?.crashedModuleId ?? SpanId.random()
+        self.startTime = DDTestMonitor.instance?.crashedModuleInfo?.moduleStartTime ?? moduleStartTime
         self.localization = PlatformUtils.getLocalization()
     }
 
@@ -76,7 +74,7 @@ public class DDTestSession: NSObject, Encodable {
                 suiteStatus = DDTagValues.statusSkip
         }
 
-        /// Export session event
+        /// Export module event
         let defaultAttributes: [String: String] = [
             DDGenericTags.type: DDTagValues.typeSuiteEnd,
             DDGenericTags.language: "swift",
@@ -91,36 +89,36 @@ public class DDTestSession: NSObject, Encodable {
             DDDeviceTags.deviceModel: DDTestMonitor.env.deviceModel,
             DDRuntimeTags.runtimeName: DDTestMonitor.env.runtimeName,
             DDRuntimeTags.runtimeVersion: DDTestMonitor.env.runtimeVersion,
-            DDTestSessionTags.testSessionId: String(id.rawValue)
+            DDTestModuleTags.testModuleId: String(id.rawValue)
         ]
         meta.merge(defaultAttributes) { _, new in new }
         meta.merge(DDEnvironmentValues.gitAttributes) { _, new in new }
         meta.merge(DDEnvironmentValues.ciAttributes) { _, new in new }
-        meta[DDUISettingsTags.uiSettingsSessionLocalization] = localization
-        DDTestMonitor.tracer.opentelemetryExporter?.exportEvent(event: DDTestSessionEnvelope(self))
+        meta[DDUISettingsTags.uiSettingsModuleLocalization] = localization
+        DDTestMonitor.tracer.opentelemetryExporter?.exportEvent(event: DDTestModuleEnvelope(self))
         /// We need to wait for all the traces to be written to the backend before exiting
         DDTestMonitor.tracer.flush()
     }
 }
 
-/// Public interface for DDTestSession
-public extension DDTestSession {
-    /// Starts the session
+/// Public interface for DDTestModule
+public extension DDTestModule {
+    /// Starts the module
     /// - Parameters:
     ///   - bundleName: name of the module or bundle to test.
-    ///   - startTime: Optional, the time where the session started
-    @objc static func start(bundleName: String, startTime: Date? = nil) -> DDTestSession {
-        let session = DDTestSession(bundleName: bundleName, startTime: startTime)
-        return session
+    ///   - startTime: Optional, the time where the module started
+    @objc static func start(bundleName: String, startTime: Date? = nil) -> DDTestModule {
+        let module = DDTestModule(bundleName: bundleName, startTime: startTime)
+        return module
     }
 
-    @objc static func start(bundleName: String) -> DDTestSession {
+    @objc static func start(bundleName: String) -> DDTestModule {
         return start(bundleName: bundleName, startTime: nil)
     }
 
-    /// Ends the session
+    /// Ends the module
     /// - Parameters:
-    ///   - endTime: Optional, the time where the session ended
+    ///   - endTime: Optional, the time where the module ended
     @objc(endWithTime:) func end(endTime: Date? = nil) {
         internalEnd(endTime: endTime)
     }
@@ -129,19 +127,19 @@ public extension DDTestSession {
         return end(endTime: nil)
     }
 
-    /// Adds a extra tag or attribute to the test session, any number of tags can be reported
+    /// Adds a extra tag or attribute to the test module, any number of tags can be reported
     /// - Parameters:
     ///   - key: The name of the tag, if a tag exists with the name it will be
     ///     replaced with the new value
     ///   - value: The value of the tag, can be a number or a string.
     @objc func setTag(key: String, value: Any) {}
 
-    /// Starts a suite in this session
+    /// Starts a suite in this module
     /// - Parameters:
     ///   - name: name of the suite
     ///   - startTime: Optional, the time where the suite started
     @objc func suiteStart(name: String, startTime: Date? = nil) -> DDTestSuite {
-        let suite = DDTestSuite(name: name, session: self, startTime: startTime)
+        let suite = DDTestSuite(name: name, module: self, startTime: startTime)
         return suite
     }
 
@@ -150,9 +148,9 @@ public extension DDTestSession {
     }
 }
 
-extension DDTestSession {
+extension DDTestModule {
     enum StaticCodingKeys: String, CodingKey {
-        case test_session_id
+        case test_module_id
         case start
         case duration
         case meta
@@ -164,17 +162,17 @@ extension DDTestSession {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: StaticCodingKeys.self)
-        try container.encode(id.rawValue, forKey: .test_session_id)
+        try container.encode(id.rawValue, forKey: .test_module_id)
         try container.encode(startTime.timeIntervalSince1970.toNanoseconds, forKey: .start)
         try container.encode(duration, forKey: .duration)
         try container.encode(meta, forKey: .meta)
         try container.encode(status == .fail ? 1 : 0, forKey: .error)
-        try container.encode("\(testFramework).session", forKey: .name)
+        try container.encode("\(testFramework).module", forKey: .name)
         try container.encode("\(bundleName)", forKey: .resource)
         try container.encode(DDTestMonitor.env.ddService ?? DDTestMonitor.env.getRepositoryName() ?? "unknown-swift-repo", forKey: .service)
     }
 
-    struct DDTestSessionEnvelope: Encodable {
+    struct DDTestModuleEnvelope: Encodable {
         enum CodingKeys: String, CodingKey {
             case type
             case version
@@ -183,10 +181,10 @@ extension DDTestSession {
 
         let version: Int = 1
 
-        let type: String = DDTagValues.typeSessionEnd
-        let content: DDTestSession
+        let type: String = DDTagValues.typeModuleEnd
+        let content: DDTestModule
 
-        init(_ content: DDTestSession) {
+        init(_ content: DDTestModule) {
             self.content = content
         }
     }

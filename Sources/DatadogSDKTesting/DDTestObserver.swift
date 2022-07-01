@@ -12,7 +12,7 @@ class DDTestObserver: NSObject, XCTestObservation {
     static let supportsSkipping = NSClassFromString("XCTSkippedTestContext") != nil
     static let tracerVersion = (Bundle(for: DDTestObserver.self).infoDictionary?["CFBundleShortVersionString"] as? String) ?? "unknown"
 
-    var session: DDTestSession?
+    var module: DDTestModule?
     var suite: DDTestSuite?
     var test: DDTest?
 
@@ -27,19 +27,19 @@ class DDTestObserver: NSObject, XCTestObservation {
 
     func testBundleWillStart(_ testBundle: Bundle) {
         let bundleName = testBundle.bundleURL.deletingPathExtension().lastPathComponent
-        session = DDTestSession.start(bundleName: bundleName)
-        session?.testFramework = "XCTest"
+        module = DDTestModule.start(bundleName: bundleName)
+        module?.testFramework = "XCTest"
     }
 
     func testBundleDidFinish(_ testBundle: Bundle) {
         /// We need to wait for all the traces to be written to the backend before exiting
-        session?.end()
+        module?.end()
     }
 
     func testSuiteWillStart(_ testSuite: XCTestSuite) {
         if let tests = testSuite.value(forKey: "_mutableTests") as? NSArray,
            tests.firstObject is XCTestCase {
-            suite = session?.suiteStart(name: testSuite.name)
+            suite = module?.suiteStart(name: testSuite.name)
         }
     }
 

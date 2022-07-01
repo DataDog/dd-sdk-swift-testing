@@ -154,7 +154,7 @@ struct PlatformUtils {
         #if os(iOS) || os(tvOS) || os(watchOS)
             return Locale.current.languageCode ?? "none"
         #else
-            return NSLocale.current.languageCode
+            return NSLocale.current.languageCode ?? "none"
         #endif
     }
 }

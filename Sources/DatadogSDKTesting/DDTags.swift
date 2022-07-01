@@ -74,7 +74,7 @@ internal enum DDUISettingsTags {
     static let uiSettingsAppearance = "ui.appearance"
     static let uiSettingsOrientation = "ui.orientation"
     static let uiSettingsLocalization = "ui.localization"
-    static let uiSettingsSessionLocalization = "_dd.ci.test_session.ui.localization"
+    static let uiSettingsModuleLocalization = "_dd.ci.test_module.ui.localization"
     static let uiSettingsSuiteLocalization = "_dd.ci.test_suite.ui.localization"
 }
 
@@ -83,8 +83,8 @@ internal enum DDRuntimeTags {
     static let runtimeVersion = "runtime.version"
 }
 
-internal enum DDTestSessionTags {
-    static let testSessionId = "test_session_id"
+internal enum DDTestModuleTags {
+    static let testModuleId = "test_module_id"
     static let testSuiteId = "test_suite_id"
 }
 
@@ -167,7 +167,7 @@ internal enum DDTagValues {
     static let typeTest = "test"
 
     static let typeSuiteEnd = "test_suite_end"
-    static let typeSessionEnd = "test_session_end"
+    static let typeModuleEnd = "test_module_end"
 
     static let statusPass = "pass"
     static let statusFail = "fail"

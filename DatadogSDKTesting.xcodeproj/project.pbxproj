@@ -7,9 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		E10034DC27035A7700439C9C /* DDTestSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10034D92703599D00439C9C /* DDTestSession.swift */; };
-		E10034DE27035A7800439C9C /* DDTestSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10034D92703599D00439C9C /* DDTestSession.swift */; };
-		E10034E027035A7900439C9C /* DDTestSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10034D92703599D00439C9C /* DDTestSession.swift */; };
+		E10034DC27035A7700439C9C /* DDTestModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10034D92703599D00439C9C /* DDTestModule.swift */; };
+		E10034DE27035A7800439C9C /* DDTestModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10034D92703599D00439C9C /* DDTestModule.swift */; };
+		E10034E027035A7900439C9C /* DDTestModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10034D92703599D00439C9C /* DDTestModule.swift */; };
 		E10A7E16280701CA00B464C9 /* Subprocess.c in Sources */ = {isa = PBXBuildFile; fileRef = E10A7E15280701CA00B464C9 /* Subprocess.c */; };
 		E10A7E17280701CA00B464C9 /* Subprocess.c in Sources */ = {isa = PBXBuildFile; fileRef = E10A7E15280701CA00B464C9 /* Subprocess.c */; };
 		E10A7E18280701CA00B464C9 /* Subprocess.c in Sources */ = {isa = PBXBuildFile; fileRef = E10A7E15280701CA00B464C9 /* Subprocess.c */; };
@@ -652,7 +652,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		E10034D92703599D00439C9C /* DDTestSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTestSession.swift; sourceTree = "<group>"; };
+		E10034D92703599D00439C9C /* DDTestModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTestModule.swift; sourceTree = "<group>"; };
 		E10A7E15280701CA00B464C9 /* Subprocess.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Subprocess.c; sourceTree = "<group>"; };
 		E11295BA25F2483D002719E7 /* FileLocator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileLocator.swift; sourceTree = "<group>"; };
 		E11295C725F63BA8002719E7 /* DDSymbolAddress.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = DDSymbolAddress.c; sourceTree = "<group>"; };
@@ -1545,7 +1545,7 @@
 				E116D7D925248C280022779D /* Utils */,
 				E1ABA07325231F4700ED8AEF /* DDEnvironmentValues.swift */,
 				E158E2DB25471DA000DBCD6C /* DDInstrumentationControl.swift */,
-				E10034D92703599D00439C9C /* DDTestSession.swift */,
+				E10034D92703599D00439C9C /* DDTestModule.swift */,
 				E1743F4C283E7D9E006CBFF8 /* DDTestSuite.swift */,
 				E1743F4D283E7DAE006CBFF8 /* DDTest.swift */,
 				E1ABA07025231F4700ED8AEF /* DDTestObserver.swift */,
@@ -2537,7 +2537,7 @@
 				E114C135274F8A1200B57E08 /* NTPServer.m in Sources */,
 				E114C138274F8A1200B57E08 /* NTPTypes.c in Sources */,
 				E157A723256E9D1D00CBCA52 /* SwiftExtensions.swift in Sources */,
-				E10034DE27035A7800439C9C /* DDTestSession.swift in Sources */,
+				E10034DE27035A7800439C9C /* DDTestModule.swift in Sources */,
 				E1EBBD5C27F2040E0059BC3E /* Log.swift in Sources */,
 				E10A7E17280701CA00B464C9 /* Subprocess.c in Sources */,
 				E1665A8225D13BBB00BA53CD /* DDSymbolicator.swift in Sources */,
@@ -2578,7 +2578,7 @@
 				E114C139274F8A1400B57E08 /* NTPServer.m in Sources */,
 				E114C13C274F8A1400B57E08 /* NTPTypes.c in Sources */,
 				E157A75B256E9D3300CBCA52 /* SwiftExtensions.swift in Sources */,
-				E10034E027035A7900439C9C /* DDTestSession.swift in Sources */,
+				E10034E027035A7900439C9C /* DDTestModule.swift in Sources */,
 				E1EBBD5D27F2040F0059BC3E /* Log.swift in Sources */,
 				E10A7E18280701CA00B464C9 /* Subprocess.c in Sources */,
 				E1665A8125D13BBB00BA53CD /* DDSymbolicator.swift in Sources */,
@@ -2729,7 +2729,7 @@
 				E114C132274F8A0000B57E08 /* NTPServer.m in Sources */,
 				E114C133274F8A0000B57E08 /* NTPTypes.c in Sources */,
 				E1AD079F252F5B00003705C1 /* SwiftExtensions.swift in Sources */,
-				E10034DC27035A7700439C9C /* DDTestSession.swift in Sources */,
+				E10034DC27035A7700439C9C /* DDTestModule.swift in Sources */,
 				E1EBBD5B27F2040C0059BC3E /* Log.swift in Sources */,
 				E10A7E16280701CA00B464C9 /* Subprocess.c in Sources */,
 				E1D6EFA525F6647F00E8C3AE /* LibraryInitializer.m in Sources */,

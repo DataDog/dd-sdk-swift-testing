@@ -32,7 +32,7 @@ internal class DDTestObserverTests: XCTestCase {
 
     func testWhenTestBundleWillStartIsCalled_testBundleNameIsSet() throws {
         testObserver.testBundleWillStart(Bundle.main)
-        let bundleName = try XCTUnwrap(testObserver.session?.bundleName)
+        let bundleName = try XCTUnwrap(testObserver.module?.bundleName)
         XCTAssertFalse(bundleName.isEmpty)
         testObserver.testBundleDidFinish(Bundle.main)
     }
@@ -44,7 +44,7 @@ internal class DDTestObserverTests: XCTestCase {
 
         let testName = "testWhenTestCaseWillStartIsCalled_testSpanIsCreated"
         let testSuite = "DDTestObserverTests"
-        let testBundle = testObserver.session?.bundleName
+        let testBundle = testObserver.module?.bundleName
         let deviceModel = PlatformUtils.getDeviceModel()
         let deviceVersion = PlatformUtils.getDeviceVersion()
         let span = OpenTelemetry.instance.contextProvider.activeSpan as! RecordEventsReadableSpan
@@ -53,7 +53,7 @@ internal class DDTestObserverTests: XCTestCase {
         XCTAssertEqual(spanData.name, "XCTest.test")
         XCTAssertEqual(spanData.attributes[DDGenericTags.language]?.description, "swift")
         XCTAssertEqual(spanData.attributes[DDGenericTags.type]?.description, DDTagValues.typeTest)
-        XCTAssertEqual(spanData.attributes[DDGenericTags.resourceName]?.description, "\(testSuite).\(testName)")
+        XCTAssertEqual(spanData.attributes[DDGenericTags.resource]?.description, "\(testSuite).\(testName)")
         XCTAssertEqual(spanData.attributes[DDTestTags.testName]?.description, testName)
         XCTAssertEqual(spanData.attributes[DDTestTags.testSuite]?.description, testSuite)
         XCTAssertEqual(spanData.attributes[DDTestTags.testFramework]?.description, "XCTest")

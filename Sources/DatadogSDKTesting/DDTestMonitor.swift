@@ -16,11 +16,11 @@
     let didBecomeActiveNotificationName = NSApplication.didBecomeActiveNotification
 #endif
 
-struct CrashedSessionInformation {
-    var crashedSessionId: SpanId
+struct CrashedModuleInformation {
+    var crashedModuleId: SpanId
     var crashedSuiteId: SpanId
     var crashedSuiteName: String
-    var sessionStartTime: Date?
+    var moduleStartTime: Date?
     var suiteStartTime: Date?
 }
 
@@ -41,7 +41,7 @@ internal class DDTestMonitor {
     var didBecomeActiveNotificationObserver: NSObjectProtocol?
     var isRumActive: Bool = false
 
-    var crashedSessionInfo: CrashedSessionInformation?
+    var crashedModuleInfo: CrashedModuleInformation?
 
 
     var rLock = NSRecursiveLock()

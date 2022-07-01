@@ -18,18 +18,18 @@ public class DDTest: NSObject {
     var name: String
     var span: Span
 
-    var session: DDTestSession
+    var module: DDTestModule
     var suite: DDTestSuite
 
     private var errorInfo: ErrorInfo?
 
-    init(name: String, suite: DDTestSuite, session: DDTestSession, startTime: Date? = nil) {
+    init(name: String, suite: DDTestSuite, module: DDTestModule, startTime: Date? = nil) {
         let testStartTime = startTime ?? DDTestMonitor.clock.now
         self.name = name
         self.suite = suite
-        self.session = session
+        self.module = module
 
-        currentTestExecutionOrder = session.currentExecutionOrder
+        currentTestExecutionOrder = module.currentExecutionOrder
 
         let attributes: [String: String] = [
             DDGenericTags.type: DDTagValues.typeTest,
@@ -37,8 +37,8 @@ public class DDTest: NSObject {
             DDGenericTags.language: "swift",
             DDTestTags.testName: name,
             DDTestTags.testSuite: suite.name,
-            DDTestTags.testFramework: session.testFramework,
-            DDTestTags.testBundle: session.bundleName,
+            DDTestTags.testFramework: module.testFramework,
+            DDTestTags.testBundle: module.bundleName,
             DDTestTags.testType: DDTagValues.typeTest,
             DDTestTags.testExecutionOrder: "\(currentTestExecutionOrder)",
             DDTestTags.testExecutionProcessId: "\(initialProcessId)",
@@ -49,11 +49,11 @@ public class DDTest: NSObject {
             DDDeviceTags.deviceModel: DDTestMonitor.env.deviceModel,
             DDRuntimeTags.runtimeName: DDTestMonitor.env.runtimeName,
             DDRuntimeTags.runtimeVersion: DDTestMonitor.env.runtimeVersion,
-            DDTestSessionTags.testSessionId: session.id.hexString,
-            DDTestSessionTags.testSuiteId: suite.id.hexString
+            DDTestModuleTags.testModuleId: module.id.hexString,
+            DDTestModuleTags.testSuiteId: suite.id.hexString
         ]
 
-        span = DDTestMonitor.tracer.startSpan(name: "\(session.testFramework).test", attributes: attributes, startTime: testStartTime)
+        span = DDTestMonitor.tracer.startSpan(name: "\(module.testFramework).test", attributes: attributes, startTime: testStartTime)
 
         super.init()
         DDTestMonitor.instance?.currentTest = self
@@ -63,12 +63,12 @@ public class DDTest: NSObject {
 
         span.setAttribute(key: DDUISettingsTags.uiSettingsLocalization, value: PlatformUtils.getLocalization())
         span.setAttribute(key: DDUISettingsTags.uiSettingsSuiteLocalization, value: suite.localization)
-        span.setAttribute(key: DDUISettingsTags.uiSettingsSessionLocalization, value: session.localization)
+        span.setAttribute(key: DDUISettingsTags.uiSettingsModuleLocalization, value: module.localization)
 
         DDTestMonitor.tracer.addPropagationsHeadersToEnvironment()
 
         let functionName = suite.name + "." + name
-        if let functionInfo = session.bundleFunctionInfo[functionName] {
+        if let functionInfo = module.bundleFunctionInfo[functionName] {
             var filePath = functionInfo.file
             if let workspacePath = DDTestMonitor.env.workspacePath,
                let workspaceRange = filePath.range(of: workspacePath + "/")
@@ -78,7 +78,7 @@ public class DDTest: NSObject {
             span.setAttribute(key: DDTestTags.testSourceFile, value: filePath)
             span.setAttribute(key: DDTestTags.testSourceStartLine, value: functionInfo.startLine)
             span.setAttribute(key: DDTestTags.testSourceEndLine, value: functionInfo.endLine)
-            if let owners = session.codeOwners?.ownersForPath(filePath) {
+            if let owners = module.codeOwners?.ownersForPath(filePath) {
                 span.setAttribute(key: DDTestTags.testCodeowners, value: owners)
             }
         }
@@ -86,7 +86,7 @@ public class DDTest: NSObject {
         DDTestMonitor.env.addTagsToSpan(span: span)
 
         if let testSpan = span as? RecordEventsReadableSpan {
-            let simpleSpan = SimpleSpanData(spanData: testSpan.toSpanData(), sessionStartTime: session.startTime, suiteStartTime: suite.startTime)
+            let simpleSpan = SimpleSpanData(spanData: testSpan.toSpanData(), moduleStartTime: module.startTime, suiteStartTime: suite.startTime)
             DDCrashes.setCustomData(customData: SimpleSpanSerializer.serializeSpan(simpleSpan: simpleSpan))
         }
     }
@@ -138,7 +138,7 @@ public class DDTest: NSObject {
             case .fail:
                 testStatus = DDTagValues.statusFail
                 suite.status = .fail
-                session.status = .fail
+                module.status = .fail
                 span.status = .error(description: "Test failed")
                 setErrorInformation()
             case .skip:

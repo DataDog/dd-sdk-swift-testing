@@ -72,17 +72,17 @@ internal enum DDCrashes {
                        let executionOrder = Int(executionOrderString),
                        let executionProcessIdString = spanData.stringAttributes[DDTestTags.testExecutionProcessId],
                        let processId = Int(executionProcessIdString),
-                       let sessionID = spanData.stringAttributes[DDTestSessionTags.testSessionId],
-                       let suiteID = spanData.stringAttributes[DDTestSessionTags.testSuiteId],
+                       let moduleID = spanData.stringAttributes[DDTestModuleTags.testModuleId],
+                       let suiteID = spanData.stringAttributes[DDTestModuleTags.testSuiteId],
                        let suiteName = spanData.stringAttributes[DDTestTags.testSuite]
                     {
                         DDTestMonitor.instance?.currentTest?.currentTestExecutionOrder = executionOrder
                         DDTestMonitor.instance?.currentTest?.initialProcessId = processId
-                        DDTestMonitor.instance?.crashedSessionInfo = CrashedSessionInformation(
-                            crashedSessionId: SpanId(fromHexString: sessionID),
+                        DDTestMonitor.instance?.crashedModuleInfo = CrashedModuleInformation(
+                            crashedModuleId: SpanId(fromHexString: moduleID),
                             crashedSuiteId: SpanId(fromHexString: suiteID),
                             crashedSuiteName: suiteName,
-                            sessionStartTime: spanData.sessionStartTime,
+                            moduleStartTime: spanData.moduleStartTime,
                             suiteStartTime: spanData.suiteStartTime)
                     }
                 }

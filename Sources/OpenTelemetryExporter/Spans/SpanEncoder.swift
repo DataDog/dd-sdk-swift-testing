@@ -65,7 +65,7 @@ internal struct DDSpan: Encodable {
     let errorType: String?
     let errorStack: String?
     let type: String
-    let sessionID: UInt64?
+    let moduleID: UInt64?
     let suiteID: UInt64?
 
     // MARK: - Meta
@@ -76,7 +76,7 @@ internal struct DDSpan: Encodable {
     var tags: [String: AttributeValue]
 
     static let filteredTagKeys: Set<String> = [
-        "error.message", "error.type", "error.stack", "test_session_id", "test_suite_id"
+        "error.message", "error.type", "error.stack", "test_module_id", "test_suite_id"
     ]
 
     func encode(to encoder: Encoder) throws {
@@ -117,10 +117,10 @@ internal struct DDSpan: Encodable {
         self.type = spanType?.description ?? spanData.kind.rawValue
 
         if self.type == "test" {
-            self.sessionID = UInt64(spanData.attributes["test_session_id"]?.description ?? "0", radix: 16) ?? 0
+            self.moduleID = UInt64(spanData.attributes["test_module_id"]?.description ?? "0", radix: 16) ?? 0
             self.suiteID = UInt64(spanData.attributes["test_suite_id"]?.description ?? "0", radix: 16) ?? 0
         } else {
-            self.sessionID = nil
+            self.moduleID = nil
             self.suiteID = nil
         }
 
@@ -140,7 +140,7 @@ internal struct SpanEncoder {
         case traceID = "trace_id"
         case spanID = "span_id"
         case parentID = "parent_id"
-        case testSessionID = "test_session_id"
+        case testModuleID = "test_module_id"
         case testSuiteID = "test_suite_id"
         case name
         case service
@@ -180,7 +180,7 @@ internal struct SpanEncoder {
         let parentSpanID = span.parentID ?? SpanId.invalid // 0 is a reserved ID for a root span (ref: DDTracer.java#L600)
         try container.encode(parentSpanID.rawValue, forKey: .parentID)
 
-        try container.encode(span.sessionID, forKey: .testSessionID)
+        try container.encode(span.moduleID, forKey: .testModuleID)
         try container.encode(span.suiteID, forKey: .testSuiteID)
 
         try container.encode(span.name, forKey: .name)

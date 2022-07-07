@@ -494,6 +494,27 @@ internal struct DDEnvironmentValues {
             committerName = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_COMMITER_NAME")
             committerEmail = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_COMMITER_EMAIL")
 
+        } else if DDEnvironmentValues.getEnvVariable("CI_WORKSPACE") != nil {
+            isCi = true
+            provider = "Xcode Cloud"
+            repository = nil
+            commit = DDEnvironmentValues.getEnvVariable("CI_COMMIT")
+            workspaceEnv = DDEnvironmentValues.getEnvVariable("CI_WORKSPACE")
+            pipelineId = DDEnvironmentValues.getEnvVariable("CI_BUILD_ID")
+            pipelineNumber = DDEnvironmentValues.getEnvVariable("CI_BUILD_NUMBER")
+            pipelineURL = nil
+            pipelineName = DDEnvironmentValues.getEnvVariable("CI_WORKFLOW")
+            jobURL = nil
+            jobName = nil
+            stageName = nil
+            tagEnv = DDEnvironmentValues.getEnvVariable("CI_TAG")
+            if tagEnv?.isEmpty ?? true {
+                branchEnv = DDEnvironmentValues.getEnvVariable("CI_BRANCH")
+                if tagEnv?.isEmpty ?? true {
+                    branchEnv = DDEnvironmentValues.getEnvVariable("CI_GIT_REF")
+                }
+            }
+
         } else {
             isCi = false
             provider = nil

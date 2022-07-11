@@ -40,7 +40,7 @@ class DDCoverageHelper {
         }
     }
 
-    func setTest(name: String, traceId: String, spanId: String) {
+    func setTest(name: String, traceId: UInt64, spanId: UInt64) {
         if !self.initialCoverageSaved {
             profileSetFilename(url: llvmProfileURL)
             internalWriteProfile()
@@ -54,8 +54,8 @@ class DDCoverageHelper {
         profileSetFilename(url: saveURL)
     }
 
-    func getURLForTest(name: String, traceId: String, spanId: String) -> URL {
-        let finalName = traceId + "__" + spanId + "__" + name
+    func getURLForTest(name: String, traceId: UInt64, spanId: UInt64) -> URL {
+        let finalName = String(traceId) + "__" + String(spanId) + "__" + name
         return storageProfileURL.appendingPathComponent(finalName).appendingPathExtension("profraw")
     }
 

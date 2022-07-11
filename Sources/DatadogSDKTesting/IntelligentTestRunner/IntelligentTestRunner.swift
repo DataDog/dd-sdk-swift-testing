@@ -28,16 +28,15 @@ struct IntelligentTestRunner {
 
         let commitsToUpload = getCommitsAndTreesExcluding(excluded: existingCommits)
 
-        //guard !commitsToUpload.isEmpty else { return }
-        //generatePackFilesFromCommits(commits: commitsToUpload)
+        // guard !commitsToUpload.isEmpty else { return }
+        // generatePackFilesFromCommits(commits: commitsToUpload)
         generatePackFilesFromCommits(commits: existingCommits)
-
 
         uploadExistingPackfiles(repository: repo)
     }
 
     func getRepositoryURL() -> String {
-        let url = Spawn.commandWithResult(#"git  -C "\#(workspacePath)" config --get remote.origin.url"#).trimmingCharacters(in: .whitespacesAndNewlines)
+        let url = Spawn.commandWithResult(#"git -C "\#(workspacePath)" config --get remote.origin.url"#).trimmingCharacters(in: .whitespacesAndNewlines)
         return url
     }
 

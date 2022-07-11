@@ -46,7 +46,7 @@ internal class CoverageExporter {
                     device: Device.current
                 ),
                 .ddAPIKeyHeader(apiKey: config.apiKey)
-            ] //+ (configuration.payloadCompression ? [HTTPHeader.contentEncodingHeader(contentEncoding: .deflate)] : [])
+            ] // + (configuration.payloadCompression ? [HTTPHeader.contentEncodingHeader(contentEncoding: .deflate)] : [])
         )
 
         coverageUpload = FeatureUpload(featureName: "coverageUpload",
@@ -56,7 +56,7 @@ internal class CoverageExporter {
         requestBuilder.addFieldsCallback = addCoverage
     }
 
-    func exportCoverage(coverage: URL, traceId: String, spanId: String, workspacePath: String?, binaryImagePaths: [String]) {
+    func exportCoverage(coverage: URL, traceId: UInt64, spanId: UInt64, workspacePath: String?, binaryImagePaths: [String]) {
         let profData = DDCoverageConversor.generateProfData(profrawFile: coverage)
         let ddCoverage = DDCoverageConversor.getDatadogCoverage(profdataFile: profData, traceId: traceId, spanId: spanId, workspacePath: workspacePath, binaryImagePaths: binaryImagePaths)
         coverageStorage.writer.write(value: ddCoverage)

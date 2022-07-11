@@ -8,8 +8,8 @@ import Foundation
 
 struct DDCoverageFormat: Encodable {
     var version: String = "1"
-    var trace_id: String
-    var span_id: String
+    var trace_id: UInt64
+    var span_id: UInt64
     var files = [File]()
 
     struct File: Encodable {
@@ -36,7 +36,7 @@ struct DDCoverageFormat: Encodable {
         init() {}
     }
 
-    init?(llvmFormat: LLVMCoverageFormat, traceId: String, spanId: String, workspacePath: String?) {
+    init?(llvmFormat: LLVMCoverageFormat, traceId: UInt64, spanId: UInt64, workspacePath: String?) {
         guard let llvmFiles = llvmFormat.data.first?.files else { return nil }
 
         self.trace_id = traceId

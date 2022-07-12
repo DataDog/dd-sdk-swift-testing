@@ -28,9 +28,8 @@ struct IntelligentTestRunner {
 
         let commitsToUpload = getCommitsAndTreesExcluding(excluded: existingCommits)
 
-        // guard !commitsToUpload.isEmpty else { return }
-        // generatePackFilesFromCommits(commits: commitsToUpload)
-        generatePackFilesFromCommits(commits: existingCommits)
+        guard !commitsToUpload.isEmpty else { return }
+        generatePackFilesFromCommits(commits: commitsToUpload)
 
         uploadExistingPackfiles(repository: repo)
     }

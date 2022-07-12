@@ -41,7 +41,7 @@ struct IntelligentTestRunner {
     }
 
     func getLatestCommits() -> [String] {
-        let latestCommits = Spawn.commandWithResult(#"git -C "\#(workspacePath)" log --format=%H -n 1000 --since="1 month ago""#).trimmingCharacters(in: .whitespacesAndNewlines)
+        let latestCommits = Spawn.commandWithResult(#"git -C "\#(workspacePath)" rev-list --objects --no-object-names --filter=blob:none HEAD --since="1 month ago""#).trimmingCharacters(in: .whitespacesAndNewlines)
 
         let commitsArray = latestCommits.components(separatedBy: .newlines)
         return commitsArray
@@ -55,7 +55,7 @@ struct IntelligentTestRunner {
 
     func getCommitsAndTreesExcluding(excluded: [String]) -> [String] {
         let exclusionList = excluded.map { "^\($0)" }.joined(separator: " ")
-        let missingCommits = Spawn.commandWithResult(#"git -C "\#(workspacePath)" rev-list --objects --no-object-names --filter=blob:none HEAD ^included_commits --since="1 month ago" \#(exclusionList)"#).trimmingCharacters(in: .whitespacesAndNewlines)
+        let missingCommits = Spawn.commandWithResult(#"git -C "\#(workspacePath)" rev-list --objects --no-object-names --filter=blob:none HEAD --since="1 month ago" \#(exclusionList)"#).trimmingCharacters(in: .whitespacesAndNewlines)
         guard !missingCommits.isEmpty else { return [] }
         let missingCommitsArray = missingCommits.components(separatedBy: .newlines)
         return missingCommitsArray

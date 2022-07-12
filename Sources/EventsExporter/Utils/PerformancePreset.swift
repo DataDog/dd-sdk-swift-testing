@@ -116,25 +116,4 @@ public struct PerformancePreset: Equatable, StoragePerformancePreset, UploadPerf
         maxUploadDelay: 5,
         uploadDelayChangeRate: 0.5 // reduce significantly for more uploads in short-lived app extensions
     )
-
-    /// Performance preset optimized for coverage data delivery.
-    /// Minimalizes the time between receiving data form the user and delivering it to the server.
-    public static let coverageDataDelivery = PerformancePreset(
-        // persistence
-        maxFileSize: `default`.maxFileSize,
-        maxDirectorySize: `default`.maxDirectorySize,
-        maxFileAgeForWrite: 2.75,
-        minFileAgeForRead: 2.75 + 0.5, // `maxFileAgeForWrite` + 0.5s margin
-        maxFileAgeForRead: `default`.maxFileAgeForRead,
-        maxObjectsInFile: 1,
-        maxObjectSize: `default`.maxObjectSize,
-        synchronousWrite: true,
-
-        // upload
-        initialUploadDelay: 0.5, // send quick to have a chance for upload in short-lived app extensions
-        defaultUploadDelay: 3,
-        minUploadDelay: 1,
-        maxUploadDelay: 5,
-        uploadDelayChangeRate: 0.5 // reduce significantly for more uploads in short-lived app extensions
-    )
 }

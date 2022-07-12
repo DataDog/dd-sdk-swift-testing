@@ -186,6 +186,7 @@ public class DDTest: NSObject {
             DDTestTags.testType: DDTagValues.typeTest,
             DDTestTags.testExecutionOrder: "\(currentTestExecutionOrder)",
             DDTestTags.testExecutionProcessId: "\(initialProcessId)",
+            DDTestTags.testIsUITest: "false",
             DDOSTags.osPlatform: DDTestMonitor.env.osName,
             DDOSTags.osArchitecture: DDTestMonitor.env.osArchitecture,
             DDOSTags.osVersion: DDTestMonitor.env.osVersion,
@@ -193,19 +194,14 @@ public class DDTest: NSObject {
             DDDeviceTags.deviceModel: DDTestMonitor.env.deviceModel,
             DDRuntimeTags.runtimeName: DDTestMonitor.env.runtimeName,
             DDRuntimeTags.runtimeVersion: DDTestMonitor.env.runtimeVersion,
+            DDUISettingsTags.uiSettingsLocalization: PlatformUtils.getLocalization() ?? "",
+            DDCITags.ciEnvVars: "{\(DDTestMonitor.env.ciEnvVars.map { $0.0 + "=" + $0.1 }.joined(separator: ","))}",
         ]
 
         span = DDTestMonitor.tracer.startSpan(name: "\(session.testFramework).test", attributes: attributes, startTime: startTime)
 
         super.init()
         DDTestMonitor.instance?.currentTest = self
-
-        // Is not a UITest until a XCUIApplication is launched
-        span.setAttribute(key: DDTestTags.testIsUITest, value: "false")
-
-        if let localization = PlatformUtils.getLocalization(){
-            span.setAttribute(key:  DDUISettingsTags.uiSettingsLocalization, value: localization)
-        }
 
         DDTestMonitor.tracer.addPropagationsHeadersToEnvironment()
 

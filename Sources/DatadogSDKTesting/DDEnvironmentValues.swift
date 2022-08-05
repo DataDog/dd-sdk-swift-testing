@@ -274,20 +274,6 @@ internal struct DDEnvironmentValues {
             }
             commitMessage = DDEnvironmentValues.getEnvVariable("TRAVIS_COMMIT_MESSAGE")
 
-            // Env vars
-            ciEnvVars["TRAVIS"] = DDEnvironmentValues.getEnvVariable("TRAVIS")
-            ciEnvVars["TRAVIS_PULL_REQUEST_SLUG"] = DDEnvironmentValues.getEnvVariable("TRAVIS_PULL_REQUEST_SLUG")
-            ciEnvVars["TRAVIS_COMMIT"] = DDEnvironmentValues.getEnvVariable("TRAVIS_COMMIT")
-            ciEnvVars["TRAVIS_BUILD_DIR"] = DDEnvironmentValues.getEnvVariable("TRAVIS_BUILD_DIR")
-            ciEnvVars["TRAVIS_BUILD_ID"] = DDEnvironmentValues.getEnvVariable("TRAVIS_BUILD_ID")
-            ciEnvVars["TRAVIS_BUILD_NUMBER"] = DDEnvironmentValues.getEnvVariable("TRAVIS_BUILD_NUMBER")
-            ciEnvVars["TRAVIS_BUILD_WEB_URL"] = DDEnvironmentValues.getEnvVariable("TRAVIS_BUILD_WEB_URL")
-            ciEnvVars["TRAVIS_JOB_WEB_URL"] = DDEnvironmentValues.getEnvVariable("TRAVIS_JOB_WEB_URL")
-            ciEnvVars["TRAVIS_TAG"] = DDEnvironmentValues.getEnvVariable("TRAVIS_TAG")
-            ciEnvVars["TRAVIS_PULL_REQUEST_BRANCH"] = DDEnvironmentValues.getEnvVariable("TRAVIS_PULL_REQUEST_BRANCH")
-            ciEnvVars["TRAVIS_BRANCH"] = DDEnvironmentValues.getEnvVariable("TRAVIS_BRANCH")
-            ciEnvVars["TRAVIS_COMMIT_MESSAGE"] = DDEnvironmentValues.getEnvVariable("TRAVIS_COMMIT_MESSAGE")
-
         } else if DDEnvironmentValues.getEnvVariable("CIRCLECI") != nil {
             isCi = true
             provider = "circleci"
@@ -311,16 +297,8 @@ internal struct DDEnvironmentValues {
             }
 
             // Env vars
-            ciEnvVars["CIRCLECI"] = DDEnvironmentValues.getEnvVariable("CIRCLECI")
-            ciEnvVars["CIRCLE_REPOSITORY_URL"] = DDEnvironmentValues.getEnvVariable("CIRCLE_REPOSITORY_URL")
-            ciEnvVars["CIRCLE_SHA1"] = DDEnvironmentValues.getEnvVariable("CIRCLE_SHA1")
-            ciEnvVars["CIRCLE_WORKING_DIRECTORY"] = DDEnvironmentValues.getEnvVariable("CIRCLE_WORKING_DIRECTORY")
             ciEnvVars["CIRCLE_WORKFLOW_ID"] = DDEnvironmentValues.getEnvVariable("CIRCLE_WORKFLOW_ID")
-            ciEnvVars["CIRCLE_PROJECT_REPONAME"] = DDEnvironmentValues.getEnvVariable("CIRCLE_PROJECT_REPONAME")
-            ciEnvVars["CIRCLE_BUILD_URL"] = DDEnvironmentValues.getEnvVariable("CIRCLE_BUILD_URL")
-            ciEnvVars["CIRCLE_JOB"] = DDEnvironmentValues.getEnvVariable("CIRCLE_JOB")
-            ciEnvVars["CIRCLE_TAG"] = DDEnvironmentValues.getEnvVariable("CIRCLE_TAG")
-            ciEnvVars["CIRCLE_BRANCH"] = DDEnvironmentValues.getEnvVariable("CIRCLE_BRANCH")
+            ciEnvVars["CIRCLE_BUILD_NUM"] = DDEnvironmentValues.getEnvVariable("CIRCLE_BUILD_NUM")
 
         } else if DDEnvironmentValues.getEnvVariable("JENKINS_URL") != nil {
             isCi = true
@@ -339,16 +317,7 @@ internal struct DDEnvironmentValues {
             branchEnv = DDEnvironmentValues.getEnvVariable("GIT_BRANCH")
 
             // Env vars
-            ciEnvVars["JENKINS_URL"] = DDEnvironmentValues.getEnvVariable("JENKINS_URL")
-            ciEnvVars["GIT_URL"] = DDEnvironmentValues.getEnvVariable("GIT_URL")
-            ciEnvVars["GIT_URL_1"] = DDEnvironmentValues.getEnvVariable("GIT_URL_1")
-            ciEnvVars["GIT_COMMIT"] = DDEnvironmentValues.getEnvVariable("GIT_COMMIT")
-            ciEnvVars["WORKSPACE"] = DDEnvironmentValues.getEnvVariable("WORKSPACE")
-            ciEnvVars["BUILD_TAG"] = DDEnvironmentValues.getEnvVariable("BUILD_TAG")
-            ciEnvVars["BUILD_NUMBER"] = DDEnvironmentValues.getEnvVariable("BUILD_NUMBER")
-            ciEnvVars["BUILD_URL"] = DDEnvironmentValues.getEnvVariable("BUILD_URL")
-            ciEnvVars["JOB_NAME"] = DDEnvironmentValues.getEnvVariable("JOB_NAME")
-            ciEnvVars["GIT_BRANCH"] = DDEnvironmentValues.getEnvVariable("GIT_BRANCH")
+            ciEnvVars["DD_CUSTOM_TRACE_ID"] = DDEnvironmentValues.getEnvVariable("DD_CUSTOM_TRACE_ID")
 
         } else if DDEnvironmentValues.getEnvVariable("GITLAB_CI") != nil {
             isCi = true
@@ -375,23 +344,9 @@ internal struct DDEnvironmentValues {
             authorDate = DDEnvironmentValues.getEnvVariable("CI_COMMIT_TIMESTAMP")
 
             // Env vars
-            ciEnvVars["CI_REPOSITORY_URL"] = repository
-            ciEnvVars["CI_COMMIT_SHA"] = DDEnvironmentValues.getEnvVariable("CI_COMMIT_SHA")
-            ciEnvVars["CI_PROJECT_DIR"] = DDEnvironmentValues.getEnvVariable("CI_PROJECT_DIR")
             ciEnvVars["CI_PIPELINE_ID"] = DDEnvironmentValues.getEnvVariable("CI_PIPELINE_ID")
-            ciEnvVars["CI_PIPELINE_IID"] = DDEnvironmentValues.getEnvVariable("CI_PIPELINE_IID")
-            ciEnvVars["CI_PIPELINE_URL"] = DDEnvironmentValues.getEnvVariable("CI_PIPELINE_URL")
-            ciEnvVars["CI_PROJECT_PATH"] = DDEnvironmentValues.getEnvVariable("CI_PROJECT_PATH")
-            ciEnvVars["CI_JOB_URL"] = DDEnvironmentValues.getEnvVariable("CI_JOB_URL")
-            ciEnvVars["CI_JOB_NAME"] = DDEnvironmentValues.getEnvVariable("CI_JOB_NAME")
-            ciEnvVars["CI_JOB_STAGE"] = DDEnvironmentValues.getEnvVariable("CI_JOB_STAGE")
-            ciEnvVars["CI_COMMIT_REF_NAME"] = DDEnvironmentValues.getEnvVariable("CI_COMMIT_REF_NAME")
-            ciEnvVars["CI_COMMIT_BRANCH"] = DDEnvironmentValues.getEnvVariable("CI_COMMIT_BRANCH")
-            ciEnvVars["CI_COMMIT_TAG"] = DDEnvironmentValues.getEnvVariable("CI_COMMIT_TAG")
-            ciEnvVars["CI_COMMIT_MESSAGE"] = DDEnvironmentValues.getEnvVariable("CI_COMMIT_MESSAGE")
-            ciEnvVars["CI_COMMIT_AUTHOR"] = DDEnvironmentValues.getEnvVariable("CI_COMMIT_AUTHOR")
-            ciEnvVars["CI_COMMIT_TIMESTAMP"] = DDEnvironmentValues.getEnvVariable("CI_COMMIT_TIMESTAMP")
             ciEnvVars["CI_JOB_ID"] = DDEnvironmentValues.getEnvVariable("CI_JOB_ID")
+            ciEnvVars["CI_PROJECT_URL"] = DDEnvironmentValues.getEnvVariable("CI_PROJECT_URL")
 
         } else if DDEnvironmentValues.getEnvVariable("APPVEYOR") != nil {
             isCi = true
@@ -415,21 +370,6 @@ internal struct DDEnvironmentValues {
             commitMessage = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED")
             authorName = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_COMMIT_AUTHOR")
             authorEmail = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_COMMIT_AUTHOR_EMAIL")
-
-            // Env vars
-            ciEnvVars["APPVEYOR"] = DDEnvironmentValues.getEnvVariable("APPVEYOR")
-            ciEnvVars["APPVEYOR_REPO_NAME"] = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_NAME")
-            ciEnvVars["APPVEYOR_REPO_COMMIT"] = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_COMMIT")
-            ciEnvVars["APPVEYOR_BUILD_FOLDER"] = DDEnvironmentValues.getEnvVariable("APPVEYOR_BUILD_FOLDER")
-            ciEnvVars["APPVEYOR_BUILD_ID"] = DDEnvironmentValues.getEnvVariable("APPVEYOR_BUILD_ID")
-            ciEnvVars["APPVEYOR_BUILD_NUMBER"] = DDEnvironmentValues.getEnvVariable("APPVEYOR_BUILD_NUMBER")
-            ciEnvVars["APPVEYOR_REPO_NAME"] = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_NAME")
-            ciEnvVars["APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH"] = DDEnvironmentValues.getEnvVariable("APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH")
-            ciEnvVars["APPVEYOR_REPO_BRANCH"] = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_BRANCH")
-            ciEnvVars["APPVEYOR_REPO_TAG_NAME"] = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_TAG_NAME")
-            ciEnvVars["APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED"] = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED")
-            ciEnvVars["APPVEYOR_REPO_COMMIT_AUTHOR"] = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_COMMIT_AUTHOR")
-            ciEnvVars["APPVEYOR_REPO_COMMIT_AUTHOR_EMAIL"] = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_COMMIT_AUTHOR_EMAIL")
 
         } else if DDEnvironmentValues.getEnvVariable("TF_BUILD") != nil {
             isCi = true
@@ -467,27 +407,6 @@ internal struct DDEnvironmentValues {
             authorName = DDEnvironmentValues.getEnvVariable("BUILD_REQUESTEDFORID")
             authorEmail = DDEnvironmentValues.getEnvVariable("BUILD_REQUESTEDFOREMAIL")
 
-            // Env vars
-            ciEnvVars["TF_BUILD"] = DDEnvironmentValues.getEnvVariable("TF_BUILD")
-            ciEnvVars["BUILD_SOURCESDIRECTORY"] = DDEnvironmentValues.getEnvVariable("BUILD_SOURCESDIRECTORY")
-            ciEnvVars["BUILD_BUILDID"] = DDEnvironmentValues.getEnvVariable("BUILD_BUILDID")
-            ciEnvVars["SYSTEM_TEAMFOUNDATIONSERVERURI"] = DDEnvironmentValues.getEnvVariable("SYSTEM_TEAMFOUNDATIONSERVERURI")
-            ciEnvVars["SYSTEM_TEAMPROJECTID"] = DDEnvironmentValues.getEnvVariable("SYSTEM_TEAMPROJECTID")
-            ciEnvVars["BUILD_DEFINITIONNAME"] = DDEnvironmentValues.getEnvVariable("BUILD_DEFINITIONNAME")
-            ciEnvVars["SYSTEM_JOBID"] = DDEnvironmentValues.getEnvVariable("SYSTEM_JOBID")
-            ciEnvVars["SYSTEM_TASKINSTANCEID"] = DDEnvironmentValues.getEnvVariable("SYSTEM_TASKINSTANCEID")
-            ciEnvVars["SYSTEM_JOBDISPLAYNAME"] = DDEnvironmentValues.getEnvVariable("SYSTEM_JOBDISPLAYNAME")
-            ciEnvVars["SYSTEM_STAGEDISPLAYNAME"] = DDEnvironmentValues.getEnvVariable("SYSTEM_STAGEDISPLAYNAME")
-            ciEnvVars["SYSTEM_PULLREQUEST_SOURCEREPOSITORYURI"] = DDEnvironmentValues.getEnvVariable("SYSTEM_PULLREQUEST_SOURCEREPOSITORYURI")
-            ciEnvVars["BUILD_REPOSITORY_URI"] = DDEnvironmentValues.getEnvVariable("BUILD_REPOSITORY_URI")
-            ciEnvVars["SYSTEM_PULLREQUEST_SOURCECOMMITID"] = DDEnvironmentValues.getEnvVariable("SYSTEM_PULLREQUEST_SOURCECOMMITID")
-            ciEnvVars["BUILD_SOURCEVERSION"] = DDEnvironmentValues.getEnvVariable("BUILD_SOURCEVERSION")
-            ciEnvVars["SYSTEM_PULLREQUEST_SOURCEBRANCH"] = DDEnvironmentValues.getEnvVariable("SYSTEM_PULLREQUEST_SOURCEBRANCH")
-            ciEnvVars["BUILD_SOURCEBRANCH"] = DDEnvironmentValues.getEnvVariable("BUILD_SOURCEBRANCH")
-            ciEnvVars["BUILD_SOURCEVERSIONMESSAGE"] = DDEnvironmentValues.getEnvVariable("BUILD_SOURCEVERSIONMESSAGE")
-            ciEnvVars["BUILD_REQUESTEDFORID"] = DDEnvironmentValues.getEnvVariable("BUILD_REQUESTEDFORID")
-            ciEnvVars["BUILD_REQUESTEDFOREMAIL"] = DDEnvironmentValues.getEnvVariable("BUILD_REQUESTEDFOREMAIL")
-
         } else if DDEnvironmentValues.getEnvVariable("BITBUCKET_BUILD_NUMBER") != nil {
             isCi = true
             provider = "bitbucket"
@@ -503,17 +422,6 @@ internal struct DDEnvironmentValues {
             stageName = nil
             branchEnv = DDEnvironmentValues.getEnvVariable("BITBUCKET_BRANCH")
             tagEnv = DDEnvironmentValues.getEnvVariable("BITBUCKET_TAG")
-
-            // Env vars
-            ciEnvVars["BITBUCKET_BUILD_NUMBER"] = DDEnvironmentValues.getEnvVariable("BITBUCKET_BUILD_NUMBER")
-            ciEnvVars["BITBUCKET_GIT_SSH_ORIGIN"] = DDEnvironmentValues.getEnvVariable("BITBUCKET_GIT_SSH_ORIGIN")
-            ciEnvVars["BITBUCKET_COMMIT"] = DDEnvironmentValues.getEnvVariable("BITBUCKET_COMMIT")
-            ciEnvVars["BITBUCKET_CLONE_DIR"] = DDEnvironmentValues.getEnvVariable("BITBUCKET_CLONE_DIR")
-            ciEnvVars["BITBUCKET_PIPELINE_UUID"] = DDEnvironmentValues.getEnvVariable("BITBUCKET_PIPELINE_UUID")
-            ciEnvVars["BITBUCKET_BUILD_NUMBER"] = DDEnvironmentValues.getEnvVariable("BITBUCKET_BUILD_NUMBER")
-            ciEnvVars["BITBUCKET_REPO_FULL_NAME"] = DDEnvironmentValues.getEnvVariable("BITBUCKET_REPO_FULL_NAME")
-            ciEnvVars["BITBUCKET_BRANCH"] = DDEnvironmentValues.getEnvVariable("BITBUCKET_BRANCH")
-            ciEnvVars["BITBUCKET_TAG"] = DDEnvironmentValues.getEnvVariable("BITBUCKET_TAG")
 
         } else if DDEnvironmentValues.getEnvVariable("GITHUB_WORKSPACE") != nil {
             isCi = true
@@ -544,17 +452,10 @@ internal struct DDEnvironmentValues {
             }
 
             // Env vars
-            ciEnvVars["GITHUB_WORKSPACE"] = DDEnvironmentValues.getEnvVariable("GITHUB_WORKSPACE")
             ciEnvVars["GITHUB_REPOSITORY"] = DDEnvironmentValues.getEnvVariable("GITHUB_REPOSITORY")
             ciEnvVars["GITHUB_SERVER_URL"] = DDEnvironmentValues.getEnvVariable("GITHUB_SERVER_URL")
-            ciEnvVars["GITHUB_SHA"] = DDEnvironmentValues.getEnvVariable("GITHUB_SHA")
-            ciEnvVars["GITHUB_WORKSPACE"] = DDEnvironmentValues.getEnvVariable("GITHUB_WORKSPACE")
             ciEnvVars["GITHUB_RUN_ID"] = DDEnvironmentValues.getEnvVariable("GITHUB_RUN_ID")
-            ciEnvVars["GITHUB_RUN_NUMBER"] = DDEnvironmentValues.getEnvVariable("GITHUB_RUN_NUMBER")
             ciEnvVars["GITHUB_RUN_ATTEMPT"] = DDEnvironmentValues.getEnvVariable("GITHUB_RUN_ATTEMPT")
-            ciEnvVars["GITHUB_WORKFLOW"] = DDEnvironmentValues.getEnvVariable("GITHUB_WORKFLOW")
-            ciEnvVars["GITHUB_HEAD_REF"] = DDEnvironmentValues.getEnvVariable("GITHUB_HEAD_REF")
-            ciEnvVars["GITHUB_REF"] = DDEnvironmentValues.getEnvVariable("GITHUB_REF")
 
         } else if DDEnvironmentValues.getEnvVariable("BUILDKITE") != nil {
             isCi = true
@@ -576,20 +477,8 @@ internal struct DDEnvironmentValues {
             authorEmail = DDEnvironmentValues.getEnvVariable("BUILDKITE_BUILD_AUTHOR_EMAIL")
 
             // Env vars
-            ciEnvVars["BUILDKITE"] = DDEnvironmentValues.getEnvVariable("BUILDKITE")
-            ciEnvVars["BUILDKITE_REPO"] = DDEnvironmentValues.getEnvVariable("BUILDKITE_REPO")
-            ciEnvVars["BUILDKITE_COMMIT"] = DDEnvironmentValues.getEnvVariable("BUILDKITE_COMMIT")
-            ciEnvVars["BUILDKITE_BUILD_CHECKOUT_PATH"] = DDEnvironmentValues.getEnvVariable("BUILDKITE_BUILD_CHECKOUT_PATH")
             ciEnvVars["BUILDKITE_BUILD_ID"] = DDEnvironmentValues.getEnvVariable("BUILDKITE_BUILD_ID")
-            ciEnvVars["BUILDKITE_BUILD_NUMBER"] = DDEnvironmentValues.getEnvVariable("BUILDKITE_BUILD_NUMBER")
-            ciEnvVars["BUILDKITE_BUILD_URL"] = DDEnvironmentValues.getEnvVariable("BUILDKITE_BUILD_URL")
-            ciEnvVars["BUILDKITE_PIPELINE_SLUG"] = DDEnvironmentValues.getEnvVariable("BUILDKITE_PIPELINE_SLUG")
             ciEnvVars["BUILDKITE_JOB_ID"] = DDEnvironmentValues.getEnvVariable("BUILDKITE_JOB_ID")
-            ciEnvVars["BUILDKITE_BRANCH"] = DDEnvironmentValues.getEnvVariable("BUILDKITE_BRANCH")
-            ciEnvVars["BUILDKITE_TAG"] = DDEnvironmentValues.getEnvVariable("BUILDKITE_TAG")
-            ciEnvVars["BUILDKITE_MESSAGE"] = DDEnvironmentValues.getEnvVariable("BUILDKITE_MESSAGE")
-            ciEnvVars["BUILDKITE_BUILD_AUTHOR"] = DDEnvironmentValues.getEnvVariable("BUILDKITE_BUILD_AUTHOR")
-            ciEnvVars["BUILDKITE_BUILD_AUTHOR_EMAIL"] = DDEnvironmentValues.getEnvVariable("BUILDKITE_BUILD_AUTHOR_EMAIL")
 
         } else if DDEnvironmentValues.getEnvVariable("BITRISE_BUILD_NUMBER") != nil {
             isCi = true
@@ -630,27 +519,6 @@ internal struct DDEnvironmentValues {
             committerName = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_COMMITER_NAME")
             committerEmail = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_COMMITER_EMAIL")
 
-            // Env vars
-            ciEnvVars["BITRISE_BUILD_NUMBER"] = DDEnvironmentValues.getEnvVariable("BITRISE_BUILD_NUMBER")
-            ciEnvVars["GIT_REPOSITORY_URL"] = DDEnvironmentValues.getEnvVariable("GIT_REPOSITORY_URL")
-            ciEnvVars["BITRISE_GIT_COMMIT"] = DDEnvironmentValues.getEnvVariable("BITRISE_GIT_COMMIT")
-            ciEnvVars["GIT_CLONE_COMMIT_HASH"] = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_HASH")
-            ciEnvVars["BITRISE_SOURCE_DIR"] = DDEnvironmentValues.getEnvVariable("BITRISE_SOURCE_DIR")
-            ciEnvVars["BITRISE_BUILD_SLUG"] = DDEnvironmentValues.getEnvVariable("BITRISE_BUILD_SLUG")
-            ciEnvVars["BITRISE_BUILD_NUMBER"] = DDEnvironmentValues.getEnvVariable("BITRISE_BUILD_NUMBER")
-            ciEnvVars["BITRISE_BUILD_URL"] = DDEnvironmentValues.getEnvVariable("BITRISE_BUILD_URL")
-            ciEnvVars["BITRISE_TRIGGERED_WORKFLOW_ID"] = DDEnvironmentValues.getEnvVariable("BITRISE_TRIGGERED_WORKFLOW_ID")
-            ciEnvVars["BITRISE_APP_TITLE"] = DDEnvironmentValues.getEnvVariable("BITRISE_APP_TITLE")
-            ciEnvVars["BITRISE_GIT_BRANCH"] = DDEnvironmentValues.getEnvVariable("BITRISE_GIT_BRANCH")
-            ciEnvVars["BITRISE_GIT_TAG"] = DDEnvironmentValues.getEnvVariable("BITRISE_GIT_TAG")
-            ciEnvVars["BITRISE_GIT_MESSAGE"] = DDEnvironmentValues.getEnvVariable("BITRISE_GIT_MESSAGE")
-            ciEnvVars["GIT_CLONE_COMMIT_MESSAGE_SUBJECT"] = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_MESSAGE_SUBJECT")
-            ciEnvVars["GIT_CLONE_COMMIT_MESSAGE_BODY"] = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_MESSAGE_BODY")
-            ciEnvVars["GIT_CLONE_COMMIT_AUTHOR_NAME"] = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_AUTHOR_NAME")
-            ciEnvVars["GIT_CLONE_COMMIT_AUTHOR_EMAIL"] = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_AUTHOR_EMAIL")
-            ciEnvVars["GIT_CLONE_COMMIT_COMMITER_NAME"] = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_COMMITER_NAME")
-            ciEnvVars["GIT_CLONE_COMMIT_COMMITER_EMAIL"] = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_COMMITER_EMAIL")
-
         } else if DDEnvironmentValues.getEnvVariable("CI_WORKSPACE") != nil {
             isCi = true
             provider = "Xcode Cloud"
@@ -671,16 +539,6 @@ internal struct DDEnvironmentValues {
                     branchEnv = DDEnvironmentValues.getEnvVariable("CI_GIT_REF")
                 }
             }
-
-            // Env vars
-            ciEnvVars["CI_WORKSPACE"] = DDEnvironmentValues.getEnvVariable("CI_WORKSPACE")
-            ciEnvVars["CI_COMMIT"] = DDEnvironmentValues.getEnvVariable("CI_COMMIT")
-            ciEnvVars["CI_BUILD_ID"] = DDEnvironmentValues.getEnvVariable("CI_BUILD_ID")
-            ciEnvVars["CI_BUILD_NUMBER"] = DDEnvironmentValues.getEnvVariable("CI_BUILD_NUMBER")
-            ciEnvVars["CI_WORKFLOW"] = DDEnvironmentValues.getEnvVariable("CI_WORKFLOW")
-            ciEnvVars["CI_TAG"] = DDEnvironmentValues.getEnvVariable("CI_TAG")
-            ciEnvVars["CI_BRANCH"] = DDEnvironmentValues.getEnvVariable("CI_BRANCH")
-            ciEnvVars["CI_GIT_REF"] = DDEnvironmentValues.getEnvVariable("CI_GIT_REF")
 
         } else {
             isCi = false

@@ -195,7 +195,7 @@ public class DDTest: NSObject {
             DDRuntimeTags.runtimeName: DDTestMonitor.env.runtimeName,
             DDRuntimeTags.runtimeVersion: DDTestMonitor.env.runtimeVersion,
             DDUISettingsTags.uiSettingsLocalization: PlatformUtils.getLocalization() ?? "",
-            DDCITags.ciEnvVars: "{\(DDTestMonitor.env.ciEnvVars.map { $0.0 + "=" + $0.1 }.joined(separator: ","))}",
+            DDCITags.ciEnvVars: ##"{\##(DDTestMonitor.env.ciEnvVars.map { #""\#($0.0)":"\#($0.1)""# }.joined(separator: ","))}"##,
         ]
 
         span = DDTestMonitor.tracer.startSpan(name: "\(session.testFramework).test", attributes: attributes, startTime: startTime)

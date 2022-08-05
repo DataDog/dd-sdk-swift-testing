@@ -112,6 +112,7 @@ internal enum DDCITags {
     static let ciJobName = "ci.job.name"
     static let ciJobURL = "ci.job.url"
     static let ciWorkspacePath = "ci.workspace_path"
+    static let ciEnvVars = "_dd.ci.env_vars"
 }
 
 internal enum DDBenchmarkTags {

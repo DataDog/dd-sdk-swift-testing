@@ -85,6 +85,7 @@ internal struct DDEnvironmentValues {
     let jobURL: String?
     let jobName: String?
     let stageName: String?
+    var ciEnvVars = [String: String]()
 
     /// Git values
     var repository: String?
@@ -298,6 +299,10 @@ internal struct DDEnvironmentValues {
                 branchEnv = DDEnvironmentValues.getEnvVariable("CIRCLE_BRANCH")
             }
 
+            // Env vars
+            ciEnvVars["CIRCLE_WORKFLOW_ID"] = DDEnvironmentValues.getEnvVariable("CIRCLE_WORKFLOW_ID")
+            ciEnvVars["CIRCLE_BUILD_NUM"] = DDEnvironmentValues.getEnvVariable("CIRCLE_BUILD_NUM")
+
         } else if DDEnvironmentValues.getEnvVariable("JENKINS_URL") != nil {
             isCi = true
             provider = "jenkins"
@@ -313,6 +318,9 @@ internal struct DDEnvironmentValues {
             jobName = nil
             stageName = nil
             branchEnv = DDEnvironmentValues.getEnvVariable("GIT_BRANCH")
+
+            // Env vars
+            ciEnvVars["DD_CUSTOM_TRACE_ID"] = DDEnvironmentValues.getEnvVariable("DD_CUSTOM_TRACE_ID")
 
         } else if DDEnvironmentValues.getEnvVariable("GITLAB_CI") != nil {
             isCi = true
@@ -337,6 +345,11 @@ internal struct DDEnvironmentValues {
                 authorEmail = gitlabAuthorComponents[1].trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
             }
             authorDate = DDEnvironmentValues.getEnvVariable("CI_COMMIT_TIMESTAMP")
+
+            // Env vars
+            ciEnvVars["CI_PIPELINE_ID"] = DDEnvironmentValues.getEnvVariable("CI_PIPELINE_ID")
+            ciEnvVars["CI_JOB_ID"] = DDEnvironmentValues.getEnvVariable("CI_JOB_ID")
+            ciEnvVars["CI_PROJECT_URL"] = DDEnvironmentValues.getEnvVariable("CI_PROJECT_URL")
 
         } else if DDEnvironmentValues.getEnvVariable("APPVEYOR") != nil {
             isCi = true
@@ -412,6 +425,7 @@ internal struct DDEnvironmentValues {
             stageName = nil
             branchEnv = DDEnvironmentValues.getEnvVariable("BITBUCKET_BRANCH")
             tagEnv = DDEnvironmentValues.getEnvVariable("BITBUCKET_TAG")
+
         } else if DDEnvironmentValues.getEnvVariable("GITHUB_WORKSPACE") != nil {
             isCi = true
             provider = "github"
@@ -439,6 +453,13 @@ internal struct DDEnvironmentValues {
             if branchEnv?.isEmpty ?? true {
                 branchEnv = DDEnvironmentValues.getEnvVariable("GITHUB_REF")
             }
+
+            // Env vars
+            ciEnvVars["GITHUB_REPOSITORY"] = DDEnvironmentValues.getEnvVariable("GITHUB_REPOSITORY")
+            ciEnvVars["GITHUB_SERVER_URL"] = DDEnvironmentValues.getEnvVariable("GITHUB_SERVER_URL")
+            ciEnvVars["GITHUB_RUN_ID"] = DDEnvironmentValues.getEnvVariable("GITHUB_RUN_ID")
+            ciEnvVars["GITHUB_RUN_ATTEMPT"] = DDEnvironmentValues.getEnvVariable("GITHUB_RUN_ATTEMPT")
+
         } else if DDEnvironmentValues.getEnvVariable("BUILDKITE") != nil {
             isCi = true
             provider = "buildkite"
@@ -457,6 +478,10 @@ internal struct DDEnvironmentValues {
             commitMessage = DDEnvironmentValues.getEnvVariable("BUILDKITE_MESSAGE")
             authorName = DDEnvironmentValues.getEnvVariable("BUILDKITE_BUILD_AUTHOR")
             authorEmail = DDEnvironmentValues.getEnvVariable("BUILDKITE_BUILD_AUTHOR_EMAIL")
+
+            // Env vars
+            ciEnvVars["BUILDKITE_BUILD_ID"] = DDEnvironmentValues.getEnvVariable("BUILDKITE_BUILD_ID")
+            ciEnvVars["BUILDKITE_JOB_ID"] = DDEnvironmentValues.getEnvVariable("BUILDKITE_JOB_ID")
 
         } else if DDEnvironmentValues.getEnvVariable("BITRISE_BUILD_NUMBER") != nil {
             isCi = true

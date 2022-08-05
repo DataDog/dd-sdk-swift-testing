@@ -42,6 +42,7 @@ public class DDTest: NSObject {
             DDTestTags.testType: DDTagValues.typeTest,
             DDTestTags.testExecutionOrder: "\(currentTestExecutionOrder)",
             DDTestTags.testExecutionProcessId: "\(initialProcessId)",
+            DDTestTags.testIsUITest: "false",
             DDOSTags.osPlatform: DDTestMonitor.env.osName,
             DDOSTags.osArchitecture: DDTestMonitor.env.osArchitecture,
             DDOSTags.osVersion: DDTestMonitor.env.osVersion,
@@ -50,20 +51,17 @@ public class DDTest: NSObject {
             DDRuntimeTags.runtimeName: DDTestMonitor.env.runtimeName,
             DDRuntimeTags.runtimeVersion: DDTestMonitor.env.runtimeVersion,
             DDTestModuleTags.testModuleId: module.id.hexString,
-            DDTestModuleTags.testSuiteId: suite.id.hexString
+            DDTestModuleTags.testSuiteId: suite.id.hexString,
+            DDUISettingsTags.uiSettingsLocalization: PlatformUtils.getLocalization(),
+        	DDUISettingsTags.uiSettingsSuiteLocalization: suite.localization,
+        	DDUISettingsTags.uiSettingsModuleLocalization: module.localization,
+            DDCITags.ciEnvVars: ##"{\##(DDTestMonitor.env.ciEnvVars.map { #""\#($0.0)":"\#($0.1)""# }.joined(separator: ","))}"##,
         ]
 
         span = DDTestMonitor.tracer.startSpan(name: "\(module.testFramework).test", attributes: attributes, startTime: testStartTime)
 
         super.init()
         DDTestMonitor.instance?.currentTest = self
-
-        // Is not a UITest until a XCUIApplication is launched
-        span.setAttribute(key: DDTestTags.testIsUITest, value: "false")
-
-        span.setAttribute(key: DDUISettingsTags.uiSettingsLocalization, value: PlatformUtils.getLocalization())
-        span.setAttribute(key: DDUISettingsTags.uiSettingsSuiteLocalization, value: suite.localization)
-        span.setAttribute(key: DDUISettingsTags.uiSettingsModuleLocalization, value: module.localization)
 
         DDTestMonitor.tracer.addPropagationsHeadersToEnvironment()
 

@@ -59,10 +59,10 @@ internal class DDTestMonitor {
         }
     }
 
-    static func installTestMonitor() {
+    static func installTestMonitor() -> Bool {
         guard DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_API_KEY.rawValue) != nil else {
             Log.print("A Datadog API key is required. DD_API_KEY environment value is missing.")
-            exit(1)
+            return false
         }
         if DDEnvironmentValues.getEnvVariable(ConfigurationValues.SRCROOT.rawValue) == nil {
             Log.print("SRCROOT is not properly set")
@@ -70,6 +70,7 @@ internal class DDTestMonitor {
         Log.print("Library loaded and active. Instrumenting tests.")
         DDTestMonitor.instance = DDTestMonitor()
         DDTestMonitor.instance?.startInstrumenting()
+        return true
     }
 
     init() {

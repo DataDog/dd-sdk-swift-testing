@@ -37,6 +37,10 @@ class DDTestObserver: NSObject, XCTestObservation {
     }
 
     func testSuiteWillStart(_ testSuite: XCTestSuite) {
+        if module?.configError ?? false {
+            testSuite.testRun?.stop()
+            exit(1)
+        }
         if let tests = testSuite.value(forKey: "_mutableTests") as? NSArray,
            tests.firstObject is XCTestCase {
             suite = module?.suiteStart(name: testSuite.name)

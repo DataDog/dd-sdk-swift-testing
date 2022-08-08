@@ -24,6 +24,7 @@ public class DDTestModule: NSObject, Encodable {
     var meta: [String: String] = [:]
     var status: DDTestStatus
     var localization: String
+    var configError = false
 
     private let executionLock = NSLock()
     private var privateCurrentExecutionOrder = 0
@@ -41,7 +42,10 @@ public class DDTestModule: NSObject, Encodable {
         self.duration = 0
         self.status = .pass
         if DDTestMonitor.instance == nil {
-            DDTestMonitor.installTestMonitor()
+            let success = DDTestMonitor.installTestMonitor()
+            if !success {
+                configError = true;
+            }
         }
 
         self.bundleName = bundleName

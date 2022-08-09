@@ -55,7 +55,6 @@ public class DDTest: NSObject {
             DDUISettingsTags.uiSettingsLocalization: PlatformUtils.getLocalization(),
         	DDUISettingsTags.uiSettingsSuiteLocalization: suite.localization,
         	DDUISettingsTags.uiSettingsModuleLocalization: module.localization,
-            DDCITags.ciEnvVars: ##"{\##(DDTestMonitor.env.ciEnvVars.map { #""\#($0.0)":"\#($0.1)""# }.joined(separator: ","))}"##,
         ]
 
         span = DDTestMonitor.tracer.startSpan(name: "\(module.testFramework).test", attributes: attributes, startTime: testStartTime)

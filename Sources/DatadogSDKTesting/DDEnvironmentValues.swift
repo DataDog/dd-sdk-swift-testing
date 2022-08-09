@@ -657,6 +657,8 @@ internal struct DDEnvironmentValues {
         attributes[DDCITags.ciStageName] = stageName
         attributes[DDCITags.ciJobName] = jobName
         attributes[DDCITags.ciJobURL] = jobURL
+        attributes[DDCITags.ciEnvVars] = ##"{\##(ciEnvVars.map { #""\#($0.0)":"\#($0.1)""# }.joined(separator: ","))}"##
+
         DDEnvironmentValues.ciAttributes = attributes
     }
 
@@ -687,11 +689,12 @@ internal struct DDEnvironmentValues {
             span.setAttribute(key: $0.key, value: $0.value)
         }
 
-        DDEnvironmentValues.ciAttributes.forEach {
-            span.setAttribute(key: $0.key, value: $0.value)
-        }
         if !isCi {
             return
+        }
+
+        DDEnvironmentValues.ciAttributes.forEach {
+            span.setAttribute(key: $0.key, value: $0.value)
         }
     }
 

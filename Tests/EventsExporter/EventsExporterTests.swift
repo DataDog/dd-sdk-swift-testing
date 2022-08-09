@@ -55,6 +55,7 @@ class EventsExporterTests: XCTestCase {
                                                           applicationVersion: "applicationVersion",
                                                           environment: "environment",
                                                           apiKey: "apikey",
+                                                          applicationKey: "applicationkey",
                                                           endpoint: Endpoint.custom(
                                                               testsURL: URL(string: "http://localhost:33333/traces")!,
                                                               logsURL: URL(string: "http://localhost:33333/logs")!

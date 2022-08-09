@@ -64,7 +64,7 @@ class IntegrationTestsRunner: XCTestCase {
     func testBasicPass() throws {
         XCTAssertEqual(recoveredSpans.count, 1)
         XCTAssertEqual(attrib[DDTestTags.testStatus], DDTagValues.statusPass)
-        XCTAssertEqual(attrib[DDGenericTags.resourceName], "BasicPass.testBasicPass")
+        XCTAssertEqual(attrib[DDGenericTags.resource], "BasicPass.testBasicPass")
         XCTAssertEqual(attrib[DDTestTags.testName], "testBasicPass")
         XCTAssertEqual(attrib[DDTestTags.testSuite], "BasicPass")
         XCTAssertEqual(attrib[DDTestTags.testType], "test")
@@ -73,7 +73,7 @@ class IntegrationTestsRunner: XCTestCase {
     func testBasicSkip() throws {
         XCTAssertEqual(recoveredSpans.count, 1)
         XCTAssertEqual(testSpan.stringAttributes[DDTestTags.testStatus], DDTagValues.statusSkip)
-        XCTAssertEqual(attrib[DDGenericTags.resourceName], "BasicSkip.testBasicSkip")
+        XCTAssertEqual(attrib[DDGenericTags.resource], "BasicSkip.testBasicSkip")
         XCTAssertEqual(attrib[DDTestTags.testName], "testBasicSkip")
         XCTAssertEqual(attrib[DDTestTags.testSuite], "BasicSkip")
         XCTAssertEqual(attrib[DDTestTags.testType], "test")
@@ -82,7 +82,7 @@ class IntegrationTestsRunner: XCTestCase {
     func testBasicError() throws {
         XCTAssertEqual(recoveredSpans.count, 1)
         XCTAssertEqual(attrib[DDTestTags.testStatus], DDTagValues.statusFail)
-        XCTAssertEqual(attrib[DDGenericTags.resourceName], "BasicError.testBasicError")
+        XCTAssertEqual(attrib[DDGenericTags.resource], "BasicError.testBasicError")
         XCTAssertEqual(attrib[DDTestTags.testName], "testBasicError")
         XCTAssertEqual(attrib[DDTestTags.testSuite], "BasicError")
         XCTAssertEqual(attrib[DDTestTags.testType], "test")
@@ -91,7 +91,7 @@ class IntegrationTestsRunner: XCTestCase {
     func testAsynchronousPass() throws {
         XCTAssertEqual(recoveredSpans.count, 2)
         XCTAssertEqual(attrib[DDTestTags.testStatus], DDTagValues.statusPass)
-        XCTAssertEqual(attrib[DDGenericTags.resourceName], "AsynchronousPass.testAsynchronousPass")
+        XCTAssertEqual(attrib[DDGenericTags.resource], "AsynchronousPass.testAsynchronousPass")
         XCTAssertEqual(attrib[DDTestTags.testName], "testAsynchronousPass")
         XCTAssertEqual(attrib[DDTestTags.testSuite], "AsynchronousPass")
         XCTAssertEqual(attrib[DDTestTags.testType], "test")
@@ -100,7 +100,7 @@ class IntegrationTestsRunner: XCTestCase {
     func testAsynchronousSkip() throws {
         XCTAssertEqual(recoveredSpans.count, 2)
         XCTAssertEqual(attrib[DDTestTags.testStatus], DDTagValues.statusSkip)
-        XCTAssertEqual(attrib[DDGenericTags.resourceName], "AsynchronousSkip.testAsynchronousSkip")
+        XCTAssertEqual(attrib[DDGenericTags.resource], "AsynchronousSkip.testAsynchronousSkip")
         XCTAssertEqual(attrib[DDTestTags.testName], "testAsynchronousSkip")
         XCTAssertEqual(attrib[DDTestTags.testSuite], "AsynchronousSkip")
         XCTAssertEqual(attrib[DDTestTags.testType], "test")
@@ -109,7 +109,7 @@ class IntegrationTestsRunner: XCTestCase {
     func testAsynchronousError() throws {
         XCTAssertEqual(recoveredSpans.count, 2)
         XCTAssertEqual(attrib[DDTestTags.testStatus], DDTagValues.statusFail)
-        XCTAssertEqual(attrib[DDGenericTags.resourceName], "AsynchronousError.testAsynchronousError")
+        XCTAssertEqual(attrib[DDGenericTags.resource], "AsynchronousError.testAsynchronousError")
         XCTAssertEqual(attrib[DDTestTags.testName], "testAsynchronousError")
         XCTAssertEqual(attrib[DDTestTags.testSuite], "AsynchronousError")
         XCTAssertEqual(attrib[DDTestTags.testType], "test")
@@ -117,7 +117,7 @@ class IntegrationTestsRunner: XCTestCase {
 
     func testNetworkIntegration() throws {
         XCTAssertEqual(recoveredSpans.count, 2)
-        XCTAssertEqual(attrib[DDGenericTags.resourceName], "NetworkIntegration.testNetworkIntegration")
+        XCTAssertEqual(attrib[DDGenericTags.resource], "NetworkIntegration.testNetworkIntegration")
         XCTAssertEqual(attrib[DDTestTags.testName], "testNetworkIntegration")
         XCTAssertEqual(attrib[DDTestTags.testSuite], "NetworkIntegration")
         XCTAssertEqual(attrib[DDTestTags.testType], "test")
@@ -137,7 +137,7 @@ class IntegrationTestsRunner: XCTestCase {
 
     func testBenchmark() throws {
         XCTAssertEqual(recoveredSpans.count, 1)
-        XCTAssertEqual(attrib[DDGenericTags.resourceName], "Benchmark.testBenchmark")
+        XCTAssertEqual(attrib[DDGenericTags.resource], "Benchmark.testBenchmark")
         XCTAssertEqual(attrib[DDTestTags.testName], "testBenchmark")
         XCTAssertEqual(attrib[DDTestTags.testSuite], "Benchmark")
         XCTAssertEqual(attrib[DDTestTags.testType], "benchmark")

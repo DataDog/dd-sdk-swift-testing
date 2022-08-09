@@ -7,9 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		E10034DC27035A7700439C9C /* DDTestSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10034D92703599D00439C9C /* DDTestSession.swift */; };
-		E10034DE27035A7800439C9C /* DDTestSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10034D92703599D00439C9C /* DDTestSession.swift */; };
-		E10034E027035A7900439C9C /* DDTestSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10034D92703599D00439C9C /* DDTestSession.swift */; };
+		E10034DC27035A7700439C9C /* DDTestModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10034D92703599D00439C9C /* DDTestModule.swift */; };
+		E10034DE27035A7800439C9C /* DDTestModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10034D92703599D00439C9C /* DDTestModule.swift */; };
+		E10034E027035A7900439C9C /* DDTestModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10034D92703599D00439C9C /* DDTestModule.swift */; };
 		E10A7E16280701CA00B464C9 /* Subprocess.c in Sources */ = {isa = PBXBuildFile; fileRef = E10A7E15280701CA00B464C9 /* Subprocess.c */; };
 		E10A7E17280701CA00B464C9 /* Subprocess.c in Sources */ = {isa = PBXBuildFile; fileRef = E10A7E15280701CA00B464C9 /* Subprocess.c */; };
 		E10A7E18280701CA00B464C9 /* Subprocess.c in Sources */ = {isa = PBXBuildFile; fileRef = E10A7E15280701CA00B464C9 /* Subprocess.c */; };
@@ -254,6 +254,12 @@
 		E1743F8128490DA8006CBFF8 /* DDCoverageHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C8DEF4268363EC005B5411 /* DDCoverageHelper.swift */; };
 		E1743F8228490DA9006CBFF8 /* DDCoverageHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C8DEF4268363EC005B5411 /* DDCoverageHelper.swift */; };
 		E1743F8328490DA9006CBFF8 /* DDCoverageHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C8DEF4268363EC005B5411 /* DDCoverageHelper.swift */; };
+		E1743F4E283E7E3E006CBFF8 /* DDTestSuite.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1743F4C283E7D9E006CBFF8 /* DDTestSuite.swift */; };
+		E1743F4F283E7E3E006CBFF8 /* DDTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1743F4D283E7DAE006CBFF8 /* DDTest.swift */; };
+		E1743F50283E7E40006CBFF8 /* DDTestSuite.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1743F4C283E7D9E006CBFF8 /* DDTestSuite.swift */; };
+		E1743F51283E7E40006CBFF8 /* DDTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1743F4D283E7DAE006CBFF8 /* DDTest.swift */; };
+		E1743F52283E7E41006CBFF8 /* DDTestSuite.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1743F4C283E7D9E006CBFF8 /* DDTestSuite.swift */; };
+		E1743F53283E7E41006CBFF8 /* DDTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1743F4D283E7DAE006CBFF8 /* DDTest.swift */; };
 		E1798CC62524B9BD008DEBB9 /* DDTracer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1798CC52524B9BD008DEBB9 /* DDTracer.swift */; };
 		E17B7AA8253F02580081D7F3 /* SigmaSwiftStatistics in Frameworks */ = {isa = PBXBuildFile; productRef = E17B7AA7253F02580081D7F3 /* SigmaSwiftStatistics */; };
 		E18C35F027EDD47500E0BC08 /* NTPServer.h in Headers */ = {isa = PBXBuildFile; fileRef = E13B5F3627ECD08B006F8E2D /* NTPServer.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -678,8 +684,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		E10034D92703599D00439C9C /* DDTestSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTestSession.swift; sourceTree = "<group>"; };
 		E10A7E0D2806D68F00B464C9 /* LLVMCoverageFormat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LLVMCoverageFormat.swift; sourceTree = "<group>"; };
+		E10034D92703599D00439C9C /* DDTestModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTestModule.swift; sourceTree = "<group>"; };
 		E10A7E15280701CA00B464C9 /* Subprocess.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Subprocess.c; sourceTree = "<group>"; };
 		E11295BA25F2483D002719E7 /* FileLocator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileLocator.swift; sourceTree = "<group>"; };
 		E11295C725F63BA8002719E7 /* DDSymbolAddress.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = DDSymbolAddress.c; sourceTree = "<group>"; };
@@ -833,6 +839,8 @@
 		E1665A8025D13BBB00BA53CD /* DDSymbolicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDSymbolicator.swift; sourceTree = "<group>"; };
 		E171DC91270DBCAB00A12B79 /* DDTestSessionApiTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DDTestSessionApiTests.m; sourceTree = "<group>"; };
 		E1743F5628490141006CBFF8 /* CoverageExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoverageExporter.swift; sourceTree = "<group>"; };
+		E1743F4C283E7D9E006CBFF8 /* DDTestSuite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTestSuite.swift; sourceTree = "<group>"; };
+		E1743F4D283E7DAE006CBFF8 /* DDTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTest.swift; sourceTree = "<group>"; };
 		E1798CC52524B9BD008DEBB9 /* DDTracer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTracer.swift; sourceTree = "<group>"; };
 		E17B7AA5253F010C0081D7F3 /* LICENSE-3rdparty.csv */ = {isa = PBXFileReference; lastKnownFileType = text; path = "LICENSE-3rdparty.csv"; sourceTree = "<group>"; };
 		E18F2169278C980800F77910 /* IntegrationTests (macOS)Debug.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "IntegrationTests (macOS)Debug.entitlements"; sourceTree = "<group>"; };
@@ -1657,7 +1665,9 @@
 				E116D7D925248C280022779D /* Utils */,
 				E1ABA07325231F4700ED8AEF /* DDEnvironmentValues.swift */,
 				E158E2DB25471DA000DBCD6C /* DDInstrumentationControl.swift */,
-				E10034D92703599D00439C9C /* DDTestSession.swift */,
+				E10034D92703599D00439C9C /* DDTestModule.swift */,
+				E1743F4C283E7D9E006CBFF8 /* DDTestSuite.swift */,
+				E1743F4D283E7DAE006CBFF8 /* DDTest.swift */,
 				E1ABA07025231F4700ED8AEF /* DDTestObserver.swift */,
 				E1ABA07125231F4700ED8AEF /* DDTags.swift */,
 				E1ABA08A252341EA00ED8AEF /* DDTestMonitor.swift */,
@@ -2589,14 +2599,16 @@
 				E114C135274F8A1200B57E08 /* NTPServer.m in Sources */,
 				E114C138274F8A1200B57E08 /* NTPTypes.c in Sources */,
 				E157A723256E9D1D00CBCA52 /* SwiftExtensions.swift in Sources */,
-				E10034DE27035A7800439C9C /* DDTestSession.swift in Sources */,
 				E13BD580279AAFAE00105856 /* InternalError.swift in Sources */,
+				E10034DE27035A7800439C9C /* DDTestModule.swift in Sources */,
 				E1EBBD5C27F2040E0059BC3E /* Log.swift in Sources */,
 				E10A7E17280701CA00B464C9 /* Subprocess.c in Sources */,
 				E1665A8225D13BBB00BA53CD /* DDSymbolicator.swift in Sources */,
 				E146BC3B2869AEA80057C37B /* IntelligentTestRunner.swift in Sources */,
 				E1550C46274F7FF700006F11 /* NTPClock.swift in Sources */,
+				E1743F50283E7E40006CBFF8 /* DDTestSuite.swift in Sources */,
 				E1A63F5D26789915002F48FA /* CodeOwners.swift in Sources */,
+				E1743F51283E7E40006CBFF8 /* DDTest.swift in Sources */,
 				E157A724256E9D1D00CBCA52 /* DDTestMonitor.swift in Sources */,
 				E14405A725D6AA9500FE3D3C /* GitInfo.swift in Sources */,
 				E157A725256E9D1D00CBCA52 /* DDEnvironmentValues.swift in Sources */,
@@ -2630,14 +2642,16 @@
 				E114C139274F8A1400B57E08 /* NTPServer.m in Sources */,
 				E114C13C274F8A1400B57E08 /* NTPTypes.c in Sources */,
 				E157A75B256E9D3300CBCA52 /* SwiftExtensions.swift in Sources */,
-				E10034E027035A7900439C9C /* DDTestSession.swift in Sources */,
 				E13BD581279AAFAF00105856 /* InternalError.swift in Sources */,
+				E10034E027035A7900439C9C /* DDTestModule.swift in Sources */,
 				E1EBBD5D27F2040F0059BC3E /* Log.swift in Sources */,
 				E10A7E18280701CA00B464C9 /* Subprocess.c in Sources */,
 				E1665A8125D13BBB00BA53CD /* DDSymbolicator.swift in Sources */,
 				E146BC3C2869AEA80057C37B /* IntelligentTestRunner.swift in Sources */,
 				E1550C47274F7FF700006F11 /* NTPClock.swift in Sources */,
+				E1743F52283E7E41006CBFF8 /* DDTestSuite.swift in Sources */,
 				E1A63F5E26789915002F48FA /* CodeOwners.swift in Sources */,
+				E1743F53283E7E41006CBFF8 /* DDTest.swift in Sources */,
 				E157A75C256E9D3300CBCA52 /* DDTestMonitor.swift in Sources */,
 				E14405A825D6AA9600FE3D3C /* GitInfo.swift in Sources */,
 				E157A75D256E9D3300CBCA52 /* DDEnvironmentValues.swift in Sources */,
@@ -2781,13 +2795,15 @@
 				E114C132274F8A0000B57E08 /* NTPServer.m in Sources */,
 				E114C133274F8A0000B57E08 /* NTPTypes.c in Sources */,
 				E1AD079F252F5B00003705C1 /* SwiftExtensions.swift in Sources */,
-				E10034DC27035A7700439C9C /* DDTestSession.swift in Sources */,
+				E10034DC27035A7700439C9C /* DDTestModule.swift in Sources */,
 				E1EBBD5B27F2040C0059BC3E /* Log.swift in Sources */,
 				E10A7E16280701CA00B464C9 /* Subprocess.c in Sources */,
 				E1D6EFA525F6647F00E8C3AE /* LibraryInitializer.m in Sources */,
 				E1550C45274F7FF700006F11 /* NTPClock.swift in Sources */,
 				E146BC3A2869AEA80057C37B /* IntelligentTestRunner.swift in Sources */,
+				E1743F4E283E7E3E006CBFF8 /* DDTestSuite.swift in Sources */,
 				E1A63F5C26789915002F48FA /* CodeOwners.swift in Sources */,
+				E1743F4F283E7E3E006CBFF8 /* DDTest.swift in Sources */,
 				E1665A8525D1524100BA53CD /* DDSymbolicator.swift in Sources */,
 				E1ABA08B252341EA00ED8AEF /* DDTestMonitor.swift in Sources */,
 				E14405A625D6AA9500FE3D3C /* GitInfo.swift in Sources */,
@@ -3322,7 +3338,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.1.0;
 				OTHER_LDFLAGS = "-weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
@@ -3351,7 +3367,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.1.0;
 				OTHER_LDFLAGS = "-weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
@@ -3379,7 +3395,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.1.0;
 				OTHER_LDFLAGS = "-weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
@@ -3409,7 +3425,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.1.0;
 				OTHER_LDFLAGS = "-weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
@@ -3563,7 +3579,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -3632,7 +3648,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LLVM_LTO = YES_THIN;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.1.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
@@ -3663,7 +3679,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.1.0;
 				OTHER_LDFLAGS = " -weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
@@ -3690,7 +3706,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.1;
+				MARKETING_VERSION = 2.1.0;
 				OTHER_LDFLAGS = " -weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;

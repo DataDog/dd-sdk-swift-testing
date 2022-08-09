@@ -12,8 +12,8 @@ import MachO
 @_implementationOnly import EventsExporter
 
 enum DDSymbolicator {
-    private static let crashLineRegex = try! NSRegularExpression(pattern: "^([0-9]+)(\\s+)(\\S+ *\\S+)(\\s+)(0x[0-9a-fA-F]+)([ \t]+)(0x[0-9a-fA-F]+)([ \t]+\\+[ \t]+[0-9]+)$?", options: .anchorsMatchLines)
-    private static let callStackRegex = try! NSRegularExpression(pattern: "^([0-9]+)(\\s+)(\\S+ *\\S+)(\\s+)(0x[0-9a-fA-F]+)", options: .anchorsMatchLines)
+    private static let crashLineRegex = try! NSRegularExpression(pattern: "^([0-9]+)(\\s+)((?:\\w *\\w*)+)(\\s+)(0x[0-9a-fA-F]+)([ \t]+)(0x[0-9a-fA-F]+)([ \t]+\\+[ \t]+[0-9]+)$?", options: .anchorsMatchLines)
+    private static let callStackRegex = try! NSRegularExpression(pattern: "^([0-9]+)(\\s+)((?:\\w *\\w*)+)(\\s+)(0x[0-9a-fA-F]+)", options: .anchorsMatchLines)
 
     private static var dSYMFiles: [URL] = {
         var dSYMFiles = [URL]()

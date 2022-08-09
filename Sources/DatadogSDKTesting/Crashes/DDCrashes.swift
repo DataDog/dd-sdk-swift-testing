@@ -6,6 +6,7 @@
 
 @_implementationOnly import CrashReporter
 import Foundation
+@_implementationOnly import OpenTelemetryApi
 
 /// This class is our interface with the crash reporter, now it is based on PLCrashReporter,
 /// but we could modify this class to use another if needed
@@ -70,10 +71,19 @@ internal enum DDCrashes {
                     if let executionOrderString = spanData.stringAttributes[DDTestTags.testExecutionOrder],
                        let executionOrder = Int(executionOrderString),
                        let executionProcessIdString = spanData.stringAttributes[DDTestTags.testExecutionProcessId],
-                       let processId = Int(executionProcessIdString)
+                       let processId = Int(executionProcessIdString),
+                       let moduleID = spanData.stringAttributes[DDTestModuleTags.testModuleId],
+                       let suiteID = spanData.stringAttributes[DDTestModuleTags.testSuiteId],
+                       let suiteName = spanData.stringAttributes[DDTestTags.testSuite]
                     {
                         DDTestMonitor.instance?.currentTest?.currentTestExecutionOrder = executionOrder
                         DDTestMonitor.instance?.currentTest?.initialProcessId = processId
+                        DDTestMonitor.instance?.crashedModuleInfo = CrashedModuleInformation(
+                            crashedModuleId: SpanId(fromHexString: moduleID),
+                            crashedSuiteId: SpanId(fromHexString: suiteID),
+                            crashedSuiteName: suiteName,
+                            moduleStartTime: spanData.moduleStartTime,
+                            suiteStartTime: spanData.suiteStartTime)
                     }
                 }
             }

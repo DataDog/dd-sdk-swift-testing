@@ -87,6 +87,7 @@ internal struct DDEnvironmentValues {
     let jobURL: String?
     let jobName: String?
     let stageName: String?
+    var ciEnvVars = [String: String]()
 
     /// Git values
     var repository: String?
@@ -132,6 +133,9 @@ internal struct DDEnvironmentValues {
     }()
 
     static let environmentCharset = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_")
+
+    static var gitAttributes = [String: String]()
+    static var ciAttributes = [String: String]()
 
     init() {
         /// Datatog configuration values
@@ -306,6 +310,10 @@ internal struct DDEnvironmentValues {
                 branchEnv = DDEnvironmentValues.getEnvVariable("CIRCLE_BRANCH")
             }
 
+            // Env vars
+            ciEnvVars["CIRCLE_WORKFLOW_ID"] = DDEnvironmentValues.getEnvVariable("CIRCLE_WORKFLOW_ID")
+            ciEnvVars["CIRCLE_BUILD_NUM"] = DDEnvironmentValues.getEnvVariable("CIRCLE_BUILD_NUM")
+
         } else if DDEnvironmentValues.getEnvVariable("JENKINS_URL") != nil {
             isCi = true
             provider = "jenkins"
@@ -321,6 +329,9 @@ internal struct DDEnvironmentValues {
             jobName = nil
             stageName = nil
             branchEnv = DDEnvironmentValues.getEnvVariable("GIT_BRANCH")
+
+            // Env vars
+            ciEnvVars["DD_CUSTOM_TRACE_ID"] = DDEnvironmentValues.getEnvVariable("DD_CUSTOM_TRACE_ID")
 
         } else if DDEnvironmentValues.getEnvVariable("GITLAB_CI") != nil {
             isCi = true
@@ -345,6 +356,11 @@ internal struct DDEnvironmentValues {
                 authorEmail = gitlabAuthorComponents[1].trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
             }
             authorDate = DDEnvironmentValues.getEnvVariable("CI_COMMIT_TIMESTAMP")
+
+            // Env vars
+            ciEnvVars["CI_PIPELINE_ID"] = DDEnvironmentValues.getEnvVariable("CI_PIPELINE_ID")
+            ciEnvVars["CI_JOB_ID"] = DDEnvironmentValues.getEnvVariable("CI_JOB_ID")
+            ciEnvVars["CI_PROJECT_URL"] = DDEnvironmentValues.getEnvVariable("CI_PROJECT_URL")
 
         } else if DDEnvironmentValues.getEnvVariable("APPVEYOR") != nil {
             isCi = true
@@ -420,6 +436,7 @@ internal struct DDEnvironmentValues {
             stageName = nil
             branchEnv = DDEnvironmentValues.getEnvVariable("BITBUCKET_BRANCH")
             tagEnv = DDEnvironmentValues.getEnvVariable("BITBUCKET_TAG")
+
         } else if DDEnvironmentValues.getEnvVariable("GITHUB_WORKSPACE") != nil {
             isCi = true
             provider = "github"
@@ -447,6 +464,13 @@ internal struct DDEnvironmentValues {
             if branchEnv?.isEmpty ?? true {
                 branchEnv = DDEnvironmentValues.getEnvVariable("GITHUB_REF")
             }
+
+            // Env vars
+            ciEnvVars["GITHUB_REPOSITORY"] = DDEnvironmentValues.getEnvVariable("GITHUB_REPOSITORY")
+            ciEnvVars["GITHUB_SERVER_URL"] = DDEnvironmentValues.getEnvVariable("GITHUB_SERVER_URL")
+            ciEnvVars["GITHUB_RUN_ID"] = DDEnvironmentValues.getEnvVariable("GITHUB_RUN_ID")
+            ciEnvVars["GITHUB_RUN_ATTEMPT"] = DDEnvironmentValues.getEnvVariable("GITHUB_RUN_ATTEMPT")
+
         } else if DDEnvironmentValues.getEnvVariable("BUILDKITE") != nil {
             isCi = true
             provider = "buildkite"
@@ -465,6 +489,10 @@ internal struct DDEnvironmentValues {
             commitMessage = DDEnvironmentValues.getEnvVariable("BUILDKITE_MESSAGE")
             authorName = DDEnvironmentValues.getEnvVariable("BUILDKITE_BUILD_AUTHOR")
             authorEmail = DDEnvironmentValues.getEnvVariable("BUILDKITE_BUILD_AUTHOR_EMAIL")
+
+            // Env vars
+            ciEnvVars["BUILDKITE_BUILD_ID"] = DDEnvironmentValues.getEnvVariable("BUILDKITE_BUILD_ID")
+            ciEnvVars["BUILDKITE_JOB_ID"] = DDEnvironmentValues.getEnvVariable("BUILDKITE_JOB_ID")
 
         } else if DDEnvironmentValues.getEnvVariable("BITRISE_BUILD_NUMBER") != nil {
             isCi = true
@@ -504,6 +532,27 @@ internal struct DDEnvironmentValues {
             authorEmail = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_AUTHOR_EMAIL")
             committerName = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_COMMITER_NAME")
             committerEmail = DDEnvironmentValues.getEnvVariable("GIT_CLONE_COMMIT_COMMITER_EMAIL")
+
+        } else if DDEnvironmentValues.getEnvVariable("CI_WORKSPACE") != nil {
+            isCi = true
+            provider = "Xcode Cloud"
+            repository = nil
+            commit = DDEnvironmentValues.getEnvVariable("CI_COMMIT")
+            workspaceEnv = DDEnvironmentValues.getEnvVariable("CI_WORKSPACE")
+            pipelineId = DDEnvironmentValues.getEnvVariable("CI_BUILD_ID")
+            pipelineNumber = DDEnvironmentValues.getEnvVariable("CI_BUILD_NUMBER")
+            pipelineURL = nil
+            pipelineName = DDEnvironmentValues.getEnvVariable("CI_WORKFLOW")
+            jobURL = nil
+            jobName = nil
+            stageName = nil
+            tagEnv = DDEnvironmentValues.getEnvVariable("CI_TAG")
+            if tagEnv?.isEmpty ?? true {
+                branchEnv = DDEnvironmentValues.getEnvVariable("CI_BRANCH")
+                if tagEnv?.isEmpty ?? true {
+                    branchEnv = DDEnvironmentValues.getEnvVariable("CI_GIT_REF")
+                }
+            }
 
         } else {
             isCi = false
@@ -581,6 +630,47 @@ internal struct DDEnvironmentValues {
         if commit == nil || repository == nil || (branch == nil && tag == nil) {
             Log.print("Please check: https://docs.datadoghq.com/continuous_integration/troubleshooting")
         }
+
+        initGitAttributes()
+        initCiAttributes()
+    }
+
+    func initGitAttributes() {
+        var attributes = [String: String]()
+        let disableGit = (DDEnvironmentValues.getEnvVariable("DD_DISABLE_GIT_INFORMATION") as NSString?)?.boolValue ?? false
+        guard !disableGit else {
+            return
+        }
+        attributes[DDGitTags.gitRepository] = repository
+        attributes[DDGitTags.gitCommit] = commit
+        attributes[DDGitTags.gitBranch] = branch
+        attributes[DDGitTags.gitTag] = tag
+        attributes[DDGitTags.gitCommitMessage] = commitMessage
+        attributes[DDGitTags.gitAuthorName] = authorName
+        attributes[DDGitTags.gitAuthorEmail] = authorEmail
+        attributes[DDGitTags.gitAuthorDate] = authorDate
+        attributes[DDGitTags.gitCommitterName] = committerName
+        attributes[DDGitTags.gitCommitterEmail] = committerEmail
+        attributes[DDGitTags.gitCommitterDate] = committerDate
+        DDEnvironmentValues.gitAttributes = attributes
+    }
+
+    func initCiAttributes() {
+        var attributes = [String: String]()
+        guard isCi else {
+            return
+        }
+        attributes[DDCITags.ciProvider] = provider
+        attributes[DDCITags.ciPipelineId] = pipelineId
+        attributes[DDCITags.ciPipelineNumber] = pipelineNumber
+        attributes[DDCITags.ciPipelineURL] = pipelineURL
+        attributes[DDCITags.ciPipelineName] = pipelineName
+        attributes[DDCITags.ciStageName] = stageName
+        attributes[DDCITags.ciJobName] = jobName
+        attributes[DDCITags.ciJobURL] = jobURL
+        attributes[DDCITags.ciEnvVars] = ##"{\##(ciEnvVars.map { #""\#($0.0)":"\#($0.1)""# }.joined(separator: ","))}"##
+
+        DDEnvironmentValues.ciAttributes = attributes
     }
 
     func addTagsToSpan(span: Span) {
@@ -606,34 +696,17 @@ internal struct DDEnvironmentValues {
 
         setAttributeIfExist(toSpan: span, key: DDCITags.ciWorkspacePath, value: workspacePath)
 
-        let disableGit = (DDEnvironmentValues.getEnvVariable("DD_DISABLE_GIT_INFORMATION") as NSString?)?.boolValue ?? false
-        if !disableGit {
-            setAttributeIfExist(toSpan: span, key: DDGitTags.gitRepository, value: repository)
-            setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommit, value: commit)
-            setAttributeIfExist(toSpan: span, key: DDGitTags.gitBranch, value: branch)
-            setAttributeIfExist(toSpan: span, key: DDGitTags.gitTag, value: tag)
-
-            setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommitMessage, value: commitMessage)
-            setAttributeIfExist(toSpan: span, key: DDGitTags.gitAuthorName, value: authorName)
-            setAttributeIfExist(toSpan: span, key: DDGitTags.gitAuthorEmail, value: authorEmail)
-            setAttributeIfExist(toSpan: span, key: DDGitTags.gitAuthorDate, value: authorDate)
-            setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommitterName, value: committerName)
-            setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommitterEmail, value: committerEmail)
-            setAttributeIfExist(toSpan: span, key: DDGitTags.gitCommitterDate, value: committerDate)
+        DDEnvironmentValues.gitAttributes.forEach {
+            span.setAttribute(key: $0.key, value: $0.value)
         }
 
         if !isCi {
             return
         }
 
-        setAttributeIfExist(toSpan: span, key: DDCITags.ciProvider, value: provider ?? "local development")
-        setAttributeIfExist(toSpan: span, key: DDCITags.ciPipelineId, value: pipelineId)
-        setAttributeIfExist(toSpan: span, key: DDCITags.ciPipelineNumber, value: pipelineNumber)
-        setAttributeIfExist(toSpan: span, key: DDCITags.ciPipelineURL, value: pipelineURL)
-        setAttributeIfExist(toSpan: span, key: DDCITags.ciPipelineName, value: pipelineName)
-        setAttributeIfExist(toSpan: span, key: DDCITags.ciStageName, value: stageName)
-        setAttributeIfExist(toSpan: span, key: DDCITags.ciJobName, value: jobName)
-        setAttributeIfExist(toSpan: span, key: DDCITags.ciJobURL, value: jobURL)
+        DDEnvironmentValues.ciAttributes.forEach {
+            span.setAttribute(key: $0.key, value: $0.value)
+        }
     }
 
     private func setAttributeIfExist(toSpan span: Span, key: String, value: String?) {

@@ -34,6 +34,14 @@ public class EventsExporter: SpanExporter {
         return .success
     }
 
+    public func exportEvent<T: Encodable>(event: T) {
+        if configuration.performancePreset.synchronousWrite {
+            spansExporter.spansStorage.writer.writeSync(value: event)
+        } else {
+            spansExporter.spansStorage.writer.write(value: event)
+        }
+    }
+
     public func flush() -> SpanExporterResultCode {
         logsExporter.logsStorage.writer.queue.sync {}
         spansExporter.spansStorage.writer.queue.sync {}

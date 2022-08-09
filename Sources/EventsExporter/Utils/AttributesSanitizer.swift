@@ -14,7 +14,7 @@ internal struct AttributesSanitizer {
         static let maxNestedLevelsInAttributeName: Int = 10
         /// Maximum number of attributes in log.
         /// If this number is exceeded, extra attributes will be ignored.
-        static let maxNumberOfAttributes: Int = 128
+        static let maxNumberOfAttributes: Int = 256
     }
 
     let featureName: String

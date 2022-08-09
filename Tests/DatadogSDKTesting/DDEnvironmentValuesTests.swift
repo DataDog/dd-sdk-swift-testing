@@ -40,6 +40,8 @@ class DDEnvironmentValuesTests: XCTestCase {
         DDEnvironmentValues.environment = previousEnvironment
         DDEnvironmentValues.infoDictionary = previousInfoDictionary
         XCTAssertNil(DDTracer.activeSpan)
+        DDEnvironmentValues.gitAttributes = [String: String]()
+        DDEnvironmentValues.ciAttributes = [String: String]()
     }
 
     private func setEnvVariables() {
@@ -271,7 +273,6 @@ class DDEnvironmentValuesTests: XCTestCase {
         testEnvironment["GITHUB_SHA"] = nil
         testEnvironment["SRCROOT"] = ProcessInfo.processInfo.environment["SRCROOT"]
 
-
         setEnvVariables()
         let env = DDEnvironmentValues()
 
@@ -352,8 +353,20 @@ class DDEnvironmentValuesTests: XCTestCase {
             spanData = span.toSpanData()
 
             spec[1].forEach {
-                XCTAssertEqual(spanData.attributes[$0.key]?.description, $0.value, "\($0.key) != \($0.value)")
+                if $0.key == "_dd.ci.env_vars" {
+                    XCTAssertTrue(compareJsons(spanData.attributes[$0.key]?.description, $0.value))
+                } else {
+                    XCTAssertEqual(spanData.attributes[$0.key]?.description, $0.value, "\($0.key) != \($0.value)")
+                }
             }
         }
+    }
+
+    private func compareJsons(_ string1: String?, _ string2: String) -> Bool {
+        guard let string1 = string1 else { return false }
+        let json1 = try! JSONSerialization.jsonObject(with: string1.utf8Data) as! [String: String]
+        let json2 = try! JSONSerialization.jsonObject(with: string2.utf8Data) as! [String: String]
+        let comparison = NSDictionary(dictionary: json1).isEqual(to: json2)
+        return comparison
     }
 }

@@ -16,6 +16,11 @@ internal enum LogLevel: Int, Codable {
     case critical
 }
 
+internal enum LogConstants {
+    static let ddSource = "ios"
+    static let ddProduct = "datadog.product:citest"
+}
+
 internal class LogsExporter {
     let logsDirectory = "com.datadog.civisibility/logs/v1"
     let configuration: ExporterConfiguration
@@ -48,7 +53,8 @@ internal class LogsExporter {
         let requestBuilder = SingleRequestBuilder(
             url: configuration.endpoint.logsURL,
             queryItems: [
-                .ddsource(source: configuration.source)
+                .ddsource(source: LogConstants.ddSource),
+                .ddtags(tags: [LogConstants.ddProduct])
             ],
             headers: [
                 .contentTypeHeader(contentType: .applicationJSON),

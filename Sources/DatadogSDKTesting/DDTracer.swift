@@ -55,7 +55,7 @@ internal class DDTracer {
         tracerProvider.updateActiveSampler(Samplers.alwaysOn)
         let spanLimits = tracerProvider.getActiveSpanLimits().settingAttributeCountLimit(1024)
         tracerProvider.updateActiveSpanLimits(spanLimits)
-        tracerProvider.updateActiveClock(ntpClock)
+        tracerProvider.updateActiveClock(DDTestMonitor.clock)
 
         let bundle = Bundle.main
         let identifier = bundle.bundleIdentifier ?? "com.datadoghq.DatadogSDKTesting"
@@ -249,7 +249,7 @@ internal class DDTracer {
         }
         return [DDTestTags.testName: AttributeValue.string(currentTest.name),
                 DDTestTags.testSuite: AttributeValue.string(currentTest.suite.name),
-                DDTestTags.testBundle: AttributeValue.string(currentTest.session.bundleName)]
+                DDTestTags.testBundle: AttributeValue.string(currentTest.module.bundleName)]
     }
 
     private func attributesForString(_ string: String) -> [String: AttributeValue] {

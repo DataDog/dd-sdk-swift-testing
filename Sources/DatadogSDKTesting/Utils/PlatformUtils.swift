@@ -150,11 +150,11 @@ struct PlatformUtils {
         }
     #endif
 
-    static func getLocalization() -> String? {
+    static func getLocalization() -> String {
         #if os(iOS) || os(tvOS) || os(watchOS)
-            return Locale.current.languageCode
+            return Locale.current.languageCode ?? "none"
         #else
-            return NSLocale.current.languageCode
+            return NSLocale.current.languageCode ?? "none"
         #endif
     }
 }

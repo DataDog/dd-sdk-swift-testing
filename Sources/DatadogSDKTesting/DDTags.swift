@@ -22,6 +22,12 @@ internal enum DDTags {
     /// Default span type for spans created without a specifying a type. In general all spans should use this type.
     static let defaultSpanType = "custom"
 
+    ///
+    static let environment = "env"
+    static let name = "name"
+    static let service = "service"
+    static let error = "error"
+
     /// Expected value: `String`
     static let contextCallStack = "context.call_stack"
     static let contextThreadNumber = "context.thread_number"
@@ -31,7 +37,7 @@ internal enum DDTags {
 
 internal enum DDGenericTags {
     static let type = "type"
-    static let resourceName = "resource.name"
+    static let resource = "resource"
     static let language = "language"
     static let library_version = "library_version"
 }
@@ -68,11 +74,18 @@ internal enum DDUISettingsTags {
     static let uiSettingsAppearance = "ui.appearance"
     static let uiSettingsOrientation = "ui.orientation"
     static let uiSettingsLocalization = "ui.localization"
+    static let uiSettingsModuleLocalization = "_dd.ci.test_module.ui.localization"
+    static let uiSettingsSuiteLocalization = "_dd.ci.test_suite.ui.localization"
 }
 
 internal enum DDRuntimeTags {
     static let runtimeName = "runtime.name"
     static let runtimeVersion = "runtime.version"
+}
+
+internal enum DDTestModuleTags {
+    static let testModuleId = "test_module_id"
+    static let testSuiteId = "test_suite_id"
 }
 
 internal enum DDGitTags {
@@ -99,6 +112,7 @@ internal enum DDCITags {
     static let ciJobName = "ci.job.name"
     static let ciJobURL = "ci.job.url"
     static let ciWorkspacePath = "ci.workspace_path"
+    static let ciEnvVars = "_dd.ci.env_vars"
 }
 
 internal enum DDBenchmarkTags {
@@ -152,6 +166,9 @@ internal enum DDTagValues {
 
     static let typeBenchmark = "benchmark"
     static let typeTest = "test"
+
+    static let typeSuiteEnd = "test_suite_end"
+    static let typeModuleEnd = "test_module_end"
 
     static let statusPass = "pass"
     static let statusFail = "fail"

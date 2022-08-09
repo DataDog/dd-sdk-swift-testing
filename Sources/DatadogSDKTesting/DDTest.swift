@@ -9,153 +9,6 @@ import Foundation
 @_implementationOnly import OpenTelemetrySdk
 @_implementationOnly import SigmaSwiftStatistics
 
-public class DDTestSession: NSObject {
-    var bundleName = ""
-    var bundleFunctionInfo = FunctionMap()
-    var codeOwners: CodeOwners?
-    var testFramework = "Swift API"
-
-    private let executionLock = NSLock()
-    private var privateCurrentExecutionOrder = 0
-    var currentExecutionOrder: Int {
-        executionLock.lock()
-        defer {
-            privateCurrentExecutionOrder += 1
-            executionLock.unlock()
-        }
-        return privateCurrentExecutionOrder
-    }
-
-    init(bundleName: String, startTime: Date?) {
-        if DDTestMonitor.instance == nil {
-            DDTestMonitor.installTestMonitor()
-        }
-
-        self.bundleName = bundleName
-#if targetEnvironment(simulator) || os(macOS)
-        DDSymbolicator.createDSYMFileIfNeeded(forImageName: bundleName)
-        bundleFunctionInfo = FileLocator.testFunctionsInModule(bundleName)
-#endif
-        if let workspacePath = DDTestMonitor.env.workspacePath {
-            codeOwners = CodeOwners(workspacePath: URL(fileURLWithPath: workspacePath))
-        }
-
-        if !DDTestMonitor.env.disableCrashHandler {
-            DDCrashes.install()
-        }
-
-        DDCoverageHelper.instance = DDCoverageHelper()
-    }
-
-    func internalEnd(endTime: Date? = nil) {
-        /// We need to wait for all the traces to be written to the backend before exiting
-        DDTestMonitor.tracer.flush()
-    }
-}
-
-@objc public enum DDTestStatus: Int {
-    case pass
-    case fail
-    case skip
-}
-
-/// Public interface for DDTestSession
-public extension DDTestSession {
-    /// Starts the session
-    /// - Parameters:
-    ///   - bundleName: name of the module or bundle to test.
-    ///   - startTime: Optional, the time where the session started
-    @objc static func start(bundleName: String, startTime: Date? = nil) -> DDTestSession {
-        let session = DDTestSession(bundleName: bundleName, startTime: startTime)
-        return session
-    }
-
-    @objc static func start(bundleName: String) -> DDTestSession {
-        return start(bundleName: bundleName, startTime: nil)
-    }
-
-    /// Ends the session
-    /// - Parameters:
-    ///   - endTime: Optional, the time where the session ended
-    @objc(endWithTime:) func end(endTime: Date? = nil) {
-        internalEnd(endTime: endTime)
-    }
-
-    @objc func end() {
-        return end(endTime: nil)
-    }
-
-    /// Adds a extra tag or attribute to the test session, any number of tags can be reported
-    /// - Parameters:
-    ///   - key: The name of the tag, if a tag exists with the name it will be
-    ///     replaced with the new value
-    ///   - value: The value of the tag, can be a number or a string.
-    @objc func setTag(key: String, value: Any) {}
-
-    /// Starts a suite in this session
-    /// - Parameters:
-    ///   - name: name of the suite
-    ///   - startTime: Optional, the time where the suite started
-    @objc func suiteStart(name: String, startTime: Date? = nil) -> DDTestSuite {
-        let suite = DDTestSuite(name: name, session: self, startTime: startTime)
-        return suite
-    }
-
-    @objc func suiteStart(name: String) -> DDTestSuite {
-        return suiteStart(name: name, startTime: nil)
-    }
-}
-
-public class DDTestSuite: NSObject {
-    var name: String
-    var session: DDTestSession
-
-    init(name: String, session: DDTestSession, startTime: Date? = nil) {
-        self.name = name
-        self.session = session
-    }
-
-    /// Ends the test suite
-    /// - Parameters:
-    ///   - endTime: Optional, the time where the suite ended
-    @objc(endWithTime:) public func end(endTime: Date? = nil) {}
-    @objc public func end() {}
-
-    /// Adds a extra tag or attribute to the test suite, any number of tags can be reported
-    /// - Parameters:
-    ///   - key: The name of the tag, if a tag exists with the name it will be
-    ///     replaced with the new value
-    ///   - value: The value of the tag, can be a number or a string.
-    @objc public func setTag(key: String, value: Any) {}
-
-    /// Starts a test in this suite
-    /// - Parameters:
-    ///   - name: name of the suite
-    ///   - startTime: Optional, the time where the test started
-    @objc public func testStart(name: String, startTime: Date? = nil) -> DDTest {
-        return DDTest(name: name, suite: self, session: session, startTime: startTime)
-    }
-
-    @objc public func testStart(name: String) -> DDTest {
-        return testStart(name: name, startTime: nil)
-    }
-}
-
-private struct ErrorInfo {
-    var type: String
-    var message: String
-    var callstack: String?
-    var errorCount = 1
-
-    mutating func addExtraError(message newMessage: String) {
-        if errorCount == 1 {
-            message.insert("\n", at: message.startIndex)
-        }
-        message.append("\n" + newMessage)
-        errorCount += 1
-    }
-}
-
 public class DDTest: NSObject {
     static let testNameRegex = try! NSRegularExpression(pattern: "([\\w]+) ([\\w]+)", options: .caseInsensitive)
     static let supportsSkipping = NSClassFromString("XCTSkippedTestContext") != nil
@@ -165,29 +18,31 @@ public class DDTest: NSObject {
     var name: String
     var span: Span
 
-    var session: DDTestSession
+    var module: DDTestModule
     var suite: DDTestSuite
 
     private var errorInfo: ErrorInfo?
 
-    init(name: String, suite: DDTestSuite, session: DDTestSession, startTime: Date? = nil) {
+    init(name: String, suite: DDTestSuite, module: DDTestModule, startTime: Date? = nil) {
+        let testStartTime = startTime ?? DDTestMonitor.clock.now
         self.name = name
         self.suite = suite
-        self.session = session
+        self.module = module
 
-        currentTestExecutionOrder = session.currentExecutionOrder
+        currentTestExecutionOrder = module.currentExecutionOrder
 
         let attributes: [String: String] = [
             DDGenericTags.type: DDTagValues.typeTest,
-            DDGenericTags.resourceName: "\(suite.name).\(name)",
+            DDGenericTags.resource: "\(suite.name).\(name)",
             DDGenericTags.language: "swift",
             DDTestTags.testName: name,
             DDTestTags.testSuite: suite.name,
-            DDTestTags.testFramework: session.testFramework,
-            DDTestTags.testBundle: session.bundleName,
+            DDTestTags.testFramework: module.testFramework,
+            DDTestTags.testBundle: module.bundleName,
             DDTestTags.testType: DDTagValues.typeTest,
             DDTestTags.testExecutionOrder: "\(currentTestExecutionOrder)",
             DDTestTags.testExecutionProcessId: "\(initialProcessId)",
+            DDTestTags.testIsUITest: "false",
             DDOSTags.osPlatform: DDTestMonitor.env.osName,
             DDOSTags.osArchitecture: DDTestMonitor.env.osArchitecture,
             DDOSTags.osVersion: DDTestMonitor.env.osVersion,
@@ -195,20 +50,22 @@ public class DDTest: NSObject {
             DDDeviceTags.deviceModel: DDTestMonitor.env.deviceModel,
             DDRuntimeTags.runtimeName: DDTestMonitor.env.runtimeName,
             DDRuntimeTags.runtimeVersion: DDTestMonitor.env.runtimeVersion,
+            DDTestModuleTags.testModuleId: module.id.hexString,
+            DDTestModuleTags.testSuiteId: suite.id.hexString,
+            DDUISettingsTags.uiSettingsLocalization: PlatformUtils.getLocalization(),
+        	DDUISettingsTags.uiSettingsSuiteLocalization: suite.localization,
+        	DDUISettingsTags.uiSettingsModuleLocalization: module.localization,
         ]
 
-        span = DDTestMonitor.tracer.startSpan(name: "\(session.testFramework).test", attributes: attributes, startTime: startTime)
+        span = DDTestMonitor.tracer.startSpan(name: "\(module.testFramework).test", attributes: attributes, startTime: testStartTime)
 
         super.init()
         DDTestMonitor.instance?.currentTest = self
 
-        // Is not a UITest until a XCUIApplication is launched
-        span.setAttribute(key: DDTestTags.testIsUITest, value: "false")
-
         DDTestMonitor.tracer.addPropagationsHeadersToEnvironment()
 
         let functionName = suite.name + "." + name
-        if let functionInfo = session.bundleFunctionInfo[functionName] {
+        if let functionInfo = module.bundleFunctionInfo[functionName] {
             var filePath = functionInfo.file
             if let workspacePath = DDTestMonitor.env.workspacePath,
                let workspaceRange = filePath.range(of: workspacePath + "/")
@@ -218,7 +75,7 @@ public class DDTest: NSObject {
             span.setAttribute(key: DDTestTags.testSourceFile, value: filePath)
             span.setAttribute(key: DDTestTags.testSourceStartLine, value: functionInfo.startLine)
             span.setAttribute(key: DDTestTags.testSourceEndLine, value: functionInfo.endLine)
-            if let owners = session.codeOwners?.ownersForPath(filePath) {
+            if let owners = module.codeOwners?.ownersForPath(filePath) {
                 span.setAttribute(key: DDTestTags.testCodeowners, value: owners)
             }
         }
@@ -226,7 +83,7 @@ public class DDTest: NSObject {
         DDTestMonitor.env.addTagsToSpan(span: span)
 
         if let testSpan = span as? RecordEventsReadableSpan {
-            let simpleSpan = SimpleSpanData(spanData: testSpan.toSpanData())
+            let simpleSpan = SimpleSpanData(spanData: testSpan.toSpanData(), moduleStartTime: module.startTime, suiteStartTime: suite.startTime)
             DDCrashes.setCustomData(customData: SimpleSpanSerializer.serializeSpan(simpleSpan: simpleSpan))
         }
 
@@ -274,7 +131,7 @@ public class DDTest: NSObject {
     ///   - status: the status reported for this test
     ///   - endTime: Optional, the time where the test ended
     @objc public func end(status: DDTestStatus, endTime: Date? = nil) {
-        let testEndTime = endTime ?? DDTestMonitor.tracer.ntpClock.now
+        let testEndTime = endTime ?? DDTestMonitor.clock.now
         let testStatus: String
         switch status {
             case .pass:
@@ -282,6 +139,8 @@ public class DDTest: NSObject {
                 span.status = .ok
             case .fail:
                 testStatus = DDTagValues.statusFail
+                suite.status = .fail
+                module.status = .fail
                 span.status = .error(description: "Test failed")
                 setErrorInformation()
             case .skip:
@@ -303,7 +162,6 @@ public class DDTest: NSObject {
 
         StderrCapture.syncData()
         span.end(time: testEndTime)
-
         DDTestMonitor.tracer.backgroundWorkQueue.waitUntilAllOperationsAreFinished()
         DDTestMonitor.instance?.currentTest = nil
         DDTestMonitor.instance?.networkInstrumentation?.endAndCleanAliveSpans()
@@ -365,5 +223,20 @@ public class DDTest: NSObject {
         if let percentile90 = Sigma.percentile(samples, percentile: 0.90) {
             span.setAttribute(key: tag + DDBenchmarkTags.statisticsP90, value: percentile90)
         }
+    }
+}
+
+private struct ErrorInfo {
+    var type: String
+    var message: String
+    var callstack: String?
+    var errorCount = 1
+
+    mutating func addExtraError(message newMessage: String) {
+        if errorCount == 1 {
+            message.insert("\n", at: message.startIndex)
+        }
+        message.append("\n" + newMessage)
+        errorCount += 1
     }
 }

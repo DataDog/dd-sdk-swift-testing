@@ -7,7 +7,7 @@
 @_implementationOnly import EventsExporter
 import Foundation
 
-struct IntelligentTestRunner {
+struct GitUploader {
     let packFilesLocation = "com.datadog.civisibility/packfiles/v1/" + UUID().uuidString
     var packFilesdirectory: Directory
 

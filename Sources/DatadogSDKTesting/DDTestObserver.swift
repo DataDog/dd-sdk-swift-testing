@@ -26,8 +26,8 @@ class DDTestObserver: NSObject, XCTestObservation {
     }
 
     func testBundleWillStart(_ testBundle: Bundle) {
-        let itr = try? IntelligentTestRunner()
-        itr?.start()
+        let gitUploader = try? GitUploader()
+        gitUploader?.start()
 
         let bundleName = testBundle.bundleURL.deletingPathExtension().lastPathComponent
         module = DDTestModule.start(bundleName: bundleName)

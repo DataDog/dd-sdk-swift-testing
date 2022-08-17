@@ -26,6 +26,7 @@ public class DDTestModule: NSObject, Encodable {
     var localization: String
     var configError = false
     var configurationTags: [String: String]
+    var itr: IntelligentTestRunner
 
     private let executionLock = NSLock()
     private var privateCurrentExecutionOrder = 0
@@ -82,7 +83,7 @@ public class DDTestModule: NSObject, Encodable {
         let gitUploader = try? GitUploader()
         gitUploader?.start()
 
-        let itr = IntelligentTestRunner(configurations: configurationTags)
+        itr = IntelligentTestRunner(configurations: configurationTags)
         itr.start()
     }
 

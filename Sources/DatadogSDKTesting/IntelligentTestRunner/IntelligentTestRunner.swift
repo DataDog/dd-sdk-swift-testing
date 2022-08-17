@@ -7,11 +7,11 @@
 @_implementationOnly import EventsExporter
 import Foundation
 
-struct IntelligentTestRunner {
+class IntelligentTestRunner {
+    var configurations: [String: String]
+    var skippableTests: [SkipTestPublicFormat] = []
 
-    var configurations: [String:String]
-
-    init( configurations: [String:String]) {
+    init(configurations: [String: String]) {
         self.configurations = configurations
     }
 
@@ -22,14 +22,10 @@ struct IntelligentTestRunner {
     func getSkippableTests(repository: String) {
         guard let commit = DDTestMonitor.env.commit else { return }
 
-        let skippableTests = DDTestMonitor.tracer.eventsExporter?.skippableTests(repositoryURL: getRepositoryURL(), sha: commit, configurations: configurations)
-
-        let a = 0
+        skippableTests = DDTestMonitor.tracer.eventsExporter?.skippableTests(repositoryURL: getRepositoryURL(), sha: commit, configurations: configurations) ?? []
     }
 
-
     func getRepositoryURL() -> String {
-
         let url = Spawn.commandWithResult(#"git -C "\#(DDTestMonitor.env.workspacePath!)" config --get remote.origin.url"#).trimmingCharacters(in: .whitespacesAndNewlines)
         return url
     }

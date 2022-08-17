@@ -58,7 +58,7 @@ struct SkipTestsResponseFormat: Decodable {
 }
 
 public struct SkipTestPublicFormat {
-    var name: String
-    var suite: String
-    var configuration: [String: String]?
+    public var name: String
+    public var suite: String
+    public var configuration: [String: String]?
 }

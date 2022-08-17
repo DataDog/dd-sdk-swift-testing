@@ -32,7 +32,7 @@ public class DDTestSuite: NSObject, Encodable {
         }
         self.localization = PlatformUtils.getLocalization()
 
-        //If we are recovering from a crash, clean the crash information
+        // If we are recovering from a crash, clean the crash information
         if DDTestMonitor.instance?.crashedModuleInfo != nil {
             DDTestMonitor.instance?.crashedModuleInfo = nil
         }
@@ -58,19 +58,12 @@ public class DDTestSuite: NSObject, Encodable {
             DDGenericTags.language: "swift",
             DDTestTags.testSuite: name,
             DDTestTags.testFramework: module.testFramework,
-            DDTestTags.testBundle: module.bundleName,
             DDTestTags.testStatus: moduleStatus,
-            DDOSTags.osPlatform: DDTestMonitor.env.osName,
-            DDOSTags.osArchitecture: DDTestMonitor.env.osArchitecture,
-            DDOSTags.osVersion: DDTestMonitor.env.osVersion,
-            DDDeviceTags.deviceName: DDTestMonitor.env.deviceName,
-            DDDeviceTags.deviceModel: DDTestMonitor.env.deviceModel,
-            DDRuntimeTags.runtimeName: DDTestMonitor.env.runtimeName,
-            DDRuntimeTags.runtimeVersion: DDTestMonitor.env.runtimeVersion,
             DDTestModuleTags.testModuleId: String(module.id.rawValue),
             DDTestModuleTags.testSuiteId: String(id.rawValue)
         ]
 
+        meta.merge(module.configurationTags) { _, new in new }
         meta.merge(defaultAttributes) { _, new in new }
         meta.merge(DDEnvironmentValues.gitAttributes) { _, new in new }
         meta.merge(DDEnvironmentValues.ciAttributes) { _, new in new }

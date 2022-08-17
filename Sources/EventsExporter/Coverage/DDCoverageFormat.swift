@@ -7,7 +7,7 @@
 import Foundation
 
 struct DDCoverageFormat: Encodable {
-    var version: String = "1"
+    var version: Int = 1
     var trace_id: UInt64
     var span_id: UInt64
     var files = [File]()

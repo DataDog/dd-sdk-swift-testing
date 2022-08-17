@@ -12,14 +12,14 @@ public class EventsExporter: SpanExporter {
     var spansExporter: SpansExporter
     var logsExporter: LogsExporter
     var coverageExporter: CoverageExporter
-    var gitTreeExporter: GitTreeExporter
+    var itrService: ITRService
 
     public init(config: ExporterConfiguration) throws {
         self.configuration = config
         spansExporter = try SpansExporter(config: configuration)
         logsExporter = try LogsExporter(config: configuration)
         coverageExporter = try CoverageExporter(config: configuration)
-        gitTreeExporter = try GitTreeExporter(config: configuration)
+        itrService = try ITRService(config: configuration)
     }
 
     public func export(spans: [SpanData]) -> SpanExporterResultCode {
@@ -59,13 +59,17 @@ public class EventsExporter: SpanExporter {
     }
 
     public func searchCommits(repositoryURL: String, commits: [String]) -> [String] {
-        return gitTreeExporter.searchExistingCommits(repositoryURL: repositoryURL, commits: commits)
+        return itrService.searchExistingCommits(repositoryURL: repositoryURL, commits: commits)
     }
 
     public func uploadPackFiles(packFilesDirectory: Directory, commit: String, repository: String) {
-        try? gitTreeExporter.uploadPackFiles(packFilesDirectory: packFilesDirectory,
+        try? itrService.uploadPackFiles(packFilesDirectory: packFilesDirectory,
                                              commit: commit,
                                              repository: repository)
+    }
+
+    public func skippableTests(repositoryURL: String, sha: String, configurations: [String:String]) -> [SkipTestPublicFormat] {
+        return itrService.skippableTests(repositoryURL: repositoryURL, sha: sha, configurations: configurations)
     }
 
     public func shutdown() {
@@ -75,6 +79,11 @@ public class EventsExporter: SpanExporter {
     public func endpointURLs() -> Set<String> {
         return [configuration.endpoint.logsURL.absoluteString,
                 configuration.endpoint.spansURL.absoluteString,
-                configuration.endpoint.coverageURL.absoluteString]
+                configuration.endpoint.coverageURL.absoluteString,
+                configuration.endpoint.searchCommitsURL.absoluteString,
+                configuration.endpoint.skippableTestsURLString,
+                configuration.endpoint.packfileURL.absoluteString,
+                
+        ]
     }
 }

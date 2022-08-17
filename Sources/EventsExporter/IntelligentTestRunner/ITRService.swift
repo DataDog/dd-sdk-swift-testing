@@ -7,12 +7,13 @@
 import Foundation
 import OpenTelemetrySdk
 
-internal class GitTreeExporter {
+internal class ITRService {
     let configuration: ExporterConfiguration
 
     let searchCommitUploader: DataUploader
     let packFileUploader: DataUploader
     var packFileRequestBuilder: MultipartRequestBuilder
+    let skippableTestsUploader: DataUploader
 
     init(config: ExporterConfiguration) throws {
         self.configuration = config
@@ -28,7 +29,7 @@ internal class GitTreeExporter {
                 ),
                 .ddAPIKeyHeader(apiKey: config.apiKey),
                 .ddApplicationKeyHeader(applicationKey: config.applicationKey)
-            ] //+ (configuration.payloadCompression ? [HTTPHeader.contentEncodingHeader(contentEncoding: .deflate)] : [])
+            ] // + (configuration.payloadCompression ? [HTTPHeader.contentEncodingHeader(contentEncoding: .deflate)] : [])
         )
 
         packFileRequestBuilder = MultipartRequestBuilder(
@@ -45,6 +46,22 @@ internal class GitTreeExporter {
             ] + (configuration.payloadCompression ? [HTTPHeader.contentEncodingHeader(contentEncoding: .deflate)] : [])
         )
 
+        let skippableTestsRequestBuilder = SingleRequestBuilder(
+            url: ITRService.skippableTestsURL(originalURL: configuration.endpoint.skippableTestsURLString,
+                                              env: configuration.environment,
+                                              service: configuration.serviceName),
+            queryItems: [],
+            headers: [
+                .userAgentHeader(
+                    appName: configuration.applicationName,
+                    appVersion: configuration.version,
+                    device: Device.current
+                ),
+                .ddAPIKeyHeader(apiKey: config.apiKey),
+                .ddApplicationKeyHeader(applicationKey: config.applicationKey)
+            ] // + (configuration.payloadCompression ? [HTTPHeader.contentEncodingHeader(contentEncoding: .deflate)] : [])
+        )
+
         searchCommitUploader = DataUploader(
             httpClient: HTTPClient(),
             requestBuilder: searchCommitRequestBuilder
@@ -55,6 +72,10 @@ internal class GitTreeExporter {
             requestBuilder: packFileRequestBuilder
         )
 
+        skippableTestsUploader = DataUploader(
+            httpClient: HTTPClient(),
+            requestBuilder: skippableTestsRequestBuilder
+        )
     }
 
     public func searchExistingCommits(repositoryURL: String, commits: [String]) -> [String] {
@@ -74,11 +95,30 @@ internal class GitTreeExporter {
         try packFilesDirectory.files()
             .filter { $0.name.hasSuffix(".pack") }
             .forEach {
-            packFileRequestBuilder.addFieldsCallback = { request, data in
-                request.addDataField(named: "packfile", data: data, mimeType: .applicationOctetStream)
-                request.addDataField(named: "pushedSha", data: #"{"data":{"id":"\#(commit)","type":"commit"}, "meta":{"repository_url":"\#(repository)"}}"#.data(using: .utf8)!, mimeType: .applicationJSON)
+                packFileRequestBuilder.addFieldsCallback = { request, data in
+                    request.addDataField(named: "packfile", data: data, mimeType: .applicationOctetStream)
+                    request.addDataField(named: "pushedSha", data: #"{"data":{"id":"\#(commit)","type":"commit"}, "meta":{"repository_url":"\#(repository)"}}"#.data(using: .utf8)!, mimeType: .applicationJSON)
+                }
+                _ = packFileUploader.upload(data: try $0.read())
             }
-            _ = packFileUploader.upload(data: try $0.read())
+    }
+
+    private static func skippableTestsURL(originalURL: String, env: String, service: String) -> URL {
+        return URL(string: originalURL.replacingOccurrences(of: "@1", with: env.lowercased())
+            .replacingOccurrences(of: "@2", with: service.lowercased()))!
+    }
+
+    public func skippableTests(repositoryURL: String, sha: String, configurations: [String: String]) -> [SkipTestPublicFormat] {
+        let commitPayload = SkipTestsRequestFormat(repositoryURL: repositoryURL, sha: sha, configurations: configurations)
+        guard let jsonData = commitPayload.jsonData,
+              let response = skippableTestsUploader.uploadWithResponse(data: jsonData),
+              let skipTests = try? JSONDecoder().decode(SkipTestsResponseFormat.self, from: response)
+        else {
+            return []
         }
+
+        return skipTests.data.map { SkipTestPublicFormat(name: $0.attributes.name,
+                                                         suite: $0.attributes.suite,
+                                                         configuration: $0.attributes.configuration) }
     }
 }

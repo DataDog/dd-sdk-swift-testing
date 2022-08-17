@@ -26,9 +26,6 @@ class DDTestObserver: NSObject, XCTestObservation {
     }
 
     func testBundleWillStart(_ testBundle: Bundle) {
-        let gitUploader = try? GitUploader()
-        gitUploader?.start()
-
         let bundleName = testBundle.bundleURL.deletingPathExtension().lastPathComponent
         module = DDTestModule.start(bundleName: bundleName)
         module?.testFramework = "XCTest"

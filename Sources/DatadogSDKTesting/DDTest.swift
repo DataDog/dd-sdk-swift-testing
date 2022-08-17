@@ -38,24 +38,15 @@ public class DDTest: NSObject {
             DDTestTags.testName: name,
             DDTestTags.testSuite: suite.name,
             DDTestTags.testFramework: module.testFramework,
-            DDTestTags.testBundle: module.bundleName,
             DDTestTags.testType: DDTagValues.typeTest,
             DDTestTags.testExecutionOrder: "\(currentTestExecutionOrder)",
             DDTestTags.testExecutionProcessId: "\(initialProcessId)",
             DDTestTags.testIsUITest: "false",
-            DDOSTags.osPlatform: DDTestMonitor.env.osName,
-            DDOSTags.osArchitecture: DDTestMonitor.env.osArchitecture,
-            DDOSTags.osVersion: DDTestMonitor.env.osVersion,
-            DDDeviceTags.deviceName: DDTestMonitor.env.deviceName,
-            DDDeviceTags.deviceModel: DDTestMonitor.env.deviceModel,
-            DDRuntimeTags.runtimeName: DDTestMonitor.env.runtimeName,
-            DDRuntimeTags.runtimeVersion: DDTestMonitor.env.runtimeVersion,
             DDTestModuleTags.testModuleId: module.id.hexString,
             DDTestModuleTags.testSuiteId: suite.id.hexString,
-            DDUISettingsTags.uiSettingsLocalization: PlatformUtils.getLocalization(),
-        	DDUISettingsTags.uiSettingsSuiteLocalization: suite.localization,
-        	DDUISettingsTags.uiSettingsModuleLocalization: module.localization,
-        ]
+            DDUISettingsTags.uiSettingsSuiteLocalization: suite.localization,
+            DDUISettingsTags.uiSettingsModuleLocalization: module.localization,
+        ].merging(module.configurationTags) { old, _ in old }
 
         span = DDTestMonitor.tracer.startSpan(name: "\(module.testFramework).test", attributes: attributes, startTime: testStartTime)
 

@@ -35,7 +35,6 @@ public enum Endpoint {
             case .us3: return URL(string: "https://logs.browser-intake-us3-datadoghq.com/" + endpoint)!
             case .us5: return URL(string: "https://logs.browser-intake-us5-datadoghq.com/" + endpoint)!
             case .eu1: return URL(string: "https://mobile-http-intake.logs.datadoghq.eu/" + endpoint)!
-            // case .us1_fed: return URL(string: "https://logs.browser-intake-ddog-gov.com/" + endpoint)!
             case .staging: return URL(string: "https://logs.browser-intake-datad0g.com/" + endpoint)!
             case let .custom(_, logsURL: logsUrl): return logsUrl
         }
@@ -48,7 +47,6 @@ public enum Endpoint {
             case .us3: return URL(string: "https://citestcycle-intake.us3.datadoghq.com/" + endpoint)!
             case .us5: return URL(string: "https://citestcycle-intake.us5.datadoghq.com/" + endpoint)!
             case .eu1: return URL(string: "https://citestcycle-intake.datadoghq.eu/" + endpoint)!
-            // case .us1_fed: return URL(string: "https://trace.browser-intake-ddog-gov.com/" + endpoint)!
             case .staging: return URL(string: "https://citestcycle-intake.datad0g.com/" + endpoint)!
             case let .custom(testsURL: testsURL, _): return testsURL
         }
@@ -61,12 +59,10 @@ public enum Endpoint {
             case .us3: return URL(string: "https://event-platform-intake.us3.datadoghq.com/" + endpoint)!
             case .us5: return URL(string: "https://event-platform-intake.us5.datadoghq.com/" + endpoint)!
             case .eu1: return URL(string: "https://event-platform-intake.datadoghq.eu/" + endpoint)!
-            // case .us1_fed: return URL(string: "https://trace.browser-intake-ddog-gov.com/" + endpoint)!
             case .staging: return URL(string: "https://event-platform-intake.datad0g.com/" + endpoint)!
             case let .custom(testsURL: testsURL, _): return testsURL
         }
     }
-
 
     internal var searchCommitsURL: URL {
         let endpoint = "api/v2/git/repository/search_commits"
@@ -75,25 +71,34 @@ public enum Endpoint {
             case .us3: return URL(string: "https://api.us3.datadoghq.com/" + endpoint)!
             case .us5: return URL(string: "https://api.us5.datadoghq.com/" + endpoint)!
             case .eu1: return URL(string: "https://api.datadoghq.eu/" + endpoint)!
-                // case .us1_fed: return URL(string: "https://trace.browser-intake-ddog-gov.com/" + endpoint)!
             case .staging: return URL(string: "https://api.datad0g.com/" + endpoint)!
-            //case .staging: return URL(string: "https://git-api-ci-app-backend.us1.staging.dog/repository/search_commits")!
-
             case let .custom(testsURL: testsURL, _): return testsURL
         }
     }
 
-    
-    internal var packfileURL: URL {
-        let endpoint = "repository/packfile"
+    internal var skippableTestsURLString: String {
+        let endpoint = "api/v2/ci/environment/@1/service/@2/tests/skippable"
         switch self {
-            case .us1: return URL(string: "https://git-api-ci-app-backend.datadoghq.com/" + endpoint)!
-            case .us3: return URL(string: "https://git-api-ci-app-backend.us3.datadoghq.com/" + endpoint)!
-            case .us5: return URL(string: "https://git-api-ci-app-backend.us5.datadoghq.com/" + endpoint)!
-            case .eu1: return URL(string: "https://git-api-ci-app-backend.datadoghq.eu/" + endpoint)!
-                // case .us1_fed: return URL(string: "https://trace.browser-intake-ddog-gov.com/" + endpoint)!
-            case .staging: return URL(string: "https://git-api-ci-app-backend.us1.staging.dog/" + endpoint)!
+            case .us1: return "https://api.datadoghq.com/" + endpoint
+            case .us3: return "https://api.us3.datadoghq.com/" + endpoint
+            case .us5: return "https://api.us5.datadoghq.com/" + endpoint
+            case .eu1: return "https://api.datadoghq.eu/" + endpoint
+            case .staging: return "https://api.datad0g.com/" + endpoint
+            case let .custom(testsURL: testsURL, _): return testsURL.path
+        }
+    }
+
+
+    internal var packfileURL: URL {
+        let endpoint = "api/v2/git/repository/packfile"
+        switch self {
+            case .us1: return URL(string: "https://api.datadoghq.com/" + endpoint)!
+            case .us3: return URL(string: "https://api.us3.datadoghq.com/" + endpoint)!
+            case .us5: return URL(string: "https://api.us5.datadoghq.com/" + endpoint)!
+            case .eu1: return URL(string: "https://api.datadoghq.eu/" + endpoint)!
+            case .staging: return URL(string: "https://api.datad0g.com/" + endpoint)!
             case let .custom(testsURL: testsURL, _): return testsURL
         }
     }
+
 }

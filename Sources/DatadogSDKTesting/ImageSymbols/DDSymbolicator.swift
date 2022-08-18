@@ -153,7 +153,7 @@ enum DDSymbolicator {
         let dSYMFileURL = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent(binaryURL.lastPathComponent)
 
-        Spawn.command("/usr/bin/dsymutil --minimize --flat \"\(binaryPath)\" --out \"\(dSYMFileURL.path)\"")
+        Spawn.command("/usr/bin/dsymutil --flat \"\(binaryPath)\" --out \"\(dSYMFileURL.path)\"")
         if FileManager.default.fileExists(atPath: dSYMFileURL.path) {
             dSYMFiles.append(dSYMFileURL)
             return dSYMFileURL.path

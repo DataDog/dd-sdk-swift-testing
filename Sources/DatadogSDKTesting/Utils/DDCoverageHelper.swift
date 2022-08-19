@@ -14,6 +14,8 @@ class DDCoverageHelper {
     var llvmProfileURL: URL
     var storageProfileURL: URL
     var initialCoverageSaved: Bool
+    let coverageWorkQueue: OperationQueue
+
 
     init?() {
         guard !DDEnvironmentValues().disableCodeCoverage,
@@ -29,6 +31,9 @@ class DDCoverageHelper {
             .appendingPathComponent("DDTestingCoverage")
         Log.print("DDTestingCoverage: \(storageProfileURL.path)")
         initialCoverageSaved = false
+        coverageWorkQueue = OperationQueue()
+        coverageWorkQueue.qualityOfService = .background
+        coverageWorkQueue.maxConcurrentOperationCount = (ProcessInfo.processInfo.activeProcessorCount / 2)
     }
 
     func clearCounters() {

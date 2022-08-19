@@ -141,13 +141,13 @@ public class DDTest: NSObject {
 
         span.setAttribute(key: DDTestTags.testStatus, value: testStatus)
 
-        DDCoverageHelper.instance?.writeProfile()
-        let traceId = span.context.traceId.rawLowerLong
-        let spanId = span.context.spanId.rawValue
-        if let coverageFileURL = DDCoverageHelper.instance?.getURLForTest(name: name, traceId: traceId, spanId: spanId) {
-            DDTestMonitor.tracer.backgroundWorkQueue.addOperation {
-                let binaryImagePaths = BinaryImages.profileImages.map { $0.path }
-                DDTestMonitor.tracer.eventsExporter?.export(coverage: coverageFileURL, traceId: traceId, spanId: spanId, workspacePath: DDTestMonitor.env.workspacePath, binaryImagePaths: binaryImagePaths)
+        if let coverageHelper = DDCoverageHelper.instance {
+            coverageHelper.writeProfile()
+            let traceId = span.context.traceId.rawLowerLong
+            let spanId = span.context.spanId.rawValue
+            let coverageFileURL = coverageHelper.getURLForTest(name: name, traceId: traceId, spanId: spanId)
+            coverageHelper.coverageWorkQueue.addOperation {
+                DDTestMonitor.tracer.eventsExporter?.export(coverage: coverageFileURL, traceId: traceId, spanId: spanId, workspacePath: DDTestMonitor.env.workspacePath, binaryImagePaths: BinaryImages.binaryImagesPath)
             }
         }
 

@@ -29,6 +29,7 @@ struct BinaryImages {
 
     private var imageAddresses: [String: MachOImage]
     private var profileImages: [ProfileInfoImage]
+    private var binaryImagesPath: [String]
 
     private init() {
         /// User library addresses are randomized each time an app is run, create a map to locate library addresses by name,
@@ -72,6 +73,7 @@ struct BinaryImages {
                 profileImages.append(profileImage)
             }
         }
+        binaryImagesPath = profileImages.map { $0.path }
     }
 
     /// Structure to store all loaded libraries and images in the process
@@ -81,5 +83,9 @@ struct BinaryImages {
 
     static var profileImages: [ProfileInfoImage] = {
         BinaryImages.instance.profileImages
+    }()
+
+    static var binaryImagesPath: [String] = {
+        BinaryImages.instance.binaryImagesPath
     }()
 }

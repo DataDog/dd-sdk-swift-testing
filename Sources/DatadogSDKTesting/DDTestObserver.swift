@@ -49,11 +49,15 @@ class DDTestObserver: NSObject, XCTestObservation {
             return
         }
 
-        let skippableTests = module.itr.skippableTests.filter { $0.suite == testSuite.name }.map{"-[\(testSuite.name) \($0.name)]"}
-        let finalTests = tests.filter { !skippableTests.contains(($0 as AnyObject).name) }
-        Log.print("ITR skipped \(tests.count-finalTests.count) tests")
-        testSuite.setValue(finalTests, forKey: "_mutableTests")
-        if !finalTests.isEmpty {
+        if let itr = module.itr {
+            let skippableTests = itr.skippableTests.filter { $0.suite == testSuite.name }.map { "-[\(testSuite.name) \($0.name)]" }
+            let finalTests = tests.filter { !skippableTests.contains(($0 as AnyObject).name) }
+            Log.print("ITR skipped \(tests.count - finalTests.count) tests")
+            testSuite.setValue(finalTests, forKey: "_mutableTests")
+            if !finalTests.isEmpty {
+                suite = module.suiteStart(name: testSuite.name)
+            }
+        } else {
             suite = module.suiteStart(name: testSuite.name)
         }
     }

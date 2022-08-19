@@ -26,7 +26,7 @@ public class DDTestModule: NSObject, Encodable {
     var localization: String
     var configError = false
     var configurationTags: [String: String]
-    var itr: IntelligentTestRunner
+    var itr: IntelligentTestRunner?
 
     private let executionLock = NSLock()
     private var privateCurrentExecutionOrder = 0
@@ -84,7 +84,7 @@ public class DDTestModule: NSObject, Encodable {
         gitUploader?.start()
 
         itr = IntelligentTestRunner(configurations: configurationTags)
-        itr.start()
+        itr?.start()
     }
 
     func internalEnd(endTime: Date? = nil) {
@@ -118,6 +118,7 @@ public class DDTestModule: NSObject, Encodable {
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: DDTestModuleEnvelope(self))
         /// We need to wait for all the traces to be written to the backend before exiting
         DDTestMonitor.tracer.flush()
+        DDCoverageHelper.instance?.coverageWorkQueue.waitUntilAllOperationsAreFinished()
     }
 }
 

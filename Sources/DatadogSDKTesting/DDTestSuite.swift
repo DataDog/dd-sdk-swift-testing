@@ -63,7 +63,7 @@ public class DDTestSuite: NSObject, Encodable {
             DDTestModuleTags.testSuiteId: String(id.rawValue)
         ]
 
-        meta.merge(module.configurationTags) { _, new in new }
+        meta.merge(DDTestMonitor.baseConfigurationTags) { _, new in new }
         meta.merge(defaultAttributes) { _, new in new }
         meta.merge(DDEnvironmentValues.gitAttributes) { _, new in new }
         meta.merge(DDEnvironmentValues.ciAttributes) { _, new in new }

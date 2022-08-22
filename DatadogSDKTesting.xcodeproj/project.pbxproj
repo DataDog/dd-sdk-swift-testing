@@ -1070,7 +1070,6 @@
 		E116D7D925248C280022779D /* Utils */ = {
 			isa = PBXGroup;
 			children = (
-				E1C8DEF4268363EC005B5411 /* DDCoverageHelper.swift */,
 				E1AD07A8252F5CB8003705C1 /* InternalError.swift */,
 				E1D476A525DD369F00832592 /* BinaryParser.swift */,
 				E14405A225D6A80800FE3D3C /* GitInfo.swift */,
@@ -1591,8 +1590,9 @@
 		E146BC382869AE740057C37B /* IntelligentTestRunner */ = {
 			isa = PBXGroup;
 			children = (
-				E137366128A3BE3600420E26 /* IntelligentTestRunner.swift */,
+				E1C8DEF4268363EC005B5411 /* DDCoverageHelper.swift */,
 				E146BC392869AEA80057C37B /* GitUploader.swift */,
+				E137366128A3BE3600420E26 /* IntelligentTestRunner.swift */,
 			);
 			path = IntelligentTestRunner;
 			sourceTree = "<group>";

@@ -25,8 +25,6 @@ public class DDTestModule: NSObject, Encodable {
     var status: DDTestStatus
     var localization: String
     var configError = false
-    var configurationTags: [String: String]
-    var itr: IntelligentTestRunner?
 
     private let executionLock = NSLock()
     private var privateCurrentExecutionOrder = 0
@@ -47,6 +45,8 @@ public class DDTestModule: NSObject, Encodable {
             let success = DDTestMonitor.installTestMonitor()
             if !success {
                 configError = true
+            } else {
+                DDTestMonitor.baseConfigurationTags[DDTestTags.testBundle] = bundleName
             }
         }
 
@@ -65,26 +65,6 @@ public class DDTestModule: NSObject, Encodable {
         self.id = DDTestMonitor.instance?.crashedModuleInfo?.crashedModuleId ?? SpanId.random()
         self.startTime = DDTestMonitor.instance?.crashedModuleInfo?.moduleStartTime ?? moduleStartTime
         self.localization = PlatformUtils.getLocalization()
-
-        configurationTags = [
-            DDOSTags.osPlatform: DDTestMonitor.env.osName,
-            DDOSTags.osArchitecture: DDTestMonitor.env.osArchitecture,
-            DDOSTags.osVersion: DDTestMonitor.env.osVersion,
-            DDDeviceTags.deviceName: DDTestMonitor.env.deviceName,
-            DDDeviceTags.deviceModel: DDTestMonitor.env.deviceModel,
-            DDRuntimeTags.runtimeName: DDTestMonitor.env.runtimeName,
-            DDRuntimeTags.runtimeVersion: DDTestMonitor.env.runtimeVersion,
-            DDTestTags.testBundle: bundleName,
-            DDUISettingsTags.uiSettingsLocalization: PlatformUtils.getLocalization(),
-        ]
-
-        DDCoverageHelper.instance = DDCoverageHelper()
-
-        let gitUploader = try? GitUploader()
-        gitUploader?.start()
-
-        itr = IntelligentTestRunner(configurations: configurationTags)
-        itr?.start()
     }
 
     func internalEnd(endTime: Date? = nil) {
@@ -110,7 +90,7 @@ public class DDTestModule: NSObject, Encodable {
             DDTestModuleTags.testModuleId: String(id.rawValue)
         ]
 
-        meta.merge(configurationTags) { _, new in new }
+        meta.merge(DDTestMonitor.baseConfigurationTags) { _, new in new }
         meta.merge(defaultAttributes) { _, new in new }
         meta.merge(DDEnvironmentValues.gitAttributes) { _, new in new }
         meta.merge(DDEnvironmentValues.ciAttributes) { _, new in new }
@@ -118,7 +98,7 @@ public class DDTestModule: NSObject, Encodable {
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: DDTestModuleEnvelope(self))
         /// We need to wait for all the traces to be written to the backend before exiting
         DDTestMonitor.tracer.flush()
-        DDCoverageHelper.instance?.coverageWorkQueue.waitUntilAllOperationsAreFinished()
+        DDTestMonitor.instance?.coverageHelper?.coverageWorkQueue.waitUntilAllOperationsAreFinished()
     }
 }
 

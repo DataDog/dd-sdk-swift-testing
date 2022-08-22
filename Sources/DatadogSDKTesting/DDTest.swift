@@ -46,7 +46,7 @@ public class DDTest: NSObject {
             DDTestModuleTags.testSuiteId: suite.id.hexString,
             DDUISettingsTags.uiSettingsSuiteLocalization: suite.localization,
             DDUISettingsTags.uiSettingsModuleLocalization: module.localization,
-        ].merging(module.configurationTags) { old, _ in old }
+        ].merging(DDTestMonitor.baseConfigurationTags) { old, _ in old }
 
         span = DDTestMonitor.tracer.startSpan(name: "\(module.testFramework).test", attributes: attributes, startTime: testStartTime)
 
@@ -78,10 +78,12 @@ public class DDTest: NSObject {
             DDCrashes.setCustomData(customData: SimpleSpanSerializer.serializeSpan(simpleSpan: simpleSpan))
         }
 
-        DDCoverageHelper.instance?.setTest(name: name,
-                                           traceId: span.context.traceId.rawLowerLong,
-                                           spanId: span.context.spanId.rawValue)
-        DDCoverageHelper.instance?.clearCounters()
+        if let coverageHelper = DDTestMonitor.instance?.coverageHelper {
+            coverageHelper.setTest(name: name,
+                                   traceId: span.context.traceId.rawLowerLong,
+                                   spanId: span.context.spanId.rawValue)
+            coverageHelper.clearCounters()
+        }
     }
 
     /// Adds a extra tag or attribute to the test, any number of tags can be reported
@@ -141,7 +143,7 @@ public class DDTest: NSObject {
 
         span.setAttribute(key: DDTestTags.testStatus, value: testStatus)
 
-        if let coverageHelper = DDCoverageHelper.instance {
+        if let coverageHelper = DDTestMonitor.instance?.coverageHelper {
             coverageHelper.writeProfile()
             let traceId = span.context.traceId.rawLowerLong
             let spanId = span.context.spanId.rawValue

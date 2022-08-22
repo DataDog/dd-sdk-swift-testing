@@ -49,7 +49,7 @@ class DDTestObserver: NSObject, XCTestObservation {
             return
         }
 
-        if let itr = module.itr {
+        if let itr = DDTestMonitor.instance?.itr {
             let skippableTests = itr.skippableTests.filter { $0.suite == testSuite.name }.map { "-[\(testSuite.name) \($0.name)]" }
             let finalTests = tests.filter { !skippableTests.contains(($0 as AnyObject).name) }
             Log.print("ITR skipped \(tests.count - finalTests.count) tests")

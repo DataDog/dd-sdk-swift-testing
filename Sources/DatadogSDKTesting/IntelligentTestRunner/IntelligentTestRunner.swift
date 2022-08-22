@@ -25,7 +25,7 @@ class IntelligentTestRunner {
         skippableTests = DDTestMonitor.tracer.eventsExporter?.skippableTests(repositoryURL: getRepositoryURL(), sha: commit, configurations: configurations) ?? []
     }
 
-    func getRepositoryURL() -> String {
+    private func getRepositoryURL() -> String {
         let url = Spawn.commandWithResult(#"git -C "\#(DDTestMonitor.env.workspacePath!)" config --get remote.origin.url"#).trimmingCharacters(in: .whitespacesAndNewlines)
         return url
     }

@@ -43,6 +43,21 @@ internal class DDTestMonitor {
 
     var crashedModuleInfo: CrashedModuleInformation?
 
+    static var baseConfigurationTags = [
+        DDOSTags.osPlatform: env.osName,
+        DDOSTags.osArchitecture: env.osArchitecture,
+        DDOSTags.osVersion: env.osVersion,
+        DDDeviceTags.deviceName: env.deviceName,
+        DDDeviceTags.deviceModel: env.deviceModel,
+        DDRuntimeTags.runtimeName: env.runtimeName,
+        DDRuntimeTags.runtimeVersion: env.runtimeVersion,
+        DDUISettingsTags.uiSettingsLocalization: PlatformUtils.getLocalization(),
+    ]
+
+    let coverageHelper: DDCoverageHelper?
+    let gitUploader: GitUploader?
+    let itr: IntelligentTestRunner?
+
     var rLock = NSRecursiveLock()
     private var privateCurrentTest: DDTest?
     var currentTest: DDTest? {
@@ -121,6 +136,26 @@ internal class DDTestMonitor {
                     }
                 }
             #endif
+        }
+
+        if DDTestMonitor.env.gitUploadEnabled {
+            gitUploader = try? GitUploader()
+            gitUploader?.sendGitInfo()
+        } else {
+            gitUploader = nil
+        }
+
+        if DDTestMonitor.env.coverageEnabled {
+            coverageHelper = DDCoverageHelper()
+        } else {
+            coverageHelper = nil
+        }
+
+        if DDTestMonitor.env.itrEnabled {
+            itr = IntelligentTestRunner(configurations: DDTestMonitor.baseConfigurationTags)
+            itr?.start()
+        } else {
+            itr = nil
         }
     }
 

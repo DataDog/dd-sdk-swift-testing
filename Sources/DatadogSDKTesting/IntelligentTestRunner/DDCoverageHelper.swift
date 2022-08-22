@@ -9,19 +9,17 @@ import Foundation
 typealias cFunc = @convention(c) () -> Void
 
 class DDCoverageHelper {
-    static var instance: DDCoverageHelper?
-
     var llvmProfileURL: URL
     var storageProfileURL: URL
     var initialCoverageSaved: Bool
     let coverageWorkQueue: OperationQueue
 
-
     init?() {
-        guard !DDEnvironmentValues().disableCodeCoverage,
+        guard DDEnvironmentValues().coverageEnabled,
               let profilePath = DDEnvironmentValues.getEnvVariable("LLVM_PROFILE_FILE"),
               BinaryImages.profileImages.count > 0
         else {
+            Log.debug("DDCoverageHelper could not be instanced")
             return nil
         }
 
@@ -29,7 +27,7 @@ class DDCoverageHelper {
         storageProfileURL = llvmProfileURL.deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("DDTestingCoverage")
-        Log.print("DDTestingCoverage: \(storageProfileURL.path)")
+        Log.debug("DDCoverageHelper location: \(storageProfileURL.path)")
         initialCoverageSaved = false
         coverageWorkQueue = OperationQueue()
         coverageWorkQueue.qualityOfService = .background

@@ -15,14 +15,19 @@ struct GitUploader {
 
     init() throws {
         guard let envWorkspacePath = DDTestMonitor.env.workspacePath else {
+            Log.debug("IntelligentTestRunner failed building")
             throw InternalError(description: "IntelligentTestRunner failed building")
         }
         packFilesdirectory = try Directory(withSubdirectoryPath: packFilesLocation)
         workspacePath = envWorkspacePath
     }
 
-    func start() {
+    func sendGitInfo() {
         let repo = getRepositoryURL()
+        guard !repo.isEmpty else {
+            Log.print("sendGitInfo failed, repository not found")
+            return
+        }
 
         let existingCommits = searchRepositoryCommits(repository: repo)
 
@@ -34,25 +39,25 @@ struct GitUploader {
         uploadExistingPackfiles(repository: repo)
     }
 
-    func getRepositoryURL() -> String {
+    private func getRepositoryURL() -> String {
         let url = Spawn.commandWithResult(#"git -C "\#(workspacePath)" config --get remote.origin.url"#).trimmingCharacters(in: .whitespacesAndNewlines)
         return url
     }
 
-    func getLatestCommits() -> [String] {
+    private func getLatestCommits() -> [String] {
         let latestCommits = Spawn.commandWithResult(#"git -C "\#(workspacePath)" rev-list --objects --no-object-names --filter=blob:none HEAD --since="1 month ago""#).trimmingCharacters(in: .whitespacesAndNewlines)
 
         let commitsArray = latestCommits.components(separatedBy: .newlines)
         return commitsArray
     }
 
-    func searchRepositoryCommits(repository: String) -> [String] {
+    private func searchRepositoryCommits(repository: String) -> [String] {
         let commits = getLatestCommits()
 
         return DDTestMonitor.tracer.eventsExporter?.searchCommits(repositoryURL: repository, commits: commits) ?? []
     }
 
-    func getCommitsAndTreesExcluding(excluded: [String]) -> [String] {
+    private func getCommitsAndTreesExcluding(excluded: [String]) -> [String] {
         let exclusionList = excluded.map { "^\($0)" }.joined(separator: " ")
         let missingCommits = Spawn.commandWithResult(#"git -C "\#(workspacePath)" rev-list --objects --no-object-names --filter=blob:none HEAD --since="1 month ago" \#(exclusionList)"#).trimmingCharacters(in: .whitespacesAndNewlines)
         guard !missingCommits.isEmpty else { return [] }
@@ -60,12 +65,12 @@ struct GitUploader {
         return missingCommitsArray
     }
 
-    func generatePackFilesFromCommits(commits: [String]) {
+    private func generatePackFilesFromCommits(commits: [String]) {
         let commitList = commits.joined(separator: "\n")
         Spawn.command(#"git -C "\#(workspacePath)" pack-objects --compression=9 --max-pack-size=3m "\#(packFilesdirectory.getURL().path + "/" + UUID().uuidString)" <<< "\#(commitList)""#)
     }
 
-    func uploadExistingPackfiles(repository: String) {
+    private func uploadExistingPackfiles(repository: String) {
         guard let commit = DDTestMonitor.env.commit else { return }
         DDTestMonitor.tracer.eventsExporter?.uploadPackFiles(packFilesDirectory: packFilesdirectory, commit: commit, repository: repository)
     }

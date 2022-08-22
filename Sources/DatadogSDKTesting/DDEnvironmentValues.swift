@@ -7,6 +7,7 @@
 import Foundation
 @_implementationOnly import OpenTelemetryApi
 
+// These configuration values must be passed to the child app in an UI test
 internal enum ConfigurationValues: String, CaseIterable {
     case DD_TEST_RUNNER
     case DD_API_KEY
@@ -39,6 +40,13 @@ internal enum ConfigurationValues: String, CaseIterable {
     case DD_TRACE_DEBUG
 }
 
+// These configuration values must not be passed to the child app in an UI test
+internal enum ExtraConfigurationValues: String {
+    case DD_CIVISIBILITY_GIT_UPLOAD_ENABLED
+    case DD_CIVISIBILITY_COVERAGE_ENABLED
+    case DD_CIVISIBILITY_ITR_ENABLED
+}
+
 internal struct DDEnvironmentValues {
     /// Datatog Configuration values
     let ddApiKey: String?
@@ -61,7 +69,6 @@ internal struct DDEnvironmentValues {
     let disableRUMIntegration: Bool
     let disableCrashHandler: Bool
     let disableTestInstrumenting: Bool
-    let disableCodeCoverage: Bool
 
     /// OS Information
     let osName: String
@@ -122,6 +129,12 @@ internal struct DDEnvironmentValues {
 
     /// The framework has been launched with extra debug information
     let extraDebug: Bool
+
+    /// Intelligent test runner related environment
+    let gitUploadEnabled: Bool
+    let coverageEnabled: Bool
+    let itrEnabled: Bool
+
 
     static var environment = ProcessInfo.processInfo.environment
     static var infoDictionary: [String: Any] = {
@@ -225,11 +238,18 @@ internal struct DDEnvironmentValues {
         let envDisableCrashReporting = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_DISABLE_CRASH_HANDLER.rawValue) as NSString?
         disableCrashHandler = envDisableCrashReporting?.boolValue ?? false
 
-        let envDisableCodeCoverage = DDEnvironmentValues.getEnvVariable("DD_DISABLE_CODE_COVERAGE") as NSString?
-        disableCodeCoverage = envDisableCodeCoverage?.boolValue ?? false
-
         let envDisableTestInstrumenting = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_DISABLE_TEST_INSTRUMENTING.rawValue) as NSString?
         disableTestInstrumenting = envDisableTestInstrumenting?.boolValue ?? false
+
+        /// Intelligent test runner related configuration
+        let envGitUploadEnabled = DDEnvironmentValues.getEnvVariable(ExtraConfigurationValues.DD_CIVISIBILITY_GIT_UPLOAD_ENABLED.rawValue) as NSString?
+        gitUploadEnabled = envGitUploadEnabled?.boolValue ?? false
+
+        let envItrEnabled = DDEnvironmentValues.getEnvVariable(ExtraConfigurationValues.DD_CIVISIBILITY_ITR_ENABLED.rawValue) as NSString?
+        itrEnabled = envItrEnabled?.boolValue ?? false
+
+        let envCoverageEnabled = DDEnvironmentValues.getEnvVariable(ExtraConfigurationValues.DD_CIVISIBILITY_COVERAGE_ENABLED.rawValue) as NSString?
+        coverageEnabled = envCoverageEnabled?.boolValue ?? itrEnabled
 
         /// Device Information
         osName = PlatformUtils.getRunningPlatform()

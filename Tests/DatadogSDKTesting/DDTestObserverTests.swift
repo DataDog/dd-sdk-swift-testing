@@ -57,7 +57,6 @@ internal class DDTestObserverTests: XCTestCase {
         XCTAssertEqual(spanData.attributes[DDTestTags.testName]?.description, testName)
         XCTAssertEqual(spanData.attributes[DDTestTags.testSuite]?.description, testSuite)
         XCTAssertEqual(spanData.attributes[DDTestTags.testFramework]?.description, "XCTest")
-        XCTAssertEqual(spanData.attributes[DDTestTags.testBundle]?.description, testBundle)
         XCTAssertEqual(spanData.attributes[DDTestTags.testType]?.description, DDTagValues.typeTest)
         XCTAssertEqual(spanData.attributes[DDOSTags.osArchitecture]?.description, PlatformUtils.getPlatformArchitecture())
         XCTAssertEqual(spanData.attributes[DDOSTags.osPlatform]?.description, PlatformUtils.getRunningPlatform())

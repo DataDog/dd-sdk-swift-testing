@@ -41,15 +41,31 @@ class DDTestObserver: NSObject, XCTestObservation {
             testSuite.testRun?.stop()
             exit(1)
         }
-        if let tests = testSuite.value(forKey: "_mutableTests") as? NSArray,
-           tests.firstObject is XCTestCase {
-            suite = module?.suiteStart(name: testSuite.name)
+
+        guard let tests = testSuite.value(forKey: "_mutableTests") as? NSArray,
+              tests.firstObject is XCTestCase,
+              let module = module
+        else {
+            return
+        }
+
+        if let itr = DDTestMonitor.instance?.itr {
+            let skippableTests = itr.skippableTests.filter { $0.suite == testSuite.name }.map { "-[\(testSuite.name) \($0.name)]" }
+            let finalTests = tests.filter { !skippableTests.contains(($0 as AnyObject).name) }
+            Log.print("ITR skipped \(tests.count - finalTests.count) tests")
+            testSuite.setValue(finalTests, forKey: "_mutableTests")
+            if !finalTests.isEmpty {
+                suite = module.suiteStart(name: testSuite.name)
+            }
+        } else {
+            suite = module.suiteStart(name: testSuite.name)
         }
     }
 
     func testSuiteDidFinish(_ testSuite: XCTestSuite) {
         if let tests = testSuite.value(forKey: "_mutableTests") as? NSArray,
-           tests.firstObject is XCTestCase {
+           tests.firstObject is XCTestCase
+        {
             suite?.end()
         }
     }

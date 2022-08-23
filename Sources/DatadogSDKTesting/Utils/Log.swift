@@ -8,15 +8,15 @@
 import Foundation
 
 struct Log {
-    static var debugTracer = DDTestMonitor.env.extraDebug
+    private static var debugTracer = DDTestMonitor.env.extraDebug
 
     static func debug(_ string: String) {
         if debugTracer {
-            Swift.print("[Debug][DatadogSDKTesting] " + string)
+            Swift.print("[Debug][DatadogSDKTesting] " + string + "\n")
         }
     }
 
     static func print(_ string: String) {
-        Swift.print("[DatadogSDKTesting] " + string)
+        Swift.print("[DatadogSDKTesting] " + string + "\n")
     }
 }

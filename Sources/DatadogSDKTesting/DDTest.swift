@@ -38,24 +38,15 @@ public class DDTest: NSObject {
             DDTestTags.testName: name,
             DDTestTags.testSuite: suite.name,
             DDTestTags.testFramework: module.testFramework,
-            DDTestTags.testBundle: module.bundleName,
             DDTestTags.testType: DDTagValues.typeTest,
             DDTestTags.testExecutionOrder: "\(currentTestExecutionOrder)",
             DDTestTags.testExecutionProcessId: "\(initialProcessId)",
             DDTestTags.testIsUITest: "false",
-            DDOSTags.osPlatform: DDTestMonitor.env.osName,
-            DDOSTags.osArchitecture: DDTestMonitor.env.osArchitecture,
-            DDOSTags.osVersion: DDTestMonitor.env.osVersion,
-            DDDeviceTags.deviceName: DDTestMonitor.env.deviceName,
-            DDDeviceTags.deviceModel: DDTestMonitor.env.deviceModel,
-            DDRuntimeTags.runtimeName: DDTestMonitor.env.runtimeName,
-            DDRuntimeTags.runtimeVersion: DDTestMonitor.env.runtimeVersion,
             DDTestModuleTags.testModuleId: module.id.hexString,
             DDTestModuleTags.testSuiteId: suite.id.hexString,
-            DDUISettingsTags.uiSettingsLocalization: PlatformUtils.getLocalization(),
-        	DDUISettingsTags.uiSettingsSuiteLocalization: suite.localization,
-        	DDUISettingsTags.uiSettingsModuleLocalization: module.localization,
-        ]
+            DDUISettingsTags.uiSettingsSuiteLocalization: suite.localization,
+            DDUISettingsTags.uiSettingsModuleLocalization: module.localization,
+        ].merging(DDTestMonitor.baseConfigurationTags) { old, _ in old }
 
         span = DDTestMonitor.tracer.startSpan(name: "\(module.testFramework).test", attributes: attributes, startTime: testStartTime)
 
@@ -85,6 +76,13 @@ public class DDTest: NSObject {
         if let testSpan = span as? RecordEventsReadableSpan {
             let simpleSpan = SimpleSpanData(spanData: testSpan.toSpanData(), moduleStartTime: module.startTime, suiteStartTime: suite.startTime)
             DDCrashes.setCustomData(customData: SimpleSpanSerializer.serializeSpan(simpleSpan: simpleSpan))
+        }
+
+        if let coverageHelper = DDTestMonitor.instance?.coverageHelper {
+            coverageHelper.setTest(name: name,
+                                   traceId: span.context.traceId.rawLowerLong,
+                                   spanId: span.context.spanId.rawValue)
+            coverageHelper.clearCounters()
         }
     }
 
@@ -145,9 +143,19 @@ public class DDTest: NSObject {
 
         span.setAttribute(key: DDTestTags.testStatus, value: testStatus)
 
+        if let coverageHelper = DDTestMonitor.instance?.coverageHelper {
+            coverageHelper.writeProfile()
+            let traceId = span.context.traceId.rawLowerLong
+            let spanId = span.context.spanId.rawValue
+            let coverageFileURL = coverageHelper.getURLForTest(name: name, traceId: traceId, spanId: spanId)
+            coverageHelper.coverageWorkQueue.addOperation {
+                DDTestMonitor.tracer.eventsExporter?.export(coverage: coverageFileURL, traceId: traceId, spanId: spanId, workspacePath: DDTestMonitor.env.workspacePath, binaryImagePaths: BinaryImages.binaryImagesPath)
+            }
+        }
+
         StderrCapture.syncData()
         span.end(time: testEndTime)
-        DDTestMonitor.tracer.backgroundWorkQueue.sync {}
+        DDTestMonitor.tracer.backgroundWorkQueue.waitUntilAllOperationsAreFinished()
         DDTestMonitor.instance?.currentTest = nil
         DDTestMonitor.instance?.networkInstrumentation?.endAndCleanAliveSpans()
     }

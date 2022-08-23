@@ -19,7 +19,6 @@ internal struct SimpleSpanData: Codable, Equatable {
     var moduleStartTime: Date?
     var suiteStartTime: Date?
 
-
     init(spanData: SpanData, moduleStartTime: Date? = nil, suiteStartTime: Date? = nil) {
         self.traceIdHi = spanData.traceId.rawHigherLong
         self.traceIdLo = spanData.traceId.rawLowerLong

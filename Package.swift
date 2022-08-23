@@ -13,15 +13,15 @@ let package = Package(
             name: "DatadogSDKTesting",
             type: .dynamic,
             targets: [
-                "DatadogSDKTesting",
+                "DatadogSDKTesting"
             ]
-        ),
+        )
     ],
     dependencies: [
         .package(name: "opentelemetry-swift", url: "https://github.com/open-telemetry/opentelemetry-swift", from: "1.0.7"),
         .package(name: "PLCrashReporter", url: "https://github.com/microsoft/plcrashreporter.git", from: "1.9.0"),
         .package(name: "SigmaSwiftStatistics", url: "https://github.com/evgenyneu/SigmaSwiftStatistics.git", from: "9.0.2"),
-        .package(name: "swift-atomics", url: "https://github.com/apple/swift-atomics.git", "0.0.2"..."2.0.0")
+        .package(name: "swift-atomics", url: "https://github.com/apple/swift-atomics.git", "0.0.2" ... "2.0.0")
 
     ],
     targets: [
@@ -33,10 +33,10 @@ let package = Package(
                 .product(name: "CrashReporter", package: "PLCrashReporter"),
                 .product(name: "SigmaSwiftStatistics", package: "SigmaSwiftStatistics"),
                 .target(name: "DatadogSDKTestingObjc"),
-                .target(name: "OpenTelemetryExporter")
+                .target(name: "EventsExporter")
             ],
             exclude: [
-                "Objc",
+                "Objc"
             ]
         ),
         .target(
@@ -44,10 +44,13 @@ let package = Package(
             path: "Sources/DatadogSDKTesting/Objc"
         ),
         .target(
-            name: "OpenTelemetryExporter",
+            name: "EventsExporter",
             dependencies: [
                 .product(name: "Atomics", package: "swift-atomics"),
                 .product(name: "OpenTelemetrySdk", package: "opentelemetry-swift")
+            ],
+            exclude: [
+                "llvm-cov"
             ]
         )
     ]

@@ -4,10 +4,10 @@
  * Copyright 2020-2021 Datadog, Inc.
  */
 
+@_implementationOnly import EventsExporter
 import Foundation
 @_implementationOnly import InMemoryExporter
 @_implementationOnly import OpenTelemetryApi
-@_implementationOnly import OpenTelemetryExporter
 @_implementationOnly import OpenTelemetrySdk
 
 enum DDHeaders: String, CaseIterable {
@@ -20,9 +20,10 @@ enum DDHeaders: String, CaseIterable {
 
 internal class DDTracer {
     let tracerSdk: TracerSdk
-    var opentelemetryExporter: OpenTelemetryExporter?
+    let ntpClock = NTPClock()
+    var eventsExporter: EventsExporter?
     private var launchSpanContext: SpanContext?
-    let backgroundWorkQueue = DispatchQueue(label: "com.datadog.logswriter")
+    let backgroundWorkQueue = OperationQueue()
 
     static var activeSpan: Span? {
         return OpenTelemetrySDK.instance.contextProvider.activeSpan ??
@@ -96,17 +97,18 @@ internal class DDTracer {
             applicationVersion: version,
             environment: env.ddEnvironment ?? (env.isCi ? "ci" : "none"),
             apiKey: env.ddApiKey ?? "",
+            applicationKey: env.ddApplicationKey ?? "",
             endpoint: endpoint,
             payloadCompression: payloadCompression,
             performancePreset: .instantDataDelivery
         )
-        opentelemetryExporter = try? OpenTelemetryExporter(config: exporterConfiguration)
+        eventsExporter = try? EventsExporter(config: exporterConfiguration)
 
         let exporterToUse: SpanExporter
 
         if env.disableTracesExporting {
             exporterToUse = InMemoryExporter()
-        } else if let exporter = opentelemetryExporter {
+        } else if let exporter = eventsExporter {
             exporterToUse = exporter as SpanExporter
         } else {
             Log.print("Failed creating Datadog exporter.")
@@ -283,7 +285,7 @@ internal class DDTracer {
     func logStringAppUITested(string: String, date: Date? = nil) {
         let auxSpan = createSpanFromLaunchContext()
         auxSpan.addEvent(name: "logString", attributes: attributesForString(string), timestamp: date ?? Date())
-        backgroundWorkQueue.async {
+        backgroundWorkQueue.addOperation {
             auxSpan.status = .ok
             auxSpan.end()
             OpenTelemetrySDK.instance.tracerProvider.forceFlush()
@@ -319,9 +321,10 @@ internal class DDTracer {
         }
         Log.debug("DDCFMessageID.forceFlush finished")
 
-        backgroundWorkQueue.sync {
+        backgroundWorkQueue.addOperation {
             OpenTelemetrySDK.instance.tracerProvider.forceFlush()
         }
+        backgroundWorkQueue.waitUntilAllOperationsAreFinished()
     }
 
     func addPropagationsHeadersToEnvironment() {
@@ -384,6 +387,6 @@ internal class DDTracer {
     }
 
     func endpointURLs() -> Set<String> {
-        return opentelemetryExporter?.endpointURLs() ?? Set<String>()
+        return eventsExporter?.endpointURLs() ?? Set<String>()
     }
 }

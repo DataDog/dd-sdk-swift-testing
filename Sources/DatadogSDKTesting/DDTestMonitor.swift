@@ -43,6 +43,20 @@ internal class DDTestMonitor {
 
     var crashedModuleInfo: CrashedModuleInformation?
 
+    static var baseConfigurationTags = [
+        DDOSTags.osPlatform: env.osName,
+        DDOSTags.osArchitecture: env.osArchitecture,
+        DDOSTags.osVersion: env.osVersion,
+        DDDeviceTags.deviceName: env.deviceName,
+        DDDeviceTags.deviceModel: env.deviceModel,
+        DDRuntimeTags.runtimeName: env.runtimeName,
+        DDRuntimeTags.runtimeVersion: env.runtimeVersion,
+        DDUISettingsTags.uiSettingsLocalization: PlatformUtils.getLocalization(),
+    ]
+
+    let coverageHelper: DDCoverageHelper?
+    let gitUploader: GitUploader?
+    let itr: IntelligentTestRunner?
 
     var rLock = NSRecursiveLock()
     private var privateCurrentTest: DDTest?
@@ -79,47 +93,75 @@ internal class DDTestMonitor {
             /// except if testing the tracer itself
             launchNotificationObserver = NotificationCenter.default.addObserver(
                 forName: launchNotificationName,
-                object: nil, queue: nil) { _ in
-                    /// As crash reporter is initialized in testBundleWillStart() method, we initialize it here
-                    /// because dont have test observer
-                    if !DDTestMonitor.env.disableCrashHandler {
-                        DDCrashes.install()
-                        let launchedSpan = DDTestMonitor.tracer.createSpanFromLaunchContext()
-                        let simpleSpan = SimpleSpanData(spanData: launchedSpan.toSpanData())
-                        DDCrashes.setCustomData(customData: SimpleSpanSerializer.serializeSpan(simpleSpan: simpleSpan))
-                    }
+                object: nil, queue: nil)
+            { _ in
+                /// As crash reporter is initialized in testBundleWillStart() method, we initialize it here
+                /// because dont have test observer
+                if !DDTestMonitor.env.disableCrashHandler {
+                    DDCrashes.install()
+                    let launchedSpan = DDTestMonitor.tracer.createSpanFromLaunchContext()
+                    let simpleSpan = SimpleSpanData(spanData: launchedSpan.toSpanData())
+                    DDCrashes.setCustomData(customData: SimpleSpanSerializer.serializeSpan(simpleSpan: simpleSpan))
                 }
+            }
 
             #if targetEnvironment(simulator) || os(macOS)
                 didBecomeActiveNotificationObserver = NotificationCenter.default.addObserver(
                     forName: didBecomeActiveNotificationName,
-                    object: nil, queue: nil) { _ in
-                        var data = [DDUISettingsTags.uiSettingsAppearance: PlatformUtils.getAppearance(),
-                                    DDUISettingsTags.uiSettingsLocalization: PlatformUtils.getLocalization()]
-                        #if os(iOS)
-                            data[DDUISettingsTags.uiSettingsOrientation] = PlatformUtils.getOrientation()
-                        #endif
-                        let encoded = try? JSONSerialization.data(withJSONObject: data)
-                        let timeout: CFTimeInterval = 1.0
-                        let remotePort = CFMessagePortCreateRemote(nil, "DatadogTestingPort" as CFString)
-                        if remotePort == nil {
-                            Log.debug("DatadogTestingPort CFMessagePortCreateRemote failed")
-                            return
-                        }
-                        let status = CFMessagePortSendRequest(remotePort,
-                                                              DDCFMessageID.setCustomTags,
-                                                              encoded as CFData?,
-                                                              timeout,
-                                                              timeout,
-                                                              nil,
-                                                              nil)
-                        if status == kCFMessagePortSuccess {
-                            Log.debug("DatadogTestingPort Success: \(data)")
-                        } else {
-                            Log.debug("DatadogTestingPort Error: \(status)")
-                        }
+                    object: nil, queue: nil)
+                { _ in
+                    var data = [DDUISettingsTags.uiSettingsAppearance: PlatformUtils.getAppearance(),
+                                DDUISettingsTags.uiSettingsLocalization: PlatformUtils.getLocalization()]
+                    #if os(iOS)
+                        data[DDUISettingsTags.uiSettingsOrientation] = PlatformUtils.getOrientation()
+                    #endif
+                    let encoded = try? JSONSerialization.data(withJSONObject: data)
+                    let timeout: CFTimeInterval = 1.0
+                    let remotePort = CFMessagePortCreateRemote(nil, "DatadogTestingPort" as CFString)
+                    if remotePort == nil {
+                        Log.debug("DatadogTestingPort CFMessagePortCreateRemote failed")
+                        return
                     }
+                    let status = CFMessagePortSendRequest(remotePort,
+                                                          DDCFMessageID.setCustomTags,
+                                                          encoded as CFData?,
+                                                          timeout,
+                                                          timeout,
+                                                          nil,
+                                                          nil)
+                    if status == kCFMessagePortSuccess {
+                        Log.debug("DatadogTestingPort Success: \(data)")
+                    } else {
+                        Log.debug("DatadogTestingPort Error: \(status)")
+                    }
+                }
             #endif
+        }
+
+        if DDTestMonitor.env.gitUploadEnabled {
+            gitUploader = try? GitUploader()
+            gitUploader?.sendGitInfo()
+        } else {
+            gitUploader = nil
+        }
+
+        if DDTestMonitor.env.coverageEnabled {
+            //Coverage is not supported for swift < 5.3 (binary target dependency)
+            #if swift(>=5.3)
+                coverageHelper = DDCoverageHelper()
+            #else
+                coverageHelper = nil
+            #endif
+
+        } else {
+            coverageHelper = nil
+        }
+
+        if DDTestMonitor.env.itrEnabled {
+            itr = IntelligentTestRunner(configurations: DDTestMonitor.baseConfigurationTags)
+            itr?.start()
+        } else {
+            itr = nil
         }
     }
 

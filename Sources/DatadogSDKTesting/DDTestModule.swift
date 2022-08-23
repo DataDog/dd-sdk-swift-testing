@@ -44,7 +44,9 @@ public class DDTestModule: NSObject, Encodable {
         if DDTestMonitor.instance == nil {
             let success = DDTestMonitor.installTestMonitor()
             if !success {
-                configError = true;
+                configError = true
+            } else {
+                DDTestMonitor.baseConfigurationTags[DDTestTags.testBundle] = bundleName
             }
         }
 
@@ -84,24 +86,19 @@ public class DDTestModule: NSObject, Encodable {
             DDGenericTags.language: "swift",
             DDTestTags.testSuite: bundleName,
             DDTestTags.testFramework: testFramework,
-            DDTestTags.testBundle: bundleName,
             DDTestTags.testStatus: suiteStatus,
-            DDOSTags.osPlatform: DDTestMonitor.env.osName,
-            DDOSTags.osArchitecture: DDTestMonitor.env.osArchitecture,
-            DDOSTags.osVersion: DDTestMonitor.env.osVersion,
-            DDDeviceTags.deviceName: DDTestMonitor.env.deviceName,
-            DDDeviceTags.deviceModel: DDTestMonitor.env.deviceModel,
-            DDRuntimeTags.runtimeName: DDTestMonitor.env.runtimeName,
-            DDRuntimeTags.runtimeVersion: DDTestMonitor.env.runtimeVersion,
             DDTestModuleTags.testModuleId: String(id.rawValue)
         ]
+
+        meta.merge(DDTestMonitor.baseConfigurationTags) { _, new in new }
         meta.merge(defaultAttributes) { _, new in new }
         meta.merge(DDEnvironmentValues.gitAttributes) { _, new in new }
         meta.merge(DDEnvironmentValues.ciAttributes) { _, new in new }
         meta[DDUISettingsTags.uiSettingsModuleLocalization] = localization
-        DDTestMonitor.tracer.opentelemetryExporter?.exportEvent(event: DDTestModuleEnvelope(self))
+        DDTestMonitor.tracer.eventsExporter?.exportEvent(event: DDTestModuleEnvelope(self))
         /// We need to wait for all the traces to be written to the backend before exiting
         DDTestMonitor.tracer.flush()
+        DDTestMonitor.instance?.coverageHelper?.coverageWorkQueue.waitUntilAllOperationsAreFinished()
     }
 }
 

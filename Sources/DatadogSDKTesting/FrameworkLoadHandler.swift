@@ -35,6 +35,16 @@ public class FrameworkLoadHandler: NSObject {
             environment["SDKROOT"] != nil
 
         if isInTestMode {
+            // When code coverage is enabled modify profile name so it disables countinuous profiling
+            // or we cannot recover coverage manually
+            let envDisableCodeCoverage = environment["DD_DISABLE_CODE_COVERAGE"] as NSString?
+            if !(envDisableCodeCoverage?.boolValue ?? false),
+               let profilePath = environment["LLVM_PROFILE_FILE"]
+            {
+                let newEnv = profilePath.replacingOccurrences(of: "%c", with: "")
+                setenv("LLVM_PROFILE_FILE", newEnv, 1)
+            }
+
             let envDisableTestInstrumenting = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_DISABLE_TEST_INSTRUMENTING.rawValue) as NSString?
             let disableTestInstrumenting = envDisableTestInstrumenting?.boolValue ?? false
 

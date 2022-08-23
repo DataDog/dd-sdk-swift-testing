@@ -99,3 +99,64 @@ void * FindSymbolInImage(const char *symbol, const struct mach_header *image, in
 
 	return NULL;
 }
+
+//LLVM structs recreated
+typedef struct __llvm_profile_data {
+    const uint64_t NameRef;
+    const uint64_t FuncHash;
+    const int *CounterPtr;
+    const int *FunctionPointer;
+    int *Values;
+    const uint32_t NumCounters;
+    const uint16_t NumValueSites[2];
+} __llvm_profile_data;
+
+typedef struct ValueProfNode {
+    // InstrProfValueData VData;
+    uint64_t Value;
+    uint64_t Count;
+    struct ValueProfNode *Next;
+} ValueProfNode;
+
+void Profile_reset_counters(void *beginCounters, void *endCounters, void *beginData, void *endData)
+{
+    uint64_t * (*llvm_profile_begin_counters_ptr)(void) = beginCounters;
+    uint64_t * (*llvm_profile_end_counters_ptr)(void) = endCounters;
+    const __llvm_profile_data * (*llvm_profile_begin_data)(void) = beginData;
+    const __llvm_profile_data * (*llvm_profile_end_data)(void) = endData;
+
+    uint64_t *I = (*llvm_profile_begin_counters_ptr)();
+    uint64_t *E = (*llvm_profile_end_counters_ptr)();
+
+    memset(I, 0, sizeof(uint64_t) * (E - I));
+
+    const __llvm_profile_data *DataBegin = (*llvm_profile_begin_data)();
+    const __llvm_profile_data *DataEnd = (*llvm_profile_end_data)();
+    const __llvm_profile_data *DI;
+    for (DI = DataBegin; DI < DataEnd; ++DI) {
+        uint64_t CurrentVSiteCount = 0;
+        uint32_t VKI, i;
+        if (!DI->Values) {
+            continue;
+        }
+
+        ValueProfNode **ValueCounters = (ValueProfNode **)DI->Values;
+
+        for (VKI = 0; VKI <= 1; ++VKI) {
+            CurrentVSiteCount += DI->NumValueSites[VKI];
+        }
+
+        for (i = 0; i < CurrentVSiteCount; ++i) {
+            ValueProfNode *CurrentVNode = ValueCounters[i];
+
+            while (CurrentVNode) {
+                CurrentVNode->Count = 0;
+                CurrentVNode = CurrentVNode->Next;
+            }
+        }
+    }
+}
+
+
+//extern int __llvm_profile_runtime;
+//int __llvm_profile_runtime = 1;

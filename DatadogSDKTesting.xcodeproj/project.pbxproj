@@ -363,7 +363,6 @@
 		E1DCAF6F284A200800F44BE3 /* DDCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12C5838280D809900A31763 /* DDCoverageFormat.swift */; };
 		E1DCAF70284A200800F44BE3 /* DDCoverageConversor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E15C79672722AD0500E9DBAD /* DDCoverageConversor.swift */; };
 		E1DCAF72284A203100F44BE3 /* Spawn.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1665A7225D12D7500BA53CD /* Spawn.swift */; };
-		E1DCAF73284A219700F44BE3 /* LLVM.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1F5C16A28295845003FF7E6 /* LLVM.xcframework */; };
 		E1DCAF74284A22C300F44BE3 /* EventsExporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1DCAF2F284A1F0D00F44BE3 /* EventsExporter.framework */; };
 		E1DCAF83284A280700F44BE3 /* EventsExporter.h in Headers */ = {isa = PBXBuildFile; fileRef = E1DCAF31284A1F0D00F44BE3 /* EventsExporter.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E1DCAF84284A285D00F44BE3 /* FileReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1527D7790300F4018A /* FileReader.swift */; };
@@ -409,12 +408,10 @@
 		E1DCAFAE284A294100F44BE3 /* DDCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12C5838280D809900A31763 /* DDCoverageFormat.swift */; };
 		E1DCAFB1284A294100F44BE3 /* DDCoverageConversor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E15C79672722AD0500E9DBAD /* DDCoverageConversor.swift */; };
 		E1DCAFB2284A294100F44BE3 /* LLVMCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10A7E0D2806D68F00B464C9 /* LLVMCoverageFormat.swift */; };
-		E1DCAFB5284A298C00F44BE3 /* LLVM.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1F5C16A28295845003FF7E6 /* LLVM.xcframework */; };
 		E1DCAFB8284A299A00F44BE3 /* EventsExporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1DCAF7C284A27DE00F44BE3 /* EventsExporter.framework */; };
 		E1DCAFBC284A29DD00F44BE3 /* Spawn.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1665A7225D12D7500BA53CD /* Spawn.swift */; };
 		E1DCAFCA284A2BA300F44BE3 /* OpenTelemetrySdk in Frameworks */ = {isa = PBXBuildFile; productRef = E1DCAFC9284A2BA300F44BE3 /* OpenTelemetrySdk */; };
 		E1DCAFCC284A2BA800F44BE3 /* Atomics in Frameworks */ = {isa = PBXBuildFile; productRef = E1DCAFCB284A2BA800F44BE3 /* Atomics */; };
-		E1DCAFCD284A2BAD00F44BE3 /* LLVM.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1F5C16A28295845003FF7E6 /* LLVM.xcframework */; };
 		E1DCAFCE284A2BED00F44BE3 /* CodeCoverage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D7848281838D200758E2A /* CodeCoverage.cpp */; };
 		E1DCAFCF284A2BED00F44BE3 /* DateFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0527D7790200F4018A /* DateFormatting.swift */; };
 		E1DCAFD0284A2BED00F44BE3 /* File.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1827D7790300F4018A /* File.swift */; };
@@ -461,6 +458,9 @@
 		E1DCAFF9284A2BFB00F44BE3 /* EventsExporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1DCAFC2284A2B7B00F44BE3 /* EventsExporter.framework */; };
 		E1DFF0EA257010E700344895 /* PlatformUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141CF5F256FD513008B6B70 /* PlatformUtils.swift */; };
 		E1DFF0EB257010E800344895 /* PlatformUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141CF5F256FD513008B6B70 /* PlatformUtils.swift */; };
+		E1E51D5028B5099200E0E206 /* llvm-xcframework in Frameworks */ = {isa = PBXBuildFile; productRef = E1E51D4F28B5099200E0E206 /* llvm-xcframework */; };
+		E1E51D5228B509BA00E0E206 /* llvm-xcframework in Frameworks */ = {isa = PBXBuildFile; productRef = E1E51D5128B509BA00E0E206 /* llvm-xcframework */; };
+		E1E51D5428B509C100E0E206 /* llvm-xcframework in Frameworks */ = {isa = PBXBuildFile; productRef = E1E51D5328B509C100E0E206 /* llvm-xcframework */; };
 		E1EBBD5227F202A60059BC3E /* SpanSanitizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EBBD4E27F200A50059BC3E /* SpanSanitizerTests.swift */; };
 		E1EBBD5327F202A70059BC3E /* SpanSanitizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EBBD4E27F200A50059BC3E /* SpanSanitizerTests.swift */; };
 		E1EBBD5427F202A90059BC3E /* SpanSanitizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EBBD4E27F200A50059BC3E /* SpanSanitizerTests.swift */; };
@@ -893,6 +893,9 @@
 		E1DCAF31284A1F0D00F44BE3 /* EventsExporter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EventsExporter.h; sourceTree = "<group>"; };
 		E1DCAF7C284A27DE00F44BE3 /* EventsExporter.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = EventsExporter.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E1DCAFC2284A2B7B00F44BE3 /* EventsExporter.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = EventsExporter.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		E1E51D4B28B5086600E0E206 /* llvm-xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = "llvm-xcframework"; path = "../llvm-xcframework"; sourceTree = "<group>"; };
+		E1E51D4C28B508D200E0E206 /* llvm-xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = "llvm-xcframework"; path = "../llvm-xcframework"; sourceTree = "<group>"; };
+		E1E51D4D28B508FD00E0E206 /* llvm-xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = "llvm-xcframework"; path = "../llvm-xcframework"; sourceTree = "<group>"; };
 		E1EBBD4627F1FFE70059BC3E /* SpanSanitizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpanSanitizer.swift; sourceTree = "<group>"; };
 		E1EBBD4A27F200210059BC3E /* AttributesSanitizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AttributesSanitizer.swift; sourceTree = "<group>"; };
 		E1EBBD4E27F200A50059BC3E /* SpanSanitizerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpanSanitizerTests.swift; sourceTree = "<group>"; };
@@ -903,7 +906,6 @@
 		E1F421B32652D0F500233B75 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Platforms/AppleTVOS.platform/Developer/Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
 		E1F421CC26539FAB00233B75 /* Tests tvOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Tests tvOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E1F595D32609FC3000AE92B7 /* DDNetworkInstrumentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDNetworkInstrumentation.swift; sourceTree = "<group>"; };
-		E1F5C16A28295845003FF7E6 /* LLVM.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = LLVM.xcframework; sourceTree = "<group>"; };
 		E1FB483D253891CE0083B263 /* SimpleSpanSerializer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleSpanSerializer.swift; sourceTree = "<group>"; };
 		E1FB483E253891CE0083B263 /* DDCrashes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DDCrashes.swift; sourceTree = "<group>"; };
 		E1FB483F253891CE0083B263 /* SimpleSpanData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleSpanData.swift; sourceTree = "<group>"; };
@@ -1021,8 +1023,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E1DCAF73284A219700F44BE3 /* LLVM.xcframework in Frameworks */,
 				E1DCAF6B284A1FE000F44BE3 /* OpenTelemetrySdk in Frameworks */,
+				E1E51D5028B5099200E0E206 /* llvm-xcframework in Frameworks */,
 				E1DCAF6D284A1FE600F44BE3 /* Atomics in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1031,8 +1033,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E1DCAFB5284A298C00F44BE3 /* LLVM.xcframework in Frameworks */,
 				E1DCAFAB284A28DE00F44BE3 /* OpenTelemetrySdk in Frameworks */,
+				E1E51D5228B509BA00E0E206 /* llvm-xcframework in Frameworks */,
 				E1DCAFAD284A28E600F44BE3 /* Atomics in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1041,8 +1043,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E1DCAFCD284A2BAD00F44BE3 /* LLVM.xcframework in Frameworks */,
 				E1DCAFCA284A2BA300F44BE3 /* OpenTelemetrySdk in Frameworks */,
+				E1E51D5428B509C100E0E206 /* llvm-xcframework in Frameworks */,
 				E1DCAFCC284A2BA800F44BE3 /* Atomics in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1690,6 +1692,7 @@
 		E1ABA04025231E2500ED8AEF = {
 			isa = PBXGroup;
 			children = (
+				E1E51D4A28B5086600E0E206 /* Packages */,
 				E18F2169278C980800F77910 /* IntegrationTests (macOS)Debug.entitlements */,
 				E17B7AA5253F010C0081D7F3 /* LICENSE-3rdparty.csv */,
 				E160A11125275CC1003121A5 /* Package.swift */,
@@ -1761,7 +1764,6 @@
 		E1ABA07E25231F8E00ED8AEF /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				E1F5C16A28295845003FF7E6 /* LLVM.xcframework */,
 				E131592F281A9CB100B29123 /* libz.tbd */,
 				E13DB9BF28241C3700409105 /* libz.tbd */,
 				E1F421B32652D0F500233B75 /* XCTest.framework */,
@@ -1878,6 +1880,16 @@
 				E1D4769525DC2B8E00832592 /* master */,
 			);
 			path = heads;
+			sourceTree = "<group>";
+		};
+		E1E51D4A28B5086600E0E206 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				E1E51D4B28B5086600E0E206 /* llvm-xcframework */,
+				E1E51D4C28B508D200E0E206 /* llvm-xcframework */,
+				E1E51D4D28B508FD00E0E206 /* llvm-xcframework */,
+			);
+			name = Packages;
 			sourceTree = "<group>";
 		};
 		E1F42082264D6B5A00233B75 /* FileTraceExporter */ = {
@@ -2217,6 +2229,7 @@
 			packageProductDependencies = (
 				E1DCAF6A284A1FE000F44BE3 /* OpenTelemetrySdk */,
 				E1DCAF6C284A1FE600F44BE3 /* Atomics */,
+				E1E51D4F28B5099200E0E206 /* llvm-xcframework */,
 			);
 			productName = EventsExporter_iOS;
 			productReference = E1DCAF2F284A1F0D00F44BE3 /* EventsExporter.framework */;
@@ -2239,6 +2252,7 @@
 			packageProductDependencies = (
 				E1DCAFAA284A28DE00F44BE3 /* OpenTelemetrySdk */,
 				E1DCAFAC284A28E600F44BE3 /* Atomics */,
+				E1E51D5128B509BA00E0E206 /* llvm-xcframework */,
 			);
 			productName = EventsExporter_macOS;
 			productReference = E1DCAF7C284A27DE00F44BE3 /* EventsExporter.framework */;
@@ -2261,6 +2275,7 @@
 			packageProductDependencies = (
 				E1DCAFC9284A2BA300F44BE3 /* OpenTelemetrySdk */,
 				E1DCAFCB284A2BA800F44BE3 /* Atomics */,
+				E1E51D5328B509C100E0E206 /* llvm-xcframework */,
 			);
 			productName = EventsExporter_tvOS;
 			productReference = E1DCAFC2284A2B7B00F44BE3 /* EventsExporter.framework */;
@@ -2368,6 +2383,7 @@
 				E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */,
 				E143CF8827D77E1900F4018A /* XCRemoteSwiftPackageReference "swift-atomics" */,
 				E141EB5727EB44400057D747 /* XCRemoteSwiftPackageReference "swift-nio" */,
+				E1E51D4E28B5099200E0E206 /* XCRemoteSwiftPackageReference "llvm-xcframework" */,
 			);
 			productRefGroup = E1ABA04B25231E2500ED8AEF /* Products */;
 			projectDirPath = "";
@@ -4268,6 +4284,14 @@
 				minimumVersion = 9.0.2;
 			};
 		};
+		E1E51D4E28B5099200E0E206 /* XCRemoteSwiftPackageReference "llvm-xcframework" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/DataDog/llvm-xcframework";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 14.0.0;
+			};
+		};
 		E1FB4839253891650083B263 /* XCRemoteSwiftPackageReference "plcrashreporter" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/microsoft/plcrashreporter.git";
@@ -4393,6 +4417,19 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E143CF8827D77E1900F4018A /* XCRemoteSwiftPackageReference "swift-atomics" */;
 			productName = Atomics;
+		};
+		E1E51D4F28B5099200E0E206 /* llvm-xcframework */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E1E51D4E28B5099200E0E206 /* XCRemoteSwiftPackageReference "llvm-xcframework" */;
+			productName = "llvm-xcframework";
+		};
+		E1E51D5128B509BA00E0E206 /* llvm-xcframework */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = "llvm-xcframework";
+		};
+		E1E51D5328B509C100E0E206 /* llvm-xcframework */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = "llvm-xcframework";
 		};
 		E1FB483A253891650083B263 /* CrashReporter */ = {
 			isa = XCSwiftPackageProductDependency;

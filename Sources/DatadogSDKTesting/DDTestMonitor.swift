@@ -146,7 +146,13 @@ internal class DDTestMonitor {
         }
 
         if DDTestMonitor.env.coverageEnabled {
-            coverageHelper = DDCoverageHelper()
+            //Coverage is not supported for swift < 5.3 (binary target dependency)
+            #if swift(>=5.3)
+                coverageHelper = DDCoverageHelper()
+            #else
+                coverageHelper = nil
+            #endif
+
         } else {
             coverageHelper = nil
         }

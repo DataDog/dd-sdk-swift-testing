@@ -17,10 +17,15 @@ struct DDCoverageConversor {
     }
 
     static func getDatadogCoverage(profdataFile: URL, traceId: UInt64, spanId: UInt64, workspacePath: String?, binaryImagePaths: [String]) -> DDCoverageFormat? {
+#if swift(>=5.3)
+        //LLVM Support is dependant on binary target, swift 5.3 is needed
         let llvmJSON = LLVMCodeCoverageBridge.coverageInfo(forProfile: profdataFile.path, images: binaryImagePaths)
         guard let llvmCov = LLVMCoverageFormat(llvmJSON) else {
             return nil
         }
         return DDCoverageFormat(llvmFormat: llvmCov, traceId: traceId, spanId: spanId, workspacePath: workspacePath)
+#else
+        return nil
+#endif
     }
 }

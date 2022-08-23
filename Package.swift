@@ -48,6 +48,9 @@ let package = Package(
             dependencies: [
                 .product(name: "Atomics", package: "swift-atomics"),
                 .product(name: "OpenTelemetrySdk", package: "opentelemetry-swift")
+            ],
+            exclude: [
+                "llvm-cov"
             ]
         )
     ]

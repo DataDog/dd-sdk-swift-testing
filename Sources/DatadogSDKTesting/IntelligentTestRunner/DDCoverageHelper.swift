@@ -5,6 +5,9 @@
  */
 
 import Foundation
+#if SWIFT_PACKAGE
+import DatadogSDKTestingObjc
+#endif
 
 typealias cFunc = @convention(c) () -> Void
 

@@ -43,7 +43,7 @@ internal enum ConfigurationValues: String, CaseIterable {
 // These configuration values must not be passed to the child app in an UI test
 internal enum ExtraConfigurationValues: String {
     case DD_CIVISIBILITY_GIT_UPLOAD_ENABLED
-    case DD_CIVISIBILITY_COVERAGE_ENABLED
+    case DD_CIVISIBILITY_CODE_COVERAGE_ENABLED
     case DD_CIVISIBILITY_ITR_ENABLED
 }
 
@@ -248,7 +248,7 @@ internal struct DDEnvironmentValues {
         let envItrEnabled = DDEnvironmentValues.getEnvVariable(ExtraConfigurationValues.DD_CIVISIBILITY_ITR_ENABLED.rawValue) as NSString?
         itrEnabled = envItrEnabled?.boolValue ?? false
 
-        let envCoverageEnabled = DDEnvironmentValues.getEnvVariable(ExtraConfigurationValues.DD_CIVISIBILITY_COVERAGE_ENABLED.rawValue) as NSString?
+        let envCoverageEnabled = DDEnvironmentValues.getEnvVariable(ExtraConfigurationValues.DD_CIVISIBILITY_CODE_COVERAGE_ENABLED.rawValue) as NSString?
         coverageEnabled = envCoverageEnabled?.boolValue ?? itrEnabled
 
         /// Device Information

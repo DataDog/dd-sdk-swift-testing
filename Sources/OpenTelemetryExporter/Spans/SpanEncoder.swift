@@ -149,18 +149,21 @@ internal struct SpanEncoder {
         case start
         case duration
         case error
-        case errorMessage = "meta.error.message"
-        case errorType = "meta.error.type"
-        case errorStack = "meta.error.stack"
+        case errorMessage = "error.message"
+        case errorType = "error.type"
+        case errorStack = "error.stack"
 
         // MARK: - Metrics
 
-        case isRootSpan = "metrics._top_level"
+        case isRootSpan = "_top_level"
 
         // MARK: - Meta
 
-        case source = "meta._dd.source"
-        case applicationVersion = "meta.version"
+        case source = "_dd.source"
+        case applicationVersion = "version"
+
+        case meta
+        case metrics
     }
 
     /// Coding keys for dynamic `Span` attributes specified by user.
@@ -191,54 +194,54 @@ internal struct SpanEncoder {
         try container.encode(span.startTime, forKey: .start)
         try container.encode(span.duration, forKey: .duration)
 
+        var meta = container.nestedContainer(keyedBy: DynamicCodingKey.self, forKey: .meta)
+        var metrics = container.nestedContainer(keyedBy: DynamicCodingKey.self, forKey: .metrics)
+
         if span.error {
             try container.encode(1, forKey: .error)
-            try container.encode(span.errorMessage, forKey: .errorMessage)
-            try container.encode(span.errorType, forKey: .errorType)
-            try container.encode(span.errorStack, forKey: .errorStack)
+            try meta.encode(span.errorMessage, forKey: DynamicCodingKey(StaticCodingKeys.errorMessage.stringValue))
+            try meta.encode(span.errorType, forKey: DynamicCodingKey(StaticCodingKeys.errorType.stringValue))
+            try meta.encode(span.errorStack, forKey: DynamicCodingKey(StaticCodingKeys.errorStack.stringValue))
         } else {
             try container.encode(0, forKey: .error)
         }
 
-        try encodeDefaultMetrics(span, to: &container)
-        try encodeDefaultMeta(span, to: &container)
-
-        var customAttributesContainer = encoder.container(keyedBy: DynamicCodingKey.self)
-        try encodeCustomAttributes(span, to: &customAttributesContainer)
+        try encodeDefaultMetrics(span, to: &metrics)
+        try encodeDefaultMeta(span, to: &meta)
+        try encodeCustomAttributes(span, toMeta: &meta, metrics: &metrics)
     }
 
     /// Encodes default `metrics.*` attributes
-    private func encodeDefaultMetrics(_ span: DDSpan, to container: inout KeyedEncodingContainer<StaticCodingKeys>) throws {
+    private func encodeDefaultMetrics(_ span: DDSpan, to metrics: inout KeyedEncodingContainer<DynamicCodingKey>) throws {
         // NOTE: RUMM-299 only numeric values are supported for `metrics.*` attributes
         if span.parentID == nil {
-            try container.encode(1, forKey: .isRootSpan)
+            try metrics.encode(1, forKey: DynamicCodingKey(StaticCodingKeys.isRootSpan.stringValue))
         }
     }
 
     /// Encodes default `meta.*` attributes
-    private func encodeDefaultMeta(_ span: DDSpan, to container: inout KeyedEncodingContainer<StaticCodingKeys>) throws {
+    private func encodeDefaultMeta(_ span: DDSpan, to meta: inout KeyedEncodingContainer<DynamicCodingKey>) throws {
         // NOTE: RUMM-299 only string values are supported for `meta.*` attributes
-        try container.encode(Constants.ddsource, forKey: .source)
-        try container.encode(span.applicationVersion, forKey: .applicationVersion)
+        try meta.encode(Constants.ddsource, forKey: DynamicCodingKey(StaticCodingKeys.source.stringValue))
+        try meta.encode(span.applicationVersion, forKey: DynamicCodingKey(StaticCodingKeys.applicationVersion.stringValue))
     }
 
     /// Encodes `meta.*` attributes coming from user
-    private func encodeCustomAttributes(_ span: DDSpan, to container: inout KeyedEncodingContainer<DynamicCodingKey>) throws {
+    private func encodeCustomAttributes(_ span: DDSpan,
+                                        toMeta meta: inout KeyedEncodingContainer<DynamicCodingKey>,
+                                        metrics: inout KeyedEncodingContainer<DynamicCodingKey>) throws
+    {
         // NOTE: RUMM-299 only string values are supported for `meta.*` attributes
         try span.tags.forEach {
             switch $0.value {
                 case .int(let intValue):
-                    let metricsKey = "metrics.\($0.key)"
-                    try container.encode(intValue, forKey: DynamicCodingKey(metricsKey))
+                    try metrics.encode(intValue, forKey: DynamicCodingKey($0.key))
                 case .double(let doubleValue):
-                    let metricsKey = "metrics.\($0.key)"
-                    try container.encode(doubleValue, forKey: DynamicCodingKey(metricsKey))
+                    try metrics.encode(doubleValue, forKey: DynamicCodingKey($0.key))
                 case .string(let stringValue):
-                    let metaKey = "meta.\($0.key)"
-                    try container.encode(stringValue, forKey: DynamicCodingKey(metaKey))
+                    try meta.encode(stringValue, forKey: DynamicCodingKey($0.key))
                 case .bool(let boolValue):
-                    let metaKey = "meta.\($0.key)"
-                    try container.encode(boolValue, forKey: DynamicCodingKey(metaKey))
+                    try meta.encode(boolValue, forKey: DynamicCodingKey($0.key))
                 default:
                     break
             }

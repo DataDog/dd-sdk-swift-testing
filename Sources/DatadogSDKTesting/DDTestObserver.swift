@@ -42,14 +42,16 @@ class DDTestObserver: NSObject, XCTestObservation {
             exit(1)
         }
         if let tests = testSuite.value(forKey: "_mutableTests") as? NSArray,
-           tests.firstObject is XCTestCase {
+           tests.firstObject is XCTestCase
+        {
             suite = module?.suiteStart(name: testSuite.name)
         }
     }
 
     func testSuiteDidFinish(_ testSuite: XCTestSuite) {
         if let tests = testSuite.value(forKey: "_mutableTests") as? NSArray,
-           tests.firstObject is XCTestCase {
+           tests.firstObject is XCTestCase
+        {
             suite?.end()
         }
     }
@@ -114,6 +116,8 @@ class DDTestObserver: NSObject, XCTestObservation {
             return
         }
 
+        let maximumAllowedBenchmarks = 16
+        var currentlyAddedBenchmarks = 0
         metrics.forEach { metric in
             guard let measurements = measurements(metric.value) else {
                 return
@@ -192,7 +196,12 @@ class DDTestObserver: NSObject, XCTestObservation {
                     samples = measurements
                     name = info ?? "unknown_measure"
             }
-            test.addBenchmark(name: name, samples: samples, info: info)
+            if currentlyAddedBenchmarks < maximumAllowedBenchmarks {
+                test.addBenchmark(name: name, samples: samples, info: info)
+                currentlyAddedBenchmarks += 1
+            } else {
+                Log.print(#"Maximum allowed benchmarks per test reached, following benchmark not added: "\#(name)""#)
+            }
         }
     }
 }

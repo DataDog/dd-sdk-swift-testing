@@ -46,25 +46,4 @@ class SpanSanitizerTests: XCTestCase {
         XCTAssertNotNil(sanitized.tags["tag-one.two.three.four.five.six.seven.eight.nine.ten_eleven"])
         XCTAssertNotNil(sanitized.tags["tag-one.two.three.four.five.six.seven.eight.nine.ten_eleven_twelve"])
     }
-
-    func testWhenNumberOfAttributesExceedsLimit_itDropsExtraOnes() {
-        let twiceTheLimit = AttributesSanitizer.Constraints.maxNumberOfAttributes * 2
-
-        let mockTags = (0..<twiceTheLimit).map { index in
-            ("tag-\(index)", AttributeValue(String.mockAny())!)
-        }
-
-        let spanData = SpanData(traceId: TraceId(), spanId: SpanId(), name: "spanName", kind: .client, startTime: Date(), attributes:Dictionary(uniqueKeysWithValues: mockTags), endTime: Date().addingTimeInterval(1.0))
-
-        let ddSpan = DDSpan(spanData: spanData, serviceName: "name", applicationVersion: "1.0")
-
-        // When
-        let sanitized = SpanSanitizer().sanitize(span: ddSpan)
-
-        // Then
-        XCTAssertEqual(
-            sanitized.tags.count,
-            AttributesSanitizer.Constraints.maxNumberOfAttributes
-        )
-    }
 }

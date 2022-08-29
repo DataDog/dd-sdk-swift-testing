@@ -60,22 +60,4 @@ internal struct AttributesSanitizer {
         }
         return sanitized
     }
-
-    // MARK: - Attributes count limitting
-
-    /// Removes attributes exceeding the `count` limit.
-    func limitNumberOf<Value>(attributes: [String: Value], to count: Int) -> [String: Value] {
-        if attributes.count > count {
-            let extraAttributesCount = attributes.count - count
-            Swift.print(
-                """
-                    [DatadogSDKTesting] + Number of \(featureName) attributes exceeds the limit of \(Constraints.maxNumberOfAttributes).
-                \(extraAttributesCount) attribute(s) will be ignored.
-                """
-            )
-            return Dictionary(uniqueKeysWithValues: attributes.dropLast(extraAttributesCount))
-        } else {
-            return attributes
-        }
-    }
 }

@@ -12,7 +12,7 @@ internal struct SpanSanitizer {
 
     func sanitize(span: DDSpan) -> DDSpan {
         // Sanitize attribute names
-        var sanitizedTags = attributesSanitizer.sanitizeKeys(for: span.tags)
+        let sanitizedTags = attributesSanitizer.sanitizeKeys(for: span.tags)
 
         var sanitizedSpan = span
         sanitizedSpan.tags = sanitizedTags

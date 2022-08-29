@@ -152,16 +152,6 @@ internal class DDTestMonitor {
             return
         }
 
-        /// Check branch is not excluded
-        if let excludedBranches = DDTestMonitor.env.excludedBranches,
-           let currentBranch = DDTestMonitor.env.branch,
-           excludedBranches.contains(currentBranch)
-        {
-            coverageHelper = nil
-            itr = nil
-            return
-        }
-
         // Activate Coverage
         if DDTestMonitor.env.coverageEnabled {
             // Coverage is not supported for swift < 5.3 (binary target dependency)
@@ -173,6 +163,15 @@ internal class DDTestMonitor {
 
         } else {
             coverageHelper = nil
+        }
+
+        /// Check branch is not excluded
+        if let excludedBranches = DDTestMonitor.env.excludedBranches,
+           let currentBranch = DDTestMonitor.env.branch,
+           excludedBranches.contains(currentBranch)
+        {
+            itr = nil
+            return
         }
 
         // Activate Intelligent Test Runner

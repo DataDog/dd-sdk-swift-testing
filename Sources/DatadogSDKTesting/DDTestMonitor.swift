@@ -145,6 +145,13 @@ internal class DDTestMonitor {
             gitUploader = nil
         }
 
+        /// Chek Git is up to date and no local changes
+        guard DDTestMonitor.env.isCi || (gitUploader?.statusUpToDate() ?? false) else {
+            coverageHelper = nil
+            itr = nil
+            return
+        }
+
         /// Check branch is not excluded
         if let excludedBranches = DDTestMonitor.env.excludedBranches,
            let currentBranch = DDTestMonitor.env.branch,

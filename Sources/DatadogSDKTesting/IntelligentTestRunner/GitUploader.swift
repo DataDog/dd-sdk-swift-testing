@@ -39,6 +39,11 @@ struct GitUploader {
         uploadExistingPackfiles(repository: repo)
     }
 
+    func statusUpToDate() -> Bool {
+        let status = Spawn.commandWithResult(#"git -C "\#(workspacePath)" status --short -uno"#).trimmingCharacters(in: .whitespacesAndNewlines)
+        return status.isEmpty
+    }
+
     private func getRepositoryURL() -> String {
         let url = Spawn.commandWithResult(#"git -C "\#(workspacePath)" config --get remote.origin.url"#).trimmingCharacters(in: .whitespacesAndNewlines)
         return url

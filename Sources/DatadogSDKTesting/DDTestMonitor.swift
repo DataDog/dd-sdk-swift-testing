@@ -145,8 +145,19 @@ internal class DDTestMonitor {
             gitUploader = nil
         }
 
+        /// Check branch is not excluded
+        if let excludedBranches = DDTestMonitor.env.excludedBranches,
+           let currentBranch = DDTestMonitor.env.branch,
+           excludedBranches.contains(currentBranch)
+        {
+            coverageHelper = nil
+            itr = nil
+            return
+        }
+
+        // Activate Coverage
         if DDTestMonitor.env.coverageEnabled {
-            //Coverage is not supported for swift < 5.3 (binary target dependency)
+            // Coverage is not supported for swift < 5.3 (binary target dependency)
             #if swift(>=5.3)
                 coverageHelper = DDCoverageHelper()
             #else
@@ -157,6 +168,7 @@ internal class DDTestMonitor {
             coverageHelper = nil
         }
 
+        // Activate Intelligent Test Runner
         if DDTestMonitor.env.itrEnabled {
             itr = IntelligentTestRunner(configurations: DDTestMonitor.baseConfigurationTags)
             itr?.start()

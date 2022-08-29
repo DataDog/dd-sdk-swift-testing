@@ -67,7 +67,7 @@ struct GitUploader {
 
     private func generatePackFilesFromCommits(commits: [String]) {
         let commitList = commits.joined(separator: "\n")
-        Spawn.command(#"git -C "\#(workspacePath)" pack-objects --compression=9 --max-pack-size=3m "\#(packFilesdirectory.getURL().path + "/" + UUID().uuidString)" <<< "\#(commitList)""#)
+        Spawn.command(#"git -C "\#(workspacePath)" pack-objects --quiet --compression=9 --max-pack-size=3m "\#(packFilesdirectory.getURL().path + "/" + UUID().uuidString)" <<< "\#(commitList)""#)
     }
 
     private func uploadExistingPackfiles(repository: String) {

@@ -45,6 +45,7 @@ internal enum ExtraConfigurationValues: String {
     case DD_CIVISIBILITY_GIT_UPLOAD_ENABLED
     case DD_CIVISIBILITY_CODE_COVERAGE_ENABLED
     case DD_CIVISIBILITY_ITR_ENABLED
+    case DD_CIVISIBILITY_EXCLUDED_BRANCHES
 }
 
 internal struct DDEnvironmentValues {
@@ -134,7 +135,7 @@ internal struct DDEnvironmentValues {
     let gitUploadEnabled: Bool
     let coverageEnabled: Bool
     let itrEnabled: Bool
-
+    let excludedBranches: [String]?
 
     static var environment = ProcessInfo.processInfo.environment
     static var infoDictionary: [String: Any] = {
@@ -250,6 +251,12 @@ internal struct DDEnvironmentValues {
 
         let envCoverageEnabled = DDEnvironmentValues.getEnvVariable(ExtraConfigurationValues.DD_CIVISIBILITY_CODE_COVERAGE_ENABLED.rawValue) as NSString?
         coverageEnabled = envCoverageEnabled?.boolValue ?? itrEnabled
+
+        if let envExcludedBranches = DDEnvironmentValues.getEnvVariable(ExtraConfigurationValues.DD_CIVISIBILITY_EXCLUDED_BRANCHES.rawValue) as NSString? {
+            excludedBranches = envExcludedBranches.components(separatedBy: CharacterSet(charactersIn: ",; ")).map { $0.trimmingCharacters(in: CharacterSet.whitespaces) }
+        } else {
+            excludedBranches = nil
+        }
 
         /// Device Information
         osName = PlatformUtils.getRunningPlatform()

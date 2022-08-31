@@ -97,8 +97,8 @@ public class DDTestModule: NSObject, Encodable {
         meta[DDUISettingsTags.uiSettingsModuleLocalization] = localization
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: DDTestModuleEnvelope(self))
         /// We need to wait for all the traces to be written to the backend before exiting
-        DDTestMonitor.tracer.flush()
         DDTestMonitor.instance?.coverageHelper?.coverageWorkQueue.waitUntilAllOperationsAreFinished()
+        DDTestMonitor.tracer.flush()
     }
 }
 

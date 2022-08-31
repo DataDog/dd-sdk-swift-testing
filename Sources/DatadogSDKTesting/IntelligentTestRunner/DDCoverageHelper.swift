@@ -34,7 +34,7 @@ class DDCoverageHelper {
         initialCoverageSaved = false
         coverageWorkQueue = OperationQueue()
         coverageWorkQueue.qualityOfService = .background
-        coverageWorkQueue.maxConcurrentOperationCount = (ProcessInfo.processInfo.activeProcessorCount / 2)
+        coverageWorkQueue.maxConcurrentOperationCount = (ProcessInfo.processInfo.activeProcessorCount -  1)
     }
 
     func clearCounters() {

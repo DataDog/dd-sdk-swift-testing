@@ -146,12 +146,12 @@ internal class DDTestMonitor {
             gitUploader = nil
         }
 
-        /// Chek Git is up to date and no local changes
-        guard DDTestMonitor.env.isCi || (gitUploader?.statusUpToDate() ?? false) else {
-            coverageHelper = nil
-            itr = nil
-            return
-        }
+//        /// Chek Git is up to date and no local changes
+//        guard DDTestMonitor.env.isCi || (gitUploader?.statusUpToDate() ?? false) else {
+//            coverageHelper = nil
+//            itr = nil
+//            return
+//        }
 
         // Activate Coverage
         if DDTestMonitor.env.coverageEnabled {

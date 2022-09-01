@@ -10,9 +10,9 @@ import Foundation
 struct Log {
     private static var debugTracer = DDTestMonitor.env.extraDebug
 
-    static func debug(_ string: String) {
+    static func debug(_ string: @autoclosure () -> String) {
         if debugTracer {
-            Swift.print("[Debug][DatadogSDKTesting] " + string + "\n")
+            Swift.print("[Debug][DatadogSDKTesting] " + string() + "\n")
         }
     }
 

@@ -61,4 +61,8 @@ public struct SkipTestPublicFormat {
     public var name: String
     public var suite: String
     public var configuration: [String: String]?
+
+    public var description: String {
+        return "SkipeTest{name:\(name), suite:\(suite), configurtion: \(configuration)}"
+    }
 }

@@ -30,8 +30,10 @@ struct GitUploader {
         }
 
         let existingCommits = searchRepositoryCommits(repository: repo)
+        Log.debug("Existing commits: \(existingCommits)")
 
         let commitsToUpload = getCommitsAndTreesExcluding(excluded: existingCommits)
+        Log.debug("Commits To Upload: \(commitsToUpload)")
 
         guard !commitsToUpload.isEmpty else { return }
         generatePackFilesFromCommits(commits: commitsToUpload)
@@ -41,6 +43,7 @@ struct GitUploader {
 
     func statusUpToDate() -> Bool {
         let status = Spawn.commandWithResult(#"git -C "\#(workspacePath)" status --short -uno"#).trimmingCharacters(in: .whitespacesAndNewlines)
+        Log.debug("Git status: \(status)")
         return status.isEmpty
     }
 

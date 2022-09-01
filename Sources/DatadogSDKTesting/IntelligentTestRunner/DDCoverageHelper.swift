@@ -18,7 +18,7 @@ class DDCoverageHelper {
     let coverageWorkQueue: OperationQueue
 
     init?() {
-        guard DDEnvironmentValues().coverageEnabled,
+        guard DDTestMonitor.env.coverageEnabled,
               let profilePath = DDEnvironmentValues.getEnvVariable("LLVM_PROFILE_FILE"),
               BinaryImages.profileImages.count > 0
         else {

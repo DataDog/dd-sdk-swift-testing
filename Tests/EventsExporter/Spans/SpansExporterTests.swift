@@ -49,7 +49,8 @@ class SpansExporterTests: XCTestCase {
                                                       testsURL: URL(string: "http://localhost:33333/traces")!,
                                                       logsURL: URL(string: "http://localhost:33333/logs")!
                                                   ),
-                                                  performancePreset: .instantDataDelivery)
+                                                  performancePreset: .instantDataDelivery,
+                                                  exporterId: "exporterId")
 
         let spansExporter = try SpansExporter(config: configuration)
 

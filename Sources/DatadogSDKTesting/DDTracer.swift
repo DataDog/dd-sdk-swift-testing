@@ -100,7 +100,8 @@ internal class DDTracer {
             applicationKey: env.ddApplicationKey ?? "",
             endpoint: endpoint,
             payloadCompression: payloadCompression,
-            performancePreset: .instantDataDelivery
+            performancePreset: .instantDataDelivery,
+            exporterId: String(SpanId.random().rawValue)
         )
         eventsExporter = try? EventsExporter(config: exporterConfiguration)
 

@@ -23,6 +23,10 @@ struct HTTPHeader {
     static let userAgentHeaderField = "User-Agent"
     static let ddAPIKeyHeaderField = "DD-API-KEY"
     static let ddApplicationKeyHeaderField = "DD-APPLICATION-KEY"
+    static let traceIDField = "x-datadog-trace-id"
+    static let parentSpanIDField = "x-datadog-parent-id"
+    static let samplingPriorityField = "x-datadog-sampling-priority"
+
 
 
     enum Value {
@@ -65,5 +69,21 @@ struct HTTPHeader {
     /// Datadog request Application Key authentication header.
     static func ddApplicationKeyHeader(applicationKey: String) -> HTTPHeader {
         return HTTPHeader(field: ddApplicationKeyHeaderField, value: .constant(applicationKey))
+    }
+
+    // MARK: - Tracing Headers
+
+    /// Trace ID header.
+    static func traceIDHeader(traceID: String) -> HTTPHeader {
+        return HTTPHeader(field: traceIDField, value: .constant(traceID))
+    }
+
+    /// Parent Span ID header.
+    static func parentSpanIDHeader(parentSpanID: String) -> HTTPHeader {
+        return HTTPHeader(field: parentSpanIDField, value: .constant(parentSpanID))
+    }
+
+    static func samplingPriorityHeader() -> HTTPHeader {
+        return HTTPHeader(field: samplingPriorityField, value: .constant("1"))
     }
 }

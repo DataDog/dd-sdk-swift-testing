@@ -139,6 +139,7 @@ internal class DDTestMonitor {
         }
 
         if DDTestMonitor.env.gitUploadEnabled {
+            Log.debug("Git Upload Enabled")
             gitUploader = try? GitUploader()
             gitUploader?.sendGitInfo()
         } else {
@@ -154,6 +155,7 @@ internal class DDTestMonitor {
 
         // Activate Coverage
         if DDTestMonitor.env.coverageEnabled {
+            Log.debug("Coverage Enabled")
             // Coverage is not supported for swift < 5.3 (binary target dependency)
             #if swift(>=5.3)
                 coverageHelper = DDCoverageHelper()
@@ -167,15 +169,25 @@ internal class DDTestMonitor {
 
         /// Check branch is not excluded
         if let excludedBranches = DDTestMonitor.env.excludedBranches,
-           let currentBranch = DDTestMonitor.env.branch,
-           excludedBranches.contains(currentBranch)
-        {
-            itr = nil
-            return
+           let currentBranch = DDTestMonitor.env.branch{
+            if excludedBranches.contains(currentBranch)
+            {
+                Log.debug("Excluded branch: \(currentBranch)")
+                itr = nil
+                return
+            }
+            let wildcardBranches = excludedBranches.filter{$0.hasSuffix("*")}.map{$0.dropLast()}
+            for branch in wildcardBranches {
+                if currentBranch.hasPrefix(branch) {
+                    Log.debug("Excluded branch with wildcard: \(currentBranch)")
+                    itr = nil
+                    return
+                }
+            }
         }
-
         // Activate Intelligent Test Runner
         if DDTestMonitor.env.itrEnabled {
+            Log.debug("ITR Enabled")
             itr = IntelligentTestRunner(configurations: DDTestMonitor.baseConfigurationTags)
             itr?.start()
         } else {

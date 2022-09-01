@@ -31,7 +31,10 @@ public struct ExporterConfiguration {
     /// Performance preset for reporting
     var performancePreset: PerformancePreset
 
-    public init(serviceName: String, libraryVersion: String, applicationName: String, applicationVersion: String, environment: String, apiKey: String, applicationKey: String, endpoint: Endpoint, payloadCompression: Bool = true, source: String = "ios", performancePreset: PerformancePreset = .default) {
+    /// Exporter ID for tracing
+    var exporterId: String
+
+    public init(serviceName: String, libraryVersion: String, applicationName: String, applicationVersion: String, environment: String, apiKey: String, applicationKey: String, endpoint: Endpoint, payloadCompression: Bool = true, source: String = "ios", performancePreset: PerformancePreset = .default, exporterId: String) {
         self.serviceName = serviceName
         self.libraryVersion = libraryVersion
         self.applicationName = applicationName
@@ -43,5 +46,6 @@ public struct ExporterConfiguration {
         self.payloadCompression = payloadCompression
         self.source = source
         self.performancePreset = performancePreset
+        self.exporterId = exporterId
     }
 }

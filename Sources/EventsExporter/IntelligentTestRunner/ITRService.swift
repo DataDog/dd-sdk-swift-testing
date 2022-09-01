@@ -28,7 +28,10 @@ internal class ITRService {
                     device: Device.current
                 ),
                 .ddAPIKeyHeader(apiKey: config.apiKey),
-                .ddApplicationKeyHeader(applicationKey: config.applicationKey)
+                .ddApplicationKeyHeader(applicationKey: config.applicationKey),
+                .traceIDHeader(traceID: config.exporterId),
+                .parentSpanIDHeader(parentSpanID: config.exporterId),
+                .samplingPriorityHeader()
             ] // + (configuration.payloadCompression ? [HTTPHeader.contentEncodingHeader(contentEncoding: .deflate)] : [])
         )
 
@@ -42,7 +45,10 @@ internal class ITRService {
                     device: Device.current
                 ),
                 .ddAPIKeyHeader(apiKey: config.apiKey),
-                .ddApplicationKeyHeader(applicationKey: config.applicationKey)
+                .ddApplicationKeyHeader(applicationKey: config.applicationKey),
+                .traceIDHeader(traceID: config.exporterId),
+                .parentSpanIDHeader(parentSpanID: config.exporterId),
+                .samplingPriorityHeader()
             ] + (configuration.payloadCompression ? [HTTPHeader.contentEncodingHeader(contentEncoding: .deflate)] : [])
         )
 
@@ -58,7 +64,10 @@ internal class ITRService {
                     device: Device.current
                 ),
                 .ddAPIKeyHeader(apiKey: config.apiKey),
-                .ddApplicationKeyHeader(applicationKey: config.applicationKey)
+                .ddApplicationKeyHeader(applicationKey: config.applicationKey),
+                .traceIDHeader(traceID: config.exporterId),
+                .parentSpanIDHeader(parentSpanID: config.exporterId),
+                .samplingPriorityHeader()
             ] // + (configuration.payloadCompression ? [HTTPHeader.contentEncodingHeader(contentEncoding: .deflate)] : [])
         )
 

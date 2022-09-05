@@ -27,9 +27,7 @@ class DDCoverageHelper {
         }
 
         llvmProfileURL = URL(fileURLWithPath: profilePath)
-        storageProfileURL = llvmProfileURL.deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .appendingPathComponent("DDTestingCoverage")
+        storageProfileURL = llvmProfileURL.deletingLastPathComponent().appendingPathComponent("DDTestingCoverage")
         Log.debug("DDCoverageHelper location: \(storageProfileURL.path)")
         initialCoverageSaved = false
         coverageWorkQueue = OperationQueue()

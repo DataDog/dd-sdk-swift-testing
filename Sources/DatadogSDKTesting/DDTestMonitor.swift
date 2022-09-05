@@ -143,15 +143,17 @@ internal class DDTestMonitor {
             gitUploader = try? GitUploader()
             gitUploader?.sendGitInfo()
         } else {
+            Log.debug("Git Upload Disabled")
             gitUploader = nil
         }
 
-//        /// Chek Git is up to date and no local changes
-//        guard DDTestMonitor.env.isCi || (gitUploader?.statusUpToDate() ?? false) else {
-//            coverageHelper = nil
-//            itr = nil
-//            return
-//        }
+        /// Check Git is up to date and no local changes
+        guard DDTestMonitor.env.isCi || (gitUploader?.statusUpToDate() ?? false) else {
+            Log.debug("Git status not up to date")
+            coverageHelper = nil
+            itr = nil
+            return
+        }
 
         // Activate Coverage
         if DDTestMonitor.env.coverageEnabled {
@@ -164,6 +166,7 @@ internal class DDTestMonitor {
             #endif
 
         } else {
+            Log.debug("Coverage Disabled")
             coverageHelper = nil
         }
 
@@ -191,6 +194,7 @@ internal class DDTestMonitor {
             itr = IntelligentTestRunner(configurations: DDTestMonitor.baseConfigurationTags)
             itr?.start()
         } else {
+            Log.debug("ITR Disabled")
             itr = nil
         }
     }

@@ -55,6 +55,7 @@ internal struct DDEnvironmentValues {
     let ddEnvironment: String?
     let ddService: String?
     var ddTags = [String: String]()
+    var customConfigurations = [String:String]()
 
     /// Instrumentation configuration values
     let disableNetworkInstrumentation: Bool
@@ -187,6 +188,10 @@ internal struct DDEnvironmentValues {
                 let key = entryPair[0].trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
                 let value = entryPair[1].trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
                 ddTags[key] = value
+                if key.hasPrefix("test.configuration.") {
+                    let auxKey = String(key.dropFirst(19))
+                    customConfigurations[auxKey] = value
+                }
             }
         }
 

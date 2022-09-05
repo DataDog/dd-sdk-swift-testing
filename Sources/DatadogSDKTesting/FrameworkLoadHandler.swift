@@ -37,8 +37,8 @@ public class FrameworkLoadHandler: NSObject {
         if isInTestMode {
             // When code coverage is enabled modify profile name so it disables countinuous profiling
             // or we cannot recover coverage manually
-            let envDisableCodeCoverage = environment["DD_DISABLE_CODE_COVERAGE"] as NSString?
-            if !(envDisableCodeCoverage?.boolValue ?? false),
+            let envEnabledCodeCoverage = environment["DD_CIVISIBILITY_CODE_COVERAGE_ENABLED"] as NSString?
+            if envEnabledCodeCoverage?.boolValue ?? false,
                let profilePath = environment["LLVM_PROFILE_FILE"]
             {
                 let newEnv = profilePath.replacingOccurrences(of: "%c", with: "")
@@ -58,6 +58,8 @@ public class FrameworkLoadHandler: NSObject {
                 DDTestMonitor.instance = DDTestMonitor()
                 DDTestMonitor.instance?.startInstrumenting()
             }
+        } else {
+            print("[DatadogSDKTesting] Framework loaded but not in test mode")
         }
     }
 }

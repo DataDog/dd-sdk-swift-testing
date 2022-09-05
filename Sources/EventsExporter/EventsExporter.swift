@@ -68,8 +68,8 @@ public class EventsExporter: SpanExporter {
                                              repository: repository)
     }
 
-    public func skippableTests(repositoryURL: String, sha: String, configurations: [String:String]) -> [SkipTestPublicFormat] {
-        return itrService.skippableTests(repositoryURL: repositoryURL, sha: sha, configurations: configurations)
+    public func skippableTests(repositoryURL: String, sha: String, configurations: [String:String],  customConfigurations: [String:String]) -> [SkipTestPublicFormat] {
+        return itrService.skippableTests(repositoryURL: repositoryURL, sha: sha, configurations: configurations, customConfigurations: customConfigurations)
     }
 
     public func shutdown() {

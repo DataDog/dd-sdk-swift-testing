@@ -41,16 +41,15 @@ public class DDTestModule: NSObject, Encodable {
         let moduleStartTime = startTime ?? DDTestMonitor.clock.now
         self.duration = 0
         self.status = .pass
+        self.bundleName = bundleName
         if DDTestMonitor.instance == nil {
+            DDTestMonitor.baseConfigurationTags[DDTestTags.testBundle] = bundleName
             let success = DDTestMonitor.installTestMonitor()
             if !success {
                 configError = true
-            } else {
-                DDTestMonitor.baseConfigurationTags[DDTestTags.testBundle] = bundleName
             }
         }
 
-        self.bundleName = bundleName
 #if targetEnvironment(simulator) || os(macOS)
         DDSymbolicator.createDSYMFileIfNeeded(forImageName: bundleName)
         bundleFunctionInfo = FileLocator.testFunctionsInModule(bundleName)

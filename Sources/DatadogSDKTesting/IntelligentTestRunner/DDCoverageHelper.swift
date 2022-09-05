@@ -18,21 +18,23 @@ class DDCoverageHelper {
     let coverageWorkQueue: OperationQueue
 
     init?() {
-        guard DDTestMonitor.env.coverageEnabled,
-              let profilePath = DDEnvironmentValues.getEnvVariable("LLVM_PROFILE_FILE"),
+        guard let profilePath = DDEnvironmentValues.getEnvVariable("LLVM_PROFILE_FILE"),
               BinaryImages.profileImages.count > 0
         else {
             Log.debug("DDCoverageHelper could not be instanced")
+            Log.debug("LLVM_PROFILE_FILE: \(DDEnvironmentValues.getEnvVariable("LLVM_PROFILE_FILE") ?? "NIL")")
+            Log.debug("Profile Images coung: \(BinaryImages.profileImages.count)")
             return nil
         }
 
         llvmProfileURL = URL(fileURLWithPath: profilePath)
         storageProfileURL = llvmProfileURL.deletingLastPathComponent().appendingPathComponent("DDTestingCoverage")
+        Log.debug("LLVM Coverage location: \(llvmProfileURL.path)")
         Log.debug("DDCoverageHelper location: \(storageProfileURL.path)")
         initialCoverageSaved = false
         coverageWorkQueue = OperationQueue()
         coverageWorkQueue.qualityOfService = .background
-        coverageWorkQueue.maxConcurrentOperationCount = (ProcessInfo.processInfo.activeProcessorCount -  1)
+        coverageWorkQueue.maxConcurrentOperationCount = (ProcessInfo.processInfo.activeProcessorCount - 1)
     }
 
     func clearCounters() {

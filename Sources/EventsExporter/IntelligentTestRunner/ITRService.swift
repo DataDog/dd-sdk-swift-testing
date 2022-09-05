@@ -117,8 +117,12 @@ internal class ITRService {
             .replacingOccurrences(of: "@2", with: service.lowercased()))!
     }
 
-    public func skippableTests(repositoryURL: String, sha: String, configurations: [String: String]) -> [SkipTestPublicFormat] {
-        let commitPayload = SkipTestsRequestFormat(repositoryURL: repositoryURL, sha: sha, configurations: configurations)
+    public func skippableTests(repositoryURL: String, sha: String, configurations: [String: String], customConfigurations: [String: String]) -> [SkipTestPublicFormat] {
+
+        var itrConfig:[String: JSONGeneric] = configurations.mapValues { .string($0)}
+        itrConfig["custom"] = .stringDict(customConfigurations)
+
+        let commitPayload = SkipTestsRequestFormat(repositoryURL: repositoryURL, sha: sha, configurations: itrConfig)
         guard let jsonData = commitPayload.jsonData,
               let response = skippableTestsUploader.uploadWithResponse(data: jsonData),
               let skipTests = try? JSONDecoder().decode(SkipTestsResponseFormat.self, from: response)
@@ -126,8 +130,28 @@ internal class ITRService {
             return []
         }
 
-        return skipTests.data.map { SkipTestPublicFormat(name: $0.attributes.name,
-                                                         suite: $0.attributes.suite,
-                                                         configuration: $0.attributes.configuration) }
+        return skipTests.data.map { skipTest in
+
+            let customConfigurations: [String: String]?
+            if case .stringDict(let dict) = skipTest.attributes.configuration?["custom"] {
+                customConfigurations = dict
+            } else {
+                customConfigurations = nil
+            }
+
+            let configurations: [String: String]? = skipTest.attributes.configuration?.compactMapValues {
+                switch $0 {
+                    case .string(let string):
+                        return string
+                    default:
+                        return nil
+                }
+            }
+
+            return SkipTestPublicFormat(name: skipTest.attributes.name,
+                                        suite: skipTest.attributes.suite,
+                                        configuration: configurations,
+                                        customConfiguration: customConfigurations)
+        }
     }
 }

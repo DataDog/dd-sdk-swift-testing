@@ -12,19 +12,19 @@ struct SkipTestsRequestFormat: Codable {
     struct SkipTestRequestAttributes: Codable {
         var repository_url: String
         var sha: String
-        var configurations: [String: String]
+        var configurations: [String: JSONGeneric]
     }
 
     struct SkipTestsRequestData: Codable {
         var type = "test_params"
         var attributes: SkipTestRequestAttributes
 
-        init(repositoryURL: String, sha: String, configurations: [String: String]) {
+        init(repositoryURL: String, sha: String, configurations: [String: JSONGeneric]) {
             self.attributes = SkipTestRequestAttributes(repository_url: repositoryURL, sha: sha, configurations: configurations)
         }
     }
 
-    init(repositoryURL: String, sha: String, configurations: [String: String]) {
+    init(repositoryURL: String, sha: String, configurations: [String: JSONGeneric]) {
         self.data = SkipTestsRequestData(repositoryURL: repositoryURL, sha: sha, configurations: configurations)
     }
 }
@@ -40,14 +40,15 @@ extension SkipTestsRequestFormat {
     }
 }
 
+
 struct SkipTestsResponseFormat: Decodable {
     var data: [SkipTestsResponseData]
-
+    
     struct SkipTestResponseAttributes: Decodable {
         var name: String
         var parameters: String?
         var suite: String
-        var configuration: [String: String]?
+        var configuration: [String: JSONGeneric]?
     }
 
     struct SkipTestsResponseData: Decodable {
@@ -57,12 +58,13 @@ struct SkipTestsResponseFormat: Decodable {
     }
 }
 
-public struct SkipTestPublicFormat {
+public struct SkipTestPublicFormat: CustomStringConvertible {
     public var name: String
     public var suite: String
     public var configuration: [String: String]?
+    public var customConfiguration: [String: String]?
 
     public var description: String {
-        return "SkipeTest{name:\(name), suite:\(suite), configurtion: \(configuration)}"
+        return "{name:\(name), suite:\(suite), configuration: \(configuration ?? [:]), customConfiguration: \(customConfiguration ?? [:])}"
     }
 }

@@ -31,10 +31,7 @@ jobs:
     - name: Get the tag version
       id: tag_version
       run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
-    - name: Get branch name
-      id: branch-name
-      uses: tj-actions/branch-names@v6
     - name: Update swift binary and recreate tag
-      run: sh Scripts/uploadBinary.sh $GITHUB_TOKEN ${{ steps.tag_version.outputs.VERSION }} ${{ steps.branch-name.outputs.current_branch }}
+      run: sh Scripts/uploadBinary.sh $GITHUB_TOKEN ${{ steps.tag_version.outputs.VERSION }}
 
 

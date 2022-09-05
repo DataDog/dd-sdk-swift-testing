@@ -2,7 +2,6 @@
 # This script expects two inputs
 # $1 - The github token for dd-sdk-swift-testing
 # $2 - the git tag
-# $3 - the git branch
 
 #Upload binary file to release file
 brew list gh &>/dev/null || brew install gh
@@ -17,4 +16,4 @@ cat Package@swift-5.3.swift
 git add Package@swift-5.3.swift
 git commit -m "Updated binary package version to $2"
 git tag -f $2
-git push -f --tags origin HEAD:$3
+git push -f --tags origin HEAD:main

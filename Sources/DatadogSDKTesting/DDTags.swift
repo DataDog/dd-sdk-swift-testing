@@ -175,6 +175,10 @@ internal enum DDTagValues {
     static let statusSkip = "skip"
 }
 
+internal enum DDItrTags {
+    static let iItrSkippedTests = "_dd.ci.itr"
+}
+
 internal enum DDCFMessageID {
     static let setCustomTags: Int32 = 0x1111
     static let enableRUM: Int32 = 0x2222

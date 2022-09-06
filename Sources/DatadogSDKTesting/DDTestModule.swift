@@ -25,6 +25,7 @@ public class DDTestModule: NSObject, Encodable {
     var status: DDTestStatus
     var localization: String
     var configError = false
+    var itrSkipped = false
 
     private let executionLock = NSLock()
     private var privateCurrentExecutionOrder = 0
@@ -94,6 +95,7 @@ public class DDTestModule: NSObject, Encodable {
         meta.merge(DDEnvironmentValues.gitAttributes) { _, new in new }
         meta.merge(DDEnvironmentValues.ciAttributes) { _, new in new }
         meta[DDUISettingsTags.uiSettingsModuleLocalization] = localization
+        meta[DDItrTags.iItrSkippedTests] = itrSkipped ? "true" : "false"
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: DDTestModuleEnvelope(self))
         /// We need to wait for all the traces to be written to the backend before exiting
         DDTestMonitor.instance?.coverageHelper?.coverageWorkQueue.waitUntilAllOperationsAreFinished()

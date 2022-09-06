@@ -49,7 +49,8 @@ class LogsExporterTests: XCTestCase {
                                                       logsURL: URL(string: "http://localhost:33333/logs")!
                                                   ),
                                                   performancePreset: .instantDataDelivery,
-                                                  exporterId: "exporterId")
+                                                  exporterId: "exporterId",
+                                                  debugMode: false)
 
         let logsExporter = try LogsExporter(config: configuration)
 

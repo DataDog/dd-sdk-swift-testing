@@ -332,7 +332,7 @@
 		E1DCAF4E284A1F5500F44BE3 /* SpansExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CEFE27D7790200F4018A /* SpansExporter.swift */; };
 		E1DCAF4F284A1F5B00F44BE3 /* Device.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0927D7790200F4018A /* Device.swift */; };
 		E1DCAF50284A1F5B00F44BE3 /* PerformancePreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0127D7790200F4018A /* PerformancePreset.swift */; };
-		E1DCAF51284A1F5B00F44BE3 /* JSONEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0227D7790200F4018A /* JSONEncoder.swift */; };
+		E1DCAF51284A1F5B00F44BE3 /* JSONUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0227D7790200F4018A /* JSONUtils.swift */; };
 		E1DCAF52284A1F5B00F44BE3 /* DateProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0427D7790200F4018A /* DateProvider.swift */; };
 		E1DCAF53284A1F5B00F44BE3 /* EncodableValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0627D7790200F4018A /* EncodableValue.swift */; };
 		E1DCAF54284A1F5B00F44BE3 /* DataCompression.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0827D7790200F4018A /* DataCompression.swift */; };
@@ -382,7 +382,7 @@
 		E1DCAF92284A285D00F44BE3 /* RequestBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1B27D7790300F4018A /* RequestBuilder.swift */; };
 		E1DCAF93284A285D00F44BE3 /* File.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1827D7790300F4018A /* File.swift */; };
 		E1DCAF94284A285D00F44BE3 /* CoverageExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1743F5628490141006CBFF8 /* CoverageExporter.swift */; };
-		E1DCAF95284A285D00F44BE3 /* JSONEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0227D7790200F4018A /* JSONEncoder.swift */; };
+		E1DCAF95284A285D00F44BE3 /* JSONUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0227D7790200F4018A /* JSONUtils.swift */; };
 		E1DCAF96284A285D00F44BE3 /* CoverageExporterJson.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D78392818262500758E2A /* CoverageExporterJson.cpp */; };
 		E1DCAF97284A285D00F44BE3 /* DateFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0527D7790200F4018A /* DateFormatting.swift */; };
 		E1DCAF98284A285D00F44BE3 /* DataFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1427D7790300F4018A /* DataFormat.swift */; };
@@ -424,7 +424,7 @@
 		E1DCAFD7284A2BED00F44BE3 /* DataUploadDelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF2027D7790300F4018A /* DataUploadDelay.swift */; };
 		E1DCAFD8284A2BED00F44BE3 /* DataUploadStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF2127D7790300F4018A /* DataUploadStatus.swift */; };
 		E1DCAFD9284A2BED00F44BE3 /* CoverageReport.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D784128182BDA00758E2A /* CoverageReport.cpp */; };
-		E1DCAFDA284A2BED00F44BE3 /* JSONEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0227D7790200F4018A /* JSONEncoder.swift */; };
+		E1DCAFDA284A2BED00F44BE3 /* JSONUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0227D7790200F4018A /* JSONUtils.swift */; };
 		E1DCAFDB284A2BED00F44BE3 /* DateProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0427D7790200F4018A /* DateProvider.swift */; };
 		E1DCAFDC284A2BED00F44BE3 /* EventsExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1927D7790300F4018A /* EventsExporter.swift */; };
 		E1DCAFDD284A2BED00F44BE3 /* CoverageSummaryInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D78452818364A00758E2A /* CoverageSummaryInfo.cpp */; };
@@ -783,7 +783,7 @@
 		E143CEFE27D7790200F4018A /* SpansExporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpansExporter.swift; sourceTree = "<group>"; };
 		E143CEFF27D7790200F4018A /* SpanEncoder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpanEncoder.swift; sourceTree = "<group>"; };
 		E143CF0127D7790200F4018A /* PerformancePreset.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PerformancePreset.swift; sourceTree = "<group>"; };
-		E143CF0227D7790200F4018A /* JSONEncoder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JSONEncoder.swift; sourceTree = "<group>"; };
+		E143CF0227D7790200F4018A /* JSONUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JSONUtils.swift; sourceTree = "<group>"; };
 		E143CF0327D7790200F4018A /* Feature.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Feature.swift; sourceTree = "<group>"; };
 		E143CF0427D7790200F4018A /* DateProvider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DateProvider.swift; sourceTree = "<group>"; };
 		E143CF0527D7790200F4018A /* DateFormatting.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DateFormatting.swift; sourceTree = "<group>"; };
@@ -1357,7 +1357,7 @@
 				E1EBBD4A27F200210059BC3E /* AttributesSanitizer.swift */,
 				E143CF0827D7790200F4018A /* DataCompression.swift */,
 				E143CF0127D7790200F4018A /* PerformancePreset.swift */,
-				E143CF0227D7790200F4018A /* JSONEncoder.swift */,
+				E143CF0227D7790200F4018A /* JSONUtils.swift */,
 				E143CF0327D7790200F4018A /* Feature.swift */,
 				E1F69C2028C648000042156E /* JSONGeneric.swift */,
 				E143CF0427D7790200F4018A /* DateProvider.swift */,
@@ -2965,7 +2965,7 @@
 				E1DCAF5C284A1F6900F44BE3 /* DataFormat.swift in Sources */,
 				E1DCAF46284A1F4900F44BE3 /* Error.cpp in Sources */,
 				E1DCAF4A284A1F4900F44BE3 /* CoverageReport.cpp in Sources */,
-				E1DCAF51284A1F5B00F44BE3 /* JSONEncoder.swift in Sources */,
+				E1DCAF51284A1F5B00F44BE3 /* JSONUtils.swift in Sources */,
 				E1F69C2C28C7301A0042156E /* Log.swift in Sources */,
 				E1DCAF45284A1F4900F44BE3 /* LLVMCodeCoverageBridge.mm in Sources */,
 				E1DCAF4C284A1F5500F44BE3 /* SpanEncoder.swift in Sources */,
@@ -2988,7 +2988,7 @@
 				E1DCAF8F284A285D00F44BE3 /* AttributesSanitizer.swift in Sources */,
 				E1DCAF8A284A285D00F44BE3 /* Directory.swift in Sources */,
 				E1DCAFBC284A29DD00F44BE3 /* Spawn.swift in Sources */,
-				E1DCAF95284A285D00F44BE3 /* JSONEncoder.swift in Sources */,
+				E1DCAF95284A285D00F44BE3 /* JSONUtils.swift in Sources */,
 				E1DCAFA1284A285D00F44BE3 /* HTTPClient.swift in Sources */,
 				E1DCAF87284A285D00F44BE3 /* LLVMCodeCoverageBridge.mm in Sources */,
 				E1DCAF86284A285D00F44BE3 /* DataUploadDelay.swift in Sources */,
@@ -3082,7 +3082,7 @@
 				E1F69C2428C6493A0042156E /* JSONGeneric.swift in Sources */,
 				E1DCAFD4284A2BED00F44BE3 /* LogsExporter.swift in Sources */,
 				E1DCAFED284A2BED00F44BE3 /* FileReader.swift in Sources */,
-				E1DCAFDA284A2BED00F44BE3 /* JSONEncoder.swift in Sources */,
+				E1DCAFDA284A2BED00F44BE3 /* JSONUtils.swift in Sources */,
 				E1DCAFD2284A2BED00F44BE3 /* DDCoverageConversor.swift in Sources */,
 				E1DCAFF5284A2BED00F44BE3 /* HTTPClient.swift in Sources */,
 				E1DCAFEE284A2BED00F44BE3 /* Directory.swift in Sources */,

@@ -52,10 +52,14 @@ class DDTestObserver: NSObject, XCTestObservation {
         if let itr = DDTestMonitor.instance?.itr {
             let skippableTests = itr.skippableTests.filter { $0.suite == testSuite.name }.map { "-[\(testSuite.name) \($0.name)]" }
             let finalTests = tests.filter { !skippableTests.contains(($0 as AnyObject).name) }
-            Log.print("ITR skipped \(tests.count - finalTests.count) tests")
             testSuite.setValue(finalTests, forKey: "_mutableTests")
             if !finalTests.isEmpty {
                 suite = module.suiteStart(name: testSuite.name)
+            }
+            let testsToSkip = tests.count - finalTests.count
+            Log.print("ITR skipped \(testsToSkip) tests")
+            if testsToSkip > 0 {
+                module.itrSkipped = true
             }
         } else {
             suite = module.suiteStart(name: testSuite.name)

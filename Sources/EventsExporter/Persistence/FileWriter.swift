@@ -51,7 +51,7 @@ internal final class FileWriter {
                 try file.append(data: atomicData, synchronized: syncOnEnd)
             }
         } catch {
-            print("🔥 Failed to write file: \(error)")
+            Log.print("🔥 Failed to write file: \(error)")
         }
     }
 }

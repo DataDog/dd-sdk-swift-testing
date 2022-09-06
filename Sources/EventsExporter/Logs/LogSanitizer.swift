@@ -75,7 +75,7 @@ internal struct LogSanitizer {
         // Attribute name cannot be empty
         return attributes.filter { attribute in
             if attribute.key.isEmpty {
-                print("Attribute key is empty. This attribute will be ignored.")
+                Log.print("Attribute key is empty. This attribute will be ignored.")
                 return false
             }
             return true
@@ -95,7 +95,7 @@ internal struct LogSanitizer {
         let sanitizedAttributes: [(String, Encodable)] = attributes.map { name, value in
             let sanitizedName = sanitize(attributeName: name)
             if sanitizedName != name {
-                print("Attribute '\(name)' was modified to '\(sanitizedName)' to match Datadog constraints.")
+                Log.print("Attribute '\(name)' was modified to '\(sanitizedName)' to match Datadog constraints.")
                 return (sanitizedName, value)
             } else {
                 return (name, value)
@@ -123,7 +123,7 @@ internal struct LogSanitizer {
         // Only `limit` number of attributes are allowed.
         if attributes.count > limit {
             let extraAttributesCount = attributes.count - Constraints.maxNumberOfAttributes
-            print("Number of attributes exceeds the limit of \(Constraints.maxNumberOfAttributes). \(extraAttributesCount) attribute(s) will be ignored.")
+            Log.print("Number of attributes exceeds the limit of \(Constraints.maxNumberOfAttributes). \(extraAttributesCount) attribute(s) will be ignored.")
             return Dictionary(uniqueKeysWithValues: attributes.dropLast(extraAttributesCount))
         } else {
             return attributes
@@ -149,7 +149,7 @@ internal struct LogSanitizer {
 
     private func startsWithAllowedCharacter(tag: String) -> Bool {
         guard let firstCharacter = tag.first?.asciiValue else {
-            print("Tag is empty and will be ignored.")
+            Log.print("Tag is empty and will be ignored.")
             return false
         }
 
@@ -157,7 +157,7 @@ internal struct LogSanitizer {
         if Constraints.allowedTagNameFirstCharacterASCIIRange.contains(firstCharacter) {
             return true
         } else {
-            print("Tag '\(tag)' starts with an invalid character and will be ignored.")
+            Log.print("Tag '\(tag)' starts with an invalid character and will be ignored.")
             return false
         }
     }
@@ -165,7 +165,7 @@ internal struct LogSanitizer {
     private func replaceIllegalCharactersIn(tag: String) -> String {
         let sanitized = tag.replacingOccurrences(of: #"[^a-z0-9_:.\/-]"#, with: "_", options: .regularExpression)
         if sanitized != tag {
-            print("Tag '\(tag)' was modified to '\(sanitized)' to match Datadog constraints.")
+            Log.print("Tag '\(tag)' was modified to '\(sanitized)' to match Datadog constraints.")
         }
         return sanitized
     }
@@ -175,7 +175,7 @@ internal struct LogSanitizer {
         var sanitized = tag
         while sanitized.last == ":" { _ = sanitized.removeLast() }
         if sanitized != tag {
-            print("Tag '\(tag)' was modified to '\(sanitized)' to match Datadog constraints.")
+            Log.print("Tag '\(tag)' was modified to '\(sanitized)' to match Datadog constraints.")
         }
         return sanitized
     }
@@ -183,7 +183,7 @@ internal struct LogSanitizer {
     private func limitToMaxLength(tag: String) -> String {
         if tag.count > Constraints.maxTagLength {
             let sanitized = String(tag.prefix(Constraints.maxTagLength))
-            print("Tag '\(tag)' was modified to '\(sanitized)' to match Datadog constraints.")
+            Log.print("Tag '\(tag)' was modified to '\(sanitized)' to match Datadog constraints.")
             return sanitized
         } else {
             return tag
@@ -194,7 +194,7 @@ internal struct LogSanitizer {
         if let colonIndex = tag.firstIndex(of: ":") {
             let key = String(tag.prefix(upTo: colonIndex))
             if Constraints.reservedTagKeys.contains(key) {
-                print("'\(key)' is a reserved tag key. This tag will be ignored.")
+                Log.print("'\(key)' is a reserved tag key. This tag will be ignored.")
                 return false
             } else {
                 return true
@@ -208,7 +208,7 @@ internal struct LogSanitizer {
         // Only `Constraints.maxNumberOfTags` of tags are allowed.
         if tags.count > Constraints.maxNumberOfTags {
             let extraTagsCount = tags.count - Constraints.maxNumberOfTags
-            print("Number of tags exceeds the limit of \(Constraints.maxNumberOfTags). \(extraTagsCount) attribute(s) will be ignored.")
+            Log.print("Number of tags exceeds the limit of \(Constraints.maxNumberOfTags). \(extraTagsCount) attribute(s) will be ignored.")
             return tags.dropLast(extraTagsCount)
         } else {
             return tags

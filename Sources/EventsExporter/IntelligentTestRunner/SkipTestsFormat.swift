@@ -6,7 +6,7 @@
 
 import Foundation
 
-struct SkipTestsRequestFormat: Codable {
+struct SkipTestsRequestFormat: Codable, JSONable {
     var data: SkipTestsRequestData
 
     struct SkipTestRequestAttributes: Codable {
@@ -26,17 +26,6 @@ struct SkipTestsRequestFormat: Codable {
 
     init(repositoryURL: String, sha: String, configurations: [String: JSONGeneric]) {
         self.data = SkipTestsRequestData(repositoryURL: repositoryURL, sha: sha, configurations: configurations)
-    }
-}
-
-extension SkipTestsRequestFormat {
-    var jsonData: Data? {
-        return try? JSONEncoder().encode(self)
-    }
-
-    var json: String? {
-        guard let data = self.jsonData else { return nil }
-        return String(data: data, encoding: .utf8)
     }
 }
 

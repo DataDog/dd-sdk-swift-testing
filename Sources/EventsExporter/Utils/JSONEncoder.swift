@@ -20,3 +20,19 @@ extension JSONEncoder {
         return encoder
     }
 }
+
+protocol JSONable {
+    var jsonData: Data? { get }
+    var jsonString: String { get }
+}
+
+extension JSONable where Self: Encodable {
+    var jsonData: Data? {
+        return try? JSONEncoder().encode(self)
+    }
+
+    var jsonString: String {
+        guard let data = self.jsonData else { return "" }
+        return String(decoding: data, as: UTF8.self)
+    }
+}

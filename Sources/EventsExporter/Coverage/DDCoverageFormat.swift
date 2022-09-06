@@ -99,14 +99,3 @@ struct DDCoverageFormat: Encodable {
         }
     }
 }
-
-extension DDCoverageFormat {
-    var jsonData: Data? {
-        return try? JSONEncoder().encode(self)
-    }
-
-    var json: String? {
-        guard let data = self.jsonData else { return nil }
-        return String(data: data, encoding: .utf8)
-    }
-}

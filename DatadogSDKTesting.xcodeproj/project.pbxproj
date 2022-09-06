@@ -493,6 +493,9 @@
 		E1F69C2428C6493A0042156E /* JSONGeneric.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F69C2028C648000042156E /* JSONGeneric.swift */; };
 		E1F69C2528C6493B0042156E /* JSONGeneric.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F69C2028C648000042156E /* JSONGeneric.swift */; };
 		E1F69C2628C6493B0042156E /* JSONGeneric.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F69C2028C648000042156E /* JSONGeneric.swift */; };
+		E1F69C2B28C730190042156E /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F69C2A28C72FAD0042156E /* Log.swift */; };
+		E1F69C2C28C7301A0042156E /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F69C2A28C72FAD0042156E /* Log.swift */; };
+		E1F69C2D28C7301B0042156E /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F69C2A28C72FAD0042156E /* Log.swift */; };
 		E1FB48312538909D0083B263 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1ABA04A25231E2500ED8AEF /* DatadogSDKTesting.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 		E1FB483B253891650083B263 /* CrashReporter in Frameworks */ = {isa = PBXBuildFile; productRef = E1FB483A253891650083B263 /* CrashReporter */; };
 		E1FB4840253891CE0083B263 /* SimpleSpanSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FB483D253891CE0083B263 /* SimpleSpanSerializer.swift */; };
@@ -910,6 +913,7 @@
 		E1F421CC26539FAB00233B75 /* Tests tvOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Tests tvOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E1F595D32609FC3000AE92B7 /* DDNetworkInstrumentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDNetworkInstrumentation.swift; sourceTree = "<group>"; };
 		E1F69C2028C648000042156E /* JSONGeneric.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONGeneric.swift; sourceTree = "<group>"; };
+		E1F69C2A28C72FAD0042156E /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
 		E1FB483D253891CE0083B263 /* SimpleSpanSerializer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleSpanSerializer.swift; sourceTree = "<group>"; };
 		E1FB483E253891CE0083B263 /* DDCrashes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DDCrashes.swift; sourceTree = "<group>"; };
 		E1FB483F253891CE0083B263 /* SimpleSpanData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleSpanData.swift; sourceTree = "<group>"; };
@@ -1348,6 +1352,7 @@
 		E143CF0027D7790200F4018A /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				E1F69C2A28C72FAD0042156E /* Log.swift */,
 				E1665A7225D12D7500BA53CD /* Spawn.swift */,
 				E1EBBD4A27F200210059BC3E /* AttributesSanitizer.swift */,
 				E143CF0827D7790200F4018A /* DataCompression.swift */,
@@ -2961,6 +2966,7 @@
 				E1DCAF46284A1F4900F44BE3 /* Error.cpp in Sources */,
 				E1DCAF4A284A1F4900F44BE3 /* CoverageReport.cpp in Sources */,
 				E1DCAF51284A1F5B00F44BE3 /* JSONEncoder.swift in Sources */,
+				E1F69C2C28C7301A0042156E /* Log.swift in Sources */,
 				E1DCAF45284A1F4900F44BE3 /* LLVMCodeCoverageBridge.mm in Sources */,
 				E1DCAF4C284A1F5500F44BE3 /* SpanEncoder.swift in Sources */,
 				E1F69C2628C6493B0042156E /* JSONGeneric.swift in Sources */,
@@ -3015,6 +3021,7 @@
 				E1DCAF85284A285D00F44BE3 /* CoverageSummaryInfo.cpp in Sources */,
 				E1DCAF9E284A285D00F44BE3 /* PerformancePreset.swift in Sources */,
 				E1DCAFA4284A285D00F44BE3 /* SpanSanitizer.swift in Sources */,
+				E1F69C2B28C730190042156E /* Log.swift in Sources */,
 				E1DCAF99284A285D00F44BE3 /* DataUploadStatus.swift in Sources */,
 				E1DCAFA5284A285D00F44BE3 /* Feature.swift in Sources */,
 				E1F69C2528C6493B0042156E /* JSONGeneric.swift in Sources */,
@@ -3069,6 +3076,7 @@
 				E1DCAFF3284A2BED00F44BE3 /* DataUploadWorker.swift in Sources */,
 				E1DCAFDD284A2BED00F44BE3 /* CoverageSummaryInfo.cpp in Sources */,
 				E1DCAFE4284A2BED00F44BE3 /* DataUploader.swift in Sources */,
+				E1F69C2D28C7301B0042156E /* Log.swift in Sources */,
 				E1DCAFF2284A2BED00F44BE3 /* LogEncoder.swift in Sources */,
 				E1DCAFD7284A2BED00F44BE3 /* DataUploadDelay.swift in Sources */,
 				E1F69C2428C6493A0042156E /* JSONGeneric.swift in Sources */,

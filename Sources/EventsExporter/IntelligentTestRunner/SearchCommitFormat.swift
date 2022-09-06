@@ -11,11 +11,11 @@ struct CommitData: Codable {
     var type = "commit"
 }
 
-struct CommitResponseFormat: Codable {
+struct CommitResponseFormat: Codable, JSONable {
     var data: [CommitData]
 }
 
-struct CommitRequesFormat: Codable {
+struct CommitRequesFormat: Codable, JSONable {
     var meta: Meta
     var data: [CommitData]
 
@@ -32,16 +32,5 @@ struct CommitRequesFormat: Codable {
         self.data = commits.map {
             CommitData(id: $0)
         }
-    }
-}
-
-extension CommitRequesFormat {
-    var jsonData: Data? {
-        return try? JSONEncoder().encode(self)
-    }
-
-    var json: String? {
-        guard let data = self.jsonData else { return nil }
-        return String(data: data, encoding: .utf8)
     }
 }

@@ -35,7 +35,7 @@ internal final class FileReader {
                 let batchData = dataFormat.prefixData + fileData + dataFormat.suffixData
                 return Batch(data: batchData, file: file)
             } catch {
-                print("Failed to read data from file")
+                Log.print("Failed to read data from file")
                 return nil
             }
         }

@@ -68,7 +68,7 @@ extension LLVMCoverageFormat {
         do {
             try self.init(data: data)
         } catch {
-            print("[DatadogSDKTesting][process-coverage] Unexpected error in File: \n\(url.path)\nError: \(error)\n")
+            Log.print("[process-coverage] Unexpected error in File: \n\(url.path)\nError: \(error)")
             return nil
         }
     }

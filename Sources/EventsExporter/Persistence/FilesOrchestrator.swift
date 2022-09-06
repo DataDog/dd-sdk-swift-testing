@@ -73,7 +73,7 @@ internal class FilesOrchestrator {
                     return lastFile
                 }
             } catch {
-                print("🔥 Failed to read previously used writable file: \(error)")
+                Log.print("🔥 Failed to read previously used writable file: \(error)")
             }
         }
         return nil
@@ -100,7 +100,7 @@ internal class FilesOrchestrator {
 
             return fileIsOldEnough ? oldestFile : nil
         } catch {
-            print("🔥 Failed to obtain readable file: \(error)")
+            Log.print("🔥 Failed to obtain readable file: \(error)")
             return nil
         }
     }
@@ -110,7 +110,7 @@ internal class FilesOrchestrator {
             return try directory.files()
                 .filter { excludedFileNames.contains($0.name) == false }
         } catch {
-            print("🔥 Failed to obtain readable files: \(error)")
+            Log.print("🔥 Failed to obtain readable files: \(error)")
             return nil
         }
     }
@@ -119,7 +119,7 @@ internal class FilesOrchestrator {
         do {
             try readableFile.delete()
         } catch {
-            print("🔥 Failed to delete file: \(error)")
+            Log.print("🔥 Failed to delete file: \(error)")
         }
     }
 

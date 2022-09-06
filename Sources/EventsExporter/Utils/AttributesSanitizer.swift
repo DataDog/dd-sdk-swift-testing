@@ -34,10 +34,7 @@ internal struct AttributesSanitizer {
         let sanitizedAttributes: [(String, Value)] = attributes.map { key, value in
             let sanitizedName = sanitize(attributeKey: key, prefixLevels: prefixLevels)
             if sanitizedName != key {
-                Swift.print(
-                    """
-                    [DatadogSDKTesting] +\(featureName) attribute '\(key)' was modified to '\(sanitizedName)' to match Datadog constraints.
-                    """
+                Log.print("\(featureName) attribute '\(key)' was modified to '\(sanitizedName)' to match Datadog constraints."
                 )
                 return (sanitizedName, value)
             } else {

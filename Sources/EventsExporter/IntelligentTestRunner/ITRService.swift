@@ -93,6 +93,8 @@ internal class ITRService {
               let response = searchCommitUploader.uploadWithResponse(data: jsonData),
               let commitResponse = try? JSONDecoder().decode(CommitResponseFormat.self, from: response)
         else {
+            Log.debug("CommitRequesFormat payload: \(commitPayload.jsonString)")
+            Log.debug("searchCommits invalid response")
             return []
         }
 
@@ -122,11 +124,13 @@ internal class ITRService {
         var itrConfig:[String: JSONGeneric] = configurations.mapValues { .string($0)}
         itrConfig["custom"] = .stringDict(customConfigurations)
 
-        let commitPayload = SkipTestsRequestFormat(repositoryURL: repositoryURL, sha: sha, configurations: itrConfig)
-        guard let jsonData = commitPayload.jsonData,
+        let skippablePayload = SkipTestsRequestFormat(repositoryURL: repositoryURL, sha: sha, configurations: itrConfig)
+        guard let jsonData = skippablePayload.jsonData,
               let response = skippableTestsUploader.uploadWithResponse(data: jsonData),
               let skipTests = try? JSONDecoder().decode(SkipTestsResponseFormat.self, from: response)
         else {
+            Log.debug("SkipTestsRequestFormat payload: \(skippablePayload.jsonString)")
+            Log.debug("skippableTests invalid response")
             return []
         }
 

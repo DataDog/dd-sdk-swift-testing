@@ -120,17 +120,21 @@ internal class ITRService {
     }
 
     public func skippableTests(repositoryURL: String, sha: String, configurations: [String: String], customConfigurations: [String: String]) -> [SkipTestPublicFormat] {
-
-        var itrConfig:[String: JSONGeneric] = configurations.mapValues { .string($0)}
+        var itrConfig: [String: JSONGeneric] = configurations.mapValues { .string($0) }
         itrConfig["custom"] = .stringDict(customConfigurations)
 
         let skippablePayload = SkipTestsRequestFormat(repositoryURL: repositoryURL, sha: sha, configurations: itrConfig)
+
         guard let jsonData = skippablePayload.jsonData,
-              let response = skippableTestsUploader.uploadWithResponse(data: jsonData),
-              let skipTests = try? JSONDecoder().decode(SkipTestsResponseFormat.self, from: response)
+              let response = skippableTestsUploader.uploadWithResponse(data: jsonData)
         else {
             Log.debug("SkipTestsRequestFormat payload: \(skippablePayload.jsonString)")
-            Log.debug("skippableTests invalid response")
+            Log.debug("skippableTests no response")
+            return []
+        }
+
+        guard let skipTests = try? JSONDecoder().decode(SkipTestsResponseFormat.self, from: response) else {
+            Log.debug("skippableTests invalid response: \(String(decoding: response, as: UTF8.self))")
             return []
         }
 

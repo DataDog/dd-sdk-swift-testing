@@ -98,6 +98,7 @@ public class DDTestModule: NSObject, Encodable {
         meta[DDItrTags.iItrSkippedTests] = itrSkipped ? "true" : "false"
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: DDTestModuleEnvelope(self))
         /// We need to wait for all the traces to be written to the backend before exiting
+        DDTestMonitor.instance?.coverageHelper?.coverageWorkQueue.maxConcurrentOperationCount = ProcessInfo.processInfo.activeProcessorCount
         DDTestMonitor.instance?.coverageHelper?.coverageWorkQueue.waitUntilAllOperationsAreFinished()
         DDTestMonitor.tracer.flush()
     }

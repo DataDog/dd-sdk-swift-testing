@@ -19,4 +19,10 @@ struct Log {
     static func print(_ string: String) {
         Swift.print("[DatadogSDKTesting] " + string + "\n")
     }
+
+    static func runOnDebug(_ function: @autoclosure () -> Void) {
+        if debugMode {
+            function()
+        }
+    }
 }

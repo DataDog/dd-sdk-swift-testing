@@ -59,6 +59,16 @@ internal class CoverageExporter {
     func exportCoverage(coverage: URL, traceId: UInt64, spanId: UInt64, workspacePath: String?, binaryImagePaths: [String]) {
         let profData = DDCoverageConversor.generateProfData(profrawFile: coverage)
         let ddCoverage = DDCoverageConversor.getDatadogCoverage(profdataFile: profData, traceId: traceId, spanId: spanId, workspacePath: workspacePath, binaryImagePaths: binaryImagePaths)
+        if Log.debugMode == false {
+            try? FileManager.default.removeItem(at: coverage)
+            try? FileManager.default.removeItem(at: profData)
+        }
+        Log.runOnDebug({
+            let data = try? JSONEncoder.default().encode(ddCoverage)
+            let testName = coverage.deletingPathExtension().lastPathComponent.components(separatedBy: "__").last!
+            let jsonURL = coverage.deletingLastPathComponent().appendingPathComponent(testName).appendingPathExtension("json")
+            try? data?.write(to: jsonURL)
+        }())
         coverageStorage.writer.write(value: ddCoverage)
     }
 

@@ -28,6 +28,7 @@ struct GitInfo {
             mergePath = head.trimmingCharacters(in: .whitespacesAndNewlines)
             mergePath!.removeFirst(4)
             mergePath = mergePath!.trimmingCharacters(in: .whitespacesAndNewlines)
+            self.branch = mergePath
             let refData = try String(contentsOf: gitFolder.appendingPathComponent(mergePath!))
             commit = refData.trimmingCharacters(in: .whitespacesAndNewlines)
         } else {

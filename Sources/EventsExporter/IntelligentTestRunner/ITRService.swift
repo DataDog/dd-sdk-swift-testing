@@ -8,7 +8,7 @@ import Foundation
 import OpenTelemetrySdk
 
 internal class ITRService {
-    let configuration: ExporterConfiguration
+    let exporterConfiguration: ExporterConfiguration
 
     let searchCommitUploader: DataUploader
     let packFileUploader: DataUploader
@@ -17,15 +17,15 @@ internal class ITRService {
     let itrConfigUploader: DataUploader
 
     init(config: ExporterConfiguration) throws {
-        self.configuration = config
+        self.exporterConfiguration = config
 
         let searchCommitRequestBuilder = SingleRequestBuilder(
-            url: configuration.endpoint.searchCommitsURL,
+            url: exporterConfiguration.endpoint.searchCommitsURL,
             queryItems: [],
             headers: [
                 .userAgentHeader(
-                    appName: configuration.applicationName,
-                    appVersion: configuration.version,
+                    appName: exporterConfiguration.applicationName,
+                    appVersion: exporterConfiguration.version,
                     device: Device.current
                 ),
                 .ddAPIKeyHeader(apiKey: config.apiKey),
@@ -37,12 +37,12 @@ internal class ITRService {
         )
 
         packFileRequestBuilder = MultipartRequestBuilder(
-            url: configuration.endpoint.packfileURL,
+            url: exporterConfiguration.endpoint.packfileURL,
             queryItems: [],
             headers: [
                 .userAgentHeader(
-                    appName: configuration.applicationName,
-                    appVersion: configuration.version,
+                    appName: exporterConfiguration.applicationName,
+                    appVersion: exporterConfiguration.version,
                     device: Device.current
                 ),
                 .ddAPIKeyHeader(apiKey: config.apiKey),
@@ -50,18 +50,16 @@ internal class ITRService {
                 .traceIDHeader(traceID: config.exporterId),
                 .parentSpanIDHeader(parentSpanID: config.exporterId),
                 .samplingPriorityHeader()
-            ] + (configuration.payloadCompression ? [HTTPHeader.contentEncodingHeader(contentEncoding: .deflate)] : [])
+            ] + (exporterConfiguration.payloadCompression ? [HTTPHeader.contentEncodingHeader(contentEncoding: .deflate)] : [])
         )
 
         let skippableTestsRequestBuilder = SingleRequestBuilder(
-            url: ITRService.skippableTestsURL(originalURL: configuration.endpoint.skippableTestsURLString,
-                                              env: configuration.environment,
-                                              service: configuration.serviceName),
+            url: exporterConfiguration.endpoint.skippableTestsURL,
             queryItems: [],
             headers: [
                 .userAgentHeader(
-                    appName: configuration.applicationName,
-                    appVersion: configuration.version,
+                    appName: exporterConfiguration.applicationName,
+                    appVersion: exporterConfiguration.version,
                     device: Device.current
                 ),
                 .ddAPIKeyHeader(apiKey: config.apiKey),
@@ -73,12 +71,12 @@ internal class ITRService {
         )
 
         let itrConfigRequestBuilder = SingleRequestBuilder(
-            url: configuration.endpoint.itrSettingsURL,
+            url: exporterConfiguration.endpoint.itrSettingsURL,
             queryItems: [],
             headers: [
                 .userAgentHeader(
-                    appName: configuration.applicationName,
-                    appVersion: configuration.version,
+                    appName: exporterConfiguration.applicationName,
+                    appVersion: exporterConfiguration.version,
                     device: Device.current
                 ),
                 .ddAPIKeyHeader(apiKey: config.apiKey),
@@ -137,16 +135,15 @@ internal class ITRService {
             }
     }
 
-    private static func skippableTestsURL(originalURL: String, env: String, service: String) -> URL {
-        return URL(string: originalURL.replacingOccurrences(of: "@1", with: env.lowercased())
-            .replacingOccurrences(of: "@2", with: service.lowercased()))!
-    }
-
     func skippableTests(repositoryURL: String, sha: String, configurations: [String: String], customConfigurations: [String: String]) -> [SkipTestPublicFormat] {
         var itrConfig: [String: JSONGeneric] = configurations.mapValues { .string($0) }
         itrConfig["custom"] = .stringDict(customConfigurations)
 
-        let skippablePayload = SkipTestsRequestFormat(repositoryURL: repositoryURL, sha: sha, configurations: itrConfig)
+        let skippablePayload = SkipTestsRequestFormat(env: exporterConfiguration.environment,
+                                                      service: exporterConfiguration.serviceName,
+                                                      repositoryURL: repositoryURL,
+                                                      sha: sha,
+                                                      configurations: itrConfig)
 
         guard let jsonData = skippablePayload.jsonData,
               let response = skippableTestsUploader.uploadWithResponse(data: jsonData)
@@ -162,7 +159,6 @@ internal class ITRService {
         }
 
         return skipTests.data.map { skipTest in
-
             let customConfigurations: [String: String]?
             if case .stringDict(let dict) = skipTest.attributes.configuration?["custom"] {
                 customConfigurations = dict

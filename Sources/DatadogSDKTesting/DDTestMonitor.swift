@@ -165,7 +165,13 @@ internal class DDTestMonitor {
         {
             let ddEnvironment = DDTestMonitor.env.ddEnvironment ?? (DDTestMonitor.env.isCi ? "ci" : "none")
 
-            itrBackendConfig = eventsExporter.itrSetting(service: service, env: ddEnvironment, repositoryURL: DDTestMonitor.localRepositoryURLPath, branch: branch, sha: commit, configurations: DDTestMonitor.baseConfigurationTags, customConfigurations: DDTestMonitor.env.customConfigurations)
+            itrBackendConfig = eventsExporter.itrSetting(service: service,
+                                                         env: ddEnvironment,
+                                                         repositoryURL: DDTestMonitor.localRepositoryURLPath,
+                                                         branch: branch,
+                                                         sha: commit,
+                                                         configurations: DDTestMonitor.baseConfigurationTags,
+                                                         customConfigurations: DDTestMonitor.env.customConfigurations)
         } else {
             itrBackendConfig = nil
         }
@@ -212,7 +218,7 @@ internal class DDTestMonitor {
             }
         }
         // Activate Intelligent Test Runner
-        if DDTestMonitor.env.itrEnabled ?? DDTestMonitor.env.itrEnabled ?? false {
+        if DDTestMonitor.env.itrEnabled ?? itrBackendConfig?.testsSkipping ?? false {
             Log.debug("ITR Enabled")
             itr = IntelligentTestRunner(configurations: DDTestMonitor.baseConfigurationTags)
             itr?.start()

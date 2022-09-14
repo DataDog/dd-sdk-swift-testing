@@ -10,6 +10,8 @@ struct SkipTestsRequestFormat: Codable, JSONable {
     var data: SkipTestsRequestData
 
     struct SkipTestRequestAttributes: Codable {
+        var env: String
+        var service: String
         var repository_url: String
         var sha: String
         var configurations: [String: JSONGeneric]
@@ -19,20 +21,19 @@ struct SkipTestsRequestFormat: Codable, JSONable {
         var type = "test_params"
         var attributes: SkipTestRequestAttributes
 
-        init(repositoryURL: String, sha: String, configurations: [String: JSONGeneric]) {
-            self.attributes = SkipTestRequestAttributes(repository_url: repositoryURL, sha: sha, configurations: configurations)
+        init(env: String, service: String, repositoryURL: String, sha: String, configurations: [String: JSONGeneric]) {
+            self.attributes = SkipTestRequestAttributes(env: env, service: service, repository_url: repositoryURL, sha: sha, configurations: configurations)
         }
     }
 
-    init(repositoryURL: String, sha: String, configurations: [String: JSONGeneric]) {
-        self.data = SkipTestsRequestData(repositoryURL: repositoryURL, sha: sha, configurations: configurations)
+    init(env: String, service: String, repositoryURL: String, sha: String, configurations: [String: JSONGeneric]) {
+        self.data = SkipTestsRequestData(env: env, service: service, repositoryURL: repositoryURL, sha: sha, configurations: configurations)
     }
 }
 
-
 struct SkipTestsResponseFormat: Decodable {
     var data: [SkipTestsResponseData]
-    
+
     struct SkipTestResponseAttributes: Decodable {
         var name: String
         var parameters: String?

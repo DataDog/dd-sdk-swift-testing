@@ -76,15 +76,15 @@ public enum Endpoint {
         }
     }
 
-    internal var skippableTestsURLString: String {
-        let endpoint = "api/v2/ci/environment/@1/service/@2/tests/skippable"
+    internal var skippableTestsURL: URL {
+        let endpoint = "api/v2/ci/tests/skippable"
         switch self {
-            case .us1: return "https://api.datadoghq.com/" + endpoint
-            case .us3: return "https://api.us3.datadoghq.com/" + endpoint
-            case .us5: return "https://api.us5.datadoghq.com/" + endpoint
-            case .eu1: return "https://api.datadoghq.eu/" + endpoint
-            case .staging: return "https://api.datad0g.com/" + endpoint
-            case let .custom(testsURL: testsURL, _): return testsURL.path
+            case .us1: return URL(string: "https://api.datadoghq.com/" + endpoint)!
+            case .us3: return URL(string: "https://api.us3.datadoghq.com/" + endpoint)!
+            case .us5: return URL(string: "https://api.us5.datadoghq.com/" + endpoint)!
+            case .eu1: return URL(string: "https://api.datadoghq.eu/" + endpoint)!
+            case .staging: return URL(string: "https://api.datad0g.com/" + endpoint)!
+            case let .custom(testsURL: testsURL, _): return testsURL
         }
     }
 

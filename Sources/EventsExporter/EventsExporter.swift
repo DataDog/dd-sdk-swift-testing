@@ -85,9 +85,9 @@ public class EventsExporter: SpanExporter {
                 configuration.endpoint.spansURL.absoluteString,
                 configuration.endpoint.coverageURL.absoluteString,
                 configuration.endpoint.searchCommitsURL.absoluteString,
-                configuration.endpoint.skippableTestsURLString,
+                configuration.endpoint.skippableTestsURL.absoluteString,
                 configuration.endpoint.packfileURL.absoluteString,
-                
+                configuration.endpoint.itrSettingsURL.absoluteString
         ]
     }
 }

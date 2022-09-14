@@ -16,19 +16,14 @@ class IntelligentTestRunner {
     }
 
     func start() {
-        getSkippableTests(repository: getRepositoryURL())
+        getSkippableTests(repository: DDTestMonitor.localRepositoryURLPath)
     }
 
     func getSkippableTests(repository: String) {
         guard let commit = DDTestMonitor.env.commit else { return }
 
-        skippableTests = DDTestMonitor.tracer.eventsExporter?.skippableTests(repositoryURL: getRepositoryURL(), sha: commit, configurations: configurations, customConfigurations: DDTestMonitor.env.customConfigurations) ?? []
-        Log.debug("Skippable Request:\n repositoryURL:\(getRepositoryURL())\n sha:\(commit)\n configurations:\(configurations) )")
+        skippableTests = DDTestMonitor.tracer.eventsExporter?.skippableTests(repositoryURL: repository, sha: commit, configurations: configurations, customConfigurations: DDTestMonitor.env.customConfigurations) ?? []
+        Log.debug("Skippable Request:\n repositoryURL:\(repository)\n sha:\(commit)\n configurations:\(configurations) )")
         Log.debug("Skippable Tests: \(skippableTests)")
-    }
-
-    private func getRepositoryURL() -> String {
-        let url = Spawn.commandWithResult(#"git -C "\#(DDTestMonitor.env.workspacePath!)" config --get remote.origin.url"#).trimmingCharacters(in: .whitespacesAndNewlines)
-        return url
     }
 }

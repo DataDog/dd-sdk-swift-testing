@@ -88,7 +88,6 @@ public enum Endpoint {
         }
     }
 
-
     internal var packfileURL: URL {
         let endpoint = "api/v2/git/repository/packfile"
         switch self {
@@ -101,4 +100,15 @@ public enum Endpoint {
         }
     }
 
+    internal var itrSettingsURL: URL {
+        let endpoint = "api/v2/libraries/tests/services/setting"
+        switch self {
+            case .us1: return URL(string: "https://api.datadoghq.com/" + endpoint)!
+            case .us3: return URL(string: "https://api.us3.datadoghq.com/" + endpoint)!
+            case .us5: return URL(string: "https://api.us5.datadoghq.com/" + endpoint)!
+            case .eu1: return URL(string: "https://api.datadoghq.eu/" + endpoint)!
+            case .staging: return URL(string: "https://api.datad0g.com/" + endpoint)!
+            case let .custom(testsURL: testsURL, _): return testsURL
+        }
+    }
 }

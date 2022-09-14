@@ -14,6 +14,7 @@ internal class ITRService {
     let packFileUploader: DataUploader
     var packFileRequestBuilder: MultipartRequestBuilder
     let skippableTestsUploader: DataUploader
+    let itrConfigUploader: DataUploader
 
     init(config: ExporterConfiguration) throws {
         self.configuration = config
@@ -68,7 +69,24 @@ internal class ITRService {
                 .traceIDHeader(traceID: config.exporterId),
                 .parentSpanIDHeader(parentSpanID: config.exporterId),
                 .samplingPriorityHeader()
-            ] // + (configuration.payloadCompression ? [HTTPHeader.contentEncodingHeader(contentEncoding: .deflate)] : [])
+            ]
+        )
+
+        let itrConfigRequestBuilder = SingleRequestBuilder(
+            url: configuration.endpoint.itrSettingsURL,
+            queryItems: [],
+            headers: [
+                .userAgentHeader(
+                    appName: configuration.applicationName,
+                    appVersion: configuration.version,
+                    device: Device.current
+                ),
+                .ddAPIKeyHeader(apiKey: config.apiKey),
+                .ddApplicationKeyHeader(applicationKey: config.applicationKey),
+                .traceIDHeader(traceID: config.exporterId),
+                .parentSpanIDHeader(parentSpanID: config.exporterId),
+                .samplingPriorityHeader()
+            ]
         )
 
         searchCommitUploader = DataUploader(
@@ -85,9 +103,14 @@ internal class ITRService {
             httpClient: HTTPClient(),
             requestBuilder: skippableTestsRequestBuilder
         )
+
+        itrConfigUploader = DataUploader(
+            httpClient: HTTPClient(),
+            requestBuilder: itrConfigRequestBuilder
+        )
     }
 
-    public func searchExistingCommits(repositoryURL: String, commits: [String]) -> [String] {
+    func searchExistingCommits(repositoryURL: String, commits: [String]) -> [String] {
         let commitPayload = CommitRequesFormat(repositoryURL: repositoryURL, commits: commits)
         guard let jsonData = commitPayload.jsonData,
               let response = searchCommitUploader.uploadWithResponse(data: jsonData),
@@ -102,7 +125,7 @@ internal class ITRService {
         return commits
     }
 
-    public func uploadPackFiles(packFilesDirectory: Directory, commit: String, repository: String) throws {
+    func uploadPackFiles(packFilesDirectory: Directory, commit: String, repository: String) throws {
         try packFilesDirectory.files()
             .filter { $0.name.hasSuffix(".pack") }
             .forEach {
@@ -119,7 +142,7 @@ internal class ITRService {
             .replacingOccurrences(of: "@2", with: service.lowercased()))!
     }
 
-    public func skippableTests(repositoryURL: String, sha: String, configurations: [String: String], customConfigurations: [String: String]) -> [SkipTestPublicFormat] {
+    func skippableTests(repositoryURL: String, sha: String, configurations: [String: String], customConfigurations: [String: String]) -> [SkipTestPublicFormat] {
         var itrConfig: [String: JSONGeneric] = configurations.mapValues { .string($0) }
         itrConfig["custom"] = .stringDict(customConfigurations)
 
@@ -161,5 +184,27 @@ internal class ITRService {
                                         configuration: configurations,
                                         customConfiguration: customConfigurations)
         }
+    }
+
+    func itrSetting(service: String, env: String, repositoryURL: String, branch: String, sha: String, configurations: [String: String], customConfigurations: [String: String]) -> (codeCoverage: Bool, testsSkipping: Bool)? {
+        var configurations: [String: JSONGeneric] = configurations.mapValues { .string($0) }
+        configurations["custom"] = .stringDict(customConfigurations)
+
+        let itrConfigPayload = ITRConfigRequesFormat(service: service, env: env, repositoryURL: repositoryURL, branch: branch, sha: sha, configurations: configurations)
+
+        guard let jsonData = itrConfigPayload.jsonData,
+              let response = itrConfigUploader.uploadWithResponse(data: jsonData)
+        else {
+            Log.debug("SkipTestsRequestFormat payload: \(itrConfigPayload.jsonString)")
+            Log.debug("skippableTests no response")
+            return nil
+        }
+
+        guard let itrConfig = try? JSONDecoder().decode(ITRConfigResponseFormat.self, from: response) else {
+            Log.debug("skippableTests invalid response: \(String(decoding: response, as: UTF8.self))")
+            return nil
+        }
+
+        return (itrConfig.data.attributes.code_coverage, itrConfig.data.attributes.tests_skipping)
     }
 }

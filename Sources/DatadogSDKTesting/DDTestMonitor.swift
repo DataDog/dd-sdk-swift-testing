@@ -4,6 +4,7 @@
  * Copyright 2020-2021 Datadog, Inc.
  */
 
+@_implementationOnly import EventsExporter
 @_implementationOnly import OpenTelemetryApi
 
 #if canImport(UIKit)
@@ -71,6 +72,14 @@ internal class DDTestMonitor {
             defer { rLock.unlock() }
             privateCurrentTest = newValue
         }
+    }
+
+    static var localRepositoryURLPath: String {
+        guard let workspacePath = DDTestMonitor.env.workspacePath else {
+            return ""
+        }
+        let url = Spawn.commandWithResult(#"git -C "\#(workspacePath)" config --get remote.origin.url"#).trimmingCharacters(in: .whitespacesAndNewlines)
+        return url
     }
 
     static func installTestMonitor() -> Bool {
@@ -147,6 +156,20 @@ internal class DDTestMonitor {
             gitUploader = nil
         }
 
+        let itrBackendConfig: (codeCoverage: Bool, testsSkipping: Bool)?
+
+        if let service = DDTestMonitor.env.ddService ?? DDTestMonitor.env.getRepositoryName(),
+           let branch = DDTestMonitor.env.branch,
+           let commit = DDTestMonitor.env.commit,
+           let eventsExporter = DDTestMonitor.tracer.eventsExporter
+        {
+            let ddEnvironment = DDTestMonitor.env.ddEnvironment ?? (DDTestMonitor.env.isCi ? "ci" : "none")
+
+            itrBackendConfig = eventsExporter.itrSetting(service: service, env: ddEnvironment, repositoryURL: DDTestMonitor.localRepositoryURLPath, branch: branch, sha: commit, configurations: DDTestMonitor.baseConfigurationTags, customConfigurations: DDTestMonitor.env.customConfigurations)
+        } else {
+            itrBackendConfig = nil
+        }
+
         /// Check Git is up to date and no local changes
         guard DDTestMonitor.env.isCi || (gitUploader?.statusUpToDate() ?? false) else {
             Log.debug("Git status not up to date")
@@ -156,7 +179,7 @@ internal class DDTestMonitor {
         }
 
         // Activate Coverage
-        if DDTestMonitor.env.coverageEnabled {
+        if DDTestMonitor.env.coverageEnabled ?? itrBackendConfig?.codeCoverage ?? false {
             Log.debug("Coverage Enabled")
             // Coverage is not supported for swift < 5.3 (binary target dependency)
             #if swift(>=5.3)
@@ -172,14 +195,14 @@ internal class DDTestMonitor {
 
         /// Check branch is not excluded
         if let excludedBranches = DDTestMonitor.env.excludedBranches,
-           let currentBranch = DDTestMonitor.env.branch{
-            if excludedBranches.contains(currentBranch)
-            {
+           let currentBranch = DDTestMonitor.env.branch
+        {
+            if excludedBranches.contains(currentBranch) {
                 Log.debug("Excluded branch: \(currentBranch)")
                 itr = nil
                 return
             }
-            let wildcardBranches = excludedBranches.filter{$0.hasSuffix("*")}.map{$0.dropLast()}
+            let wildcardBranches = excludedBranches.filter { $0.hasSuffix("*") }.map { $0.dropLast() }
             for branch in wildcardBranches {
                 if currentBranch.hasPrefix(branch) {
                     Log.debug("Excluded branch with wildcard: \(currentBranch)")
@@ -189,7 +212,7 @@ internal class DDTestMonitor {
             }
         }
         // Activate Intelligent Test Runner
-        if DDTestMonitor.env.itrEnabled {
+        if DDTestMonitor.env.itrEnabled ?? DDTestMonitor.env.itrEnabled ?? false {
             Log.debug("ITR Enabled")
             itr = IntelligentTestRunner(configurations: DDTestMonitor.baseConfigurationTags)
             itr?.start()

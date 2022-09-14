@@ -23,7 +23,7 @@ struct GitUploader {
     }
 
     func sendGitInfo() {
-        let repo = getRepositoryURL()
+        let repo = DDTestMonitor.localRepositoryURLPath
         guard !repo.isEmpty else {
             Log.print("sendGitInfo failed, repository not found")
             return
@@ -45,11 +45,6 @@ struct GitUploader {
         let status = Spawn.commandWithResult(#"git -C "\#(workspacePath)" status --short -uno"#).trimmingCharacters(in: .whitespacesAndNewlines)
         Log.debug("Git status: \(status)")
         return status.isEmpty
-    }
-
-    private func getRepositoryURL() -> String {
-        let url = Spawn.commandWithResult(#"git -C "\#(workspacePath)" config --get remote.origin.url"#).trimmingCharacters(in: .whitespacesAndNewlines)
-        return url
     }
 
     private func getLatestCommits() -> [String] {

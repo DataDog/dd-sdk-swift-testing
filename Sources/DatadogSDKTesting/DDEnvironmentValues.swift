@@ -6,6 +6,7 @@
 
 import Foundation
 @_implementationOnly import OpenTelemetryApi
+import EventsExporter
 
 // These configuration values must be passed to the child app in an UI test
 internal enum ConfigurationValues: String, CaseIterable {
@@ -134,8 +135,8 @@ internal struct DDEnvironmentValues {
 
     /// Intelligent test runner related environment
     let gitUploadEnabled: Bool
-    let coverageEnabled: Bool
-    let itrEnabled: Bool
+    let coverageEnabled: Bool?
+    let itrEnabled: Bool?
     let excludedBranches: [String]?
 
     static var environment = ProcessInfo.processInfo.environment
@@ -249,10 +250,10 @@ internal struct DDEnvironmentValues {
 
         /// Intelligent test runner related configuration
         let envGitUploadEnabled = DDEnvironmentValues.getEnvVariable(ExtraConfigurationValues.DD_CIVISIBILITY_GIT_UPLOAD_ENABLED.rawValue) as NSString?
-        gitUploadEnabled = envGitUploadEnabled?.boolValue ?? false
+        gitUploadEnabled = envGitUploadEnabled?.boolValue ?? true
 
         let envItrEnabled = DDEnvironmentValues.getEnvVariable(ExtraConfigurationValues.DD_CIVISIBILITY_ITR_ENABLED.rawValue) as NSString?
-        itrEnabled = envItrEnabled?.boolValue ?? false
+        itrEnabled = envItrEnabled?.boolValue
 
         let envCoverageEnabled = DDEnvironmentValues.getEnvVariable(ExtraConfigurationValues.DD_CIVISIBILITY_CODE_COVERAGE_ENABLED.rawValue) as NSString?
         coverageEnabled = envCoverageEnabled?.boolValue ?? itrEnabled

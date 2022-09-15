@@ -13,8 +13,8 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2
-    - name: Select Xcode 13.3.1
-      run: sudo xcode-select --switch /Applications/Xcode_13.3.1.app
+    - name: Select Xcode 14
+      run: sudo xcode-select --switch /Applications/Xcode_14.0.app
     - name: Test
       run: make tests
 
@@ -24,8 +24,8 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2
-    - name: Select Xcode 13.3.1
-      run: sudo xcode-select --switch /Applications/Xcode_13.3.1.app
+    - name: Select Xcode 14
+      run: sudo xcode-select --switch /Applications/Xcode_14.0.app
     - name: Build XCFrameworks
       run: make release
     - name: Get the tag version

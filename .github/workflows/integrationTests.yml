@@ -6,21 +6,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  test-10-15-Integration-build:
-    name: Run Tests 10.15
-    runs-on: macos-10.15
-    strategy:
-      fail-fast: false
-      matrix:
-        xcode: ["12.4"]
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-    - name: Select Xcode ${{ matrix.xcode }}
-      run: sudo xcode-select --switch /Applications/Xcode_${{ matrix.xcode }}.app
-    - name: Unit tests
-      run: make tests
-      
   test-11-0-Integration-build:
     name: Run Tests 11.0
     runs-on: macos-11
@@ -42,7 +27,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        xcode: ["13.2.1", "13.3.1"]
+        xcode: ["13.2.1", "13.3.1", "14.0"]
     steps:
     - name: Checkout
       uses: actions/checkout@v2

@@ -57,7 +57,7 @@ struct GitInfo {
                     return
                 }
 
-                if self.branch == nil, line.hasPrefix("[branch") {
+                if tmpBranch == nil, line.hasPrefix("[branch") {
                     tmpBranch = line
                     tmpBranch?.removeFirst(9)
                     tmpBranch?.removeLast(2)

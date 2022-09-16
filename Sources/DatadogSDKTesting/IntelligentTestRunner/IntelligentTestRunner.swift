@@ -23,7 +23,6 @@ class IntelligentTestRunner {
         guard let commit = DDTestMonitor.env.commit else { return }
 
         skippableTests = DDTestMonitor.tracer.eventsExporter?.skippableTests(repositoryURL: repository, sha: commit, configurations: configurations, customConfigurations: DDTestMonitor.env.customConfigurations) ?? []
-        Log.debug("Skippable Request:\n repositoryURL:\(repository)\n sha:\(commit)\n configurations:\(configurations) )")
         Log.debug("Skippable Tests: \(skippableTests)")
     }
 }

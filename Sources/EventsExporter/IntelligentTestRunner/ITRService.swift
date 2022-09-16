@@ -145,10 +145,10 @@ internal class ITRService {
                                                       sha: sha,
                                                       configurations: itrConfig)
 
+        Log.debug("SkipTestsRequestFormat payload: \(skippablePayload.jsonString)")
         guard let jsonData = skippablePayload.jsonData,
               let response = skippableTestsUploader.uploadWithResponse(data: jsonData)
         else {
-            Log.debug("SkipTestsRequestFormat payload: \(skippablePayload.jsonString)")
             Log.debug("skippableTests no response")
             return []
         }

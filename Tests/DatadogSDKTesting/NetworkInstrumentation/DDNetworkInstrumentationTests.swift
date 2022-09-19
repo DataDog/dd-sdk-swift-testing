@@ -19,6 +19,7 @@ class DDNetworkInstrumentationTests: XCTestCase {
         DDEnvironmentValues.environment[ConfigurationValues.DD_DISABLE_TEST_INSTRUMENTING.rawValue] = "1"
         DDTestMonitor.env = DDEnvironmentValues()
         DDTestMonitor.instance = DDTestMonitor()
+        DDTestMonitor.instance?.initializationWorkQueue.waitUntilAllOperationsAreFinished()
         let tracer = DDTestMonitor.tracer
         OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(testSpanProcessor)
         DDTestMonitor.instance?.networkInstrumentation = DDNetworkInstrumentation()

@@ -44,6 +44,9 @@ internal class DDTestMonitor {
 
     var crashedModuleInfo: CrashedModuleInformation?
 
+    let initializationWorkQueue = OperationQueue()
+
+
     static var baseConfigurationTags = [
         DDOSTags.osPlatform: env.osName,
         DDOSTags.osArchitecture: env.osArchitecture,
@@ -55,9 +58,9 @@ internal class DDTestMonitor {
         DDUISettingsTags.uiSettingsLocalization: PlatformUtils.getLocalization(),
     ]
 
-    let coverageHelper: DDCoverageHelper?
-    let gitUploader: GitUploader?
-    let itr: IntelligentTestRunner?
+    var coverageHelper: DDCoverageHelper?
+    var gitUploader: GitUploader?
+    var itr: IntelligentTestRunner?
 
     var rLock = NSRecursiveLock()
     private var privateCurrentTest: DDTest?
@@ -147,15 +150,6 @@ internal class DDTestMonitor {
             #endif
         }
 
-        if DDTestMonitor.env.gitUploadEnabled {
-            Log.debug("Git Upload Enabled")
-            gitUploader = try? GitUploader()
-            gitUploader?.sendGitInfo()
-        } else {
-            Log.debug("Git Upload Disabled")
-            gitUploader = nil
-        }
-
         let itrBackendConfig: (codeCoverage: Bool, testsSkipping: Bool)?
 
         if let service = DDTestMonitor.env.ddService ?? DDTestMonitor.env.getRepositoryName(),
@@ -176,6 +170,7 @@ internal class DDTestMonitor {
             itrBackendConfig = nil
         }
 
+
         /// Check Git is up to date and no local changes
         guard DDTestMonitor.env.isCi || (gitUploader?.statusUpToDate() ?? false) else {
             Log.debug("Git status not up to date")
@@ -184,47 +179,64 @@ internal class DDTestMonitor {
             return
         }
 
-        // Activate Coverage
-        if DDTestMonitor.env.coverageEnabled ?? itrBackendConfig?.codeCoverage ?? false {
-            Log.debug("Coverage Enabled")
-            // Coverage is not supported for swift < 5.3 (binary target dependency)
-            #if swift(>=5.3)
-                coverageHelper = DDCoverageHelper()
-            #else
-                coverageHelper = nil
-            #endif
 
-        } else {
-            Log.debug("Coverage Disabled")
-            coverageHelper = nil
+        initializationWorkQueue.addOperation { [self] in
+            if DDTestMonitor.env.gitUploadEnabled {
+                Log.debug("Git Upload Enabled")
+                gitUploader = try? GitUploader()
+                gitUploader?.sendGitInfo()
+            } else {
+                Log.debug("Git Upload Disabled")
+                gitUploader = nil
+            }
         }
 
-        /// Check branch is not excluded
-        if let excludedBranches = DDTestMonitor.env.excludedBranches,
-           let currentBranch = DDTestMonitor.env.branch
-        {
-            if excludedBranches.contains(currentBranch) {
-                Log.debug("Excluded branch: \(currentBranch)")
-                itr = nil
-                return
+        initializationWorkQueue.addOperation { [self] in
+            // Activate Coverage
+            if DDTestMonitor.env.coverageEnabled ?? itrBackendConfig?.codeCoverage ?? false {
+                Log.debug("Coverage Enabled")
+                // Coverage is not supported for swift < 5.3 (binary target dependency)
+#if swift(>=5.3)
+                coverageHelper = DDCoverageHelper()
+#else
+                coverageHelper = nil
+#endif
+
+            } else {
+                Log.debug("Coverage Disabled")
+                coverageHelper = nil
             }
-            let wildcardBranches = excludedBranches.filter { $0.hasSuffix("*") }.map { $0.dropLast() }
-            for branch in wildcardBranches {
-                if currentBranch.hasPrefix(branch) {
-                    Log.debug("Excluded branch with wildcard: \(currentBranch)")
+        }
+
+        initializationWorkQueue.addOperation { [self] in
+
+            /// Check branch is not excluded
+            if let excludedBranches = DDTestMonitor.env.excludedBranches,
+               let currentBranch = DDTestMonitor.env.branch
+            {
+                if excludedBranches.contains(currentBranch) {
+                    Log.debug("Excluded branch: \(currentBranch)")
                     itr = nil
                     return
                 }
+                let wildcardBranches = excludedBranches.filter { $0.hasSuffix("*") }.map { $0.dropLast() }
+                for branch in wildcardBranches {
+                    if currentBranch.hasPrefix(branch) {
+                        Log.debug("Excluded branch with wildcard: \(currentBranch)")
+                        itr = nil
+                        return
+                    }
+                }
             }
-        }
-        // Activate Intelligent Test Runner
-        if DDTestMonitor.env.itrEnabled ?? itrBackendConfig?.testsSkipping ?? false {
-            Log.debug("ITR Enabled")
-            itr = IntelligentTestRunner(configurations: DDTestMonitor.baseConfigurationTags)
-            itr?.start()
-        } else {
-            Log.debug("ITR Disabled")
-            itr = nil
+            // Activate Intelligent Test Runner
+            if DDTestMonitor.env.itrEnabled ?? itrBackendConfig?.testsSkipping ?? false {
+                Log.debug("ITR Enabled")
+                itr = IntelligentTestRunner(configurations: DDTestMonitor.baseConfigurationTags)
+                itr?.start()
+            } else {
+                Log.debug("ITR Disabled")
+                itr = nil
+            }
         }
     }
 
@@ -234,26 +246,34 @@ internal class DDTestMonitor {
         }
 
         if !DDTestMonitor.env.disableNetworkInstrumentation {
-            startNetworkAutoInstrumentation()
-            if !DDTestMonitor.env.disableHeadersInjection {
-                injectHeaders = true
-            }
-            if DDTestMonitor.env.enableRecordPayload {
-                recordPayload = true
-            }
-            if let maxPayload = DDTestMonitor.env.maxPayloadSize {
-                maxPayloadSize = maxPayload
+            initializationWorkQueue.addOperation { [self] in
+                startNetworkAutoInstrumentation()
+                if !DDTestMonitor.env.disableHeadersInjection {
+                    injectHeaders = true
+                }
+                if DDTestMonitor.env.enableRecordPayload {
+                    recordPayload = true
+                }
+                if let maxPayload = DDTestMonitor.env.maxPayloadSize {
+                    maxPayloadSize = maxPayload
+                }
             }
         }
         if DDTestMonitor.env.enableStdoutInstrumentation {
-            startStdoutCapture()
+            initializationWorkQueue.addOperation { [self] in
+                startStdoutCapture()
+            }
         }
         if DDTestMonitor.env.enableStderrInstrumentation {
-            startStderrCapture()
+            initializationWorkQueue.addOperation { [self] in
+                startStderrCapture()
+            }
         }
 
         if !DDTestMonitor.env.disableCrashHandler {
-            DDCrashes.install()
+            initializationWorkQueue.addOperation {
+                DDCrashes.install()
+            }
         }
     }
 

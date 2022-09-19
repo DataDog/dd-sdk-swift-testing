@@ -39,7 +39,7 @@ public class DDTestModule: NSObject, Encodable {
     }
 
     init(bundleName: String, startTime: Date?) {
-        let moduleStartTime = startTime ?? DDTestMonitor.clock.now
+
         self.duration = 0
         self.status = .pass
         self.bundleName = bundleName
@@ -50,14 +50,18 @@ public class DDTestModule: NSObject, Encodable {
                 configError = true
             }
         }
-
 #if targetEnvironment(simulator) || os(macOS)
+        
         DDSymbolicator.createDSYMFileIfNeeded(forImageName: bundleName)
         bundleFunctionInfo = FileLocator.testFunctionsInModule(bundleName)
 #endif
         if let workspacePath = DDTestMonitor.env.workspacePath {
             codeOwners = CodeOwners(workspacePath: URL(fileURLWithPath: workspacePath))
         }
+
+        DDTestMonitor.instance?.initializationWorkQueue.waitUntilAllOperationsAreFinished()
+
+        let moduleStartTime = startTime ?? DDTestMonitor.clock.now
 
         self.id = DDTestMonitor.instance?.crashedModuleInfo?.crashedModuleId ?? SpanId.random()
         self.startTime = DDTestMonitor.instance?.crashedModuleInfo?.moduleStartTime ?? moduleStartTime

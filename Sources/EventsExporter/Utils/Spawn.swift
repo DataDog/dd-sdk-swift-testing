@@ -7,20 +7,16 @@
 import Foundation
 
 public enum Spawn {
-    public static func command(_ command: String, environment: [String: String]? = nil) {
+    public static func command(_ command: String) {
         let arguments = ["/bin/sh", "-c", command]
         let command = "/bin/sh"
-        let args = arguments.map { strdup($0) } + [nil]
-
-        var env: [UnsafeMutablePointer<CChar>?]?
-        if let environment = environment {
-            env = environment.map {
-                "\($0.0)=\($0.1)".withCString(strdup)
-            } + [nil]
-        }
 
         var pid: pid_t = 0
-        let ret = _stdlib_posix_spawn(&pid, command, nil, nil, args, env)
+
+        let ret =  withArrayOfCStrings(arguments) { argv in
+            _stdlib_posix_spawn(&pid, command, nil, nil, argv, nil)
+        }
+
         guard ret == 0 else {
             return
         }
@@ -28,17 +24,9 @@ public enum Spawn {
         waitpid(pid, &status, 0)
     }
 
-    public static func commandWithResult(_ command: String, environment: [String: String]? = nil) -> String {
+    public static func commandWithResult(_ command: String) -> String {
         let arguments = ["/bin/sh", "-c", command]
         let command = "/bin/sh"
-        let args = arguments.map { strdup($0) } + [nil]
-
-        var env: [UnsafeMutablePointer<CChar>?]?
-        if let environment = environment {
-            env = environment.map {
-                "\($0.0)=\($0.1)".withCString(strdup)
-            } + [nil]
-        }
 
         var outputPipe: [Int32] = [-1, -1]
         pipe(&outputPipe)
@@ -48,10 +36,13 @@ public enum Spawn {
         _stdlib_posix_spawn_file_actions_adddup2(&childActions, outputPipe[1], 2)
         _stdlib_posix_spawn_file_actions_addclose(&childActions, outputPipe[0])
         _stdlib_posix_spawn_file_actions_addclose(&childActions, outputPipe[1])
+        defer { _stdlib_posix_spawn_file_actions_destroy(&childActions) }
 
         var pid: pid_t = 0
 
-        let ret = _stdlib_posix_spawn(&pid, command, &childActions, nil, args, env)
+        let ret =  withArrayOfCStrings(arguments) { argv in
+            _stdlib_posix_spawn(&pid, command, &childActions, nil, argv, nil)
+        }
         guard ret == 0 else {
             return ""
         }
@@ -63,16 +54,16 @@ public enum Spawn {
         var output = ""
         let bufferSize: size_t = 1024 * 64
         // #if swift(>=5.6)
-//        withUnsafeTemporaryAllocation(of: UInt8.self, capacity: bufferSize) { dynamicBuffer in
-//            while true {
-//                memset(dynamicBuffer.baseAddress!, 0, bufferSize)
-//                let amtRead = read(outputPipe[0], dynamicBuffer.baseAddress!, bufferSize - 1)
-//                output += String(cString: dynamicBuffer.baseAddress!)
-//                if amtRead < bufferSize - 1 {
-//                    break
-//                }
-//            }
-//        }
+        //        withUnsafeTemporaryAllocation(of: UInt8.self, capacity: bufferSize) { dynamicBuffer in
+        //            while true {
+        //                memset(dynamicBuffer.baseAddress!, 0, bufferSize)
+        //                let amtRead = read(outputPipe[0], dynamicBuffer.baseAddress!, bufferSize - 1)
+        //                output += String(cString: dynamicBuffer.baseAddress!)
+        //                if amtRead < bufferSize - 1 {
+        //                    break
+        //                }
+        //            }
+        //        }
         // #else
         let dynamicBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
         while true {
@@ -85,36 +76,68 @@ public enum Spawn {
         }
         dynamicBuffer.deallocate()
         // #endif
-        _stdlib_posix_spawn_file_actions_destroy(&childActions)
         return output
     }
 
-    public static func commandToFile(_ command: String, outputPath: String, environment: [String: String]? = nil) {
+    public static func commandToFile(_ command: String, outputPath: String) {
         let arguments = ["/bin/sh", "-c", command]
         let command = "/bin/sh"
-        let args = arguments.map { strdup($0) } + [nil]
-
-        var env: [UnsafeMutablePointer<CChar>?]?
-        if let environment = environment {
-            env = environment.map {
-                "\($0.0)=\($0.1)".withCString(strdup)
-            } + [nil]
-        }
 
         var childActions: posix_spawn_file_actions_t?
         _stdlib_posix_spawn_file_actions_init(&childActions)
         _stdlib_posix_spawn_file_actions_addopen(&childActions, 1, outputPath, O_WRONLY | O_CREAT | O_TRUNC, 0444)
         _stdlib_posix_spawn_file_actions_adddup2(&childActions, 1, 2)
+        defer { _stdlib_posix_spawn_file_actions_destroy(&childActions) }
         var pid: pid_t = 0
 
-        let ret = _stdlib_posix_spawn(&pid, command, &childActions, nil, args, env)
+        let ret =  withArrayOfCStrings(arguments) { argv in
+            _stdlib_posix_spawn(&pid, command, &childActions, nil, argv, nil)
+        }
+
         guard ret == 0 else {
             return
         }
 
         var status: Int32 = 0
         waitpid(pid, &status, 0)
-        _stdlib_posix_spawn_file_actions_destroy(&childActions)
+    }
+}
+
+fileprivate func scan<
+    S : Sequence, U
+>(_ seq: S, _ initial: U, _ combine: (U, S.Element) -> U) -> [U] {
+    var result: [U] = []
+    result.reserveCapacity(seq.underestimatedCount)
+    var runningResult = initial
+    for element in seq {
+        runningResult = combine(runningResult, element)
+        result.append(runningResult)
+    }
+    return result
+}
+
+fileprivate func withArrayOfCStrings<R>(
+    _ args: [String],
+    _ body: ([UnsafeMutablePointer<CChar>?]) -> R
+) -> R {
+    let argsCounts = Array(args.map { $0.utf8.count + 1 })
+    let argsOffsets = [ 0 ] + scan(argsCounts, 0, +)
+    let argsBufferSize = argsOffsets.last!
+
+    var argsBuffer: [UInt8] = []
+    argsBuffer.reserveCapacity(argsBufferSize)
+    for arg in args {
+        argsBuffer.append(contentsOf: arg.utf8)
+        argsBuffer.append(0)
+    }
+
+    return argsBuffer.withUnsafeMutableBufferPointer {
+        (argsBuffer) in
+        let ptr = UnsafeMutableRawPointer(argsBuffer.baseAddress!).bindMemory(
+            to: CChar.self, capacity: argsBuffer.count)
+        var cStrings: [UnsafeMutablePointer<CChar>?] = argsOffsets.map { ptr + $0 }
+        cStrings[cStrings.count - 1] = nil
+        return body(cStrings)
     }
 }
 

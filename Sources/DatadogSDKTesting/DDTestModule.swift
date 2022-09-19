@@ -59,9 +59,6 @@ public class DDTestModule: NSObject, Encodable {
             codeOwners = CodeOwners(workspacePath: URL(fileURLWithPath: workspacePath))
         }
 
-        if !DDTestMonitor.env.disableCrashHandler {
-            DDCrashes.install()
-        }
         self.id = DDTestMonitor.instance?.crashedModuleInfo?.crashedModuleId ?? SpanId.random()
         self.startTime = DDTestMonitor.instance?.crashedModuleInfo?.moduleStartTime ?? moduleStartTime
         self.localization = PlatformUtils.getLocalization()

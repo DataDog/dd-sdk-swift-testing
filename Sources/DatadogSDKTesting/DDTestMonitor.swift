@@ -251,6 +251,10 @@ internal class DDTestMonitor {
         if DDTestMonitor.env.enableStderrInstrumentation {
             startStderrCapture()
         }
+
+        if !DDTestMonitor.env.disableCrashHandler {
+            DDCrashes.install()
+        }
     }
 
     func startNetworkAutoInstrumentation() {

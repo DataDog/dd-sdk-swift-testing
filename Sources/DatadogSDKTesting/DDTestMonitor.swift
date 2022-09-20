@@ -269,12 +269,6 @@ internal class DDTestMonitor {
                 startStderrCapture()
             }
         }
-
-        if !DDTestMonitor.env.disableCrashHandler {
-            initializationWorkQueue.addOperation {
-                DDCrashes.install()
-            }
-        }
     }
 
     func startNetworkAutoInstrumentation() {

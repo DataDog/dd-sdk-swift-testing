@@ -50,9 +50,9 @@ enum StderrCapture {
         }
 
         var synchronizeData: DispatchWorkItem!
-        synchronizeData = DispatchWorkItem(block: { [weak synchronizeData] in
+        synchronizeData = DispatchWorkItem(block: {
             let auxData = self.inputPipe.fileHandleForReading.availableData
-            if synchronizeData?.isCancelled ?? true {
+            if synchronizeData.isCancelled {
                 return
             }
             if !auxData.isEmpty,

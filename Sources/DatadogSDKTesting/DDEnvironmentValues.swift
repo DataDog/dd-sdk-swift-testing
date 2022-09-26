@@ -4,9 +4,9 @@
  * Copyright 2020-2021 Datadog, Inc.
  */
 
+@_implementationOnly import EventsExporter
 import Foundation
 @_implementationOnly import OpenTelemetryApi
-import EventsExporter
 
 // These configuration values must be passed to the child app in an UI test
 internal enum ConfigurationValues: String, CaseIterable {
@@ -56,7 +56,7 @@ internal struct DDEnvironmentValues {
     let ddEnvironment: String?
     let ddService: String?
     var ddTags = [String: String]()
-    var customConfigurations = [String:String]()
+    var customConfigurations = [String: String]()
 
     /// Instrumentation configuration values
     let disableNetworkInstrumentation: Bool

@@ -8,11 +8,18 @@
 import Foundation
 @_implementationOnly import OpenTelemetryApi
 
+let signalCallback: PLCrashReporterPostCrashSignalCallback = { _, _, _ in
+    if let sanitizerInfo = SanitizerHelper.getSaniziterInfo() {
+        try? sanitizerInfo.write(to: DDCrashes.sanitizerURL, atomically: true, encoding: .utf8)
+    }
+}
+
 /// This class is our interface with the crash reporter, now it is based on PLCrashReporter,
 /// but we could modify this class to use another if needed
 internal enum DDCrashes {
     private static var sharedPLCrashReporter: PLCrashReporter?
     private static var crashCustomData = [String: Data]()
+    fileprivate static var sanitizerURL: URL!
 
     static func install() {
         if sharedPLCrashReporter == nil {
@@ -25,6 +32,12 @@ internal enum DDCrashes {
         guard let plCrashReporter = PLCrashReporter(configuration: config) else {
             return
         }
+
+        let reportURL = URL(fileURLWithPath: plCrashReporter.crashReportPath())
+        sanitizerURL = reportURL.deletingLastPathComponent().appendingPathComponent("SanitizerLog")
+
+        var callback = PLCrashReporterCallbacks(version: 0, context: nil, handleSignal: signalCallback)
+        plCrashReporter.setCrash(&callback)
         sharedPLCrashReporter = plCrashReporter
         handlePLCrashReport()
         plCrashReporter.enable()
@@ -84,6 +97,14 @@ internal enum DDCrashes {
                             crashedSuiteName: suiteName,
                             moduleStartTime: spanData.moduleStartTime,
                             suiteStartTime: spanData.suiteStartTime)
+                    }
+
+                    // Sanitizer info
+                    if FileManager.default.fileExists(atPath: sanitizerURL.path),
+                       let content = try? String(contentsOf: sanitizerURL)
+                    {
+                        SanitizerHelper.setSaniziterInfo(info: content)
+                        try? FileManager.default.removeItem(at: sanitizerURL)
                     }
                 }
             }

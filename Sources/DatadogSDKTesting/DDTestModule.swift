@@ -39,7 +39,6 @@ public class DDTestModule: NSObject, Encodable {
     }
 
     init(bundleName: String, startTime: Date?) {
-
         self.duration = 0
         self.status = .pass
         self.bundleName = bundleName
@@ -51,7 +50,7 @@ public class DDTestModule: NSObject, Encodable {
             }
         }
 #if targetEnvironment(simulator) || os(macOS)
-        
+
         DDSymbolicator.createDSYMFileIfNeeded(forImageName: bundleName)
         bundleFunctionInfo = FileLocator.testFunctionsInModule(bundleName)
 #endif
@@ -60,7 +59,7 @@ public class DDTestModule: NSObject, Encodable {
         }
 
         if !DDTestMonitor.env.disableCrashHandler {
-                DDCrashes.install()
+            DDCrashes.install()
         }
 
         DDTestMonitor.instance?.initializationWorkQueue.waitUntilAllOperationsAreFinished()
@@ -75,23 +74,31 @@ public class DDTestModule: NSObject, Encodable {
     func internalEnd(endTime: Date? = nil) {
         duration = (endTime ?? DDTestMonitor.clock.now).timeIntervalSince(startTime).toNanoseconds
 
-        let suiteStatus: String
-        switch status {
-            case .pass:
-                suiteStatus = DDTagValues.statusPass
-            case .fail:
-                suiteStatus = DDTagValues.statusFail
-            case .skip:
-                suiteStatus = DDTagValues.statusSkip
-        }
+        let moduleStatus: String
 
+        //If there is a Sanitizer message, we fail the module so error can be shown
+        if let sanitizerInfo = SanitizerHelper.getSaniziterInfo() {
+            moduleStatus = DDTagValues.statusFail
+            meta[DDTags.errorType] = "Sanitizer Error"
+            meta[DDTags.errorStack] = sanitizerInfo
+
+        } else {
+            switch status {
+            case .pass:
+                moduleStatus = DDTagValues.statusPass
+            case .fail:
+                moduleStatus = DDTagValues.statusFail
+            case .skip:
+                moduleStatus = DDTagValues.statusSkip
+            }
+        }
         /// Export module event
         let defaultAttributes: [String: String] = [
             DDGenericTags.type: DDTagValues.typeSuiteEnd,
             DDGenericTags.language: "swift",
             DDTestTags.testSuite: bundleName,
             DDTestTags.testFramework: testFramework,
-            DDTestTags.testStatus: suiteStatus,
+            DDTestTags.testStatus: moduleStatus,
             DDTestModuleTags.testModuleId: String(id.rawValue)
         ]
 

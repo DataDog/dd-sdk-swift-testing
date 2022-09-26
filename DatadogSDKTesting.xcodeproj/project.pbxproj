@@ -51,6 +51,12 @@
 		E12515E5254892C600670D23 /* XCUIApplicationSwizzler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12515E4254892C500670D23 /* XCUIApplicationSwizzler.swift */; };
 		E126DD2D253F366200700A40 /* StdoutCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E126DD2C253F366200700A40 /* StdoutCapture.swift */; };
 		E126DD2F253F367600700A40 /* StderrCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E126DD2E253F367600700A40 /* StderrCapture.swift */; };
+		E1293F8528DB510200D31DD6 /* SanitizerMessageHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = E1293F8428DB510200D31DD6 /* SanitizerMessageHandler.m */; };
+		E1293F8628DB510200D31DD6 /* SanitizerMessageHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = E1293F8428DB510200D31DD6 /* SanitizerMessageHandler.m */; };
+		E1293F8728DB510200D31DD6 /* SanitizerMessageHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = E1293F8428DB510200D31DD6 /* SanitizerMessageHandler.m */; };
+		E1293F8928DB529B00D31DD6 /* SanitizerHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1293F8828DB515F00D31DD6 /* SanitizerHelper.swift */; };
+		E1293F8A28DB529B00D31DD6 /* SanitizerHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1293F8828DB515F00D31DD6 /* SanitizerHelper.swift */; };
+		E1293F8B28DB529B00D31DD6 /* SanitizerHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1293F8828DB515F00D31DD6 /* SanitizerHelper.swift */; };
 		E1315930281A9CCA00B29123 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = E131592F281A9CB100B29123 /* libz.tbd */; };
 		E137366228A3BE3600420E26 /* IntelligentTestRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E137366128A3BE3600420E26 /* IntelligentTestRunner.swift */; };
 		E137366328A3BE3600420E26 /* IntelligentTestRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E137366128A3BE3600420E26 /* IntelligentTestRunner.swift */; };
@@ -745,6 +751,8 @@
 		E12515E4254892C500670D23 /* XCUIApplicationSwizzler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XCUIApplicationSwizzler.swift; sourceTree = "<group>"; };
 		E126DD2C253F366200700A40 /* StdoutCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StdoutCapture.swift; sourceTree = "<group>"; };
 		E126DD2E253F367600700A40 /* StderrCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StderrCapture.swift; sourceTree = "<group>"; };
+		E1293F8428DB510200D31DD6 /* SanitizerMessageHandler.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SanitizerMessageHandler.m; sourceTree = "<group>"; };
+		E1293F8828DB515F00D31DD6 /* SanitizerHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SanitizerHelper.swift; sourceTree = "<group>"; };
 		E12C5838280D809900A31763 /* DDCoverageFormat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DDCoverageFormat.swift; sourceTree = "<group>"; };
 		E12E506525A363A400B92F3A /* bitrise.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = bitrise.json; sourceTree = "<group>"; };
 		E131592D281A7DDB00B29123 /* Error.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Error.cpp; sourceTree = "<group>"; };
@@ -1084,6 +1092,7 @@
 		E116D7D925248C280022779D /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				E1293F8828DB515F00D31DD6 /* SanitizerHelper.swift */,
 				E1AD07A8252F5CB8003705C1 /* InternalError.swift */,
 				E1D476A525DD369F00832592 /* BinaryParser.swift */,
 				E14405A225D6A80800FE3D3C /* GitInfo.swift */,
@@ -1770,6 +1779,7 @@
 				E1550C32274F7E7900006F11 /* NTPKit */,
 				E160A113252B3A6B003121A5 /* include */,
 				E1ABA06C25231F3200ED8AEF /* LibraryInitializer.m */,
+				E1293F8428DB510200D31DD6 /* SanitizerMessageHandler.m */,
 				E11295C725F63BA8002719E7 /* DDSymbolAddress.c */,
 				E10A7E15280701CA00B464C9 /* Subprocess.c */,
 			);
@@ -2653,9 +2663,11 @@
 				E157A724256E9D1D00CBCA52 /* DDTestMonitor.swift in Sources */,
 				E14405A725D6AA9500FE3D3C /* GitInfo.swift in Sources */,
 				E157A725256E9D1D00CBCA52 /* DDEnvironmentValues.swift in Sources */,
+				E1293F8A28DB529B00D31DD6 /* SanitizerHelper.swift in Sources */,
 				E157A726256E9D1D00CBCA52 /* LibraryInitializer.m in Sources */,
 				E157A728256E9D1D00CBCA52 /* DDInstrumentationControl.swift in Sources */,
 				E157A729256E9D1D00CBCA52 /* SimpleSpanData.swift in Sources */,
+				E1293F8628DB510200D31DD6 /* SanitizerMessageHandler.m in Sources */,
 				E1F595D52609FC3000AE92B7 /* DDNetworkInstrumentation.swift in Sources */,
 				E157A72B256E9D1D00CBCA52 /* FrameworkLoadHandler.swift in Sources */,
 				E157A72C256E9D1D00CBCA52 /* DDTags.swift in Sources */,
@@ -2697,9 +2709,11 @@
 				E157A75C256E9D3300CBCA52 /* DDTestMonitor.swift in Sources */,
 				E14405A825D6AA9600FE3D3C /* GitInfo.swift in Sources */,
 				E157A75D256E9D3300CBCA52 /* DDEnvironmentValues.swift in Sources */,
+				E1293F8B28DB529B00D31DD6 /* SanitizerHelper.swift in Sources */,
 				E157A75E256E9D3300CBCA52 /* LibraryInitializer.m in Sources */,
 				E157A760256E9D3300CBCA52 /* DDInstrumentationControl.swift in Sources */,
 				E157A761256E9D3300CBCA52 /* SimpleSpanData.swift in Sources */,
+				E1293F8728DB510200D31DD6 /* SanitizerMessageHandler.m in Sources */,
 				E1F595D62609FC3000AE92B7 /* DDNetworkInstrumentation.swift in Sources */,
 				E157A763256E9D3300CBCA52 /* FrameworkLoadHandler.swift in Sources */,
 				E157A764256E9D3300CBCA52 /* DDTags.swift in Sources */,
@@ -2851,9 +2865,11 @@
 				E1ABA08B252341EA00ED8AEF /* DDTestMonitor.swift in Sources */,
 				E14405A625D6AA9500FE3D3C /* GitInfo.swift in Sources */,
 				E1ABA07725231F4700ED8AEF /* DDEnvironmentValues.swift in Sources */,
+				E1293F8928DB529B00D31DD6 /* SanitizerHelper.swift in Sources */,
 				E158E2DC25471DA000DBCD6C /* DDInstrumentationControl.swift in Sources */,
 				E1FB4842253891CE0083B263 /* SimpleSpanData.swift in Sources */,
 				E1F595D42609FC3000AE92B7 /* DDNetworkInstrumentation.swift in Sources */,
+				E1293F8528DB510200D31DD6 /* SanitizerMessageHandler.m in Sources */,
 				E1ABA07625231F4700ED8AEF /* FrameworkLoadHandler.swift in Sources */,
 				E1ABA07525231F4700ED8AEF /* DDTags.swift in Sources */,
 				E13D0BCA2546E29C00C37D56 /* SignalUtils.swift in Sources */,
@@ -3394,7 +3410,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.2.0-beta.8;
+				MARKETING_VERSION = "2.2.0-beta.8";
 				OTHER_LDFLAGS = "-weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
@@ -3423,7 +3439,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.2.0-beta.8;
+				MARKETING_VERSION = "2.2.0-beta.8";
 				OTHER_LDFLAGS = "-weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
@@ -3451,7 +3467,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.2.0-beta.8;
+				MARKETING_VERSION = "2.2.0-beta.8";
 				OTHER_LDFLAGS = "-weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
@@ -3481,7 +3497,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.2.0-beta.8;
+				MARKETING_VERSION = "2.2.0-beta.8";
 				OTHER_LDFLAGS = "-weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
@@ -3635,7 +3651,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 2.2.0-beta.8;
+				MARKETING_VERSION = "2.2.0-beta.8";
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -3704,7 +3720,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LLVM_LTO = YES_THIN;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 2.2.0-beta.8;
+				MARKETING_VERSION = "2.2.0-beta.8";
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
@@ -3735,7 +3751,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.2.0-beta.8;
+				MARKETING_VERSION = "2.2.0-beta.8";
 				OTHER_LDFLAGS = " -weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
@@ -3762,7 +3778,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.2.0-beta.8;
+				MARKETING_VERSION = "2.2.0-beta.8";
 				OTHER_LDFLAGS = " -weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
@@ -3835,7 +3851,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = 2.2.0-beta.8;
+				MARKETING_VERSION = "2.2.0-beta.8";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.EventsExporter;
 				PRODUCT_NAME = EventsExporter;
 				SKIP_INSTALL = YES;
@@ -3867,7 +3883,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = 2.2.0-beta.8;
+				MARKETING_VERSION = "2.2.0-beta.8";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.EventsExporter;
 				PRODUCT_NAME = EventsExporter;
 				SKIP_INSTALL = YES;
@@ -3900,7 +3916,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = 2.2.0-beta.8;
+				MARKETING_VERSION = "2.2.0-beta.8";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.EventsExporter;
 				PRODUCT_NAME = EventsExporter;
 				SDKROOT = macosx;
@@ -3932,7 +3948,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = 2.2.0-beta.8;
+				MARKETING_VERSION = "2.2.0-beta.8";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.EventsExporter;
 				PRODUCT_NAME = EventsExporter;
 				SDKROOT = macosx;
@@ -3965,7 +3981,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = 2.2.0-beta.8;
+				MARKETING_VERSION = "2.2.0-beta.8";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.datadoghq.EventsExporter-tvOS";
 				PRODUCT_NAME = EventsExporter;
 				SDKROOT = appletvos;
@@ -3998,7 +4014,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = 2.2.0-beta.8;
+				MARKETING_VERSION = "2.2.0-beta.8";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.datadoghq.EventsExporter-tvOS";
 				PRODUCT_NAME = EventsExporter;
 				SDKROOT = appletvos;

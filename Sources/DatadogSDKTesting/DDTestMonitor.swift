@@ -46,7 +46,6 @@ internal class DDTestMonitor {
 
     let initializationWorkQueue = OperationQueue()
 
-
     static var baseConfigurationTags = [
         DDOSTags.osPlatform: env.osName,
         DDOSTags.osArchitecture: env.osArchitecture,
@@ -170,7 +169,6 @@ internal class DDTestMonitor {
             itrBackendConfig = nil
         }
 
-
         /// Check Git is up to date and no local changes
         guard DDTestMonitor.env.isCi || (gitUploader?.statusUpToDate() ?? false) else {
             Log.debug("Git status not up to date")
@@ -178,7 +176,6 @@ internal class DDTestMonitor {
             itr = nil
             return
         }
-
 
         initializationWorkQueue.addOperation { [self] in
             if DDTestMonitor.env.gitUploadEnabled {
@@ -196,11 +193,11 @@ internal class DDTestMonitor {
             if DDTestMonitor.env.coverageEnabled ?? itrBackendConfig?.codeCoverage ?? false {
                 Log.debug("Coverage Enabled")
                 // Coverage is not supported for swift < 5.3 (binary target dependency)
-#if swift(>=5.3)
-                coverageHelper = DDCoverageHelper()
-#else
-                coverageHelper = nil
-#endif
+                #if swift(>=5.3)
+                    coverageHelper = DDCoverageHelper()
+                #else
+                    coverageHelper = nil
+                #endif
 
             } else {
                 Log.debug("Coverage Disabled")
@@ -243,6 +240,12 @@ internal class DDTestMonitor {
     func startInstrumenting() {
         guard !DDTestMonitor.env.disableTestInstrumenting else {
             return
+        }
+
+        if !DDTestMonitor.env.disableCrashHandler {
+            initializationWorkQueue.addOperation {
+                DDCrashes.install()
+            }
         }
 
         if !DDTestMonitor.env.disableNetworkInstrumentation {

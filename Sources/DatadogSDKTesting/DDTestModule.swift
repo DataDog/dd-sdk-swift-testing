@@ -58,10 +58,6 @@ public class DDTestModule: NSObject, Encodable {
             codeOwners = CodeOwners(workspacePath: URL(fileURLWithPath: workspacePath))
         }
 
-        if !DDTestMonitor.env.disableCrashHandler {
-            DDCrashes.install()
-        }
-
         DDTestMonitor.instance?.initializationWorkQueue.waitUntilAllOperationsAreFinished()
 
         let moduleStartTime = startTime ?? DDTestMonitor.clock.now

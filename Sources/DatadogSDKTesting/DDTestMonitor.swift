@@ -306,9 +306,10 @@ internal class DDTestMonitor {
         func attributeCallback(port: CFMessagePort?, msgid: Int32, data: CFData?, info: UnsafeMutableRawPointer?) -> Unmanaged<CFData>? {
             switch msgid {
                 case DDCFMessageID.setCustomTags:
-                    if let data = data as Data? {
-                        let decoded = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
-                        decoded?.forEach {
+                    if let data = data as Data?,
+                       let decoded = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
+                    {
+                        decoded.forEach {
                             DDTestMonitor.instance?.currentTest?.setTag(key: $0.key, value: $0.value)
                         }
                     }

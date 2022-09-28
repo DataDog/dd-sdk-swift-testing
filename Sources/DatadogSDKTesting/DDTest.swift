@@ -21,6 +21,8 @@ public class DDTest: NSObject {
     var module: DDTestModule
     var suite: DDTestSuite
 
+    private var isUITest: Bool
+
     private var errorInfo: ErrorInfo?
 
     init(name: String, suite: DDTestSuite, module: DDTestModule, startTime: Date? = nil) {
@@ -28,6 +30,7 @@ public class DDTest: NSObject {
         self.name = name
         self.suite = suite
         self.module = module
+        self.isUITest = false
 
         currentTestExecutionOrder = module.currentExecutionOrder
 
@@ -86,6 +89,11 @@ public class DDTest: NSObject {
         }
     }
 
+    func setIsUITest(_ value: Bool) {
+        self.isUITest = value
+        self.span.setAttribute(key: DDTestTags.testIsUITest, value: value ? "true": "false")
+    }
+
     /// Adds a extra tag or attribute to the test, any number of tags can be reported
     /// - Parameters:
     ///   - key: The name of the tag, if a tag exists with the name it will be
@@ -96,7 +104,7 @@ public class DDTest: NSObject {
     }
 
     /// Adds error information to the test, several errors can be added. Only first will set the error type, but all error messages
-    /// will be shown in the error messages. If stdout or stderr instrumentation is enabled, errors will also be logged.
+    /// will be shown in the error messages. If stdout or stderr instrumentation are enabled, errors will also be logged.
     /// - Parameters:
     ///   - type: The type of error to be reported
     ///   - message: The message associated with the error

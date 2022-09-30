@@ -44,7 +44,7 @@ internal class DDTestObserverTests: XCTestCase {
 
         let testName = "testWhenTestCaseWillStartIsCalled_testSpanIsCreated"
         let testSuite = "DDTestObserverTests"
-        let testBundle = testObserver.module?.bundleName
+        //let testBundle = testObserver.module?.bundleName
         let deviceModel = PlatformUtils.getDeviceModel()
         let deviceVersion = PlatformUtils.getDeviceVersion()
         let span = OpenTelemetry.instance.contextProvider.activeSpan as! RecordEventsReadableSpan

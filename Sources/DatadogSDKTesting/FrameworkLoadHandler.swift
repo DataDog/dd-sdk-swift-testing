@@ -38,7 +38,8 @@ public class FrameworkLoadHandler: NSObject {
             // When code coverage is enabled modify profile name so it disables countinuous profiling
             // or we cannot recover coverage manually
             let envEnabledCodeCoverage = environment["DD_CIVISIBILITY_CODE_COVERAGE_ENABLED"] as NSString?
-            if envEnabledCodeCoverage?.boolValue ?? true,
+            let envEnabledITR = environment["DD_CIVISIBILITY_ITR_ENABLED"] as NSString?
+            if envEnabledCodeCoverage?.boolValue ?? envEnabledITR?.boolValue ?? true,
                let profilePath = environment["LLVM_PROFILE_FILE"]
             {
                 let newEnv = profilePath.replacingOccurrences(of: "%c", with: "")

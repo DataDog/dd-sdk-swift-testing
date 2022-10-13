@@ -21,9 +21,9 @@ class DDCoverageHelper {
         guard let profilePath = DDEnvironmentValues.getEnvVariable("LLVM_PROFILE_FILE"),
               BinaryImages.profileImages.count > 0
         else {
-            Log.debug("DDCoverageHelper could not be instanced")
+            Log.print("Coverage not properly enabled in project, check documentation")
             Log.debug("LLVM_PROFILE_FILE: \(DDEnvironmentValues.getEnvVariable("LLVM_PROFILE_FILE") ?? "NIL")")
-            Log.debug("Profile Images coung: \(BinaryImages.profileImages.count)")
+            Log.debug("Profile Images count: \(BinaryImages.profileImages.count)")
             return nil
         }
 

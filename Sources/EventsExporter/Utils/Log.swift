@@ -12,12 +12,16 @@ struct Log {
 
     static func debug(_ string: @autoclosure () -> String) {
         if debugMode {
-            Swift.print("[Debug][DatadogSDKTesting] " + string() + "\n")
+            NSLog("[Debug][DatadogSDKTesting] " + string() + "\n")
         }
     }
 
     static func print(_ string: String) {
-        Swift.print("[DatadogSDKTesting] " + string + "\n")
+        if debugMode {
+            NSLog("[DatadogSDKTesting] " + string + "\n")
+        } else {
+            Swift.print("[DatadogSDKTesting] " + string + "\n")
+        }
     }
 
     static func runOnDebug(_ function: @autoclosure () -> Void) {

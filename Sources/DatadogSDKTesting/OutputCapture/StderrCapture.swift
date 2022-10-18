@@ -52,9 +52,6 @@ enum StderrCapture {
         var synchronizeData: DispatchWorkItem!
         synchronizeData = DispatchWorkItem(block: {
             let auxData = self.inputPipe.fileHandleForReading.availableData
-            if synchronizeData.isCancelled {
-                return
-            }
             if !auxData.isEmpty,
                let string = String(data: auxData, encoding: String.Encoding.utf8)
             {
@@ -65,7 +62,6 @@ enum StderrCapture {
             synchronizeData.perform()
         }
         _ = synchronizeData.wait(timeout: .now() + .milliseconds(10))
-        synchronizeData.cancel()
     }
 
     static func stopCapturing() {

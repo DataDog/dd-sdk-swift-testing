@@ -367,7 +367,6 @@
 		E1DCAF68284A1F8900F44BE3 /* RequestBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1B27D7790300F4018A /* RequestBuilder.swift */; };
 		E1DCAF69284A1F8900F44BE3 /* DataUploadStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF2127D7790300F4018A /* DataUploadStatus.swift */; };
 		E1DCAF6B284A1FE000F44BE3 /* OpenTelemetrySdk in Frameworks */ = {isa = PBXBuildFile; productRef = E1DCAF6A284A1FE000F44BE3 /* OpenTelemetrySdk */; };
-		E1DCAF6D284A1FE600F44BE3 /* Atomics in Frameworks */ = {isa = PBXBuildFile; productRef = E1DCAF6C284A1FE600F44BE3 /* Atomics */; };
 		E1DCAF6E284A200800F44BE3 /* LLVMCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10A7E0D2806D68F00B464C9 /* LLVMCoverageFormat.swift */; };
 		E1DCAF6F284A200800F44BE3 /* DDCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12C5838280D809900A31763 /* DDCoverageFormat.swift */; };
 		E1DCAF70284A200800F44BE3 /* DDCoverageConversor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E15C79672722AD0500E9DBAD /* DDCoverageConversor.swift */; };
@@ -413,14 +412,12 @@
 		E1DCAFA8284A285D00F44BE3 /* EventsExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1927D7790300F4018A /* EventsExporter.swift */; };
 		E1DCAFA9284A285D00F44BE3 /* ExporterConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0C27D7790300F4018A /* ExporterConfiguration.swift */; };
 		E1DCAFAB284A28DE00F44BE3 /* OpenTelemetrySdk in Frameworks */ = {isa = PBXBuildFile; productRef = E1DCAFAA284A28DE00F44BE3 /* OpenTelemetrySdk */; };
-		E1DCAFAD284A28E600F44BE3 /* Atomics in Frameworks */ = {isa = PBXBuildFile; productRef = E1DCAFAC284A28E600F44BE3 /* Atomics */; };
 		E1DCAFAE284A294100F44BE3 /* DDCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12C5838280D809900A31763 /* DDCoverageFormat.swift */; };
 		E1DCAFB1284A294100F44BE3 /* DDCoverageConversor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E15C79672722AD0500E9DBAD /* DDCoverageConversor.swift */; };
 		E1DCAFB2284A294100F44BE3 /* LLVMCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10A7E0D2806D68F00B464C9 /* LLVMCoverageFormat.swift */; };
 		E1DCAFB8284A299A00F44BE3 /* EventsExporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1DCAF7C284A27DE00F44BE3 /* EventsExporter.framework */; };
 		E1DCAFBC284A29DD00F44BE3 /* Spawn.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1665A7225D12D7500BA53CD /* Spawn.swift */; };
 		E1DCAFCA284A2BA300F44BE3 /* OpenTelemetrySdk in Frameworks */ = {isa = PBXBuildFile; productRef = E1DCAFC9284A2BA300F44BE3 /* OpenTelemetrySdk */; };
-		E1DCAFCC284A2BA800F44BE3 /* Atomics in Frameworks */ = {isa = PBXBuildFile; productRef = E1DCAFCB284A2BA800F44BE3 /* Atomics */; };
 		E1DCAFCE284A2BED00F44BE3 /* CodeCoverage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D7848281838D200758E2A /* CodeCoverage.cpp */; };
 		E1DCAFCF284A2BED00F44BE3 /* DateFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0527D7790200F4018A /* DateFormatting.swift */; };
 		E1DCAFD0284A2BED00F44BE3 /* File.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1827D7790300F4018A /* File.swift */; };
@@ -1045,7 +1042,6 @@
 			files = (
 				E1DCAF6B284A1FE000F44BE3 /* OpenTelemetrySdk in Frameworks */,
 				E1E51D5028B5099200E0E206 /* llvm-xcframework in Frameworks */,
-				E1DCAF6D284A1FE600F44BE3 /* Atomics in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1055,7 +1051,6 @@
 			files = (
 				E1DCAFAB284A28DE00F44BE3 /* OpenTelemetrySdk in Frameworks */,
 				E1E51D5228B509BA00E0E206 /* llvm-xcframework in Frameworks */,
-				E1DCAFAD284A28E600F44BE3 /* Atomics in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1065,7 +1060,6 @@
 			files = (
 				E1DCAFCA284A2BA300F44BE3 /* OpenTelemetrySdk in Frameworks */,
 				E1E51D5428B509C100E0E206 /* llvm-xcframework in Frameworks */,
-				E1DCAFCC284A2BA800F44BE3 /* Atomics in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2253,7 +2247,6 @@
 			name = EventsExporter_iOS;
 			packageProductDependencies = (
 				E1DCAF6A284A1FE000F44BE3 /* OpenTelemetrySdk */,
-				E1DCAF6C284A1FE600F44BE3 /* Atomics */,
 				E1E51D4F28B5099200E0E206 /* llvm-xcframework */,
 			);
 			productName = EventsExporter_iOS;
@@ -2276,7 +2269,6 @@
 			name = EventsExporter_macOS;
 			packageProductDependencies = (
 				E1DCAFAA284A28DE00F44BE3 /* OpenTelemetrySdk */,
-				E1DCAFAC284A28E600F44BE3 /* Atomics */,
 				E1E51D5128B509BA00E0E206 /* llvm-xcframework */,
 			);
 			productName = EventsExporter_macOS;
@@ -2299,7 +2291,6 @@
 			name = EventsExporter_tvOS;
 			packageProductDependencies = (
 				E1DCAFC9284A2BA300F44BE3 /* OpenTelemetrySdk */,
-				E1DCAFCB284A2BA800F44BE3 /* Atomics */,
 				E1E51D5328B509C100E0E206 /* llvm-xcframework */,
 			);
 			productName = EventsExporter_tvOS;
@@ -2406,7 +2397,6 @@
 				E1FB4839253891650083B263 /* XCRemoteSwiftPackageReference "plcrashreporter" */,
 				E17B7AA6253F02580081D7F3 /* XCRemoteSwiftPackageReference "SigmaSwiftStatistics" */,
 				E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */,
-				E143CF8827D77E1900F4018A /* XCRemoteSwiftPackageReference "swift-atomics" */,
 				E141EB5727EB44400057D747 /* XCRemoteSwiftPackageReference "swift-nio" */,
 				E1E51D4E28B5099200E0E206 /* XCRemoteSwiftPackageReference "llvm-xcframework" */,
 			);
@@ -3405,7 +3395,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.2.0-rc.1;
+				MARKETING_VERSION = "2.2.0-rc.1";
 				OTHER_LDFLAGS = "-weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
@@ -3432,7 +3422,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.2.0-rc.1;
+				MARKETING_VERSION = "2.2.0-rc.1";
 				OTHER_LDFLAGS = "-weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
@@ -3459,7 +3449,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.2.0-rc.1;
+				MARKETING_VERSION = "2.2.0-rc.1";
 				OTHER_LDFLAGS = "-weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
@@ -3487,7 +3477,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.2.0-rc.1;
+				MARKETING_VERSION = "2.2.0-rc.1";
 				OTHER_LDFLAGS = "-weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
@@ -3634,7 +3624,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 2.2.0-rc.1;
+				MARKETING_VERSION = "2.2.0-rc.1";
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -3704,7 +3694,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LLVM_LTO = YES_THIN;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 2.2.0-rc.1;
+				MARKETING_VERSION = "2.2.0-rc.1";
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
@@ -3736,7 +3726,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.2.0-rc.1;
+				MARKETING_VERSION = "2.2.0-rc.1";
 				OTHER_LDFLAGS = " -weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
@@ -3761,7 +3751,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.2.0-rc.1;
+				MARKETING_VERSION = "2.2.0-rc.1";
 				OTHER_LDFLAGS = " -weak-lXCTestSwiftSupport";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTesting;
 				PRODUCT_NAME = DatadogSDKTesting;
@@ -3830,7 +3820,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = 2.2.0-rc.1;
+				MARKETING_VERSION = "2.2.0-rc.1";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.EventsExporter;
 				PRODUCT_NAME = EventsExporter;
 				SKIP_INSTALL = YES;
@@ -3861,7 +3851,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = 2.2.0-rc.1;
+				MARKETING_VERSION = "2.2.0-rc.1";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.EventsExporter;
 				PRODUCT_NAME = EventsExporter;
 				SKIP_INSTALL = YES;
@@ -3893,7 +3883,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = 2.2.0-rc.1;
+				MARKETING_VERSION = "2.2.0-rc.1";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.EventsExporter;
 				PRODUCT_NAME = EventsExporter;
 				SDKROOT = macosx;
@@ -3924,7 +3914,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = 2.2.0-rc.1;
+				MARKETING_VERSION = "2.2.0-rc.1";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.EventsExporter;
 				PRODUCT_NAME = EventsExporter;
 				SDKROOT = macosx;
@@ -3956,7 +3946,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = 2.2.0-rc.1;
+				MARKETING_VERSION = "2.2.0-rc.1";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.datadoghq.EventsExporter-tvOS";
 				PRODUCT_NAME = EventsExporter;
 				SDKROOT = appletvos;
@@ -3988,7 +3978,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = 2.2.0-rc.1;
+				MARKETING_VERSION = "2.2.0-rc.1";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.datadoghq.EventsExporter-tvOS";
 				PRODUCT_NAME = EventsExporter;
 				SDKROOT = appletvos;
@@ -4233,7 +4223,7 @@
 			repositoryURL = "https://github.com/open-telemetry/opentelemetry-swift";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 1.1.7;
+				minimumVersion = 1.1.8;
 			};
 		};
 		E141EB5727EB44400057D747 /* XCRemoteSwiftPackageReference "swift-nio" */ = {
@@ -4242,15 +4232,6 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 2.0.0;
-			};
-		};
-		E143CF8827D77E1900F4018A /* XCRemoteSwiftPackageReference "swift-atomics" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/apple/swift-atomics.git";
-			requirement = {
-				kind = versionRange;
-				maximumVersion = 2.0.0;
-				minimumVersion = 0.0.2;
 			};
 		};
 		E157A719256E9D1D00CBCA52 /* XCRemoteSwiftPackageReference "plcrashreporter" */ = {
@@ -4402,30 +4383,15 @@
 			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
 			productName = OpenTelemetrySdk;
 		};
-		E1DCAF6C284A1FE600F44BE3 /* Atomics */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E143CF8827D77E1900F4018A /* XCRemoteSwiftPackageReference "swift-atomics" */;
-			productName = Atomics;
-		};
 		E1DCAFAA284A28DE00F44BE3 /* OpenTelemetrySdk */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
 			productName = OpenTelemetrySdk;
 		};
-		E1DCAFAC284A28E600F44BE3 /* Atomics */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E143CF8827D77E1900F4018A /* XCRemoteSwiftPackageReference "swift-atomics" */;
-			productName = Atomics;
-		};
 		E1DCAFC9284A2BA300F44BE3 /* OpenTelemetrySdk */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
 			productName = OpenTelemetrySdk;
-		};
-		E1DCAFCB284A2BA800F44BE3 /* Atomics */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E143CF8827D77E1900F4018A /* XCRemoteSwiftPackageReference "swift-atomics" */;
-			productName = Atomics;
 		};
 		E1E51D4F28B5099200E0E206 /* llvm-xcframework */ = {
 			isa = XCSwiftPackageProductDependency;

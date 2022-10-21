@@ -20,9 +20,7 @@ let package = Package(
     dependencies: [
         .package(name: "opentelemetry-swift", url: "https://github.com/open-telemetry/opentelemetry-swift", from: "1.0.7"),
         .package(name: "PLCrashReporter", url: "https://github.com/microsoft/plcrashreporter.git", from: "1.9.0"),
-        .package(name: "SigmaSwiftStatistics", url: "https://github.com/evgenyneu/SigmaSwiftStatistics.git", from: "9.0.2"),
-        .package(name: "swift-atomics", url: "https://github.com/apple/swift-atomics.git", "0.0.2" ... "2.0.0")
-
+        .package(name: "SigmaSwiftStatistics", url: "https://github.com/evgenyneu/SigmaSwiftStatistics.git", from: "9.0.2")
     ],
     targets: [
         .target(
@@ -46,7 +44,6 @@ let package = Package(
         .target(
             name: "EventsExporter",
             dependencies: [
-                .product(name: "Atomics", package: "swift-atomics"),
                 .product(name: "OpenTelemetrySdk", package: "opentelemetry-swift")
             ],
             exclude: [

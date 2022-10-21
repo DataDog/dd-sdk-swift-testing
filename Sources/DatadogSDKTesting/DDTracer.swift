@@ -199,7 +199,7 @@ internal class DDTracer {
         let spanProcessor = MultiSpanProcessor(spanProcessors: tracerProvider.getActiveSpanProcessors())
         let span = RecordEventsReadableSpan.startSpan(context: spanContext,
                                                       name: spanName,
-                                                      instrumentationLibraryInfo: tracerSdk.instrumentationLibraryInfo,
+                                                      instrumentationScopeInfo: tracerSdk.instrumentationScopeInfo,
                                                       kind: .internal,
                                                       parentContext: parentContext,
                                                       hasRemoteParent: false,
@@ -229,7 +229,7 @@ internal class DDTracer {
 
         let span = RecordEventsReadableSpan.startSpan(context: launchSpanContext!,
                                                       name: "ApplicationUnderTest",
-                                                      instrumentationLibraryInfo: tracerSdk.instrumentationLibraryInfo,
+                                                      instrumentationScopeInfo: tracerSdk.instrumentationScopeInfo,
                                                       kind: .internal,
                                                       parentContext: nil,
                                                       hasRemoteParent: false,

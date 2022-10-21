@@ -75,7 +75,7 @@ class SpansExporterTests: XCTestCase {
                         traceFlags: TraceFlags(),
                         traceState: TraceState(),
                         resource: Resource(),
-                        instrumentationLibraryInfo: InstrumentationLibraryInfo(),
+                        instrumentationScope: InstrumentationScopeInfo(),
                         name: "spanName",
                         kind: .server,
                         startTime: Date(timeIntervalSinceReferenceDate: 3000),

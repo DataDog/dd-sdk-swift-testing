@@ -12,11 +12,11 @@ struct Log {
 
     static func debug(_ string: @autoclosure () -> String) {
         if debugTracer {
-            Swift.print("[Debug][DatadogSDKTesting] " + string() + "\n")
+            NSLog("[Debug][DatadogSDKTesting] " + string() + "\n")
         }
     }
 
     static func print(_ string: String) {
-        Swift.print("[DatadogSDKTesting] " + string + "\n")
+        NSLog("[DatadogSDKTesting] " + string + "\n")
     }
 }

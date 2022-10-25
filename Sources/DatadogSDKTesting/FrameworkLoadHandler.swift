@@ -58,7 +58,7 @@ public class FrameworkLoadHandler: NSObject {
                 print("[DatadogSDKTesting] Application launched from UITest while being instrumented")
                 DDTestMonitor.instance = DDTestMonitor()
                 DDTestMonitor.instance?.startInstrumenting()
-                DDTestMonitor.instance?.initializationWorkQueue.waitUntilAllOperationsAreFinished()
+                DDTestMonitor.instance?.instrumentationWorkQueue.waitUntilAllOperationsAreFinished()
             }
         } else {
             print("[DatadogSDKTesting] Framework loaded but not in test mode")

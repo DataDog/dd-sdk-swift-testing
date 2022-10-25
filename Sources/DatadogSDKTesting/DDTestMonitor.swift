@@ -44,7 +44,8 @@ internal class DDTestMonitor {
 
     var crashedModuleInfo: CrashedModuleInformation?
 
-    let initializationWorkQueue = OperationQueue()
+    let instrumentationWorkQueue = OperationQueue()
+    let itrWorkQueue = OperationQueue()
 
     static var baseConfigurationTags = [
         DDOSTags.osPlatform: env.osName,
@@ -95,6 +96,7 @@ internal class DDTestMonitor {
         Log.print("Library loaded and active. Instrumenting tests.")
         DDTestMonitor.instance = DDTestMonitor()
         DDTestMonitor.instance?.startInstrumenting()
+        DDTestMonitor.instance?.startITR()
         return true
     }
 
@@ -148,7 +150,9 @@ internal class DDTestMonitor {
                 }
             #endif
         }
+    }
 
+    func startITR() {
         let itrBackendConfig: (codeCoverage: Bool, testsSkipping: Bool)?
 
         if let service = DDTestMonitor.env.ddService ?? DDTestMonitor.env.getRepositoryName(),
@@ -177,7 +181,7 @@ internal class DDTestMonitor {
             return
         }
 
-        initializationWorkQueue.addOperation { [self] in
+        itrWorkQueue.addOperation { [self] in
             if DDTestMonitor.env.gitUploadEnabled {
                 Log.debug("Git Upload Enabled")
                 gitUploader = try? GitUploader()
@@ -188,7 +192,7 @@ internal class DDTestMonitor {
             }
         }
 
-        initializationWorkQueue.addOperation { [self] in
+        itrWorkQueue.addOperation { [self] in
             // Activate Coverage
             if DDTestMonitor.env.coverageEnabled ?? itrBackendConfig?.codeCoverage ?? false {
                 Log.debug("Coverage Enabled")
@@ -205,7 +209,9 @@ internal class DDTestMonitor {
             }
         }
 
-        initializationWorkQueue.addOperation { [self] in
+        itrWorkQueue.waitUntilAllOperationsAreFinished()
+
+        itrWorkQueue.addOperation { [self] in
 
             /// Check branch is not excluded
             if let excludedBranches = DDTestMonitor.env.excludedBranches,
@@ -225,6 +231,7 @@ internal class DDTestMonitor {
                     }
                 }
             }
+
             // Activate Intelligent Test Runner
             if DDTestMonitor.env.itrEnabled ?? itrBackendConfig?.testsSkipping ?? false {
                 Log.debug("ITR Enabled")
@@ -243,13 +250,13 @@ internal class DDTestMonitor {
         }
 
         if !DDTestMonitor.env.disableCrashHandler {
-            initializationWorkQueue.addOperation {
+            instrumentationWorkQueue.addOperation {
                 DDCrashes.install()
             }
         }
 
         if !DDTestMonitor.env.disableNetworkInstrumentation {
-            initializationWorkQueue.addOperation { [self] in
+            instrumentationWorkQueue.addOperation { [self] in
                 startNetworkAutoInstrumentation()
                 if !DDTestMonitor.env.disableHeadersInjection {
                     injectHeaders = true
@@ -263,12 +270,12 @@ internal class DDTestMonitor {
             }
         }
         if DDTestMonitor.env.enableStdoutInstrumentation {
-            initializationWorkQueue.addOperation { [self] in
+            instrumentationWorkQueue.addOperation { [self] in
                 startStdoutCapture()
             }
         }
         if DDTestMonitor.env.enableStderrInstrumentation {
-            initializationWorkQueue.addOperation { [self] in
+            instrumentationWorkQueue.addOperation { [self] in
                 startStderrCapture()
             }
         }

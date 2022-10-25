@@ -58,7 +58,8 @@ public class DDTestModule: NSObject, Encodable {
             codeOwners = CodeOwners(workspacePath: URL(fileURLWithPath: workspacePath))
         }
 
-        DDTestMonitor.instance?.initializationWorkQueue.waitUntilAllOperationsAreFinished()
+        DDTestMonitor.instance?.instrumentationWorkQueue.waitUntilAllOperationsAreFinished()
+        DDTestMonitor.instance?.itrWorkQueue.waitUntilAllOperationsAreFinished()
 
         let moduleStartTime = startTime ?? DDTestMonitor.clock.now
 

@@ -96,6 +96,7 @@ internal class DDTestMonitor {
         Log.print("Library loaded and active. Instrumenting tests.")
         DDTestMonitor.instance = DDTestMonitor()
         DDTestMonitor.instance?.startInstrumenting()
+        DDTestMonitor.instance?.instrumentationWorkQueue.waitUntilAllOperationsAreFinished()
         DDTestMonitor.instance?.startITR()
         return true
     }

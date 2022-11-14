@@ -28,6 +28,8 @@ struct GitUploader {
             Log.print("sendGitInfo failed, repository not found")
             return
         }
+        /// Check if the repository is a shallow clone, if so fetch more info
+        handleShallowClone(repository: repo)
 
         let existingCommits = searchRepositoryCommits(repository: repo)
         Log.debug("Existing commits: \(existingCommits)")
@@ -45,6 +47,24 @@ struct GitUploader {
         let status = Spawn.commandWithResult(#"git -C "\#(workspacePath)" status --short -uno"#).trimmingCharacters(in: .whitespacesAndNewlines)
         Log.debug("Git status: \(status)")
         return status.isEmpty
+    }
+
+    private func handleShallowClone(repository: String) {
+        // Check if is a shallow repository
+        let isShallow = Spawn.commandWithResult(#"git -C "\#(workspacePath)" rev-parse --is-shallow-repository"#).trimmingCharacters(in: .whitespacesAndNewlines)
+        if isShallow != "true" {
+            return
+        }
+
+        // Count if number of returned lines is greater than 1
+        let lineLength = Spawn.commandWithResult(#"git -C "\#(workspacePath)" log --format=oneline -n 2"#).trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !lineLength.contains("\n") else {
+            return
+        }
+
+        // Fetch remaining tree info
+        Spawn.command(#"git -C "\#(workspacePath)" config remote.origin.partialclonefilter "blob:none""#)
+        Spawn.command(#"git -C "\#(workspacePath)" fetch --shallow-since="1 month ago" --update-shallow --refetch"#)
     }
 
     private func getLatestCommits() -> [String] {

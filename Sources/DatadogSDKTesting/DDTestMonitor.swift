@@ -174,6 +174,13 @@ internal class DDTestMonitor {
             itrBackendConfig = nil
         }
 
+        if DDTestMonitor.env.gitUploadEnabled {
+            Log.debug("Git Upload Enabled")
+            gitUploader = try? GitUploader()
+        } else {
+            Log.debug("Git Upload Disabled")
+        }
+
         /// Check Git is up to date and no local changes
         guard DDTestMonitor.env.isCi || (gitUploader?.statusUpToDate() ?? false) else {
             Log.debug("Git status not up to date")
@@ -183,14 +190,7 @@ internal class DDTestMonitor {
         }
 
         itrWorkQueue.addOperation { [self] in
-            if DDTestMonitor.env.gitUploadEnabled {
-                Log.debug("Git Upload Enabled")
-                gitUploader = try? GitUploader()
-                gitUploader?.sendGitInfo()
-            } else {
-                Log.debug("Git Upload Disabled")
-                gitUploader = nil
-            }
+            gitUploader?.sendGitInfo()
         }
 
         itrWorkQueue.addOperation { [self] in

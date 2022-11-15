@@ -8,17 +8,17 @@
 import Foundation
 
 struct GitUploader {
-    let packFilesLocation = "com.datadog.civisibility/packfiles/v1/" + UUID().uuidString
-    var packFilesdirectory: Directory
+    var workspacePath: String
 
-    let workspacePath: String
+    private static let packFilesLocation = "com.datadog.civisibility/packfiles/v1/" + UUID().uuidString
+    var packFilesdirectory: Directory
 
     init() throws {
         guard let envWorkspacePath = DDTestMonitor.env.workspacePath else {
             Log.debug("IntelligentTestRunner failed building")
             throw InternalError(description: "IntelligentTestRunner failed building")
         }
-        packFilesdirectory = try Directory(withSubdirectoryPath: packFilesLocation)
+        packFilesdirectory = try Directory(withSubdirectoryPath: GitUploader.packFilesLocation)
         workspacePath = envWorkspacePath
     }
 
@@ -38,9 +38,7 @@ struct GitUploader {
         Log.debug("Commits To Upload: \(commitsToUpload)")
 
         guard !commitsToUpload.isEmpty else { return }
-        generatePackFilesFromCommits(commits: commitsToUpload)
-
-        uploadExistingPackfiles(repository: repo)
+        generateAndUploadPackFilesFromCommits(commits: commitsToUpload, repository: repo)
     }
 
     func statusUpToDate() -> Bool {
@@ -88,12 +86,22 @@ struct GitUploader {
         return missingCommitsArray
     }
 
-    private func generatePackFilesFromCommits(commits: [String]) {
+    private func generateAndUploadPackFilesFromCommits(commits: [String], repository: String) {
+        var uploadPackfileDirectory = packFilesdirectory
         let commitList = commits.joined(separator: "\n")
-        Spawn.command(#"git -C "\#(workspacePath)" pack-objects --quiet --compression=9 --max-pack-size=3m "\#(packFilesdirectory.getURL().path + "/" + UUID().uuidString)" <<< "\#(commitList)""#)
+        let aux = Spawn.commandWithResult(#"git -C "\#(workspacePath)" pack-objects --quiet --compression=9 --max-pack-size=3m "\#(packFilesdirectory.getURL().path + "/" + UUID().uuidString)" <<< "\#(commitList)""#)
+        if aux.hasPrefix("fatal:") {
+            let uploadPackfilePath = workspacePath + "/" + UUID().uuidString
+            try? FileManager.default.createDirectory(atPath: uploadPackfilePath, withIntermediateDirectories: true)
+            uploadPackfileDirectory = Directory(url: URL(fileURLWithPath: uploadPackfilePath))
+            Spawn.command(#"git -C "\#(workspacePath)" pack-objects --quiet --compression=9 --max-pack-size=3m "\#(uploadPackfileDirectory.getURL().path + "/" + UUID().uuidString)" <<< "\#(commitList)""#)
+        }
+
+        uploadExistingPackfiles(directory: uploadPackfileDirectory, repository: repository)
+        try? uploadPackfileDirectory.deleteDirectory()
     }
 
-    private func uploadExistingPackfiles(repository: String) {
+    private func uploadExistingPackfiles(directory: Directory, repository: String) {
         guard let commit = DDTestMonitor.env.commit else { return }
         DDTestMonitor.tracer.eventsExporter?.uploadPackFiles(packFilesDirectory: packFilesdirectory, commit: commit, repository: repository)
     }

@@ -48,6 +48,13 @@ import Foundation
      public func getURL() -> URL {
          return url
      }
+     
+     /// Deletes all files in this directory.
+     public func deleteDirectory() throws {
+         if FileManager.default.fileExists(atPath: url.path) {
+             try FileManager.default.removeItem(at: url)
+         }
+     }
 }
 
 /// Creates subdirectory at given path in `/Library/Caches` if it does not exist. Might throw `ExporterError` when it's not possible.

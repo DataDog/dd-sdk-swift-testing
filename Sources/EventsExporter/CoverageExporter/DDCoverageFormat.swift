@@ -36,7 +36,7 @@ struct DDCoverageFormat: Encodable {
         init() {}
     }
 
-    init?(llvmFormat: LLVMCoverageFormat, traceId: UInt64, spanId: UInt64, workspacePath: String?) {
+    init?(llvmFormat: LLVMSimpleCoverageFormat, traceId: UInt64, spanId: UInt64, workspacePath: String?) {
         guard let llvmFiles = llvmFormat.data.first?.files else { return nil }
 
         self.trace_id = traceId

@@ -6,7 +6,7 @@
 
 import Foundation
 
-struct LLVMCoverageFormat {
+struct LLVMSimpleCoverageFormat {
     struct Datum {
         let files: [File]
     }
@@ -25,7 +25,7 @@ struct LLVMCoverageFormat {
     let data: [Datum]
 }
 
-extension LLVMCoverageFormat {
+extension LLVMSimpleCoverageFormat {
     init(data: Data) throws {
         // Use ObjC parser to avoid reserving memory, and parse only really needed bytes. Keep
         // the ObjC types as long as possible to avoid extra conversions

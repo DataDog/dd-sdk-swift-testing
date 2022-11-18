@@ -74,12 +74,11 @@ internal class CoverageExporter {
 
     private func addCoverage(request: MultipartFormDataRequest, data: Data?) {
         guard let data = data,
-            let newline = Character("\n").asciiValue else { return }
+              let newline = Character("\n").asciiValue else { return }
 
         let separatedData = data.split(separator: newline)
         separatedData.enumerated().forEach {
             request.addDataField(named: "coverage\($0)", data: $1, mimeType: .applicationJSON)
-
         }
         request.addDataField(named: "event", data: #"{"dummy": true}"#.data(using: .utf8)!, mimeType: .applicationJSON)
     }

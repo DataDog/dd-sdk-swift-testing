@@ -22,10 +22,12 @@ public class DDTestModule: NSObject, Encodable {
     let startTime: Date
     var duration: UInt64
     var meta: [String: String] = [:]
+    var metrics: [String: Double] = [:]
     var status: DDTestStatus
     var localization: String
     var configError = false
     var itrSkipped = false
+    var linesCovered: Double?
 
     private let executionLock = NSLock()
     private var privateCurrentExecutionOrder = 0
@@ -73,7 +75,7 @@ public class DDTestModule: NSObject, Encodable {
 
         let moduleStatus: String
 
-        //If there is a Sanitizer message, we fail the module so error can be shown
+        // If there is a Sanitizer message, we fail the module so error can be shown
         if let sanitizerInfo = SanitizerHelper.getSaniziterInfo() {
             moduleStatus = DDTagValues.statusFail
             meta[DDTags.errorType] = "Sanitizer Error"
@@ -87,6 +89,20 @@ public class DDTestModule: NSObject, Encodable {
                 moduleStatus = DDTagValues.statusFail
             case .skip:
                 moduleStatus = DDTagValues.statusSkip
+            }
+        }
+
+        if let llvmProfilePath = DDEnvironmentValues.getEnvVariable("LLVM_PROFILE_FILE") {
+            let profileFolder = URL(fileURLWithPath: llvmProfilePath).deletingLastPathComponent()
+            // Locate proper file
+            if let enumerator = FileManager.default.enumerator(at: profileFolder, includingPropertiesForKeys: nil, options: .skipsSubdirectoryDescendants) {
+                for element in enumerator {
+                    if let file = element as? URL, file.pathExtension == "profraw" {
+                        let coverage = DDCoverageHelper.getModuleCoverage(profrawFile: file, binaryImagePaths: BinaryImages.binaryImagesPath)
+                        linesCovered = coverage?.data.first?.totals.lines.percent
+                        break
+                    }
+                }
             }
         }
         /// Export module event
@@ -105,10 +121,15 @@ public class DDTestModule: NSObject, Encodable {
         meta.merge(DDEnvironmentValues.ciAttributes) { _, new in new }
         meta[DDUISettingsTags.uiSettingsModuleLocalization] = localization
         meta[DDItrTags.iItrSkippedTests] = itrSkipped ? "true" : "false"
+        metrics[DDTestModuleTags.testCoverageLines] = linesCovered
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: DDTestModuleEnvelope(self))
-        /// We need to wait for all the traces to be written to the backend before exiting
-        DDTestMonitor.instance?.coverageHelper?.coverageWorkQueue.maxConcurrentOperationCount = ProcessInfo.processInfo.activeProcessorCount
-        DDTestMonitor.instance?.coverageHelper?.coverageWorkQueue.waitUntilAllOperationsAreFinished()
+
+        if let coverageHelper = DDTestMonitor.instance?.coverageHelper {
+            /// We need to wait for all the traces to be written to the backend before exiting
+            coverageHelper.coverageWorkQueue.maxConcurrentOperationCount = ProcessInfo.processInfo.activeProcessorCount
+            coverageHelper.coverageWorkQueue.waitUntilAllOperationsAreFinished()
+        }
+
         DDTestMonitor.tracer.flush()
     }
 }
@@ -166,6 +187,7 @@ extension DDTestModule {
         case start
         case duration
         case meta
+        case metrics
         case error
         case name
         case resource
@@ -178,6 +200,7 @@ extension DDTestModule {
         try container.encode(startTime.timeIntervalSince1970.toNanoseconds, forKey: .start)
         try container.encode(duration, forKey: .duration)
         try container.encode(meta, forKey: .meta)
+        try container.encode(metrics, forKey: .metrics)
         try container.encode(status == .fail ? 1 : 0, forKey: .error)
         try container.encode("\(testFramework).module", forKey: .name)
         try container.encode("\(bundleName)", forKey: .resource)

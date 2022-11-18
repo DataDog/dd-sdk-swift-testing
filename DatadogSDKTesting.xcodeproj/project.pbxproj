@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		81EDADB7292795B900279027 /* LLVMTotalsCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81EDADB2292698A200279027 /* LLVMTotalsCoverageFormat.swift */; };
+		81EDADB8292795B900279027 /* LLVMTotalsCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81EDADB2292698A200279027 /* LLVMTotalsCoverageFormat.swift */; };
+		81EDADB9292795B900279027 /* LLVMTotalsCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81EDADB2292698A200279027 /* LLVMTotalsCoverageFormat.swift */; };
 		E10034DC27035A7700439C9C /* DDTestModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10034D92703599D00439C9C /* DDTestModule.swift */; };
 		E10034DE27035A7800439C9C /* DDTestModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10034D92703599D00439C9C /* DDTestModule.swift */; };
 		E10034E027035A7900439C9C /* DDTestModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10034D92703599D00439C9C /* DDTestModule.swift */; };
@@ -367,7 +370,7 @@
 		E1DCAF68284A1F8900F44BE3 /* RequestBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1B27D7790300F4018A /* RequestBuilder.swift */; };
 		E1DCAF69284A1F8900F44BE3 /* DataUploadStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF2127D7790300F4018A /* DataUploadStatus.swift */; };
 		E1DCAF6B284A1FE000F44BE3 /* OpenTelemetrySdk in Frameworks */ = {isa = PBXBuildFile; productRef = E1DCAF6A284A1FE000F44BE3 /* OpenTelemetrySdk */; };
-		E1DCAF6E284A200800F44BE3 /* LLVMCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10A7E0D2806D68F00B464C9 /* LLVMCoverageFormat.swift */; };
+		E1DCAF6E284A200800F44BE3 /* LLVMSimpleCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10A7E0D2806D68F00B464C9 /* LLVMSimpleCoverageFormat.swift */; };
 		E1DCAF6F284A200800F44BE3 /* DDCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12C5838280D809900A31763 /* DDCoverageFormat.swift */; };
 		E1DCAF70284A200800F44BE3 /* DDCoverageConversor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E15C79672722AD0500E9DBAD /* DDCoverageConversor.swift */; };
 		E1DCAF72284A203100F44BE3 /* Spawn.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1665A7225D12D7500BA53CD /* Spawn.swift */; };
@@ -414,7 +417,7 @@
 		E1DCAFAB284A28DE00F44BE3 /* OpenTelemetrySdk in Frameworks */ = {isa = PBXBuildFile; productRef = E1DCAFAA284A28DE00F44BE3 /* OpenTelemetrySdk */; };
 		E1DCAFAE284A294100F44BE3 /* DDCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12C5838280D809900A31763 /* DDCoverageFormat.swift */; };
 		E1DCAFB1284A294100F44BE3 /* DDCoverageConversor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E15C79672722AD0500E9DBAD /* DDCoverageConversor.swift */; };
-		E1DCAFB2284A294100F44BE3 /* LLVMCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10A7E0D2806D68F00B464C9 /* LLVMCoverageFormat.swift */; };
+		E1DCAFB2284A294100F44BE3 /* LLVMSimpleCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10A7E0D2806D68F00B464C9 /* LLVMSimpleCoverageFormat.swift */; };
 		E1DCAFB8284A299A00F44BE3 /* EventsExporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1DCAF7C284A27DE00F44BE3 /* EventsExporter.framework */; };
 		E1DCAFBC284A29DD00F44BE3 /* Spawn.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1665A7225D12D7500BA53CD /* Spawn.swift */; };
 		E1DCAFCA284A2BA300F44BE3 /* OpenTelemetrySdk in Frameworks */ = {isa = PBXBuildFile; productRef = E1DCAFC9284A2BA300F44BE3 /* OpenTelemetrySdk */; };
@@ -444,7 +447,7 @@
 		E1DCAFE5284A2BED00F44BE3 /* SpansExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CEFE27D7790200F4018A /* SpansExporter.swift */; };
 		E1DCAFE6284A2BED00F44BE3 /* Feature.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0327D7790200F4018A /* Feature.swift */; };
 		E1DCAFE7284A2BED00F44BE3 /* CoverageExporterJson.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D78392818262500758E2A /* CoverageExporterJson.cpp */; };
-		E1DCAFE8284A2BED00F44BE3 /* LLVMCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10A7E0D2806D68F00B464C9 /* LLVMCoverageFormat.swift */; };
+		E1DCAFE8284A2BED00F44BE3 /* LLVMSimpleCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10A7E0D2806D68F00B464C9 /* LLVMSimpleCoverageFormat.swift */; };
 		E1DCAFE9284A2BED00F44BE3 /* ExporterConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0C27D7790300F4018A /* ExporterConfiguration.swift */; };
 		E1DCAFEA284A2BED00F44BE3 /* AttributesSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EBBD4A27F200210059BC3E /* AttributesSanitizer.swift */; };
 		E1DCAFEB284A2BED00F44BE3 /* DataCompression.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0827D7790200F4018A /* DataCompression.swift */; };
@@ -702,8 +705,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		81EDADB2292698A200279027 /* LLVMTotalsCoverageFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLVMTotalsCoverageFormat.swift; sourceTree = "<group>"; };
 		E10034D92703599D00439C9C /* DDTestModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTestModule.swift; sourceTree = "<group>"; };
-		E10A7E0D2806D68F00B464C9 /* LLVMCoverageFormat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LLVMCoverageFormat.swift; sourceTree = "<group>"; };
+		E10A7E0D2806D68F00B464C9 /* LLVMSimpleCoverageFormat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LLVMSimpleCoverageFormat.swift; sourceTree = "<group>"; };
 		E10A7E15280701CA00B464C9 /* Subprocess.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Subprocess.c; sourceTree = "<group>"; };
 		E11295BA25F2483D002719E7 /* FileLocator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileLocator.swift; sourceTree = "<group>"; };
 		E11295C725F63BA8002719E7 /* DDSymbolAddress.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = DDSymbolAddress.c; sourceTree = "<group>"; };
@@ -1083,6 +1087,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		81EDADB62927957700279027 /* Coverage */ = {
+			isa = PBXGroup;
+			children = (
+				81EDADB2292698A200279027 /* LLVMTotalsCoverageFormat.swift */,
+				E1C8DEF4268363EC005B5411 /* DDCoverageHelper.swift */,
+			);
+			path = Coverage;
+			sourceTree = "<group>";
+		};
 		E116D7D925248C280022779D /* Utils */ = {
 			isa = PBXGroup;
 			children = (
@@ -1333,7 +1346,7 @@
 				E146BC362865D51E0057C37B /* IntelligentTestRunner */,
 				E1DCAF31284A1F0D00F44BE3 /* EventsExporter.h */,
 				E15D77FE281821B600758E2A /* llvm-cov */,
-				E1743F552849012A006CBFF8 /* Coverage */,
+				E1743F552849012A006CBFF8 /* CoverageExporter */,
 				E143CEFD27D7790200F4018A /* Spans */,
 				E143CF0027D7790200F4018A /* Utils */,
 				E143CF0C27D7790300F4018A /* ExporterConfiguration.swift */,
@@ -1610,7 +1623,6 @@
 		E146BC382869AE740057C37B /* IntelligentTestRunner */ = {
 			isa = PBXGroup;
 			children = (
-				E1C8DEF4268363EC005B5411 /* DDCoverageHelper.swift */,
 				E146BC392869AEA80057C37B /* GitUploader.swift */,
 				E137366128A3BE3600420E26 /* IntelligentTestRunner.swift */,
 			);
@@ -1663,15 +1675,15 @@
 			path = ObjCApi;
 			sourceTree = "<group>";
 		};
-		E1743F552849012A006CBFF8 /* Coverage */ = {
+		E1743F552849012A006CBFF8 /* CoverageExporter */ = {
 			isa = PBXGroup;
 			children = (
 				E15C79672722AD0500E9DBAD /* DDCoverageConversor.swift */,
 				E12C5838280D809900A31763 /* DDCoverageFormat.swift */,
-				E10A7E0D2806D68F00B464C9 /* LLVMCoverageFormat.swift */,
+				E10A7E0D2806D68F00B464C9 /* LLVMSimpleCoverageFormat.swift */,
 				E1743F5628490141006CBFF8 /* CoverageExporter.swift */,
 			);
-			path = Coverage;
+			path = CoverageExporter;
 			sourceTree = "<group>";
 		};
 		E1798CCA2524C1E2008DEBB9 /* NetworkInstrumentation */ = {
@@ -1685,6 +1697,7 @@
 		E1798E0925260BC4008DEBB9 /* DatadogSDKTesting */ = {
 			isa = PBXGroup;
 			children = (
+				81EDADB62927957700279027 /* Coverage */,
 				E146BC382869AE740057C37B /* IntelligentTestRunner */,
 				E1ABA04D25231E2500ED8AEF /* DatadogSDKTesting.h */,
 				E1FB483C253891CE0083B263 /* Crashes */,
@@ -2663,6 +2676,7 @@
 				E1293F8628DB510200D31DD6 /* SanitizerMessageHandler.m in Sources */,
 				E1F595D52609FC3000AE92B7 /* DDNetworkInstrumentation.swift in Sources */,
 				E157A72B256E9D1D00CBCA52 /* FrameworkLoadHandler.swift in Sources */,
+				81EDADB8292795B900279027 /* LLVMTotalsCoverageFormat.swift in Sources */,
 				E157A72C256E9D1D00CBCA52 /* DDTags.swift in Sources */,
 				E157A730256E9D1D00CBCA52 /* SignalUtils.swift in Sources */,
 				E157A731256E9D1D00CBCA52 /* XCUIApplicationSwizzler.swift in Sources */,
@@ -2709,6 +2723,7 @@
 				E1293F8728DB510200D31DD6 /* SanitizerMessageHandler.m in Sources */,
 				E1F595D62609FC3000AE92B7 /* DDNetworkInstrumentation.swift in Sources */,
 				E157A763256E9D3300CBCA52 /* FrameworkLoadHandler.swift in Sources */,
+				81EDADB7292795B900279027 /* LLVMTotalsCoverageFormat.swift in Sources */,
 				E157A764256E9D3300CBCA52 /* DDTags.swift in Sources */,
 				E157A768256E9D3300CBCA52 /* SignalUtils.swift in Sources */,
 				E157A769256E9D3300CBCA52 /* XCUIApplicationSwizzler.swift in Sources */,
@@ -2865,6 +2880,7 @@
 				E1293F8528DB510200D31DD6 /* SanitizerMessageHandler.m in Sources */,
 				E1ABA07625231F4700ED8AEF /* FrameworkLoadHandler.swift in Sources */,
 				E1ABA07525231F4700ED8AEF /* DDTags.swift in Sources */,
+				81EDADB9292795B900279027 /* LLVMTotalsCoverageFormat.swift in Sources */,
 				E13D0BCA2546E29C00C37D56 /* SignalUtils.swift in Sources */,
 				E12515E5254892C600670D23 /* XCUIApplicationSwizzler.swift in Sources */,
 				E172E96D271F069600CBA95C /* InternalError.swift in Sources */,
@@ -2988,7 +3004,7 @@
 				E1DCAF54284A1F5B00F44BE3 /* DataCompression.swift in Sources */,
 				E1DCAF4E284A1F5500F44BE3 /* SpansExporter.swift in Sources */,
 				E1DCAF63284A1F8900F44BE3 /* DataUploadDelay.swift in Sources */,
-				E1DCAF6E284A200800F44BE3 /* LLVMCoverageFormat.swift in Sources */,
+				E1DCAF6E284A200800F44BE3 /* LLVMSimpleCoverageFormat.swift in Sources */,
 				E1DCAF44284A1F4900F44BE3 /* CoverageSummaryInfo.cpp in Sources */,
 				E1DCAF50284A1F5B00F44BE3 /* PerformancePreset.swift in Sources */,
 			);
@@ -3032,7 +3048,7 @@
 				E1C3F52B284E150C00A2C2F8 /* MultipartFormDataRequest.swift in Sources */,
 				E1DCAF8D284A285D00F44BE3 /* DatadogEndpoints.swift in Sources */,
 				E1DCAFA9284A285D00F44BE3 /* ExporterConfiguration.swift in Sources */,
-				E1DCAFB2284A294100F44BE3 /* LLVMCoverageFormat.swift in Sources */,
+				E1DCAFB2284A294100F44BE3 /* LLVMSimpleCoverageFormat.swift in Sources */,
 				E1DCAFA8284A285D00F44BE3 /* EventsExporter.swift in Sources */,
 				E1DCAF85284A285D00F44BE3 /* CoverageSummaryInfo.cpp in Sources */,
 				E1DCAF9E284A285D00F44BE3 /* PerformancePreset.swift in Sources */,
@@ -3089,7 +3105,7 @@
 				E1DCAFE5284A2BED00F44BE3 /* SpansExporter.swift in Sources */,
 				E1DCAFD6284A2BED00F44BE3 /* FilesOrchestrator.swift in Sources */,
 				E1DCAFD8284A2BED00F44BE3 /* DataUploadStatus.swift in Sources */,
-				E1DCAFE8284A2BED00F44BE3 /* LLVMCoverageFormat.swift in Sources */,
+				E1DCAFE8284A2BED00F44BE3 /* LLVMSimpleCoverageFormat.swift in Sources */,
 				E1DCAFF3284A2BED00F44BE3 /* DataUploadWorker.swift in Sources */,
 				E1DCAFDD284A2BED00F44BE3 /* CoverageSummaryInfo.cpp in Sources */,
 				E1DCAFE4284A2BED00F44BE3 /* DataUploader.swift in Sources */,

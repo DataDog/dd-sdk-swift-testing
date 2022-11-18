@@ -64,11 +64,11 @@ public class EventsExporter: SpanExporter {
 
     public func uploadPackFiles(packFilesDirectory: Directory, commit: String, repository: String) {
         try? itrService.uploadPackFiles(packFilesDirectory: packFilesDirectory,
-                                             commit: commit,
-                                             repository: repository)
+                                        commit: commit,
+                                        repository: repository)
     }
 
-    public func skippableTests(repositoryURL: String, sha: String, configurations: [String:String],  customConfigurations: [String:String]) -> [SkipTestPublicFormat] {
+    public func skippableTests(repositoryURL: String, sha: String, configurations: [String: String], customConfigurations: [String: String]) -> [SkipTestPublicFormat] {
         return itrService.skippableTests(repositoryURL: repositoryURL, sha: sha, configurations: configurations, customConfigurations: customConfigurations)
     }
 
@@ -87,7 +87,6 @@ public class EventsExporter: SpanExporter {
                 configuration.endpoint.searchCommitsURL.absoluteString,
                 configuration.endpoint.skippableTestsURL.absoluteString,
                 configuration.endpoint.packfileURL.absoluteString,
-                configuration.endpoint.itrSettingsURL.absoluteString
-        ]
+                configuration.endpoint.itrSettingsURL.absoluteString]
     }
 }

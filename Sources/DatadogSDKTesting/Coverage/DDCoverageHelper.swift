@@ -4,6 +4,7 @@
  * Copyright 2020-2021 Datadog, Inc.
  */
 
+@_implementationOnly import EventsExporter
 import Foundation
 #if SWIFT_PACKAGE
 import DatadogSDKTestingObjc
@@ -89,5 +90,25 @@ class DDCoverageHelper {
                 llvm_profile_initialize_file()
             }
         }
+    }
+
+    fileprivate static func generateProfData(profrawFile: URL) -> URL {
+        let outputURL = profrawFile.deletingPathExtension().appendingPathExtension("profdata")
+        let input = profrawFile.path
+        let outputPath = outputURL.path
+        let commandToRun = #"xcrun llvm-profdata merge -sparse "\#(input)" -o "\#(outputPath)""#
+        Spawn.command(commandToRun)
+        return outputURL
+    }
+
+    static func getModuleCoverage(profrawFile: URL, binaryImagePaths: [String]) -> LLVMTotalsCoverageFormat? {
+        let profDataURL = DDCoverageHelper.generateProfData(profrawFile: profrawFile)
+
+        let covJsonURL = profDataURL.deletingLastPathComponent().appendingPathComponent("coverageFile").appendingPathExtension("json")
+        let binariesPath = binaryImagePaths.map { #""\#($0)""# }.joined(separator: " -object ")
+        let commandToRun = #"xcrun llvm-cov export -instr-profile "\#(profDataURL.path)" >  \#(binariesPath) > "\#(covJsonURL.path)""#
+        Spawn.command(commandToRun)
+
+        return LLVMTotalsCoverageFormat(fromURL: covJsonURL)
     }
 }

@@ -86,6 +86,7 @@ internal enum DDRuntimeTags {
 internal enum DDTestModuleTags {
     static let testModuleId = "test_module_id"
     static let testSuiteId = "test_suite_id"
+    static let testCoverageLines = "test.codecov_lines_total"
 }
 
 internal enum DDGitTags {

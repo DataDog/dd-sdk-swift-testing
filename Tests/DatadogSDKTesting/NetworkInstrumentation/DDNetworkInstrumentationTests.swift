@@ -161,7 +161,7 @@ class DDNetworkInstrumentationTests: XCTestCase {
         XCTAssertNotNil(headers?.object(forKey: "X-Datadog-Trace-Id"))
         XCTAssertEqual(headers?.object(forKey: "X-Datadog-Origin") as! String, "ciapp-test")
 
-        let currentTraceId = try XCTUnwrap(OpenTelemetry.instance.contextProvider.activeSpan?.context.traceId)
+        let currentTraceId = try XCTUnwrap(containerSpan?.context.traceId)
         XCTAssertEqual(headers?.object(forKey: "X-Datadog-Trace-Id") as! String, String(currentTraceId.rawLowerLong))
     }
 }

@@ -106,9 +106,8 @@ class DDCoverageHelper {
 
         let covJsonURL = profDataURL.deletingLastPathComponent().appendingPathComponent("coverageFile").appendingPathExtension("json")
         let binariesPath = binaryImagePaths.map { #""\#($0)""# }.joined(separator: " -object ")
-        let commandToRun = #"xcrun llvm-cov export -instr-profile "\#(profDataURL.path)" >  \#(binariesPath) > "\#(covJsonURL.path)""#
+        let commandToRun = #"xcrun llvm-cov export -instr-profile "\#(profDataURL.path)" \#(binariesPath) > "\#(covJsonURL.path)""#
         Spawn.command(commandToRun)
-
         return LLVMTotalsCoverageFormat(fromURL: covJsonURL)
     }
 }

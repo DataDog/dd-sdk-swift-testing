@@ -46,6 +46,10 @@ extension String {
     func contains(exactWord: String) -> Bool {
         return self.range(of: "\\b\(exactWord)\\b", options: .regularExpression) != nil
     }
+    
+    var isHexNumber: Bool {
+        filter(\.isHexDigit).count == count
+    }
 }
 
 extension Data {

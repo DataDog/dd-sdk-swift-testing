@@ -666,6 +666,8 @@ internal struct DDEnvironmentValues {
 
         initGitAttributes()
         initCiAttributes()
+
+        validateUserDefinedGitInfo()
     }
 
     func initGitAttributes() {
@@ -854,5 +856,30 @@ internal struct DDEnvironmentValues {
         let rootDirectory = URL(fileURLWithPath: rootFolder as String, isDirectory: true)
         let gitInfo = try? GitInfo(gitFolder: rootDirectory.appendingPathComponent(".git"))
         return gitInfo
+    }
+
+    func validateUserDefinedGitInfo() {
+        let disableGit = (DDEnvironmentValues.getEnvVariable("DD_DISABLE_GIT_INFORMATION") as NSString?)?.boolValue ?? false
+        guard !disableGit else {
+            return
+        }
+
+        if let userDefinedRepository = DDEnvironmentValues.environment["DD_GIT_REPOSITORY_URL"] {
+            if userDefinedRepository.isEmpty {
+                Log.print("DD_GIT_REPOSITORY_URL environment variable was configured with an empty value")
+            } else if URL(string: userDefinedRepository) == nil {
+                Log.print("DD_GIT_REPOSITORY_URL environment variable was configured with non valid URL")
+            }
+        }
+
+        if let userDefinedCommit = DDEnvironmentValues.environment["DD_GIT_COMMIT_SHA"] {
+            if userDefinedCommit.isEmpty {
+                Log.print("DD_GIT_COMMIT_SHA environment variable was configured with an empty value")
+            } else if !userDefinedCommit.isHexNumber {
+                Log.print("DD_GIT_COMMIT_SHA environment variable was configured with a non-hexadecimal string")
+            } else if userDefinedCommit.count != 40 {
+                Log.print("DD_GIT_COMMIT_SHA environment variable was configured with a value shorter than 40 character")
+            }
+        }
     }
 }

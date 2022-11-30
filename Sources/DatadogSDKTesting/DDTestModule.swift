@@ -109,10 +109,11 @@ public class DDTestModule: NSObject, Encodable {
         let defaultAttributes: [String: String] = [
             DDGenericTags.type: DDTagValues.typeSuiteEnd,
             DDGenericTags.language: "swift",
+            DDDeviceTags.deviceName: DDTestMonitor.env.deviceName,
             DDTestTags.testSuite: bundleName,
             DDTestTags.testFramework: testFramework,
             DDTestTags.testStatus: moduleStatus,
-            DDTestModuleTags.testModuleId: String(id.rawValue)
+            DDTestModuleTags.testModuleId: String(id.rawValue),
         ]
 
         meta.merge(DDTestMonitor.baseConfigurationTags) { _, new in new }

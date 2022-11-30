@@ -38,6 +38,7 @@ public class DDTest: NSObject {
             DDGenericTags.type: DDTagValues.typeTest,
             DDGenericTags.resource: "\(suite.name).\(name)",
             DDGenericTags.language: "swift",
+            DDDeviceTags.deviceName: DDTestMonitor.env.deviceName,
             DDTestTags.testName: name,
             DDTestTags.testSuite: suite.name,
             DDTestTags.testFramework: module.testFramework,

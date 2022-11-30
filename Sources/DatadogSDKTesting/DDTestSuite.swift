@@ -56,6 +56,7 @@ public class DDTestSuite: NSObject, Encodable {
             DDTags.service: DDTestMonitor.env.ddService ?? DDTestMonitor.env.getRepositoryName() ?? "unknown-swift-repo",
             DDGenericTags.type: DDTagValues.typeSuiteEnd,
             DDGenericTags.language: "swift",
+            DDDeviceTags.deviceName: DDTestMonitor.env.deviceName,
             DDTestTags.testSuite: name,
             DDTestTags.testFramework: module.testFramework,
             DDTestTags.testStatus: moduleStatus,

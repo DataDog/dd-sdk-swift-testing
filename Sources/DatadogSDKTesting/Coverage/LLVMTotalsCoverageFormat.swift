@@ -15,7 +15,6 @@ struct LLVMTotalsCoverageFormat: Codable {
         var count: Int
         var covered: Int
         var percent: Double
-        var notcovered: Int?
     }
 
     struct Totals: Codable {

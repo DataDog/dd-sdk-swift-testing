@@ -18,6 +18,7 @@
 #endif
 
 struct CrashedModuleInformation {
+    var crashedSessionId: SpanId
     var crashedModuleId: SpanId
     var crashedSuiteId: SpanId
     var crashedSuiteName: String

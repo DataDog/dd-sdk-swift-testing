@@ -57,6 +57,7 @@ internal enum DDTestTags {
     static let testCodeowners = "test.codeowners"
     static let testIsUITest = "test.is_ui_test"
     static let testIsRUMActive = "test.is_rum_active"
+    static let testCommand = "test.command"
 }
 
 internal enum DDOSTags {
@@ -84,6 +85,7 @@ internal enum DDRuntimeTags {
 }
 
 internal enum DDTestModuleTags {
+    static let testSessionId = "test_session_id"
     static let testModuleId = "test_module_id"
     static let testSuiteId = "test_suite_id"
     static let testCoverageLines = "test.codecov_lines_total"
@@ -170,6 +172,7 @@ internal enum DDTagValues {
 
     static let typeSuiteEnd = "test_suite_end"
     static let typeModuleEnd = "test_module_end"
+    static let typeSessionEnd = "test_session_end"
 
     static let statusPass = "pass"
     static let statusFail = "fail"

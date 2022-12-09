@@ -42,14 +42,14 @@ public class DDTestSuite: NSObject, Encodable {
         duration = (endTime ?? DDTestMonitor.clock.now).timeIntervalSince(startTime).toNanoseconds
         /// Export module event
 
-        let moduleStatus: String
+        let suiteStatus: String
         switch status {
             case .pass:
-                moduleStatus = DDTagValues.statusPass
+                suiteStatus = DDTagValues.statusPass
             case .fail:
-                moduleStatus = DDTagValues.statusFail
+                suiteStatus = DDTagValues.statusFail
             case .skip:
-                moduleStatus = DDTagValues.statusSkip
+                suiteStatus = DDTagValues.statusSkip
         }
 
         let defaultAttributes: [String: String] = [
@@ -59,7 +59,7 @@ public class DDTestSuite: NSObject, Encodable {
             DDDeviceTags.deviceName: DDTestMonitor.env.deviceName,
             DDTestTags.testSuite: name,
             DDTestTags.testFramework: module.testFramework,
-            DDTestTags.testStatus: moduleStatus,
+            DDTestTags.testStatus: suiteStatus,
             DDTestModuleTags.testModuleId: String(module.id.rawValue),
             DDTestModuleTags.testSuiteId: String(id.rawValue)
         ]
@@ -102,6 +102,7 @@ public class DDTestSuite: NSObject, Encodable {
 
 extension DDTestSuite {
     enum StaticCodingKeys: String, CodingKey {
+        case test_session_id
         case test_module_id
         case test_suite_id
         case start
@@ -115,6 +116,7 @@ extension DDTestSuite {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: StaticCodingKeys.self)
+        try container.encode(module.sessionId.rawValue, forKey: .test_session_id)
         try container.encode(module.id.rawValue, forKey: .test_module_id)
         try container.encode(id.rawValue, forKey: .test_suite_id)
         try container.encode(startTime.timeIntervalSince1970.toNanoseconds, forKey: .start)

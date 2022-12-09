@@ -19,6 +19,7 @@ public class DDTestModule: NSObject, Encodable {
     var codeOwners: CodeOwners?
     var testFramework = "Swift API"
     var id: SpanId
+    var sessionId: SpanId
     let startTime: Date
     var duration: UInt64
     var meta: [String: String] = [:]
@@ -66,6 +67,7 @@ public class DDTestModule: NSObject, Encodable {
         let moduleStartTime = startTime ?? DDTestMonitor.clock.now
 
         self.id = DDTestMonitor.instance?.crashedModuleInfo?.crashedModuleId ?? SpanId.random()
+        self.sessionId = DDTestMonitor.instance?.crashedModuleInfo?.crashedSessionId ?? SpanId.random()
         self.startTime = DDTestMonitor.instance?.crashedModuleInfo?.moduleStartTime ?? moduleStartTime
         self.localization = PlatformUtils.getLocalization()
     }
@@ -124,6 +126,10 @@ public class DDTestModule: NSObject, Encodable {
         meta[DDItrTags.iItrSkippedTests] = itrSkipped ? "true" : "false"
         metrics[DDTestModuleTags.testCoverageLines] = linesCovered
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: DDTestModuleEnvelope(self))
+        
+        let testSession = DDTestSession(testModule: self)
+        DDTestMonitor.tracer.eventsExporter?.exportEvent(event: DDTestSession.DDTestSessionEnvelope(testSession))
+
 
         if let coverageHelper = DDTestMonitor.instance?.coverageHelper {
             /// We need to wait for all the traces to be written to the backend before exiting
@@ -184,6 +190,7 @@ public extension DDTestModule {
 
 extension DDTestModule {
     enum StaticCodingKeys: String, CodingKey {
+        case test_session_id
         case test_module_id
         case start
         case duration
@@ -197,6 +204,7 @@ extension DDTestModule {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: StaticCodingKeys.self)
+        try container.encode(sessionId.rawValue, forKey: .test_session_id)
         try container.encode(id.rawValue, forKey: .test_module_id)
         try container.encode(startTime.timeIntervalSince1970.toNanoseconds, forKey: .start)
         try container.encode(duration, forKey: .duration)

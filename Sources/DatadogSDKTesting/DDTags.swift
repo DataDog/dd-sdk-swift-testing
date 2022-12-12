@@ -91,6 +91,11 @@ internal enum DDTestModuleTags {
     static let testCoverageLines = "test.codecov_lines_total"
 }
 
+internal enum DDTestTestSessionTags {
+    static let testSkippingEnabled = "test_session.itr.tests_skipping.enabled"
+    static let codeCoverageEnabled = "test_session.code_coverage.enabled"
+}
+
 internal enum DDGitTags {
     static let gitRepository = "git.repository_url"
     static let gitBranch = "git.branch"

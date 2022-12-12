@@ -7,7 +7,6 @@
 import Foundation
 @_implementationOnly import OpenTelemetryApi
 
-
 public class DDTestSession: NSObject, Encodable {
     var id: SpanId
     var name: String
@@ -19,7 +18,7 @@ public class DDTestSession: NSObject, Encodable {
     var status: DDTestStatus
 
     init(testModule: DDTestModule) {
-        //Create a fake session from module Info
+        // Create a fake session from module Info
         self.id = testModule.sessionId
         self.name = "\(testModule.testFramework).session"
         self.resource = "\(testModule.bundleName) session"
@@ -28,10 +27,14 @@ public class DDTestSession: NSObject, Encodable {
         self.meta = testModule.meta
         self.metrics = testModule.metrics
         self.status = testModule.status
-        
-        //Remove and add tags that are different
+
+        // Remove and add tags that are different
         self.meta[DDTestTags.testBundle] = nil
         self.meta[DDTestTags.testCommand] = "test \(testModule.bundleName)"
+
+        // Add session specific tags
+        self.meta[DDTestTestSessionTags.testSkippingEnabled] = (DDTestMonitor.instance?.itr != nil) ? "true" : "false"
+        self.meta[DDTestTestSessionTags.codeCoverageEnabled] = (DDTestMonitor.instance?.coverageHelper != nil) ? "true" : "false"
     }
 }
 

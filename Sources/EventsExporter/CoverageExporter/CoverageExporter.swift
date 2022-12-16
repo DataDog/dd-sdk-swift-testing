@@ -56,9 +56,10 @@ internal class CoverageExporter {
         requestBuilder.addFieldsCallback = addCoverage
     }
 
-    func exportCoverage(coverage: URL, traceId: UInt64, spanId: UInt64, workspacePath: String?, binaryImagePaths: [String]) {
+    func exportCoverage(coverage: URL, testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64, workspacePath: String?, binaryImagePaths: [String]) {
         let profData = DDCoverageConversor.generateProfData(profrawFile: coverage)
-        let ddCoverage = DDCoverageConversor.getDatadogCoverage(profdataFile: profData, traceId: traceId, spanId: spanId, workspacePath: workspacePath, binaryImagePaths: binaryImagePaths)
+        let ddCoverage = DDCoverageConversor.getDatadogCoverage(profdataFile: profData, testSessionId: testSessionId, testSuiteId: testSuiteId, spanId: spanId, workspacePath: workspacePath, binaryImagePaths: binaryImagePaths)
+
         if Log.debugMode == false {
             try? FileManager.default.removeItem(at: coverage)
             try? FileManager.default.removeItem(at: profData)

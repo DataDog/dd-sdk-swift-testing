@@ -12,6 +12,7 @@ let signalCallback: PLCrashReporterPostCrashSignalCallback = { _, _, _ in
     if let sanitizerInfo = SanitizerHelper.getSaniziterInfo() {
         try? sanitizerInfo.write(to: DDCrashes.sanitizerURL, atomically: true, encoding: .utf8)
     }
+    DDTestMonitor.instance?.coverageHelper?.coverageWorkQueue.waitUntilAllOperationsAreFinished()
 }
 
 /// This class is our interface with the crash reporter, now it is based on PLCrashReporter,

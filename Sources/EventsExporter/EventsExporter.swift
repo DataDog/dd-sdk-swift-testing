@@ -54,8 +54,8 @@ public class EventsExporter: SpanExporter {
         return .success
     }
 
-    public func export(coverage: URL, traceId: UInt64, spanId: UInt64, workspacePath: String?, binaryImagePaths: [String]) {
-        coverageExporter.exportCoverage(coverage: coverage, traceId: traceId, spanId: spanId, workspacePath: workspacePath, binaryImagePaths: binaryImagePaths)
+    public func export(coverage: URL, testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64, workspacePath: String?, binaryImagePaths: [String]) {
+        coverageExporter.exportCoverage(coverage: coverage, testSessionId: testSessionId, testSuiteId: testSuiteId, spanId: spanId, workspacePath: workspacePath, binaryImagePaths: binaryImagePaths)
     }
 
     public func searchCommits(repositoryURL: String, commits: [String]) -> [String] {

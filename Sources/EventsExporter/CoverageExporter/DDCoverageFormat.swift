@@ -7,95 +7,111 @@
 import Foundation
 
 struct DDCoverageFormat: Encodable {
-    var version: Int = 1
-    var trace_id: UInt64
-    var span_id: UInt64
-    var files = [File]()
+    var version: Int = 2
+    var coverages = [Coverage]()
 
-    struct File: Encodable {
-        let filename: String
-        let segments: [Segment]
-    }
+    struct Coverage: Encodable {
+        var test_session_id: UInt64
+        var test_suite_id: UInt64
+        var span_id: UInt64
+        var files = [File]()
 
-    struct Segment: Codable {
-        var startLine = 0
-        var startColumn = 0
-        var endLine = 0
-        var endColumn = 0
-        var count = 0
-
-        func encode(to encoder: Encoder) throws {
-            var container = encoder.unkeyedContainer()
-            try container.encode(startLine)
-            try container.encode(startColumn)
-            try container.encode(endLine)
-            try container.encode(endColumn)
-            try container.encode(count)
+        struct File: Encodable {
+            let filename: String
+            let segments: [Segment]
         }
 
-        init() {}
-    }
+        struct Segment: Encodable {
+            var startLine = 0
+            var startColumn = 0
+            var endLine = 0
+            var endColumn = 0
+            var count = 0
 
-    init?(llvmFormat: LLVMSimpleCoverageFormat, traceId: UInt64, spanId: UInt64, workspacePath: String?) {
-        guard let llvmFiles = llvmFormat.data.first?.files else { return nil }
+            func encode(to encoder: Encoder) throws {
+                var container = encoder.unkeyedContainer()
+                try container.encode(startLine)
+                try container.encode(startColumn)
+                try container.encode(endLine)
+                try container.encode(endColumn)
+                try container.encode(count)
+            }
 
-        self.trace_id = traceId
-        self.span_id = spanId
+            init() {}
+        }
+        
+        init?(llvmFormat: LLVMSimpleCoverageFormat, testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64, workspacePath: String?) {
+            guard let llvmFiles = llvmFormat.data.first?.files else { return nil }
 
-        for llvmFile in llvmFiles {
-            var segments = [Segment]()
-            var currentSegment = Segment()
-            var previousCount = 0
-            for segment in llvmFile.segments {
-                let line = segment.line
-                let column = segment.column
-                let count = segment.count
-                if previousCount == 0 {
-                    if count == 0 {
-                        continue
-                    } else {
-                        // start Boundary
-                        currentSegment.startLine = line
-                        currentSegment.startColumn = column
-                        currentSegment.count = count
-                        previousCount = count
-                    }
-                } else {
-                    if count == 0 {
-                        // end Segment
-                        currentSegment.endLine = line
-                        currentSegment.endColumn = column
-                        segments.append(currentSegment)
-                        currentSegment = Segment()
-                        previousCount = 0
-                    } else if count == previousCount {
-                        // continue boundary
-                    } else {
-                        // change Segment
-                        if column > 0 {
-                            currentSegment.endLine = line
-                            currentSegment.endColumn = column - 1
+            self.test_session_id = testSessionId
+            self.test_suite_id = testSuiteId
+            self.span_id = spanId
+
+            for llvmFile in llvmFiles {
+                var segments = [Segment]()
+                var currentSegment = Segment()
+                var previousCount = 0
+                for segment in llvmFile.segments {
+                    let line = segment.line
+                    let column = segment.column
+                    let count = segment.count
+                    if previousCount == 0 {
+                        if count == 0 {
+                            continue
                         } else {
-                            currentSegment.endLine = line - 1
-                            currentSegment.endColumn = column
+                            // start Boundary
+                            currentSegment.startLine = line
+                            currentSegment.startColumn = column
+                            currentSegment.count = count
+                            previousCount = count
                         }
-                        segments.append(currentSegment)
-                        currentSegment = Segment()
-                        currentSegment.startLine = line
-                        currentSegment.startColumn = column
-                        currentSegment.count = count
-                        previousCount = count
+                    } else {
+                        if count == 0 {
+                            // end Segment
+                            currentSegment.endLine = line
+                            currentSegment.endColumn = column
+                            segments.append(currentSegment)
+                            currentSegment = Segment()
+                            previousCount = 0
+                        } else if count == previousCount {
+                            // continue boundary
+                        } else {
+                            // change Segment
+                            if column > 0 {
+                                currentSegment.endLine = line
+                                currentSegment.endColumn = column - 1
+                            } else {
+                                currentSegment.endLine = line - 1
+                                currentSegment.endColumn = column
+                            }
+                            segments.append(currentSegment)
+                            currentSegment = Segment()
+                            currentSegment.startLine = line
+                            currentSegment.startColumn = column
+                            currentSegment.count = count
+                            previousCount = count
+                        }
                     }
                 }
-            }
-            if segments.count > 0 {
-                var filename = llvmFile.filename
-                if let workspacePath = workspacePath {
-                    filename = filename.replacingOccurrences(of: workspacePath + "/", with: "")
+                if segments.count > 0 {
+                    var filename = llvmFile.filename
+                    if let workspacePath = workspacePath {
+                        filename = filename.replacingOccurrences(of: workspacePath + "/", with: "")
+                    }
+                    let file = File(filename: filename, segments: segments)
+                    files.append(file)
                 }
-                let file = File(filename: filename, segments: segments)
-                files.append(file)
             }
         }
+        
     }
+    
+    mutating func addCoverage(llvmFormat: LLVMSimpleCoverageFormat, testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64, workspacePath: String?) {
+        guard let coverage = Coverage(llvmFormat: llvmFormat, testSessionId: testSessionId, testSuiteId: testSuiteId, spanId: spanId, workspacePath: workspacePath) else {
+            return
+        }
+        coverages.append(coverage)
+    }
+
+    
 }

@@ -85,7 +85,8 @@ public class DDTest: NSObject {
 
         if let coverageHelper = DDTestMonitor.instance?.coverageHelper {
             coverageHelper.setTest(name: name,
-                                   traceId: span.context.traceId.rawLowerLong,
+                                   testSessionId: module.sessionId.rawValue,
+                                   testSuiteId: suite.id.rawValue,
                                    spanId: span.context.spanId.rawValue)
             coverageHelper.clearCounters()
         }
@@ -93,7 +94,7 @@ public class DDTest: NSObject {
 
     func setIsUITest(_ value: Bool) {
         self.isUITest = value
-        self.span.setAttribute(key: DDTestTags.testIsUITest, value: value ? "true": "false")
+        self.span.setAttribute(key: DDTestTags.testIsUITest, value: value ? "true" : "false")
     }
 
     /// Adds a extra tag or attribute to the test, any number of tags can be reported
@@ -155,14 +156,15 @@ public class DDTest: NSObject {
 
         if let coverageHelper = DDTestMonitor.instance?.coverageHelper {
             coverageHelper.writeProfile()
-            let traceId = span.context.traceId.rawLowerLong
+            let testSessionId = module.sessionId.rawValue
+            let testSuiteId = suite.id.rawValue
             let spanId = span.context.spanId.rawValue
-            let coverageFileURL = coverageHelper.getURLForTest(name: name, traceId: traceId, spanId: spanId)
+            let coverageFileURL = coverageHelper.getURLForTest(name: name, testSessionId: testSessionId, testSuiteId: testSuiteId, spanId: spanId)
             coverageHelper.coverageWorkQueue.addOperation {
                 guard FileManager.default.fileExists(atPath: coverageFileURL.path) else {
                     return
                 }
-                DDTestMonitor.tracer.eventsExporter?.export(coverage: coverageFileURL, traceId: traceId, spanId: spanId, workspacePath: DDTestMonitor.env.workspacePath, binaryImagePaths: BinaryImages.binaryImagesPath)
+                DDTestMonitor.tracer.eventsExporter?.export(coverage: coverageFileURL, testSessionId: testSessionId, testSuiteId: testSuiteId, spanId: spanId, workspacePath: DDTestMonitor.env.workspacePath, binaryImagePaths: BinaryImages.binaryImagesPath)
             }
         }
 

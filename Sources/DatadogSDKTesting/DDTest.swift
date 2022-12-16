@@ -159,6 +159,9 @@ public class DDTest: NSObject {
             let spanId = span.context.spanId.rawValue
             let coverageFileURL = coverageHelper.getURLForTest(name: name, traceId: traceId, spanId: spanId)
             coverageHelper.coverageWorkQueue.addOperation {
+                guard FileManager.default.fileExists(atPath: coverageFileURL.path) else {
+                    return
+                }
                 DDTestMonitor.tracer.eventsExporter?.export(coverage: coverageFileURL, traceId: traceId, spanId: spanId, workspacePath: DDTestMonitor.env.workspacePath, binaryImagePaths: BinaryImages.binaryImagesPath)
             }
         }

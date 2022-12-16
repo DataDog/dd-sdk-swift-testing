@@ -4,7 +4,7 @@
  * Copyright 2020-2021 Datadog, Inc.
  */
 
-#import "DDSymbolAddress.h"
+#import "include/DDSymbolAddress.h"
 
 #import <string.h>
 #import <mach-o/nlist.h>

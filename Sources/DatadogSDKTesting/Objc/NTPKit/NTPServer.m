@@ -6,7 +6,7 @@
 //  Copyright © 2016 Nicholas Cvitak. All rights reserved.
 //
 
-#import "NTPServer.h"
+#import "../include/NTPServer.h"
 
 #import "NTPTypes.h"
 

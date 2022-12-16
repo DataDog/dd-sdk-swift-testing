@@ -49,12 +49,15 @@ public class FrameworkLoadHandler: NSObject {
             let envDisableTestInstrumenting = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_DISABLE_TEST_INSTRUMENTING.rawValue) as NSString?
             let disableTestInstrumenting = envDisableTestInstrumenting?.boolValue ?? false
 
-            let needsTestObserver = !DDTestMonitor.tracer.isBinaryUnderUITesting || environment["TEST_CLASS"] != nil
+            let isBinaryUnderUITesting = DDEnvironmentValues.getEnvVariable("ENVIRONMENT_TRACER_TRACEID") != nil &&
+                DDEnvironmentValues.getEnvVariable("ENVIRONMENT_TRACER_SPANID") != nil
+
+            let needsTestObserver = !isBinaryUnderUITesting || environment["TEST_CLASS"] != nil
 
             if needsTestObserver, !disableTestInstrumenting {
                 testObserver = DDTestObserver()
                 testObserver?.startObserving()
-            } else if DDTestMonitor.tracer.isBinaryUnderUITesting {
+            } else if isBinaryUnderUITesting {
                 print("[DatadogSDKTesting] Application launched from UITest while being instrumented")
                 DDTestMonitor.instance = DDTestMonitor()
                 DDTestMonitor.instance?.startInstrumenting()

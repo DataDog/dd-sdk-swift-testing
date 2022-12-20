@@ -13,8 +13,10 @@ public enum Spawn {
 
         var pid: pid_t = 0
 
-        let ret =  withArrayOfCStrings(arguments) { argv in
-            _stdlib_posix_spawn(&pid, command, nil, nil, argv, nil)
+        let ret = withArrayOfCStrings(arguments) { argv in
+            DispatchQueue.global().sync {
+                _stdlib_posix_spawn(&pid, command, nil, nil, argv, nil)
+            }
         }
 
         guard ret == 0 else {
@@ -40,9 +42,12 @@ public enum Spawn {
 
         var pid: pid_t = 0
 
-        let ret =  withArrayOfCStrings(arguments) { argv in
-            _stdlib_posix_spawn(&pid, command, &childActions, nil, argv, nil)
+        let ret = withArrayOfCStrings(arguments) { argv in
+            DispatchQueue.global().sync {
+                _stdlib_posix_spawn(&pid, command, &childActions, nil, argv, nil)
+            }
         }
+
         guard ret == 0 else {
             return ""
         }
@@ -90,8 +95,10 @@ public enum Spawn {
         defer { _stdlib_posix_spawn_file_actions_destroy(&childActions) }
         var pid: pid_t = 0
 
-        let ret =  withArrayOfCStrings(arguments) { argv in
-            _stdlib_posix_spawn(&pid, command, &childActions, nil, argv, nil)
+        let ret = withArrayOfCStrings(arguments) { argv in
+            DispatchQueue.global().sync {
+                _stdlib_posix_spawn(&pid, command, &childActions, nil, argv, nil)
+            }
         }
 
         guard ret == 0 else {
@@ -103,8 +110,8 @@ public enum Spawn {
     }
 }
 
-fileprivate func scan<
-    S : Sequence, U
+private func scan<
+    S: Sequence, U
 >(_ seq: S, _ initial: U, _ combine: (U, S.Element) -> U) -> [U] {
     var result: [U] = []
     result.reserveCapacity(seq.underestimatedCount)
@@ -116,12 +123,12 @@ fileprivate func scan<
     return result
 }
 
-fileprivate func withArrayOfCStrings<R>(
+private func withArrayOfCStrings<R>(
     _ args: [String],
-    _ body: ([UnsafeMutablePointer<CChar>?]) -> R
-) -> R {
+    _ body: ([UnsafeMutablePointer<CChar>?]) -> R) -> R
+{
     let argsCounts = Array(args.map { $0.utf8.count + 1 })
-    let argsOffsets = [ 0 ] + scan(argsCounts, 0, +)
+    let argsOffsets = [0] + scan(argsCounts, 0, +)
     let argsBufferSize = argsOffsets.last!
 
     var argsBuffer: [UInt8] = []
@@ -132,7 +139,7 @@ fileprivate func withArrayOfCStrings<R>(
     }
 
     return argsBuffer.withUnsafeMutableBufferPointer {
-        (argsBuffer) in
+        argsBuffer in
         let ptr = UnsafeMutableRawPointer(argsBuffer.baseAddress!).bindMemory(
             to: CChar.self, capacity: argsBuffer.count)
         var cStrings: [UnsafeMutablePointer<CChar>?] = argsOffsets.map { ptr + $0 }

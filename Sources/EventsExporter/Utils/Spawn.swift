@@ -21,7 +21,7 @@ public enum Spawn {
             return
         }
         var status: Int32 = 0
-        waitpid(pid, &status, WNOHANG)
+        waitpid(pid, &status, 0)
     }
 
     public static func commandWithResult(_ command: String) -> String {
@@ -48,7 +48,7 @@ public enum Spawn {
         }
 
         var status: Int32 = 0
-        waitpid(pid, &status, WNOHANG)
+        waitpid(pid, &status, 0)
 
         close(outputPipe[1])
         var output = ""
@@ -99,7 +99,7 @@ public enum Spawn {
         }
 
         var status: Int32 = 0
-        waitpid(pid, &status, WNOHANG)
+        waitpid(pid, &status, 0)
     }
 }
 

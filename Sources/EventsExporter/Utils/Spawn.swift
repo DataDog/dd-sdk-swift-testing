@@ -14,9 +14,7 @@ public enum Spawn {
         var pid: pid_t = 0
 
         let ret = withArrayOfCStrings(arguments) { argv in
-            DispatchQueue.global().sync {
-                _stdlib_posix_spawn(&pid, command, nil, nil, argv, nil)
-            }
+            _stdlib_posix_spawn(&pid, command, nil, nil, argv, nil)
         }
 
         guard ret == 0 else {
@@ -30,22 +28,20 @@ public enum Spawn {
         let arguments = ["/bin/sh", "-c", command]
         let command = "/bin/sh"
 
-        var outputPipe: [Int32] = [-1, -1]
-        pipe(&outputPipe)
+        let tempOutput = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
+        defer {
+            try? FileManager.default.removeItem(at: tempOutput)
+        }
+
         var childActions: posix_spawn_file_actions_t?
         _stdlib_posix_spawn_file_actions_init(&childActions)
-        _stdlib_posix_spawn_file_actions_adddup2(&childActions, outputPipe[1], 1)
-        _stdlib_posix_spawn_file_actions_adddup2(&childActions, outputPipe[1], 2)
-        _stdlib_posix_spawn_file_actions_addclose(&childActions, outputPipe[0])
-        _stdlib_posix_spawn_file_actions_addclose(&childActions, outputPipe[1])
+        _stdlib_posix_spawn_file_actions_addopen(&childActions, 1, tempOutput.path, O_WRONLY | O_CREAT | O_TRUNC, 0444)
+        _stdlib_posix_spawn_file_actions_adddup2(&childActions, 1, 2)
         defer { _stdlib_posix_spawn_file_actions_destroy(&childActions) }
-
         var pid: pid_t = 0
 
         let ret = withArrayOfCStrings(arguments) { argv in
-            DispatchQueue.global().sync {
-                _stdlib_posix_spawn(&pid, command, &childActions, nil, argv, nil)
-            }
+            _stdlib_posix_spawn(&pid, command, &childActions, nil, argv, nil)
         }
 
         guard ret == 0 else {
@@ -55,33 +51,7 @@ public enum Spawn {
         var status: Int32 = 0
         waitpid(pid, &status, 0)
 
-        close(outputPipe[1])
-        var output = ""
-        let bufferSize: size_t = 1024 * 64
-        // #if swift(>=5.6)
-        //        withUnsafeTemporaryAllocation(of: UInt8.self, capacity: bufferSize) { dynamicBuffer in
-        //            while true {
-        //                memset(dynamicBuffer.baseAddress!, 0, bufferSize)
-        //                let amtRead = read(outputPipe[0], dynamicBuffer.baseAddress!, bufferSize - 1)
-        //                output += String(cString: dynamicBuffer.baseAddress!)
-        //                if amtRead < bufferSize - 1 {
-        //                    break
-        //                }
-        //            }
-        //        }
-        // #else
-        let dynamicBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
-        while true {
-            memset(dynamicBuffer, 0, bufferSize)
-            let amtRead = read(outputPipe[0], dynamicBuffer, bufferSize - 1)
-            output += String(cString: dynamicBuffer)
-            if amtRead < bufferSize - 1 {
-                break
-            }
-        }
-        dynamicBuffer.deallocate()
-        // #endif
-        return output
+        return (try? String(contentsOf: tempOutput)) ?? ""
     }
 
     public static func commandToFile(_ command: String, outputPath: String) {
@@ -96,9 +66,7 @@ public enum Spawn {
         var pid: pid_t = 0
 
         let ret = withArrayOfCStrings(arguments) { argv in
-            DispatchQueue.global().sync {
-                _stdlib_posix_spawn(&pid, command, &childActions, nil, argv, nil)
-            }
+            _stdlib_posix_spawn(&pid, command, &childActions, nil, argv, nil)
         }
 
         guard ret == 0 else {

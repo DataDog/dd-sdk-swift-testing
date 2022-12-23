@@ -47,7 +47,7 @@ class DDCoverageHelper {
         }
     }
 
-    func setTest(name: String, traceId: UInt64, spanId: UInt64) {
+    func setTest(name: String, testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64) {
         if !self.initialCoverageSaved {
             profileSetFilename(url: llvmProfileURL)
             internalWriteProfile()
@@ -57,12 +57,12 @@ class DDCoverageHelper {
         if !FileManager.default.fileExists(atPath: storageProfileURL.path) {
             try? FileManager.default.createDirectory(at: storageProfileURL, withIntermediateDirectories: true, attributes: nil)
         }
-        let saveURL = getURLForTest(name: name, traceId: traceId, spanId: spanId)
+        let saveURL = getURLForTest(name: name, testSessionId: testSessionId, testSuiteId: testSuiteId, spanId: spanId)
         profileSetFilename(url: saveURL)
     }
 
-    func getURLForTest(name: String, traceId: UInt64, spanId: UInt64) -> URL {
-        let finalName = String(traceId) + "__" + String(spanId) + "__" + name
+    func getURLForTest(name: String, testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64) -> URL {
+        let finalName = String(testSessionId) + "__" + String(testSuiteId) + "__" + String(spanId) + "__" + name
         return storageProfileURL.appendingPathComponent(finalName).appendingPathExtension("profraw")
     }
 

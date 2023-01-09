@@ -45,7 +45,7 @@ internal class CoverageExporter {
                     appVersion: configuration.version,
                     device: Device.current
                 ),
-                .ddAPIKeyHeader(apiKey: config.apiKey)
+                .apiKeyHeader(apiKey: config.apiKey)
             ] // + (configuration.payloadCompression ? [HTTPHeader.contentEncodingHeader(contentEncoding: .deflate)] : [])
         )
 

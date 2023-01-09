@@ -17,6 +17,7 @@ public struct ExporterConfiguration {
     var applicationName: String
     var version: String
     var environment: String
+    var hostname: String?
 
     /// API key for authentication
     var apiKey: String
@@ -34,12 +35,13 @@ public struct ExporterConfiguration {
     /// Exporter ID for tracing
     var exporterId: String
 
-    public init(serviceName: String, libraryVersion: String, applicationName: String, applicationVersion: String, environment: String, apiKey: String, applicationKey: String, endpoint: Endpoint, payloadCompression: Bool = true, source: String = "ios", performancePreset: PerformancePreset = .default, exporterId: String, debugMode: Bool) {
+    public init(serviceName: String, libraryVersion: String, applicationName: String, applicationVersion: String, environment: String, hostname: String?, apiKey: String, applicationKey: String, endpoint: Endpoint, payloadCompression: Bool = true, source: String = "ios", performancePreset: PerformancePreset = .default, exporterId: String, debugMode: Bool) {
         self.serviceName = serviceName
         self.libraryVersion = libraryVersion
         self.applicationName = applicationName
         self.version = applicationVersion
         self.environment = environment
+        self.hostname = hostname
         self.apiKey = apiKey
         self.applicationKey = applicationKey
         self.endpoint = endpoint

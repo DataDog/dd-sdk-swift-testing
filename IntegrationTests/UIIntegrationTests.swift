@@ -4,10 +4,8 @@
  * Copyright 2020-2021 Datadog, Inc.
  */
 
-@_implementationOnly import OpenTelemetryApi
-@_implementationOnly import OpenTelemetrySdk
-import XCTest
 import IntegrationTests
+import XCTest
 
 class UIIntegrationTests: XCTestCase {
     var testOutputFile: URL!
@@ -38,8 +36,6 @@ class UIIntegrationTests: XCTestCase {
         XCTAssertNotNil(networkSpan)
         XCTAssertEqual(networkSpan?.stringAttributes["http.method"], "GET")
     }
-
-
 
     func getTestResult() -> [SimpleSpanData]? {
         guard let outputFile = FileHandle(forReadingAtPath: testOutputFile.path) else {

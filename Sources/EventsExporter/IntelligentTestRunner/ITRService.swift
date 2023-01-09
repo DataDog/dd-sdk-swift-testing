@@ -28,8 +28,8 @@ internal class ITRService {
                     appVersion: exporterConfiguration.version,
                     device: Device.current
                 ),
-                .ddAPIKeyHeader(apiKey: config.apiKey),
-                .ddApplicationKeyHeader(applicationKey: config.applicationKey),
+                .apiKeyHeader(apiKey: config.apiKey),
+                .applicationKeyHeader(applicationKey: config.applicationKey),
                 .traceIDHeader(traceID: config.exporterId),
                 .parentSpanIDHeader(parentSpanID: config.exporterId),
                 .samplingPriorityHeader()
@@ -45,8 +45,8 @@ internal class ITRService {
                     appVersion: exporterConfiguration.version,
                     device: Device.current
                 ),
-                .ddAPIKeyHeader(apiKey: config.apiKey),
-                .ddApplicationKeyHeader(applicationKey: config.applicationKey),
+                .apiKeyHeader(apiKey: config.apiKey),
+                .applicationKeyHeader(applicationKey: config.applicationKey),
                 .traceIDHeader(traceID: config.exporterId),
                 .parentSpanIDHeader(parentSpanID: config.exporterId),
                 .samplingPriorityHeader()
@@ -62,8 +62,8 @@ internal class ITRService {
                     appVersion: exporterConfiguration.version,
                     device: Device.current
                 ),
-                .ddAPIKeyHeader(apiKey: config.apiKey),
-                .ddApplicationKeyHeader(applicationKey: config.applicationKey),
+                .apiKeyHeader(apiKey: config.apiKey),
+                .applicationKeyHeader(applicationKey: config.applicationKey),
                 .traceIDHeader(traceID: config.exporterId),
                 .parentSpanIDHeader(parentSpanID: config.exporterId),
                 .samplingPriorityHeader()
@@ -79,8 +79,8 @@ internal class ITRService {
                     appVersion: exporterConfiguration.version,
                     device: Device.current
                 ),
-                .ddAPIKeyHeader(apiKey: config.apiKey),
-                .ddApplicationKeyHeader(applicationKey: config.applicationKey),
+                .apiKeyHeader(apiKey: config.apiKey),
+                .applicationKeyHeader(applicationKey: config.applicationKey),
                 .traceIDHeader(traceID: config.exporterId),
                 .parentSpanIDHeader(parentSpanID: config.exporterId),
                 .samplingPriorityHeader()
@@ -197,7 +197,7 @@ internal class ITRService {
         }
 
         guard let itrConfig = try? JSONDecoder().decode(ITRConfigResponseFormat.self, from: response) else {
-            Log.debug("skippableTests invalid response: \(String(decoding: response, as: UTF8.self))")
+            Log.debug("itrSetting invalid response: \(String(decoding: response, as: UTF8.self))")
             return nil
         }
 

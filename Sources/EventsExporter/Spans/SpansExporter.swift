@@ -56,8 +56,9 @@ internal class SpansExporter {
                     appVersion: configuration.version,
                     device: Device.current
                 ),
-                .ddAPIKeyHeader(apiKey: config.apiKey)
-            ] + (configuration.payloadCompression ? [HTTPHeader.contentEncodingHeader(contentEncoding: .deflate)] : [])
+                .apiKeyHeader(apiKey: config.apiKey) ] +
+            (configuration.payloadCompression ? [HTTPHeader.contentEncodingHeader(contentEncoding: .deflate)] : []) +
+            ((configuration.hostname != nil) ? [HTTPHeader.hostnameHeader(hostname: configuration.hostname!)] : [])
         )
 
         spansUpload = FeatureUpload(featureName: "spansUpload",

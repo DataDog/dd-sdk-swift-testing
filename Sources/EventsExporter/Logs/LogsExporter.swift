@@ -63,7 +63,7 @@ internal class LogsExporter {
                     appVersion: configuration.version,
                     device: Device.current
                 ),
-                .ddAPIKeyHeader(apiKey: configuration.apiKey)
+                .apiKeyHeader(apiKey: configuration.apiKey)
             ] + (configuration.payloadCompression ? [HTTPHeader.contentEncodingHeader(contentEncoding: .deflate)] : [])
         )
 

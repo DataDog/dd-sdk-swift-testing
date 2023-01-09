@@ -48,6 +48,8 @@ internal class DDTestMonitor {
     let instrumentationWorkQueue = OperationQueue()
     let itrWorkQueue = OperationQueue()
 
+    static let developerMachineHostName: String = Spawn.commandWithResult("hostname").trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+
     static var baseConfigurationTags = [
         DDOSTags.osPlatform: env.osName,
         DDOSTags.osArchitecture: env.osArchitecture,

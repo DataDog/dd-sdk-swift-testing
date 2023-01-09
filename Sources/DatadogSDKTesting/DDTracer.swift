@@ -96,6 +96,7 @@ internal class DDTracer {
             applicationName: identifier,
             applicationVersion: version,
             environment: env.ddEnvironment ?? (env.isCi ? "ci" : "none"),
+            hostname: DDTestMonitor.developerMachineHostName.isEmpty ? nil : DDTestMonitor.developerMachineHostName,
             apiKey: env.ddApiKey ?? "",
             applicationKey: env.ddApplicationKey ?? "",
             endpoint: endpoint,

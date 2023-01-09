@@ -21,13 +21,12 @@ struct HTTPHeader {
     static let contentTypeHeaderField = "Content-Type"
     static let contentEncodingHeaderField = "Content-Encoding"
     static let userAgentHeaderField = "User-Agent"
-    static let ddAPIKeyHeaderField = "DD-API-KEY"
-    static let ddApplicationKeyHeaderField = "DD-APPLICATION-KEY"
-    static let traceIDField = "x-datadog-trace-id"
-    static let parentSpanIDField = "x-datadog-parent-id"
-    static let samplingPriorityField = "x-datadog-sampling-priority"
-
-
+    static let aPIKeyHeaderField = "DD-API-KEY"
+    static let applicationKeyHeaderField = "DD-APPLICATION-KEY"
+    static let traceIDHeaderField = "X-Datadog-Trace-Id"
+    static let parentSpanIDHeaderField = "X-Datadog-Parent-Id"
+    static let samplingPriorityHeaderField = "X-Datadog-Sampling-Priority"
+    static let hostnameHeaderField = "X-Datadog-Hostname"
 
     enum Value {
         /// If the header's value is constant.
@@ -62,28 +61,33 @@ struct HTTPHeader {
     // MARK: - Datadog Headers
 
     /// Datadog request API Key authentication header.
-    static func ddAPIKeyHeader(apiKey: String) -> HTTPHeader {
-        return HTTPHeader(field: ddAPIKeyHeaderField, value: .constant(apiKey))
+    static func apiKeyHeader(apiKey: String) -> HTTPHeader {
+        return HTTPHeader(field: aPIKeyHeaderField, value: .constant(apiKey))
     }
 
     /// Datadog request Application Key authentication header.
-    static func ddApplicationKeyHeader(applicationKey: String) -> HTTPHeader {
-        return HTTPHeader(field: ddApplicationKeyHeaderField, value: .constant(applicationKey))
+    static func applicationKeyHeader(applicationKey: String) -> HTTPHeader {
+        return HTTPHeader(field: applicationKeyHeaderField, value: .constant(applicationKey))
+    }
+
+    /// Datadog request Application Key authentication header.
+    static func hostnameHeader(hostname: String) -> HTTPHeader {
+        return HTTPHeader(field: hostnameHeaderField, value: .constant(hostname))
     }
 
     // MARK: - Tracing Headers
 
     /// Trace ID header.
     static func traceIDHeader(traceID: String) -> HTTPHeader {
-        return HTTPHeader(field: traceIDField, value: .constant(traceID))
+        return HTTPHeader(field: traceIDHeaderField, value: .constant(traceID))
     }
 
     /// Parent Span ID header.
     static func parentSpanIDHeader(parentSpanID: String) -> HTTPHeader {
-        return HTTPHeader(field: parentSpanIDField, value: .constant(parentSpanID))
+        return HTTPHeader(field: parentSpanIDHeaderField, value: .constant(parentSpanID))
     }
 
     static func samplingPriorityHeader() -> HTTPHeader {
-        return HTTPHeader(field: samplingPriorityField, value: .constant("1"))
+        return HTTPHeader(field: samplingPriorityHeaderField, value: .constant("1"))
     }
 }

@@ -43,6 +43,7 @@ class SpansExporterTests: XCTestCase {
                                                   applicationName: "applicationName",
                                                   applicationVersion: "applicationVersion",
                                                   environment: "environment",
+                                                  hostname: nil,
                                                   apiKey: "apikey",
                                                   applicationKey: "applicationkey",
                                                   endpoint: Endpoint.custom(

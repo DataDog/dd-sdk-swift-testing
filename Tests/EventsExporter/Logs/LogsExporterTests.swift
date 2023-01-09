@@ -4,8 +4,8 @@
  * Copyright 2020-2021 Datadog, Inc.
  */
 
-import OpenTelemetryApi
 @testable import EventsExporter
+import OpenTelemetryApi
 @testable import OpenTelemetrySdk
 import XCTest
 
@@ -42,6 +42,7 @@ class LogsExporterTests: XCTestCase {
                                                   applicationName: "applicationName",
                                                   applicationVersion: "applicationVersion",
                                                   environment: "environment",
+                                                  hostname: "hostname",
                                                   apiKey: "apikey",
                                                   applicationKey: "applicationkey",
                                                   endpoint: Endpoint.custom(

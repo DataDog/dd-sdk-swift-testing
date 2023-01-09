@@ -54,6 +54,7 @@ class EventsExporterTests: XCTestCase {
                                                           applicationName: "applicationName",
                                                           applicationVersion: "applicationVersion",
                                                           environment: "environment",
+                                                          hostname: "hostname",
                                                           apiKey: "apikey",
                                                           applicationKey: "applicationkey",
                                                           endpoint: Endpoint.custom(

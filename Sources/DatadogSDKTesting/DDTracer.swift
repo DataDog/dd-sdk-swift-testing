@@ -89,6 +89,8 @@ internal class DDTracer {
             Log.print("Reporting tests to \(localURL.absoluteURL)")
             payloadCompression = false
         }
+        
+        let hostnameToReport: String? = (env.reportHostname && !DDTestMonitor.developerMachineHostName.isEmpty) ? DDTestMonitor.developerMachineHostName : nil
 
         let exporterConfiguration = ExporterConfiguration(
             serviceName: env.ddService ?? env.getRepositoryName() ?? "unknown-swift-repo",
@@ -96,7 +98,7 @@ internal class DDTracer {
             applicationName: identifier,
             applicationVersion: version,
             environment: env.ddEnvironment ?? (env.isCi ? "ci" : "none"),
-            hostname: DDTestMonitor.developerMachineHostName.isEmpty ? nil : DDTestMonitor.developerMachineHostName,
+            hostname: hostnameToReport,
             apiKey: env.ddApiKey ?? "",
             applicationKey: env.ddApplicationKey ?? "",
             endpoint: endpoint,

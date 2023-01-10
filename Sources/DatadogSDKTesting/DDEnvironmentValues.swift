@@ -47,6 +47,7 @@ internal enum ExtraConfigurationValues: String {
     case DD_CIVISIBILITY_CODE_COVERAGE_ENABLED
     case DD_CIVISIBILITY_ITR_ENABLED
     case DD_CIVISIBILITY_EXCLUDED_BRANCHES
+    case DD_CIVISIBILITY_REPORT_HOSTNAME
 }
 
 internal struct DDEnvironmentValues {
@@ -124,6 +125,9 @@ internal struct DDEnvironmentValues {
 
     /// Avoids configuring the traces exporter
     let disableTracesExporting: Bool
+    
+    /// Avoids configuring the traces exporter
+    let reportHostname: Bool
 
     /// The tracer is being tested itself
     let tracerUnderTesting: Bool
@@ -279,6 +283,9 @@ internal struct DDEnvironmentValues {
 
         let envDisableTracesExporting = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_DONT_EXPORT.rawValue) as NSString?
         disableTracesExporting = envDisableTracesExporting?.boolValue ?? false
+        
+        let envReportHostname = DDEnvironmentValues.getEnvVariable(ExtraConfigurationValues.DD_CIVISIBILITY_REPORT_HOSTNAME.rawValue) as NSString?
+        reportHostname = envReportHostname?.boolValue ?? false
 
         let envExtraDebug = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_TRACE_DEBUG.rawValue) as NSString?
         extraDebug = envExtraDebug?.boolValue ?? false

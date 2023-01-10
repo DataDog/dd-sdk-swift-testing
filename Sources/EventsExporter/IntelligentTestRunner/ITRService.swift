@@ -200,6 +200,7 @@ internal class ITRService {
             Log.debug("itrSetting invalid response: \(String(decoding: response, as: UTF8.self))")
             return nil
         }
+        Log.debug("itrSetting response: \(String(decoding: response, as: UTF8.self))")
 
         return (itrConfig.data.attributes.code_coverage, itrConfig.data.attributes.tests_skipping)
     }

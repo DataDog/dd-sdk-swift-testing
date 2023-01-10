@@ -46,41 +46,19 @@ struct GitInfo {
         }
 
         let configPath = gitFolder.appendingPathComponent("config")
-        if let configData = try? String(contentsOf: configPath) {
-            let configDataLines = configData.components(separatedBy: "\n").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            var intoRemote = false
-            var tmpBranch: String?
+        let configs = getConfigItems(configPath: configPath)
+        if configs.count > 0 {
+            var remote = "origin"
 
-            configDataLines.forEach { line in
-                if line.hasPrefix("[remote") {
-                    intoRemote = line.contains("origin")
-                    return
-                }
+            let branchItem = configs.first { $0.type == "branch" && $0.merge == branch }
+            if let branchItem = branchItem {
+                branch = branchItem.name
+                remote = branchItem.remote ?? "origin"
+            }
 
-                if tmpBranch == nil, line.hasPrefix("[branch") {
-                    tmpBranch = line
-                    tmpBranch?.removeFirst(9)
-                    tmpBranch?.removeLast(2)
-                    return
-                }
-
-                if line.contains("merge"), let equalIdx = line.firstIndex(of: "=") {
-                    let mergeIdx = line.index(after: equalIdx)
-                    let mergeData = line.suffix(from: mergeIdx).trimmingCharacters(in: .whitespacesAndNewlines)
-                    if mergeData == mergePath {
-                        self.branch = tmpBranch
-                        return
-                    }
-                }
-
-                if intoRemote, line.contains("url =") {
-                    let splitArray = line
-                        .components(separatedBy: "=")
-                        .filter { !$0.isEmpty }
-                    if splitArray.count == 2 {
-                        repository = splitArray[1].trimmingCharacters(in: .whitespacesAndNewlines)
-                    }
-                }
+            let remoteItem = configs.first { $0.type == "remote" && $0.name == remote }
+            if let remoteItem = remoteItem {
+                repository = remoteItem.url
             }
         }
 
@@ -302,6 +280,64 @@ struct GitInfo {
 
         let myDate = Date(timeIntervalSince1970: timeInterval)
         return ISO8601DateFormatter().string(from: myDate)
+    }
+
+    class ConfigItem {
+        var type: String = ""
+        var name: String = ""
+        var url: String?
+        var remote: String?
+        var merge: String?
+
+        init(type: String, name: String) {
+            self.type = type
+            self.name = name
+        }
+    }
+
+    private func getConfigItems(configPath: URL) -> [ConfigItem] {
+        var configItems = [ConfigItem]()
+        let regex = try! NSRegularExpression(pattern: "^\\[(.*) \\\"(.*)\\\"\\]", options: .anchorsMatchLines)
+
+        if let configData = try? String(contentsOf: configPath) {
+            let configDataLines = configData.components(separatedBy: "\n")
+
+            var currentItem: ConfigItem?
+
+            configDataLines.forEach { line in
+                if line.first == "\t", let currentItem = currentItem {
+                    let parts = line.components(separatedBy: "=").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                    if parts.count < 2 {
+                        return
+                    }
+                    switch parts[0] {
+                        case "url":
+                            currentItem.url = parts[1]
+                        case "remote":
+                            currentItem.remote = parts[1]
+                        case "merge":
+                            currentItem.merge = parts[1]
+                        default:
+                            break
+                    }
+                    return
+                }
+
+                if let match = regex.firstMatch(in: line, options: [], range: NSRange(location: 0, length: line.count)),
+                   let firstRange = Range(match.range(at: 1), in: line),
+                   let secondRange = Range(match.range(at: 2), in: line)
+                {
+                    if let currentItem = currentItem {
+                        configItems.append(currentItem)
+                    }
+
+                    currentItem = ConfigItem(type: String(line[firstRange]),
+                                             name: String(line[secondRange]))
+                }
+            }
+        }
+
+        return configItems
     }
 }
 

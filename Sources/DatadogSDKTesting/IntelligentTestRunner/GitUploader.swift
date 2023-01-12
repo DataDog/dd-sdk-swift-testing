@@ -59,7 +59,7 @@ struct GitUploader {
         guard !lineLength.contains("\n") else {
             return
         }
-
+        Log.debug("Unshallowing git repository")
         // Fetch remaining tree info
         Spawn.command(#"git -C "\#(workspacePath)" config remote.origin.partialclonefilter "blob:none""#)
         Spawn.command(#"git -C "\#(workspacePath)" fetch --shallow-since="1 month ago" --update-shallow --refetch"#)

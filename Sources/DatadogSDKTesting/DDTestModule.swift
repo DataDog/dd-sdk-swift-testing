@@ -52,10 +52,15 @@ public class DDTestModule: NSObject, Encodable {
                 configError = true
             }
         }
-#if targetEnvironment(simulator) || os(macOS)
 
-        DDSymbolicator.createDSYMFileIfNeeded(forImageName: bundleName)
-        bundleFunctionInfo = FileLocator.testFunctionsInModule(bundleName)
+#if targetEnvironment(simulator) || os(macOS)
+        if !DDTestMonitor.env.disableSourceLocation {
+            Log.debug("Create test bundle DSYM file for test source location")
+            DDSymbolicator.createDSYMFileIfNeeded(forImageName: bundleName)
+            Log.debug("Create source index for test source location")
+            bundleFunctionInfo = FileLocator.testFunctionsInModule(bundleName)
+            Log.debug("Source Code location index created")
+        }
 #endif
         if let workspacePath = DDTestMonitor.env.workspacePath {
             codeOwners = CodeOwners(workspacePath: URL(fileURLWithPath: workspacePath))
@@ -126,10 +131,9 @@ public class DDTestModule: NSObject, Encodable {
         meta[DDItrTags.iItrSkippedTests] = itrSkipped ? "true" : "false"
         metrics[DDTestModuleTags.testCoverageLines] = linesCovered
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: DDTestModuleEnvelope(self))
-        
+
         let testSession = DDTestSession(testModule: self)
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: DDTestSession.DDTestSessionEnvelope(testSession))
-
 
         if let coverageHelper = DDTestMonitor.instance?.coverageHelper {
             /// We need to wait for all the traces to be written to the backend before exiting

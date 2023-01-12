@@ -48,6 +48,7 @@ internal enum ExtraConfigurationValues: String {
     case DD_CIVISIBILITY_ITR_ENABLED
     case DD_CIVISIBILITY_EXCLUDED_BRANCHES
     case DD_CIVISIBILITY_REPORT_HOSTNAME
+    case DD_DISABLE_SOURCE_LOCATION
 }
 
 internal struct DDEnvironmentValues {
@@ -73,6 +74,7 @@ internal struct DDEnvironmentValues {
     let disableRUMIntegration: Bool
     let disableCrashHandler: Bool
     let disableTestInstrumenting: Bool
+    let disableSourceLocation: Bool
 
     /// OS Information
     let osName: String
@@ -125,7 +127,7 @@ internal struct DDEnvironmentValues {
 
     /// Avoids configuring the traces exporter
     let disableTracesExporting: Bool
-    
+
     /// Avoids configuring the traces exporter
     let reportHostname: Bool
 
@@ -252,6 +254,9 @@ internal struct DDEnvironmentValues {
         let envDisableTestInstrumenting = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_DISABLE_TEST_INSTRUMENTING.rawValue) as NSString?
         disableTestInstrumenting = envDisableTestInstrumenting?.boolValue ?? false
 
+        let envDisableSourceLocation = DDEnvironmentValues.getEnvVariable(ExtraConfigurationValues.DD_DISABLE_SOURCE_LOCATION.rawValue) as NSString?
+        disableSourceLocation = envDisableSourceLocation?.boolValue ?? false
+
         /// Intelligent test runner related configuration
         let envGitUploadEnabled = DDEnvironmentValues.getEnvVariable(ExtraConfigurationValues.DD_CIVISIBILITY_GIT_UPLOAD_ENABLED.rawValue) as NSString?
         gitUploadEnabled = envGitUploadEnabled?.boolValue ?? true
@@ -283,7 +288,7 @@ internal struct DDEnvironmentValues {
 
         let envDisableTracesExporting = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_DONT_EXPORT.rawValue) as NSString?
         disableTracesExporting = envDisableTracesExporting?.boolValue ?? false
-        
+
         let envReportHostname = DDEnvironmentValues.getEnvVariable(ExtraConfigurationValues.DD_CIVISIBILITY_REPORT_HOSTNAME.rawValue) as NSString?
         reportHostname = envReportHostname?.boolValue ?? false
 

@@ -29,7 +29,11 @@ internal enum DDCrashes {
     }
 
     private static func installPLCrashReporterHandler() {
+#if os(macOS)
+        let config = PLCrashReporterConfig(signalHandlerType: .mach, symbolicationStrategy: [])
+#else
         let config = PLCrashReporterConfig(signalHandlerType: .BSD, symbolicationStrategy: [])
+#endif
         guard let plCrashReporter = PLCrashReporter(configuration: config) else {
             return
         }

@@ -4260,8 +4260,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/open-telemetry/opentelemetry-swift";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.3.0;
+				kind = revision;
+				revision = 7a19f2224c1b6814658a5ee18fba66533643186e;
 			};
 		};
 		E141EB5727EB44400057D747 /* XCRemoteSwiftPackageReference "swift-nio" */ = {

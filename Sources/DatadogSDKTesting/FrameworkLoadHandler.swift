@@ -32,7 +32,8 @@ public class FrameworkLoadHandler: NSObject {
         let isInTestMode = environment["XCInjectBundleInto"] != nil ||
             environment["XCTestConfigurationFilePath"] != nil ||
             environment["XCTestBundlePath"] != nil ||
-            environment["SDKROOT"] != nil
+            environment["SDKROOT"] != nil ||
+            environment["ENVIRONMENT_TRACER_SPANID"] != nil
 
         if isInTestMode {
             // When code coverage is enabled modify profile name so it disables countinuous profiling

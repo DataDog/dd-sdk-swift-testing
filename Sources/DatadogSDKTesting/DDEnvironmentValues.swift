@@ -12,10 +12,6 @@ import Foundation
 internal enum ConfigurationValues: String, CaseIterable {
     case DD_TEST_RUNNER
     case DD_API_KEY
-    case XCTestConfigurationFilePath
-    case XCInjectBundleInto
-    case XCTestBundlePath
-    case SDKROOT
     case DD_ENV
     case DD_SERVICE
     case SRCROOT

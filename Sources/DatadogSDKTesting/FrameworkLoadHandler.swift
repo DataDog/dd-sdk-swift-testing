@@ -20,12 +20,12 @@ public class FrameworkLoadHandler: NSObject {
     static func libraryLoaded() {
         /// Only initialize test observer if user configured so and is running tests
         guard let enabled = environment[ConfigurationValues.DD_TEST_RUNNER.rawValue] as NSString? else {
-            print("[DatadogSDKTesting] Library loaded but not active, DD_TEST_RUNNER is missing")
+            NSLog("[DatadogSDKTesting] Library loaded but not active, DD_TEST_RUNNER is missing")
             return
         }
 
         if enabled.boolValue == false {
-            print("[DatadogSDKTesting] Library loaded but not active, DD_TEST_RUNNER is off")
+            NSLog("[DatadogSDKTesting] Library loaded but not active, DD_TEST_RUNNER is off")
             return
         }
 
@@ -58,14 +58,20 @@ public class FrameworkLoadHandler: NSObject {
             if needsTestObserver, !disableTestInstrumenting {
                 testObserver = DDTestObserver()
                 testObserver?.startObserving()
+                DispatchQueue.global().async {
+                    _ = DDTestMonitor.env
+                }
+                DispatchQueue.global().async {
+                    _ = DDTestMonitor.clock
+                }
             } else if isBinaryUnderUITesting {
-                print("[DatadogSDKTesting] Application launched from UITest while being instrumented")
+                NSLog("[DatadogSDKTesting] Application launched from UITest while being instrumented")
                 DDTestMonitor.instance = DDTestMonitor()
                 DDTestMonitor.instance?.startInstrumenting()
                 DDTestMonitor.instance?.instrumentationWorkQueue.waitUntilAllOperationsAreFinished()
             }
         } else {
-            print("[DatadogSDKTesting] Framework loaded but not in test mode")
+            NSLog("[DatadogSDKTesting] Framework loaded but not in test mode")
         }
     }
 }

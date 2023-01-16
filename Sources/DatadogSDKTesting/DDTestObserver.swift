@@ -17,7 +17,9 @@ class DDTestObserver: NSObject, XCTestObservation {
     var test: DDTest?
 
     override init() {
-        XCUIApplication.swizzleMethods
+        Log.measure(name: "swizzleUIMethods") {
+            XCUIApplication.swizzleMethods
+        }
         super.init()
     }
 

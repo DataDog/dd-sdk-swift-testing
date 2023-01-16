@@ -19,4 +19,15 @@ struct Log {
     static func print(_ string: String) {
         NSLog("[DatadogSDKTesting] " + string + "\n")
     }
+
+    static func measure(name: String, _ operation: () -> Void) {
+        if debugTracer {
+            let startTime = CFAbsoluteTimeGetCurrent()
+            operation()
+            let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
+            NSLog("[Debug][DatadogSDKTesting] Time elapsed for \(name): \(timeElapsed) s.")
+        } else {
+            operation()
+        }
+    }
 }

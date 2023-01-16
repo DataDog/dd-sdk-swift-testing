@@ -15,8 +15,8 @@ import Foundation
 
 public class DDTestModule: NSObject, Encodable {
     var bundleName = ""
-    var bundleFunctionInfo = FunctionMap()
-    var codeOwners: CodeOwners?
+    static var bundleFunctionInfo = FunctionMap()
+    static var codeOwners: CodeOwners?
     var testFramework = "Swift API"
     var id: SpanId
     var sessionId: SpanId
@@ -29,6 +29,8 @@ public class DDTestModule: NSObject, Encodable {
     var configError = false
     var itrSkipped = false
     var linesCovered: Double?
+
+    let initializationQueue = OperationQueue()
 
     private let executionLock = NSLock()
     private var privateCurrentExecutionOrder = 0
@@ -45,36 +47,59 @@ public class DDTestModule: NSObject, Encodable {
         self.duration = 0
         self.status = .pass
         self.bundleName = bundleName
+
+        let beforeLoadingTime = DDTestMonitor.clock.now
         if DDTestMonitor.instance == nil {
             DDTestMonitor.baseConfigurationTags[DDTestTags.testBundle] = bundleName
-            let success = DDTestMonitor.installTestMonitor()
+            var success = false
+            Log.measure(name: "installTestMonitor") {
+                success = DDTestMonitor.installTestMonitor()
+            }
             if !success {
                 configError = true
             }
         }
+        Log.debug("Install Test monitor time interval: \(DDTestMonitor.clock.now.timeIntervalSince(beforeLoadingTime))")
 
 #if targetEnvironment(simulator) || os(macOS)
         if !DDTestMonitor.env.disableSourceLocation {
-            Log.debug("Create test bundle DSYM file for test source location")
-            DDSymbolicator.createDSYMFileIfNeeded(forImageName: bundleName)
-            Log.debug("Create source index for test source location")
-            bundleFunctionInfo = FileLocator.testFunctionsInModule(bundleName)
-            Log.debug("Source Code location index created")
+            initializationQueue.addOperation {
+                Log.debug("Create test bundle DSYM file for test source location")
+                Log.measure(name: "createDSYMFileIfNeeded") {
+                    DDTestMonitor.crashHandlerInitSemaphore.wait()
+                    DDSymbolicator.createDSYMFileIfNeeded(forImageName: bundleName)
+                    DDTestMonitor.crashHandlerInitSemaphore.signal()
+                }
+                Log.measure(name: "testFunctionsInModule") {
+                    DDTestModule.bundleFunctionInfo = FileLocator.testFunctionsInModule(bundleName)
+                }
+            }
+            initializationQueue.addOperation {
+                if let workspacePath = DDTestMonitor.env.workspacePath {
+                    Log.measure(name: "createCodeOwners") {
+                        DDTestModule.codeOwners = CodeOwners(workspacePath: URL(fileURLWithPath: workspacePath))
+                    }
+                }
+            }
         }
 #endif
-        if let workspacePath = DDTestMonitor.env.workspacePath {
-            codeOwners = CodeOwners(workspacePath: URL(fileURLWithPath: workspacePath))
+
+        Log.measure(name: "waiting InstrumentationQueue") {
+            DDTestMonitor.instance?.instrumentationWorkQueue.waitUntilAllOperationsAreFinished()
         }
 
-        DDTestMonitor.instance?.instrumentationWorkQueue.waitUntilAllOperationsAreFinished()
-        DDTestMonitor.instance?.itrWorkQueue.waitUntilAllOperationsAreFinished()
+        Log.measure(name: "waiting itrWorkQueue") {
+            DDTestMonitor.instance?.itrWorkQueue.waitUntilAllOperationsAreFinished()
+        }
 
-        let moduleStartTime = startTime ?? DDTestMonitor.clock.now
+        let moduleStartTime = startTime ?? beforeLoadingTime
 
         self.id = DDTestMonitor.instance?.crashedModuleInfo?.crashedModuleId ?? SpanId.random()
         self.sessionId = DDTestMonitor.instance?.crashedModuleInfo?.crashedSessionId ?? SpanId.random()
         self.startTime = DDTestMonitor.instance?.crashedModuleInfo?.moduleStartTime ?? moduleStartTime
         self.localization = PlatformUtils.getLocalization()
+
+        Log.debug("Module loading time interval: \(DDTestMonitor.clock.now.timeIntervalSince(beforeLoadingTime))")
     }
 
     func internalEnd(endTime: Date? = nil) {

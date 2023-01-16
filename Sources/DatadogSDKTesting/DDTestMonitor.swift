@@ -63,6 +63,8 @@ internal class DDTestMonitor {
     var coverageHelper: DDCoverageHelper?
     var gitUploader: GitUploader?
     var itr: IntelligentTestRunner?
+    
+    static var crashHandlerInitSemaphore = DispatchSemaphore(value: 1)
 
     var rLock = NSRecursiveLock()
     private var privateCurrentTest: DDTest?
@@ -97,14 +99,21 @@ internal class DDTestMonitor {
         }
         Log.print("Library loaded and active. Instrumenting tests.")
         DDTestMonitor.instance = DDTestMonitor()
-        DDTestMonitor.instance?.startInstrumenting()
-        DDTestMonitor.instance?.instrumentationWorkQueue.waitUntilAllOperationsAreFinished()
-        DDTestMonitor.instance?.startITR()
+        Log.measure(name: "startInstrumenting") {
+            DDTestMonitor.instance?.startInstrumenting()
+        }
+
+        Log.measure(name: "startITR") {
+            DDTestMonitor.instance?.startITR()
+        }
         return true
     }
 
     init() {
-        if DDTestMonitor.tracer.isBinaryUnderUITesting {
+        let isBinaryUnderTesting = DDEnvironmentValues.getEnvVariable("ENVIRONMENT_TRACER_TRACEID") != nil &&
+            DDEnvironmentValues.getEnvVariable("ENVIRONMENT_TRACER_SPANID") != nil
+
+        if isBinaryUnderTesting {
             /// If the library is being loaded in a binary launched from a UITest, dont start test observing,
             /// except if testing the tracer itself
             launchNotificationObserver = NotificationCenter.default.addObserver(
@@ -156,6 +165,11 @@ internal class DDTestMonitor {
     }
 
     func startITR() {
+        if DDTestMonitor.env.ddApplicationKey == nil {
+            Log.print("APPLICATION_KET not set, Intelligent test runner needs it to run")
+            return
+        }
+
         let itrBackendConfig: (codeCoverage: Bool, testsSkipping: Bool)?
 
         if let service = DDTestMonitor.env.ddService ?? DDTestMonitor.env.getRepositoryName(),
@@ -254,32 +268,42 @@ internal class DDTestMonitor {
 
         if !DDTestMonitor.env.disableCrashHandler {
             instrumentationWorkQueue.addOperation {
-                DDCrashes.install()
+                Log.measure(name: "DDCrashesInstall") {
+                    DDTestMonitor.crashHandlerInitSemaphore.wait()
+                    DDCrashes.install()
+                    DDTestMonitor.crashHandlerInitSemaphore.signal()
+                }
             }
         }
 
         if !DDTestMonitor.env.disableNetworkInstrumentation {
             instrumentationWorkQueue.addOperation { [self] in
-                startNetworkAutoInstrumentation()
-                if !DDTestMonitor.env.disableHeadersInjection {
-                    injectHeaders = true
-                }
-                if DDTestMonitor.env.enableRecordPayload {
-                    recordPayload = true
-                }
-                if let maxPayload = DDTestMonitor.env.maxPayloadSize {
-                    maxPayloadSize = maxPayload
+                Log.measure(name: "startNetworkAutoInstrumentation") {
+                    startNetworkAutoInstrumentation()
+                    if !DDTestMonitor.env.disableHeadersInjection {
+                        injectHeaders = true
+                    }
+                    if DDTestMonitor.env.enableRecordPayload {
+                        recordPayload = true
+                    }
+                    if let maxPayload = DDTestMonitor.env.maxPayloadSize {
+                        maxPayloadSize = maxPayload
+                    }
                 }
             }
         }
         if DDTestMonitor.env.enableStdoutInstrumentation {
             instrumentationWorkQueue.addOperation { [self] in
-                startStdoutCapture()
+                Log.measure(name: "startStdoutCapture") {
+                    startStdoutCapture()
+                }
             }
         }
         if DDTestMonitor.env.enableStderrInstrumentation {
             instrumentationWorkQueue.addOperation { [self] in
-                startStderrCapture()
+                Log.measure(name: "startStderrCapture") {
+                    startStderrCapture()
+                }
             }
         }
     }

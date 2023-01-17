@@ -56,7 +56,7 @@ class IntegrationTestsRunner: XCTestCase {
             return nil
         }
         outputFile.waitForDataInBackgroundAndNotify()
-
+        sleep(1)
         let resultSpans = try? JSONDecoder().decode([SimpleSpanData].self, from: outputFile.availableData)
         return resultSpans
     }

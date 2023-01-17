@@ -51,6 +51,10 @@ class DDTestObserver: NSObject, XCTestObservation {
             return
         }
 
+        Log.measure(name: "waiting itrWorkQueue") {
+            DDTestMonitor.instance?.itrWorkQueue.waitUntilAllOperationsAreFinished()
+        }
+
         if let itr = DDTestMonitor.instance?.itr {
             let skippableTests = itr.skippableTests.filter { $0.suite == testSuite.name }.map { "-[\(testSuite.name) \($0.name)]" }
             let finalTests = tests.filter { !skippableTests.contains(($0 as AnyObject).name) }

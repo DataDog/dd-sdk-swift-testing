@@ -88,12 +88,7 @@ public class DDTestModule: NSObject, Encodable {
             DDTestMonitor.instance?.instrumentationWorkQueue.waitUntilAllOperationsAreFinished()
         }
 
-        Log.measure(name: "waiting itrWorkQueue") {
-            DDTestMonitor.instance?.itrWorkQueue.waitUntilAllOperationsAreFinished()
-        }
-
         let moduleStartTime = startTime ?? beforeLoadingTime
-
         self.id = DDTestMonitor.instance?.crashedModuleInfo?.crashedModuleId ?? SpanId.random()
         self.sessionId = DDTestMonitor.instance?.crashedModuleInfo?.crashedSessionId ?? SpanId.random()
         self.startTime = DDTestMonitor.instance?.crashedModuleInfo?.moduleStartTime ?? moduleStartTime

@@ -22,66 +22,92 @@ typealias FunctionName = String
 typealias FunctionMap = [FunctionName: FunctionInfo]
 
 enum FileLocator {
-    private static let swiftFunctionRegex = try! NSRegularExpression(pattern: #"(\w+)\.(\w+)"#, options: .anchorsMatchLines)
-    private static let objcFunctionRegex = try! NSRegularExpression(pattern: #"-\[(\w+) (\w+)\]"#, options: .anchorsMatchLines)
-    private static let pathRegex = try! NSRegularExpression(pattern: #"(\/.*?\.\S*):(\d*)"#, options: .anchorsMatchLines)
-
-    static func testFunctionsInModule(_ module: String) -> FunctionMap {
+    internal static func extractedFunc(_ symbolsFile: URL) -> FunctionMap {
         var functionMap = FunctionMap()
-        guard let symbolsInfo = DDSymbolicator.symbolsInfo(forLibrary: module) else {
+        var currentFunctionName: String?
+
+        do {
+            let file = DDFileReader(fileURL: symbolsFile)
+            try file.open()
+            defer { file.close() }
+
+            // Find function region
+            while let line = try file.readLine() {
+                if line.contains(" __TEXT __text") {
+                    break
+                }
+            }
+
+            while let line = try file.readLine() {
+                if line.hasSuffix("] \n") {
+                    if let funcRange = line.range(of: "[FUNC, ")?.lowerBound {
+                        if line[line.index(funcRange, offsetBy: 7)...].hasPrefix("EXT") {
+                            //Swift
+                            let functionEndIndex = line.index(funcRange, offsetBy: -3)
+                            guard let dotIndex = line[...line.index(before: functionEndIndex)].lastIndex(of: "."),
+                                  line[line.index(after: dotIndex)...].hasPrefix("test"),
+                                  let moduleIndex = line[...line.index(before: dotIndex)].lastIndex(of: " "),
+                                  let startLineIndex = line[...moduleIndex].lastIndex(of: ")"),
+                                  line.distance(from: startLineIndex, to: moduleIndex) <= 1
+                            else {
+                                currentFunctionName = nil
+                                continue
+                            }
+                            currentFunctionName = String(line[line.index(after: moduleIndex)...line.index(before: functionEndIndex)])
+                        } else if line[line.index(funcRange, offsetBy: 7)...].hasPrefix("OBJC") {
+                            // ObjC exported functions
+                            let subline = line[...funcRange]
+                            guard let functionEndIndex = subline.lastIndex(of: "]"),
+                                  let spaceIndex = subline[...subline.index(before: functionEndIndex)].lastIndex(of: " "),
+                                  subline[subline.index(after: spaceIndex)...].hasPrefix("test"),
+                                  let functionStartIndex = subline[...subline.index(before: functionEndIndex)].lastIndex(of: "[")
+                            else {
+                                currentFunctionName = nil
+                                continue
+                            }
+                            currentFunctionName = String(subline[subline.index(after: functionStartIndex)...subline.index(before: spaceIndex)]) + "." +
+                                String(subline[subline.index(after: spaceIndex)...subline.index(before: functionEndIndex)])
+                        } else {
+                            currentFunctionName = nil
+                            continue
+                        }
+                        
+                    } else {
+                        // Other non exported functions
+                        currentFunctionName = nil
+                    }
+                } else if line.hasSuffix(":0\n") {
+                    continue
+                } else if let functionName = currentFunctionName {
+                    guard let colonIndex = line.lastIndex(of: ":"),
+                          let lineNumber = Int(line[line.index(after: colonIndex)...line.index(line.endIndex, offsetBy: -2)])
+                    else {
+                        continue
+                    }
+
+                    let file = line[line.index(line.startIndex, offsetBy: 50)...line.index(before: colonIndex)]
+                    if functionMap[functionName] == nil {
+                        functionMap[functionName] = FunctionInfo(file: String(file), startLine: lineNumber, endLine: lineNumber)
+                    } else if functionMap[functionName]!.file == file {
+                        functionMap[functionName]?.updateWithLine(lineNumber)
+                    }
+                } else if line.hasSuffix("__TEXT __stubs\n") {
+                    break
+                }
+            }
+        } catch {
             return functionMap
         }
 
-        var currentFunctionName: String?
-        symbolsInfo.components(separatedBy: .newlines).lazy.forEach { line in
-
-            if line.contains("[FUNC, EXT, LENGTH") ||
-                line.contains("[FUNC, PEXT, LENGTH")
-            {
-                // Swift exported functions
-                if let match = swiftFunctionRegex.firstMatch(in: line, options: [], range: NSRange(location: 0, length: line.count)) {
-                    guard let classNameRange = Range(match.range(at: 1), in: line),
-                          let functionRange = Range(match.range(at: 2), in: line),
-                          String(line[functionRange]).hasPrefix("test")
-                    else {
-                        return
-                    }
-                    currentFunctionName = String(line[classNameRange]) + "." + String(line[functionRange])
-                }
-            } else if line.contains("[FUNC, OBJC, LENGTH") {
-                // ObjC exported functions
-                if let match = objcFunctionRegex.firstMatch(in: line, options: [], range: NSRange(location: 0, length: line.count)) {
-                    guard let classNameRange = Range(match.range(at: 1), in: line),
-                          let functionRange = Range(match.range(at: 2), in: line),
-                          String(line[functionRange]).hasPrefix("test")
-                    else {
-                        return
-                    }
-                    currentFunctionName = String(line[classNameRange]) + "." + String(line[functionRange])
-                }
-            } else if line.contains("[FUNC, ") {
-                // Other non exported functions
-                currentFunctionName = nil
-            } else if let functionName = currentFunctionName {
-                // Possibly lines of a exported function
-                if let match = pathRegex.firstMatch(in: line, options: [], range: NSRange(location: 0, length: line.count)) {
-                    guard let fileRange = Range(match.range(at: 1), in: line),
-                          let lineRange = Range(match.range(at: 2), in: line)
-                    else {
-                        return
-                    }
-
-                    let file = String(line[fileRange])
-                    if let line = Int(line[lineRange]), line != 0, !file.isEmpty {
-                        if functionMap[functionName]?.file == file {
-                            functionMap[functionName]?.updateWithLine(line)
-                        } else if functionMap[functionName] == nil {
-                            functionMap[functionName] = FunctionInfo(file: file, startLine: line, endLine: line)
-                        }
-                    }
-                }
-            }
-        }
         return functionMap
+    }
+
+    static func testFunctionsInModule(_ module: String) -> FunctionMap {
+        guard let symbolsFile = DDSymbolicator.symbolsInfo(forLibrary: module) else {
+            return FunctionMap()
+        }
+        defer { try? FileManager.default.removeItem(at: symbolsFile) }
+
+        return extractedFunc(symbolsFile)
     }
 }

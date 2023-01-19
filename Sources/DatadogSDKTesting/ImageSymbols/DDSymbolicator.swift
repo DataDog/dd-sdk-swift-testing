@@ -15,7 +15,7 @@ enum DDSymbolicator {
     private static let crashLineRegex = try! NSRegularExpression(pattern: "^([0-9]+)(\\s+)((?:[\\w.] *[\\w.]*)+)(\\s+)(0x[0-9a-fA-F]+)([ \t]+)(0x[0-9a-fA-F]+)([ \t]+\\+[ \t]+[0-9]+)$?", options: .anchorsMatchLines)
     private static let callStackRegex = try! NSRegularExpression(pattern: "^([0-9]+)(\\s+)((?:[\\w.] *[\\w.]*)+)(\\s+)(0x[0-9a-fA-F]+)", options: .anchorsMatchLines)
 
-    private static var dSYMFiles: [URL] = {
+    internal static var dSYMFiles: [URL] = {
         var dSYMFiles = [URL]()
         guard let configurationBuildPath = DDEnvironmentValues.getEnvVariable("DYLD_LIBRARY_PATH") else {
             return dSYMFiles
@@ -284,7 +284,7 @@ enum DDSymbolicator {
     }
 
     /// Dumps symbols output for a given libraryName , it must be processed later
-    static func symbolsInfo(forLibrary library: String) -> String? {
+    static func symbolsInfo(forLibrary library: String) -> URL? {
         guard let imagePath = dSYMFiles.first(where: { $0.lastPathComponent == library })?.path else {
             return nil
         }
@@ -293,10 +293,9 @@ enum DDSymbolicator {
             .appendingPathComponent("symbols_output")
         FileManager.default.createFile(atPath: symbolsOutputURL.path, contents: nil, attributes: nil)
         Spawn.commandToFile("/usr/bin/symbols -fullSourcePath -lazy \"\(imagePath)\"", outputPath: symbolsOutputURL.path)
-        defer { try? FileManager.default.removeItem(at: symbolsOutputURL) }
-        let outputData = try? String(contentsOf: symbolsOutputURL)
-        return outputData
+        return symbolsOutputURL
     }
+    
 
     static func getCallStack() -> [String] {
         let callStackSymbols = Thread.callStackSymbols

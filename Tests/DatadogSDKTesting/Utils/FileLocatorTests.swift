@@ -9,15 +9,16 @@ import Foundation
 import XCTest
 
 internal class FileLocatorTests: XCTestCase {
-        func testThisTestLocation() {
-            let testName = "FileLocatorTests.testThisTestLocation"
-            let bundleName = Bundle(for: FileLocatorTests.self).bundleURL.deletingPathExtension().lastPathComponent
-            DDSymbolicator.createDSYMFileIfNeeded(forImageName: bundleName)
+    func testThisTestLocation() {
+        let testName = "FileLocatorTests.testThisTestLocation"
+        let bundleName = Bundle(for: FileLocatorTests.self).bundleURL.deletingPathExtension().lastPathComponent
+        DDSymbolicator.createDSYMFileIfNeeded(forImageName: bundleName)
 
-            let bundleFunctionInfo = FileLocator.testFunctionsInModule(bundleName)
-            let functionInfo = bundleFunctionInfo[testName]
-            XCTAssertEqual(#file, functionInfo?.file)
-            XCTAssertEqual(12, functionInfo?.startLine)
-            XCTAssertEqual(22, functionInfo?.endLine)
+        let bundleFunctionInfo = FileLocator.testFunctionsInModule(bundleName)
+        let functionInfo = bundleFunctionInfo[testName]
+        XCTAssertEqual(#file, functionInfo?.file)
+        XCTAssertEqual(12, functionInfo?.startLine)
+        XCTAssertEqual(22, functionInfo?.endLine)
+    }
         }
 }

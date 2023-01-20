@@ -20,5 +20,4 @@ internal class FileLocatorTests: XCTestCase {
         XCTAssertEqual(12, functionInfo?.startLine)
         XCTAssertEqual(22, functionInfo?.endLine)
     }
-        }
 }

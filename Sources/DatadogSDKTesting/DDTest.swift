@@ -60,6 +60,24 @@ public class DDTest: NSObject {
 
         DDTestMonitor.tracer.addPropagationsHeadersToEnvironment()
         DDTestMonitor.env.addTagsToSpan(span: span)
+        
+        module.initializationQueue.waitUntilAllOperationsAreFinished()
+        Log.debug("Test waiting on module finishing loading: \(DDTestMonitor.clock.now.timeIntervalSince(testStartTime))")
+        let functionName = suite.name + "." + name
+        if let functionInfo = DDTestModule.bundleFunctionInfo[functionName] {
+            var filePath = functionInfo.file
+            if let workspacePath = DDTestMonitor.env.workspacePath,
+               let workspaceRange = filePath.range(of: workspacePath + "/")
+            {
+                filePath.removeSubrange(workspaceRange)
+            }
+            span.setAttribute(key: DDTestTags.testSourceFile, value: filePath)
+            span.setAttribute(key: DDTestTags.testSourceStartLine, value: functionInfo.startLine)
+            span.setAttribute(key: DDTestTags.testSourceEndLine, value: functionInfo.endLine)
+            if let owners = DDTestModule.codeOwners?.ownersForPath(filePath) {
+                span.setAttribute(key: DDTestTags.testCodeowners, value: owners)
+            }
+        }
 
         if let testSpan = span as? RecordEventsReadableSpan {
             let simpleSpan = SimpleSpanData(spanData: testSpan.toSpanData(), moduleStartTime: module.startTime, suiteStartTime: suite.startTime)
@@ -148,24 +166,6 @@ public class DDTest: NSObject {
                     return
                 }
                 DDTestMonitor.tracer.eventsExporter?.export(coverage: coverageFileURL, testSessionId: testSessionId, testSuiteId: testSuiteId, spanId: spanId, workspacePath: DDTestMonitor.env.workspacePath, binaryImagePaths: BinaryImages.binaryImagesPath)
-            }
-        }
-        
-        module.initializationQueue.waitUntilAllOperationsAreFinished()
-        Log.debug("Test waiting on module finishing loading: \(DDTestMonitor.clock.now.timeIntervalSince(testEndTime))")
-        let functionName = suite.name + "." + name
-        if let functionInfo = DDTestModule.bundleFunctionInfo[functionName] {
-            var filePath = functionInfo.file
-            if let workspacePath = DDTestMonitor.env.workspacePath,
-               let workspaceRange = filePath.range(of: workspacePath + "/")
-            {
-                filePath.removeSubrange(workspaceRange)
-            }
-            span.setAttribute(key: DDTestTags.testSourceFile, value: filePath)
-            span.setAttribute(key: DDTestTags.testSourceStartLine, value: functionInfo.startLine)
-            span.setAttribute(key: DDTestTags.testSourceEndLine, value: functionInfo.endLine)
-            if let owners = DDTestModule.codeOwners?.ownersForPath(filePath) {
-                span.setAttribute(key: DDTestTags.testCodeowners, value: owners)
             }
         }
         

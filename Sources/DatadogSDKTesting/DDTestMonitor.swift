@@ -166,7 +166,7 @@ internal class DDTestMonitor {
 
     func startITR() {
         if DDTestMonitor.env.ddApplicationKey == nil {
-            Log.print("APPLICATION_KEY not set, Intelligent test runner needs it to run")
+            Log.print("APPLICATION_KEY env variable is not set, this is only needed if you use Intelligent Test Runner")
             return
         }
 

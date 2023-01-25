@@ -20,6 +20,7 @@ class DDTracerTests: XCTestCase {
     override func tearDown() {
         XCTAssertNil(DDTracer.activeSpan)
         resetEnvironmentVariables()
+        OpenTelemetry.registerTracerProvider(tracerProvider: DefaultTracerProvider.instance)
     }
 
     func resetEnvironmentVariables() {
@@ -220,10 +221,9 @@ class DDTracerTests: XCTestCase {
         DDEnvironmentValues.environment["ENVIRONMENT_TRACER_SPANID"] = testSpanId.hexString
         resetEnvironmentVariables()
 
-        let testSpanProcessor = SpySpanProcessor()
-        OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(testSpanProcessor)
-
         let tracer = DDTracer()
+        let testSpanProcessor = SpySpanProcessor()
+        tracer.tracerProviderSdk.addSpanProcessor(testSpanProcessor)
 
         tracer.logString(string: "Hello World", date: Date(timeIntervalSince1970: 1212))
         tracer.flush()

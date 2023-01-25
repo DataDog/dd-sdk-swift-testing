@@ -4,8 +4,8 @@
  * Copyright 2020-2021 Datadog, Inc.
  */
 
-import OpenTelemetryApi
 @testable import EventsExporter
+import OpenTelemetryApi
 @testable import OpenTelemetrySdk
 import XCTest
 
@@ -47,8 +47,6 @@ class EventsExporterTests: XCTestCase {
         let instrumentationLibraryName = "SimpleExporter"
         let instrumentationLibraryVersion = "semver:0.1.0"
 
-        let tracer = OpenTelemetrySDK.instance.tracerProvider.get(instrumentationName: instrumentationLibraryName, instrumentationVersion: instrumentationLibraryVersion) as! TracerSdk
-
         let exporterConfiguration = ExporterConfiguration(serviceName: "serviceName",
                                                           libraryVersion: "0.0",
                                                           applicationName: "applicationName",
@@ -67,7 +65,13 @@ class EventsExporterTests: XCTestCase {
         let datadogExporter = try! EventsExporter(config: exporterConfiguration)
 
         let spanProcessor = SimpleSpanProcessor(spanExporter: datadogExporter)
-        OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(spanProcessor)
+
+        OpenTelemetry.registerTracerProvider(tracerProvider:
+            TracerProviderBuilder()
+                .add(spanProcessor: spanProcessor)
+                .build()
+        )
+        let tracer = OpenTelemetry.instance.tracerProvider.get(instrumentationName: instrumentationLibraryName, instrumentationVersion: instrumentationLibraryVersion) as! TracerSdk
 
         simpleSpan(tracer: tracer)
         spanProcessor.shutdown()

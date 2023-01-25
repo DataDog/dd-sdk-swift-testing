@@ -20,13 +20,16 @@ enum DDHeaders: String, CaseIterable {
 
 internal class DDTracer {
     let tracerSdk: TracerSdk
+    let tracerProviderSdk: TracerProviderSdk
     let ntpClock = NTPClock()
     var eventsExporter: EventsExporter?
     private var launchSpanContext: SpanContext?
     let backgroundWorkQueue = OperationQueue()
 
+    private let attributeCountLimit: UInt = 1024
+
     static var activeSpan: Span? {
-        return OpenTelemetrySDK.instance.contextProvider.activeSpan ??
+        return OpenTelemetry.instance.contextProvider.activeSpan ??
             DDTestMonitor.instance?.currentTest?.span
     }
 
@@ -51,17 +54,9 @@ internal class DDTracer {
                                                    traceState: TraceState())
         }
 
-        let tracerProvider = OpenTelemetrySDK.instance.tracerProvider
-        tracerProvider.updateActiveSampler(Samplers.alwaysOn)
-        let spanLimits = tracerProvider.getActiveSpanLimits().settingAttributeCountLimit(1024)
-        tracerProvider.updateActiveSpanLimits(spanLimits)
-        tracerProvider.updateActiveClock(DDTestMonitor.clock)
-
         let bundle = Bundle.main
         let identifier = bundle.bundleIdentifier ?? "com.datadoghq.DatadogSDKTesting"
         let version = (bundle.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "unknown"
-
-        tracerSdk = tracerProvider.get(instrumentationName: identifier, instrumentationVersion: version) as! TracerSdk
 
         var endpoint: Endpoint
         switch env.ddEndpoint {
@@ -89,7 +84,7 @@ internal class DDTracer {
             Log.print("Reporting tests to \(localURL.absoluteURL)")
             payloadCompression = false
         }
-        
+
         let hostnameToReport: String? = (env.reportHostname && !DDTestMonitor.developerMachineHostName.isEmpty) ? DDTestMonitor.developerMachineHostName : nil
 
         let exporterConfiguration = ExporterConfiguration(
@@ -117,7 +112,7 @@ internal class DDTracer {
             exporterToUse = exporter as SpanExporter
         } else {
             Log.print("Failed creating Datadog exporter.")
-            return
+            exporterToUse = InMemoryExporter()
         }
 
         var spanProcessor: SpanProcessor
@@ -127,7 +122,14 @@ internal class DDTracer {
             spanProcessor = SimpleSpanProcessor(spanExporter: exporterToUse)
         }
 
-        OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(spanProcessor)
+        tracerProviderSdk = TracerProviderBuilder().with(sampler: Samplers.alwaysOn)
+            .with(spanLimits: SpanLimits().settingAttributeCountLimit(attributeCountLimit))
+            .with(clock: DDTestMonitor.clock)
+            .add(spanProcessor: spanProcessor)
+            .build()
+
+        OpenTelemetry.registerTracerProvider(tracerProvider: tracerProviderSdk)
+        tracerSdk = tracerProviderSdk.get(instrumentationName: identifier, instrumentationVersion: version) as! TracerSdk
     }
 
     func startSpan(name: String, attributes: [String: String], startTime: Date? = nil) -> Span {
@@ -176,8 +178,7 @@ internal class DDTracer {
                                              traceFlags: TraceFlags().settingIsSampled(true),
                                              traceState: TraceState())
 
-        let tracerProvider = OpenTelemetrySDK.instance.tracerProvider
-        var attributes = AttributesDictionary(capacity: OpenTelemetrySDK.instance.tracerProvider.getActiveSpanLimits().attributeCountLimit)
+        var attributes = AttributesDictionary(capacity: Int(attributeCountLimit))
         spanData.stringAttributes.forEach {
             attributes.updateValue(value: AttributeValue.string($0.value), forKey: $0.key)
         }
@@ -199,16 +200,16 @@ internal class DDTracer {
             }
         }
 
-        let spanProcessor = MultiSpanProcessor(spanProcessors: tracerProvider.getActiveSpanProcessors())
+        let spanProcessor = MultiSpanProcessor(spanProcessors: tracerProviderSdk.getActiveSpanProcessors())
         let span = RecordEventsReadableSpan.startSpan(context: spanContext,
                                                       name: spanName,
                                                       instrumentationScopeInfo: tracerSdk.instrumentationScopeInfo,
                                                       kind: .internal,
                                                       parentContext: parentContext,
                                                       hasRemoteParent: false,
-                                                      spanLimits: tracerProvider.getActiveSpanLimits(),
+                                                      spanLimits: tracerProviderSdk.getActiveSpanLimits(),
                                                       spanProcessor: spanProcessor,
-                                                      clock: tracerProvider.getActiveClock(),
+                                                      clock: tracerProviderSdk.getActiveClock(),
                                                       resource: Resource(),
                                                       attributes: attributes,
                                                       links: [SpanData.Link](),
@@ -226,9 +227,8 @@ internal class DDTracer {
     }
 
     @discardableResult func createSpanFromLaunchContext() -> RecordEventsReadableSpan {
-        let tracerProvider = OpenTelemetrySDK.instance.tracerProvider
-        let attributes = AttributesDictionary(capacity: tracerProvider.getActiveSpanLimits().attributeCountLimit)
-        let spanProcessor = MultiSpanProcessor(spanProcessors: tracerProvider.getActiveSpanProcessors())
+        let attributes = AttributesDictionary(capacity: tracerProviderSdk.getActiveSpanLimits().attributeCountLimit)
+        let spanProcessor = MultiSpanProcessor(spanProcessors: tracerProviderSdk.getActiveSpanProcessors())
 
         let span = RecordEventsReadableSpan.startSpan(context: launchSpanContext!,
                                                       name: "ApplicationUnderTest",
@@ -236,9 +236,9 @@ internal class DDTracer {
                                                       kind: .internal,
                                                       parentContext: nil,
                                                       hasRemoteParent: false,
-                                                      spanLimits: tracerProvider.getActiveSpanLimits(),
+                                                      spanLimits: tracerProviderSdk.getActiveSpanLimits(),
                                                       spanProcessor: spanProcessor,
-                                                      clock: tracerProvider.getActiveClock(),
+                                                      clock: tracerProviderSdk.getActiveClock(),
                                                       resource: Resource(),
                                                       attributes: attributes,
                                                       links: [SpanData.Link](),
@@ -293,7 +293,7 @@ internal class DDTracer {
         backgroundWorkQueue.addOperation {
             auxSpan.status = .ok
             auxSpan.end()
-            OpenTelemetrySDK.instance.tracerProvider.forceFlush()
+            self.tracerProviderSdk.forceFlush()
         }
     }
 
@@ -327,7 +327,7 @@ internal class DDTracer {
         Log.debug("DDCFMessageID.forceFlush finished")
 
         backgroundWorkQueue.addOperation {
-            OpenTelemetrySDK.instance.tracerProvider.forceFlush()
+            self.tracerProviderSdk.forceFlush()
         }
         backgroundWorkQueue.waitUntilAllOperationsAreFinished()
     }

@@ -21,7 +21,7 @@ class DDNetworkInstrumentationTests: XCTestCase {
         DDTestMonitor.instance = DDTestMonitor()
         DDTestMonitor.instance?.instrumentationWorkQueue.waitUntilAllOperationsAreFinished()
         let tracer = DDTestMonitor.tracer
-        OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(testSpanProcessor)
+        tracer.tracerProviderSdk.addSpanProcessor(testSpanProcessor)
         DDTestMonitor.instance?.networkInstrumentation = DDNetworkInstrumentation()
         DDTestMonitor.instance?.injectHeaders = true // This is the default
         let spanName = "containerSpan"

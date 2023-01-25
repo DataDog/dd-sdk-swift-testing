@@ -20,7 +20,7 @@ class DDEnvironmentValuesTests: XCTestCase {
     var testInfoDictionary = [String: Any]()
     var previousInfoDictionary = [String: Any]()
 
-    var tracerProvider = OpenTelemetrySDK.instance.tracerProvider
+    var tracerProvider = TracerProviderSdk()
     var tracerSdk: Tracer!
 
     override func setUp() {
@@ -32,8 +32,8 @@ class DDEnvironmentValuesTests: XCTestCase {
         testInfoDictionary = [String: Any]()
         previousInfoDictionary = DDEnvironmentValues.infoDictionary
         DDEnvironmentValues.infoDictionary = [String: Any]()
-
-        tracerSdk = tracerProvider.get(instrumentationName: "SpanBuilderSdkTest")
+        OpenTelemetry.registerTracerProvider(tracerProvider: tracerProvider)
+        tracerSdk = tracerProvider.get(instrumentationName: "SpanBuilderSdkTest", instrumentationVersion: nil)
     }
 
     override func tearDown() {

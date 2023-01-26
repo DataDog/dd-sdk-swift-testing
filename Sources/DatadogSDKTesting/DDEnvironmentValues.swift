@@ -332,7 +332,7 @@ internal struct DDEnvironmentValues {
         } else if DDEnvironmentValues.getEnvVariable("CIRCLECI") != nil {
             isCi = true
             provider = "circleci"
-            repository = DDEnvironmentValues.removingUserPassword(DDEnvironmentValues.getEnvVariable("CIRCLE_REPOSITORY_URL"))
+            repository = DDEnvironmentValues.getEnvVariable("CIRCLE_REPOSITORY_URL")
             commit = DDEnvironmentValues.getEnvVariable("CIRCLE_SHA1")
             workspaceEnv = DDEnvironmentValues.getEnvVariable("CIRCLE_WORKING_DIRECTORY")
             pipelineId = DDEnvironmentValues.getEnvVariable("CIRCLE_WORKFLOW_ID")
@@ -358,7 +358,7 @@ internal struct DDEnvironmentValues {
         } else if DDEnvironmentValues.getEnvVariable("JENKINS_URL") != nil {
             isCi = true
             provider = "jenkins"
-            repository = DDEnvironmentValues.removingUserPassword(DDEnvironmentValues.getEnvVariable("GIT_URL") ?? DDEnvironmentValues.removingUserPassword(DDEnvironmentValues.getEnvVariable("GIT_URL_1")))
+            repository = DDEnvironmentValues.getEnvVariable("GIT_URL") ?? DDEnvironmentValues.getEnvVariable("GIT_URL_1")
             commit = DDEnvironmentValues.getEnvVariable("GIT_COMMIT")
             workspaceEnv = DDEnvironmentValues.getEnvVariable("WORKSPACE")
             pipelineId = DDEnvironmentValues.getEnvVariable("BUILD_TAG")
@@ -377,7 +377,7 @@ internal struct DDEnvironmentValues {
         } else if DDEnvironmentValues.getEnvVariable("GITLAB_CI") != nil {
             isCi = true
             provider = "gitlab"
-            repository = DDEnvironmentValues.removingUserPassword(DDEnvironmentValues.getEnvVariable("CI_REPOSITORY_URL"))
+            repository = DDEnvironmentValues.getEnvVariable("CI_REPOSITORY_URL")
             commit = DDEnvironmentValues.getEnvVariable("CI_COMMIT_SHA")
             workspaceEnv = DDEnvironmentValues.getEnvVariable("CI_PROJECT_DIR")
             pipelineId = DDEnvironmentValues.getEnvVariable("CI_PIPELINE_ID")
@@ -422,7 +422,17 @@ internal struct DDEnvironmentValues {
                 branchEnv = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_BRANCH")
             }
             tagEnv = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_TAG_NAME")
-            commitMessage = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED")
+
+            var theCommitMessage: String?
+            if let envCommitMessage = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_COMMIT_MESSAGE") {
+                theCommitMessage = envCommitMessage
+                if let extCommitMessage = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED") {
+                    theCommitMessage? += "\n\(extCommitMessage)"
+                }
+            } else {
+                theCommitMessage = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED")
+            }
+            commitMessage = theCommitMessage
             authorName = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_COMMIT_AUTHOR")
             authorEmail = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_COMMIT_AUTHOR_EMAIL")
 
@@ -462,10 +472,15 @@ internal struct DDEnvironmentValues {
             authorName = DDEnvironmentValues.getEnvVariable("BUILD_REQUESTEDFORID")
             authorEmail = DDEnvironmentValues.getEnvVariable("BUILD_REQUESTEDFOREMAIL")
 
+            // Env vars
+            ciEnvVars["SYSTEM_TEAMPROJECTID"] = DDEnvironmentValues.getEnvVariable("SYSTEM_TEAMPROJECTID")
+            ciEnvVars["BUILD_BUILDID"] = DDEnvironmentValues.getEnvVariable("BUILD_BUILDID")
+            ciEnvVars["SYSTEM_JOBID"] = DDEnvironmentValues.getEnvVariable("SYSTEM_JOBID")
+
         } else if DDEnvironmentValues.getEnvVariable("BITBUCKET_BUILD_NUMBER") != nil {
             isCi = true
             provider = "bitbucket"
-            repository = DDEnvironmentValues.removingUserPassword(DDEnvironmentValues.getEnvVariable("BITBUCKET_GIT_SSH_ORIGIN"))
+            repository = DDEnvironmentValues.getEnvVariable("BITBUCKET_GIT_SSH_ORIGIN")
             commit = DDEnvironmentValues.getEnvVariable("BITBUCKET_COMMIT")
             workspaceEnv = DDEnvironmentValues.getEnvVariable("BITBUCKET_CLONE_DIR")
             pipelineId = DDEnvironmentValues.getEnvVariable("BITBUCKET_PIPELINE_UUID")?.replacingOccurrences(of: "[{}]", with: "", options: .regularExpression)
@@ -499,7 +514,7 @@ internal struct DDEnvironmentValues {
             pipelineURL = "\(githubServerEnv)/\(repositoryEnv)/actions/runs/\(envRunId ?? "")" + attemptsString
             pipelineName = DDEnvironmentValues.getEnvVariable("GITHUB_WORKFLOW")
             jobURL = "\(githubServerEnv)/\(repositoryEnv)/commit/\(commit ?? "")/checks"
-            jobName = nil
+            jobName = DDEnvironmentValues.getEnvVariable("GITHUB_JOB")
             stageName = nil
             branchEnv = DDEnvironmentValues.getEnvVariable("GITHUB_HEAD_REF")
             if branchEnv?.isEmpty ?? true {
@@ -515,7 +530,7 @@ internal struct DDEnvironmentValues {
         } else if DDEnvironmentValues.getEnvVariable("BUILDKITE") != nil {
             isCi = true
             provider = "buildkite"
-            repository = DDEnvironmentValues.removingUserPassword(DDEnvironmentValues.getEnvVariable("BUILDKITE_REPO"))
+            repository = DDEnvironmentValues.getEnvVariable("BUILDKITE_REPO")
             commit = DDEnvironmentValues.getEnvVariable("BUILDKITE_COMMIT")
             workspaceEnv = DDEnvironmentValues.getEnvVariable("BUILDKITE_BUILD_CHECKOUT_PATH")
             pipelineId = DDEnvironmentValues.getEnvVariable("BUILDKITE_BUILD_ID")
@@ -646,7 +661,7 @@ internal struct DDEnvironmentValues {
         }
         branch = DDEnvironmentValues.normalizedBranchOrTag(branchEnv)
         tag = DDEnvironmentValues.normalizedBranchOrTag(tagEnv)
-        repository = DDEnvironmentValues.getEnvVariable("DD_GIT_REPOSITORY_URL") ?? repository
+        repository = DDEnvironmentValues.removingUserPassword(DDEnvironmentValues.getEnvVariable("DD_GIT_REPOSITORY_URL") ?? repository)
         commit = DDEnvironmentValues.getEnvVariable("DD_GIT_COMMIT_SHA") ?? commit
         commitMessage = DDEnvironmentValues.getEnvVariable("DD_GIT_COMMIT_MESSAGE") ?? commitMessage
         authorName = DDEnvironmentValues.getEnvVariable("DD_GIT_COMMIT_AUTHOR_NAME") ?? authorName

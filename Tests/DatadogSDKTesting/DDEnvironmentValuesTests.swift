@@ -316,6 +316,10 @@ class DDEnvironmentValuesTests: XCTestCase {
         var numTestedFiles = 0
         for case let fileURL as URL in fileEnumerator {
             if fileURL.pathExtension == "json" {
+                if fileURL.lastPathComponent == "buddy.json" {
+                    //buddy CI does not support macOS runners
+                    continue
+                }
                 numTestedFiles += 1
                 print("validating \(fileURL.lastPathComponent)")
                 do {

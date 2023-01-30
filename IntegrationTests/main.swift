@@ -4,6 +4,7 @@
  * Copyright 2020-2021 Datadog, Inc.
  */
 
+@_implementationOnly import OpenTelemetryApi
 @_implementationOnly import OpenTelemetrySdk
 import XCTest
 
@@ -14,7 +15,6 @@ guard let outputPath = ProcessInfo.processInfo.environment["TEST_OUTPUT_FILE"] e
 // Create a exporter to export the spans to the desired file
 let exporter = FileTraceExporter(outputURL: URL(fileURLWithPath: outputPath))
 
-OpenTelemetrySDK.instance.tracerProvider.addSpanProcessor(SimpleSpanProcessor(spanExporter: exporter))
 
 if let testClass = ProcessInfo.processInfo.environment["TEST_CLASS"],
    let theClass: AnyClass = Bundle.main.classNamed(testClass)
@@ -24,17 +24,20 @@ if let testClass = ProcessInfo.processInfo.environment["TEST_CLASS"],
    // let currentBundleName = Bundle.main.bundleURL.deletingPathExtension().lastPathComponent
     observer.testBundleWillStart?(Bundle.main)
 
+    let tracerProvider = OpenTelemetry.instance.tracerProvider as? TracerProviderSdk
+    tracerProvider?.addSpanProcessor(SimpleSpanProcessor(spanExporter: exporter))
+    
     // Run the desired test
     let testSuite = XCTestSuite(forTestCaseClass: theClass)
     testSuite.run()
 
     // Force flushing the results
-    OpenTelemetrySDK.instance.tracerProvider.forceFlush()
+    (OpenTelemetry.instance.tracerProvider as! TracerProviderSdk).forceFlush()
     startApp()
 }
 else {
     createNetworkRequest()
-    OpenTelemetrySDK.instance.tracerProvider.forceFlush()
+    (OpenTelemetry.instance.tracerProvider as! TracerProviderSdk).forceFlush()
     startApp()
 }
 

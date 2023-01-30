@@ -4,10 +4,10 @@
  * Copyright 2020-2021 Datadog, Inc.
  */
 
-@_implementationOnly import OpenTelemetrySdk
+@_implementationOnly import OpenTelemetryApi
 import XCTest
 
-let tracer = OpenTelemetrySDK.instance.tracerProvider.get(instrumentationName: "Custom Tracer")
+let tracer = OpenTelemetry.instance.tracerProvider.get(instrumentationName: "Custom Tracer", instrumentationVersion: nil)
 
 class BasicPass: XCTestCase {
     func testBasicPass() throws {

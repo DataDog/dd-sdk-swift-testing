@@ -114,8 +114,6 @@ internal class DDTestMonitor {
             DDEnvironmentValues.getEnvVariable("ENVIRONMENT_TRACER_SPANID") != nil
 
         if isBinaryUnderTesting {
-            /// If the library is being loaded in a binary launched from a UITest, dont start test observing,
-            /// except if testing the tracer itself
             launchNotificationObserver = NotificationCenter.default.addObserver(
                 forName: launchNotificationName,
                 object: nil, queue: nil)

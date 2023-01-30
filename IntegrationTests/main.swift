@@ -8,25 +8,24 @@
 @_implementationOnly import OpenTelemetrySdk
 import XCTest
 
-
 guard let outputPath = ProcessInfo.processInfo.environment["TEST_OUTPUT_FILE"] else {
     exit(0)
 }
+
 // Create a exporter to export the spans to the desired file
 let exporter = FileTraceExporter(outputURL: URL(fileURLWithPath: outputPath))
-
 
 if let testClass = ProcessInfo.processInfo.environment["TEST_CLASS"],
    let theClass: AnyClass = Bundle.main.classNamed(testClass)
 {
     // Force a testBundleWillStart using the app bundle
     let observer = (XCTestObservationCenter.shared.value(forKey: "_observers") as! NSMutableArray).lastObject as! XCTestObservation
-   // let currentBundleName = Bundle.main.bundleURL.deletingPathExtension().lastPathComponent
+    // let currentBundleName = Bundle.main.bundleURL.deletingPathExtension().lastPathComponent
     observer.testBundleWillStart?(Bundle.main)
 
     let tracerProvider = OpenTelemetry.instance.tracerProvider as? TracerProviderSdk
     tracerProvider?.addSpanProcessor(SimpleSpanProcessor(spanExporter: exporter))
-    
+
     // Run the desired test
     let testSuite = XCTestSuite(forTestCaseClass: theClass)
     testSuite.run()
@@ -36,6 +35,9 @@ if let testClass = ProcessInfo.processInfo.environment["TEST_CLASS"],
     startApp()
 }
 else {
+    let tracerProvider = OpenTelemetry.instance.tracerProvider as? TracerProviderSdk
+    tracerProvider?.addSpanProcessor(SimpleSpanProcessor(spanExporter: exporter))
+
     createNetworkRequest()
     (OpenTelemetry.instance.tracerProvider as! TracerProviderSdk).forceFlush()
     startApp()

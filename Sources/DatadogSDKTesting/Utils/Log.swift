@@ -18,7 +18,7 @@ struct Log {
         NSLog(string)
     }
 
-    private static var printMethod = {
+    private static var printMethod: () -> (String) -> () = {
         let osActivityMode = DDEnvironmentValues.getEnvVariable("OS_ACTIVITY_MODE") ?? ""
         if osActivityMode == "disable" {
             return swiftPrint

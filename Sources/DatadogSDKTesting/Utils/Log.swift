@@ -10,14 +10,31 @@ import Foundation
 struct Log {
     private static var debugTracer = DDTestMonitor.env.extraDebug
 
+    private static func swiftPrint(_ string: String) {
+        Swift.print(string)
+    }
+
+    private static func nslogPrint(_ string: String) {
+        NSLog(string)
+    }
+
+    private static var printMethod = {
+        let osActivityMode = DDEnvironmentValues.getEnvVariable("OS_ACTIVITY_MODE") ?? ""
+        if osActivityMode == "disable" {
+            return swiftPrint
+        } else {
+            return nslogPrint
+        }
+    }
+
     static func debug(_ string: @autoclosure () -> String) {
         if debugTracer {
-            NSLog("[Debug][DatadogSDKTesting] " + string() + "\n")
+            Log.printMethod()("[Debug][DatadogSDKTesting] " + string() + "\n")
         }
     }
 
     static func print(_ string: String) {
-        NSLog("[DatadogSDKTesting] " + string + "\n")
+        Log.printMethod()("[DatadogSDKTesting] " + string + "\n")
     }
 
     static func measure(name: String, _ operation: () -> Void) {
@@ -25,7 +42,7 @@ struct Log {
             let startTime = CFAbsoluteTimeGetCurrent()
             operation()
             let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
-            NSLog("[Debug][DatadogSDKTesting] Time elapsed for \(name): \(timeElapsed) s.")
+            Log.printMethod()("[Debug][DatadogSDKTesting] Time elapsed for \(name): \(timeElapsed) s.")
         } else {
             operation()
         }

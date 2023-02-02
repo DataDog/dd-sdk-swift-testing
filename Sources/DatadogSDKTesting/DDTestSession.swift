@@ -24,17 +24,26 @@ public class DDTestSession: NSObject, Encodable {
         self.resource = "\(testModule.bundleName) session"
         self.startTime = testModule.startTime
         self.duration = testModule.duration
-        self.meta = testModule.meta
         self.metrics = testModule.metrics
         self.status = testModule.status
 
-        // Remove and add tags that are different
-        self.meta[DDTestTags.testBundle] = nil
-        self.meta[DDTestTags.testCommand] = "test \(testModule.bundleName)"
+        // Copy module tags
+        self.meta = testModule.meta
 
-        // Add session specific tags
-        self.meta[DDTestTestSessionTags.testSkippingEnabled] = (DDTestMonitor.instance?.itr != nil) ? "true" : "false"
-        self.meta[DDTestTestSessionTags.codeCoverageEnabled] = (DDTestMonitor.instance?.coverageHelper != nil) ? "true" : "false"
+        // Modify tags that are different
+        self.meta[DDGenericTags.type] = DDTagValues.typeSessionEnd
+
+        // Remove tags that dont belong to sessions
+        self.meta[DDTestTags.testBundle] = nil
+        self.meta[DDTestSuiteVisibilityTags.testModuleId] = nil
+        self.meta[DDUISettingsTags.uiSettingsModuleLocalization] = nil
+        self.meta[DDTestModuleTags.testSkippingEnabled] = nil
+        self.meta[DDTestModuleTags.codeCoverageEnabled] = nil
+
+        // Add spacific tags for sessions
+        self.meta[DDTestTags.testCommand] = "test \(testModule.bundleName)"
+        self.meta[DDTestSessionTags.testSkippingEnabled] = (DDTestMonitor.instance?.itr != nil) ? "true" : "false"
+        self.meta[DDTestSessionTags.codeCoverageEnabled] = (DDTestMonitor.instance?.coverageHelper != nil) ? "true" : "false"
     }
 }
 

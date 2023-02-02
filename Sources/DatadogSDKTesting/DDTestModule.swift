@@ -134,13 +134,13 @@ public class DDTestModule: NSObject, Encodable {
         }
         /// Export module event
         let defaultAttributes: [String: String] = [
-            DDGenericTags.type: DDTagValues.typeSuiteEnd,
+            DDGenericTags.type: DDTagValues.typeModuleEnd,
             DDGenericTags.language: "swift",
             DDDeviceTags.deviceName: DDTestMonitor.env.deviceName,
             DDTestTags.testSuite: bundleName,
             DDTestTags.testFramework: testFramework,
             DDTestTags.testStatus: moduleStatus,
-            DDTestModuleTags.testModuleId: String(id.rawValue),
+            DDTestSuiteVisibilityTags.testModuleId: String(id.rawValue),
         ]
 
         meta.merge(DDTestMonitor.baseConfigurationTags) { _, new in new }
@@ -148,8 +148,12 @@ public class DDTestModule: NSObject, Encodable {
         meta.merge(DDEnvironmentValues.gitAttributes) { _, new in new }
         meta.merge(DDEnvironmentValues.ciAttributes) { _, new in new }
         meta[DDUISettingsTags.uiSettingsModuleLocalization] = localization
-        meta[DDItrTags.iItrSkippedTests] = itrSkipped ? "true" : "false"
-        metrics[DDTestModuleTags.testCoverageLines] = linesCovered
+        meta[DDItrTags.itrSkippedTests] = itrSkipped ? "true" : "false"
+        meta[DDTestModuleTags.testSkippingEnabled] = (DDTestMonitor.instance?.itr != nil) ? "true" : "false"
+        meta[DDTestModuleTags.codeCoverageEnabled] = (DDTestMonitor.instance?.coverageHelper != nil) ? "true" : "false"
+        if !itrSkipped {
+            metrics[DDTestSuiteVisibilityTags.testCoverageLines] = linesCovered
+        }
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: DDTestModuleEnvelope(self))
 
         let testSession = DDTestSession(testModule: self)

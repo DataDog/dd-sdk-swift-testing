@@ -47,6 +47,7 @@ internal class DDTestMonitor {
 
     let instrumentationWorkQueue = OperationQueue()
     let itrWorkQueue = OperationQueue()
+    let networkInstrumentationSemaphore = DispatchSemaphore(value: 1)
 
     static let developerMachineHostName: String = Spawn.commandWithResult("hostname").trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
 
@@ -63,7 +64,7 @@ internal class DDTestMonitor {
     var coverageHelper: DDCoverageHelper?
     var gitUploader: GitUploader?
     var itr: IntelligentTestRunner?
-    
+
     static var crashHandlerInitSemaphore = DispatchSemaphore(value: 1)
 
     var rLock = NSRecursiveLock()
@@ -168,6 +169,14 @@ internal class DDTestMonitor {
             return
         }
 
+        /// Check Git is up to date and no local changes
+        guard DDTestMonitor.env.isCi || (gitUploader?.statusUpToDate() ?? false) else {
+            Log.debug("Git status not up to date")
+            coverageHelper = nil
+            itr = nil
+            return
+        }
+
         let itrBackendConfig: (codeCoverage: Bool, testsSkipping: Bool)?
 
         if let service = DDTestMonitor.env.ddService ?? DDTestMonitor.env.getRepositoryName(),
@@ -177,6 +186,7 @@ internal class DDTestMonitor {
         {
             let ddEnvironment = DDTestMonitor.env.ddEnvironment ?? (DDTestMonitor.env.isCi ? "ci" : "none")
 
+            networkInstrumentationSemaphore.wait()
             itrBackendConfig = eventsExporter.itrSetting(service: service,
                                                          env: ddEnvironment,
                                                          repositoryURL: DDTestMonitor.localRepositoryURLPath,
@@ -184,6 +194,7 @@ internal class DDTestMonitor {
                                                          sha: commit,
                                                          configurations: DDTestMonitor.baseConfigurationTags,
                                                          customConfigurations: DDTestMonitor.env.customConfigurations)
+            networkInstrumentationSemaphore.signal()
         } else {
             itrBackendConfig = nil
         }
@@ -195,36 +206,7 @@ internal class DDTestMonitor {
             Log.debug("Git Upload Disabled")
         }
 
-        /// Check Git is up to date and no local changes
-        guard DDTestMonitor.env.isCi || (gitUploader?.statusUpToDate() ?? false) else {
-            Log.debug("Git status not up to date")
-            coverageHelper = nil
-            itr = nil
-            return
-        }
-
-        itrWorkQueue.addOperation { [self] in
-            gitUploader?.sendGitInfo()
-        }
-
-        itrWorkQueue.addOperation { [self] in
-            // Activate Coverage
-            if DDTestMonitor.env.coverageEnabled ?? itrBackendConfig?.codeCoverage ?? false {
-                Log.debug("Coverage Enabled")
-                // Coverage is not supported for swift < 5.3 (binary target dependency)
-                #if swift(>=5.3)
-                    coverageHelper = DDCoverageHelper()
-                #else
-                    coverageHelper = nil
-                #endif
-
-            } else {
-                Log.debug("Coverage Disabled")
-                coverageHelper = nil
-            }
-        }
-
-        itrWorkQueue.waitUntilAllOperationsAreFinished()
+        gitUploader?.sendGitInfo()
 
         itrWorkQueue.addOperation { [self] in
 
@@ -251,10 +233,29 @@ internal class DDTestMonitor {
             if DDTestMonitor.env.itrEnabled ?? itrBackendConfig?.testsSkipping ?? false {
                 Log.debug("ITR Enabled")
                 itr = IntelligentTestRunner(configurations: DDTestMonitor.baseConfigurationTags)
+                DDTestMonitor.instance?.networkInstrumentationSemaphore.wait()
                 itr?.start()
+                DDTestMonitor.instance?.networkInstrumentationSemaphore.signal()
             } else {
                 Log.debug("ITR Disabled")
                 itr = nil
+            }
+        }
+
+        itrWorkQueue.addOperation { [self] in
+            // Activate Coverage
+            if DDTestMonitor.env.coverageEnabled ?? itrBackendConfig?.codeCoverage ?? false {
+                Log.debug("Coverage Enabled")
+                // Coverage is not supported for swift < 5.3 (binary target dependency)
+                #if swift(>=5.3)
+                    coverageHelper = DDCoverageHelper()
+                #else
+                    coverageHelper = nil
+                #endif
+
+            } else {
+                Log.debug("Coverage Disabled")
+                coverageHelper = nil
             }
         }
     }
@@ -307,7 +308,9 @@ internal class DDTestMonitor {
     }
 
     func startNetworkAutoInstrumentation() {
+        DDTestMonitor.instance?.networkInstrumentationSemaphore.wait()
         networkInstrumentation = DDNetworkInstrumentation()
+        DDTestMonitor.instance?.networkInstrumentationSemaphore.signal()
     }
 
     func startHeaderInjection() {

@@ -84,16 +84,21 @@ internal enum DDRuntimeTags {
     static let runtimeVersion = "runtime.version"
 }
 
-internal enum DDTestModuleTags {
+internal enum DDTestSuiteVisibilityTags {
     static let testSessionId = "test_session_id"
     static let testModuleId = "test_module_id"
     static let testSuiteId = "test_suite_id"
     static let testCoverageLines = "test.codecov_lines_total"
 }
 
-internal enum DDTestTestSessionTags {
+internal enum DDTestSessionTags {
     static let testSkippingEnabled = "test_session.itr.tests_skipping.enabled"
     static let codeCoverageEnabled = "test_session.code_coverage.enabled"
+}
+
+internal enum DDTestModuleTags {
+    static let testSkippingEnabled = "test_module.itr.tests_skipping.enabled"
+    static let codeCoverageEnabled = "test_module.code_coverage.enabled"
 }
 
 internal enum DDGitTags {
@@ -185,7 +190,7 @@ internal enum DDTagValues {
 }
 
 internal enum DDItrTags {
-    static let iItrSkippedTests = "_dd.ci.itr.tests_skipped"
+    static let itrSkippedTests = "_dd.ci.itr.tests_skipped"
 }
 
 internal enum DDCFMessageID {

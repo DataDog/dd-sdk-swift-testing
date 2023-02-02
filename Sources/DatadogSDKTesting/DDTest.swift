@@ -46,9 +46,9 @@ public class DDTest: NSObject {
             DDTestTags.testExecutionOrder: "\(currentTestExecutionOrder)",
             DDTestTags.testExecutionProcessId: "\(initialProcessId)",
             DDTestTags.testIsUITest: "false",
-            DDTestModuleTags.testSessionId: module.sessionId.hexString,
-            DDTestModuleTags.testModuleId: module.id.hexString,
-            DDTestModuleTags.testSuiteId: suite.id.hexString,
+            DDTestSuiteVisibilityTags.testSessionId: module.sessionId.hexString,
+            DDTestSuiteVisibilityTags.testModuleId: module.id.hexString,
+            DDTestSuiteVisibilityTags.testSuiteId: suite.id.hexString,
             DDUISettingsTags.uiSettingsSuiteLocalization: suite.localization,
             DDUISettingsTags.uiSettingsModuleLocalization: module.localization,
         ].merging(DDTestMonitor.baseConfigurationTags) { old, _ in old }

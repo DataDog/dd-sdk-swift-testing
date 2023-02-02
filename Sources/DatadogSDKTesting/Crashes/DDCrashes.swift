@@ -90,9 +90,9 @@ internal enum DDCrashes {
                        let executionOrder = Int(executionOrderString),
                        let executionProcessIdString = spanData.stringAttributes[DDTestTags.testExecutionProcessId],
                        let processId = Int(executionProcessIdString),
-                       let sessionID = spanData.stringAttributes[DDTestModuleTags.testSessionId],
-                       let moduleID = spanData.stringAttributes[DDTestModuleTags.testModuleId],
-                       let suiteID = spanData.stringAttributes[DDTestModuleTags.testSuiteId],
+                       let sessionID = spanData.stringAttributes[DDTestSuiteVisibilityTags.testSessionId],
+                       let moduleID = spanData.stringAttributes[DDTestSuiteVisibilityTags.testModuleId],
+                       let suiteID = spanData.stringAttributes[DDTestSuiteVisibilityTags.testSuiteId],
                        let suiteName = spanData.stringAttributes[DDTestTags.testSuite]
                     {
                         DDTestMonitor.instance?.currentTest?.currentTestExecutionOrder = executionOrder

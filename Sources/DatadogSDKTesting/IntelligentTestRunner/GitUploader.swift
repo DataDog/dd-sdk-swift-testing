@@ -103,6 +103,8 @@ struct GitUploader {
 
     private func uploadExistingPackfiles(directory: Directory, repository: String) {
         guard let commit = DDTestMonitor.env.commit else { return }
+        DDTestMonitor.instance?.networkInstrumentationSemaphore.wait()
         DDTestMonitor.tracer.eventsExporter?.uploadPackFiles(packFilesDirectory: packFilesdirectory, commit: commit, repository: repository)
+        DDTestMonitor.instance?.networkInstrumentationSemaphore.signal()
     }
 }

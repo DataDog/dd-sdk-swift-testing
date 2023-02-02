@@ -60,8 +60,8 @@ public class DDTestSuite: NSObject, Encodable {
             DDTestTags.testSuite: name,
             DDTestTags.testFramework: module.testFramework,
             DDTestTags.testStatus: suiteStatus,
-            DDTestModuleTags.testModuleId: String(module.id.rawValue),
-            DDTestModuleTags.testSuiteId: String(id.rawValue)
+            DDTestSuiteVisibilityTags.testModuleId: String(module.id.rawValue),
+            DDTestSuiteVisibilityTags.testSuiteId: String(id.rawValue)
         ]
 
         meta.merge(DDTestMonitor.baseConfigurationTags) { _, new in new }

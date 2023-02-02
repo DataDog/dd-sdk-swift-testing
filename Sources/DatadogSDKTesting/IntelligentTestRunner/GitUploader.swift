@@ -28,13 +28,21 @@ struct GitUploader {
             Log.print("sendGitInfo failed, repository not found")
             return
         }
-        /// Check if the repository is a shallow clone, if so fetch more info
-        handleShallowClone(repository: repo)
+        Log.measure(name: "handleShallowClone") {
+            /// Check if the repository is a shallow clone, if so fetch more info
+            handleShallowClone(repository: repo)
+        }
 
-        let existingCommits = searchRepositoryCommits(repository: repo)
+        var existingCommits = [String]()
+        Log.measure(name: "searchRepositoryCommits") {
+            existingCommits = searchRepositoryCommits(repository: repo)
+        }
         Log.debug("Existing commits: \(existingCommits)")
 
-        let commitsToUpload = getCommitsAndTreesExcluding(excluded: existingCommits)
+        var commitsToUpload = [String]()
+        Log.measure(name: "getCommitsAndTreesExcluding") {
+            commitsToUpload = getCommitsAndTreesExcluding(excluded: existingCommits)
+        }
         Log.debug("Commits To Upload: \(commitsToUpload)")
 
         guard !commitsToUpload.isEmpty else { return }
@@ -88,16 +96,19 @@ struct GitUploader {
 
     private func generateAndUploadPackFilesFromCommits(commits: [String], repository: String) {
         var uploadPackfileDirectory = packFilesdirectory
-        let commitList = commits.joined(separator: "\n")
-        let aux = Spawn.commandWithResult(#"git -C "\#(workspacePath)" pack-objects --quiet --compression=9 --max-pack-size=3m "\#(packFilesdirectory.getURL().path + "/" + UUID().uuidString)" <<< "\#(commitList)""#)
-        if aux.hasPrefix("fatal:") {
-            let uploadPackfilePath = workspacePath + "/" + UUID().uuidString
-            try? FileManager.default.createDirectory(atPath: uploadPackfilePath, withIntermediateDirectories: true)
-            uploadPackfileDirectory = Directory(url: URL(fileURLWithPath: uploadPackfilePath))
-            Spawn.command(#"git -C "\#(workspacePath)" pack-objects --quiet --compression=9 --max-pack-size=3m "\#(uploadPackfileDirectory.getURL().path + "/" + UUID().uuidString)" <<< "\#(commitList)""#)
+        Log.measure(name: "packObjects") {
+            let commitList = commits.joined(separator: "\n")
+            let aux = Spawn.commandWithResult(#"git -C "\#(workspacePath)" pack-objects --quiet --compression=9 --max-pack-size=3m "\#(packFilesdirectory.getURL().path + "/" + UUID().uuidString)" <<< "\#(commitList)""#)
+            if aux.hasPrefix("fatal:") {
+                let uploadPackfilePath = workspacePath + "/" + UUID().uuidString
+                try? FileManager.default.createDirectory(atPath: uploadPackfilePath, withIntermediateDirectories: true)
+                uploadPackfileDirectory = Directory(url: URL(fileURLWithPath: uploadPackfilePath))
+                Spawn.command(#"git -C "\#(workspacePath)" pack-objects --quiet --compression=9 --max-pack-size=3m "\#(uploadPackfileDirectory.getURL().path + "/" + UUID().uuidString)" <<< "\#(commitList)""#)
+            }
         }
-
-        uploadExistingPackfiles(directory: uploadPackfileDirectory, repository: repository)
+        Log.measure(name: "uploadExistingPackfiles") {
+            uploadExistingPackfiles(directory: uploadPackfileDirectory, repository: repository)
+        }
         try? uploadPackfileDirectory.deleteDirectory()
     }
 

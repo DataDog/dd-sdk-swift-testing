@@ -177,7 +177,7 @@ internal class DDTestMonitor {
             return
         }
 
-        let itrBackendConfig: (codeCoverage: Bool, testsSkipping: Bool)?
+        var itrBackendConfig: (codeCoverage: Bool, testsSkipping: Bool)?
 
         if let service = DDTestMonitor.env.ddService ?? DDTestMonitor.env.getRepositoryName(),
            let branch = DDTestMonitor.env.branch,
@@ -187,13 +187,15 @@ internal class DDTestMonitor {
             let ddEnvironment = DDTestMonitor.env.ddEnvironment ?? (DDTestMonitor.env.isCi ? "ci" : "none")
 
             networkInstrumentationSemaphore.wait()
-            itrBackendConfig = eventsExporter.itrSetting(service: service,
-                                                         env: ddEnvironment,
-                                                         repositoryURL: DDTestMonitor.localRepositoryURLPath,
-                                                         branch: branch,
-                                                         sha: commit,
-                                                         configurations: DDTestMonitor.baseConfigurationTags,
-                                                         customConfigurations: DDTestMonitor.env.customConfigurations)
+            Log.measure(name: "itrBackendConfig") {
+                itrBackendConfig = eventsExporter.itrSetting(service: service,
+                                                             env: ddEnvironment,
+                                                             repositoryURL: DDTestMonitor.localRepositoryURLPath,
+                                                             branch: branch,
+                                                             sha: commit,
+                                                             configurations: DDTestMonitor.baseConfigurationTags,
+                                                             customConfigurations: DDTestMonitor.env.customConfigurations)
+            }
             networkInstrumentationSemaphore.signal()
         } else {
             itrBackendConfig = nil

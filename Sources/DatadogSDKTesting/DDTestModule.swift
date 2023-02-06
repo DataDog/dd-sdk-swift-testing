@@ -30,8 +30,6 @@ public class DDTestModule: NSObject, Encodable {
     var itrSkipped = false
     var linesCovered: Double?
 
-    let initializationQueue = OperationQueue()
-
     private let executionLock = NSLock()
     private var privateCurrentExecutionOrder = 0
     var currentExecutionOrder: Int {
@@ -63,7 +61,7 @@ public class DDTestModule: NSObject, Encodable {
 
 #if targetEnvironment(simulator) || os(macOS)
         if !DDTestMonitor.env.disableSourceLocation {
-            initializationQueue.addOperation {
+            DDTestMonitor.instance?.instrumentationWorkQueue.addOperation {
                 Log.debug("Create test bundle DSYM file for test source location")
                 Log.measure(name: "createDSYMFileIfNeeded") {
                     DDTestMonitor.crashHandlerInitSemaphore.wait()
@@ -74,7 +72,7 @@ public class DDTestModule: NSObject, Encodable {
                     DDTestModule.bundleFunctionInfo = FileLocator.testFunctionsInModule(bundleName)
                 }
             }
-            initializationQueue.addOperation {
+            DDTestMonitor.instance?.instrumentationWorkQueue.addOperation {
                 if let workspacePath = DDTestMonitor.env.workspacePath {
                     Log.measure(name: "createCodeOwners") {
                         DDTestModule.codeOwners = CodeOwners(workspacePath: URL(fileURLWithPath: workspacePath))
@@ -87,7 +85,6 @@ public class DDTestModule: NSObject, Encodable {
         Log.measure(name: "waiting InstrumentationQueue") {
             DDTestMonitor.instance?.instrumentationWorkQueue.waitUntilAllOperationsAreFinished()
         }
-
         let moduleStartTime = startTime ?? beforeLoadingTime
         self.id = DDTestMonitor.instance?.crashedModuleInfo?.crashedModuleId ?? SpanId.random()
         self.sessionId = DDTestMonitor.instance?.crashedModuleInfo?.crashedSessionId ?? SpanId.random()

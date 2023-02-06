@@ -221,7 +221,7 @@ class DDTestObserver: NSObject, XCTestObservation {
                     name = info ?? "unknown_measure"
             }
             if currentlyAddedBenchmarks < maximumAllowedBenchmarks {
-                test.addBenchmark(name: name, samples: samples, info: info)
+                test.addBenchmarkData(name: name, samples: samples, info: info)
                 currentlyAddedBenchmarks += 1
             } else {
                 Log.print(#"Maximum allowed benchmarks per test reached, following benchmark not added: "\#(name)""#)

@@ -61,8 +61,6 @@ public class DDTest: NSObject {
         DDTestMonitor.tracer.addPropagationsHeadersToEnvironment()
         DDTestMonitor.env.addTagsToSpan(span: span)
         
-        module.initializationQueue.waitUntilAllOperationsAreFinished()
-        Log.debug("Test waiting on module finishing loading: \(DDTestMonitor.clock.now.timeIntervalSince(testStartTime))")
         let functionName = suite.name + "." + name
         if let functionInfo = DDTestModule.bundleFunctionInfo[functionName] {
             var filePath = functionInfo.file
@@ -186,7 +184,7 @@ public class DDTest: NSObject {
     ///   - name: Name of the measure benchmarked
     ///   - samples: Array for values sampled for the measure
     ///   - info: (Optional) Extra information about the benchmark
-    @objc func addBenchmark(name: String, samples: [Double], info: String?) {
+    @objc func addBenchmarkData(name: String, samples: [Double], info: String?) {
         span.setAttribute(key: DDTestTags.testType, value: DDTagValues.typeBenchmark)
 
         let tag = DDBenchmarkTags.benchmark + "." + name + "."

@@ -235,9 +235,9 @@ internal class DDTestMonitor {
             if DDTestMonitor.env.itrEnabled ?? itrBackendConfig?.testsSkipping ?? false {
                 Log.debug("ITR Enabled")
                 itr = IntelligentTestRunner(configurations: DDTestMonitor.baseConfigurationTags)
-                DDTestMonitor.instance?.networkInstrumentationSemaphore.wait()
+                networkInstrumentationSemaphore.wait()
                 itr?.start()
-                DDTestMonitor.instance?.networkInstrumentationSemaphore.signal()
+                networkInstrumentationSemaphore.signal()
             } else {
                 Log.debug("ITR Disabled")
                 itr = nil
@@ -310,9 +310,9 @@ internal class DDTestMonitor {
     }
 
     func startNetworkAutoInstrumentation() {
-        DDTestMonitor.instance?.networkInstrumentationSemaphore.wait()
+        networkInstrumentationSemaphore.wait()
         networkInstrumentation = DDNetworkInstrumentation()
-        DDTestMonitor.instance?.networkInstrumentationSemaphore.signal()
+        networkInstrumentationSemaphore.signal()
     }
 
     func startHeaderInjection() {

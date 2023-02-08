@@ -58,7 +58,8 @@ internal enum DDCrashes {
         }
 
         let crashData = plCrashReporter.loadPendingCrashReportData()
-        plCrashReporter.purgePendingCrashReport()
+        let purgeSuccess = plCrashReporter.purgePendingCrashReport()
+        Log.debug("Crash report loaded and purged with status: \(purgeSuccess)")
 
         if let crashReport = try? PLCrashReport(data: crashData) {
             var crashLog = PLCrashReportTextFormatter.stringValue(for: crashReport, with: PLCrashReportTextFormatiOS) ?? ""
@@ -104,6 +105,8 @@ internal enum DDCrashes {
                             crashedSuiteName: suiteName,
                             moduleStartTime: spanData.moduleStartTime,
                             suiteStartTime: spanData.suiteStartTime)
+                        Log.debug("Loaded Crashed Session Info: \(sessionID)")
+
                     }
 
                     // Sanitizer info
@@ -112,6 +115,7 @@ internal enum DDCrashes {
                     {
                         SanitizerHelper.setSaniziterInfo(info: content)
                         try? FileManager.default.removeItem(at: sanitizerURL)
+                        Log.debug("Loaded Sanitizer Info from crash")
                     }
                 }
             }

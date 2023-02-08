@@ -64,9 +64,7 @@ public class DDTestModule: NSObject, Encodable {
             DDTestMonitor.instance?.instrumentationWorkQueue.addOperation {
                 Log.debug("Create test bundle DSYM file for test source location")
                 Log.measure(name: "createDSYMFileIfNeeded") {
-                    DDTestMonitor.crashHandlerInitSemaphore.wait()
                     DDSymbolicator.createDSYMFileIfNeeded(forImageName: bundleName)
-                    DDTestMonitor.crashHandlerInitSemaphore.signal()
                 }
                 Log.measure(name: "testFunctionsInModule") {
                     DDTestModule.bundleFunctionInfo = FileLocator.testFunctionsInModule(bundleName)
@@ -84,6 +82,12 @@ public class DDTestModule: NSObject, Encodable {
 
         Log.measure(name: "waiting InstrumentationQueue") {
             DDTestMonitor.instance?.instrumentationWorkQueue.waitUntilAllOperationsAreFinished()
+        }
+
+        if !DDTestMonitor.env.disableCrashHandler {
+            Log.measure(name: "DDCrashesInstall") {
+                DDCrashes.install()
+            }
         }
         let moduleStartTime = startTime ?? beforeLoadingTime
         self.id = DDTestMonitor.instance?.crashedModuleInfo?.crashedModuleId ?? SpanId.random()

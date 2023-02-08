@@ -65,8 +65,6 @@ internal class DDTestMonitor {
     var gitUploader: GitUploader?
     var itr: IntelligentTestRunner?
 
-    static var crashHandlerInitSemaphore = DispatchSemaphore(value: 1)
-
     var rLock = NSRecursiveLock()
     private var privateCurrentTest: DDTest?
     var currentTest: DDTest? {
@@ -273,17 +271,6 @@ internal class DDTestMonitor {
             }
         }
         
-
-        if !DDTestMonitor.env.disableCrashHandler {
-            instrumentationWorkQueue.addOperation {
-                Log.measure(name: "DDCrashesInstall") {
-                    DDTestMonitor.crashHandlerInitSemaphore.wait()
-                    DDCrashes.install()
-                    DDTestMonitor.crashHandlerInitSemaphore.signal()
-                }
-            }
-        }
-
         if !DDTestMonitor.env.disableNetworkInstrumentation {
             instrumentationWorkQueue.addOperation { [self] in
                 Log.measure(name: "startNetworkAutoInstrumentation") {

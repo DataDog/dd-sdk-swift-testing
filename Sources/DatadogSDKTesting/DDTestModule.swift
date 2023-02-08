@@ -152,9 +152,11 @@ public class DDTestModule: NSObject, Encodable {
             metrics[DDTestSuiteVisibilityTags.testCoverageLines] = linesCovered
         }
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: DDTestModuleEnvelope(self))
+        Log.debug("Exported module_end event moduleId: \(self.id)")
 
         let testSession = DDTestSession(testModule: self)
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: DDTestSession.DDTestSessionEnvelope(testSession))
+        Log.debug("Exported session_end event sessionId: \(self.sessionId)")
 
         if let coverageHelper = DDTestMonitor.instance?.coverageHelper {
             /// We need to wait for all the traces to be written to the backend before exiting

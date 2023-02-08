@@ -12,6 +12,7 @@ internal class SpansExporter {
     let configuration: ExporterConfiguration
     let spansStorage: FeatureStorage
     let spansUpload: FeatureUpload
+    let runtimeId = UUID().uuidString
 
     init(config: ExporterConfiguration) throws {
         self.configuration = config
@@ -23,7 +24,7 @@ internal class SpansExporter {
         )
 
         let genericMetadata = """
-        "*": { "env": "\(configuration.environment)", "runtime-id": "\(UUID().uuidString)", "language": "swift", "library_version": "\(configuration.libraryVersion)"}
+        "*": { "env": "\(configuration.environment)", "runtime-id": "\(runtimeId)", "language": "swift", "library_version": "\(configuration.libraryVersion)"}
         """
 
         let prefix = """

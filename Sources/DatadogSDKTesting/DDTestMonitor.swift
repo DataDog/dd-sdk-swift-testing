@@ -266,6 +266,13 @@ internal class DDTestMonitor {
         guard !DDTestMonitor.env.disableTestInstrumenting else {
             return
         }
+        
+        instrumentationWorkQueue.addOperation {
+            Log.measure(name: "DDTracer") {
+                _ = DDTestMonitor.tracer
+            }
+        }
+        
 
         if !DDTestMonitor.env.disableCrashHandler {
             instrumentationWorkQueue.addOperation {

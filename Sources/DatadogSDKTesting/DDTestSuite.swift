@@ -71,7 +71,7 @@ public class DDTestSuite: NSObject, Encodable {
         meta[DDUISettingsTags.uiSettingsSuiteLocalization] = localization
         meta[DDUISettingsTags.uiSettingsModuleLocalization] = module.localization
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: DDTestSuiteEnvelope(self))
-        /// We need to wait for all the traces to be written to the backend before exiting
+        Log.debug("Exported suite_end event suiteId: \(self.id)")
     }
 
     /// Ends the test suite

@@ -25,6 +25,7 @@ class DDTestObserver: NSObject, XCTestObservation {
 
     func startObserving() {
         XCTestObservationCenter.shared.addTestObserver(self)
+        Log.debug("Start observing DDtestObserver: \(ObjectIdentifier(self))")
     }
 
     func testBundleWillStart(_ testBundle: Bundle) {

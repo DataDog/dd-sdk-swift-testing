@@ -169,9 +169,10 @@ public class DDTest: NSObject {
         
         StderrCapture.syncData()
         span.end(time: testEndTime)
+        DDTestMonitor.instance?.networkInstrumentation?.endAndCleanAliveSpans()
+        DDCrashes.setCustomData(customData: Data())
         DDTestMonitor.tracer.backgroundWorkQueue.waitUntilAllOperationsAreFinished()
         DDTestMonitor.instance?.currentTest = nil
-        DDTestMonitor.instance?.networkInstrumentation?.endAndCleanAliveSpans()
     }
 
     @objc public func end(status: DDTestStatus) {

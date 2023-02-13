@@ -29,6 +29,7 @@ public class DDTestModule: NSObject, Encodable {
     var configError = false
     var itrSkipped = false
     var linesCovered: Double?
+    var anyTestExecuted = false
 
     private let executionLock = NSLock()
     private var privateCurrentExecutionOrder = 0
@@ -99,6 +100,12 @@ public class DDTestModule: NSObject, Encodable {
     }
 
     func internalEnd(endTime: Date? = nil) {
+        if DDTestMonitor.instance?.crashedModuleInfo != nil && anyTestExecuted == false {
+            //The module started after a crash and no test was executed because of ITR dont report it
+            DDTestMonitor.tracer.flush()
+            return
+        }
+        
         duration = (endTime ?? DDTestMonitor.clock.now).timeIntervalSince(startTime).toNanoseconds
 
         let moduleStatus: String
@@ -211,6 +218,7 @@ public extension DDTestModule {
     ///   - startTime: Optional, the time where the suite started
     @objc func suiteStart(name: String, startTime: Date? = nil) -> DDTestSuite {
         let suite = DDTestSuite(name: name, module: self, startTime: startTime)
+        anyTestExecuted = true
         return suite
     }
 

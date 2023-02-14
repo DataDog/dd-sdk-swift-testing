@@ -35,6 +35,7 @@ internal enum ConfigurationValues: String, CaseIterable {
     case DD_ENDPOINT
     case DD_DONT_EXPORT
     case DD_TRACE_DEBUG
+    case DD_TRACE_DEBUG_CALLSTACK
 }
 
 // These configuration values must not be passed to the child app in an UI test
@@ -134,6 +135,7 @@ internal struct DDEnvironmentValues {
 
     /// The framework has been launched with extra debug information
     let extraDebug: Bool
+    let extraDebugCallstack: Bool
 
     /// Intelligent test runner related environment
     let gitUploadEnabled: Bool
@@ -288,8 +290,11 @@ internal struct DDEnvironmentValues {
         let envReportHostname = DDEnvironmentValues.getEnvVariable(ExtraConfigurationValues.DD_CIVISIBILITY_REPORT_HOSTNAME.rawValue) as NSString?
         reportHostname = envReportHostname?.boolValue ?? false
 
+        let envExtraDebugCallStack = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_TRACE_DEBUG_CALLSTACK.rawValue) as NSString?
+        extraDebugCallstack = envExtraDebugCallStack?.boolValue ?? false
+
         let envExtraDebug = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_TRACE_DEBUG.rawValue) as NSString?
-        extraDebug = envExtraDebug?.boolValue ?? false
+        extraDebug = envExtraDebug?.boolValue ?? extraDebugCallstack
 
         /// CI  values
         var branchEnv: String?

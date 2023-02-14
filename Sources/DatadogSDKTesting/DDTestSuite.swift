@@ -38,7 +38,7 @@ public class DDTestSuite: NSObject, Encodable {
         }
     }
 
-    func internalEnd(endTime: Date? = nil) {
+    private func internalEnd(endTime: Date? = nil) {
         duration = (endTime ?? DDTestMonitor.clock.now).timeIntervalSince(startTime).toNanoseconds
         /// Export module event
 

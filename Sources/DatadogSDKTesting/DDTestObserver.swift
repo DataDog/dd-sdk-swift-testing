@@ -30,6 +30,7 @@ class DDTestObserver: NSObject, XCTestObservation {
 
     func testBundleWillStart(_ testBundle: Bundle) {
         let bundleName = testBundle.bundleURL.deletingPathExtension().lastPathComponent
+        Log.debug("testBundleWillStart: \(bundleName)")
         module = DDTestModule.start(bundleName: bundleName)
         module?.testFramework = "XCTest"
     }
@@ -37,10 +38,12 @@ class DDTestObserver: NSObject, XCTestObservation {
     func testBundleDidFinish(_ testBundle: Bundle) {
         /// We need to wait for all the traces to be written to the backend before exiting
         module?.end()
+        Log.debug("testBundleDidFinish: \(testBundle.bundleURL.deletingPathExtension().lastPathComponent)")
     }
 
     func testSuiteWillStart(_ testSuite: XCTestSuite) {
         if module?.configError ?? false {
+            Log.debug("testSuiteWillStart: Failed, module config error")
             testSuite.testRun?.stop()
             exit(1)
         }
@@ -51,7 +54,6 @@ class DDTestObserver: NSObject, XCTestObservation {
         else {
             return
         }
-
         Log.measure(name: "waiting itrWorkQueue") {
             DDTestMonitor.instance?.itrWorkQueue.waitUntilAllOperationsAreFinished()
         }
@@ -62,6 +64,7 @@ class DDTestObserver: NSObject, XCTestObservation {
             testSuite.setValue(finalTests, forKey: "_mutableTests")
             if !finalTests.isEmpty {
                 suite = module.suiteStart(name: testSuite.name)
+                Log.debug("testSuiteWillStart: \(testSuite.name)")
             }
             let testsToSkip = tests.count - finalTests.count
             Log.print("ITR skipped \(testsToSkip) tests")
@@ -70,6 +73,7 @@ class DDTestObserver: NSObject, XCTestObservation {
             }
         } else {
             suite = module.suiteStart(name: testSuite.name)
+            Log.debug("testSuiteWillStart: \(testSuite.name)")
         }
     }
 
@@ -78,6 +82,7 @@ class DDTestObserver: NSObject, XCTestObservation {
            tests.firstObject is XCTestCase
         {
             suite?.end()
+            Log.debug("testSuiteDidFinish: \(testSuite.name)")
         }
     }
 

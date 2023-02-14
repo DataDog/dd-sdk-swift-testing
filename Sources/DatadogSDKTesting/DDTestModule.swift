@@ -99,7 +99,7 @@ public class DDTestModule: NSObject, Encodable {
         Log.debug("Module loading time interval: \(DDTestMonitor.clock.now.timeIntervalSince(beforeLoadingTime))")
     }
 
-    func internalEnd(endTime: Date? = nil) {
+    private func internalEnd(endTime: Date? = nil) {
         if DDTestMonitor.instance?.crashedModuleInfo != nil && anyTestExecuted == false {
             //The module started after a crash and no test was executed because of ITR dont report it
             DDTestMonitor.tracer.flush()

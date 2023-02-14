@@ -9,6 +9,7 @@ import Foundation
 
 struct Log {
     private static var debugTracer = DDTestMonitor.env.extraDebug
+    private static var debugTracerCallstack = DDTestMonitor.env.extraDebugCallstack
 
     private static func swiftPrint(_ string: String) {
         Swift.print(string)
@@ -18,7 +19,7 @@ struct Log {
         NSLog(string)
     }
 
-    private static var printMethod: () -> (String) -> () = {
+    private static var printMethod: () -> (String) -> Void = {
         let osActivityMode = DDEnvironmentValues.getEnvVariable("OS_ACTIVITY_MODE") ?? ""
         if osActivityMode == "disable" {
             return swiftPrint
@@ -30,6 +31,9 @@ struct Log {
     static func debug(_ string: @autoclosure () -> String) {
         if debugTracer {
             Log.printMethod()("[Debug][DatadogSDKTesting] " + string() + "\n")
+            if debugTracerCallstack {
+                Swift.print("Callstack:\n" + DDSymbolicator.getCallStack(hidesLibrarySymbols: false).joined(separator: "\n") + "\n")
+            }
         }
     }
 

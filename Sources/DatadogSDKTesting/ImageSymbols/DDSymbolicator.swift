@@ -295,11 +295,15 @@ enum DDSymbolicator {
         Spawn.commandToFile("/usr/bin/symbols -fullSourcePath -lazy \"\(imagePath)\"", outputPath: symbolsOutputURL.path)
         return symbolsOutputURL
     }
-    
 
-    static func getCallStack() -> [String] {
+    static func getCallStack(hidesLibrarySymbols: Bool = true) -> [String] {
         let callStackSymbols = Thread.callStackSymbols
-        let index = callStackSymbols.firstIndex { !$0.contains(exactWord: "DatadogSDKTesting") } ?? 0
+        let index: Array<String>.Index
+        if hidesLibrarySymbols {
+            index = callStackSymbols.firstIndex { !$0.contains(exactWord: "DatadogSDKTesting") } ?? callStackSymbols.startIndex
+        } else {
+            index = callStackSymbols.index(0, offsetBy: 2)
+        }
 
         let demangled: [String] = callStackSymbols.dropFirst(index)
             .map {

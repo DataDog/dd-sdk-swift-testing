@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
   s.name         = "DatadogSDKTesting"
   s.module_name  = "DatadogSDKTesting"
-  s.version      = "2.2.3-beta.2"
+  s.version      = "2.2.3-beta.3"
   s.summary      = "Swift testing framework for Datadog's CI Visibility product"
   
   s.homepage     = "https://www.datadoghq.com"

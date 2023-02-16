@@ -54,11 +54,11 @@ class DDTestObserver: NSObject, XCTestObservation {
         else {
             return
         }
-        Log.measure(name: "waiting itrWorkQueue") {
-            DDTestMonitor.instance?.itrWorkQueue.waitUntilAllOperationsAreFinished()
-        }
 
         if let itr = DDTestMonitor.instance?.itr {
+            Log.measure(name: "waiting itrWorkQueue") {
+                DDTestMonitor.instance?.itrWorkQueue.waitUntilAllOperationsAreFinished()
+            }
             let skippableTests = itr.skippableTests.filter { $0.suite == testSuite.name }.map { "-[\(testSuite.name) \($0.name)]" }
             let finalTests = tests.filter { !skippableTests.contains(($0 as AnyObject).name) }
             testSuite.setValue(finalTests, forKey: "_mutableTests")

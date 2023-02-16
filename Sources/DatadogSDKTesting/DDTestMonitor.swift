@@ -47,7 +47,6 @@ internal class DDTestMonitor {
 
     let instrumentationWorkQueue = OperationQueue()
     let itrWorkQueue = OperationQueue()
-    let networkInstrumentationSemaphore = DispatchSemaphore(value: 0)
 
     static let developerMachineHostName: String = Spawn.commandWithResult("hostname").trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
 
@@ -167,16 +166,16 @@ internal class DDTestMonitor {
             return
         }
 
-        /// Check Git is up to date and no local changes
-        guard DDTestMonitor.env.isCi || GitUploader.statusUpToDate() else {
-            Log.debug("Git status not up to date")
-            coverageHelper = nil
-            itr = nil
-            return
-        }
+//        /// Check Git is up to date and no local changes
+//        guard DDTestMonitor.env.isCi || GitUploader.statusUpToDate() else {
+//            Log.debug("Git status not up to date")
+//            coverageHelper = nil
+//            itr = nil
+//            return
+//        }
         
-        networkInstrumentationSemaphore.wait()
-
+        instrumentationWorkQueue.waitUntilAllOperationsAreFinished()
+        
         itrWorkQueue.addOperation { [self] in
             if DDTestMonitor.env.gitUploadEnabled {
                 Log.debug("Git Upload Enabled")
@@ -305,7 +304,6 @@ internal class DDTestMonitor {
 
     func startNetworkAutoInstrumentation() {
         networkInstrumentation = DDNetworkInstrumentation()
-        networkInstrumentationSemaphore.signal()
     }
 
     func startHeaderInjection() {

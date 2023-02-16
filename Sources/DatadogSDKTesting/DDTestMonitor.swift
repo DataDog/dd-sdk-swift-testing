@@ -47,7 +47,7 @@ internal class DDTestMonitor {
 
     let instrumentationWorkQueue = OperationQueue()
     let itrWorkQueue = OperationQueue()
-    let networkInstrumentationSemaphore = DispatchSemaphore(value: 1)
+    let networkInstrumentationSemaphore = DispatchSemaphore(value: 0)
 
     static let developerMachineHostName: String = Spawn.commandWithResult("hostname").trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
 
@@ -174,39 +174,44 @@ internal class DDTestMonitor {
             itr = nil
             return
         }
+        
+        networkInstrumentationSemaphore.wait()
+
+        itrWorkQueue.addOperation { [self] in
+            if DDTestMonitor.env.gitUploadEnabled {
+                Log.debug("Git Upload Enabled")
+                gitUploader = try? GitUploader()
+            } else {
+                Log.debug("Git Upload Disabled")
+            }
+            gitUploader?.sendGitInfo()
+        }
 
         var itrBackendConfig: (codeCoverage: Bool, testsSkipping: Bool)?
 
-        if let service = DDTestMonitor.env.ddService ?? DDTestMonitor.env.getRepositoryName(),
-           let branch = DDTestMonitor.env.branch,
-           let commit = DDTestMonitor.env.commit,
-           let eventsExporter = DDTestMonitor.tracer.eventsExporter
-        {
-            let ddEnvironment = DDTestMonitor.env.ddEnvironment ?? (DDTestMonitor.env.isCi ? "ci" : "none")
+        itrWorkQueue.addOperation {
+            if let service = DDTestMonitor.env.ddService ?? DDTestMonitor.env.getRepositoryName(),
+               let branch = DDTestMonitor.env.branch,
+               let commit = DDTestMonitor.env.commit,
+               let eventsExporter = DDTestMonitor.tracer.eventsExporter
+            {
+                let ddEnvironment = DDTestMonitor.env.ddEnvironment ?? (DDTestMonitor.env.isCi ? "ci" : "none")
 
-            networkInstrumentationSemaphore.wait()
-            Log.measure(name: "itrBackendConfig") {
-                itrBackendConfig = eventsExporter.itrSetting(service: service,
-                                                             env: ddEnvironment,
-                                                             repositoryURL: DDTestMonitor.localRepositoryURLPath,
-                                                             branch: branch,
-                                                             sha: commit,
-                                                             configurations: DDTestMonitor.baseConfigurationTags,
-                                                             customConfigurations: DDTestMonitor.env.customConfigurations)
+                Log.measure(name: "itrBackendConfig") {
+                    itrBackendConfig = eventsExporter.itrSetting(service: service,
+                                                                 env: ddEnvironment,
+                                                                 repositoryURL: DDTestMonitor.localRepositoryURLPath,
+                                                                 branch: branch,
+                                                                 sha: commit,
+                                                                 configurations: DDTestMonitor.baseConfigurationTags,
+                                                                 customConfigurations: DDTestMonitor.env.customConfigurations)
+                }
+            } else {
+                itrBackendConfig = nil
             }
-            networkInstrumentationSemaphore.signal()
-        } else {
-            itrBackendConfig = nil
         }
 
-        if DDTestMonitor.env.gitUploadEnabled {
-            Log.debug("Git Upload Enabled")
-            gitUploader = try? GitUploader()
-        } else {
-            Log.debug("Git Upload Disabled")
-        }
-
-        gitUploader?.sendGitInfo()
+        itrWorkQueue.waitUntilAllOperationsAreFinished()
 
         itrWorkQueue.addOperation { [self] in
 
@@ -233,9 +238,7 @@ internal class DDTestMonitor {
             if DDTestMonitor.env.itrEnabled ?? itrBackendConfig?.testsSkipping ?? false {
                 Log.debug("ITR Enabled")
                 itr = IntelligentTestRunner(configurations: DDTestMonitor.baseConfigurationTags)
-                networkInstrumentationSemaphore.wait()
                 itr?.start()
-                networkInstrumentationSemaphore.signal()
             } else {
                 Log.debug("ITR Disabled")
                 itr = nil
@@ -264,15 +267,12 @@ internal class DDTestMonitor {
         guard !DDTestMonitor.env.disableTestInstrumenting else {
             return
         }
-        
-        instrumentationWorkQueue.addOperation {
-            Log.measure(name: "DDTracer") {
-                _ = DDTestMonitor.tracer
-            }
-        }
-        
+
         if !DDTestMonitor.env.disableNetworkInstrumentation {
             instrumentationWorkQueue.addOperation { [self] in
+                Log.measure(name: "DDTracer") {
+                    _ = DDTestMonitor.tracer
+                }
                 Log.measure(name: "startNetworkAutoInstrumentation") {
                     startNetworkAutoInstrumentation()
                     if !DDTestMonitor.env.disableHeadersInjection {
@@ -304,7 +304,6 @@ internal class DDTestMonitor {
     }
 
     func startNetworkAutoInstrumentation() {
-        networkInstrumentationSemaphore.wait()
         networkInstrumentation = DDNetworkInstrumentation()
         networkInstrumentationSemaphore.signal()
     }

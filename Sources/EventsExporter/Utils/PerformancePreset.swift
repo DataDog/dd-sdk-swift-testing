@@ -110,7 +110,7 @@ public struct PerformancePreset: Equatable, StoragePerformancePreset, UploadPerf
         synchronousWrite: true,
 
         // upload
-        initialUploadDelay: 0.5, // send quick to have a chance for upload in short-lived app extensions
+        initialUploadDelay: 5, // send quick to have a chance for upload in short-lived app extensions
         defaultUploadDelay: 3,
         minUploadDelay: 1,
         maxUploadDelay: 5,

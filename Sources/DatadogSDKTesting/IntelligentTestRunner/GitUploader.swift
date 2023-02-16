@@ -84,10 +84,6 @@ struct GitUploader {
 
     private func searchRepositoryCommits(repository: String) -> [String] {
         let commits = getLatestCommits()
-        DDTestMonitor.instance?.networkInstrumentationSemaphore.wait()
-        defer {
-            DDTestMonitor.instance?.networkInstrumentationSemaphore.signal()
-        }
         return DDTestMonitor.tracer.eventsExporter?.searchCommits(repositoryURL: repository, commits: commits) ?? []
     }
 
@@ -119,10 +115,6 @@ struct GitUploader {
 
     private func uploadExistingPackfiles(directory: Directory, repository: String) {
         guard let commit = DDTestMonitor.env.commit else { return }
-        DDTestMonitor.instance?.networkInstrumentationSemaphore.wait()
-        defer {
-            DDTestMonitor.instance?.networkInstrumentationSemaphore.signal()
-        }
         DDTestMonitor.tracer.eventsExporter?.uploadPackFiles(packFilesDirectory: packFilesdirectory, commit: commit, repository: repository)
     }
 }

@@ -320,16 +320,18 @@ internal class DDTracer {
                 nil
             )
             if status == kCFMessagePortSuccess {
+                Log.debug("DDCFMessageID.forceFlush finished")
             } else {
                 Log.debug("CFMessagePortCreateRemote request to DatadogRUMTestingPort failed")
             }
         }
-        Log.debug("DDCFMessageID.forceFlush finished")
 
         backgroundWorkQueue.addOperation {
             self.tracerProviderSdk.forceFlush()
         }
         backgroundWorkQueue.waitUntilAllOperationsAreFinished()
+        Log.debug("Tracer flush finished")
+
     }
 
     func addPropagationsHeadersToEnvironment() {

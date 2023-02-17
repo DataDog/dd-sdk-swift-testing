@@ -166,13 +166,13 @@ internal class DDTestMonitor {
             return
         }
 
-//        /// Check Git is up to date and no local changes
-//        guard DDTestMonitor.env.isCi || GitUploader.statusUpToDate() else {
-//            Log.debug("Git status not up to date")
-//            coverageHelper = nil
-//            itr = nil
-//            return
-//        }
+        /// Check Git is up to date and no local changes
+        guard DDTestMonitor.env.isCi || GitUploader.statusUpToDate() else {
+            Log.debug("Git status not up to date")
+            coverageHelper = nil
+            itr = nil
+            return
+        }
         
         instrumentationWorkQueue.waitUntilAllOperationsAreFinished()
         

@@ -17,15 +17,12 @@ class DDTestObserver: NSObject, XCTestObservation {
     var test: DDTest?
 
     override init() {
-        Log.measure(name: "swizzleUIMethods") {
-            XCUIApplication.swizzleMethods
-        }
+        XCUIApplication.swizzleMethods
         super.init()
     }
 
     func startObserving() {
         XCTestObservationCenter.shared.addTestObserver(self)
-        Log.debug("Start observing DDTestObserver: \(ObjectIdentifier(self))")
     }
 
     func testBundleWillStart(_ testBundle: Bundle) {

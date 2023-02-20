@@ -90,9 +90,16 @@ public class DDTestModule: NSObject, Encodable {
             }
         }
         let moduleStartTime = startTime ?? beforeLoadingTime
-        self.id = DDTestMonitor.instance?.crashedModuleInfo?.crashedModuleId ?? SpanId.random()
-        self.sessionId = DDTestMonitor.instance?.crashedModuleInfo?.crashedSessionId ?? SpanId.random()
-        self.startTime = DDTestMonitor.instance?.crashedModuleInfo?.moduleStartTime ?? moduleStartTime
+        if let crashedModuleInfo = DDTestMonitor.instance?.crashedModuleInfo {
+            self.status = .fail
+            self.id = crashedModuleInfo.crashedModuleId
+            self.sessionId = crashedModuleInfo.crashedSessionId
+            self.startTime = crashedModuleInfo.moduleStartTime ?? moduleStartTime
+        } else {
+            self.id = SpanId.random()
+            self.sessionId = SpanId.random()
+            self.startTime = moduleStartTime
+        }
         self.localization = PlatformUtils.getLocalization()
 
         Log.debug("Module loading time interval: \(DDTestMonitor.clock.now.timeIntervalSince(beforeLoadingTime))")

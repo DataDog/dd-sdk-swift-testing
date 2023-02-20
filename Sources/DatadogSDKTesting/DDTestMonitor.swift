@@ -173,9 +173,7 @@ internal class DDTestMonitor {
             itr = nil
             return
         }
-        
-        instrumentationWorkQueue.waitUntilAllOperationsAreFinished()
-        
+
         itrWorkQueue.addOperation { [self] in
             if DDTestMonitor.env.gitUploadEnabled {
                 Log.debug("Git Upload Enabled")
@@ -267,22 +265,21 @@ internal class DDTestMonitor {
             return
         }
 
+        Log.measure(name: "DDTracer") {
+            _ = DDTestMonitor.tracer
+        }
+
         if !DDTestMonitor.env.disableNetworkInstrumentation {
-            instrumentationWorkQueue.addOperation { [self] in
-                Log.measure(name: "DDTracer") {
-                    _ = DDTestMonitor.tracer
+            Log.measure(name: "startNetworkAutoInstrumentation") {
+                startNetworkAutoInstrumentation()
+                if !DDTestMonitor.env.disableHeadersInjection {
+                    injectHeaders = true
                 }
-                Log.measure(name: "startNetworkAutoInstrumentation") {
-                    startNetworkAutoInstrumentation()
-                    if !DDTestMonitor.env.disableHeadersInjection {
-                        injectHeaders = true
-                    }
-                    if DDTestMonitor.env.enableRecordPayload {
-                        recordPayload = true
-                    }
-                    if let maxPayload = DDTestMonitor.env.maxPayloadSize {
-                        maxPayloadSize = maxPayload
-                    }
+                if DDTestMonitor.env.enableRecordPayload {
+                    recordPayload = true
+                }
+                if let maxPayload = DDTestMonitor.env.maxPayloadSize {
+                    maxPayloadSize = maxPayload
                 }
             }
         }

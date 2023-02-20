@@ -29,10 +29,14 @@ internal enum DDCrashes {
     }
 
     private static func installPLCrashReporterHandler() {
+        let crashDir = FileManager.default
+            .urls(for: .cachesDirectory, in: .userDomainMask)
+            .first?
+            .appendingPathComponent("com.datadoghq.datadogsdktesting", isDirectory: true)
 #if os(macOS)
-        let config = PLCrashReporterConfig(signalHandlerType: .mach, symbolicationStrategy: [])
+        let config = PLCrashReporterConfig(signalHandlerType: .mach, symbolicationStrategy: [], basePath: crashDir?.path)
 #else
-        let config = PLCrashReporterConfig(signalHandlerType: .BSD, symbolicationStrategy: [])
+        let config = PLCrashReporterConfig(signalHandlerType: .BSD, symbolicationStrategy: [], basePath: crashDir?.path)
 #endif
         guard let plCrashReporter = PLCrashReporter(configuration: config) else {
             return
@@ -106,7 +110,6 @@ internal enum DDCrashes {
                             moduleStartTime: spanData.moduleStartTime,
                             suiteStartTime: spanData.suiteStartTime)
                         Log.debug("Loaded Crashed Session Info: \(sessionID)")
-
                     }
 
                     // Sanitizer info

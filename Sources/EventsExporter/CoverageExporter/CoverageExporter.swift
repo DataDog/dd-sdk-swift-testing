@@ -57,6 +57,7 @@ internal class CoverageExporter {
     }
 
     func exportCoverage(coverage: URL, testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64, workspacePath: String?, binaryImagePaths: [String]) {
+        Log.debug("Start processing coverage: \(coverage.path)")
         let profData = DDCoverageConversor.generateProfData(profrawFile: coverage)
         let ddCoverage = DDCoverageConversor.getDatadogCoverage(profdataFile: profData, testSessionId: testSessionId, testSuiteId: testSuiteId, spanId: spanId, workspacePath: workspacePath, binaryImagePaths: binaryImagePaths)
 
@@ -71,6 +72,7 @@ internal class CoverageExporter {
             try? data?.write(to: jsonURL)
         }())
         coverageStorage.writer.write(value: ddCoverage)
+        Log.debug("End processing coverage: \(coverage.path)")
     }
 
     private func addCoverage(request: MultipartFormDataRequest, data: Data?) {

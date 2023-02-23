@@ -168,6 +168,8 @@ public class DDTestModule: NSObject, Encodable {
         let testSession = DDTestSession(testModule: self)
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: DDTestSession.DDTestSessionEnvelope(testSession))
         Log.debug("Exported session_end event sessionId: \(self.sessionId)")
+        
+        DDCrashes.disableCrashReporter()
 
         if let coverageHelper = DDTestMonitor.instance?.coverageHelper {
             /// We need to wait for all the traces to be written to the backend before exiting

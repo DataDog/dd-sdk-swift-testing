@@ -9,13 +9,8 @@ import Foundation
 @_implementationOnly import OpenTelemetryApi
 
 let signalCallback: PLCrashReporterPostCrashSignalCallback = { _, _, _ in
-    if (DDCrashes.disabled) {
-        Log.print("Application crashed while test module is ending")
-        DDCrashes.sharedPLCrashReporter?.purgePendingCrashReport()
-    } else {
-        if let sanitizerInfo = SanitizerHelper.getSaniziterInfo() {
-            try? sanitizerInfo.write(to: DDCrashes.sanitizerURL, atomically: true, encoding: .utf8)
-        }
+    if let sanitizerInfo = SanitizerHelper.getSaniziterInfo() {
+        try? sanitizerInfo.write(to: DDCrashes.sanitizerURL, atomically: true, encoding: .utf8)
     }
     DDTestMonitor.instance?.coverageHelper?.coverageWorkQueue.waitUntilAllOperationsAreFinished()
 }
@@ -23,29 +18,9 @@ let signalCallback: PLCrashReporterPostCrashSignalCallback = { _, _, _ in
 /// This class is our interface with the crash reporter, now it is based on PLCrashReporter,
 /// but we could modify this class to use another if needed
 internal enum DDCrashes {
-    fileprivate static var sharedPLCrashReporter: PLCrashReporter?
+    private static var sharedPLCrashReporter: PLCrashReporter?
     private static var crashCustomData = [String: Data]()
     fileprivate static var sanitizerURL: URL!
-    fileprivate static var disabled: Bool = false
-    
-    private static let lock = NSLock()
-    private static var privateDisabled = false
-    private static var internalDisabled: Bool {
-        get{
-            DDCrashes.lock.lock()
-            defer {
-                DDCrashes.lock.unlock()
-            }
-            return DDCrashes.privateDisabled
-        }
-        set{
-            DDCrashes.lock.lock()
-            defer {
-                DDCrashes.lock.unlock()
-            }
-            DDCrashes.privateDisabled = newValue
-        }
-    }
 
     static func install() {
         if sharedPLCrashReporter == nil {
@@ -152,9 +127,5 @@ internal enum DDCrashes {
 
     static func setCustomData(customData: Data) {
         DDCrashes.sharedPLCrashReporter?.customData = customData
-    }
-    
-    static func disableCrashReporter() {
-        internalDisabled = true
     }
 }

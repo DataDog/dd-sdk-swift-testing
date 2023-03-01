@@ -51,4 +51,10 @@ struct Log {
             operation()
         }
     }
+    
+    static func runOnDebug(_ function: @autoclosure () -> Void) {
+        if debugTracer {
+            function()
+        }
+    }
 }

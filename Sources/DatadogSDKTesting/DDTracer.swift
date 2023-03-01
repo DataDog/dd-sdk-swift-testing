@@ -24,7 +24,6 @@ internal class DDTracer {
     let ntpClock = NTPClock()
     var eventsExporter: EventsExporter?
     private var launchSpanContext: SpanContext?
-    let backgroundWorkQueue = OperationQueue()
 
     private let attributeCountLimit: UInt = 1024
 
@@ -92,7 +91,7 @@ internal class DDTracer {
             libraryVersion: DDTestObserver.tracerVersion,
             applicationName: identifier,
             applicationVersion: version,
-            environment: env.ddEnvironment ?? (env.isCi ? "ci" : "none"),
+            environment: DDTestMonitor.env.getDatadogEnvValue(),
             hostname: hostnameToReport,
             apiKey: env.ddApiKey ?? "",
             applicationKey: env.ddApplicationKey ?? "",
@@ -290,11 +289,8 @@ internal class DDTracer {
     func logStringAppUITested(string: String, date: Date? = nil) {
         let auxSpan = createSpanFromLaunchContext()
         auxSpan.addEvent(name: "logString", attributes: attributesForString(string), timestamp: date ?? Date())
-        backgroundWorkQueue.addOperation {
-            auxSpan.status = .ok
-            auxSpan.end()
-            self.tracerProviderSdk.forceFlush()
-        }
+        auxSpan.status = .ok
+        auxSpan.end()
     }
 
     /// This method is only currently used when logging with an app being launched from a UITest, and no span has been created in the App.
@@ -326,10 +322,7 @@ internal class DDTracer {
             }
         }
 
-        backgroundWorkQueue.addOperation {
-            self.tracerProviderSdk.forceFlush()
-        }
-        backgroundWorkQueue.waitUntilAllOperationsAreFinished()
+        self.tracerProviderSdk.forceFlush()
         Log.debug("Tracer flush finished")
 
     }

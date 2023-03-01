@@ -59,7 +59,7 @@ internal class FilesOrchestrator {
     private func reuseLastWritableFileIfPossible(writeSize: UInt64) -> WritableFile? {
         if let lastFileName = lastWritableFileName {
             do {
-                guard let lastFile = directory.file(named: lastFileName) else {
+                guard let lastFile = try? directory.file(named: lastFileName) else {
                     return nil
                 }
                 let fileCanBeUsedMoreTimes = (lastWritableFileUsesCount + 1) <= performance.maxObjectsInFile

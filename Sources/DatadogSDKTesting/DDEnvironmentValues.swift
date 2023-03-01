@@ -52,7 +52,7 @@ internal struct DDEnvironmentValues {
     /// Datatog Configuration values
     let ddApiKey: String?
     let ddApplicationKey: String?
-    let ddEnvironment: String?
+    private let ddEnvironment: String?
     let ddService: String?
     var ddTags = [String: String]()
     var customConfigurations = [String: String]()
@@ -165,7 +165,7 @@ internal struct DDEnvironmentValues {
         }
         ddApiKey = apiKey
 
-        var applicationKey = DDEnvironmentValues.getEnvVariable("DD_APPLICATION_KEY")
+        var applicationKey = DDEnvironmentValues.getEnvVariable("DD_APPLICATION_KEY") ?? DDEnvironmentValues.getEnvVariable("DD_APP_KEY")
         if applicationKey == nil {
             applicationKey = DDEnvironmentValues.infoDictionary["DatadogApplicationKey"] as? String
         }
@@ -734,6 +734,10 @@ internal struct DDEnvironmentValues {
         attributes[DDCITags.ciEnvVars] = ##"{\##(ciEnvVars.map { #""\#($0.0)":"\#($0.1)""# }.joined(separator: ","))}"##
 
         DDEnvironmentValues.ciAttributes = attributes
+    }
+
+    func getDatadogEnvValue() -> String {
+        return ddEnvironment ?? (isCi ? "ci" : "none")
     }
 
     func addTagsToSpan(span: Span) {

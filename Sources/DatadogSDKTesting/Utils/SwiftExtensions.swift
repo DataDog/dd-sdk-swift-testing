@@ -46,7 +46,7 @@ extension String {
     func contains(exactWord: String) -> Bool {
         return self.range(of: "\\b\(exactWord)\\b", options: .regularExpression) != nil
     }
-    
+
     var isHexNumber: Bool {
         filter(\.isHexDigit).count == count
     }
@@ -56,21 +56,21 @@ extension Data {
     func zlibDecompress(minimumSize: Int = 0) -> String {
         let expectedSize = minimumSize < 0x10000 ? 0x10000 : 0x10000
         let result: String
-//#if swift(>=5.6)
+        // #if swift(>=5.6)
 //        result = withUnsafeTemporaryAllocation(of: UInt8.self, capacity: expectedSize) { buffer in
 //            self.subdata(in: 2 ..< self.count).withUnsafeBytes {
 //                let read = compression_decode_buffer(buffer.baseAddress!, expectedSize, $0.baseAddress!.bindMemory(to: UInt8.self, capacity: 1), self.count - 2, nil, COMPRESSION_ZLIB)
 //                return String(decoding: Data(bytes: buffer.baseAddress!, count: read), as: UTF8.self)
 //            } as String
 //        }
-//#else
+        // #else
         let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: expectedSize)
         result = self.subdata(in: 2 ..< self.count).withUnsafeBytes {
             let read = compression_decode_buffer(buffer, expectedSize, $0.baseAddress!.bindMemory(to: UInt8.self, capacity: 1), self.count - 2, nil, COMPRESSION_ZLIB)
             return String(decoding: Data(bytes: buffer, count: read), as: UTF8.self)
         } as String
         buffer.deallocate()
-//#endif
+        // #endif
         return result
     }
 
@@ -207,5 +207,20 @@ extension FileHandle {
         let actualResult = status > 0 ? fdIsSet(fileDescriptor, set: &fdset) : false
 
         return actualResult
+    }
+}
+
+private func djb2Hash(_ string: String) -> Int {
+    let unicodeScalars = string.unicodeScalars.map { $0.value }
+    return unicodeScalars.reduce(5381) {
+        ($0 << 5) &+ $0 &+ Int($1)
+    }
+}
+
+extension Dictionary where Key == String, Value == String {
+    var stableHash: Int {
+        let concatenatedString = self.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }.joined(separator: "&")
+        let hashedData = djb2Hash(concatenatedString)
+        return hashedData
     }
 }

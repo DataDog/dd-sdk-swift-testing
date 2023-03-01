@@ -5,6 +5,7 @@
  */
 
 @_implementationOnly import CrashReporter
+@_implementationOnly import EventsExporter
 import Foundation
 @_implementationOnly import OpenTelemetryApi
 
@@ -29,14 +30,11 @@ internal enum DDCrashes {
     }
 
     private static func installPLCrashReporterHandler() {
-        let crashDir = FileManager.default
-            .urls(for: .cachesDirectory, in: .userDomainMask)
-            .first?
-            .appendingPathComponent("com.datadoghq.datadogsdktesting", isDirectory: true)
+        let crashDir = try? Directory(withSubdirectoryPath: "com.datadog.civisibility/crash")
 #if os(macOS)
-        let config = PLCrashReporterConfig(signalHandlerType: .mach, symbolicationStrategy: [], basePath: crashDir?.path)
+        let config = PLCrashReporterConfig(signalHandlerType: .mach, symbolicationStrategy: [], basePath: crashDir?.url.path)
 #else
-        let config = PLCrashReporterConfig(signalHandlerType: .BSD, symbolicationStrategy: [], basePath: crashDir?.path)
+        let config = PLCrashReporterConfig(signalHandlerType: .BSD, symbolicationStrategy: [], basePath: crashDir?.url.path)
 #endif
         guard let plCrashReporter = PLCrashReporter(configuration: config) else {
             return

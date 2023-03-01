@@ -8,20 +8,32 @@
 import Foundation
 
 struct GitUploader {
+    private let gitCachePath = "git"
+    private var gitUploadCacheFolder: Directory?
+
     static let workspacePath: String = DDTestMonitor.env.workspacePath ?? ""
 
-    private static let packFilesLocation = "com.datadog.civisibility/packfiles/v1/" + UUID().uuidString
+    private let packFilesLocation = "packfiles/v1/" + UUID().uuidString
     var packFilesdirectory: Directory
 
-    init() throws {
-        guard !GitUploader.workspacePath.isEmpty else {
-            Log.debug("IntelligentTestRunner failed building")
-            throw InternalError(description: "IntelligentTestRunner failed building")
+    init?() {
+        guard !GitUploader.workspacePath.isEmpty,
+              let packFilesdirectory = try? DDTestMonitor.dataPath?.createSubdirectory(path: packFilesLocation)
+        else {
+            Log.debug("GitUploader failed initializing")
+            return nil
         }
-        packFilesdirectory = try Directory(withSubdirectoryPath: GitUploader.packFilesLocation)
+
+        gitUploadCacheFolder = try? DDTestMonitor.commitFolder?.subdirectory(path: gitCachePath)
+        if gitUploadCacheFolder != nil {
+            Log.debug("GitUploader: git information alredy uploaded")
+            return nil
+        }
+
+        self.packFilesdirectory = packFilesdirectory
     }
 
-    func sendGitInfo() {
+    mutating func sendGitInfo() {
         let repo = DDTestMonitor.localRepositoryURLPath
         guard !repo.isEmpty else {
             Log.print("sendGitInfo failed, repository not found")
@@ -43,6 +55,12 @@ struct GitUploader {
             commitsToUpload = getCommitsAndTreesExcluding(excluded: existingCommits)
         }
         Log.debug("Commits To Upload: \(commitsToUpload)")
+
+        gitUploadCacheFolder = try? DDTestMonitor.commitFolder?.createSubdirectory(path: gitCachePath)
+        Log.runOnDebug({
+            let commitsToUploadFile = try? gitUploadCacheFolder?.createFile(named: "commitsToUpload")
+            try? commitsToUploadFile?.append(data: JSONEncoder().encode(commitsToUpload))
+        }())
 
         guard !commitsToUpload.isEmpty else { return }
         generateAndUploadPackFilesFromCommits(commits: commitsToUpload, repository: repo)
@@ -99,18 +117,18 @@ struct GitUploader {
         var uploadPackfileDirectory = packFilesdirectory
         Log.measure(name: "packObjects") {
             let commitList = commits.joined(separator: "\n")
-            let aux = Spawn.commandWithResult(#"git -C "\#(GitUploader.workspacePath)" pack-objects --quiet --compression=9 --max-pack-size=3m "\#(packFilesdirectory.getURL().path + "/" + UUID().uuidString)" <<< "\#(commitList)""#)
+            let aux = Spawn.commandWithResult(#"git -C "\#(GitUploader.workspacePath)" pack-objects --quiet --compression=9 --max-pack-size=3m "\#(packFilesdirectory.url.path + "/" + UUID().uuidString)" <<< "\#(commitList)""#)
             if aux.hasPrefix("fatal:") {
                 let uploadPackfilePath = GitUploader.workspacePath + "/" + UUID().uuidString
                 try? FileManager.default.createDirectory(atPath: uploadPackfilePath, withIntermediateDirectories: true)
                 uploadPackfileDirectory = Directory(url: URL(fileURLWithPath: uploadPackfilePath))
-                Spawn.command(#"git -C "\#(GitUploader.workspacePath)" pack-objects --quiet --compression=9 --max-pack-size=3m "\#(uploadPackfileDirectory.getURL().path + "/" + UUID().uuidString)" <<< "\#(commitList)""#)
+                Spawn.command(#"git -C "\#(GitUploader.workspacePath)" pack-objects --quiet --compression=9 --max-pack-size=3m "\#(uploadPackfileDirectory.url.path + "/" + UUID().uuidString)" <<< "\#(commitList)""#)
             }
         }
         Log.measure(name: "uploadExistingPackfiles") {
             uploadExistingPackfiles(directory: uploadPackfileDirectory, repository: repository)
         }
-        try? uploadPackfileDirectory.deleteDirectory()
+        try? uploadPackfileDirectory.deleteAllFiles()
     }
 
     private func uploadExistingPackfiles(directory: Directory, repository: String) {

@@ -42,7 +42,7 @@ public struct File: WritableFile, ReadableFile {
     }
 
     /// Appends given data at the end of this file.
-    func append(data: Data, synchronized: Bool = false) throws {
+    public func append(data: Data, synchronized: Bool = false) throws {
         let fileHandle = try FileHandle(forWritingTo: url)
 
         // NOTE: RUMM-669
@@ -87,7 +87,7 @@ public struct File: WritableFile, ReadableFile {
         fileHandle.write(data)
     }
 
-    func read() throws -> Data {
+    public func read() throws -> Data {
         let fileHandle = try FileHandle(forReadingFrom: url)
 
         // NOTE: RUMM-669
@@ -124,12 +124,12 @@ public struct File: WritableFile, ReadableFile {
         return data
     }
 
-    func size() throws -> UInt64 {
+    public func size() throws -> UInt64 {
         let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
         return attributes[.size] as? UInt64 ?? 0
     }
 
-    func delete() throws {
+    public func delete() throws {
         try FileManager.default.removeItem(at: url)
     }
 }

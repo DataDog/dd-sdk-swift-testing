@@ -171,7 +171,6 @@ public class DDTest: NSObject {
         span.end(time: testEndTime)
         DDTestMonitor.instance?.networkInstrumentation?.endAndCleanAliveSpans()
         DDCrashes.setCustomData(customData: Data())
-        DDTestMonitor.tracer.backgroundWorkQueue.waitUntilAllOperationsAreFinished()
         DDTestMonitor.instance?.currentTest = nil
     }
 

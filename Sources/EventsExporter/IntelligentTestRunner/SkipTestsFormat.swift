@@ -48,7 +48,7 @@ struct SkipTestsResponseFormat: Decodable {
     }
 }
 
-public struct SkipTestPublicFormat: CustomStringConvertible {
+public struct SkipTestPublicFormat: CustomStringConvertible, Codable {
     public var name: String
     public var suite: String
     public var configuration: [String: String]?

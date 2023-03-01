@@ -13,6 +13,9 @@
 		81AA244B2978589600DE8F8A /* DDFileReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81AA244A2978589600DE8F8A /* DDFileReader.swift */; };
 		81AA244C2978589600DE8F8A /* DDFileReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81AA244A2978589600DE8F8A /* DDFileReader.swift */; };
 		81AA244D2978589600DE8F8A /* DDFileReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81AA244A2978589600DE8F8A /* DDFileReader.swift */; };
+		81AF86AD29ACD30F007FC893 /* Retrying.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81AF86AC29ACD30F007FC893 /* Retrying.swift */; };
+		81AF86AE29ACD30F007FC893 /* Retrying.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81AF86AC29ACD30F007FC893 /* Retrying.swift */; };
+		81AF86AF29ACD30F007FC893 /* Retrying.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81AF86AC29ACD30F007FC893 /* Retrying.swift */; };
 		81EDADB7292795B900279027 /* LLVMTotalsCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81EDADB2292698A200279027 /* LLVMTotalsCoverageFormat.swift */; };
 		81EDADB8292795B900279027 /* LLVMTotalsCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81EDADB2292698A200279027 /* LLVMTotalsCoverageFormat.swift */; };
 		81EDADB9292795B900279027 /* LLVMTotalsCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81EDADB2292698A200279027 /* LLVMTotalsCoverageFormat.swift */; };
@@ -714,6 +717,7 @@
 		8194A2242940B33100B4B592 /* DDTestSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTestSession.swift; sourceTree = "<group>"; };
 		81AA244929780F6400DE8F8A /* DatadogTests.symbols */ = {isa = PBXFileReference; lastKnownFileType = text; path = DatadogTests.symbols; sourceTree = "<group>"; };
 		81AA244A2978589600DE8F8A /* DDFileReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDFileReader.swift; sourceTree = "<group>"; };
+		81AF86AC29ACD30F007FC893 /* Retrying.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Retrying.swift; path = "../../../../dd-sdk-ios/Sources/Datadog/Core/Utils/Retrying.swift"; sourceTree = "<group>"; };
 		81EDADB2292698A200279027 /* LLVMTotalsCoverageFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLVMTotalsCoverageFormat.swift; sourceTree = "<group>"; };
 		E10034D92703599D00439C9C /* DDTestModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTestModule.swift; sourceTree = "<group>"; };
 		E10A7E0D2806D68F00B464C9 /* LLVMSimpleCoverageFormat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LLVMSimpleCoverageFormat.swift; sourceTree = "<group>"; };
@@ -1391,6 +1395,7 @@
 		E143CF0027D7790200F4018A /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				81AF86AC29ACD30F007FC893 /* Retrying.swift */,
 				E1F69C2A28C72FAD0042156E /* Log.swift */,
 				E1665A7225D12D7500BA53CD /* Spawn.swift */,
 				E1EBBD4A27F200210059BC3E /* AttributesSanitizer.swift */,
@@ -3021,6 +3026,7 @@
 				E1DCAF4B284A1F4F00F44BE3 /* CoverageExporter.swift in Sources */,
 				E1DCAF5C284A1F6900F44BE3 /* DataFormat.swift in Sources */,
 				E1DCAF46284A1F4900F44BE3 /* Error.cpp in Sources */,
+				81AF86AD29ACD30F007FC893 /* Retrying.swift in Sources */,
 				E1DCAF4A284A1F4900F44BE3 /* CoverageReport.cpp in Sources */,
 				E1DCAF51284A1F5B00F44BE3 /* JSONUtils.swift in Sources */,
 				E1F69C2C28C7301A0042156E /* Log.swift in Sources */,
@@ -3077,6 +3083,7 @@
 				E1DCAFB2284A294100F44BE3 /* LLVMSimpleCoverageFormat.swift in Sources */,
 				E1DCAFA8284A285D00F44BE3 /* EventsExporter.swift in Sources */,
 				E1DCAF85284A285D00F44BE3 /* CoverageSummaryInfo.cpp in Sources */,
+				81AF86AE29ACD30F007FC893 /* Retrying.swift in Sources */,
 				E1DCAF9E284A285D00F44BE3 /* PerformancePreset.swift in Sources */,
 				E1DCAFA4284A285D00F44BE3 /* SpanSanitizer.swift in Sources */,
 				E1F69C2B28C730190042156E /* Log.swift in Sources */,
@@ -3133,6 +3140,7 @@
 				E1DCAFD8284A2BED00F44BE3 /* DataUploadStatus.swift in Sources */,
 				E1DCAFE8284A2BED00F44BE3 /* LLVMSimpleCoverageFormat.swift in Sources */,
 				E1DCAFF3284A2BED00F44BE3 /* DataUploadWorker.swift in Sources */,
+				81AF86AF29ACD30F007FC893 /* Retrying.swift in Sources */,
 				E1DCAFDD284A2BED00F44BE3 /* CoverageSummaryInfo.cpp in Sources */,
 				E1DCAFE4284A2BED00F44BE3 /* DataUploader.swift in Sources */,
 				E1F69C2D28C7301B0042156E /* Log.swift in Sources */,
@@ -3667,7 +3675,7 @@
 					"$(inherited)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
@@ -3738,7 +3746,7 @@
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = fast;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;

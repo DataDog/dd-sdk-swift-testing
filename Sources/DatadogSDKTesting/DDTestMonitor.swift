@@ -35,6 +35,14 @@ internal class DDTestMonitor {
     static var tracer = DDTracer()
     static var env = DDEnvironmentValues()
 
+    static var dataPath: Directory? = try? Directory(withSubdirectoryPath: "com.datadog.civisibility")
+    static var cacheDir: Directory? = try? dataPath?.createSubdirectory(path: "caches")
+    static var commitFolder: Directory? = {
+        guard let commit = DDTestMonitor.env.commit
+        else { return nil }
+        return try? DDTestMonitor.cacheDir?.createSubdirectory(path: commit)
+    }()
+
     var networkInstrumentation: DDNetworkInstrumentation?
     var injectHeaders: Bool = false
     var recordPayload: Bool = false
@@ -177,7 +185,7 @@ internal class DDTestMonitor {
         itrWorkQueue.addOperation { [self] in
             if DDTestMonitor.env.gitUploadEnabled {
                 Log.debug("Git Upload Enabled")
-                gitUploader = try? GitUploader()
+                gitUploader = GitUploader()
             } else {
                 Log.debug("Git Upload Disabled")
             }
@@ -192,11 +200,9 @@ internal class DDTestMonitor {
                let commit = DDTestMonitor.env.commit,
                let eventsExporter = DDTestMonitor.tracer.eventsExporter
             {
-                let ddEnvironment = DDTestMonitor.env.ddEnvironment ?? (DDTestMonitor.env.isCi ? "ci" : "none")
-
                 Log.measure(name: "itrBackendConfig") {
                     itrBackendConfig = eventsExporter.itrSetting(service: service,
-                                                                 env: ddEnvironment,
+                                                                 env: DDTestMonitor.env.getDatadogEnvValue(),
                                                                  repositoryURL: DDTestMonitor.localRepositoryURLPath,
                                                                  branch: branch,
                                                                  sha: commit,

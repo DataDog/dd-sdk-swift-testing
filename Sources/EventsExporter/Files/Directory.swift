@@ -7,20 +7,46 @@
 import Foundation
 
 /// An abstraction over file system directory where SDK stores its files.
- public struct Directory {
-    let url: URL
+public struct Directory {
+    public let url: URL
 
     /// Creates subdirectory with given path under system caches directory.
-     public init(withSubdirectoryPath path: String) throws {
-        self.init(url: try createCachesSubdirectoryIfNotExists(subdirectoryPath: path))
+    /// RUMM-2169: Use `Directory.cache().createSubdirectory(path:)` instead.
+    public init(withSubdirectoryPath path: String) throws {
+        self.init(url: try Directory.cache().createSubdirectory(path: path).url)
     }
 
-     public init(url: URL) {
+    public init(url: URL) {
         self.url = url
     }
 
+    /// Creates subdirectory with given path by creating intermediate directories if needed.
+    /// If directory already exists at given `path` it will be used, without being altered.
+    public func createSubdirectory(path: String) throws -> Directory {
+        let subdirectoryURL = url.appendingPathComponent(path, isDirectory: true)
+        do {
+            try FileManager.default.createDirectory(at: subdirectoryURL, withIntermediateDirectories: true, attributes: nil)
+        } catch {
+            throw ExporterError(description: "Cannot create subdirectory in `/Library/Caches/` folder.")
+        }
+        return Directory(url: subdirectoryURL)
+    }
+
+    /// Returns directory at given path or throws if it doesn't exist or given `path` is not a directory.
+    public func subdirectory(path: String) throws -> Directory {
+        let directoryURL = url.appendingPathComponent(path, isDirectory: true)
+        var isDirectory = ObjCBool(false)
+        let exists = FileManager.default.fileExists(atPath: directoryURL.path, isDirectory: &isDirectory)
+
+        if exists && isDirectory.boolValue {
+            return Directory(url: directoryURL)
+        } else {
+            throw ExporterError(description: "Path doesn't exist or is not a directory: \(directoryURL)")
+        }
+    }
+
     /// Creates file with given name.
-     public func createFile(named fileName: String) throws -> File {
+    public func createFile(named fileName: String) throws -> File {
         let fileURL = url.appendingPathComponent(fileName, isDirectory: false)
         guard FileManager.default.createFile(atPath: fileURL.path, contents: nil, attributes: nil) == true else {
             throw ExporterError(description: "Cannot create file at path: \(fileURL.path)")
@@ -28,47 +54,63 @@ import Foundation
         return File(url: fileURL)
     }
 
-    /// Returns file with given name.
-     public func file(named fileName: String) -> File? {
+    /// Checks if a file with given `fileName` exists in this directory.
+    public func hasFile(named fileName: String) -> Bool {
         let fileURL = url.appendingPathComponent(fileName, isDirectory: false)
-        if FileManager.default.fileExists(atPath: fileURL.path) {
-            return File(url: fileURL)
-        } else {
-            return nil
+        return FileManager.default.fileExists(atPath: fileURL.path)
+    }
+
+    /// Returns file with given name or throws an error if file does not exist.
+    public func file(named fileName: String) throws -> File {
+        let fileURL = url.appendingPathComponent(fileName, isDirectory: false)
+        guard hasFile(named: fileName) else {
+            throw ExporterError(description: "File does not exist at path: \(fileURL.path)")
         }
+        return File(url: fileURL)
     }
 
     /// Returns all files of this directory.
-     public func files() throws -> [File] {
+    public func files() throws -> [File] {
         return try FileManager.default
             .contentsOfDirectory(at: url, includingPropertiesForKeys: [.isRegularFileKey, .canonicalPathKey])
             .map { url in File(url: url) }
     }
 
-     public func getURL() -> URL {
-         return url
-     }
-     
-     /// Deletes all files in this directory.
-     public func deleteDirectory() throws {
-         if FileManager.default.fileExists(atPath: url.path) {
-             try FileManager.default.removeItem(at: url)
-         }
-     }
+    /// Deletes all files in this directory.
+    public func deleteAllFiles() throws {
+        // Instead of iterating over all files and removing them one by one, we create a temporary
+        // empty directory and replace source directory content with (empty) temporary folder.
+        // This makes the deletion atomic, and is more performant in benchmarks.
+        let temporaryDirectory = try Directory(withSubdirectoryPath: "com.datadoghq/\(UUID().uuidString)")
+        try retry(times: 3, delay: 0.001) {
+            _ = try FileManager.default.replaceItemAt(url, withItemAt: temporaryDirectory.url)
+        }
+        if FileManager.default.fileExists(atPath: temporaryDirectory.url.path) {
+            try FileManager.default.removeItem(at: temporaryDirectory.url)
+        }
+    }
+
+    /// Moves all files from this directory to `destinationDirectory`.
+    public func moveAllFiles(to destinationDirectory: Directory) throws {
+        try retry(times: 3, delay: 0.001) {
+            try files().forEach { file in
+                let destinationFileURL = destinationDirectory.url.appendingPathComponent(file.name)
+                try? retry(times: 3, delay: 0.0001) {
+                    try FileManager.default.moveItem(at: file.url, to: destinationFileURL)
+                }
+            }
+        }
+    }
 }
 
-/// Creates subdirectory at given path in `/Library/Caches` if it does not exist. Might throw `ExporterError` when it's not possible.
-/// * `/Library/Caches` is exclduded from iTunes and iCloud backups by default.
-/// * System may delete data in `/Library/Cache` to free up disk space which reduces the impact on devices working under heavy space pressure.
-private func createCachesSubdirectoryIfNotExists(subdirectoryPath: String) throws -> URL {
-    guard let cachesDirectoryURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else {
-        throw ExporterError(description: "Cannot obtain `/Library/Caches/` url.")
+extension Directory {
+    /// Returns `Directory` pointing to `/Library/Caches`.
+    /// - `/Library/Caches` is exclduded from iTunes and iCloud backups by default.
+    /// - System may delete data in `/Library/Cache` to free up disk space which reduces the impact on devices working under heavy space pressure.
+    static func cache() throws -> Directory {
+        guard let cachesDirectoryURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else {
+            throw ExporterError(description: "Cannot obtain `/Library/Caches/` url.")
+        }
+        return Directory(url: cachesDirectoryURL)
     }
-    let subdirectoryURL = cachesDirectoryURL.appendingPathComponent(subdirectoryPath, isDirectory: true)
-    do {
-        try FileManager.default.createDirectory(at: subdirectoryURL, withIntermediateDirectories: true, attributes: nil)
-    } catch {
-        throw ExporterError(description: "Cannot create subdirectory in `/Library/Caches/` folder.")
-    }
-    return subdirectoryURL
 }

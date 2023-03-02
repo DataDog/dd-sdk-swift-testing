@@ -66,7 +66,7 @@ class DDEnvironmentValuesTests: XCTestCase {
 
         let env = DDEnvironmentValues()
         XCTAssertEqual(env.ddApiKey, "token5a101f16")
-        XCTAssertEqual(env.ddEnvironment, "testEnv")
+        XCTAssertEqual(env.getDatadogEnvValue(), "testEnv")
         XCTAssertEqual(env.ddService, "testService")
     }
 
@@ -79,7 +79,7 @@ class DDEnvironmentValuesTests: XCTestCase {
 
         let env = DDEnvironmentValues()
         XCTAssertEqual(env.ddApiKey, "token5a101f16")
-        XCTAssertEqual(env.ddEnvironment, "testEnv")
+        XCTAssertEqual(env.getDatadogEnvValue(), "testEnv")
         XCTAssertEqual(env.ddService, "testService")
     }
 
@@ -96,7 +96,7 @@ class DDEnvironmentValuesTests: XCTestCase {
 
         let env = DDEnvironmentValues()
         XCTAssertEqual(env.ddApiKey, "token5a101f16")
-        XCTAssertEqual(env.ddEnvironment, "testEnv")
+        XCTAssertEqual(env.getDatadogEnvValue(), "testEnv")
         XCTAssertEqual(env.ddService, "testService")
     }
 

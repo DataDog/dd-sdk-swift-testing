@@ -94,8 +94,7 @@ struct GitUploader {
     }
 
     private func getLatestCommits() -> [String] {
-        let latestCommits = Spawn.commandWithResult(#"git -C "\#(GitUploader.workspacePath)" rev-list --objects --no-object-names --filter=blob:none HEAD --since="1 month ago""#).trimmingCharacters(in: .whitespacesAndNewlines)
-
+        let latestCommits = Spawn.commandWithResult(#"git -C "\#(GitUploader.workspacePath)" log --format=%H -n 1000 --since="1 month ago""#).trimmingCharacters(in: .whitespacesAndNewlines)
         let commitsArray = latestCommits.components(separatedBy: .newlines)
         return commitsArray
     }

@@ -615,6 +615,18 @@ internal struct DDEnvironmentValues {
                 }
             }
 
+        } else if DDEnvironmentValues.getEnvVariable("TEAMCITY_VERSION") != nil {
+            isCi = true
+            provider = "teamcity"
+            repository = nil
+            commit = nil
+            pipelineId = nil
+            pipelineNumber = nil
+            pipelineURL = nil
+            pipelineName = nil
+            jobURL = DDEnvironmentValues.getEnvVariable("BUILD_URL")
+            jobName = DDEnvironmentValues.getEnvVariable("TEAMCITY_BUILDCONF_NAME")
+            stageName = nil
         } else {
             isCi = false
             provider = nil

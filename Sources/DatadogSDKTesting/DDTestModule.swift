@@ -176,6 +176,7 @@ public class DDTestModule: NSObject, Encodable {
         }
 
         DDTestMonitor.tracer.flush()
+        DDTestMonitor.instance?.gitUploadQueue.waitUntilAllOperationsAreFinished()
     }
 }
 

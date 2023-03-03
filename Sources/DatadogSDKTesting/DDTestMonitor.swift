@@ -55,6 +55,7 @@ internal class DDTestMonitor {
 
     let instrumentationWorkQueue = OperationQueue()
     let itrWorkQueue = OperationQueue()
+    let gitUploadQueue = OperationQueue()
 
     static let developerMachineHostName: String = Spawn.commandWithResult("hostname").trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
 
@@ -107,6 +108,10 @@ internal class DDTestMonitor {
         DDTestMonitor.instance = DDTestMonitor()
         Log.measure(name: "startInstrumenting") {
             DDTestMonitor.instance?.startInstrumenting()
+        }
+
+        Log.measure(name: "startGitUpload") {
+            DDTestMonitor.instance?.startGitUpload()
         }
 
         Log.measure(name: "startITR") {
@@ -168,30 +173,25 @@ internal class DDTestMonitor {
         }
     }
 
-    func startITR() {
-        if DDTestMonitor.env.ddApplicationKey == nil {
-            Log.print("APPLICATION_KEY env variable is not set, this is only needed if you use Intelligent Test Runner")
-            return
-        }
-
+    func startGitUpload() {
         /// Check Git is up to date and no local changes
         guard DDTestMonitor.env.isCi || GitUploader.statusUpToDate() else {
             Log.debug("Git status not up to date")
-            coverageHelper = nil
-            itr = nil
             return
         }
 
-        itrWorkQueue.addOperation { [self] in
+        DDTestMonitor.instance?.gitUploadQueue.addOperation {
             if DDTestMonitor.env.gitUploadEnabled {
                 Log.debug("Git Upload Enabled")
-                gitUploader = GitUploader()
+                DDTestMonitor.instance?.gitUploader = GitUploader()
             } else {
                 Log.debug("Git Upload Disabled")
             }
-            gitUploader?.sendGitInfo()
+            DDTestMonitor.instance?.gitUploader?.sendGitInfo()
         }
+    }
 
+    func startITR() {
         var itrBackendConfig: (codeCoverage: Bool, testsSkipping: Bool)?
 
         itrWorkQueue.addOperation {
@@ -215,7 +215,6 @@ internal class DDTestMonitor {
         }
 
         itrWorkQueue.waitUntilAllOperationsAreFinished()
-
         itrWorkQueue.addOperation { [self] in
 
             /// Check branch is not excluded
@@ -240,6 +239,12 @@ internal class DDTestMonitor {
             // Activate Intelligent Test Runner
             if DDTestMonitor.env.itrEnabled ?? itrBackendConfig?.testsSkipping ?? false {
                 Log.debug("ITR Enabled")
+
+                if DDTestMonitor.env.ddApplicationKey == nil {
+                    Log.print("APPLICATION_KEY env variable is not set, this is needed for Intelligent Test Runner")
+                    return
+                }
+                gitUploadQueue.waitUntilAllOperationsAreFinished()
                 itr = IntelligentTestRunner(configurations: DDTestMonitor.baseConfigurationTags)
                 itr?.start()
             } else {

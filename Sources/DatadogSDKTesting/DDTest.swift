@@ -94,6 +94,19 @@ public class DDTest: NSObject {
     func setIsUITest(_ value: Bool) {
         self.isUITest = value
         self.span.setAttribute(key: DDTestTags.testIsUITest, value: value ? "true" : "false")
+
+        // Set default UI values if nor previously set and update crash customData
+        if let testSpan = span as? RecordEventsReadableSpan {
+            let spanData = testSpan.toSpanData()
+            if spanData.attributes[DDUISettingsTags.uiSettingsAppearance] == nil {
+                setTag(key: DDUISettingsTags.uiSettingsAppearance, value: PlatformUtils.getAppearance())
+            }
+            if spanData.attributes[DDUISettingsTags.uiSettingsOrientation] == nil {
+                setTag(key: DDUISettingsTags.uiSettingsLocalization, value: PlatformUtils.getOrientation())
+            }
+            let simpleSpan = SimpleSpanData(spanData: testSpan.toSpanData(), moduleStartTime: module.startTime, suiteStartTime: suite.startTime)
+            DDCrashes.setCustomData(customData: SimpleSpanSerializer.serializeSpan(simpleSpan: simpleSpan))
+        }
     }
 
     /// Adds a extra tag or attribute to the test, any number of tags can be reported

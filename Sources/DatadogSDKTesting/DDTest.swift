@@ -60,7 +60,7 @@ public class DDTest: NSObject {
 
         DDTestMonitor.tracer.addPropagationsHeadersToEnvironment()
         DDTestMonitor.env.addTagsToSpan(span: span)
-        
+
         let functionName = suite.name + "." + name
         if let functionInfo = DDTestModule.bundleFunctionInfo[functionName] {
             var filePath = functionInfo.file
@@ -101,9 +101,11 @@ public class DDTest: NSObject {
             if spanData.attributes[DDUISettingsTags.uiSettingsAppearance] == nil {
                 setTag(key: DDUISettingsTags.uiSettingsAppearance, value: PlatformUtils.getAppearance())
             }
+#if os(iOS)
             if spanData.attributes[DDUISettingsTags.uiSettingsOrientation] == nil {
                 setTag(key: DDUISettingsTags.uiSettingsLocalization, value: PlatformUtils.getOrientation())
             }
+#endif
             let simpleSpan = SimpleSpanData(spanData: testSpan.toSpanData(), moduleStartTime: module.startTime, suiteStartTime: suite.startTime)
             DDCrashes.setCustomData(customData: SimpleSpanSerializer.serializeSpan(simpleSpan: simpleSpan))
         }
@@ -179,7 +181,7 @@ public class DDTest: NSObject {
                 DDTestMonitor.tracer.eventsExporter?.export(coverage: coverageFileURL, testSessionId: testSessionId, testSuiteId: testSuiteId, spanId: spanId, workspacePath: DDTestMonitor.env.workspacePath, binaryImagePaths: BinaryImages.binaryImagesPath)
             }
         }
-        
+
         StderrCapture.syncData()
         span.end(time: testEndTime)
         DDTestMonitor.instance?.networkInstrumentation?.endAndCleanAliveSpans()

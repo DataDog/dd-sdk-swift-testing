@@ -121,7 +121,7 @@ struct PlatformUtils {
             return appearance
         #else
             if #available(OSX 10.14, *) {
-                return NSApp.effectiveAppearance.name.rawValue
+                return NSApp?.effectiveAppearance.name.rawValue ?? "light"
             } else {
                 return "light"
             }

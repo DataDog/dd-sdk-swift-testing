@@ -24,7 +24,7 @@
 static const uint32_t kSecondsFrom1900To1970 = 2208988800UL;
 
 //! Returns the local time as an NTP ufixed64 timestamp
-static ufixed64_t ntp_localtime_get_ufixed64() {
+static ufixed64_t ntp_localtime_get_ufixed64(void) {
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
 	return ufixed64((uint32_t)tv.tv_sec + kSecondsFrom1900To1970, tv.tv_usec * (pow(2, 32) / USEC_PER_SEC));

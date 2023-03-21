@@ -7,14 +7,14 @@
 import Foundation
 
 public class SanitizerHelper: NSObject {
-    static let santizerQueue = DispatchQueue(label: "civisibility.sanitizerQueue")
+    static let santizerQueue = DispatchQueue(label: "civisibility.sanitizerQueue", attributes: .concurrent)
     override init() {}
 
     private static var sanitizerInfo = ""
 
     @objc
     public static func logSanitizerMessage(_ message: NSString) {
-        santizerQueue.async {
+        santizerQueue.sync(flags: .barrier) {
             sanitizerInfo += String(message)
         }
     }
@@ -29,7 +29,7 @@ public class SanitizerHelper: NSObject {
 
     public static func setSaniziterInfo(info: String?) {
         guard let info = info else { return }
-        santizerQueue.sync {
+        santizerQueue.sync(flags: .barrier) {
             sanitizerInfo = info
         }
     }

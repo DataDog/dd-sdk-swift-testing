@@ -94,6 +94,7 @@ internal enum DDTestSuiteVisibilityTags {
 internal enum DDTestSessionTags {
     static let testSkippingEnabled = "test_session.itr.tests_skipping.enabled"
     static let codeCoverageEnabled = "test_session.code_coverage.enabled"
+    static let testToolchain = "test.toolchain"
 }
 
 internal enum DDTestModuleTags {

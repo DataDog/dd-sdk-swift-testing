@@ -130,7 +130,7 @@ struct PlatformUtils {
 
     #if os(iOS)
         static func getOrientation() -> String {
-            let orientation = UIApplication.shared.keyWindow?.rootViewController?.interfaceOrientation
+            let orientation = UIApplication.shared.keyWindow?.rootViewController?.interfaceOrientation ?? .portrait
             switch orientation {
                 case .unknown:
                     return "unknown"
@@ -142,10 +142,8 @@ struct PlatformUtils {
                     return "landscapeRight"
                 case .landscapeRight:
                     return "landscapeLeft"
-                case .none:
-                    return "unknown"
                 @unknown default:
-                    return "unknown"
+                    return "portrait"
             }
         }
     #endif

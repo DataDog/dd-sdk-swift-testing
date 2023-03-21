@@ -103,7 +103,7 @@ public class DDTest: NSObject {
             }
 #if os(iOS)
             if spanData.attributes[DDUISettingsTags.uiSettingsOrientation] == nil {
-                setTag(key: DDUISettingsTags.uiSettingsLocalization, value: PlatformUtils.getOrientation())
+                setTag(key: DDUISettingsTags.uiSettingsOrientation, value: PlatformUtils.getOrientation())
             }
 #endif
             let simpleSpan = SimpleSpanData(spanData: testSpan.toSpanData(), moduleStartTime: module.startTime, suiteStartTime: suite.startTime)

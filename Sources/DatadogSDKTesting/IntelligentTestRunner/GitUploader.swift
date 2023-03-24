@@ -78,19 +78,23 @@ struct GitUploader {
     private func handleShallowClone(repository: String) {
         // Check if is a shallow repository
         let isShallow = Spawn.commandWithResult(#"git -C "\#(GitUploader.workspacePath)" rev-parse --is-shallow-repository"#).trimmingCharacters(in: .whitespacesAndNewlines)
+        Log.debug("isShallow: \(isShallow)")
         if isShallow != "true" {
             return
         }
 
         // Count if number of returned lines is greater than 1
         let lineLength = Spawn.commandWithResult(#"git -C "\#(GitUploader.workspacePath)" log --format=oneline -n 2"#).trimmingCharacters(in: .whitespacesAndNewlines)
+        Log.debug("lineLength: \(lineLength)")
         guard !lineLength.contains("\n") else {
             return
         }
-        Log.debug("Unshallowing git repository")
         // Fetch remaining tree info
-        Spawn.command(#"git -C "\#(GitUploader.workspacePath)" config remote.origin.partialclonefilter "blob:none""#)
-        Spawn.command(#"git -C "\#(GitUploader.workspacePath)" fetch --shallow-since="1 month ago" --update-shallow --refetch"#)
+        let configResult = Spawn.commandWithResult(#"git -C "\#(GitUploader.workspacePath)" config remote.origin.partialclonefilter "blob:none""#)
+        Log.debug("configResult: \(configResult)")
+
+        let unshallowResult = Spawn.commandWithResult(#"git -C "\#(GitUploader.workspacePath)" fetch --shallow-since="1 month ago" --update-shallow --refetch"#)
+        Log.debug("unshallowResult: \(unshallowResult)")
     }
 
     private func getLatestCommits() -> [String] {
@@ -107,6 +111,7 @@ struct GitUploader {
     private func getCommitsAndTreesExcluding(excluded: [String]) -> [String] {
         let exclusionList = excluded.map { "^\($0)" }.joined(separator: " ")
         let missingCommits = Spawn.commandWithResult(#"git -C "\#(GitUploader.workspacePath)" rev-list --objects --no-object-names --filter=blob:none HEAD --since="1 month ago" \#(exclusionList)"#).trimmingCharacters(in: .whitespacesAndNewlines)
+        Log.debug("rev-list objects: \(missingCommits)")
         guard !missingCommits.isEmpty else { return [] }
         let missingCommitsArray = missingCommits.components(separatedBy: .newlines)
         return missingCommitsArray

@@ -110,8 +110,17 @@ struct GitUploader {
 
     private func getCommitsAndTreesExcluding(excluded: [String]) -> [String] {
         let exclusionList = excluded.map { "^\($0)" }.joined(separator: " ")
-        let missingCommits = Spawn.commandWithResult(#"git -C "\#(GitUploader.workspacePath)" rev-list --objects --no-object-names --filter=blob:none HEAD --since="1 month ago" \#(exclusionList)"#).trimmingCharacters(in: .whitespacesAndNewlines)
-        Log.debug("rev-list objects: \(missingCommits)")
+        
+        let revlistCommand = #"git -C "\#(GitUploader.workspacePath)" rev-list --objects --no-object-names --filter=blob:none HEAD --since="1 month ago" \#(exclusionList)"#
+        Log.debug("rev-list command: \(revlistCommand)")
+        Log.debug("rev-list command without exclusion: \(#"git -C "\#(GitUploader.workspacePath)" rev-list --objects --no-object-names --filter=blob:none HEAD --since="1 month ago" \#(exclusionList)"#)")
+        let missingCommits = Spawn.commandWithResult(revlistCommand).trimmingCharacters(in: .whitespacesAndNewlines)
+        Log.debug("rev-list result: \(missingCommits)")
+        
+        let revlistCommandWithoutExclusion = #"git -C "\#(GitUploader.workspacePath)" rev-list --objects --no-object-names --filter=blob:none HEAD --since="1 month ago""#
+        log missingCommitsWithoutExclusion = Spawn.commandWithResult(revlistCommand).trimmingCharacters(in: .whitespacesAndNewlines)
+        Log.debug("rev-list result without exclusion: \(missingCommitsWithoutExclusion)")
+
         guard !missingCommits.isEmpty else { return [] }
         let missingCommitsArray = missingCommits.components(separatedBy: .newlines)
         return missingCommitsArray

@@ -118,7 +118,7 @@ struct GitUploader {
         Log.debug("rev-list result: \(missingCommits)")
         
         let revlistCommandWithoutExclusion = #"git -C "\#(GitUploader.workspacePath)" rev-list --objects --no-object-names --filter=blob:none HEAD --since="1 month ago""#
-        log missingCommitsWithoutExclusion = Spawn.commandWithResult(revlistCommand).trimmingCharacters(in: .whitespacesAndNewlines)
+        let missingCommitsWithoutExclusion = Spawn.commandWithResult(revlistCommand).trimmingCharacters(in: .whitespacesAndNewlines)
         Log.debug("rev-list result without exclusion: \(missingCommitsWithoutExclusion)")
 
         guard !missingCommits.isEmpty else { return [] }

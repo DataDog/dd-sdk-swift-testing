@@ -251,7 +251,7 @@ struct GitInfo {
             indexData = indexData.advanced(by: 4 * Int(indexOfObject))
             parser = BinaryParser(data: indexData.subdata(in: 0..<4))
             var offset = try parser.parseUInt32()
-            if offset & 0x8000000 == 0 {
+            if offset & 0x80000000 == 0 {
                 // offset is in this layes
                 packOffset = UInt64(offset)
             } else {
@@ -392,9 +392,9 @@ struct CommitInfo {
                 committerEmail = committer[1].trimmingCharacters(in: .whitespaces)
                 committerDate = committer[2].trimmingCharacters(in: .whitespaces)
             } else if authorName != nil, committerName != nil {
-                if line.contains("--BEGIN PGP SIGNATURE--") {
+                if line.contains("--BEGIN PGP SIGNATURE--") || line.contains("--BEGIN SSH SIGNATURE--") {
                     foundPGP = true
-                } else if line.contains("--END PGP SIGNATURE--") {
+                } else if line.contains("--END PGP SIGNATURE--") || line.contains("--END SSH SIGNATURE--") {
                     foundPGP = false
                 } else if foundPGP == false {
                     if !message.isEmpty {

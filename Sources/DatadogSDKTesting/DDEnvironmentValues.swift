@@ -94,6 +94,8 @@ internal struct DDEnvironmentValues {
     let pipelineNumber: String?
     let pipelineURL: String?
     let pipelineName: String?
+    let nodeName: String?
+    let nodeLabels: String?
     let jobURL: String?
     let jobName: String?
     let stageName: String?
@@ -325,6 +327,8 @@ internal struct DDEnvironmentValues {
             jobURL = DDEnvironmentValues.getEnvVariable("TRAVIS_JOB_WEB_URL")
             jobName = nil
             stageName = nil
+            nodeName = nil
+            nodeLabels = nil
             tagEnv = DDEnvironmentValues.getEnvVariable("TRAVIS_TAG")
             if tagEnv?.isEmpty ?? true {
                 branchEnv = DDEnvironmentValues.getEnvVariable("TRAVIS_PULL_REQUEST_BRANCH")
@@ -351,6 +355,8 @@ internal struct DDEnvironmentValues {
             jobURL = DDEnvironmentValues.getEnvVariable("CIRCLE_BUILD_URL")
             jobName = DDEnvironmentValues.getEnvVariable("CIRCLE_JOB")
             stageName = nil
+            nodeName = nil
+            nodeLabels = nil
             tagEnv = DDEnvironmentValues.getEnvVariable("CIRCLE_TAG")
             if tagEnv?.isEmpty ?? true {
                 branchEnv = DDEnvironmentValues.getEnvVariable("CIRCLE_BRANCH")
@@ -374,6 +380,8 @@ internal struct DDEnvironmentValues {
             jobURL = nil
             jobName = nil
             stageName = nil
+            nodeName = DDEnvironmentValues.getEnvVariable("NODE_NAME")
+            nodeLabels = DDEnvironmentValues.separatedValuesFromEnvironment(env: "NODE_LABELS")
             branchEnv = DDEnvironmentValues.getEnvVariable("GIT_BRANCH")
 
             // Env vars
@@ -392,6 +400,8 @@ internal struct DDEnvironmentValues {
             jobURL = DDEnvironmentValues.getEnvVariable("CI_JOB_URL")
             jobName = DDEnvironmentValues.getEnvVariable("CI_JOB_NAME")
             stageName = DDEnvironmentValues.getEnvVariable("CI_JOB_STAGE")
+            nodeName = DDEnvironmentValues.getEnvVariable("CI_RUNNER_ID")
+            nodeLabels = DDEnvironmentValues.getEnvVariable("CI_RUNNER_TAGS")
             branchEnv = DDEnvironmentValues.getEnvVariable("CI_COMMIT_REF_NAME") ?? DDEnvironmentValues.getEnvVariable("CI_COMMIT_BRANCH")
             tagEnv = DDEnvironmentValues.getEnvVariable("CI_COMMIT_TAG")
             commitMessage = DDEnvironmentValues.getEnvVariable("CI_COMMIT_MESSAGE")
@@ -422,6 +432,8 @@ internal struct DDEnvironmentValues {
             jobURL = pipelineURL
             jobName = nil
             stageName = nil
+            nodeName = nil
+            nodeLabels = nil
             branchEnv = DDEnvironmentValues.getEnvVariable("APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH")
             if branchEnv?.isEmpty ?? true {
                 branchEnv = DDEnvironmentValues.getEnvVariable("APPVEYOR_REPO_BRANCH")
@@ -457,6 +469,8 @@ internal struct DDEnvironmentValues {
             jobURL = "\(foundationServerUri)\(teamProjectId)/_build/results?buildId=\(pipelineId ?? "")&view=logs&j=\(jobId)&t=\(taskId)"
             jobName = DDEnvironmentValues.getEnvVariable("SYSTEM_JOBDISPLAYNAME")
             stageName = DDEnvironmentValues.getEnvVariable("SYSTEM_STAGEDISPLAYNAME")
+            nodeName = nil
+            nodeLabels = nil
             var repositoryEnv = DDEnvironmentValues.getEnvVariable("SYSTEM_PULLREQUEST_SOURCEREPOSITORYURI")
             if repositoryEnv?.isEmpty ?? true {
                 repositoryEnv = DDEnvironmentValues.getEnvVariable("BUILD_REPOSITORY_URI")
@@ -495,6 +509,8 @@ internal struct DDEnvironmentValues {
             jobURL = pipelineURL
             jobName = nil
             stageName = nil
+            nodeName = nil
+            nodeLabels = nil
             branchEnv = DDEnvironmentValues.getEnvVariable("BITBUCKET_BRANCH")
             tagEnv = DDEnvironmentValues.getEnvVariable("BITBUCKET_TAG")
 
@@ -521,6 +537,8 @@ internal struct DDEnvironmentValues {
             jobURL = "\(githubServerEnv)/\(repositoryEnv)/commit/\(commit ?? "")/checks"
             jobName = DDEnvironmentValues.getEnvVariable("GITHUB_JOB")
             stageName = nil
+            nodeName = nil
+            nodeLabels = nil
             branchEnv = DDEnvironmentValues.getEnvVariable("GITHUB_HEAD_REF")
             if branchEnv?.isEmpty ?? true {
                 branchEnv = DDEnvironmentValues.getEnvVariable("GITHUB_REF")
@@ -545,6 +563,8 @@ internal struct DDEnvironmentValues {
             jobURL = (pipelineURL ?? "") + "#" + (DDEnvironmentValues.getEnvVariable("BUILDKITE_JOB_ID") ?? "")
             jobName = nil
             stageName = nil
+            nodeName = DDEnvironmentValues.getEnvVariable("BUILDKITE_AGENT_ID")
+            nodeLabels = DDEnvironmentValues.separatedValuesFromEnvironmentStartingWith(env: "BUILDKITE_AGENT_META_DATA_")
             branchEnv = DDEnvironmentValues.getEnvVariable("BUILDKITE_BRANCH")
             tagEnv = DDEnvironmentValues.getEnvVariable("BUILDKITE_TAG")
             commitMessage = DDEnvironmentValues.getEnvVariable("BUILDKITE_MESSAGE")
@@ -572,6 +592,8 @@ internal struct DDEnvironmentValues {
             jobURL = nil
             jobName = nil
             stageName = nil
+            nodeName = nil
+            nodeLabels = nil
             pipelineURL = DDEnvironmentValues.getEnvVariable("BITRISE_BUILD_URL")
             pipelineName = DDEnvironmentValues.getEnvVariable("BITRISE_TRIGGERED_WORKFLOW_ID") ??
                 DDEnvironmentValues.getEnvVariable("BITRISE_APP_TITLE")
@@ -607,6 +629,8 @@ internal struct DDEnvironmentValues {
             jobURL = nil
             jobName = nil
             stageName = nil
+            nodeName = nil
+            nodeLabels = nil
             tagEnv = DDEnvironmentValues.getEnvVariable("CI_TAG")
             if tagEnv?.isEmpty ?? true {
                 branchEnv = DDEnvironmentValues.getEnvVariable("CI_BRANCH")
@@ -627,6 +651,27 @@ internal struct DDEnvironmentValues {
             jobURL = DDEnvironmentValues.getEnvVariable("BUILD_URL")
             jobName = DDEnvironmentValues.getEnvVariable("TEAMCITY_BUILDCONF_NAME")
             stageName = nil
+            nodeName = nil
+            nodeLabels = nil
+        } else if DDEnvironmentValues.getEnvVariable("CF_BUILD_ID") != nil {
+            isCi = true
+            provider = "codefresh"
+            repository = nil
+            commit = nil
+            pipelineId = DDEnvironmentValues.getEnvVariable("CF_BUILD_ID")
+            pipelineNumber = nil
+            pipelineURL = DDEnvironmentValues.getEnvVariable("CF_BUILD_URL")
+            pipelineName = DDEnvironmentValues.getEnvVariable("CF_PIPELINE_NAME")
+            jobURL = nil
+            jobName = DDEnvironmentValues.getEnvVariable("CF_STEP_NAME")
+            stageName = nil
+            nodeName = nil
+            nodeLabels = nil
+            branchEnv = DDEnvironmentValues.getEnvVariable("CF_BRANCH")
+            
+            // Env vars
+            ciEnvVars["CF_BUILD_ID"] = DDEnvironmentValues.getEnvVariable("CF_BUILD_ID")
+
         } else {
             isCi = false
             provider = nil
@@ -638,6 +683,8 @@ internal struct DDEnvironmentValues {
             jobURL = nil
             jobName = nil
             stageName = nil
+            nodeName = nil
+            nodeLabels = nil
         }
 
         // Read git folder information
@@ -740,6 +787,8 @@ internal struct DDEnvironmentValues {
         attributes[DDCITags.ciPipelineNumber] = pipelineNumber
         attributes[DDCITags.ciPipelineURL] = pipelineURL
         attributes[DDCITags.ciPipelineName] = pipelineName
+        attributes[DDCITags.ciNodeName] = nodeName
+        attributes[DDCITags.ciNodeLabels] = nodeLabels
         attributes[DDCITags.ciStageName] = stageName
         attributes[DDCITags.ciJobName] = jobName
         attributes[DDCITags.ciJobURL] = jobURL
@@ -892,7 +941,7 @@ internal struct DDEnvironmentValues {
         while !FileManager.default.fileExists(atPath: rootFolder.appendingPathComponent(".git")) {
             if rootFolder.isEqual(to: rootFolder.deletingLastPathComponent) {
                 // We reached to the top
-                Log.print("could not find .git folder at \(rootFolder)")
+                // Log.print("could not find .git folder at \(rootFolder)")
                 break
             }
             rootFolder = rootFolder.deletingLastPathComponent as NSString
@@ -925,5 +974,29 @@ internal struct DDEnvironmentValues {
                 Log.print("DD_GIT_COMMIT_SHA environment variable was configured with a value shorter than 40 character")
             }
         }
+    }
+
+    static func separatedValuesFromEnvironment(env: String) -> String? {
+        guard let rawValue = DDEnvironmentValues.getEnvVariable(env) else {
+            return nil
+        }
+        let separatedValues = rawValue.components(separatedBy: .whitespaces)
+        return separatedValues.description
+    }
+
+    static func separatedValuesFromEnvironmentStartingWith(env: String) -> String? {
+        var values = [String]()
+
+        DDEnvironmentValues.environment.forEach {
+            if $0.key.hasPrefix(env) {
+                var newKey = $0.key
+                newKey.removeFirst(env.count)
+                values.append( newKey.lowercased() + ":" + $0.value)
+            }
+        }
+
+        guard values.count > 0 else { return nil }
+
+        return values.description
     }
 }

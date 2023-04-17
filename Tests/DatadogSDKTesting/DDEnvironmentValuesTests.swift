@@ -317,7 +317,7 @@ class DDEnvironmentValuesTests: XCTestCase {
         for case let fileURL as URL in fileEnumerator {
             if fileURL.pathExtension == "json" {
                 if fileURL.lastPathComponent == "buddy.json" {
-                    //buddy CI does not support macOS runners
+                    // buddy CI does not support macOS runners
                     continue
                 }
                 numTestedFiles += 1
@@ -357,7 +357,7 @@ class DDEnvironmentValuesTests: XCTestCase {
             spanData = span.toSpanData()
 
             spec[1].forEach {
-                if $0.key == "_dd.ci.env_vars" {
+                if $0.key == "_dd.ci.env_vars" || $0.key == "ci.node.labels" {
                     XCTAssertTrue(compareJsons(spanData.attributes[$0.key]?.description, $0.value))
                 } else {
                     XCTAssertEqual(spanData.attributes[$0.key]?.description, $0.value, "\($0.key) != \($0.value)")
@@ -368,9 +368,21 @@ class DDEnvironmentValuesTests: XCTestCase {
 
     private func compareJsons(_ string1: String?, _ string2: String) -> Bool {
         guard let string1 = string1 else { return false }
-        let json1 = try! JSONSerialization.jsonObject(with: string1.utf8Data) as! [String: String]
-        let json2 = try! JSONSerialization.jsonObject(with: string2.utf8Data) as! [String: String]
-        let comparison = NSDictionary(dictionary: json1).isEqual(to: json2)
-        return comparison
+        if let json1 = try? JSONSerialization.jsonObject(with: string1.utf8Data) as? [String: String],
+           let json2 = try? JSONSerialization.jsonObject(with: string2.utf8Data) as? [String: String]
+        {
+            let comparison = NSDictionary(dictionary: json1).isEqual(to: json2)
+            XCTAssertTrue(comparison)
+            return comparison
+        } else if let json1 = try? JSONSerialization.jsonObject(with: string1.utf8Data) as? [String],
+                  let json2 = try? JSONSerialization.jsonObject(with: string2.utf8Data) as? [String]
+        {
+            let comparison = (json1.sorted() == json2.sorted())
+            XCTAssertTrue(comparison)
+            return comparison
+        } else {
+            XCTAssert(false, "Uncomparable objects")
+            return false
+        }
     }
 }

@@ -23,7 +23,24 @@ build/xcframework/DatadogSDKTesting.zip: build/DatadogSDKTesting.xcframework
 build/xcframework: build/xcframework/DatadogSDKTesting.zip
 
 
-release: build/xcframework
+collect_symbols:
+	mkdir -p $(PWD)/build/symbols
+	mkdir -p $(PWD)/build/symbols/macos
+	cp -R build/DatadogSDKTesting/macos.xcarchive/dSYMs/DatadogSDKTesting.framework.dSYM $(PWD)/build/symbols/macos/DatadogSDKTesting.framework.dSYM
+	mkdir -p $(PWD)/build/symbols/iphoneos
+	cp -R build/DatadogSDKTesting/iphoneos.xcarchive/dSYMs/DatadogSDKTesting.framework.dSYM $(PWD)/build/symbols/iphoneos/DatadogSDKTesting.framework.dSYM
+	mkdir -p $(PWD)/build/symbols/iphonesimulator
+	cp -R build/DatadogSDKTesting/iphonesimulator.xcarchive/dSYMs/DatadogSDKTesting.framework.dSYM $(PWD)/build/symbols/iphonesimulator/DatadogSDKTesting.framework.dSYM
+	mkdir -p $(PWD)/build/symbols/appletvos
+	cp -R build/DatadogSDKTesting/appletvos.xcarchive/dSYMs/DatadogSDKTesting.framework.dSYM $(PWD)/build/symbols/appletvos/DatadogSDKTesting.framework.dSYM
+	mkdir -p $(PWD)/build/symbols/appletvsimulator
+	cp -R build/DatadogSDKTesting/appletvsimulator.xcarchive/dSYMs/DatadogSDKTesting.framework.dSYM $(PWD)/build/symbols/appletvsimulator/DatadogSDKTesting.framework.dSYM
+	mkdir -p $(PWD)/build/symbols/maccatalyst
+	cp -R build/DatadogSDKTesting/maccatalyst.xcarchive/dSYMs/DatadogSDKTesting.framework.dSYM $(PWD)/build/symbols/maccatalyst/DatadogSDKTesting.framework.dSYM
+	cd ./build/; zip -ry ./symbols.zip ./symbols
+	
+
+release: build/xcframework collect_symbols
 
 bump:
 		@read -p "Enter version number: " version;  \

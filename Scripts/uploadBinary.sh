@@ -7,6 +7,7 @@
 brew list gh &>/dev/null || brew install gh
 echo $1 | gh auth login --with-token
 gh release upload $2 ./build/xcframework/DatadogSDKTesting.zip --clobber
+gh release upload $2 ./build/symbols.zip --clobber
 
 #Update binary release repo
 binaryChecksum=$(swift package compute-checksum ./build/xcframework/DatadogSDKTesting.zip)

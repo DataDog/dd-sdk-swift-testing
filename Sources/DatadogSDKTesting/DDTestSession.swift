@@ -37,13 +37,9 @@ public class DDTestSession: NSObject, Encodable {
         self.meta[DDTestTags.testBundle] = nil
         self.meta[DDTestSuiteVisibilityTags.testModuleId] = nil
         self.meta[DDUISettingsTags.uiSettingsModuleLocalization] = nil
-        self.meta[DDTestModuleTags.testSkippingEnabled] = nil
-        self.meta[DDTestModuleTags.codeCoverageEnabled] = nil
 
         // Add spacific tags for sessions
         self.meta[DDTestTags.testCommand] = "test \(testModule.bundleName)"
-        self.meta[DDTestSessionTags.testSkippingEnabled] = (DDTestMonitor.instance?.itr != nil) ? "true" : "false"
-        self.meta[DDTestSessionTags.codeCoverageEnabled] = (DDTestMonitor.instance?.coverageHelper != nil) ? "true" : "false"
         self.meta[DDTestSessionTags.testToolchain] = DDTestMonitor.env.runtimeName.lowercased() + "-" + DDTestMonitor.env.runtimeVersion
     }
 }

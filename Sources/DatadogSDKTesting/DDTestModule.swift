@@ -157,8 +157,8 @@ public class DDTestModule: NSObject, Encodable {
         meta.merge(DDEnvironmentValues.ciAttributes) { _, new in new }
         meta[DDUISettingsTags.uiSettingsModuleLocalization] = localization
         meta[DDItrTags.itrSkippedTests] = itrSkipped ? "true" : "false"
-        meta[DDTestModuleTags.testSkippingEnabled] = (DDTestMonitor.instance?.itr != nil) ? "true" : "false"
-        meta[DDTestModuleTags.codeCoverageEnabled] = (DDTestMonitor.instance?.coverageHelper != nil) ? "true" : "false"
+        meta[DDTestSessionTags.testSkippingEnabled] = (DDTestMonitor.instance?.itr != nil) ? "true" : "false"
+        meta[DDTestSessionTags.codeCoverageEnabled] = (DDTestMonitor.instance?.coverageHelper != nil) ? "true" : "false"
         if !itrSkipped {
             metrics[DDTestSuiteVisibilityTags.testCoverageLines] = linesCovered
         }

@@ -4339,7 +4339,7 @@
 			repositoryURL = "https://github.com/DataDog/llvm-xcframework";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 14.0.0;
+				minimumVersion = 15.0.0;
 			};
 		};
 		E1FB4839253891650083B263 /* XCRemoteSwiftPackageReference "plcrashreporter" */ = {

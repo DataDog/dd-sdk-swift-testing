@@ -19,6 +19,9 @@ public enum Endpoint {
     /// Europe based servers.
     /// Sends data to [app.datadoghq.eu](https://app.datadoghq.eu/).
     case eu1
+    /// Japan based servers.
+    /// Sends data to [app.datadoghq.eu](https://ap1.datadoghq.com/).
+    case ap1
     /// Gov servers.
     /// Sends data to [app.ddog-gov.com](https://app.ddog-gov.com/).
     //   case us1_fed
@@ -35,6 +38,7 @@ public enum Endpoint {
             case .us3: return URL(string: "https://logs.browser-intake-us3-datadoghq.com/" + endpoint)!
             case .us5: return URL(string: "https://logs.browser-intake-us5-datadoghq.com/" + endpoint)!
             case .eu1: return URL(string: "https://mobile-http-intake.logs.datadoghq.eu/" + endpoint)!
+            case .ap1: return URL(string: "https://logs.browser-intake-ap1-datadoghq.com/" + endpoint)!
             case .staging: return URL(string: "https://logs.browser-intake-datad0g.com/" + endpoint)!
             case let .custom(_, logsURL: logsUrl): return logsUrl
         }
@@ -47,6 +51,7 @@ public enum Endpoint {
             case .us3: return URL(string: "https://citestcycle-intake.us3.datadoghq.com/" + endpoint)!
             case .us5: return URL(string: "https://citestcycle-intake.us5.datadoghq.com/" + endpoint)!
             case .eu1: return URL(string: "https://citestcycle-intake.datadoghq.eu/" + endpoint)!
+            case .ap1: return URL(string: "https://citestcycle-intake.ap1.datadoghq.com/" + endpoint)!
             case .staging: return URL(string: "https://citestcycle-intake.datad0g.com/" + endpoint)!
             case let .custom(testsURL: testsURL, _): return testsURL
         }
@@ -59,6 +64,7 @@ public enum Endpoint {
             case .us3: return URL(string: "https://event-platform-intake.us3.datadoghq.com/" + endpoint)!
             case .us5: return URL(string: "https://event-platform-intake.us5.datadoghq.com/" + endpoint)!
             case .eu1: return URL(string: "https://event-platform-intake.datadoghq.eu/" + endpoint)!
+            case .ap1: return URL(string: "https://event-platform-intake.ap1.datadoghq.com/" + endpoint)!
             case .staging: return URL(string: "https://event-platform-intake.datad0g.com/" + endpoint)!
             case let .custom(testsURL: testsURL, _): return testsURL
         }
@@ -71,6 +77,7 @@ public enum Endpoint {
             case .us3: return URL(string: "https://api.us3.datadoghq.com/" + endpoint)!
             case .us5: return URL(string: "https://api.us5.datadoghq.com/" + endpoint)!
             case .eu1: return URL(string: "https://api.datadoghq.eu/" + endpoint)!
+            case .ap1: return URL(string: "https://api.ap1.datadoghq.com/" + endpoint)!
             case .staging: return URL(string: "https://api.datad0g.com/" + endpoint)!
             case let .custom(testsURL: testsURL, _): return testsURL
         }
@@ -83,6 +90,7 @@ public enum Endpoint {
             case .us3: return URL(string: "https://api.us3.datadoghq.com/" + endpoint)!
             case .us5: return URL(string: "https://api.us5.datadoghq.com/" + endpoint)!
             case .eu1: return URL(string: "https://api.datadoghq.eu/" + endpoint)!
+            case .ap1: return URL(string: "https://api.ap1.datadoghq.com/" + endpoint)!
             case .staging: return URL(string: "https://api.datad0g.com/" + endpoint)!
             case let .custom(testsURL: testsURL, _): return testsURL
         }
@@ -95,6 +103,7 @@ public enum Endpoint {
             case .us3: return URL(string: "https://api.us3.datadoghq.com/" + endpoint)!
             case .us5: return URL(string: "https://api.us5.datadoghq.com/" + endpoint)!
             case .eu1: return URL(string: "https://api.datadoghq.eu/" + endpoint)!
+            case .ap1: return URL(string: "https://api.ap1.datadoghq.com/" + endpoint)!
             case .staging: return URL(string: "https://api.datad0g.com/" + endpoint)!
             case let .custom(testsURL: testsURL, _): return testsURL
         }
@@ -107,6 +116,7 @@ public enum Endpoint {
             case .us3: return URL(string: "https://api.us3.datadoghq.com/" + endpoint)!
             case .us5: return URL(string: "https://api.us5.datadoghq.com/" + endpoint)!
             case .eu1: return URL(string: "https://api.datadoghq.eu/" + endpoint)!
+            case .ap1: return URL(string: "https://api.ap1.datadoghq.com/" + endpoint)!
             case .staging: return URL(string: "https://api.datad0g.com/" + endpoint)!
             case let .custom(testsURL: testsURL, _): return testsURL
         }

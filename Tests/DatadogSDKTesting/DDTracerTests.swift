@@ -149,6 +149,16 @@ class DDTracerTests: XCTestCase {
         XCTAssertTrue(tracer.endpointURLs().contains("https://mobile-http-intake.logs.datadoghq.eu/api/v2/logs"))
         DDEnvironmentValues.environment["DD_ENDPOINT"] = nil
     }
+    
+    func testEndpointChangeToAP1() {
+        DDEnvironmentValues.environment["DD_ENDPOINT"] = "ap1"
+        resetEnvironmentVariables()
+
+        let tracer = DDTracer()
+        XCTAssertTrue(tracer.endpointURLs().contains("https://citestcycle-intake.ap1.datadoghq.com/api/v2/citestcycle"))
+        XCTAssertTrue(tracer.endpointURLs().contains("https://logs.browser-intake-ap1-datadoghq.com/api/v2/logs"))
+        DDEnvironmentValues.environment["DD_ENDPOINT"] = nil
+    }
 
 //    func testEndpointChangeToGov() {
 //        DDEnvironmentValues.environment["DD_ENDPOINT"] = "GOV"

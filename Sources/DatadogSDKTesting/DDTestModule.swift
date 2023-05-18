@@ -127,19 +127,6 @@ public class DDTestModule: NSObject, Encodable {
             }
         }
 
-        if let llvmProfilePath = DDEnvironmentValues.getEnvVariable("LLVM_PROFILE_FILE") {
-            let profileFolder = URL(fileURLWithPath: llvmProfilePath).deletingLastPathComponent()
-            // Locate proper file
-            if let enumerator = FileManager.default.enumerator(at: profileFolder, includingPropertiesForKeys: nil, options: .skipsSubdirectoryDescendants) {
-                for element in enumerator {
-                    if let file = element as? URL, file.pathExtension == "profraw" {
-                        let coverage = DDCoverageHelper.getModuleCoverage(profrawFile: file, binaryImagePaths: BinaryImages.binaryImagesPath)
-                        linesCovered = coverage?.data.first?.totals.lines.percent
-                        break
-                    }
-                }
-            }
-        }
         /// Export module event
         let defaultAttributes: [String: String] = [
             DDGenericTags.type: DDTagValues.typeModuleEnd,
@@ -160,6 +147,19 @@ public class DDTestModule: NSObject, Encodable {
         meta[DDTestSessionTags.testSkippingEnabled] = (DDTestMonitor.instance?.itr != nil) ? "true" : "false"
         meta[DDTestSessionTags.codeCoverageEnabled] = (DDTestMonitor.instance?.coverageHelper != nil) ? "true" : "false"
         if !itrSkipped {
+            if let llvmProfilePath = DDEnvironmentValues.getEnvVariable("LLVM_PROFILE_FILE") {
+                let profileFolder = URL(fileURLWithPath: llvmProfilePath).deletingLastPathComponent()
+                // Locate proper file
+                if let enumerator = FileManager.default.enumerator(at: profileFolder, includingPropertiesForKeys: nil, options: .skipsSubdirectoryDescendants) {
+                    for element in enumerator {
+                        if let file = element as? URL, file.pathExtension == "profraw" {
+                            let coverage = DDCoverageHelper.getModuleCoverage(profrawFile: file, binaryImagePaths: BinaryImages.binaryImagesPath)
+                            linesCovered = coverage?.data.first?.totals.lines.percent
+                            break
+                        }
+                    }
+                }
+            }
             metrics[DDTestSuiteVisibilityTags.testCoverageLines] = linesCovered
         }
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: DDTestModuleEnvelope(self))

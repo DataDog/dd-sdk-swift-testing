@@ -93,7 +93,7 @@ struct GitUploader {
         let configResult = Spawn.commandWithResult(#"git -C "\#(GitUploader.workspacePath)" config remote.origin.partialclonefilter "blob:none""#)
         Log.debug("configResult: \(configResult)")
 
-        let unshallowResult = Spawn.commandWithResult(#"git -C "\#(GitUploader.workspacePath)" origin HEAD fetch --shallow-since="1 month ago" --update-shallow --refetch"#)
+        let unshallowResult = Spawn.commandWithResult(#"git -C "\#(GitUploader.workspacePath)" fetch --shallow-since="1 month ago" --update-shallow --refetch"#)
         Log.debug("unshallowResult: \(unshallowResult)")
     }
 

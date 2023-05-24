@@ -395,7 +395,7 @@ internal struct DDEnvironmentValues {
             workspaceEnv = DDEnvironmentValues.getEnvVariable("CI_PROJECT_DIR")
             pipelineId = DDEnvironmentValues.getEnvVariable("CI_PIPELINE_ID")
             pipelineNumber = DDEnvironmentValues.getEnvVariable("CI_PIPELINE_IID")
-            pipelineURL = DDEnvironmentValues.getEnvVariable("CI_PIPELINE_URL")?.replacingOccurrences(of: "/-/", with: "/")
+            pipelineURL = DDEnvironmentValues.getEnvVariable("CI_PIPELINE_URL")
             pipelineName = DDEnvironmentValues.getEnvVariable("CI_PROJECT_PATH")
             jobURL = DDEnvironmentValues.getEnvVariable("CI_JOB_URL")
             jobName = DDEnvironmentValues.getEnvVariable("CI_JOB_NAME")

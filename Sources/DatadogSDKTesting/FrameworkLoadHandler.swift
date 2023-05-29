@@ -59,9 +59,6 @@ public class FrameworkLoadHandler: NSObject {
                 testObserver = DDTestObserver()
                 testObserver?.startObserving()
                 DispatchQueue.global().async {
-                    _ = DDTestMonitor.env
-                }
-                DispatchQueue.global().async {
                     _ = DDTestMonitor.clock
                 }
             } else if isBinaryUnderUITesting {

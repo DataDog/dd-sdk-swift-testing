@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		74F0F9A92ACE0CC50086803B /* llvm-xcframework in Frameworks */ = {isa = PBXBuildFile; productRef = 74F0F9A82ACE0CC50086803B /* llvm-xcframework */; };
 		81894A4F29B0A28B00108C51 /* Retrying.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81894A4E29B0A28B00108C51 /* Retrying.swift */; };
 		81894A5029B0A28B00108C51 /* Retrying.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81894A4E29B0A28B00108C51 /* Retrying.swift */; };
 		81894A5129B0A28B00108C51 /* Retrying.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81894A4E29B0A28B00108C51 /* Retrying.swift */; };
@@ -476,7 +477,6 @@
 		E1DCAFF9284A2BFB00F44BE3 /* EventsExporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1DCAFC2284A2B7B00F44BE3 /* EventsExporter.framework */; };
 		E1DFF0EA257010E700344895 /* PlatformUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141CF5F256FD513008B6B70 /* PlatformUtils.swift */; };
 		E1DFF0EB257010E800344895 /* PlatformUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141CF5F256FD513008B6B70 /* PlatformUtils.swift */; };
-		E1E51D5028B5099200E0E206 /* llvm-xcframework in Frameworks */ = {isa = PBXBuildFile; productRef = E1E51D4F28B5099200E0E206 /* llvm-xcframework */; };
 		E1E51D5228B509BA00E0E206 /* llvm-xcframework in Frameworks */ = {isa = PBXBuildFile; productRef = E1E51D5128B509BA00E0E206 /* llvm-xcframework */; };
 		E1E51D5428B509C100E0E206 /* llvm-xcframework in Frameworks */ = {isa = PBXBuildFile; productRef = E1E51D5328B509C100E0E206 /* llvm-xcframework */; };
 		E1EBBD5227F202A60059BC3E /* SpanSanitizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EBBD4E27F200A50059BC3E /* SpanSanitizerTests.swift */; };
@@ -926,8 +926,6 @@
 		E1DCAF7C284A27DE00F44BE3 /* EventsExporter.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = EventsExporter.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E1DCAFC2284A2B7B00F44BE3 /* EventsExporter.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = EventsExporter.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E1E51D4B28B5086600E0E206 /* llvm-xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = "llvm-xcframework"; path = "../llvm-xcframework"; sourceTree = "<group>"; };
-		E1E51D4C28B508D200E0E206 /* llvm-xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = "llvm-xcframework"; path = "../llvm-xcframework"; sourceTree = "<group>"; };
-		E1E51D4D28B508FD00E0E206 /* llvm-xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = "llvm-xcframework"; path = "../llvm-xcframework"; sourceTree = "<group>"; };
 		E1EBBD4627F1FFE70059BC3E /* SpanSanitizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpanSanitizer.swift; sourceTree = "<group>"; };
 		E1EBBD4A27F200210059BC3E /* AttributesSanitizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AttributesSanitizer.swift; sourceTree = "<group>"; };
 		E1EBBD4E27F200A50059BC3E /* SpanSanitizerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpanSanitizerTests.swift; sourceTree = "<group>"; };
@@ -1058,7 +1056,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E1DCAF6B284A1FE000F44BE3 /* OpenTelemetrySdk in Frameworks */,
-				E1E51D5028B5099200E0E206 /* llvm-xcframework in Frameworks */,
+				74F0F9A92ACE0CC50086803B /* llvm-xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1943,8 +1941,6 @@
 			isa = PBXGroup;
 			children = (
 				E1E51D4B28B5086600E0E206 /* llvm-xcframework */,
-				E1E51D4C28B508D200E0E206 /* llvm-xcframework */,
-				E1E51D4D28B508FD00E0E206 /* llvm-xcframework */,
 			);
 			name = Packages;
 			sourceTree = "<group>";
@@ -2285,7 +2281,7 @@
 			name = EventsExporter_iOS;
 			packageProductDependencies = (
 				E1DCAF6A284A1FE000F44BE3 /* OpenTelemetrySdk */,
-				E1E51D4F28B5099200E0E206 /* llvm-xcframework */,
+				74F0F9A82ACE0CC50086803B /* llvm-xcframework */,
 			);
 			productName = EventsExporter_iOS;
 			productReference = E1DCAF2F284A1F0D00F44BE3 /* EventsExporter.framework */;
@@ -2436,7 +2432,6 @@
 				E17B7AA6253F02580081D7F3 /* XCRemoteSwiftPackageReference "SigmaSwiftStatistics" */,
 				E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */,
 				E141EB5727EB44400057D747 /* XCRemoteSwiftPackageReference "swift-nio" */,
-				E1E51D4E28B5099200E0E206 /* XCRemoteSwiftPackageReference "llvm-xcframework" */,
 			);
 			productRefGroup = E1ABA04B25231E2500ED8AEF /* Products */;
 			projectDirPath = "";
@@ -4334,14 +4329,6 @@
 				minimumVersion = 9.0.2;
 			};
 		};
-		E1E51D4E28B5099200E0E206 /* XCRemoteSwiftPackageReference "llvm-xcframework" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/DataDog/llvm-xcframework";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 15.0.0;
-			};
-		};
 		E1FB4839253891650083B263 /* XCRemoteSwiftPackageReference "plcrashreporter" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/microsoft/plcrashreporter.git";
@@ -4353,6 +4340,10 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		74F0F9A82ACE0CC50086803B /* llvm-xcframework */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = "llvm-xcframework";
+		};
 		E141EB5827EB44400057D747 /* NIO */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = E141EB5727EB44400057D747 /* XCRemoteSwiftPackageReference "swift-nio" */;
@@ -4452,11 +4443,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
 			productName = OpenTelemetrySdk;
-		};
-		E1E51D4F28B5099200E0E206 /* llvm-xcframework */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E1E51D4E28B5099200E0E206 /* XCRemoteSwiftPackageReference "llvm-xcframework" */;
-			productName = "llvm-xcframework";
 		};
 		E1E51D5128B509BA00E0E206 /* llvm-xcframework */ = {
 			isa = XCSwiftPackageProductDependency;

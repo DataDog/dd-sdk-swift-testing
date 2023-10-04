@@ -100,6 +100,7 @@ internal struct DDLog: Encodable {
                     return value
                 case let .doubleArray(value):
                     return value
+                default: fatalError("Found user attribute of unsupported type")
             }
         }
         self.attributes = LogAttributes(userAttributes: userAttributes, internalAttributes: internalAttributes)

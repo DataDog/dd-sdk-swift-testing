@@ -23,7 +23,8 @@ public class EventsExporter: SpanExporter {
         Log.debug("EventsExporter created: \(spansExporter.runtimeId)")
     }
 
-    public func export(spans: [SpanData]) -> SpanExporterResultCode {
+    public func export(spans: [SpanData], explicitTimeout: TimeInterval?) -> SpanExporterResultCode {
+        // TODO: Honor the timeout
         spans.forEach {
             if $0.traceFlags.sampled {
                 spansExporter.exportSpan(span: $0)
@@ -43,7 +44,8 @@ public class EventsExporter: SpanExporter {
         }
     }
 
-    public func flush() -> SpanExporterResultCode {
+    public func flush(explicitTimeout: TimeInterval?) -> SpanExporterResultCode {
+        // TODO: Honor the timeout
         logsExporter.logsStorage.writer.queue.sync {}
         spansExporter.spansStorage.writer.queue.sync {}
         coverageExporter.coverageStorage.writer.queue.sync {}
@@ -77,8 +79,8 @@ public class EventsExporter: SpanExporter {
         return itrService.itrSetting(service: service, env: env, repositoryURL: repositoryURL, branch: branch, sha: sha, configurations: configurations, customConfigurations: customConfigurations)
     }
 
-    public func shutdown() {
-        _ = self.flush()
+    public func shutdown(explicitTimeout: TimeInterval?) {
+        _ = self.flush(explicitTimeout: explicitTimeout)
     }
 
     public func endpointURLs() -> Set<String> {

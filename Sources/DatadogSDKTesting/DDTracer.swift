@@ -21,7 +21,6 @@ enum DDHeaders: String, CaseIterable {
 internal class DDTracer {
     let tracerSdk: TracerSdk
     let tracerProviderSdk: TracerProviderSdk
-    let ntpClock = NTPClock()
     var eventsExporter: EventsExporter?
     private var launchSpanContext: SpanContext?
 

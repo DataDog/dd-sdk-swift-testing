@@ -500,6 +500,9 @@ internal struct DDEnvironmentValues {
             isCi = true
             provider = "bitbucket"
             repository = DDEnvironmentValues.getEnvVariable("BITBUCKET_GIT_SSH_ORIGIN")
+            if repository?.isEmpty ?? true {
+                repository = DDEnvironmentValues.getEnvVariable("BITBUCKET_GIT_HTTP_ORIGIN")
+            }
             commit = DDEnvironmentValues.getEnvVariable("BITBUCKET_COMMIT")
             workspaceEnv = DDEnvironmentValues.getEnvVariable("BITBUCKET_CLONE_DIR")
             pipelineId = DDEnvironmentValues.getEnvVariable("BITBUCKET_PIPELINE_UUID")?.replacingOccurrences(of: "[{}]", with: "", options: .regularExpression)

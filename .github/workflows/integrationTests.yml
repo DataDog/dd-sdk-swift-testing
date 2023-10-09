@@ -7,18 +7,18 @@ on:
 
 jobs:
 
-  test-12-0-Integration-build:
-    name: Run Tests 12.0
-    runs-on: macos-12
+  test-13-Integration-build:
+    name: Run Tests MacOS 13.0
+    runs-on: macos-13
     strategy:
       fail-fast: false
       matrix:
-        xcode: ["13.3.1", "14.0", "14.1", "14.2"]
+        xcode: ["Xcode_14.3"]
     steps:
     - name: Checkout
       uses: actions/checkout@v2
-    - name: Select Xcode ${{ matrix.xcode }}
-      run: sudo xcode-select --switch /Applications/Xcode_${{ matrix.xcode }}.app
+    - name: Select ${{ matrix.xcode }}
+      run: sudo xcode-select --switch /Applications/${{ matrix.xcode }}.app
     - name: Unit tests
       run: make tests
 

@@ -55,14 +55,14 @@ clean:
 
 tests:
 	xcodebuild -scheme DatadogSDKTesting_macOS -sdk macosx -destination 'platform=macOS,arch=x86_64' test
-	xcodebuild -scheme DatadogSDKTesting_iOS -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 13' test
+	xcodebuild -scheme DatadogSDKTesting_iOS -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' test
 	xcodebuild -scheme DatadogSDKTesting_tvOS -sdk appletvsimulator -destination 'platform=tvOS Simulator,name=Apple TV' test
 
 test-macOS:
 	xcodebuild -scheme 'IntegrationTests (macOS)' -sdk macosx -destination 'platform=macOS,arch=x86_64' test
 
 test-iOS:
-	xcodebuild -scheme 'IntegrationTests (iOS)' -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 13' test
+	xcodebuild -scheme 'IntegrationTests (iOS)' -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' test
 
 test-tvOS:
 	xcodebuild -scheme 'IntegrationTests (tvOS)' -sdk appletvsimulator -destination 'platform=tvOS Simulator,name=Apple TV' test

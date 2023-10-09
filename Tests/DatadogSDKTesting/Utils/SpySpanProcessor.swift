@@ -25,7 +25,7 @@ class SpySpanProcessor: SpanProcessor {
         lastProcessedSpan = span as? RecordEventsReadableSpan
     }
 
-    func shutdown() {}
+    func shutdown(explicitTimeout: TimeInterval?) {}
 
     func forceFlush(timeout: TimeInterval?) {}
 }

@@ -15,7 +15,7 @@ class FileTraceExporter: SpanExporter {
         self.outputURL = outputURL
     }
 
-    func export(spans: [SpanData]) -> SpanExporterResultCode {
+    func export(spans: [SpanData], explicitTimeout: TimeInterval?) -> SpanExporterResultCode {
         spans.forEach {
             let simpleSpan = SimpleSpanData(spanData: $0)
             sampledSpans.append(simpleSpan)
@@ -23,7 +23,7 @@ class FileTraceExporter: SpanExporter {
         return .success
     }
 
-    func flush() -> SpanExporterResultCode {
+    func flush(explicitTimeout: TimeInterval?) -> SpanExporterResultCode {
         do {
             let outputData = try JSONEncoder().encode(sampledSpans)
             try outputData.write(to: outputURL, options: .atomicWrite)
@@ -35,5 +35,5 @@ class FileTraceExporter: SpanExporter {
 
     func reset() {}
 
-    func shutdown() {}
+    func shutdown(explicitTimeout: TimeInterval?) {}
 }

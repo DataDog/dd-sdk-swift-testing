@@ -572,13 +572,6 @@
 			remoteGlobalIDString = E1DCAF7B284A27DE00F44BE3;
 			remoteInfo = EventsExporter_macOS;
 		};
-		E1DCAFBA284A299A00F44BE3 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = E1ABA04125231E2500ED8AEF /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = E1DCAF7B284A27DE00F44BE3;
-			remoteInfo = EventsExporter_macOS;
-		};
 		E1DCAFFA284A2C4B00F44BE3 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = E1ABA04125231E2500ED8AEF /* Project object */;
@@ -2133,7 +2126,6 @@
 			);
 			dependencies = (
 				E1DCAFB4284A296600F44BE3 /* PBXTargetDependency */,
-				E1DCAFBB284A299A00F44BE3 /* PBXTargetDependency */,
 			);
 			name = DatadogSDKTesting_macOS;
 			packageProductDependencies = (
@@ -3216,11 +3208,6 @@
 			isa = PBXTargetDependency;
 			target = E1DCAF7B284A27DE00F44BE3 /* EventsExporter_macOS */;
 			targetProxy = E1DCAFB3284A296600F44BE3 /* PBXContainerItemProxy */;
-		};
-		E1DCAFBB284A299A00F44BE3 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = E1DCAF7B284A27DE00F44BE3 /* EventsExporter_macOS */;
-			targetProxy = E1DCAFBA284A299A00F44BE3 /* PBXContainerItemProxy */;
 		};
 		E1DCAFFB284A2C4B00F44BE3 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;

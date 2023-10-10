@@ -10,6 +10,7 @@ import XCTest
 class EncodableValueTests: XCTestCase {
     func testItEncodesDifferentEncodableValues() throws {
         let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
 
         XCTAssertEqual(
             try encoder.encode(EncodingContainer(EncodableValue("string"))).utf8String,
@@ -43,6 +44,7 @@ class EncodableValueTests: XCTestCase {
 class JSONStringEncodableValueTests: XCTestCase {
     func testItEncodesDifferentEncodableValuesAsString() throws {
         let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
 
         XCTAssertEqual(
             try encoder.encode(

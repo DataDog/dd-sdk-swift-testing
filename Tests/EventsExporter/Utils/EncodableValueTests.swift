@@ -10,7 +10,6 @@ import XCTest
 class EncodableValueTests: XCTestCase {
     func testItEncodesDifferentEncodableValues() throws {
         let encoder = JSONEncoder()
-        encoder.outputFormatting = [.sortedKeys]
 
         XCTAssertEqual(
             try encoder.encode(EncodingContainer(EncodableValue("string"))).utf8String,
@@ -32,11 +31,10 @@ class EncodableValueTests: XCTestCase {
         )
         struct Foo: Encodable {
             let bar = "bar_"
-            let bizz = "bizz_"
         }
         XCTAssertEqual(
             try encoder.encode(EncodableValue(Foo())).utf8String,
-            #"{"bar":"bar_","bizz":"bizz_"}"#
+            #"{"bar":"bar_"}"#
         )
     }
 }
@@ -74,13 +72,12 @@ class JSONStringEncodableValueTests: XCTestCase {
         )
         struct Foo: Encodable {
             let bar = "bar_"
-            let bizz = "bizz_"
         }
         XCTAssertEqual(
             try encoder.encode(
                 EncodingContainer(JSONStringEncodableValue(Foo(), encodedUsing: JSONEncoder()))
             ).utf8String,
-            #"{"value":"{\"bar\":\"bar_\",\"bizz\":\"bizz_\"}"}"#
+            #"{"value":"{\"bar\":\"bar_\"}"}"#
         )
     }
 

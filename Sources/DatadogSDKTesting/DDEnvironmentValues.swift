@@ -671,10 +671,29 @@ internal struct DDEnvironmentValues {
             nodeName = nil
             nodeLabels = nil
             branchEnv = DDEnvironmentValues.getEnvVariable("CF_BRANCH")
-            
+
             // Env vars
             ciEnvVars["CF_BUILD_ID"] = DDEnvironmentValues.getEnvVariable("CF_BUILD_ID")
+        } else if DDEnvironmentValues.getEnvVariable("CODEBUILD_INITIATOR") != nil {
+            isCi = true
+            provider = "awscodepipeline"
+            repository = nil
+            commit = nil
+            pipelineId = DDEnvironmentValues.getEnvVariable("DD_PIPELINE_EXECUTION_ID")
+            pipelineNumber = nil
+            pipelineURL = nil
+            pipelineName = nil
+            jobURL = nil
+            jobName = nil
+            stageName = nil
+            nodeName = nil
+            nodeLabels = nil
+            branchEnv = nil
 
+            // Env vars
+            ciEnvVars["CODEBUILD_BUILD_ARN"] = DDEnvironmentValues.getEnvVariable("CODEBUILD_BUILD_ARN")
+            ciEnvVars["DD_PIPELINE_EXECUTION_ID"] = DDEnvironmentValues.getEnvVariable("DD_PIPELINE_EXECUTION_ID")
+            ciEnvVars["DD_ACTION_EXECUTION_ID"] = DDEnvironmentValues.getEnvVariable("DD_ACTION_EXECUTION_ID")
         } else {
             isCi = false
             provider = nil

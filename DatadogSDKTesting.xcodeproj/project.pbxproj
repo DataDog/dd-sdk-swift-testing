@@ -19,6 +19,9 @@
 		81EDADB7292795B900279027 /* LLVMTotalsCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81EDADB2292698A200279027 /* LLVMTotalsCoverageFormat.swift */; };
 		81EDADB8292795B900279027 /* LLVMTotalsCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81EDADB2292698A200279027 /* LLVMTotalsCoverageFormat.swift */; };
 		81EDADB9292795B900279027 /* LLVMTotalsCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81EDADB2292698A200279027 /* LLVMTotalsCoverageFormat.swift */; };
+		DA23503E2AE949DF003FB1A9 /* DateClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA23503D2AE949DF003FB1A9 /* DateClock.swift */; };
+		DA23503F2AE949DF003FB1A9 /* DateClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA23503D2AE949DF003FB1A9 /* DateClock.swift */; };
+		DA2350402AE949DF003FB1A9 /* DateClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA23503D2AE949DF003FB1A9 /* DateClock.swift */; };
 		E10034DC27035A7700439C9C /* DDTestModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10034D92703599D00439C9C /* DDTestModule.swift */; };
 		E10034DE27035A7800439C9C /* DDTestModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10034D92703599D00439C9C /* DDTestModule.swift */; };
 		E10034E027035A7900439C9C /* DDTestModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10034D92703599D00439C9C /* DDTestModule.swift */; };
@@ -712,6 +715,7 @@
 		81AA244929780F6400DE8F8A /* DatadogTests.symbols */ = {isa = PBXFileReference; lastKnownFileType = text; path = DatadogTests.symbols; sourceTree = "<group>"; };
 		81AA244A2978589600DE8F8A /* DDFileReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDFileReader.swift; sourceTree = "<group>"; };
 		81EDADB2292698A200279027 /* LLVMTotalsCoverageFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLVMTotalsCoverageFormat.swift; sourceTree = "<group>"; };
+		DA23503D2AE949DF003FB1A9 /* DateClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateClock.swift; sourceTree = "<group>"; };
 		E10034D92703599D00439C9C /* DDTestModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTestModule.swift; sourceTree = "<group>"; };
 		E10A7E0D2806D68F00B464C9 /* LLVMSimpleCoverageFormat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LLVMSimpleCoverageFormat.swift; sourceTree = "<group>"; };
 		E10A7E15280701CA00B464C9 /* Subprocess.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Subprocess.c; sourceTree = "<group>"; };
@@ -1126,6 +1130,7 @@
 				E1A63F5B26789915002F48FA /* CodeOwners.swift */,
 				E1550C44274F7FF700006F11 /* NTPClock.swift */,
 				81AA244A2978589600DE8F8A /* DDFileReader.swift */,
+				DA23503D2AE949DF003FB1A9 /* DateClock.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -2680,6 +2685,7 @@
 				E10A7E17280701CA00B464C9 /* Subprocess.c in Sources */,
 				E1665A8225D13BBB00BA53CD /* DDSymbolicator.swift in Sources */,
 				E146BC3B2869AEA80057C37B /* GitUploader.swift in Sources */,
+				DA23503F2AE949DF003FB1A9 /* DateClock.swift in Sources */,
 				E1550C46274F7FF700006F11 /* NTPClock.swift in Sources */,
 				E1743F50283E7E40006CBFF8 /* DDTestSuite.swift in Sources */,
 				E1A63F5D26789915002F48FA /* CodeOwners.swift in Sources */,
@@ -2729,6 +2735,7 @@
 				E10A7E18280701CA00B464C9 /* Subprocess.c in Sources */,
 				E1665A8125D13BBB00BA53CD /* DDSymbolicator.swift in Sources */,
 				E146BC3C2869AEA80057C37B /* GitUploader.swift in Sources */,
+				DA2350402AE949DF003FB1A9 /* DateClock.swift in Sources */,
 				E1550C47274F7FF700006F11 /* NTPClock.swift in Sources */,
 				E1743F52283E7E41006CBFF8 /* DDTestSuite.swift in Sources */,
 				E1A63F5E26789915002F48FA /* CodeOwners.swift in Sources */,
@@ -2888,6 +2895,7 @@
 				E1D6EFA525F6647F00E8C3AE /* LibraryInitializer.m in Sources */,
 				E1550C45274F7FF700006F11 /* NTPClock.swift in Sources */,
 				E146BC3A2869AEA80057C37B /* GitUploader.swift in Sources */,
+				DA23503E2AE949DF003FB1A9 /* DateClock.swift in Sources */,
 				E1743F4E283E7E3E006CBFF8 /* DDTestSuite.swift in Sources */,
 				E1A63F5C26789915002F48FA /* CodeOwners.swift in Sources */,
 				E1743F4F283E7E3E006CBFF8 /* DDTest.swift in Sources */,

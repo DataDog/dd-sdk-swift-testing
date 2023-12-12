@@ -36,6 +36,7 @@ internal enum ConfigurationValues: String, CaseIterable {
     case DD_DONT_EXPORT
     case DD_TRACE_DEBUG
     case DD_TRACE_DEBUG_CALLSTACK
+    case DD_DISABLE_NTPCLOCK
 }
 
 // These configuration values must not be passed to the child app in an UI test
@@ -72,6 +73,7 @@ internal struct DDEnvironmentValues {
     let disableCrashHandler: Bool
     let disableTestInstrumenting: Bool
     let disableSourceLocation: Bool
+    let disableNTPClock: Bool
 
     /// OS Information
     let osName: String
@@ -256,6 +258,9 @@ internal struct DDEnvironmentValues {
 
         let envDisableSourceLocation = DDEnvironmentValues.getEnvVariable(ExtraConfigurationValues.DD_DISABLE_SOURCE_LOCATION.rawValue) as NSString?
         disableSourceLocation = envDisableSourceLocation?.boolValue ?? false
+
+        let envDisableNTPClock = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_DISABLE_NTPCLOCK.rawValue) as NSString?
+        disableNTPClock = envDisableNTPClock?.boolValue ?? false
 
         /// Intelligent test runner related configuration
         let envGitUploadEnabled = DDEnvironmentValues.getEnvVariable(ExtraConfigurationValues.DD_CIVISIBILITY_GIT_UPLOAD_ENABLED.rawValue) as NSString?

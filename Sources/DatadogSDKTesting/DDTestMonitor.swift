@@ -6,6 +6,7 @@
 
 @_implementationOnly import EventsExporter
 @_implementationOnly import OpenTelemetryApi
+@_implementationOnly import OpenTelemetrySdk
 
 #if canImport(UIKit)
     import UIKit
@@ -28,7 +29,14 @@ struct CrashedModuleInformation {
 
 internal class DDTestMonitor {
     static var instance: DDTestMonitor?
-    static var clock = NTPClock()
+    static var clock: OpenTelemetrySdk.Clock = {
+        if let envDisableNTPClock = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_DISABLE_NTPCLOCK.rawValue),
+           (envDisableNTPClock as NSString).boolValue == true {
+            return DateClock()
+        } else {
+            return NTPClock()
+        }
+    }()
 
     static let defaultPayloadSize = 1024
 

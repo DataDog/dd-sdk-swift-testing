@@ -18,4 +18,4 @@ git add Package@swift-5.3.swift
 git checkout -b update-binary
 git commit -m "Updated binary package version to $2"
 git tag -f $2
-git push -f --tags origin HEAD:main
+git push -f --tags origin update-binary

@@ -15,6 +15,7 @@ sed -E -i '' 's/let releaseVersion = ".+"/let releaseVersion = "'$2\"/ Package@s
 sed -E -i '' 's/let relaseChecksum = ".+"/let relaseChecksum = "'$binaryChecksum\"/ Package@swift-5.3.swift
 cat Package@swift-5.3.swift
 git add Package@swift-5.3.swift
+git checkout -b update-binary
 git commit -m "Updated binary package version to $2"
 git tag -f $2
 git push -f --tags origin HEAD:main

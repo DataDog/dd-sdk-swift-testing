@@ -1,4 +1,8 @@
-.PHONY: clean release tests
+.PHONY: clean build tests
+
+# Check is variable defined helper
+check_defined = $(strip $(foreach 1,$1, $(call __check_defined,$1,$(strip $(value 2)))))
+__check_defined = $(if $(value $1),, $(error Undefined $1$(if $2, ($2))$(if $(value @), required by target '$@')))
 
 build/DatadogSDKTesting/ios:
 	xcodebuild archive -scheme DatadogSDKTesting_iOS -destination "generic/platform=iOS" -archivePath build/DatadogSDKTesting/iphoneos.xcarchive -sdk iphoneos SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES
@@ -22,7 +26,6 @@ build/xcframework/DatadogSDKTesting.zip: build/DatadogSDKTesting.xcframework
 
 build/xcframework: build/xcframework/DatadogSDKTesting.zip
 
-
 collect_symbols:
 	mkdir -p $(PWD)/build/symbols
 	mkdir -p $(PWD)/build/symbols/macos
@@ -38,18 +41,37 @@ collect_symbols:
 	mkdir -p $(PWD)/build/symbols/maccatalyst
 	cp -R build/DatadogSDKTesting/maccatalyst.xcarchive/dSYMs/DatadogSDKTesting.framework.dSYM $(PWD)/build/symbols/maccatalyst/DatadogSDKTesting.framework.dSYM
 	cd ./build/; zip -ry ./symbols.zip ./symbols
+
+build: build/xcframework collect_symbols
+
+set_version:
+	@:$(call check_defined, version, release version)
+	sed -i "" "s|MARKETING_VERSION =.*|MARKETING_VERSION = $(version);|g" DatadogSDKTesting.xcodeproj/project.pbxproj
+	sed -i "" "s|s\.version\([[:blank:]]*\)=.*|s.version\1= '$(version)'|g" DatadogSDKTesting.podspec
+	sed -i "" "s|let[[:blank:]]*releaseVersion.*|let releaseVersion = \"$(version)\"|g" Package.swift
+
+set_hash:
+	$(eval HASH := $(shell swift package compute-checksum ./build/xcframework/DatadogSDKTesting.zip))
+	sed -i "" "s|:sha256 =>.*|:sha256 => '$(HASH)'|g" DatadogSDKTesting.podspec
+	sed -i "" "s|let[[:blank:]]*relaseChecksum.*|let relaseChecksum = \"$(HASH)\"|g" Package.swift
 	
+release: set_version build set_hash
 
-release: build/xcframework collect_symbols
-
-bump:
-		@read -p "Enter version number: " version;  \
-		sed -i "" "s/MARKETING_VERSION = .*/MARKETING_VERSION = $$version;/" DatadogSDKTesting.xcodeproj/project.pbxproj; \
-		sed "s/__DATADOG_VERSION__/$$version/g" DatadogSDKTesting.podspec.src > DatadogSDKTesting.podspec; \
-		git add . ; \
-		git commit -m "Bumped version to $$version"; \
-		echo Bumped version to $$version
-
+github: release
+	@:$(call check_defined, version, release version)
+	@:$(call check_defined, GITHUB_TOKEN, GitHub token)
+	# Upload binary file to GitHub release
+	brew list gh &>/dev/null || brew install gh
+	@echo $(GITHUB_TOKEN) | gh auth login --with-token
+	gh release upload $(version) ./build/xcframework/DatadogSDKTesting.zip --clobber
+	gh release upload $(version) ./build/symbols.zip --clobber
+	# Commit updated xcodeproj, Package.swift and DatadogSDKTesting.podspec
+	git add Package.swift DatadogSDKTesting.podspec DatadogSDKTesting.xcodeproj/project.pbxproj
+	git checkout -b update-binary
+	git commit -m "Updated binary package version to $(version)"
+	git tag -f $(version)
+	git push -f --tags origin update-binary
+	
 clean:
 	rm -rf ./build
 

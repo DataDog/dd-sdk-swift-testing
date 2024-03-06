@@ -98,7 +98,7 @@ internal struct DDEnvironmentValues {
     let pipelineName: String?
     let nodeName: String?
     let nodeLabels: String?
-    let jobURL: String?
+    var jobURL: String?
     let jobName: String?
     let stageName: String?
     var ciEnvVars = [String: String]()
@@ -375,6 +375,7 @@ internal struct DDEnvironmentValues {
             isCi = true
             provider = "jenkins"
             repository = DDEnvironmentValues.getEnvVariable("GIT_URL") ?? DDEnvironmentValues.getEnvVariable("GIT_URL_1")
+            
             commit = DDEnvironmentValues.getEnvVariable("GIT_COMMIT")
             workspaceEnv = DDEnvironmentValues.getEnvVariable("WORKSPACE")
             pipelineId = DDEnvironmentValues.getEnvVariable("BUILD_TAG")
@@ -522,7 +523,7 @@ internal struct DDEnvironmentValues {
             branchEnv = DDEnvironmentValues.getEnvVariable("BITBUCKET_BRANCH")
             tagEnv = DDEnvironmentValues.getEnvVariable("BITBUCKET_TAG")
 
-        } else if DDEnvironmentValues.getEnvVariable("GITHUB_WORKSPACE") != nil {
+        } else if DDEnvironmentValues.getEnvVariable("GITHUB_ACTIONS") != nil || DDEnvironmentValues.getEnvVariable("GITHUB_ACTION") != nil {
             isCi = true
             provider = "github"
             let repositoryEnv = DDEnvironmentValues.getEnvVariable("GITHUB_REPOSITORY") ?? ""
@@ -554,7 +555,7 @@ internal struct DDEnvironmentValues {
 
             // Env vars
             ciEnvVars["GITHUB_REPOSITORY"] = DDEnvironmentValues.getEnvVariable("GITHUB_REPOSITORY")
-            ciEnvVars["GITHUB_SERVER_URL"] = DDEnvironmentValues.getEnvVariable("GITHUB_SERVER_URL")
+            ciEnvVars["GITHUB_SERVER_URL"] = DDEnvironmentValues.removingUserPassword( DDEnvironmentValues.getEnvVariable("GITHUB_SERVER_URL"))
             ciEnvVars["GITHUB_RUN_ID"] = DDEnvironmentValues.getEnvVariable("GITHUB_RUN_ID")
             ciEnvVars["GITHUB_RUN_ATTEMPT"] = DDEnvironmentValues.getEnvVariable("GITHUB_RUN_ATTEMPT")
 
@@ -752,7 +753,8 @@ internal struct DDEnvironmentValues {
         }
         branch = DDEnvironmentValues.normalizedBranchOrTag(branchEnv)
         tag = DDEnvironmentValues.normalizedBranchOrTag(tagEnv)
-        repository = DDEnvironmentValues.removingUserPassword(DDEnvironmentValues.getEnvVariable("DD_GIT_REPOSITORY_URL") ?? repository)
+        let repo = DDEnvironmentValues.getEnvVariable("DD_GIT_REPOSITORY_URL") ?? repository
+        repository = DDEnvironmentValues.removingUserPassword(repo)
         commit = DDEnvironmentValues.getEnvVariable("DD_GIT_COMMIT_SHA") ?? commit
         commitMessage = DDEnvironmentValues.getEnvVariable("DD_GIT_COMMIT_MESSAGE") ?? commitMessage
         authorName = DDEnvironmentValues.getEnvVariable("DD_GIT_COMMIT_AUTHOR_NAME") ?? authorName
@@ -812,13 +814,13 @@ internal struct DDEnvironmentValues {
         attributes[DDCITags.ciProvider] = provider
         attributes[DDCITags.ciPipelineId] = pipelineId
         attributes[DDCITags.ciPipelineNumber] = pipelineNumber
-        attributes[DDCITags.ciPipelineURL] = pipelineURL
+        attributes[DDCITags.ciPipelineURL] = DDEnvironmentValues.removingUserPassword(pipelineURL)
         attributes[DDCITags.ciPipelineName] = pipelineName
         attributes[DDCITags.ciNodeName] = nodeName
         attributes[DDCITags.ciNodeLabels] = nodeLabels
         attributes[DDCITags.ciStageName] = stageName
         attributes[DDCITags.ciJobName] = jobName
-        attributes[DDCITags.ciJobURL] = jobURL
+        attributes[DDCITags.ciJobURL] = DDEnvironmentValues.removingUserPassword(jobURL)
         attributes[DDCITags.ciEnvVars] = ##"{\##(ciEnvVars.map { #""\#($0.0)":"\#($0.1)""# }.joined(separator: ","))}"##
 
         DDEnvironmentValues.ciAttributes = attributes

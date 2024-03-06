@@ -1,54 +1,22 @@
-// swift-tools-version:5.2
+// swift-tools-version:5.7.1
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 
+let releaseVersion = "2.4.0"
+let relaseChecksum = "6789599ea4013d8aeadd201ea6e8ba30a0565a0eceb9130fda60e249e262a43a"
+let url = "https://github.com/DataDog/dd-sdk-swift-testing/releases/download/\(releaseVersion)/DatadogSDKTesting.zip"
+
 let package = Package(
     name: "dd-sdk-swift-testing",
-    platforms: [.macOS(.v10_13),
-                .iOS(.v11),
-                .tvOS(.v11)],
+    platforms: [.macOS(.v10_15), .iOS(.v13), .tvOS(.v13)],
     products: [
-        .library(
-            name: "DatadogSDKTesting",
-            type: .dynamic,
-            targets: [
-                "DatadogSDKTesting"
-            ]
-        )
-    ],
-    dependencies: [
-        .package(name: "opentelemetry-swift", url: "https://github.com/open-telemetry/opentelemetry-swift", from: "1.4.1"),
-        .package(name: "PLCrashReporter", url: "https://github.com/microsoft/plcrashreporter.git", from: "1.11.0"),
-        .package(name: "SigmaSwiftStatistics", url: "https://github.com/evgenyneu/SigmaSwiftStatistics.git", from: "9.0.2")
+        .library(name: "DatadogSDKTesting",
+                 targets: ["DatadogSDKTesting"]),
     ],
     targets: [
-        .target(
-            name: "DatadogSDKTesting",
-            dependencies: [
-                .product(name: "URLSessionInstrumentation", package: "opentelemetry-swift"),
-                .product(name: "InMemoryExporter", package: "opentelemetry-swift"),
-                .product(name: "CrashReporter", package: "PLCrashReporter"),
-                .product(name: "SigmaSwiftStatistics", package: "SigmaSwiftStatistics"),
-                .target(name: "DatadogSDKTestingObjc"),
-                .target(name: "EventsExporter")
-            ],
-            exclude: [
-                "Objc"
-            ]
-        ),
-        .target(
-            name: "DatadogSDKTestingObjc",
-            path: "Sources/DatadogSDKTesting/Objc"
-        ),
-        .target(
-            name: "EventsExporter",
-            dependencies: [
-                .product(name: "OpenTelemetrySdk", package: "opentelemetry-swift")
-            ],
-            exclude: [
-                "llvm-cov"
-            ]
-        )
+        .binaryTarget(name: "DatadogSDKTesting",
+                      url: url,
+                      checksum: relaseChecksum)
     ]
 )

@@ -1,10 +1,8 @@
-name: Create relase
+name: Create new release
 
 on:
   release:
     types: [created]
-env:
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   test:
@@ -19,19 +17,14 @@ jobs:
       run: make tests
 
   release:
-   #needs: [test]
+    needs: [test]
     runs-on: macos-13
     steps:
     - name: Checkout
       uses: actions/checkout@v2
     - name: Select Xcode 14
       run: sudo xcode-select --switch /Applications/Xcode_14.3.app
-    - name: Build XCFrameworks
-      run: make release
-    - name: Get the tag version
-      id: tag_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
-    - name: Update swift binary and recreate tag
-      run: sh Scripts/uploadBinary.sh $GITHUB_TOKEN ${{ steps.tag_version.outputs.VERSION }}
-
-
+    - name: Build and upload XCFrameworks, recreate tag
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: make version=${{ github.event.release.tag_name }} github

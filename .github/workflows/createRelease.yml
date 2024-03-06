@@ -30,7 +30,7 @@ jobs:
       run: make release
     - name: Get the tag version
       id: tag_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      run: echo VERSION=${GITHUB_REF/refs\/tags\//} >> "$GITHUB_OUTPUT"
     - name: Update swift binary and recreate tag
       run: sh Scripts/uploadBinary.sh $GITHUB_TOKEN ${{ steps.tag_version.outputs.VERSION }}
 

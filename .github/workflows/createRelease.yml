@@ -12,7 +12,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
     - name: Select Xcode 14
-      run: sudo xcode-select --switch /Applications/Xcode_14.3.app
+      run: sudo xcode-select --switch /Applications/Xcode_14.1.app
     - name: Test
       run: make tests
 
@@ -23,7 +23,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
     - name: Select Xcode 14
-      run: sudo xcode-select --switch /Applications/Xcode_14.3.app
+      run: sudo xcode-select --switch /Applications/Xcode_14.1.app
     - name: Build and upload XCFrameworks, recreate tag
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

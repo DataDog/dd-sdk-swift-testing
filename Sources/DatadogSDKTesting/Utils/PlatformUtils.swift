@@ -91,22 +91,54 @@ struct PlatformUtils {
 
     static func getAppearance() -> String {
         #if os(iOS) || os(tvOS) || os(watchOS)
-            switch UITraitCollection.current.userInterfaceStyle {
-                case .unspecified: return "unspecified"
-                case .light: return "light"
-                case .dark: return "dark"
-                @unknown default: return "unknown"
+            let appearance: String
+            if #available(iOS 13.0, tvOS 13.0, *) {
+                switch UITraitCollection.current.userInterfaceStyle {
+                    case .unspecified:
+                        appearance = "unspecified"
+                    case .light:
+                        appearance = "light"
+                    case .dark:
+                        appearance = "dark"
+                    @unknown default:
+                        appearance = "unknown"
+                }
+            } else if #available(iOS 12.0, tvOS 12.0, *) {
+                switch UIScreen.main.traitCollection.userInterfaceStyle {
+                    case .dark:
+                        appearance = "dark"
+                    case .light:
+                        appearance = "light"
+                    case .unspecified:
+                        appearance = "unspecified"
+                    @unknown default:
+                        appearance = "unknown"
+                }
+            } else {
+                appearance = "light"
             }
+
+            return appearance
         #else
-            return NSApp?.effectiveAppearance.name.rawValue ?? "light"
+            if #available(OSX 10.14, *) {
+                return NSApp?.effectiveAppearance.name.rawValue ?? "light"
+            } else {
+                return "light"
+            }
         #endif
     }
 
+
     #if os(iOS)
         static func getOrientation() -> String {
-            let scene = UIApplication.shared.connectedScenes
-                        .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene
-            let orientation = scene?.interfaceOrientation ?? .portrait
+            let orientation: UIInterfaceOrientation
+            if #available(iOS 13.0, *) {
+                let scene = UIApplication.shared.connectedScenes
+                            .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene
+                orientation = scene?.interfaceOrientation ?? .portrait
+            } else {
+                orientation = UIApplication.shared.statusBarOrientation
+            }
             switch orientation {
                 case .unknown:
                     return "unknown"

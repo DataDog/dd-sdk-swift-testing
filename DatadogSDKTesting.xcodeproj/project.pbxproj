@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 53;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -19,9 +19,9 @@
 		81EDADB7292795B900279027 /* LLVMTotalsCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81EDADB2292698A200279027 /* LLVMTotalsCoverageFormat.swift */; };
 		81EDADB8292795B900279027 /* LLVMTotalsCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81EDADB2292698A200279027 /* LLVMTotalsCoverageFormat.swift */; };
 		81EDADB9292795B900279027 /* LLVMTotalsCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81EDADB2292698A200279027 /* LLVMTotalsCoverageFormat.swift */; };
-		A7FED10C2B98CEFE005C70F0 /* fixtures in Resources */ = {isa = PBXBuildFile; fileRef = A7FED10B2B98CEFE005C70F0 /* fixtures */; };
-		A7FED10D2B98CEFE005C70F0 /* fixtures in Resources */ = {isa = PBXBuildFile; fileRef = A7FED10B2B98CEFE005C70F0 /* fixtures */; };
-		A7FED10E2B98CEFE005C70F0 /* fixtures in Resources */ = {isa = PBXBuildFile; fileRef = A7FED10B2B98CEFE005C70F0 /* fixtures */; };
+		A7C292132B9B2B39009C2979 /* fixtures in Resources */ = {isa = PBXBuildFile; fileRef = A7C292122B9B2B39009C2979 /* fixtures */; };
+		A7C292142B9B2B39009C2979 /* fixtures in Resources */ = {isa = PBXBuildFile; fileRef = A7C292122B9B2B39009C2979 /* fixtures */; };
+		A7C292152B9B2B39009C2979 /* fixtures in Resources */ = {isa = PBXBuildFile; fileRef = A7C292122B9B2B39009C2979 /* fixtures */; };
 		DA23503E2AE949DF003FB1A9 /* DateClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA23503D2AE949DF003FB1A9 /* DateClock.swift */; };
 		DA23503F2AE949DF003FB1A9 /* DateClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA23503D2AE949DF003FB1A9 /* DateClock.swift */; };
 		DA2350402AE949DF003FB1A9 /* DateClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA23503D2AE949DF003FB1A9 /* DateClock.swift */; };
@@ -628,16 +628,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		A7FED1022B989035005C70F0 /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		E157A77F256E9D3300CBCA52 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -718,8 +708,8 @@
 		8194A2242940B33100B4B592 /* DDTestSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTestSession.swift; sourceTree = "<group>"; };
 		81AA244A2978589600DE8F8A /* DDFileReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDFileReader.swift; sourceTree = "<group>"; };
 		81EDADB2292698A200279027 /* LLVMTotalsCoverageFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLVMTotalsCoverageFormat.swift; sourceTree = "<group>"; };
-		A7FED0FD2B988C13005C70F0 /* DatadogSDKTesting.podspec */ = {isa = PBXFileReference; lastKnownFileType = text; path = DatadogSDKTesting.podspec; sourceTree = "<group>"; };
-		A7FED10B2B98CEFE005C70F0 /* fixtures */ = {isa = PBXFileReference; lastKnownFileType = folder; path = fixtures; sourceTree = "<group>"; };
+		A7C292122B9B2B39009C2979 /* fixtures */ = {isa = PBXFileReference; lastKnownFileType = folder; path = fixtures; sourceTree = "<group>"; };
+		A7C292162B9B2DE0009C2979 /* DatadogSDKTesting.podspec */ = {isa = PBXFileReference; lastKnownFileType = text; path = DatadogSDKTesting.podspec; sourceTree = "<group>"; };
 		DA23503D2AE949DF003FB1A9 /* DateClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateClock.swift; sourceTree = "<group>"; };
 		E10034D92703599D00439C9C /* DDTestModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTestModule.swift; sourceTree = "<group>"; };
 		E10A7E0D2806D68F00B464C9 /* LLVMSimpleCoverageFormat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LLVMSimpleCoverageFormat.swift; sourceTree = "<group>"; };
@@ -1422,7 +1412,7 @@
 				E18F2169278C980800F77910 /* IntegrationTests (macOS)Debug.entitlements */,
 				E17B7AA5253F010C0081D7F3 /* LICENSE-3rdparty.csv */,
 				E160A11125275CC1003121A5 /* Package.swift */,
-				A7FED0FD2B988C13005C70F0 /* DatadogSDKTesting.podspec */,
+				A7C292162B9B2DE0009C2979 /* DatadogSDKTesting.podspec */,
 				E1ABA04C25231E2500ED8AEF /* Sources */,
 				E1ABA05725231E2500ED8AEF /* Tests */,
 				E1224A42264ABCCE00305968 /* IntegrationTests */,
@@ -1465,7 +1455,7 @@
 		E1ABA05725231E2500ED8AEF /* Tests */ = {
 			isa = PBXGroup;
 			children = (
-				A7FED10B2B98CEFE005C70F0 /* fixtures */,
+				A7C292122B9B2B39009C2979 /* fixtures */,
 				E1AD0736252E1E1A003705C1 /* DatadogSDKTesting */,
 				E1ABA05A25231E2500ED8AEF /* Info.plist */,
 				E141EADB27EB3B9E0057D747 /* EventsExporter */,
@@ -1828,7 +1818,6 @@
 				E1ABA04625231E2500ED8AEF /* Sources */,
 				E1ABA04725231E2500ED8AEF /* Frameworks */,
 				E1ABA04825231E2500ED8AEF /* Resources */,
-				A7FED1022B989035005C70F0 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -1981,7 +1970,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastSwiftUpdateCheck = 1340;
-				LastUpgradeCheck = 1530;
+				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					E1224A49264ABCCF00305968 = {
 						CreatedOnToolsVersion = 12.5;
@@ -2109,7 +2098,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A7FED10D2B98CEFE005C70F0 /* fixtures in Resources */,
+				A7C292142B9B2B39009C2979 /* fixtures in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2117,7 +2106,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A7FED10E2B98CEFE005C70F0 /* fixtures in Resources */,
+				A7C292152B9B2B39009C2979 /* fixtures in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2132,7 +2121,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A7FED10C2B98CEFE005C70F0 /* fixtures in Resources */,
+				A7C292132B9B2B39009C2979 /* fixtures in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3203,7 +3192,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 				CLANG_ANALYZER_GCD_PERFORMANCE = YES;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -3258,8 +3246,8 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 2.4.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -3269,7 +3257,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,6";
-				TVOS_DEPLOYMENT_TARGET = 13.0;
+				TVOS_DEPLOYMENT_TARGET = 11.0;
 				USE_HEADERMAP = NO;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
@@ -3280,7 +3268,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 				CLANG_ANALYZER_GCD_PERFORMANCE = YES;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -3331,9 +3318,9 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LLVM_LTO = YES_THIN;
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 2.4.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -3342,7 +3329,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,6";
-				TVOS_DEPLOYMENT_TARGET = 13.0;
+				TVOS_DEPLOYMENT_TARGET = 11.0;
 				USE_HEADERMAP = NO;
 				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";

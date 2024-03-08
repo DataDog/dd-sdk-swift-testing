@@ -9,7 +9,7 @@ let url = "https://github.com/DataDog/dd-sdk-swift-testing/releases/download/\(r
 
 let package = Package(
     name: "dd-sdk-swift-testing",
-    platforms: [.macOS(.v10_15), .iOS(.v13), .tvOS(.v13)],
+    platforms: [.macOS(.v10_13), .iOS(.v11), .tvOS(.v11)],
     products: [
         .library(name: "DatadogSDKTesting",
                  targets: ["DatadogSDKTesting"]),

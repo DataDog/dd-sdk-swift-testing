@@ -5,17 +5,17 @@ check_defined = $(strip $(foreach 1,$1, $(call __check_defined,$1,$(strip $(valu
 __check_defined = $(if $(value $1),, $(error Undefined $1$(if $2, ($2))$(if $(value @), required by target '$@')))
 
 build/DatadogSDKTesting/ios:
-	xcodebuild archive -scheme DatadogSDKTesting_iOS -destination "generic/platform=iOS" -archivePath build/DatadogSDKTesting/iphoneos.xcarchive -sdk iphoneos SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES
-	xcodebuild archive -scheme DatadogSDKTesting_iOS -destination "generic/platform=iOS Simulator" -archivePath build/DatadogSDKTesting/iphonesimulator.xcarchive -sdk iphonesimulator SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES
+	xcodebuild archive -scheme DatadogSDKTesting -destination "generic/platform=iOS" -archivePath build/DatadogSDKTesting/iphoneos.xcarchive -sdk iphoneos SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES
+	xcodebuild archive -scheme DatadogSDKTesting -destination "generic/platform=iOS Simulator" -archivePath build/DatadogSDKTesting/iphonesimulator.xcarchive -sdk iphonesimulator SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES
 
 build/DatadogSDKTesting/mac:
-	xcodebuild archive -scheme DatadogSDKTesting_macOS -destination "generic/platform=macOS" -archivePath build/DatadogSDKTesting/macos.xcarchive -sdk macosx SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES
-	xcodebuild archive -scheme DatadogSDKTesting_iOS -destination "generic/platform=macOS,variant=Mac Catalyst" -archivePath build/DatadogSDKTesting/maccatalyst.xcarchive -sdk macosx SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES
+	xcodebuild archive -scheme DatadogSDKTesting -destination "generic/platform=macOS" -archivePath build/DatadogSDKTesting/macos.xcarchive -sdk macosx SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES
+	xcodebuild archive -scheme DatadogSDKTesting -destination "generic/platform=macOS,variant=Mac Catalyst" -archivePath build/DatadogSDKTesting/maccatalyst.xcarchive -sdk macosx SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES
 
 
 build/DatadogSDKTesting/tvos:
-	xcodebuild archive -scheme DatadogSDKTesting_tvOS -destination "generic/platform=tvOS" -archivePath build/DatadogSDKTesting/appletvos.xcarchive -sdk appletvos SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES
-	xcodebuild archive -scheme DatadogSDKTesting_tvOS -destination "generic/platform=tvOS Simulator" -archivePath build/DatadogSDKTesting/appletvsimulator.xcarchive -sdk appletvsimulator SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES
+	xcodebuild archive -scheme DatadogSDKTesting -destination "generic/platform=tvOS" -archivePath build/DatadogSDKTesting/appletvos.xcarchive -sdk appletvos SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES
+	xcodebuild archive -scheme DatadogSDKTesting -destination "generic/platform=tvOS Simulator" -archivePath build/DatadogSDKTesting/appletvsimulator.xcarchive -sdk appletvsimulator SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES
 
 build/DatadogSDKTesting.xcframework: build/DatadogSDKTesting/ios build/DatadogSDKTesting/mac build/DatadogSDKTesting/tvos
 	mkdir -p $(PWD)/build/xcframework
@@ -76,15 +76,15 @@ clean:
 	rm -rf ./build
 
 tests:
-	xcodebuild -scheme DatadogSDKTesting_macOS -sdk macosx -destination 'platform=macOS,arch=x86_64' test
-	xcodebuild -scheme DatadogSDKTesting_iOS -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' test
-	xcodebuild -scheme DatadogSDKTesting_tvOS -sdk appletvsimulator -destination 'platform=tvOS Simulator,name=Apple TV' test
+	xcodebuild -scheme DatadogSDKTesting -sdk macosx -destination 'platform=macOS,arch=x86_64' test
+	xcodebuild -scheme DatadogSDKTesting -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' test
+	xcodebuild -scheme DatadogSDKTesting -sdk appletvsimulator -destination 'platform=tvOS Simulator,name=Apple TV' test
 
 test-macOS:
-	xcodebuild -scheme 'IntegrationTests (macOS)' -sdk macosx -destination 'platform=macOS,arch=x86_64' test
+	xcodebuild -scheme IntegrationTests -sdk macosx -destination 'platform=macOS,arch=x86_64' test
 
 test-iOS:
-	xcodebuild -scheme 'IntegrationTests (iOS)' -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' test
+	xcodebuild -scheme IntegrationTests -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' test
 
 test-tvOS:
-	xcodebuild -scheme 'IntegrationTests (tvOS)' -sdk appletvsimulator -destination 'platform=tvOS Simulator,name=Apple TV' test
+	xcodebuild -scheme IntegrationTests -sdk appletvsimulator -destination 'platform=tvOS Simulator,name=Apple TV' test

@@ -1,0 +1,80 @@
+{
+  "configurations" : [
+    {
+      "id" : "4395694F-82AE-4F6C-AB04-B7BC31410AF3",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : false,
+    "environmentVariableEntries" : [
+      {
+        "key" : "GITHUB_REPOSITORY",
+        "value" : "$(GITHUB_REPOSITORY)"
+      },
+      {
+        "key" : "DD_ENV",
+        "value" : "internal-tests"
+      },
+      {
+        "key" : "DD_SERVICE",
+        "value" : "dd-sdk-swift-testing"
+      },
+      {
+        "key" : "SRCROOT",
+        "value" : "$(SRCROOT)"
+      },
+      {
+        "key" : "DD_API_KEY",
+        "value" : "$(DD_API_KEY)"
+      },
+      {
+        "key" : "GITHUB_RUN_ID",
+        "value" : "$(GITHUB_RUN_ID)"
+      },
+      {
+        "key" : "DD_ENABLE_NETWORK_CALL_STACK_SYMBOLICATED",
+        "value" : "0"
+      },
+      {
+        "key" : "GITHUB_RUN_NUMBER",
+        "value" : "$(GITHUB_RUN_NUMBER)"
+      },
+      {
+        "key" : "GITHUB_SHA",
+        "value" : "$(GITHUB_SHA)"
+      },
+      {
+        "key" : "DD_TEST_RUNNER",
+        "value" : "1"
+      },
+      {
+        "key" : "GITHUB_WORKSPACE",
+        "value" : "$(GITHUB_WORKSPACE)"
+      },
+      {
+        "key" : "GITHUB_WORKFLOW",
+        "value" : "$(GITHUB_WORKFLOW)"
+      }
+    ],
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:DatadogSDKTesting.xcodeproj",
+      "identifier" : "A7FC26A72BA20A6500067E26",
+      "name" : "IntegrationTestsApp"
+    }
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:DatadogSDKTesting.xcodeproj",
+        "identifier" : "A7FC26BF2BA20D1200067E26",
+        "name" : "IntegrationTestsUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

@@ -8,6 +8,7 @@
 import OpenTelemetryApi
 import OpenTelemetrySdk
 import XCTest
+import EventsExporter
 
 struct FixtureError: Error, CustomStringConvertible {
     let description: String

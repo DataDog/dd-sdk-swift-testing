@@ -1,0 +1,39 @@
+{
+  "configurations" : [
+    {
+      "id" : "277353A1-76B8-477E-BFD5-A002EB0D24DB",
+      "name" : "Test Scheme Action",
+      "options" : {
+        "environmentVariableEntries" : [
+          {
+            "key" : "SRCROOT",
+            "value" : "$(SRCROOT)"
+          },
+          {
+            "key" : "DD_DONT_EXPORT",
+            "value" : "1"
+          }
+        ],
+        "targetForVariableExpansion" : {
+          "containerPath" : "container:DatadogSDKTesting.xcodeproj",
+          "identifier" : "A7FC25632BA1E83500067E26",
+          "name" : "DatadogSDKTesting"
+        }
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : false
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:DatadogSDKTesting.xcodeproj",
+        "identifier" : "A7FC256C2BA1E83500067E26",
+        "name" : "DatadogSDKTestingTests"
+      }
+    }
+  ],
+  "version" : 1
+}

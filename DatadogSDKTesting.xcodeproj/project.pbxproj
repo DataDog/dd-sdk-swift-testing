@@ -176,7 +176,6 @@
 		A7FC26CC2BA20D3700067E26 /* UIIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1193F8C272C24F900E4154E /* UIIntegrationTests.swift */; };
 		A7FC26CF2BA214AC00067E26 /* SimpleSpanData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7FC26CE2BA214AC00067E26 /* SimpleSpanData.swift */; };
 		A7FC26D12BA214CE00067E26 /* SimpleSpanData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7FC26D02BA214CE00067E26 /* SimpleSpanData.swift */; };
-		A7FC26D52BA215D200067E26 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC26D42BA215D200067E26 /* XCTest.framework */; };
 		A7FC26DE2BA21B7D00067E26 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */; };
 		A7FC26DF2BA21B7D00067E26 /* DatadogSDKTesting.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
@@ -246,7 +245,6 @@
 		A7FC26CD2BA212EB00067E26 /* IntegrationTestsUITests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = IntegrationTestsUITests.xctestplan; sourceTree = "<group>"; };
 		A7FC26CE2BA214AC00067E26 /* SimpleSpanData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleSpanData.swift; sourceTree = "<group>"; };
 		A7FC26D02BA214CE00067E26 /* SimpleSpanData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleSpanData.swift; sourceTree = "<group>"; };
-		A7FC26D42BA215D200067E26 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
 		A7FC26D92BA2181A00067E26 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		DA23503D2AE949DF003FB1A9 /* DateClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateClock.swift; sourceTree = "<group>"; };
 		E10034D92703599D00439C9C /* DDTestModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTestModule.swift; sourceTree = "<group>"; };
@@ -449,7 +447,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A7FC26D52BA215D200067E26 /* XCTest.framework in Frameworks */,
 				A7FC26DE2BA21B7D00067E26 /* DatadogSDKTesting.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -503,14 +500,6 @@
 				A7FC26CD2BA212EB00067E26 /* IntegrationTestsUITests.xctestplan */,
 			);
 			path = UITests;
-			sourceTree = "<group>";
-		};
-		A7FC26D22BA2156700067E26 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				A7FC26D42BA215D200067E26 /* XCTest.framework */,
-			);
-			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		E116D7D925248C280022779D /* Utils */ = {
@@ -864,7 +853,6 @@
 				E1ABA05725231E2500ED8AEF /* Tests */,
 				E1224A42264ABCCE00305968 /* IntegrationTests */,
 				E1ABA04B25231E2500ED8AEF /* Products */,
-				A7FC26D22BA2156700067E26 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -1727,8 +1715,8 @@
 				CODE_SIGN_ENTITLEMENTS = IntegrationTests/App/IntegrationTests.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_ASSET_PATHS = "";
 				ENABLE_PREVIEWS = YES;
+				ENABLE_TESTING_SEARCH_PATHS = YES;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1743,8 +1731,16 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
-				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"@executable_path/Frameworks",
+					"$(PLATFORM_DIR)/Developer/usr/lib/",
+					"$(PLATFORM_DIR)/Developer/Library/Frameworks/",
+				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
+					"@executable_path/../Frameworks",
+					"$(PLATFORM_DIR)/Developer/usr/lib/",
+					"$(PLATFORM_DIR)/Developer/Library/Frameworks/",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.IntegrationTestsRunner;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
@@ -1766,8 +1762,8 @@
 				CODE_SIGN_ENTITLEMENTS = IntegrationTests/App/IntegrationTests.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_ASSET_PATHS = "";
 				ENABLE_PREVIEWS = YES;
+				ENABLE_TESTING_SEARCH_PATHS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = IntegrationTests/App/Info.plist;
@@ -1781,8 +1777,16 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
-				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"@executable_path/Frameworks",
+					"$(PLATFORM_DIR)/Developer/usr/lib/",
+					"$(PLATFORM_DIR)/Developer/Library/Frameworks/",
+				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
+					"@executable_path/../Frameworks",
+					"$(PLATFORM_DIR)/Developer/usr/lib/",
+					"$(PLATFORM_DIR)/Developer/Library/Frameworks/",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.IntegrationTestsRunner;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;

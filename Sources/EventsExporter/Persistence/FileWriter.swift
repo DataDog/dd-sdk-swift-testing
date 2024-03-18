@@ -29,6 +29,10 @@ internal final class FileWriter {
 
     func write<T: Encodable>(value: T) {
         queue.async { [weak self] in
+            Log.print("Writing value: \(value)")
+            if self == nil {
+                Log.print("ERROR: SELF IS NIL!!!!")
+            }
             self?.synchronizedWrite(value: value)
         }
     }
@@ -50,6 +54,7 @@ internal final class FileWriter {
                 let atomicData = dataFormat.separatorData + data
                 try file.append(data: atomicData, synchronized: syncOnEnd)
             }
+            Log.print("Wrote to file: \(value)")
         } catch {
             Log.print("🔥 Failed to write file: \(error)")
         }

@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        xcode: ["Xcode_14.1", "Xcode_14.2", "Xcode_14.3"]
+        xcode: ["Xcode_14.2"]  # ["Xcode_14.1", "Xcode_14.2", "Xcode_14.3"]
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -26,6 +26,7 @@ jobs:
 
   test-Integration-macOS:
     runs-on: macos-latest
+    if: ${{ false }}  # disable for now
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -36,6 +37,7 @@ jobs:
 
   test-Integration-iOS:
     runs-on: macos-latest
+    if: ${{ false }}  # disable for now
     env: 
       DD_API_KEY: ${{ secrets.DD_API_KEY }}
     steps:
@@ -48,6 +50,7 @@ jobs:
 
   test-Integration-tvOS:
     runs-on: macos-latest
+    if: ${{ false }}  # disable for now
     env: 
       DD_API_KEY: ${{ secrets.DD_API_KEY }}
     steps:

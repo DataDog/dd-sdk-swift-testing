@@ -22,7 +22,7 @@ jobs:
     - name: Select ${{ matrix.xcode }}
       run: sudo xcode-select --switch /Applications/${{ matrix.xcode }}.app
     - name: Unit tests
-      run: make tests/unit/pretty
+      run: make tests/unit
 
   test-Integration-macOS:
     runs-on: macos-latest

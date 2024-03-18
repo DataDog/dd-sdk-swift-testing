@@ -33,7 +33,7 @@ jobs:
           # queries: ./path/to/local/query, your-org/your-repo/queries@main
 
       - name: Build library
-        run: make release
+        run: make build
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@1a927e9307bc11970b2c679922ebc4d03a5bd980 # 1.0.31
@@ -42,11 +42,11 @@ jobs:
         uses: actions/upload-artifact@82c141cc518b40d92cc801eee768e7aafc9c2fa2 # 2.3.1
         with:
           name: CodeQL Analysis Sarif
-          path: /home/runner/work/dd-sdk-swift-testing/results/swift.sarif
+          path: ${{ github.workspace }}/results/swift.sarif
 
       - name: Upload SARIF report to DDOG
         run: |
           npm install -g @datadog/datadog-ci
-          datadog-ci sarif upload /home/runner/work/dd-sdk-swift-testing/results/swift.sarif --service dd-sdk-swift-testing --env ci
+          datadog-ci sarif upload "${{ github.workspace }}/results/swift.sarif" --service dd-sdk-swift-testing --env ci
         env:
           DD_API_KEY: '${{secrets.DD_API_KEY}}'

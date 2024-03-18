@@ -128,9 +128,17 @@ struct PlatformUtils {
         #endif
     }
 
+
     #if os(iOS)
         static func getOrientation() -> String {
-            let orientation = UIApplication.shared.keyWindow?.rootViewController?.interfaceOrientation ?? .portrait
+            let orientation: UIInterfaceOrientation
+            if #available(iOS 13.0, *) {
+                let scene = UIApplication.shared.connectedScenes
+                            .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene
+                orientation = scene?.interfaceOrientation ?? .portrait
+            } else {
+                orientation = UIApplication.shared.statusBarOrientation
+            }
             switch orientation {
                 case .unknown:
                     return "unknown"

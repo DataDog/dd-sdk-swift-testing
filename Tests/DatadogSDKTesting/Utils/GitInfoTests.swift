@@ -8,10 +8,12 @@
 import XCTest
 
 class GitInfoTests: XCTestCase {
+    let fixturesURL: URL = {
+        let bundle = Bundle(for: GitInfoTests.self)
+        return bundle.resourceURL!.appendingPathComponent("fixtures")
+    }()
+    
     func testNoCommits() throws {
-        let bundle = Bundle(for: type(of: self))
-        let fixturesURL = bundle.resourceURL!
-
         let noCommitsFolder = fixturesURL.appendingPathComponent("git")
             .appendingPathComponent("no_commits").appendingPathComponent("git")
 
@@ -20,9 +22,6 @@ class GitInfoTests: XCTestCase {
     }
 
     func testNoObjects() throws {
-        let bundle = Bundle(for: type(of: self))
-        let fixturesURL = bundle.resourceURL!
-
         let withCommitsFolder = fixturesURL.appendingPathComponent("git")
             .appendingPathComponent("no_objects").appendingPathComponent("git")
 
@@ -31,9 +30,6 @@ class GitInfoTests: XCTestCase {
     }
 
     func testWithCommits() throws {
-        let bundle = Bundle(for: type(of: self))
-        let fixturesURL = bundle.resourceURL!
-
         let withCommitsFolder = fixturesURL.appendingPathComponent("git")
             .appendingPathComponent("with_commits").appendingPathComponent("git")
 
@@ -50,9 +46,6 @@ class GitInfoTests: XCTestCase {
     }
 
     func testWithCommitsNoRefs() throws {
-        let bundle = Bundle(for: type(of: self))
-        let fixturesURL = bundle.resourceURL!
-
         let withCommitsFolder = fixturesURL.appendingPathComponent("git")
             .appendingPathComponent("with_commits_no_refs").appendingPathComponent("git")
 
@@ -66,9 +59,6 @@ class GitInfoTests: XCTestCase {
     }
 
     func testWithTag() throws {
-        let bundle = Bundle(for: type(of: self))
-        let fixturesURL = bundle.resourceURL!
-
         let withCommitsFolder = fixturesURL.appendingPathComponent("git")
             .appendingPathComponent("with_tag").appendingPathComponent("git")
 
@@ -82,9 +72,6 @@ class GitInfoTests: XCTestCase {
     }
 
     func testWithPackFiles() throws {
-        let bundle = Bundle(for: type(of: self))
-        let fixturesURL = bundle.resourceURL!
-
         let packFilesFolder = fixturesURL.appendingPathComponent("git")
             .appendingPathComponent("pack_files").appendingPathComponent("git")
 

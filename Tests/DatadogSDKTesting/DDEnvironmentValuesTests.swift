@@ -14,6 +14,11 @@ struct FixtureError: Error, CustomStringConvertible {
 }
 
 class DDEnvironmentValuesTests: XCTestCase {
+    // buddy CI does not support macOS runners
+    let unsupportedCIs = ["buddy"]
+    // list of attributes stored as json
+    let jsonAttributes = ["_dd.ci.env_vars", "ci.node.labels"]
+    
     var testEnvironment = [String: String]()
     var previousEnvironment = [String: String]()
 
@@ -22,7 +27,7 @@ class DDEnvironmentValuesTests: XCTestCase {
 
     var tracerProvider = TracerProviderSdk()
     var tracerSdk: Tracer!
-
+    
     override func setUp() {
         XCTAssertNil(DDTracer.activeSpan)
         testEnvironment = [String: String]()
@@ -258,7 +263,7 @@ class DDEnvironmentValuesTests: XCTestCase {
     }
 
     func testRepositoryName() {
-        testEnvironment["GITHUB_WORKSPACE"] = "/tmp/folder"
+        testEnvironment["GITHUB_ACTION"] = "run"
         testEnvironment["GITHUB_REPOSITORY"] = "therepo"
 
         setEnvVariables()
@@ -269,7 +274,7 @@ class DDEnvironmentValuesTests: XCTestCase {
     }
 
     func testIfCommitHashFromEnvironmentIsNotSetGitFolderIsEvaluated() {
-        testEnvironment["GITHUB_WORKSPACE"] = "/tmp/folder"
+        testEnvironment["GITHUB_ACTION"] = "run"
         testEnvironment["GITHUB_SHA"] = nil
         testEnvironment["SRCROOT"] = ProcessInfo.processInfo.environment["SRCROOT"]
 
@@ -280,7 +285,7 @@ class DDEnvironmentValuesTests: XCTestCase {
     }
 
     func testIfCommitHashFromEnvironmentIsSetAndDifferentFromGitFolderThenGitFolderIsNotEvaluated() {
-        testEnvironment["GITHUB_WORKSPACE"] = "/tmp/folder"
+        testEnvironment["GITHUB_ACTION"] = "run"
         testEnvironment["GITHUB_SHA"] = "environmentSHA"
 
         setEnvVariables()
@@ -309,42 +314,54 @@ class DDEnvironmentValuesTests: XCTestCase {
     }
 
     func testSpecs() throws {
-        let bundle = Bundle(for: type(of: self))
-        let fixturesURL = bundle.resourceURL!.appendingPathComponent("ci")
+        let fixturesURL = Bundle(for: type(of: self)).resourceURL!
+            .appendingPathComponent("fixtures")
+            .appendingPathComponent("ci")
         let fileEnumerator = FileManager.default.enumerator(at: fixturesURL, includingPropertiesForKeys: nil)!
 
         var numTestedFiles = 0
         for case let fileURL as URL in fileEnumerator {
-            if fileURL.pathExtension == "json" {
-                if fileURL.lastPathComponent == "buddy.json" {
-                    // buddy CI does not support macOS runners
-                    continue
+            // check is json
+            guard fileURL.pathExtension == "json" else { continue }
+            
+            let ciName = fileURL.lastPathComponent
+                .replacingOccurrences(of: ".json", with: "")
+            
+            // filter unsupported CI
+            guard unsupportedCIs.firstIndex(of: ciName) == nil else { continue }
+            
+            numTestedFiles += 1
+            
+            do {
+                try validateSpec(file: fileURL, ci: ciName)
+            } catch {
+                print("[FixtureError] JSON serialization failed on file: \(fileURL)")
+                let content = try String(contentsOf: fileURL)
+                if content.isEmpty {
+                    print("[FixtureError] File is empty" + content)
+                } else {
+                    print("[FixtureError] content:\n" + content)
                 }
-                numTestedFiles += 1
-                print("validating \(fileURL.lastPathComponent)")
-                do {
-                    try validateSpec(file: fileURL)
-                } catch {
-                    print("[FixtureError] JSON serialization failed on file: \(fileURL)")
-                    let content = try String(contentsOf: fileURL)
-                    if content.isEmpty {
-                        print("[FixtureError] File is empty" + content)
-                    } else {
-                        print("[FixtureError] content:\n" + content)
-                    }
-                    throw error
-                }
+                throw error
             }
         }
         XCTAssertGreaterThan(numTestedFiles, 0)
     }
 
-    private func validateSpec(file: URL) throws {
+    private func validateSpec(file: URL, ci: String) throws {
+        print("validating \(ci)")
         let data = try Data(contentsOf: file)
-        guard let json = try JSONSerialization.jsonObject(with: data, options: []) as? [Any] else { throw FixtureError(description: "[FixtureError] JSON serialization failed on file: \(file)") }
+        guard let json = try JSONSerialization.jsonObject(with: data, options: []) as? [Any] else {
+            throw FixtureError(description: "[FixtureError] JSON serialization failed on file: \(file)")
+        }
+
         try json.forEach { specVal in
             DDEnvironmentValues.environment = [String: String]()
-            guard let spec = specVal as? [[String: String]] else { throw FixtureError(description: "[FixtureError] spec invalid: \(specVal)") }
+            
+            guard let spec = specVal as? [[String: String]] else {
+                throw FixtureError(description: "[FixtureError] spec invalid: \(specVal)")
+            }
+            
             spec[0].forEach {
                 testEnvironment[$0.key] = $0.value
             }
@@ -357,10 +374,13 @@ class DDEnvironmentValuesTests: XCTestCase {
             spanData = span.toSpanData()
 
             spec[1].forEach {
-                if $0.key == "_dd.ci.env_vars" || $0.key == "ci.node.labels" {
-                    XCTAssertTrue(compareJsons(spanData.attributes[$0.key]?.description, $0.value))
+                let data = spanData.attributes[$0.key]?.description
+                if jsonAttributes.firstIndex(of: $0.key) != nil {
+                    XCTAssertTrue(compareJsons(data, $0.value),
+                                  "\(ci) > \($0.key): \(data ?? "nil") != \($0.value)")
                 } else {
-                    XCTAssertEqual(spanData.attributes[$0.key]?.description, $0.value, "\($0.key) != \($0.value)")
+                    XCTAssertEqual(data, $0.value,
+                                   "\(ci) > \($0.key): \(data ?? "nil") != \($0.value)")
                 }
             }
         }
@@ -371,17 +391,12 @@ class DDEnvironmentValuesTests: XCTestCase {
         if let json1 = try? JSONSerialization.jsonObject(with: string1.utf8Data) as? [String: String],
            let json2 = try? JSONSerialization.jsonObject(with: string2.utf8Data) as? [String: String]
         {
-            let comparison = NSDictionary(dictionary: json1).isEqual(to: json2)
-            XCTAssertTrue(comparison)
-            return comparison
+            return json1 == json2
         } else if let json1 = try? JSONSerialization.jsonObject(with: string1.utf8Data) as? [String],
                   let json2 = try? JSONSerialization.jsonObject(with: string2.utf8Data) as? [String]
         {
-            let comparison = (json1.sorted() == json2.sorted())
-            XCTAssertTrue(comparison)
-            return comparison
+            return json1.sorted() == json2.sorted()
         } else {
-            XCTAssert(false, "Uncomparable objects")
             return false
         }
     }

@@ -30,9 +30,6 @@ internal final class FileWriter {
     func write<T: Encodable>(value: T) {
         queue.async { [weak self] in
             Log.print("Writing value: \(value)")
-            if self == nil {
-                Log.print("ERROR: SELF IS NIL!!!!")
-            }
             self?.synchronizedWrite(value: value)
         }
     }

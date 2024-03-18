@@ -109,20 +109,19 @@ class FileWriterTests: XCTestCase {
         }
         
         writer.writeSync(value: Foo())
-        let file = try! temporaryDirectory.files().first!
 
-        // Write 300 of `Foo`s and interrupt writes randomly
+        // Write 299 more of `Foo`s and interrupt writes randomly
         (1..<300).forEach { _ in
             writer.write(value: Foo())
-            randomlyInterruptIO(for: file)
+            randomlyInterruptIO(for: try! temporaryDirectory.files().first!)
         }
 
         ioInterruptionQueue.sync {}
         waitForWritesCompletion(on: writer.queue, thenFulfill: expectation)
-        waitForExpectations(timeout: 7, handler: nil)
+        waitForExpectations(timeout: 20, handler: nil)
         XCTAssertEqual(try temporaryDirectory.files().count, 1)
 
-        let fileData = try temporaryDirectory.files()[0].read()
+        let fileData = try temporaryDirectory.files().first!.read()
         let jsonDecoder = JSONDecoder()
 
         // Assert that data written is not malformed

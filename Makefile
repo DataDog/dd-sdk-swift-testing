@@ -81,9 +81,9 @@ tests/unit/exporter:
 	xcodebuild -scheme EventsExporter -sdk appletvsimulator -destination 'platform=tvOS Simulator,name=Apple TV' test
 
 tests/unit/exporter/pretty:
-	set -o pipefail; xcodebuild -scheme EventsExporter -sdk macosx -destination 'platform=macOS,arch=x86_64' test | xcbeautify
-	set -o pipefail; xcodebuild -scheme EventsExporter -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' test | xcbeautify
-	set -o pipefail; xcodebuild -scheme EventsExporter -sdk appletvsimulator -destination 'platform=tvOS Simulator,name=Apple TV' test | xcbeautify
+	set -o pipefail; xcodebuild -scheme EventsExporter -sdk macosx -destination 'platform=macOS,arch=x86_64' test | xcbeautify --renderer github-actions
+	set -o pipefail; xcodebuild -scheme EventsExporter -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' test | xcbeautify --renderer github-actions
+	set -o pipefail; xcodebuild -scheme EventsExporter -sdk appletvsimulator -destination 'platform=tvOS Simulator,name=Apple TV' test | xcbeautify --renderer github-actions
 
 tests/unit/sdk:
 	xcodebuild -scheme DatadogSDKTesting -sdk macosx -destination 'platform=macOS,arch=x86_64' test
@@ -91,9 +91,9 @@ tests/unit/sdk:
 	xcodebuild -scheme DatadogSDKTesting -sdk appletvsimulator -destination 'platform=tvOS Simulator,name=Apple TV' test
 
 tests/unit/sdk/pretty:
-	set -o pipefail; xcodebuild -scheme DatadogSDKTesting -sdk macosx -destination 'platform=macOS,arch=x86_64' test | xcbeautify
-	set -o pipefail; xcodebuild -scheme DatadogSDKTesting -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' test | xcbeautify
-	set -o pipefail; xcodebuild -scheme DatadogSDKTesting -sdk appletvsimulator -destination 'platform=tvOS Simulator,name=Apple TV' test | xcbeautify
+	set -o pipefail; xcodebuild -scheme DatadogSDKTesting -sdk macosx -destination 'platform=macOS,arch=x86_64' test | xcbeautify --renderer github-actions
+	set -o pipefail; xcodebuild -scheme DatadogSDKTesting -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' test | xcbeautify --renderer github-actions
+	set -o pipefail; xcodebuild -scheme DatadogSDKTesting -sdk appletvsimulator -destination 'platform=tvOS Simulator,name=Apple TV' test | xcbeautify --renderer github-actions
 
 tests/integration/macOS:
 	xcodebuild -scheme IntegrationTests -sdk macosx -destination 'platform=macOS,arch=x86_64' test

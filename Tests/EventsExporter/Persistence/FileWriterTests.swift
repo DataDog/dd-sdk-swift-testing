@@ -99,19 +99,22 @@ class FileWriterTests: XCTestCase {
 
         let ioInterruptionQueue = DispatchQueue(label: "com.datadohq.file-writer-random-io")
 
-        func randomlyInterruptIO(for file: File?) {
-            ioInterruptionQueue.async { try? file?.makeReadonly() }
-            ioInterruptionQueue.async { try? file?.makeReadWrite() }
+        func randomlyInterruptIO(for file: File) {
+            ioInterruptionQueue.async { try? file.makeReadonly() }
+            ioInterruptionQueue.async { try? file.makeReadWrite() }
         }
 
         struct Foo: Codable {
             var foo = "bar"
         }
+        
+        writer.writeSync(value: Foo())
+        let file = try! temporaryDirectory.files().first!
 
         // Write 300 of `Foo`s and interrupt writes randomly
-        (0..<300).forEach { _ in
+        (1..<300).forEach { _ in
             writer.write(value: Foo())
-            randomlyInterruptIO(for: try? temporaryDirectory.files().first)
+            randomlyInterruptIO(for: file)
         }
 
         ioInterruptionQueue.sync {}
@@ -125,7 +128,7 @@ class FileWriterTests: XCTestCase {
         // Assert that data written is not malformed
         let writtenData = try jsonDecoder.decode([Foo].self, from: "[".utf8Data + fileData + "]".utf8Data)
         // Assert that some (including all) `Foo`s were written
-        XCTAssertGreaterThan(writtenData.count, 0)
+        XCTAssertGreaterThan(writtenData.count, 1)
         XCTAssertLessThanOrEqual(writtenData.count, 300)
     }
 

@@ -68,7 +68,6 @@
   },
   "testTargets" : [
     {
-      "parallelizable" : true,
       "target" : {
         "containerPath" : "container:DatadogSDKTesting.xcodeproj",
         "identifier" : "A7FC26BF2BA20D1200067E26",

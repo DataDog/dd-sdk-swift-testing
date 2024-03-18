@@ -35,7 +35,6 @@
 		A7FC25D62BA1EB6400067E26 /* DDSymbolAddress.c in Sources */ = {isa = PBXBuildFile; fileRef = E11295C725F63BA8002719E7 /* DDSymbolAddress.c */; };
 		A7FC25D72BA1EB6400067E26 /* LibraryInitializer.m in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA06C25231F3200ED8AEF /* LibraryInitializer.m */; };
 		A7FC25D82BA1EB6400067E26 /* SanitizerMessageHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = E1293F8428DB510200D31DD6 /* SanitizerMessageHandler.m */; };
-		A7FC25D92BA1EB6400067E26 /* Subprocess.c in Sources */ = {isa = PBXBuildFile; fileRef = E10A7E15280701CA00B464C9 /* Subprocess.c */; };
 		A7FC25DA2BA1EB8D00067E26 /* DDSymbolAddress.h in Headers */ = {isa = PBXBuildFile; fileRef = E1D6EFA125F6563000E8C3AE /* DDSymbolAddress.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A7FC25DB2BA1EB8D00067E26 /* NTPServer.h in Headers */ = {isa = PBXBuildFile; fileRef = E13B5F3627ECD08B006F8E2D /* NTPServer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A7FC25DC2BA1EB9B00067E26 /* NTPTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = E114C130274F8A0000B57E08 /* NTPTypes.h */; };
@@ -178,6 +177,10 @@
 		A7FC26D12BA214CE00067E26 /* SimpleSpanData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7FC26D02BA214CE00067E26 /* SimpleSpanData.swift */; };
 		A7FC26DE2BA21B7D00067E26 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */; };
 		A7FC26DF2BA21B7D00067E26 /* DatadogSDKTesting.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		A7FC26EB2BA866BB00067E26 /* NIO in Frameworks */ = {isa = PBXBuildFile; productRef = A7FC26EA2BA866BB00067E26 /* NIO */; };
+		A7FC26ED2BA866D000067E26 /* NIOHTTP1 in Frameworks */ = {isa = PBXBuildFile; productRef = A7FC26EC2BA866D000067E26 /* NIOHTTP1 */; };
+		A7FC26F52BA867BA00067E26 /* OpenTelemetryApi in Frameworks */ = {isa = PBXBuildFile; productRef = A7FC26F42BA867BA00067E26 /* OpenTelemetryApi */; };
+		A7FC27012BA8818300067E26 /* Subprocess.c in Sources */ = {isa = PBXBuildFile; fileRef = A7FC27002BA8818300067E26 /* Subprocess.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -246,10 +249,11 @@
 		A7FC26CE2BA214AC00067E26 /* SimpleSpanData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleSpanData.swift; sourceTree = "<group>"; };
 		A7FC26D02BA214CE00067E26 /* SimpleSpanData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleSpanData.swift; sourceTree = "<group>"; };
 		A7FC26D92BA2181A00067E26 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A7FC26E42BA8648300067E26 /* EventsExporter.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = EventsExporter.xctestplan; sourceTree = "<group>"; };
+		A7FC27002BA8818300067E26 /* Subprocess.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Subprocess.c; sourceTree = "<group>"; };
 		DA23503D2AE949DF003FB1A9 /* DateClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateClock.swift; sourceTree = "<group>"; };
 		E10034D92703599D00439C9C /* DDTestModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTestModule.swift; sourceTree = "<group>"; };
 		E10A7E0D2806D68F00B464C9 /* LLVMSimpleCoverageFormat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LLVMSimpleCoverageFormat.swift; sourceTree = "<group>"; };
-		E10A7E15280701CA00B464C9 /* Subprocess.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Subprocess.c; sourceTree = "<group>"; };
 		E11295BA25F2483D002719E7 /* FileLocator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileLocator.swift; sourceTree = "<group>"; };
 		E11295C725F63BA8002719E7 /* DDSymbolAddress.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = DDSymbolAddress.c; sourceTree = "<group>"; };
 		E114C12E274F8A0000B57E08 /* NTPServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NTPServer.m; sourceTree = "<group>"; };
@@ -432,6 +436,7 @@
 			files = (
 				A7FC264E2BA1EFEC00067E26 /* OpenTelemetrySdk in Frameworks */,
 				A7FC264F2BA1EFEC00067E26 /* llvm-xcframework in Frameworks */,
+				A7FC26F52BA867BA00067E26 /* OpenTelemetryApi in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -439,7 +444,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A7FC26ED2BA866D000067E26 /* NIOHTTP1 in Frameworks */,
 				A7FC25882BA1E87400067E26 /* EventsExporter.framework in Frameworks */,
+				A7FC26EB2BA866BB00067E26 /* NIO in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -547,11 +554,12 @@
 				E141EADC27EB3B9E0057D747 /* Spans */,
 				E141EADE27EB3B9E0057D747 /* Utils */,
 				E141EAE427EB3B9E0057D747 /* Logs */,
-				E141EAE727EB3B9E0057D747 /* EventsExporterTests.swift */,
 				E141EAE827EB3B9E0057D747 /* Persistence */,
 				E141EAEC27EB3B9E0057D747 /* Files */,
 				E141EAEF27EB3B9E0057D747 /* Helpers */,
 				E141EAFB27EB3B9E0057D747 /* Upload */,
+				A7FC26E42BA8648300067E26 /* EventsExporter.xctestplan */,
+				E141EAE727EB3B9E0057D747 /* EventsExporterTests.swift */,
 			);
 			path = EventsExporter;
 			sourceTree = "<group>";
@@ -667,6 +675,7 @@
 		E143CF0027D7790200F4018A /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				A7FC27002BA8818300067E26 /* Subprocess.c */,
 				81894A4E29B0A28B00108C51 /* Retrying.swift */,
 				E1F69C2A28C72FAD0042156E /* Log.swift */,
 				E1665A7225D12D7500BA53CD /* Spawn.swift */,
@@ -896,7 +905,6 @@
 				E1ABA06C25231F3200ED8AEF /* LibraryInitializer.m */,
 				E1293F8428DB510200D31DD6 /* SanitizerMessageHandler.m */,
 				E11295C725F63BA8002719E7 /* DDSymbolAddress.c */,
-				E10A7E15280701CA00B464C9 /* Subprocess.c */,
 			);
 			path = Objc;
 			sourceTree = "<group>";
@@ -1030,6 +1038,10 @@
 			buildRules = (
 			);
 			dependencies = (
+				A7FC26FD2BA87E5100067E26 /* PBXTargetDependency */,
+				A7FC26FB2BA87E4A00067E26 /* PBXTargetDependency */,
+				A7FC26F92BA87E4000067E26 /* PBXTargetDependency */,
+				A7FC26F72BA87E2900067E26 /* PBXTargetDependency */,
 				A7FC26582BA1F1F900067E26 /* PBXTargetDependency */,
 			);
 			name = DatadogSDKTesting;
@@ -1073,11 +1085,15 @@
 			buildRules = (
 			);
 			dependencies = (
+				A7FC26F32BA867B000067E26 /* PBXTargetDependency */,
+				A7FC26F12BA8677900067E26 /* PBXTargetDependency */,
+				A7FC26EF2BA8676A00067E26 /* PBXTargetDependency */,
 			);
 			name = EventsExporter;
 			packageProductDependencies = (
 				E1DCAF6A284A1FE000F44BE3 /* OpenTelemetrySdk */,
 				E1E51D4F28B5099200E0E206 /* llvm-xcframework */,
+				A7FC26F42BA867BA00067E26 /* OpenTelemetryApi */,
 			);
 			productName = EventsExporter;
 			productReference = A7FC25802BA1E87400067E26 /* EventsExporter.framework */;
@@ -1094,9 +1110,15 @@
 			buildRules = (
 			);
 			dependencies = (
+				A7FC26E82BA8653D00067E26 /* PBXTargetDependency */,
+				A7FC26E62BA864FB00067E26 /* PBXTargetDependency */,
 				A7FC258A2BA1E87400067E26 /* PBXTargetDependency */,
 			);
 			name = EventsExporterTests;
+			packageProductDependencies = (
+				A7FC26EA2BA866BB00067E26 /* NIO */,
+				A7FC26EC2BA866D000067E26 /* NIOHTTP1 */,
+			);
 			productName = EventsExporterTests;
 			productReference = A7FC25872BA1E87400067E26 /* EventsExporterTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -1280,7 +1302,6 @@
 				A7FC25B62BA1EADF00067E26 /* DDTestModule.swift in Sources */,
 				A7FC25D22BA1EB2900067E26 /* SimpleSpanSerializer.swift in Sources */,
 				A7FC25BA2BA1EADF00067E26 /* DDTags.swift in Sources */,
-				A7FC25D92BA1EB6400067E26 /* Subprocess.c in Sources */,
 				A7FC25DF2BA1EBF300067E26 /* StdoutCapture.swift in Sources */,
 				A7FC25D32BA1EB3400067E26 /* DDSymbolicator.swift in Sources */,
 				A7FC25C12BA1EAF500067E26 /* GitUploader.swift in Sources */,
@@ -1344,6 +1365,7 @@
 				A7FC26482BA1ECEF00067E26 /* FileWriter.swift in Sources */,
 				A7FC26262BA1EC6F00067E26 /* Error.cpp in Sources */,
 				A7FC263C2BA1ECCF00067E26 /* DataCompression.swift in Sources */,
+				A7FC27012BA8818300067E26 /* Subprocess.c in Sources */,
 				A7FC261A2BA1EC5A00067E26 /* DataUploadStatus.swift in Sources */,
 				A7FC263A2BA1ECCF00067E26 /* EncodableValue.swift in Sources */,
 				A7FC26352BA1ECCF00067E26 /* PerformancePreset.swift in Sources */,
@@ -1458,6 +1480,42 @@
 			isa = PBXTargetDependency;
 			target = A7FC26A72BA20A6500067E26 /* IntegrationTestsApp */;
 			targetProxy = A7FC26C62BA20D1200067E26 /* PBXContainerItemProxy */;
+		};
+		A7FC26E62BA864FB00067E26 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = A7FC26E52BA864FB00067E26 /* NIO */;
+		};
+		A7FC26E82BA8653D00067E26 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = A7FC26E72BA8653D00067E26 /* NIOHTTP1 */;
+		};
+		A7FC26EF2BA8676A00067E26 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = A7FC26EE2BA8676A00067E26 /* OpenTelemetrySdk */;
+		};
+		A7FC26F12BA8677900067E26 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = A7FC26F02BA8677900067E26 /* llvm-xcframework */;
+		};
+		A7FC26F32BA867B000067E26 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = A7FC26F22BA867B000067E26 /* OpenTelemetryApi */;
+		};
+		A7FC26F72BA87E2900067E26 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = A7FC26F62BA87E2900067E26 /* URLSessionInstrumentation */;
+		};
+		A7FC26F92BA87E4000067E26 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = A7FC26F82BA87E4000067E26 /* CrashReporter */;
+		};
+		A7FC26FB2BA87E4A00067E26 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = A7FC26FA2BA87E4A00067E26 /* SigmaSwiftStatistics */;
+		};
+		A7FC26FD2BA87E5100067E26 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = A7FC26FC2BA87E5100067E26 /* InMemoryExporter */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1673,6 +1731,7 @@
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				OTHER_LDFLAGS = "-lz";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.EventsExporterTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
@@ -1694,6 +1753,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				OTHER_LDFLAGS = "-lz";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.EventsExporterTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
@@ -2125,6 +2185,66 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		A7FC26E52BA864FB00067E26 /* NIO */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E141EB5727EB44400057D747 /* XCRemoteSwiftPackageReference "swift-nio" */;
+			productName = NIO;
+		};
+		A7FC26E72BA8653D00067E26 /* NIOHTTP1 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E141EB5727EB44400057D747 /* XCRemoteSwiftPackageReference "swift-nio" */;
+			productName = NIOHTTP1;
+		};
+		A7FC26EA2BA866BB00067E26 /* NIO */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E141EB5727EB44400057D747 /* XCRemoteSwiftPackageReference "swift-nio" */;
+			productName = NIO;
+		};
+		A7FC26EC2BA866D000067E26 /* NIOHTTP1 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E141EB5727EB44400057D747 /* XCRemoteSwiftPackageReference "swift-nio" */;
+			productName = NIOHTTP1;
+		};
+		A7FC26EE2BA8676A00067E26 /* OpenTelemetrySdk */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			productName = OpenTelemetrySdk;
+		};
+		A7FC26F02BA8677900067E26 /* llvm-xcframework */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E1E51D4E28B5099200E0E206 /* XCRemoteSwiftPackageReference "llvm-xcframework" */;
+			productName = "llvm-xcframework";
+		};
+		A7FC26F22BA867B000067E26 /* OpenTelemetryApi */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			productName = OpenTelemetryApi;
+		};
+		A7FC26F42BA867BA00067E26 /* OpenTelemetryApi */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			productName = OpenTelemetryApi;
+		};
+		A7FC26F62BA87E2900067E26 /* URLSessionInstrumentation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			productName = URLSessionInstrumentation;
+		};
+		A7FC26F82BA87E4000067E26 /* CrashReporter */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E1FB4839253891650083B263 /* XCRemoteSwiftPackageReference "plcrashreporter" */;
+			productName = CrashReporter;
+		};
+		A7FC26FA2BA87E4A00067E26 /* SigmaSwiftStatistics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E17B7AA6253F02580081D7F3 /* XCRemoteSwiftPackageReference "SigmaSwiftStatistics" */;
+			productName = SigmaSwiftStatistics;
+		};
+		A7FC26FC2BA87E5100067E26 /* InMemoryExporter */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			productName = InMemoryExporter;
+		};
 		E157A718256E9D1D00CBCA52 /* CrashReporter */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = E157A719256E9D1D00CBCA52 /* XCRemoteSwiftPackageReference "plcrashreporter" */;

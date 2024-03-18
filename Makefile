@@ -75,16 +75,27 @@ github: release
 clean:
 	rm -rf ./build
 
-tests:
+tests/unit/exporter:
+	xcodebuild -scheme EventsExporter -sdk macosx -destination 'platform=macOS,arch=x86_64' test
+	xcodebuild -scheme EventsExporter -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' test
+	xcodebuild -scheme EventsExporter -sdk appletvsimulator -destination 'platform=tvOS Simulator,name=Apple TV' test
+
+tests/unit/sdk:
 	xcodebuild -scheme DatadogSDKTesting -sdk macosx -destination 'platform=macOS,arch=x86_64' test
 	xcodebuild -scheme DatadogSDKTesting -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' test
 	xcodebuild -scheme DatadogSDKTesting -sdk appletvsimulator -destination 'platform=tvOS Simulator,name=Apple TV' test
 
-test-macOS:
+tests/integration/macOS:
 	xcodebuild -scheme IntegrationTests -sdk macosx -destination 'platform=macOS,arch=x86_64' test
 
-test-iOS:
+tests/integration/iOS:
 	xcodebuild -scheme IntegrationTests -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' test
 
-test-tvOS:
+tests/integration/tvOS:
 	xcodebuild -scheme IntegrationTests -sdk appletvsimulator -destination 'platform=tvOS Simulator,name=Apple TV' test
+
+tests/unit: tests/unit/exporter tests/unit/sdk
+
+tests/integration: tests/integration/macOS tests/integration/iOS tests/integration/tvOS
+
+tests: tests/unit

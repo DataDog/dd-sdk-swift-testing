@@ -34,7 +34,7 @@ class IntegrationTestsRunner: XCTestCase {
         FileManager.default.createFile(atPath: testOutputFile.path, contents: nil, attributes: nil)
 
         app = XCUIApplication()
-        app.launchEnvironment["TEST_CLASS"] = "IntegrationTests.\(testDesiredClass)"
+        app.launchEnvironment["TEST_CLASS"] = "IntegrationTestsApp.\(testDesiredClass)"
         app.launchEnvironment["SRCROOT"] = ProcessInfo.processInfo.environment["SRCROOT"]
         app.launchEnvironment["TEST_OUTPUT_FILE"] = testOutputFile.path
         app.launch()
@@ -164,9 +164,9 @@ class IntegrationTestsRunner: XCTestCase {
     func validateGenericAttributes() {
         XCTAssertEqual(attrib[DDGenericTags.language], "swift")
         XCTAssertEqual(attrib[DDGenericTags.type], "test")
-        XCTAssertEqual(attrib[DDTestTags.testBundle], "IntegrationTests")
+        XCTAssertEqual(attrib[DDTestTags.testBundle], "IntegrationTestsApp")
         XCTAssertEqual(attrib[DDTestTags.testFramework], "XCTest")
-        XCTAssertEqual(attrib[DDTestTags.testSourceFile], "IntegrationTests/IntegrationTests.swift")
+        XCTAssertEqual(attrib[DDTestTags.testSourceFile], "IntegrationTests/App/IntegrationTests.swift")
         XCTAssertGreaterThan(Int(attrib[DDTestTags.testSourceStartLine] ?? "0") ?? 0, 0)
         XCTAssertGreaterThan(Int(attrib[DDTestTags.testSourceEndLine] ?? "0") ?? 0, 0)
         XCTAssertEqual(attrib[DDOSTags.osPlatform], PlatformUtils.getRunningPlatform())

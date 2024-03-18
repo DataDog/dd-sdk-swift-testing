@@ -16,17 +16,21 @@ jobs:
         xcode: ["Xcode_14.1", "Xcode_14.2", "Xcode_14.3"]
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
+    - name: Install xcbeautify
+      run: brew install xcbeautify
     - name: Select ${{ matrix.xcode }}
       run: sudo xcode-select --switch /Applications/${{ matrix.xcode }}.app
     - name: Unit tests
-      run: make tests/unit
+      run: make tests/unit/pretty
 
   test-Integration-macOS:
     runs-on: macos-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
+    - name: Install xcbeautify
+      run: brew install xcbeautify
     - name: tests macOS
       run: DD_API_KEY=${{ secrets.DD_API_KEY }} make tests/integration/macOS
 
@@ -36,7 +40,9 @@ jobs:
       DD_API_KEY: ${{ secrets.DD_API_KEY }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
+    - name: Install xcbeautify
+      run: brew install xcbeautify
     - name: tests iOS
       run: DD_API_KEY=${{ secrets.DD_API_KEY }} make tests/integration/iOS
 
@@ -46,6 +52,8 @@ jobs:
       DD_API_KEY: ${{ secrets.DD_API_KEY }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
+    - name: Install xcbeautify
+      run: brew install xcbeautify
     - name: tests tvOS
       run: DD_API_KEY=${{ secrets.DD_API_KEY }} make tests/integration/tvOS

@@ -78,7 +78,7 @@ class FileWriterTests: XCTestCase {
 
     /// NOTE: Test added after incident-4797
     func testWhenIOExceptionsHappenRandomly_theFileIsNeverMalformed() throws {
-        try XCTSkipIf(true)
+        //try XCTSkipIf(true)
         let expectation = self.expectation(description: "write completed")
         let writer = FileWriter(
             dataFormat: DataFormat(prefix: "[", suffix: "]", separator: ","),

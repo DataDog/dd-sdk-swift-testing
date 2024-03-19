@@ -10,6 +10,12 @@
   ],
   "defaultOptions" : {
     "codeCoverage" : false,
+    "environmentVariableEntries" : [
+      {
+        "key" : "GITHUB_ACTIONS",
+        "value" : "$(GITHUB_ACTIONS)"
+      }
+    ],
     "targetForVariableExpansion" : {
       "containerPath" : "container:DatadogSDKTesting.xcodeproj",
       "identifier" : "A7FC257F2BA1E87400067E26",

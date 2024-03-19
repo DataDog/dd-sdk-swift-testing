@@ -78,7 +78,11 @@ class FileWriterTests: XCTestCase {
 
     /// NOTE: Test added after incident-4797
     func testWhenIOExceptionsHappenRandomly_theFileIsNeverMalformed() throws {
-        try XCTSkipIf(true)
+        // test doesn't work properly on the github runner.
+        // global queue can stuck for couple of minutes
+        // seems as some bug of virtualization
+        try XCTSkipIf(isGithub)
+        
         let expectation = self.expectation(description: "write completed")
         let writer = FileWriter(
             dataFormat: DataFormat(prefix: "[", suffix: "]", separator: ","),
@@ -97,11 +101,17 @@ class FileWriterTests: XCTestCase {
             )
         )
 
-        let ioInterruptionQueue = DispatchQueue(label: "com.datadohq.file-writer-random-io")
+        let ioInterruptionQueue = DispatchQueue(
+            label: "com.datadohq.file-writer-random-io",
+            target: .global(qos: writer.queue.qos.qosClass)
+        )
 
         func randomlyInterruptIO(for file: File?) {
-            ioInterruptionQueue.async { try? file?.makeReadonly() }
-            ioInterruptionQueue.async { try? file?.makeReadWrite() }
+            ioInterruptionQueue.async {
+                try? file?.makeReadonly()
+                usleep(300)
+                try? file?.makeReadWrite()
+            }
         }
 
         struct Foo: Codable {
@@ -109,17 +119,17 @@ class FileWriterTests: XCTestCase {
         }
 
         // Write 300 of `Foo`s and interrupt writes randomly
-        (0..<300).forEach { _ in
+        try (0..<300).forEach { _ in
             writer.write(value: Foo())
-            randomlyInterruptIO(for: try? temporaryDirectory.files().first)
+            randomlyInterruptIO(for: try temporaryDirectory.files().first)
         }
 
         ioInterruptionQueue.sync {}
         waitForWritesCompletion(on: writer.queue, thenFulfill: expectation)
-        waitForExpectations(timeout: 7, handler: nil)
+        waitForExpectations(timeout: 20, handler: nil)
         XCTAssertEqual(try temporaryDirectory.files().count, 1)
 
-        let fileData = try temporaryDirectory.files()[0].read()
+        let fileData = try temporaryDirectory.files().first!.read()
         let jsonDecoder = JSONDecoder()
 
         // Assert that data written is not malformed
@@ -131,5 +141,10 @@ class FileWriterTests: XCTestCase {
 
     private func waitForWritesCompletion(on queue: DispatchQueue, thenFulfill expectation: XCTestExpectation) {
         queue.async { expectation.fulfill() }
+    }
+    
+    private var isGithub: Bool {
+        ProcessInfo.processInfo.environment["GITHUB_ACTION"] != nil ||
+        ProcessInfo.processInfo.environment["GITHUB_ACTIONS"] != nil
     }
 }

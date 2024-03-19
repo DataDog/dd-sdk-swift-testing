@@ -4,7 +4,6 @@
  * Copyright 2020-Present Datadog, Inc.
  */
 
-import IntegrationTests
 import XCTest
 
 class UIIntegrationTests: XCTestCase {

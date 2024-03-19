@@ -1,0 +1,35 @@
+{
+  "configurations" : [
+    {
+      "id" : "8B05D77D-C81E-4F87-A78B-7D155C3DF756",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : false,
+    "environmentVariableEntries" : [
+      {
+        "key" : "GITHUB_ACTIONS",
+        "value" : "$(GITHUB_ACTIONS)"
+      }
+    ],
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:DatadogSDKTesting.xcodeproj",
+      "identifier" : "A7FC257F2BA1E87400067E26",
+      "name" : "EventsExporter"
+    }
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:DatadogSDKTesting.xcodeproj",
+        "identifier" : "A7FC25862BA1E87400067E26",
+        "name" : "EventsExporterTests"
+      }
+    }
+  ],
+  "version" : 1
+}

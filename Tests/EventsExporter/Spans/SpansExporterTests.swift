@@ -19,7 +19,6 @@ class SpansExporterTests: XCTestCase {
     }
 
     func testWhenExportSpanIsCalled_thenTraceIsUploaded() throws {
-        //try XCTSkipIf(true)
         var tracesSent = false
         let expec = expectation(description: "traces received")
         let server = HttpTestServer(url: URL(string: "http://localhost:33333"),

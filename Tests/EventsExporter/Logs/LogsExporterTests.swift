@@ -19,7 +19,6 @@ class LogsExporterTests: XCTestCase {
     }
 
     func testWhenExportSpanIsCalledAndSpanHasEvent_thenLogIsUploaded() throws {
-        //try XCTSkipIf(true)
         var logsSent = false
         let expec = expectation(description: "logs received")
         let server = HttpTestServer(url: URL(string: "http://localhost:33333"),

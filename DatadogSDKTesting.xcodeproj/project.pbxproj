@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		A71119A22BA8A4F400118323 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */; };
-		A7FC25682BA1E83500067E26 /* DatadogSDKTesting.docc in Sources */ = {isa = PBXBuildFile; fileRef = A7FC25672BA1E83500067E26 /* DatadogSDKTesting.docc */; };
 		A7FC256E2BA1E83500067E26 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */; };
 		A7FC25882BA1E87400067E26 /* EventsExporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25802BA1E87400067E26 /* EventsExporter.framework */; };
 		A7FC25B42BA1EADF00067E26 /* DDTestObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA07025231F4700ED8AEF /* DDTestObserver.swift */; };
@@ -237,7 +236,6 @@
 		A7C292122B9B2B39009C2979 /* fixtures */ = {isa = PBXFileReference; lastKnownFileType = folder; path = fixtures; sourceTree = "<group>"; };
 		A7C292162B9B2DE0009C2979 /* DatadogSDKTesting.podspec */ = {isa = PBXFileReference; lastKnownFileType = text; path = DatadogSDKTesting.podspec; sourceTree = "<group>"; };
 		A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = DatadogSDKTesting.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		A7FC25672BA1E83500067E26 /* DatadogSDKTesting.docc */ = {isa = PBXFileReference; lastKnownFileType = folder.documentationcatalog; path = DatadogSDKTesting.docc; sourceTree = "<group>"; };
 		A7FC256D2BA1E83500067E26 /* DatadogSDKTestingTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DatadogSDKTestingTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7FC25802BA1E87400067E26 /* EventsExporter.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = EventsExporter.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7FC25872BA1E87400067E26 /* EventsExporterTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EventsExporterTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -477,14 +475,6 @@
 				E1C8DEF4268363EC005B5411 /* DDCoverageHelper.swift */,
 			);
 			path = Coverage;
-			sourceTree = "<group>";
-		};
-		A7FC25952BA1E8CB00067E26 /* Docs */ = {
-			isa = PBXGroup;
-			children = (
-				A7FC25672BA1E83500067E26 /* DatadogSDKTesting.docc */,
-			);
-			path = Docs;
 			sourceTree = "<group>";
 		};
 		A7FC26B72BA20C1B00067E26 /* App */ = {
@@ -859,7 +849,6 @@
 				E17B7AA5253F010C0081D7F3 /* LICENSE-3rdparty.csv */,
 				E160A11125275CC1003121A5 /* Package.swift */,
 				A7C292162B9B2DE0009C2979 /* DatadogSDKTesting.podspec */,
-				A7FC25952BA1E8CB00067E26 /* Docs */,
 				E1ABA04C25231E2500ED8AEF /* Sources */,
 				E1ABA05725231E2500ED8AEF /* Tests */,
 				E1224A42264ABCCE00305968 /* IntegrationTests */,
@@ -1280,7 +1269,6 @@
 				A7FC260B2BA1EC0500067E26 /* InternalError.swift in Sources */,
 				A7FC25BF2BA1EAEB00067E26 /* DDCoverageHelper.swift in Sources */,
 				A7FC25DE2BA1EBA900067E26 /* NTPServer.m in Sources */,
-				A7FC25682BA1E83500067E26 /* DatadogSDKTesting.docc in Sources */,
 				A7FC25B52BA1EADF00067E26 /* DDInstrumentationControl.swift in Sources */,
 				A7FC25B82BA1EADF00067E26 /* DDTracer.swift in Sources */,
 				A7FC26092BA1EC0500067E26 /* NTPClock.swift in Sources */,

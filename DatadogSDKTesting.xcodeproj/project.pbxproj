@@ -8,6 +8,30 @@
 
 /* Begin PBXBuildFile section */
 		A71119A22BA8A4F400118323 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */; };
+		A7FC25682BA1E83500067E26 /* DatadogSDKTesting.docc in Sources */ = {isa = PBXBuildFile; fileRef = A7FC25672BA1E83500067E26 /* DatadogSDKTesting.docc */; };
+		A71E64692BAA0AA100F2ACA5 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64512BAA0AA100F2ACA5 /* Config.swift */; };
+		A71E646A2BAA0AA100F2ACA5 /* Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64532BAA0AA100F2ACA5 /* Environment.swift */; };
+		A71E646B2BAA0AA100F2ACA5 /* Span+Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64542BAA0AA100F2ACA5 /* Span+Environment.swift */; };
+		A71E646C2BAA0AA100F2ACA5 /* TeamcityCI.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64562BAA0AA100F2ACA5 /* TeamcityCI.swift */; };
+		A71E646D2BAA0AA100F2ACA5 /* JenkinsCI.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64572BAA0AA100F2ACA5 /* JenkinsCI.swift */; };
+		A71E646E2BAA0AA100F2ACA5 /* GithubCI.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64582BAA0AA100F2ACA5 /* GithubCI.swift */; };
+		A71E646F2BAA0AA100F2ACA5 /* AwsCodeBuildCI.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64592BAA0AA100F2ACA5 /* AwsCodeBuildCI.swift */; };
+		A71E64702BAA0AA100F2ACA5 /* TravisCI.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E645A2BAA0AA100F2ACA5 /* TravisCI.swift */; };
+		A71E64712BAA0AA100F2ACA5 /* AppveyorCI.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E645B2BAA0AA100F2ACA5 /* AppveyorCI.swift */; };
+		A71E64722BAA0AA100F2ACA5 /* BuildkiteCI.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E645C2BAA0AA100F2ACA5 /* BuildkiteCI.swift */; };
+		A71E64732BAA0AA100F2ACA5 /* BitriseCI.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E645D2BAA0AA100F2ACA5 /* BitriseCI.swift */; };
+		A71E64742BAA0AA100F2ACA5 /* AwsCodePipelineCI.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E645E2BAA0AA100F2ACA5 /* AwsCodePipelineCI.swift */; };
+		A71E64752BAA0AA100F2ACA5 /* CodefreshCI.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E645F2BAA0AA100F2ACA5 /* CodefreshCI.swift */; };
+		A71E64762BAA0AA100F2ACA5 /* XcodeCI.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64602BAA0AA100F2ACA5 /* XcodeCI.swift */; };
+		A71E64772BAA0AA100F2ACA5 /* BuddyCI.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64612BAA0AA100F2ACA5 /* BuddyCI.swift */; };
+		A71E64782BAA0AA100F2ACA5 /* AzureCI.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64622BAA0AA100F2ACA5 /* AzureCI.swift */; };
+		A71E64792BAA0AA100F2ACA5 /* GitlabCI.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64632BAA0AA100F2ACA5 /* GitlabCI.swift */; };
+		A71E647A2BAA0AA100F2ACA5 /* CircleCI.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64642BAA0AA100F2ACA5 /* CircleCI.swift */; };
+		A71E647B2BAA0AA100F2ACA5 /* BitbucketCI.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64652BAA0AA100F2ACA5 /* BitbucketCI.swift */; };
+		A71E647C2BAA0AA100F2ACA5 /* EnvironmentKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64662BAA0AA100F2ACA5 /* EnvironmentKeys.swift */; };
+		A71E647D2BAA0AA100F2ACA5 /* CIEnvironmentReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64672BAA0AA100F2ACA5 /* CIEnvironmentReader.swift */; };
+		A71E647E2BAA0AA100F2ACA5 /* EnvironmentReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64682BAA0AA100F2ACA5 /* EnvironmentReader.swift */; };
+		A71E64802BAB442300F2ACA5 /* ConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E647F2BAB442300F2ACA5 /* ConfigTests.swift */; };
 		A7FC256E2BA1E83500067E26 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */; };
 		A7FC25882BA1E87400067E26 /* EventsExporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25802BA1E87400067E26 /* EventsExporter.framework */; };
 		A7FC25B42BA1EADF00067E26 /* DDTestObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA07025231F4700ED8AEF /* DDTestObserver.swift */; };
@@ -15,7 +39,6 @@
 		A7FC25B62BA1EADF00067E26 /* DDTestModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10034D92703599D00439C9C /* DDTestModule.swift */; };
 		A7FC25B72BA1EADF00067E26 /* DDTestSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8194A2242940B33100B4B592 /* DDTestSession.swift */; };
 		A7FC25B82BA1EADF00067E26 /* DDTracer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1798CC52524B9BD008DEBB9 /* DDTracer.swift */; };
-		A7FC25B92BA1EADF00067E26 /* DDEnvironmentValues.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA07325231F4700ED8AEF /* DDEnvironmentValues.swift */; };
 		A7FC25BA2BA1EADF00067E26 /* DDTags.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA07125231F4700ED8AEF /* DDTags.swift */; };
 		A7FC25BB2BA1EADF00067E26 /* DDTestMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA08A252341EA00ED8AEF /* DDTestMonitor.swift */; };
 		A7FC25BC2BA1EADF00067E26 /* FrameworkLoadHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA07225231F4700ED8AEF /* FrameworkLoadHandler.swift */; };
@@ -132,7 +155,7 @@
 		A7FC26682BA1F6FC00067E26 /* FileLocatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12248CA2644037B00305968 /* FileLocatorTests.swift */; };
 		A7FC26692BA1F6FC00067E26 /* SwiftExtensionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1AD07A1252F5B02003705C1 /* SwiftExtensionsTests.swift */; };
 		A7FC266A2BA1F6FC00067E26 /* SpySpanProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E117CFC626307B9A00ACE977 /* SpySpanProcessor.swift */; };
-		A7FC266B2BA1F70200067E26 /* DDEnvironmentValuesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1AD0756252F01F0003705C1 /* DDEnvironmentValuesTests.swift */; };
+		A7FC266B2BA1F70200067E26 /* EnvironmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1AD0756252F01F0003705C1 /* EnvironmentTests.swift */; };
 		A7FC266C2BA1F70200067E26 /* FrameworkLoadHandlerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1AD0757252F01F0003705C1 /* FrameworkLoadHandlerTests.swift */; };
 		A7FC266D2BA1F70200067E26 /* DDTracerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1AD075C252F206D003705C1 /* DDTracerTests.swift */; };
 		A7FC266E2BA1F70200067E26 /* DDTestObserverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1AD0761252F2F7E003705C1 /* DDTestObserverTests.swift */; };
@@ -233,6 +256,29 @@
 		8194A2242940B33100B4B592 /* DDTestSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTestSession.swift; sourceTree = "<group>"; };
 		81AA244A2978589600DE8F8A /* DDFileReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDFileReader.swift; sourceTree = "<group>"; };
 		81EDADB2292698A200279027 /* LLVMTotalsCoverageFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLVMTotalsCoverageFormat.swift; sourceTree = "<group>"; };
+		A71E64512BAA0AA100F2ACA5 /* Config.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
+		A71E64532BAA0AA100F2ACA5 /* Environment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Environment.swift; sourceTree = "<group>"; };
+		A71E64542BAA0AA100F2ACA5 /* Span+Environment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Span+Environment.swift"; sourceTree = "<group>"; };
+		A71E64562BAA0AA100F2ACA5 /* TeamcityCI.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TeamcityCI.swift; sourceTree = "<group>"; };
+		A71E64572BAA0AA100F2ACA5 /* JenkinsCI.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JenkinsCI.swift; sourceTree = "<group>"; };
+		A71E64582BAA0AA100F2ACA5 /* GithubCI.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GithubCI.swift; sourceTree = "<group>"; };
+		A71E64592BAA0AA100F2ACA5 /* AwsCodeBuildCI.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AwsCodeBuildCI.swift; sourceTree = "<group>"; };
+		A71E645A2BAA0AA100F2ACA5 /* TravisCI.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TravisCI.swift; sourceTree = "<group>"; };
+		A71E645B2BAA0AA100F2ACA5 /* AppveyorCI.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppveyorCI.swift; sourceTree = "<group>"; };
+		A71E645C2BAA0AA100F2ACA5 /* BuildkiteCI.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BuildkiteCI.swift; sourceTree = "<group>"; };
+		A71E645D2BAA0AA100F2ACA5 /* BitriseCI.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BitriseCI.swift; sourceTree = "<group>"; };
+		A71E645E2BAA0AA100F2ACA5 /* AwsCodePipelineCI.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AwsCodePipelineCI.swift; sourceTree = "<group>"; };
+		A71E645F2BAA0AA100F2ACA5 /* CodefreshCI.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CodefreshCI.swift; sourceTree = "<group>"; };
+		A71E64602BAA0AA100F2ACA5 /* XcodeCI.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XcodeCI.swift; sourceTree = "<group>"; };
+		A71E64612BAA0AA100F2ACA5 /* BuddyCI.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BuddyCI.swift; sourceTree = "<group>"; };
+		A71E64622BAA0AA100F2ACA5 /* AzureCI.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AzureCI.swift; sourceTree = "<group>"; };
+		A71E64632BAA0AA100F2ACA5 /* GitlabCI.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GitlabCI.swift; sourceTree = "<group>"; };
+		A71E64642BAA0AA100F2ACA5 /* CircleCI.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CircleCI.swift; sourceTree = "<group>"; };
+		A71E64652BAA0AA100F2ACA5 /* BitbucketCI.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BitbucketCI.swift; sourceTree = "<group>"; };
+		A71E64662BAA0AA100F2ACA5 /* EnvironmentKeys.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EnvironmentKeys.swift; sourceTree = "<group>"; };
+		A71E64672BAA0AA100F2ACA5 /* CIEnvironmentReader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CIEnvironmentReader.swift; sourceTree = "<group>"; };
+		A71E64682BAA0AA100F2ACA5 /* EnvironmentReader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EnvironmentReader.swift; sourceTree = "<group>"; };
+		A71E647F2BAB442300F2ACA5 /* ConfigTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigTests.swift; sourceTree = "<group>"; };
 		A7C292122B9B2B39009C2979 /* fixtures */ = {isa = PBXFileReference; lastKnownFileType = folder; path = fixtures; sourceTree = "<group>"; };
 		A7C292162B9B2DE0009C2979 /* DatadogSDKTesting.podspec */ = {isa = PBXFileReference; lastKnownFileType = text; path = DatadogSDKTesting.podspec; sourceTree = "<group>"; };
 		A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = DatadogSDKTesting.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -375,12 +421,11 @@
 		E1ABA07025231F4700ED8AEF /* DDTestObserver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DDTestObserver.swift; sourceTree = "<group>"; };
 		E1ABA07125231F4700ED8AEF /* DDTags.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DDTags.swift; sourceTree = "<group>"; };
 		E1ABA07225231F4700ED8AEF /* FrameworkLoadHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FrameworkLoadHandler.swift; sourceTree = "<group>"; };
-		E1ABA07325231F4700ED8AEF /* DDEnvironmentValues.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DDEnvironmentValues.swift; sourceTree = "<group>"; };
 		E1ABA08A252341EA00ED8AEF /* DDTestMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTestMonitor.swift; sourceTree = "<group>"; };
 		E1AD0747252E1FBC003705C1 /* DatadogSDKTestingTests-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "DatadogSDKTestingTests-Bridging-Header.h"; sourceTree = "<group>"; };
 		E1AD0749252E1FBC003705C1 /* NSURLSessionBridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NSURLSessionBridge.h; sourceTree = "<group>"; };
 		E1AD074A252E1FBC003705C1 /* NSURLSessionBridge.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSURLSessionBridge.m; sourceTree = "<group>"; };
-		E1AD0756252F01F0003705C1 /* DDEnvironmentValuesTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DDEnvironmentValuesTests.swift; sourceTree = "<group>"; };
+		E1AD0756252F01F0003705C1 /* EnvironmentTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EnvironmentTests.swift; sourceTree = "<group>"; };
 		E1AD0757252F01F0003705C1 /* FrameworkLoadHandlerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FrameworkLoadHandlerTests.swift; sourceTree = "<group>"; };
 		E1AD075C252F206D003705C1 /* DDTracerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTracerTests.swift; sourceTree = "<group>"; };
 		E1AD0761252F2F7E003705C1 /* DDTestObserverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTestObserverTests.swift; sourceTree = "<group>"; };
@@ -475,6 +520,50 @@
 				E1C8DEF4268363EC005B5411 /* DDCoverageHelper.swift */,
 			);
 			path = Coverage;
+			sourceTree = "<group>";
+		};
+		A7FC25952BA1E8CB00067E26 /* Docs */ = {
+			isa = PBXGroup;
+			children = (
+				A7FC25672BA1E83500067E26 /* DatadogSDKTesting.docc */,
+			);
+			path = Docs;
+            sourceTree = "<group>";
+        };
+		A71E64522BAA0AA100F2ACA5 /* Environment */ = {
+			isa = PBXGroup;
+			children = (
+				A71E64552BAA0AA100F2ACA5 /* CI */,
+				A71E64532BAA0AA100F2ACA5 /* Environment.swift */,
+				A71E64542BAA0AA100F2ACA5 /* Span+Environment.swift */,
+				A71E64662BAA0AA100F2ACA5 /* EnvironmentKeys.swift */,
+				A71E64672BAA0AA100F2ACA5 /* CIEnvironmentReader.swift */,
+				A71E64682BAA0AA100F2ACA5 /* EnvironmentReader.swift */,
+			);
+			path = Environment;
+			sourceTree = "<group>";
+		};
+		A71E64552BAA0AA100F2ACA5 /* CI */ = {
+			isa = PBXGroup;
+			children = (
+				A71E64562BAA0AA100F2ACA5 /* TeamcityCI.swift */,
+				A71E64572BAA0AA100F2ACA5 /* JenkinsCI.swift */,
+				A71E64582BAA0AA100F2ACA5 /* GithubCI.swift */,
+				A71E64592BAA0AA100F2ACA5 /* AwsCodeBuildCI.swift */,
+				A71E645A2BAA0AA100F2ACA5 /* TravisCI.swift */,
+				A71E645B2BAA0AA100F2ACA5 /* AppveyorCI.swift */,
+				A71E645C2BAA0AA100F2ACA5 /* BuildkiteCI.swift */,
+				A71E645D2BAA0AA100F2ACA5 /* BitriseCI.swift */,
+				A71E645E2BAA0AA100F2ACA5 /* AwsCodePipelineCI.swift */,
+				A71E645F2BAA0AA100F2ACA5 /* CodefreshCI.swift */,
+				A71E64602BAA0AA100F2ACA5 /* XcodeCI.swift */,
+				A71E64612BAA0AA100F2ACA5 /* BuddyCI.swift */,
+				A71E64622BAA0AA100F2ACA5 /* AzureCI.swift */,
+				A71E64632BAA0AA100F2ACA5 /* GitlabCI.swift */,
+				A71E64642BAA0AA100F2ACA5 /* CircleCI.swift */,
+				A71E64652BAA0AA100F2ACA5 /* BitbucketCI.swift */,
+			);
+			path = CI;
 			sourceTree = "<group>";
 		};
 		A7FC26B72BA20C1B00067E26 /* App */ = {
@@ -820,6 +909,7 @@
 			isa = PBXGroup;
 			children = (
 				81EDADB62927957700279027 /* Coverage */,
+				A71E64522BAA0AA100F2ACA5 /* Environment */,
 				E146BC382869AE740057C37B /* IntelligentTestRunner */,
 				E1FB483C253891CE0083B263 /* Crashes */,
 				E1C8DEF626836783005B5411 /* ImageSymbols */,
@@ -828,7 +918,7 @@
 				E126DD27253F355F00700A40 /* OutputCapture */,
 				E116D7D925248C280022779D /* Utils */,
 				E1ABA04D25231E2500ED8AEF /* DatadogSDKTesting.h */,
-				E1ABA07325231F4700ED8AEF /* DDEnvironmentValues.swift */,
+				A71E64512BAA0AA100F2ACA5 /* Config.swift */,
 				E158E2DB25471DA000DBCD6C /* DDInstrumentationControl.swift */,
 				8194A2242940B33100B4B592 /* DDTestSession.swift */,
 				E10034D92703599D00439C9C /* DDTestModule.swift */,
@@ -911,7 +1001,8 @@
 				E1AD0741252E1EBB003705C1 /* Utils */,
 				A7FC26902BA204B900067E26 /* DatadogSDKTesting.xctestplan */,
 				E1AD0761252F2F7E003705C1 /* DDTestObserverTests.swift */,
-				E1AD0756252F01F0003705C1 /* DDEnvironmentValuesTests.swift */,
+				E1AD0756252F01F0003705C1 /* EnvironmentTests.swift */,
+				A71E647F2BAB442300F2ACA5 /* ConfigTests.swift */,
 				E1AD075C252F206D003705C1 /* DDTracerTests.swift */,
 				E1AD0757252F01F0003705C1 /* FrameworkLoadHandlerTests.swift */,
 				A7FC268E2BA1F90500067E26 /* SwiftExtensions.swift */,
@@ -1265,44 +1356,65 @@
 				A7FC25BB2BA1EADF00067E26 /* DDTestMonitor.swift in Sources */,
 				A7FC25D62BA1EB6400067E26 /* DDSymbolAddress.c in Sources */,
 				A7FC260A2BA1EC0500067E26 /* Log.swift in Sources */,
+				A71E64712BAA0AA100F2ACA5 /* AppveyorCI.swift in Sources */,
 				A7FC26142BA1EC0500067E26 /* XCUIApplicationSwizzler.swift in Sources */,
+				A71E64722BAA0AA100F2ACA5 /* BuildkiteCI.swift in Sources */,
 				A7FC260B2BA1EC0500067E26 /* InternalError.swift in Sources */,
 				A7FC25BF2BA1EAEB00067E26 /* DDCoverageHelper.swift in Sources */,
 				A7FC25DE2BA1EBA900067E26 /* NTPServer.m in Sources */,
 				A7FC25B52BA1EADF00067E26 /* DDInstrumentationControl.swift in Sources */,
+				A71E646E2BAA0AA100F2ACA5 /* GithubCI.swift in Sources */,
 				A7FC25B82BA1EADF00067E26 /* DDTracer.swift in Sources */,
 				A7FC26092BA1EC0500067E26 /* NTPClock.swift in Sources */,
 				A7FC260E2BA1EC0500067E26 /* PlatformUtils.swift in Sources */,
+				A71E646C2BAA0AA100F2ACA5 /* TeamcityCI.swift in Sources */,
+				A71E64692BAA0AA100F2ACA5 /* Config.swift in Sources */,
+				A71E64752BAA0AA100F2ACA5 /* CodefreshCI.swift in Sources */,
 				A7FC26082BA1EC0500067E26 /* FileLocator.swift in Sources */,
 				A7FC26132BA1EC0500067E26 /* CodeOwners.swift in Sources */,
 				A7FC25B72BA1EADF00067E26 /* DDTestSession.swift in Sources */,
 				A7FC25DD2BA1EBA900067E26 /* NTPTypes.c in Sources */,
+				A71E64702BAA0AA100F2ACA5 /* TravisCI.swift in Sources */,
 				A7FC25BC2BA1EADF00067E26 /* FrameworkLoadHandler.swift in Sources */,
 				A7FC26122BA1EC0500067E26 /* SwiftExtensions.swift in Sources */,
 				A7FC260C2BA1EC0500067E26 /* GitInfo.swift in Sources */,
 				A7FC26112BA1EC0500067E26 /* DDFileReader.swift in Sources */,
+				A71E647E2BAA0AA100F2ACA5 /* EnvironmentReader.swift in Sources */,
 				A7FC25D72BA1EB6400067E26 /* LibraryInitializer.m in Sources */,
+				A71E647A2BAA0AA100F2ACA5 /* CircleCI.swift in Sources */,
+				A71E646D2BAA0AA100F2ACA5 /* JenkinsCI.swift in Sources */,
+				A71E646F2BAA0AA100F2ACA5 /* AwsCodeBuildCI.swift in Sources */,
 				A7FC26102BA1EC0500067E26 /* SanitizerHelper.swift in Sources */,
 				A7FC25D82BA1EB6400067E26 /* SanitizerMessageHandler.m in Sources */,
 				A7FC25D52BA1EB3F00067E26 /* DDNetworkInstrumentation.swift in Sources */,
+				A71E64792BAA0AA100F2ACA5 /* GitlabCI.swift in Sources */,
 				A7FC26152BA1EC0500067E26 /* DateClock.swift in Sources */,
+				A71E647B2BAA0AA100F2ACA5 /* BitbucketCI.swift in Sources */,
 				A7FC25B42BA1EADF00067E26 /* DDTestObserver.swift in Sources */,
 				A7FC260D2BA1EC0500067E26 /* SignalUtils.swift in Sources */,
 				A7FC25D42BA1EB3400067E26 /* BinaryImages.swift in Sources */,
 				A7FC25B62BA1EADF00067E26 /* DDTestModule.swift in Sources */,
+				A71E646A2BAA0AA100F2ACA5 /* Environment.swift in Sources */,
 				A7FC25D22BA1EB2900067E26 /* SimpleSpanSerializer.swift in Sources */,
 				A7FC25BA2BA1EADF00067E26 /* DDTags.swift in Sources */,
 				A7FC25DF2BA1EBF300067E26 /* StdoutCapture.swift in Sources */,
+				A71E64782BAA0AA100F2ACA5 /* AzureCI.swift in Sources */,
 				A7FC25D32BA1EB3400067E26 /* DDSymbolicator.swift in Sources */,
 				A7FC25C12BA1EAF500067E26 /* GitUploader.swift in Sources */,
+				A71E646B2BAA0AA100F2ACA5 /* Span+Environment.swift in Sources */,
+				A71E647D2BAA0AA100F2ACA5 /* CIEnvironmentReader.swift in Sources */,
+				A71E64772BAA0AA100F2ACA5 /* BuddyCI.swift in Sources */,
+				A71E647C2BAA0AA100F2ACA5 /* EnvironmentKeys.swift in Sources */,
 				A7FC25C02BA1EAEB00067E26 /* LLVMTotalsCoverageFormat.swift in Sources */,
 				A7FC25BD2BA1EADF00067E26 /* DDTestSuite.swift in Sources */,
 				A7FC25D12BA1EB2900067E26 /* DDCrashes.swift in Sources */,
+				A71E64762BAA0AA100F2ACA5 /* XcodeCI.swift in Sources */,
 				A7FC25D02BA1EB2900067E26 /* SimpleSpanData.swift in Sources */,
-				A7FC25B92BA1EADF00067E26 /* DDEnvironmentValues.swift in Sources */,
 				A7FC25BE2BA1EADF00067E26 /* DDTest.swift in Sources */,
 				A7FC260F2BA1EC0500067E26 /* BinaryParser.swift in Sources */,
 				A7FC25E02BA1EBF300067E26 /* StderrCapture.swift in Sources */,
+				A71E64732BAA0AA100F2ACA5 /* BitriseCI.swift in Sources */,
+				A71E64742BAA0AA100F2ACA5 /* AwsCodePipelineCI.swift in Sources */,
 				A7FC25C22BA1EAF500067E26 /* IntelligentTestRunner.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1317,13 +1429,14 @@
 				A7FC266A2BA1F6FC00067E26 /* SpySpanProcessor.swift in Sources */,
 				A7FC26642BA1F6BF00067E26 /* StdoutCaptureTests.swift in Sources */,
 				A7FC26662BA1F6FC00067E26 /* SignalUtilsTests.swift in Sources */,
-				A7FC266B2BA1F70200067E26 /* DDEnvironmentValuesTests.swift in Sources */,
+				A7FC266B2BA1F70200067E26 /* EnvironmentTests.swift in Sources */,
 				A7FC266E2BA1F70200067E26 /* DDTestObserverTests.swift in Sources */,
 				A7FC266C2BA1F70200067E26 /* FrameworkLoadHandlerTests.swift in Sources */,
 				A7FC265F2BA1F66E00067E26 /* DDTestSessionApiTests.m in Sources */,
 				A7FC26602BA1F67800067E26 /* SimpleSpanSerializerTests.swift in Sources */,
 				A7FC26672BA1F6FC00067E26 /* CodeOwnersTests.swift in Sources */,
 				A7FC26622BA1F67F00067E26 /* DDNetworkInstrumentationTests.swift in Sources */,
+				A71E64802BAB442300F2ACA5 /* ConfigTests.swift in Sources */,
 				A7FC266D2BA1F70200067E26 /* DDTracerTests.swift in Sources */,
 				A7FC268F2BA1F90500067E26 /* SwiftExtensions.swift in Sources */,
 				A7FC26682BA1F6FC00067E26 /* FileLocatorTests.swift in Sources */,

@@ -6,54 +6,84 @@
 
 import Foundation
 
-struct Log {
-    private static var debugTracer = DDTestMonitor.env.extraDebug
-    private static var debugTracerCallstack = DDTestMonitor.env.extraDebugCallstack
+protocol Logger {
+    func print(_ message: String)
+    func debug(_ wrapped: @autoclosure () -> String)
+    func measure<T>(name: String, _ operation: () throws -> T) rethrows -> T
+}
 
-    private static func swiftPrint(_ string: String) {
-        Swift.print(string)
+final class Log: Logger {
+    var isDebug: Bool = false
+    var isDebugTracerCallStack: Bool
+    let isSwiftPrint: Bool
+    
+    init(env: EnvironmentReader) {
+        isSwiftPrint = (env["OS_ACTIVITY_MODE"] ?? "") == "disable"
+        isDebug = false
+        isDebugTracerCallStack = false
     }
-
-    private static func nslogPrint(_ string: String) {
-        NSLog(string)
+    
+    func print(_ message: String) {
+        print(prefix: "[DatadogSDKTesting] ", message: message)
     }
-
-    private static var printMethod: () -> (String) -> Void = {
-        let osActivityMode = DDEnvironmentValues.getEnvVariable("OS_ACTIVITY_MODE") ?? ""
-        if osActivityMode == "disable" {
-            return swiftPrint
-        } else {
-            return nslogPrint
-        }
-    }
-
-    static func debug(_ string: @autoclosure () -> String) {
-        if debugTracer {
-            Log.printMethod()("[Debug][DatadogSDKTesting] " + string() + "\n")
-            if debugTracerCallstack {
-                Swift.print("Callstack:\n" + DDSymbolicator.getCallStack(hidesLibrarySymbols: false).joined(separator: "\n") + "\n")
+    
+    func debug(_ wrapped: @autoclosure () -> String) {
+        if isDebug {
+            print(prefix: "[Debug][DatadogSDKTesting] ", message: wrapped())
+            if isDebugTracerCallStack, let symb = symbolicator {
+                let stack = symb.getCallStack(hidesLibrarySymbols: false).joined(separator: "\n")
+                print(prefix: "CallStack:\n", message: stack)
             }
         }
     }
+    
+    func measure<T>(name: String, _ operation: () throws -> T) rethrows -> T {
+        if isDebug {
+            let startTime = CFAbsoluteTimeGetCurrent()
+            defer {
+                let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
+                print(prefix: "[Debug][DatadogSDKTesting] ", message: "Time elapsed for \(name): \(timeElapsed) s.")
+            }
+            return try operation()
+        } else {
+            return try operation()
+        }
+    }
 
-    static func print(_ string: String) {
-        Log.printMethod()("[DatadogSDKTesting] " + string + "\n")
+    private func print(prefix: String, message: String) {
+        let msg = "\(prefix)\(message)\n"
+        if isSwiftPrint { Swift.print(msg) } else { NSLog(msg) }
+    }
+}
+
+// TODO: Refactor lib for proper bootstrap and remove this extension
+extension Log {
+    private var symbolicator: DDSymbolicator.Type? { DDSymbolicator.self }
+    static var instance: Log = {
+        let log = Log(env: DDTestMonitor.envReader)
+        log.isDebug = DDTestMonitor.config.extraDebug
+        log.isDebugTracerCallStack = DDTestMonitor.config.extraDebugCallStack
+        return log
+    }()
+    
+    func boostrap(config: Config) {
+        isDebug = config.extraDebug
+        isDebugTracerCallStack = config.extraDebugCallStack
+    }
+
+    static func debug(_ wrapped: @autoclosure () -> String) {
+        instance.debug(wrapped())
+    }
+
+    static func print(_ message: String) {
+        instance.print(message)
     }
 
     static func measure(name: String, _ operation: () -> Void) {
-        if debugTracer {
-            let startTime = CFAbsoluteTimeGetCurrent()
-            operation()
-            let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
-            Log.printMethod()("[Debug][DatadogSDKTesting] Time elapsed for \(name): \(timeElapsed) s.")
-        } else {
-            operation()
-        }
+        instance.measure(name: name, operation)
     }
     
     static func runOnDebug(_ function: @autoclosure () -> Void) {
-        if debugTracer {
-            function()
-        }
+        if instance.isDebug { function() }
     }
 }

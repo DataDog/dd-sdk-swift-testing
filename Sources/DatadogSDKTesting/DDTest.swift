@@ -38,7 +38,7 @@ public class DDTest: NSObject {
             DDGenericTags.type: DDTagValues.typeTest,
             DDGenericTags.resource: "\(suite.name).\(name)",
             DDGenericTags.language: "swift",
-            DDDeviceTags.deviceName: DDTestMonitor.env.deviceName,
+            DDDeviceTags.deviceName: DDTestMonitor.env.platform.deviceName,
             DDTestTags.testName: name,
             DDTestTags.testSuite: suite.name,
             DDTestTags.testFramework: module.testFramework,
@@ -59,7 +59,7 @@ public class DDTest: NSObject {
         DDTestMonitor.instance?.currentTest = self
 
         DDTestMonitor.tracer.addPropagationsHeadersToEnvironment()
-        DDTestMonitor.env.addTagsToSpan(span: span)
+        span.addTags(from: DDTestMonitor.env)
 
         let functionName = suite.name + "." + name
         if let functionInfo = DDTestModule.bundleFunctionInfo[functionName] {

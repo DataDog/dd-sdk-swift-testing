@@ -13,7 +13,7 @@ class DDNetworkInstrumentation {
 
     internal static let acceptableHeaders: Set<String> = {
         let headers: Set = ["CONTENT-TYPE", "CONTENT-LENGTH", "CONTENT-ENCODING", "CONTENT-LANGUAGE", "USER-AGENT", "REFERER", "ACCEPT", "ORIGIN", "ACCESS-CONTROL-ALLOW-ORIGIN", "ACCESS-CONTROL-ALLOW-CREDENTIALS", "ACCESS-CONTROL-ALLOW-HEADERS", "ACCESS-CONTROL-ALLOW-METHODS", "ACCESS-CONTROL-EXPOSE-HEADERS", "ACCESS-CONTROL-MAX-AGE", "ACCESS-CONTROL-REQUEST-HEADERS", "ACCESS-CONTROL-REQUEST-METHOD", "DATE", "EXPIRES", "CACHE-CONTROL", "ALLOW", "SERVER", "CONNECTION", "TRACEPARENT", "X-DATADOG-TRACE-ID", "X-DATADOG-PARENT-ID"]
-        if let extraHeaders = DDTestMonitor.env.extraHTTPHeaders {
+        if let extraHeaders = DDTestMonitor.config.extraHTTPHeaders {
             return headers.union(extraHeaders)
         }
         return headers
@@ -125,11 +125,11 @@ class DDNetworkInstrumentation {
     }
 
     private func storeContextInSpan(span: Span) {
-        guard DDTestMonitor.env.disableNetworkCallStack == false else {
+        guard DDTestMonitor.config.disableNetworkCallStack == false else {
             return
         }
         let callsStack: [String]
-        if DDTestMonitor.env.enableNetworkCallStackSymbolicated {
+        if DDTestMonitor.config.enableNetworkCallStackSymbolicated {
             callsStack = DDSymbolicator.getCallStackSymbolicated()
         } else {
             callsStack = DDSymbolicator.getCallStack()

@@ -53,10 +53,10 @@ public class DDTestSuite: NSObject, Encodable {
         }
 
         let defaultAttributes: [String: String] = [
-            DDTags.service: DDTestMonitor.env.ddService ?? DDTestMonitor.env.getRepositoryName() ?? "unknown-swift-repo",
+            DDTags.service: DDTestMonitor.config.service ?? DDTestMonitor.env.git.repositoryName ?? "unknown-swift-repo",
             DDGenericTags.type: DDTagValues.typeSuiteEnd,
             DDGenericTags.language: "swift",
-            DDDeviceTags.deviceName: DDTestMonitor.env.deviceName,
+            DDDeviceTags.deviceName: DDTestMonitor.env.platform.deviceName,
             DDTestTags.testSuite: name,
             DDTestTags.testFramework: module.testFramework,
             DDTestTags.testStatus: suiteStatus,
@@ -66,8 +66,8 @@ public class DDTestSuite: NSObject, Encodable {
 
         meta.merge(DDTestMonitor.baseConfigurationTags) { _, new in new }
         meta.merge(defaultAttributes) { _, new in new }
-        meta.merge(DDEnvironmentValues.gitAttributes) { _, new in new }
-        meta.merge(DDEnvironmentValues.ciAttributes) { _, new in new }
+        meta.merge(DDTestMonitor.env.gitAttributes) { _, new in new }
+        meta.merge(DDTestMonitor.env.ciAttributes) { _, new in new }
         meta[DDUISettingsTags.uiSettingsSuiteLocalization] = localization
         meta[DDUISettingsTags.uiSettingsModuleLocalization] = module.localization
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: DDTestSuiteEnvelope(self))
@@ -125,7 +125,7 @@ extension DDTestSuite {
         try container.encode(status == .fail ? 1 : 0, forKey: .error)
         try container.encode("\(module.testFramework).suite", forKey: .name)
         try container.encode("\(name)", forKey: .resource)
-        try container.encode(DDTestMonitor.env.ddService ?? DDTestMonitor.env.getRepositoryName() ?? "unknown-swift-repo", forKey: .service)
+        try container.encode(DDTestMonitor.config.service ?? DDTestMonitor.env.git.repositoryName ?? "unknown-swift-repo", forKey: .service)
     }
 
     struct DDTestSuiteEnvelope: Encodable {

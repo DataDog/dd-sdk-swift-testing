@@ -19,9 +19,9 @@ class IntelligentTestRunner {
         self.configurations = configurations
         itrFolder = try? DDTestMonitor.commitFolder?
             .subdirectory(path: itrCachePath)
-            .subdirectory(path: DDTestMonitor.env.getDatadogEnvValue() +
+            .subdirectory(path: DDTestMonitor.env.environment +
                 String(configurations.stableHash) +
-                String(DDTestMonitor.env.customConfigurations.stableHash))
+                String(DDTestMonitor.config.customConfigurations.stableHash))
     }
 
     func start() {
@@ -38,16 +38,16 @@ class IntelligentTestRunner {
     }
 
     func getSkippableTests(repository: String) {
-        guard let commit = DDTestMonitor.env.commit else { return }
-        skippableTests = DDTestMonitor.tracer.eventsExporter?.skippableTests(repositoryURL: repository, sha: commit, configurations: configurations, customConfigurations: DDTestMonitor.env.customConfigurations) ?? []
+        guard let commit = DDTestMonitor.env.git.commitSHA else { return }
+        skippableTests = DDTestMonitor.tracer.eventsExporter?.skippableTests(repositoryURL: repository, sha: commit, configurations: configurations, customConfigurations: DDTestMonitor.config.customConfigurations) ?? []
         Log.debug("Skippable Tests: \(skippableTests)")
     }
 
     private func createITRFolder() {
         itrFolder = try? DDTestMonitor.commitFolder?.createSubdirectory(path: itrCachePath)
-            .createSubdirectory(path: DDTestMonitor.env.getDatadogEnvValue() +
+            .createSubdirectory(path: DDTestMonitor.env.environment +
                 String(configurations.stableHash) +
-                String(DDTestMonitor.env.customConfigurations.stableHash))
+                String(DDTestMonitor.config.customConfigurations.stableHash))
     }
 
     private func loadSkippableTestsFromDisk() {

@@ -30,24 +30,21 @@ struct CrashedModuleInformation {
 internal class DDTestMonitor {
     static var instance: DDTestMonitor?
     static var clock: OpenTelemetrySdk.Clock = {
-        if let envDisableNTPClock = DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_DISABLE_NTPCLOCK.rawValue),
-           (envDisableNTPClock as NSString).boolValue == true {
-            return DateClock()
-        } else {
-            return NTPClock()
-        }
+        DDTestMonitor.config.disableNTPClock ? DateClock() as OpenTelemetrySdk.Clock: NTPClock()
     }()
 
     static let defaultPayloadSize = 1024
 
     static var tracer = DDTracer()
-    static var env = DDEnvironmentValues()
+    static var env = Environment(config: config, env: envReader, log: Log.instance)
+    static var config: Config = Config(env: envReader)
+    
+    static var envReader: EnvironmentReader = ProcessEnvironmentReader()
 
     static var dataPath: Directory? = try? Directory(withSubdirectoryPath: "com.datadog.civisibility")
     static var cacheDir: Directory? = try? dataPath?.createSubdirectory(path: "caches")
     static var commitFolder: Directory? = {
-        guard let commit = DDTestMonitor.env.commit
-        else { return nil }
+        guard let commit = DDTestMonitor.env.git.commitSHA else { return nil }
         return try? DDTestMonitor.cacheDir?.createSubdirectory(path: commit)
     }()
 
@@ -68,13 +65,13 @@ internal class DDTestMonitor {
     static let developerMachineHostName: String = Spawn.commandWithResult("hostname").trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
 
     static var baseConfigurationTags = [
-        DDOSTags.osPlatform: env.osName,
-        DDOSTags.osArchitecture: env.osArchitecture,
-        DDOSTags.osVersion: env.osVersion,
-        DDDeviceTags.deviceModel: env.deviceModel,
-        DDRuntimeTags.runtimeName: env.runtimeName,
-        DDRuntimeTags.runtimeVersion: env.runtimeVersion,
-        DDUISettingsTags.uiSettingsLocalization: PlatformUtils.getLocalization(),
+        DDOSTags.osPlatform: env.platform.osName,
+        DDOSTags.osArchitecture: env.platform.osArchitecture,
+        DDOSTags.osVersion: env.platform.osVersion,
+        DDDeviceTags.deviceModel: env.platform.deviceModel,
+        DDRuntimeTags.runtimeName: env.platform.runtimeName,
+        DDRuntimeTags.runtimeVersion: env.platform.runtimeVersion,
+        DDUISettingsTags.uiSettingsLocalization: env.platform.localization,
     ]
 
     var coverageHelper: DDCoverageHelper?
@@ -97,19 +94,15 @@ internal class DDTestMonitor {
     }
 
     static var localRepositoryURLPath: String {
-        guard let workspacePath = DDTestMonitor.env.workspacePath else {
-            return ""
-        }
-        let url = Spawn.commandWithResult(#"git -C "\#(workspacePath)" config --get remote.origin.url"#).trimmingCharacters(in: .whitespacesAndNewlines)
-        return url
+        return env.git.repositoryURL?.spanAttribute ?? ""
     }
 
     static func installTestMonitor() -> Bool {
-        guard DDEnvironmentValues.getEnvVariable(ConfigurationValues.DD_API_KEY.rawValue) != nil else {
+        guard DDTestMonitor.config.apiKey != nil else {
             Log.print("A Datadog API key is required. DD_API_KEY environment value is missing.")
             return false
         }
-        if DDEnvironmentValues.getEnvVariable(ConfigurationValues.SRCROOT.rawValue) == nil {
+        if DDTestMonitor.env.sourceRoot == nil {
             Log.print("SRCROOT is not properly set")
         }
         Log.print("Library loaded and active. Instrumenting tests.")
@@ -129,17 +122,14 @@ internal class DDTestMonitor {
     }
 
     init() {
-        let isBinaryUnderTesting = DDEnvironmentValues.getEnvVariable("ENVIRONMENT_TRACER_TRACEID") != nil &&
-            DDEnvironmentValues.getEnvVariable("ENVIRONMENT_TRACER_SPANID") != nil
-
-        if isBinaryUnderTesting {
+        if DDTestMonitor.config.isBinaryUnderUITesting {
             launchNotificationObserver = NotificationCenter.default.addObserver(
                 forName: launchNotificationName,
                 object: nil, queue: nil)
             { _ in
                 /// As crash reporter is initialized in testBundleWillStart() method, we initialize it here
                 /// because dont have test observer
-                if !DDTestMonitor.env.disableCrashHandler {
+                if !DDTestMonitor.config.disableCrashHandler {
                     DDCrashes.install()
                     let launchedSpan = DDTestMonitor.tracer.createSpanFromLaunchContext()
                     let simpleSpan = SimpleSpanData(spanData: launchedSpan.toSpanData())
@@ -183,13 +173,13 @@ internal class DDTestMonitor {
 
     func startGitUpload() {
         /// Check Git is up to date and no local changes
-        guard DDTestMonitor.env.isCi || GitUploader.statusUpToDate() else {
+        guard DDTestMonitor.env.isCI || GitUploader.statusUpToDate() else {
             Log.debug("Git status not up to date")
             return
         }
 
         DDTestMonitor.instance?.gitUploadQueue.addOperation {
-            if DDTestMonitor.env.gitUploadEnabled {
+            if DDTestMonitor.config.gitUploadEnabled {
                 Log.debug("Git Upload Enabled")
                 DDTestMonitor.instance?.gitUploader = GitUploader()
             } else {
@@ -203,19 +193,19 @@ internal class DDTestMonitor {
         var itrBackendConfig: (codeCoverage: Bool, testsSkipping: Bool)?
 
         itrWorkQueue.addOperation {
-            if let service = DDTestMonitor.env.ddService ?? DDTestMonitor.env.getRepositoryName(),
-               let branch = DDTestMonitor.env.branch,
-               let commit = DDTestMonitor.env.commit,
+            if let service = DDTestMonitor.config.service ?? DDTestMonitor.env.git.repositoryName,
+               let branch = DDTestMonitor.env.git.branch,
+               let commit = DDTestMonitor.env.git.commitSHA,
                let eventsExporter = DDTestMonitor.tracer.eventsExporter
             {
                 Log.measure(name: "itrBackendConfig") {
                     itrBackendConfig = eventsExporter.itrSetting(service: service,
-                                                                 env: DDTestMonitor.env.getDatadogEnvValue(),
+                                                                 env: DDTestMonitor.env.environment,
                                                                  repositoryURL: DDTestMonitor.localRepositoryURLPath,
                                                                  branch: branch,
                                                                  sha: commit,
                                                                  configurations: DDTestMonitor.baseConfigurationTags,
-                                                                 customConfigurations: DDTestMonitor.env.customConfigurations)
+                                                                 customConfigurations: DDTestMonitor.config.customConfigurations)
                 }
             } else {
                 itrBackendConfig = nil
@@ -224,11 +214,9 @@ internal class DDTestMonitor {
 
         itrWorkQueue.waitUntilAllOperationsAreFinished()
         itrWorkQueue.addOperation { [self] in
-
+            let excludedBranches = DDTestMonitor.config.excludedBranches
             /// Check branch is not excluded
-            if let excludedBranches = DDTestMonitor.env.excludedBranches,
-               let currentBranch = DDTestMonitor.env.branch
-            {
+            if let currentBranch = DDTestMonitor.env.git.branch {
                 if excludedBranches.contains(currentBranch) {
                     Log.debug("Excluded branch: \(currentBranch)")
                     itr = nil
@@ -245,10 +233,10 @@ internal class DDTestMonitor {
             }
 
             // Activate Intelligent Test Runner
-            if DDTestMonitor.env.itrEnabled ?? itrBackendConfig?.testsSkipping ?? false {
+            if DDTestMonitor.config.itrEnabled && itrBackendConfig?.testsSkipping ?? false {
                 Log.debug("ITR Enabled")
 
-                if DDTestMonitor.env.ddApplicationKey == nil {
+                if DDTestMonitor.config.applicationKey == nil {
                     Log.print("APPLICATION_KEY env variable is not set, this is needed for Intelligent Test Runner")
                     return
                 }
@@ -263,15 +251,9 @@ internal class DDTestMonitor {
 
         itrWorkQueue.addOperation { [self] in
             // Activate Coverage
-            if DDTestMonitor.env.coverageEnabled ?? itrBackendConfig?.codeCoverage ?? false {
+            if DDTestMonitor.config.coverageEnabled && itrBackendConfig?.codeCoverage ?? false {
                 Log.debug("Coverage Enabled")
-                // Coverage is not supported for swift < 5.3 (binary target dependency)
-                #if swift(>=5.3)
-                    coverageHelper = DDCoverageHelper()
-                #else
-                    coverageHelper = nil
-                #endif
-
+                coverageHelper = DDCoverageHelper()
             } else {
                 Log.debug("Coverage Disabled")
                 coverageHelper = nil
@@ -280,7 +262,7 @@ internal class DDTestMonitor {
     }
 
     func startInstrumenting() {
-        guard !DDTestMonitor.env.disableTestInstrumenting else {
+        guard !DDTestMonitor.config.disableTestInstrumenting else {
             return
         }
 
@@ -288,28 +270,28 @@ internal class DDTestMonitor {
             _ = DDTestMonitor.tracer
         }
 
-        if !DDTestMonitor.env.disableNetworkInstrumentation {
+        if !DDTestMonitor.config.disableNetworkInstrumentation {
             Log.measure(name: "startNetworkAutoInstrumentation") {
                 startNetworkAutoInstrumentation()
-                if !DDTestMonitor.env.disableHeadersInjection {
+                if !DDTestMonitor.config.disableHeadersInjection {
                     injectHeaders = true
                 }
-                if DDTestMonitor.env.enableRecordPayload {
+                if DDTestMonitor.config.enableRecordPayload {
                     recordPayload = true
                 }
-                if let maxPayload = DDTestMonitor.env.maxPayloadSize {
+                if let maxPayload = DDTestMonitor.config.maxPayloadSize {
                     maxPayloadSize = maxPayload
                 }
             }
         }
-        if DDTestMonitor.env.enableStdoutInstrumentation {
+        if DDTestMonitor.config.enableStdoutInstrumentation {
             instrumentationWorkQueue.addOperation { [self] in
                 Log.measure(name: "startStdoutCapture") {
                     startStdoutCapture()
                 }
             }
         }
-        if DDTestMonitor.env.enableStderrInstrumentation {
+        if DDTestMonitor.config.enableStderrInstrumentation {
             instrumentationWorkQueue.addOperation { [self] in
                 Log.measure(name: "startStderrCapture") {
                     startStderrCapture()

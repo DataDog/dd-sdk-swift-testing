@@ -19,11 +19,11 @@ class DDCoverageHelper {
     let coverageWorkQueue: OperationQueue
 
     init?() {
-        guard let profilePath = DDEnvironmentValues.getEnvVariable("LLVM_PROFILE_FILE"),
+        guard let profilePath = DDTestMonitor.envReader.get(env: "LLVM_PROFILE_FILE", String.self),
               BinaryImages.profileImages.count > 0
         else {
             Log.print("Coverage not properly enabled in project, check documentation")
-            Log.debug("LLVM_PROFILE_FILE: \(DDEnvironmentValues.getEnvVariable("LLVM_PROFILE_FILE") ?? "NIL")")
+            Log.debug("LLVM_PROFILE_FILE: \(DDTestMonitor.envReader.get(env: "LLVM_PROFILE_FILE") ?? "NIL")")
             Log.debug("Profile Images count: \(BinaryImages.profileImages.count)")
             return nil
         }

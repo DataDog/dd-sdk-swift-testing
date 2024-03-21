@@ -60,7 +60,7 @@ public class DDTestModule: NSObject, Encodable {
         Log.debug("Install Test monitor time interval: \(DDTestMonitor.clock.now.timeIntervalSince(beforeLoadingTime))")
 
 #if targetEnvironment(simulator) || os(macOS)
-        if !DDTestMonitor.env.disableSourceLocation {
+        if !DDTestMonitor.config.disableSourceLocation {
             DDTestMonitor.instance?.instrumentationWorkQueue.addOperation {
                 Log.debug("Create test bundle DSYM file for test source location")
                 Log.measure(name: "createDSYMFileIfNeeded") {
@@ -84,7 +84,7 @@ public class DDTestModule: NSObject, Encodable {
             DDTestMonitor.instance?.instrumentationWorkQueue.waitUntilAllOperationsAreFinished()
         }
 
-        if !DDTestMonitor.env.disableCrashHandler {
+        if !DDTestMonitor.config.disableCrashHandler {
             Log.measure(name: "DDCrashesInstall") {
                 DDCrashes.install()
             }
@@ -131,7 +131,7 @@ public class DDTestModule: NSObject, Encodable {
         let defaultAttributes: [String: String] = [
             DDGenericTags.type: DDTagValues.typeModuleEnd,
             DDGenericTags.language: "swift",
-            DDDeviceTags.deviceName: DDTestMonitor.env.deviceName,
+            DDDeviceTags.deviceName: DDTestMonitor.env.platform.deviceName,
             DDTestTags.testSuite: bundleName,
             DDTestTags.testFramework: testFramework,
             DDTestTags.testStatus: moduleStatus,
@@ -140,14 +140,14 @@ public class DDTestModule: NSObject, Encodable {
 
         meta.merge(DDTestMonitor.baseConfigurationTags) { _, new in new }
         meta.merge(defaultAttributes) { _, new in new }
-        meta.merge(DDEnvironmentValues.gitAttributes) { _, new in new }
-        meta.merge(DDEnvironmentValues.ciAttributes) { _, new in new }
+        meta.merge(DDTestMonitor.env.gitAttributes) { _, new in new }
+        meta.merge(DDTestMonitor.env.ciAttributes) { _, new in new }
         meta[DDUISettingsTags.uiSettingsModuleLocalization] = localization
         meta[DDItrTags.itrSkippedTests] = itrSkipped ? "true" : "false"
         meta[DDTestSessionTags.testSkippingEnabled] = (DDTestMonitor.instance?.itr != nil) ? "true" : "false"
         meta[DDTestSessionTags.codeCoverageEnabled] = (DDTestMonitor.instance?.coverageHelper != nil) ? "true" : "false"
         if !itrSkipped {
-            if let llvmProfilePath = DDEnvironmentValues.getEnvVariable("LLVM_PROFILE_FILE") {
+            if let llvmProfilePath = DDTestMonitor.envReader.get(env: "LLVM_PROFILE_FILE", String.self) {
                 let profileFolder = URL(fileURLWithPath: llvmProfilePath).deletingLastPathComponent()
                 // Locate proper file
                 if let enumerator = FileManager.default.enumerator(at: profileFolder, includingPropertiesForKeys: nil, options: .skipsSubdirectoryDescendants) {
@@ -252,7 +252,7 @@ extension DDTestModule {
         try container.encode(status == .fail ? 1 : 0, forKey: .error)
         try container.encode("\(testFramework).module", forKey: .name)
         try container.encode("\(bundleName)", forKey: .resource)
-        try container.encode(DDTestMonitor.env.ddService ?? DDTestMonitor.env.getRepositoryName() ?? "unknown-swift-repo", forKey: .service)
+        try container.encode(DDTestMonitor.config.service ?? DDTestMonitor.env.git.repositoryName ?? "unknown-swift-repo", forKey: .service)
     }
 
     struct DDTestModuleEnvelope: Encodable {

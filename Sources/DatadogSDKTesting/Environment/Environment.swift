@@ -305,20 +305,6 @@ internal extension Environment {
         
         var repositoryName: String? {
             repositoryURL?.deletingPathExtension().lastPathComponent
-//            guard let repo = repositoryURL else { return nil }
-//            switch repo {
-//            case .url(let url): return url.deletingPathExtension().lastPathComponent
-//            case .string(let str):
-//                let pathSplit = str.components(separatedBy: "/")
-//                var name: String? = nil
-//                if pathSplit.count > 1 { // we have path or SSH path
-//                    name = pathSplit.last
-//                } else { // try for ssh without path
-//                    let sshSplit = str.components(separatedBy: ":")
-//                    if sshSplit.count > 1 { name = sshSplit.last }
-//                }
-//                return name.flatMap { URL(string: $0)?.deletingPathExtension().lastPathComponent }
-//            }
         }
         
         init(repositoryURL: URL? = nil, branch: String? = nil, tag: String? = nil,

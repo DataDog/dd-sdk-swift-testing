@@ -39,15 +39,6 @@ extension URL: SpanAttributeConvertible {
     }
 }
 
-//extension CIURL: SpanAttributeConvertible {
-//    var spanAttribute: String {
-//        switch self {
-//        case .string(let str): return str.spanAttribute
-//        case .url(let url): return url.spanAttribute
-//        }
-//    }
-//}
-
 extension Span {
     func addTags(from env: Environment) {
         for tag in env.tags {

@@ -130,41 +130,6 @@ internal extension EnvironmentReader {
     subscript<V: EnvironmentValue>(key: String, type: V.Type = V.self) -> V? { return get(key) }
 }
 
-//internal enum CIURL: EnvironmentValue, CustomStringConvertible, ExpressibleByStringLiteral {
-//    case url(URL)
-//    case string(String)
-//    
-//    typealias StringLiteralType = String
-//    
-//    init(_ string: String) {
-//        if let url = URL(string: string) {
-//            self = .url(url)
-//        } else {
-//            print("BADURL: \(string)")
-//            self = .string(string)
-//        }
-//    }
-//    
-//    init(_ url: URL) {
-//        self = .url(url)
-//    }
-//    
-//    init?(configValue: String) {
-//        self.init(configValue)
-//    }
-//    
-//    init(stringLiteral value: String) {
-//        self.init(value)
-//    }
-//    
-//    var description: String {
-//        switch self {
-//        case .url(let url): return url.absoluteString
-//        case .string(let str): return str
-//        }
-//    }
-//}
-
 extension String: EnvironmentValue {
     init?(configValue: String) {
         self = configValue

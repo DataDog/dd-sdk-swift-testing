@@ -16,9 +16,7 @@ internal class DDTestObserverTests: XCTestCase {
 
     override func setUp() {
         XCTAssertNil(DDTracer.activeSpan)
-        DDEnvironmentValues.environment[ConfigurationValues.DD_API_KEY.rawValue] = "fakeKey"
-        DDEnvironmentValues.environment["DD_DISABLE_TEST_INSTRUMENTING"] = "1"
-        DDTestMonitor.env = DDEnvironmentValues()
+        DDTestMonitor._env_recreate(env: ["DD_API_KEY": "fakeToken", "DD_DISABLE_TEST_INSTRUMENTING": "1"])
         testObserver = DDTestObserver()
         testObserver.startObserving()
         theSuite.setValue([self], forKey: "_mutableTests")
@@ -27,6 +25,7 @@ internal class DDTestObserverTests: XCTestCase {
     override func tearDown() {
         XCTestObservationCenter.shared.removeTestObserver(testObserver)
         testObserver = nil
+        DDTestMonitor._env_recreate()
         XCTAssertNil(DDTracer.activeSpan)
     }
 

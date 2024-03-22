@@ -9,7 +9,7 @@ import Foundation
 
 extension XCUIApplication {
     fileprivate func addProcessEnvironmentToLaunch(_ environment: String) {
-        self.launchEnvironment[environment] = DDEnvironmentValues.getEnvVariable(environment)
+        self.launchEnvironment[environment] = DDTestMonitor.envReader.get(environment)
     }
 
     fileprivate func addPropagationsHeadersToEnvironment(tracer: DDTracer?) {
@@ -32,7 +32,7 @@ extension XCUIApplication {
             self.launchEnvironment["ENVIRONMENT_TRACER_SPANID"] = testSpanContext.spanId.hexString
             self.launchEnvironment["ENVIRONMENT_TRACER_TRACEID"] = testSpanContext.traceId.hexString
             addPropagationsHeadersToEnvironment(tracer: DDTestMonitor.tracer)
-            for value in ConfigurationValues.allCases {
+            for value in EnvironmentKey.childKeys {
                 addProcessEnvironmentToLaunch(value.rawValue)
             }
         }

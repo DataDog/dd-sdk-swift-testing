@@ -17,7 +17,7 @@ enum DDSymbolicator {
 
     internal static var dSYMFiles: [URL] = {
         var dSYMFiles = [URL]()
-        guard let configurationBuildPath = DDEnvironmentValues.getEnvVariable("DYLD_LIBRARY_PATH") else {
+        guard let configurationBuildPath = DDTestMonitor.envReader.get(env: "DYLD_LIBRARY_PATH", String.self) else {
             return dSYMFiles
         }
         Log.debug("DYLD_LIBRARY_PATH: \(configurationBuildPath)")

@@ -8,36 +8,21 @@
 import XCTest
 
 class FrameworkLoadHandlerTests: XCTestCase {
-    private var testEnvironment = [String: String]()
-    private var previousEnvironment = [String: String]()
-
     override func setUp() {
         XCTAssertNil(DDTracer.activeSpan)
         FrameworkLoadHandler.testObserver = nil
-        FrameworkLoadHandler.environment = [String: String]()
         DDTestMonitor.instance = nil
-        previousEnvironment = DDEnvironmentValues.environment
-        testEnvironment["DD_ENABLE_STDERR_INSTRUMENTATION"] = "1"
-        testEnvironment["DD_DISABLE_NETWORK_INSTRUMENTATION"] = "1"
     }
 
     override func tearDownWithError() throws {
-        DDEnvironmentValues.environment = previousEnvironment
+        DDTestMonitor._env_recreate()
+        DDTestMonitor.instance = DDTestMonitor()
         XCTAssertNil(DDTracer.activeSpan)
     }
 
-    func setEnvVariables() {
-        FrameworkLoadHandler.environment = testEnvironment
-        DDEnvironmentValues.environment = testEnvironment
-        DDEnvironmentValues.environment["DD_DONT_EXPORT"] = "true"
-        DDTestMonitor.env = DDEnvironmentValues()
-    }
-
     func testWhenTestRunnerIsConfiguredAndIsInTestingMode_ItIsInitialised() {
-        testEnvironment["DD_TEST_RUNNER"] = "1"
-        testEnvironment[ConfigurationValues.DD_API_KEY.rawValue] = "fakeToken"
-        testEnvironment["XCTestConfigurationFilePath"] = "/Users/user/Library/tmp/xx.xctestconfiguration"
-        setEnvVariables()
+        setEnv(env: ["DD_TEST_RUNNER": "1", "DD_API_KEY": "fakeToken",
+                     "XCTestConfigurationFilePath": "/Users/user/Library/tmp/xx.xctestconfiguration"])
 
         FrameworkLoadHandler.handleLoad()
 
@@ -45,11 +30,9 @@ class FrameworkLoadHandlerTests: XCTestCase {
     }
 
     func testWhenTestRunnerIsConfiguredAndIsInOtherTestingMode_ItIsInitialised() {
-        testEnvironment["DD_TEST_RUNNER"] = "1"
-        testEnvironment[ConfigurationValues.DD_API_KEY.rawValue] = "fakeKey"
-        testEnvironment["DD_ENABLE_STDERR_INSTRUMENTATION"] = "1"
-        testEnvironment["XCInjectBundleInto"] = "/Users/user/Library/tmp/xx.xctestconfiguration"
-        setEnvVariables()
+        setEnv(env: ["DD_TEST_RUNNER": "1", "DD_API_KEY": "fakeToken",
+                     "DD_ENABLE_STDERR_INSTRUMENTATION": "1",
+                     "XCInjectBundleInto": "/Users/user/Library/tmp/xx.xctestconfiguration"])
 
         FrameworkLoadHandler.handleLoad()
 
@@ -57,8 +40,7 @@ class FrameworkLoadHandlerTests: XCTestCase {
     }
 
     func testWhenTestRunnerIsNotConfigured_ItIsNotInitialised() {
-        testEnvironment["XCInjectBundleInto"] = "/Users/user/Library/tmp/xx.xctestconfiguration"
-        setEnvVariables()
+        setEnv(env: ["XCInjectBundleInto": "/Users/user/Library/tmp/xx.xctestconfiguration"])
 
         FrameworkLoadHandler.handleLoad()
 
@@ -66,9 +48,8 @@ class FrameworkLoadHandlerTests: XCTestCase {
     }
 
     func testWhenTestRunnerIsConfiguredButSetOff_ItIsNotInitialised() {
-        testEnvironment["DD_TEST_RUNNER"] = "0"
-        testEnvironment["XCInjectBundleInto"] = "/Users/user/Library/tmp/xx.xctestconfiguration"
-        setEnvVariables()
+        setEnv(env: ["DD_TEST_RUNNER": "0",
+                     "XCInjectBundleInto": "/Users/user/Library/tmp/xx.xctestconfiguration"])
 
         FrameworkLoadHandler.handleLoad()
 
@@ -76,10 +57,17 @@ class FrameworkLoadHandlerTests: XCTestCase {
     }
 
     func testWhenTestRunnerIsConfiguredButNotInTestingMode_ItIsNotInitialised() {
-        testEnvironment["DD_TEST_RUNNER"] = "1"
-        setEnvVariables()
+        setEnv(env: ["DD_TEST_RUNNER": "1"])
         FrameworkLoadHandler.handleLoad()
 
         XCTAssertNil(FrameworkLoadHandler.testObserver)
+    }
+    
+    private func setEnv(env: [String: String]) {
+        var env = env
+        env["DD_ENABLE_STDERR_INSTRUMENTATION"] = "1"
+        env["DD_DISABLE_NETWORK_INSTRUMENTATION"] = "1"
+        env["DD_DONT_EXPORT"] = "1"
+        DDTestMonitor._env_recreate(env: env, patch: false)
     }
 }

@@ -145,7 +145,7 @@ struct GitUploader {
     }
 
     private func uploadExistingPackfiles(directory: Directory, repository: String) {
-        guard let commit = DDTestMonitor.env.commit else { return }
+        guard let commit = DDTestMonitor.env.git.commitSHA else { return }
         DDTestMonitor.tracer.eventsExporter?.uploadPackFiles(packFilesDirectory: packFilesdirectory, commit: commit, repository: repository)
     }
 }

@@ -40,7 +40,7 @@ public class DDTestSession: NSObject, Encodable {
 
         // Add spacific tags for sessions
         self.meta[DDTestTags.testCommand] = "test \(testModule.bundleName)"
-        self.meta[DDTestSessionTags.testToolchain] = DDTestMonitor.env.runtimeName.lowercased() + "-" + DDTestMonitor.env.runtimeVersion
+        self.meta[DDTestSessionTags.testToolchain] = DDTestMonitor.env.platform.runtimeName.lowercased() + "-" + DDTestMonitor.env.platform.runtimeVersion
     }
 }
 
@@ -67,7 +67,7 @@ extension DDTestSession {
         try container.encode(status == .fail ? 1 : 0, forKey: .error)
         try container.encode(name, forKey: .name)
         try container.encode(resource, forKey: .resource)
-        try container.encode(DDTestMonitor.env.ddService ?? DDTestMonitor.env.getRepositoryName() ?? "unknown-swift-repo", forKey: .service)
+        try container.encode(DDTestMonitor.config.service ?? DDTestMonitor.env.git.repositoryName ?? "unknown-swift-repo", forKey: .service)
     }
 
     struct DDTestSessionEnvelope: Encodable {

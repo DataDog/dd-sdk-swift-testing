@@ -40,9 +40,10 @@ internal class DDTracer {
     }
 
     init() {
+        let conf = DDTestMonitor.config
         let env = DDTestMonitor.env
-        if let envTraceId = env.launchEnvironmentTraceId,
-           let envSpanId = env.launchEnvironmentSpanId
+        if let envTraceId = conf.tracerTraceId,
+           let envSpanId = conf.tracerSpanId
         {
             let launchTraceId = TraceId(fromHexString: envTraceId)
             let launchSpanId = SpanId(fromHexString: envSpanId)
@@ -57,7 +58,7 @@ internal class DDTracer {
         let version = (bundle.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "unknown"
 
         var endpoint: Endpoint
-        switch env.ddEndpoint {
+        switch conf.endpoint {
             case "us", "US", "us1", "US1", "https://app.datadoghq.com", "app.datadoghq.com", "datadoghq.com":
                 endpoint = Endpoint.us1
             case "us3", "US3", "https://us3.datadoghq.com", "us3.datadoghq.com":
@@ -78,35 +79,35 @@ internal class DDTracer {
 
         var payloadCompression = true
         // When reporting tests to local server
-        if let localPort = env.localTestEnvironmentPort {
+        if let localPort = conf.localTestEnvironmentPort {
             let localURL = URL(string: "http://localhost:\(localPort)/")!
             endpoint = Endpoint.custom(testsURL: localURL, logsURL: localURL)
             Log.print("Reporting tests to \(localURL.absoluteURL)")
             payloadCompression = false
         }
 
-        let hostnameToReport: String? = (env.reportHostname && !DDTestMonitor.developerMachineHostName.isEmpty) ? DDTestMonitor.developerMachineHostName : nil
+        let hostnameToReport: String? = (conf.reportHostname && !DDTestMonitor.developerMachineHostName.isEmpty) ? DDTestMonitor.developerMachineHostName : nil
 
         let exporterConfiguration = ExporterConfiguration(
-            serviceName: env.ddService ?? env.getRepositoryName() ?? "unknown-swift-repo",
+            serviceName: conf.service ?? env.git.repositoryName ?? "unknown-swift-repo",
             libraryVersion: DDTestObserver.tracerVersion,
             applicationName: identifier,
             applicationVersion: version,
-            environment: DDTestMonitor.env.getDatadogEnvValue(),
+            environment: env.environment,
             hostname: hostnameToReport,
-            apiKey: env.ddApiKey ?? "",
-            applicationKey: env.ddApplicationKey ?? "",
+            apiKey: conf.apiKey ?? "",
+            applicationKey: conf.applicationKey ?? "",
             endpoint: endpoint,
             payloadCompression: payloadCompression,
             performancePreset: .instantDataDelivery,
             exporterId: String(SpanId.random().rawValue),
-            debugMode: env.extraDebug
+            debugMode: conf.extraDebug
         )
         eventsExporter = try? EventsExporter(config: exporterConfiguration)
 
         let exporterToUse: SpanExporter
 
-        if env.disableTracesExporting {
+        if conf.disableTracesExporting {
             exporterToUse = InMemoryExporter()
         } else if let exporter = eventsExporter {
             exporterToUse = exporter as SpanExporter
@@ -296,7 +297,7 @@ internal class DDTracer {
 
     /// This method is only currently used when logging with an app being launched from a UITest, and no span has been created in the App.
     func logError(string: String, date: Date? = nil) {
-        guard DDTestMonitor.env.enableStderrInstrumentation || DDTestMonitor.env.enableStdoutInstrumentation else {
+        guard DDTestMonitor.config.enableStderrInstrumentation || DDTestMonitor.config.enableStdoutInstrumentation else {
             return
         }
         DDTracer.activeSpan?.addEvent(name: "logString", attributes: attributesForError(string), timestamp: date ?? Date())
@@ -359,7 +360,7 @@ internal class DDTracer {
         }
 
         OpenTelemetry.instance.propagators.textMapPropagator.inject(spanContext: propagationContext, carrier: &headers, setter: HeaderSetter())
-        if !DDTestMonitor.env.disableRUMIntegration {
+        if !DDTestMonitor.config.disableRUMIntegration {
             headers.merge(datadogHeaders(forContext: propagationContext)) { current, _ in current }
         }
         return headers
@@ -379,7 +380,7 @@ internal class DDTracer {
         }
 
         EnvironmentContextPropagator().inject(spanContext: propagationContext, carrier: &headers, setter: HeaderSetter())
-        if !DDTestMonitor.env.disableRUMIntegration {
+        if !DDTestMonitor.config.disableRUMIntegration {
             headers.merge(datadogHeaders(forContext: propagationContext)) { current, _ in current }
             headers["CI_VISIBILITY_TEST_EXECUTION_ID"] = String(propagationContext.traceId.rawLowerLong)
         }

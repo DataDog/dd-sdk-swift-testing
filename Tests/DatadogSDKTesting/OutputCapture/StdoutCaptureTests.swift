@@ -10,11 +10,12 @@ import XCTest
 
 class StdoutCaptureTests: XCTestCase {
     override func setUp() {
-        DDEnvironmentValues.environment[ConfigurationValues.DD_API_KEY.rawValue] = "fakeKey"
-        DDTestMonitor.env = DDEnvironmentValues()
+        DDTestMonitor._env_recreate(env: ["DD_API_KEY": "fakeToken", "DD_DISABLE_TEST_INSTRUMENTING": "1"])
     }
 
-    override func tearDown() {}
+    override func tearDown() {
+        DDTestMonitor._env_recreate()
+    }
 
     func testWhenPrintIsCalledAndIsCapturing_stringIsCapturedAndConvertedToEvents() {
         let tracer = DDTracer()

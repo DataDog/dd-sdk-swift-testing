@@ -15,9 +15,7 @@ class DDNetworkInstrumentationTests: XCTestCase {
 
     override func setUp() {
         XCTAssertNil(DDTracer.activeSpan)
-        DDEnvironmentValues.environment[ConfigurationValues.DD_API_KEY.rawValue] = "fakeToken"
-        DDEnvironmentValues.environment[ConfigurationValues.DD_DISABLE_TEST_INSTRUMENTING.rawValue] = "1"
-        DDTestMonitor.env = DDEnvironmentValues()
+        DDTestMonitor._env_recreate(env: ["DD_API_KEY": "fakeToken", "DD_DISABLE_TEST_INSTRUMENTING": "1"])
         DDTestMonitor.instance = DDTestMonitor()
         DDTestMonitor.instance?.instrumentationWorkQueue.waitUntilAllOperationsAreFinished()
         let tracer = DDTestMonitor.tracer
@@ -30,6 +28,7 @@ class DDNetworkInstrumentationTests: XCTestCase {
 
     override func tearDown() {
         containerSpan?.end()
+        DDTestMonitor._env_recreate()
         XCTAssertNil(DDTracer.activeSpan)
     }
 

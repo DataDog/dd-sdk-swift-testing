@@ -31,8 +31,11 @@ internal class DDTestObserverTests: XCTestCase {
 
     func testWhenTestBundleWillStartIsCalled_testBundleNameIsSet() throws {
         testObserver.testBundleWillStart(Bundle.main)
-        let bundleName = try XCTUnwrap(testObserver.module?.bundleName)
-        XCTAssertFalse(bundleName.isEmpty)
+        guard case .module(let module) = testObserver.state else {
+            XCTFail("Bad observer state: \(testObserver.state)")
+            return
+        }
+        XCTAssertFalse(module.bundleName.isEmpty)
         testObserver.testBundleDidFinish(Bundle.main)
     }
 

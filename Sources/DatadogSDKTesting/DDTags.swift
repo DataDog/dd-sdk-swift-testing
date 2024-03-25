@@ -58,6 +58,7 @@ internal enum DDTestTags {
     static let testIsUITest = "test.is_ui_test"
     static let testIsRUMActive = "test.is_rum_active"
     static let testCommand = "test.command"
+    static let testSkippedByITR = "test.skipped_by_itr"
 }
 
 internal enum DDOSTags {

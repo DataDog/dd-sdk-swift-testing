@@ -36,7 +36,7 @@ class DDTestObserver: NSObject, XCTestObservation {
 
     func testBundleWillStart(_ testBundle: Bundle) {
         guard case .none = state else {
-            Log.print("Bad observer state: \(state), expected: .none")
+            Log.print("testBundleWillStart: Bad observer state: \(state), expected: .none")
             return
         }
         let bundleName = testBundle.name
@@ -48,7 +48,7 @@ class DDTestObserver: NSObject, XCTestObservation {
 
     func testBundleDidFinish(_ testBundle: Bundle) {
         guard case .module(let module) = state else {
-            Log.print("Bad observer state: \(state), expected: .module")
+            Log.print("testBundleDidFinish: Bad observer state: \(state), expected: .module")
             return
         }
         guard module.bundleName == testBundle.name else {
@@ -64,7 +64,7 @@ class DDTestObserver: NSObject, XCTestObservation {
 
     func testSuiteWillStart(_ testSuite: XCTestSuite) {
         guard case .module(let module) = state else {
-            Log.print("Bad observer state: \(state), expected: .module")
+            Log.print("testSuiteWillStart: Bad observer state: \(state), expected: .module")
             return
         }
         
@@ -111,7 +111,7 @@ class DDTestObserver: NSObject, XCTestObservation {
 
     func testSuiteDidFinish(_ testSuite: XCTestSuite) {
         guard case .suite(let suite) = state else {
-            Log.print("Bad observer state: \(state), expected: .suite")
+            Log.print("testSuiteDidFinish: Bad observer state: \(state), expected: .suite")
             return
         }
         guard suite.name == testSuite.name else {
@@ -125,7 +125,7 @@ class DDTestObserver: NSObject, XCTestObservation {
 
     func testCaseWillStart(_ testCase: XCTestCase) {
         guard case .suite(let suite) = state else {
-            Log.print("Bad observer state: \(state), expected: .suite")
+            Log.print("testCaseWillStart: Bad observer state: \(state), expected: .suite")
             return
         }
         let testName: String
@@ -142,7 +142,7 @@ class DDTestObserver: NSObject, XCTestObservation {
 
     func testCaseDidFinish(_ testCase: XCTestCase) {
         guard case .test(let test) = state else {
-            Log.print("Bad observer state: \(state), expected: .test")
+            Log.print("testCaseDidFinish: Bad observer state: \(state), expected: .test")
             return
         }
         guard testCase.name.contains(test.name) else {
@@ -158,7 +158,7 @@ class DDTestObserver: NSObject, XCTestObservation {
     #if swift(>=5.3)
     func testCase(_ testCase: XCTestCase, didRecord issue: XCTIssue) {
         guard case .test(let test) = state else {
-            Log.print("Bad observer state: \(state), expected: .test")
+            Log.print("testCase:didRecord: Bad observer state: \(state), expected: .test")
             return
         }
         test.setErrorInfo(type: issue.compactDescription, message: issue.description, callstack: nil)
@@ -166,7 +166,7 @@ class DDTestObserver: NSObject, XCTestObservation {
     #else
     func testCase(_ testCase: XCTestCase, didFailWithDescription description: String, inFile filePath: String?, atLine lineNumber: Int) {
         guard case .test(let test) = state else {
-            Log.print("Bad observer state: \(state), expected: .test")
+            Log.print("testCase:didFailWithDescription: Bad observer state: \(state), expected: .test")
             return
         }
         test.setErrorInfo(type: description, message: "test_failure: \(filePath ?? ""):\(lineNumber)", callstack: nil)

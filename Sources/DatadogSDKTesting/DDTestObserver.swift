@@ -9,45 +9,73 @@ import Foundation
 
 class DDTestObserver: NSObject, XCTestObservation {
     static let testNameRegex = try! NSRegularExpression(pattern: "([\\w]+) ([\\w]+)", options: .caseInsensitive)
-    static let supportsSkipping = NSClassFromString("XCTSkippedTestContext") != nil
     static let tracerVersion = (Bundle(for: DDTestObserver.self).infoDictionary?["CFBundleShortVersionString"] as? String) ?? "unknown"
+    
+    enum State {
+        case none
+        case module(DDTestModule)
+        case suite(DDTestSuite)
+        case test(DDTest)
+    }
 
-    var module: DDTestModule?
-    var suite: DDTestSuite?
-    var test: DDTest?
+    private(set) var state: State
 
     override init() {
         XCUIApplication.swizzleMethods
+        state = .none
         super.init()
     }
 
     func startObserving() {
         XCTestObservationCenter.shared.addTestObserver(self)
     }
+    
+    func stopObserving() {
+        XCTestObservationCenter.shared.removeTestObserver(self)
+    }
 
     func testBundleWillStart(_ testBundle: Bundle) {
-        let bundleName = testBundle.bundleURL.deletingPathExtension().lastPathComponent
+        guard case .none = state else {
+            Log.print("testBundleWillStart: Bad observer state: \(state), expected: .none")
+            return
+        }
+        let bundleName = testBundle.name
         Log.debug("testBundleWillStart: \(bundleName)")
-        module = DDTestModule.start(bundleName: bundleName)
-        module?.testFramework = "XCTest"
+        let module = DDTestModule.start(bundleName: bundleName)
+        module.testFramework = "XCTest"
+        state = .module(module)
     }
 
     func testBundleDidFinish(_ testBundle: Bundle) {
+        guard case .module(let module) = state else {
+            Log.print("testBundleDidFinish: Bad observer state: \(state), expected: .module")
+            return
+        }
+        guard module.bundleName == testBundle.name else {
+            Log.print("Bad module: \(testBundle.name), expected: \(module.bundleName)")
+            state = .none
+            return
+        }
         /// We need to wait for all the traces to be written to the backend before exiting
-        module?.end()
-        Log.debug("testBundleDidFinish: \(testBundle.bundleURL.deletingPathExtension().lastPathComponent)")
+        module.end()
+        state = .none
+        Log.debug("testBundleDidFinish: \(module.bundleName)")
     }
 
     func testSuiteWillStart(_ testSuite: XCTestSuite) {
-        if module?.configError ?? false {
-            Log.debug("testSuiteWillStart: Failed, module config error")
+        guard case .module(let module) = state else {
+            Log.print("testSuiteWillStart: Bad observer state: \(state), expected: .module")
+            return
+        }
+        
+        if module.configError {
+            Log.print("testSuiteWillStart: Failed, module config error")
             testSuite.testRun?.stop()
             exit(1)
         }
 
         guard let tests = testSuite.value(forKey: "_mutableTests") as? NSArray,
-              tests.firstObject is XCTestCase,
-              let module = module
+              (tests.count == 0 || tests.firstObject is XCTestCase)
         else {
             return
         }
@@ -55,74 +83,90 @@ class DDTestObserver: NSObject, XCTestObservation {
         Log.measure(name: "waiting itrWorkQueue") {
             DDTestMonitor.instance?.itrWorkQueue.waitUntilAllOperationsAreFinished()
         }
+        
+        Log.debug("testSuiteWillStart: \(testSuite.name)")
+        state = .suite(module.suiteStart(name: testSuite.name))
 
         if let itr = DDTestMonitor.instance?.itr {
             let skippableTests = itr.skippableTests.filter { $0.suite == testSuite.name }.map { "-[\(testSuite.name) \($0.name)]" }
-            let finalTests = tests.filter { !skippableTests.contains(($0 as AnyObject).name) }
+            
+            let skippedTests = tests.filter { skippableTests.contains(($0 as! XCTest).name) }
+            
+            let finalTests = tests.filter { !skippableTests.contains(($0 as! XCTest).name) }
             testSuite.setValue(finalTests, forKey: "_mutableTests")
-            if !finalTests.isEmpty {
-                suite = module.suiteStart(name: testSuite.name)
-                Log.debug("testSuiteWillStart: \(testSuite.name)")
+            
+            skippedTests.forEach { test in
+                self.testCaseWillStart(test as! XCTestCase)
+                guard case .test(let test) = self.state else { return }
+                test.end(status: .skip(itr: true))
+                self.state = .suite(test.suite)
             }
-            let testsToSkip = tests.count - finalTests.count
-            Log.print("ITR skipped \(testsToSkip) tests")
-            if testsToSkip > 0 {
+            
+            if !skippedTests.isEmpty {
+                Log.print("ITR skipped \(skippedTests.count) tests")
                 module.itrSkipped = true
             }
-        } else {
-            suite = module.suiteStart(name: testSuite.name)
-            Log.debug("testSuiteWillStart: \(testSuite.name)")
         }
     }
 
     func testSuiteDidFinish(_ testSuite: XCTestSuite) {
-        if let tests = testSuite.value(forKey: "_mutableTests") as? NSArray,
-           tests.firstObject is XCTestCase
-        {
-            suite?.end()
-            Log.debug("testSuiteDidFinish: \(testSuite.name)")
+        guard case .suite(let suite) = state else {
+            Log.print("testSuiteDidFinish: Bad observer state: \(state), expected: .suite")
+            return
         }
+        guard suite.name == testSuite.name else {
+            Log.print("Bad suite: \(testSuite.name), expected: \(suite.name)")
+            return
+        }
+        suite.end()
+        state = .module(suite.module)
+        Log.debug("testSuiteDidFinish: \(suite.name)")
     }
 
     func testCaseWillStart(_ testCase: XCTestCase) {
-        guard let suite = suite,
-              let namematch = DDTestObserver.testNameRegex.firstMatch(in: testCase.name, range: NSRange(location: 0, length: testCase.name.count)),
-              let nameRange = Range(namematch.range(at: 2), in: testCase.name)
-        else {
+        guard case .suite(let suite) = state else {
+            Log.print("testCaseWillStart: Bad observer state: \(state), expected: .suite")
             return
         }
-        let testName = String(testCase.name[nameRange])
-        test = suite.testStart(name: testName)
+        let testName: String
+        if let match = DDTestObserver.testNameRegex.firstMatch(in: testCase.name, range: NSRange(location: 0, length: testCase.name.count)),
+           let range = Range(match.range(at: 2), in: testCase.name)
+        {
+            testName = String(testCase.name[range])
+        } else {
+            testName = testCase.name
+        }
+        Log.debug("testCaseWillStart: \(testName)")
+        state = .test(suite.testStart(name: testName))
     }
 
     func testCaseDidFinish(_ testCase: XCTestCase) {
-        guard let test = test
-        else {
+        guard case .test(let test) = state else {
+            Log.print("testCaseDidFinish: Bad observer state: \(state), expected: .test")
+            return
+        }
+        guard testCase.name.contains(test.name) else {
+            Log.print("Bad test: \(testCase), expected: \(test.name)")
             return
         }
         addBenchmarkTagsIfNeeded(testCase: testCase, test: test)
-
-        if DDTestObserver.supportsSkipping, testCase.testRun?.hasBeenSkipped == true {
-            test.end(status: .skip)
-        } else if testCase.testRun?.hasSucceeded ?? false {
-            test.end(status: .pass)
-        } else {
-            test.end(status: .fail)
-        }
+        test.end(status: testCase.testRun?.status ?? .fail)
+        state = .suite(test.suite)
+        Log.debug("testCaseDidFinish: \(test.name)")
     }
 
     #if swift(>=5.3)
     func testCase(_ testCase: XCTestCase, didRecord issue: XCTIssue) {
-        guard let test = test
-        else {
+        guard case .test(let test) = state else {
+            Log.print("testCase:didRecord: Bad observer state: \(state), expected: .test")
             return
         }
         test.setErrorInfo(type: issue.compactDescription, message: issue.description, callstack: nil)
     }
     #else
     func testCase(_ testCase: XCTestCase, didFailWithDescription description: String, inFile filePath: String?, atLine lineNumber: Int) {
-        guard let test = test
-        else {
+        guard case .test(let test) = state else {
+            Log.print("testCase:didFailWithDescription: Bad observer state: \(state), expected: .test")
             return
         }
         test.setErrorInfo(type: description, message: "test_failure: \(filePath ?? ""):\(lineNumber)", callstack: nil)
@@ -232,4 +276,15 @@ class DDTestObserver: NSObject, XCTestObservation {
             }
         }
     }
+}
+
+extension XCTestRun {
+    var status: DDTestStatus.ITR {
+        if XCTestRun.supportsSkipping && hasBeenSkipped {
+            return .skip(itr: false)
+        }
+        return hasSucceeded ? .pass : .fail
+    }
+    
+    static let supportsSkipping = NSClassFromString("XCTSkippedTestContext") != nil
 }

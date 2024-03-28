@@ -11,7 +11,6 @@ import Foundation
 
 public class DDTest: NSObject {
     static let testNameRegex = try! NSRegularExpression(pattern: "([\\w]+) ([\\w]+)", options: .caseInsensitive)
-    static let supportsSkipping = NSClassFromString("XCTSkippedTestContext") != nil
     var currentTestExecutionOrder: Int
     var initialProcessId = Int(ProcessInfo.processInfo.processIdentifier)
 
@@ -149,44 +148,7 @@ public class DDTest: NSObject {
     ///   - status: the status reported for this test
     ///   - endTime: Optional, the time where the test ended
     @objc public func end(status: DDTestStatus, endTime: Date? = nil) {
-        let testEndTime = endTime ?? DDTestMonitor.clock.now
-        let testStatus: String
-        switch status {
-            case .pass:
-                testStatus = DDTagValues.statusPass
-                span.status = .ok
-            case .fail:
-                testStatus = DDTagValues.statusFail
-                suite.status = .fail
-                module.status = .fail
-                span.status = .error(description: "Test failed")
-                setErrorInformation()
-            case .skip:
-                testStatus = DDTagValues.statusSkip
-                span.status = .ok
-        }
-
-        span.setAttribute(key: DDTestTags.testStatus, value: testStatus)
-
-        if let coverageHelper = DDTestMonitor.instance?.coverageHelper {
-            coverageHelper.writeProfile()
-            let testSessionId = module.sessionId.rawValue
-            let testSuiteId = suite.id.rawValue
-            let spanId = span.context.spanId.rawValue
-            let coverageFileURL = coverageHelper.getURLForTest(name: name, testSessionId: testSessionId, testSuiteId: testSuiteId, spanId: spanId)
-            coverageHelper.coverageWorkQueue.addOperation {
-                guard FileManager.default.fileExists(atPath: coverageFileURL.path) else {
-                    return
-                }
-                DDTestMonitor.tracer.eventsExporter?.export(coverage: coverageFileURL, testSessionId: testSessionId, testSuiteId: testSuiteId, spanId: spanId, workspacePath: DDTestMonitor.env.workspacePath, binaryImagePaths: BinaryImages.binaryImagesPath)
-            }
-        }
-
-        StderrCapture.syncData()
-        span.end(time: testEndTime)
-        DDTestMonitor.instance?.networkInstrumentation?.endAndCleanAliveSpans()
-        DDCrashes.setCustomData(customData: Data())
-        DDTestMonitor.instance?.currentTest = nil
+        self.end(status: status.itr, endTime: endTime)
     }
 
     @objc public func end(status: DDTestStatus) {
@@ -244,6 +206,64 @@ public class DDTest: NSObject {
         }
         if let percentile90 = Sigma.percentile(samples, percentile: 0.90) {
             span.setAttribute(key: tag + DDBenchmarkTags.statisticsP90, value: percentile90)
+        }
+    }
+}
+
+extension DDTest {
+    func end(status: DDTestStatus.ITR, endTime: Date? = nil) {
+        let testEndTime = endTime ?? DDTestMonitor.clock.now
+        
+        switch status {
+        case .pass:
+            span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusPass)
+            span.status = .ok
+        case .fail:
+            span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusFail)
+            suite.status = .fail
+            module.status = .fail
+            span.status = .error(description: "Test failed")
+            setErrorInformation()
+        case .skip(itr: let itr):
+            span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusSkip)
+            if itr { span.setAttribute(key: DDTestTags.testSkippedByITR, value: true) }
+            span.status = .ok
+        }
+
+        if let coverageHelper = DDTestMonitor.instance?.coverageHelper {
+            coverageHelper.writeProfile()
+            let testSessionId = module.sessionId.rawValue
+            let testSuiteId = suite.id.rawValue
+            let spanId = span.context.spanId.rawValue
+            let coverageFileURL = coverageHelper.getURLForTest(name: name, testSessionId: testSessionId, testSuiteId: testSuiteId, spanId: spanId)
+            coverageHelper.coverageWorkQueue.addOperation {
+                guard FileManager.default.fileExists(atPath: coverageFileURL.path) else {
+                    return
+                }
+                DDTestMonitor.tracer.eventsExporter?.export(coverage: coverageFileURL, testSessionId: testSessionId, testSuiteId: testSuiteId, spanId: spanId, workspacePath: DDTestMonitor.env.workspacePath, binaryImagePaths: BinaryImages.binaryImagesPath)
+            }
+        }
+
+        StderrCapture.syncData()
+        span.end(time: testEndTime)
+        DDTestMonitor.instance?.networkInstrumentation?.endAndCleanAliveSpans()
+        DDCrashes.setCustomData(customData: Data())
+        DDTestMonitor.instance?.currentTest = nil
+    }
+}
+
+extension DDTestStatus {
+    enum ITR: Equatable {
+        case pass
+        case fail
+        case skip(itr: Bool)
+    }
+    
+    var itr: ITR {
+        switch self {
+        case .pass: return .pass
+        case .fail: return .fail
+        case .skip: return .skip(itr: false)
         }
     }
 }

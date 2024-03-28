@@ -158,7 +158,7 @@ internal final class Environment {
         return .init(
             repositoryURL: env["DD_GIT_REPOSITORY_URL"],
             branch: isTag ? nil : branch,
-            tag: isTag ? branch : env["DD_GIT_TAG"],
+            tag: Git.normalize(branchOrTag: env["DD_GIT_TAG"]).0 ?? (isTag ? branch : nil),
             commitSHA: env["DD_GIT_COMMIT_SHA"],
             commitMessage: env["DD_GIT_COMMIT_MESSAGE"],
             authorName: env["DD_GIT_COMMIT_AUTHOR_NAME"],

@@ -187,9 +187,15 @@ internal struct SpanEncoder {
         let parentSpanID = span.parentID ?? SpanId.invalid // 0 is a reserved ID for a root span (ref: DDTracer.java#L600)
         try container.encode(parentSpanID.rawValue, forKey: .parentID)
 
-        try container.encode(span.sessionID, forKey: .testSessionID)
-        try container.encode(span.moduleID, forKey: .testModuleID)
-        try container.encode(span.suiteID, forKey: .testSuiteID)
+        if let session = span.sessionID {
+            try container.encode(session, forKey: .testSessionID)
+        }
+        if let module = span.moduleID {
+            try container.encode(module, forKey: .testModuleID)
+        }
+        if let suite = span.suiteID {
+            try container.encode(suite, forKey: .testSuiteID)
+        }
 
         try container.encode(span.name, forKey: .name)
         try container.encode(span.serviceName, forKey: .service)
@@ -204,9 +210,15 @@ internal struct SpanEncoder {
 
         if span.error {
             try container.encode(1, forKey: .error)
-            try meta.encode(span.errorMessage, forKey: DynamicCodingKey(StaticCodingKeys.errorMessage.stringValue))
-            try meta.encode(span.errorType, forKey: DynamicCodingKey(StaticCodingKeys.errorType.stringValue))
-            try meta.encode(span.errorStack, forKey: DynamicCodingKey(StaticCodingKeys.errorStack.stringValue))
+            if let message = span.errorMessage {
+                try meta.encode(message, forKey: DynamicCodingKey(StaticCodingKeys.errorMessage.stringValue))
+            }
+            if let type = span.errorType {
+                try meta.encode(type, forKey: DynamicCodingKey(StaticCodingKeys.errorType.stringValue))
+            }
+            if let stack = span.errorStack {
+                try meta.encode(stack, forKey: DynamicCodingKey(StaticCodingKeys.errorStack.stringValue))
+            }
         } else {
             try container.encode(0, forKey: .error)
         }

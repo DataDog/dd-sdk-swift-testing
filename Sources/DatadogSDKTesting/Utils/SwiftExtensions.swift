@@ -224,3 +224,9 @@ extension Dictionary where Key == String, Value == String {
         return hashedData
     }
 }
+
+extension Bundle {
+    var name: String {
+        bundleURL.deletingPathExtension().lastPathComponent
+    }
+}

@@ -226,7 +226,7 @@ extension DDTest {
             setErrorInformation()
         case .skip(itr: let itr):
             span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusSkip)
-            if itr { span.setAttribute(key: DDTestTags.testSkippedByITR, value: "true") }
+            if itr { span.setAttribute(key: DDTestTags.testSkippedByITR, value: true) }
             span.status = .ok
         }
 
@@ -253,7 +253,7 @@ extension DDTest {
 }
 
 extension DDTestStatus {
-    enum ITR {
+    enum ITR: Equatable {
         case pass
         case fail
         case skip(itr: Bool)

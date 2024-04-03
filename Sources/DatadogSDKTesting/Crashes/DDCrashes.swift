@@ -23,18 +23,22 @@ internal enum DDCrashes {
     private static var crashCustomData = [String: Data]()
     fileprivate static var sanitizerURL: URL!
 
-    static func install() {
+    static func install(disableMach: Bool) {
         if sharedPLCrashReporter == nil {
-            installPLCrashReporterHandler()
+            installPLCrashReporterHandler(disableMach: disableMach)
         }
     }
 
-    private static func installPLCrashReporterHandler() {
+    private static func installPLCrashReporterHandler(disableMach: Bool) {
         let crashDir = try? Directory(withSubdirectoryPath: "com.datadog.civisibility/crash")
 #if os(macOS)
-        let config = PLCrashReporterConfig(signalHandlerType: .mach, symbolicationStrategy: [], basePath: crashDir?.url.path)
+        let config = PLCrashReporterConfig(signalHandlerType: disableMach ? .BSD : .mach,
+                                           symbolicationStrategy: [],
+                                           basePath: crashDir?.url.path)
 #else
-        let config = PLCrashReporterConfig(signalHandlerType: .BSD, symbolicationStrategy: [], basePath: crashDir?.url.path)
+        let config = PLCrashReporterConfig(signalHandlerType: .BSD,
+                                           symbolicationStrategy: [],
+                                           basePath: crashDir?.url.path)
 #endif
         guard let plCrashReporter = PLCrashReporter(configuration: config) else {
             return

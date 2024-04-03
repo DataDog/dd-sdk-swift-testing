@@ -33,6 +33,7 @@ final class Config {
     var excludedURLS: Set<String>? = nil
     var disableRUMIntegration: Bool = false
     var disableCrashHandler: Bool = false
+    var disableMachCrashHandler: Bool = false
     var disableTestInstrumenting: Bool = false
     var disableSourceLocation: Bool = false
     var disableNTPClock: Bool = false
@@ -130,6 +131,8 @@ final class Config {
         reportHostname = env[.ciVisibilityReportHostname] ?? false
         extraDebugCallStack = env[.traceDebugCallStack] ?? false
         extraDebug = env[.traceDebug] ?? extraDebugCallStack
+        
+        disableMachCrashHandler = env[.disableMachCrashHandler] ?? extraDebug
         
         isInTestMode = env.has("XCInjectBundleInto") || env.has("XCTestConfigurationFilePath") ||
             env.has("XCTestBundlePath") || env.has("SDKROOT") || tracerSpanId != nil

@@ -86,7 +86,7 @@ public class DDTestModule: NSObject, Encodable {
 
         if !DDTestMonitor.config.disableCrashHandler {
             Log.measure(name: "DDCrashesInstall") {
-                DDCrashes.install()
+                DDCrashes.install(disableMach: DDTestMonitor.config.disableMachCrashHandler)
             }
         }
         let moduleStartTime = startTime ?? beforeLoadingTime

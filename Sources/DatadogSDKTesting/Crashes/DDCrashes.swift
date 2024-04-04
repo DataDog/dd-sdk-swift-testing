@@ -31,15 +31,15 @@ internal enum DDCrashes {
 
     private static func installPLCrashReporterHandler(disableMach: Bool) {
         let crashDir = try? Directory(withSubdirectoryPath: "com.datadog.civisibility/crash")
-#if os(macOS)
-        let config = PLCrashReporterConfig(signalHandlerType: disableMach ? .BSD : .mach,
+        let signalHandler: PLCrashReporterSignalHandlerType
+        #if os(macOS) || os(iOS)
+            signalHandler = disableMach ? .BSD : .mach
+        #else
+            signalHandler = .BSD
+        #endif
+        let config = PLCrashReporterConfig(signalHandlerType: signalHandler,
                                            symbolicationStrategy: [],
                                            basePath: crashDir?.url.path)
-#else
-        let config = PLCrashReporterConfig(signalHandlerType: .BSD,
-                                           symbolicationStrategy: [],
-                                           basePath: crashDir?.url.path)
-#endif
         guard let plCrashReporter = PLCrashReporter(configuration: config) else {
             return
         }

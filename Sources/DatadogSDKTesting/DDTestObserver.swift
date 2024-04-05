@@ -137,9 +137,9 @@ class DDTestObserver: NSObject, XCTestObservation {
             
             skippedTests.forEach { test in
                 self.testCaseWillStart(test as! XCTestCase)
-                guard case .test(test: let test, inside: let tsuite) = self.state else { return }
+                guard case .test(test: let test, inside: let csuite) = self.state else { return }
                 test.end(status: .skip(itr: true))
-                self.state = .suite(suite: test.suite, inside: tsuite)
+                self.state = .suite(suite: test.suite, inside: csuite)
             }
             
             if !skippedTests.isEmpty {

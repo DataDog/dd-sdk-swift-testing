@@ -14,14 +14,14 @@ class DDTestObserver: NSObject, XCTestObservation {
     enum State {
         case none
         case module(DDTestModule)
-        case transitional(suite: TransitionalSuite, inside: DDTestModule)
-        case suite(suite: DDTestSuite, inside: TransitionalSuite?)
-        case test(test: DDTest, inside: TransitionalSuite?)
+        case container(suite: ContainerSuite, inside: DDTestModule)
+        case suite(suite: DDTestSuite, inside: ContainerSuite?)
+        case test(test: DDTest, inside: ContainerSuite?)
     }
     
-    indirect enum TransitionalSuite {
+    indirect enum ContainerSuite {
         case simple(XCTestSuite)
-        case nested(XCTestSuite, parent: TransitionalSuite)
+        case nested(XCTestSuite, parent: ContainerSuite)
         
         var suite: XCTestSuite {
             switch self {
@@ -30,14 +30,14 @@ class DDTestObserver: NSObject, XCTestObservation {
             }
         }
         
-        var parent: TransitionalSuite? {
+        var parent: ContainerSuite? {
             switch self {
             case .nested(_, parent: let p): return p
             case .simple(_): return nil
             }
         }
         
-        init(suite: XCTestSuite, parent: TransitionalSuite? = nil) {
+        init(suite: XCTestSuite, parent: ContainerSuite? = nil) {
             if let parent = parent {
                 self = .nested(suite, parent: parent)
             } else {
@@ -92,17 +92,17 @@ class DDTestObserver: NSObject, XCTestObservation {
 
     func testSuiteWillStart(_ testSuite: XCTestSuite) {
         let module: DDTestModule
-        let parent: TransitionalSuite?
+        let parent: ContainerSuite?
         
         switch state {
         case .module(let mod):
             module = mod
             parent = nil
-        case .transitional(suite: let trans, inside: let mod):
+        case .container(suite: let cont, inside: let mod):
             module = mod
-            parent = trans
+            parent = cont
         default:
-            Log.print("testSuiteWillStart: Bad observer state: \(state), expected: .module or .transitional")
+            Log.print("testSuiteWillStart: Bad observer state: \(state), expected: .module or .container")
             return
         }
         
@@ -115,8 +115,8 @@ class DDTestObserver: NSObject, XCTestObservation {
         guard let tests = testSuite.value(forKey: "_mutableTests") as? NSArray,
               (tests.count == 0 || tests.firstObject is XCTestCase)
         else {
-            Log.debug("testSuiteWillStart: transitional \(testSuite.name)")
-            state = .transitional(suite: TransitionalSuite(suite: testSuite, parent: parent), inside: module)
+            Log.debug("testSuiteWillStart: container \(testSuite.name)")
+            state = .container(suite: ContainerSuite(suite: testSuite, parent: parent), inside: module)
             return
         }
 
@@ -151,23 +151,23 @@ class DDTestObserver: NSObject, XCTestObservation {
 
     func testSuiteDidFinish(_ testSuite: XCTestSuite) {
         switch state {
-        case .transitional(suite: let suite, inside: let module):
+        case .container(suite: let suite, inside: let module):
             guard suite.suite.name == testSuite.name else {
                 Log.print("testSuiteDidFinish: Bad suite: \(testSuite.name), expected: \(suite.suite.name)")
                 return
             }
-            state = suite.parent == nil ? .module(module) : .transitional(suite: suite.parent!, inside: module)
-            Log.debug("testSuiteDidFinish: transitional \(testSuite.name)")
+            state = suite.parent == nil ? .module(module) : .container(suite: suite.parent!, inside: module)
+            Log.debug("testSuiteDidFinish: container \(testSuite.name)")
         case .suite(suite: let suite, inside: let parent):
             guard suite.name == testSuite.name else {
                 Log.print("testSuiteDidFinish: Bad suite: \(testSuite.name), expected: \(suite.name)")
                 return
             }
             suite.end()
-            state = parent == nil ? .module(suite.module) : .transitional(suite: parent!, inside: suite.module)
+            state = parent == nil ? .module(suite.module) : .container(suite: parent!, inside: suite.module)
             Log.debug("testSuiteDidFinish: \(testSuite.name)")
         default:
-            Log.print("testSuiteDidFinish: Bad observer state: \(state), expected: .suite or .transitional")
+            Log.print("testSuiteDidFinish: Bad observer state: \(state), expected: .suite or .container")
         }
     }
 

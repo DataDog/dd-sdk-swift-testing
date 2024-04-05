@@ -34,11 +34,14 @@ jobs:
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
+        with:
+          output: "results"
+          upload: "never"
 
-      - name: upload_artifact
+      - name: Upload SARIF report to Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: CodeQL Analysis Sarif
+          name: CodeQL Analysis SARIF
           path: ${{ github.workspace }}/results/swift.sarif
 
       - name: Upload SARIF report to DDOG

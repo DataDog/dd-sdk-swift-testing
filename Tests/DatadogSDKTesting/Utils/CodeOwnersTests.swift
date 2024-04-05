@@ -79,6 +79,12 @@ class CodeOwnersGithubTests: XCTestCase {
         let defaultOwner = codeOwners.ownersForPath("/docs/test.swift")
         XCTAssertEqual(defaultOwner, #"["@doctocat"]"#)
     }
+    
+    func testIfPathIsFoundAtRootWithoutSlashReturnOwner() {
+        let codeOwners = CodeOwners(content: codeOwnersGitHubSample)
+        let defaultOwner = codeOwners.ownersForPath("docs/test.swift")
+        XCTAssertEqual(defaultOwner, #"["@doctocat"]"#)
+    }
 
     func testIfPathIsNotFoundAtRootReturnNextMatch() {
         let codeOwners = CodeOwners(content: codeOwnersGitHubSample)
@@ -233,5 +239,11 @@ class CodeOwnersGitlabTests: XCTestCase {
         XCTAssertTrue(defaultOwner.contains("\"@multiple\""))
         XCTAssertTrue(defaultOwner.contains("\"@code\""))
         XCTAssertTrue(defaultOwner.contains("\"@owners\""))
+    }
+    
+    func testCodeOwnersGitlab9() {
+        let codeOwners = CodeOwners(content: codeOwnersGitLabSample)
+        let defaultOwner = codeOwners.ownersForPath("config/data.conf")
+        XCTAssertEqual(defaultOwner, "[\"@config-owner\"]")
     }
 }

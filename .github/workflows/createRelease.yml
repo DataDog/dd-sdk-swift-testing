@@ -10,18 +10,18 @@ jobs:
     runs-on: macos-13
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
     - name: Select Xcode 14
       run: sudo xcode-select --switch /Applications/Xcode_14.1.app
     - name: Test
-      run: make tests
+      run: make tests/pretty
 
   release:
     needs: [test]
     runs-on: macos-13
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
     - name: Select Xcode 14
       run: sudo xcode-select --switch /Applications/Xcode_14.1.app
     - name: Build and upload XCFrameworks, recreate tag

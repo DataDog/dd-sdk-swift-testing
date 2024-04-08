@@ -121,4 +121,6 @@ tests/integration: tests/integration/macOS tests/integration/iOS tests/integrati
 
 tests/integration/pretty: tests/integration/macOS/pretty tests/integration/iOS/pretty tests/integration/tvOS/pretty
 
+tests/pretty: tests/unit/pretty
+
 tests: tests/unit

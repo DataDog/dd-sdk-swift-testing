@@ -6,8 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-
-  test-13-Integration-build:
+  test-13-Integration-Unit:
     name: Run Tests macOS 13.0
     runs-on: macos-13
     strategy:
@@ -17,8 +16,6 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-    - name: Install xcbeautify
-      run: brew install xcbeautify
     - name: Select ${{ matrix.xcode }}
       run: sudo xcode-select --switch /Applications/${{ matrix.xcode }}.app
     - name: Unit tests
@@ -26,34 +23,30 @@ jobs:
 
   test-Integration-macOS:
     runs-on: macos-latest
+    env:
+      DD_API_KEY: '${{ secrets.DD_API_KEY }}'
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-    - name: Install xcbeautify
-      run: brew install xcbeautify
     - name: tests macOS
-      run: DD_API_KEY=${{ secrets.DD_API_KEY }} make tests/integration/macOS/pretty
+      run: make tests/integration/macOS/pretty
 
   test-Integration-iOS:
     runs-on: macos-latest
-    env: 
-      DD_API_KEY: ${{ secrets.DD_API_KEY }}
+    env:
+      DD_API_KEY: '${{ secrets.DD_API_KEY }}'
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-    - name: Install xcbeautify
-      run: brew install xcbeautify
     - name: tests iOS
-      run: DD_API_KEY=${{ secrets.DD_API_KEY }} make tests/integration/iOS/pretty
+      run: make tests/integration/iOS/pretty
 
   test-Integration-tvOS:
     runs-on: macos-latest
-    env: 
-      DD_API_KEY: ${{ secrets.DD_API_KEY }}
+    env:
+      DD_API_KEY: '${{ secrets.DD_API_KEY }}'
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-    - name: Install xcbeautify
-      run: brew install xcbeautify
     - name: tests tvOS
-      run: DD_API_KEY=${{ secrets.DD_API_KEY }} make tests/integration/tvOS/pretty
+      run: make tests/integration/tvOS/pretty

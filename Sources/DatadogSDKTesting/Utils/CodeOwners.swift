@@ -16,24 +16,19 @@ struct CodeOwners {
 
     init?(workspacePath: URL) {
         // Search on the possible locations CODEOWNER can exist
-        var location = workspacePath.appendingPathComponent("CODEOWNERS")
-        if !FileManager.default.fileExists(atPath: location.path) {
-            location = workspacePath.appendingPathComponent(".github").appendingPathComponent("CODEOWNERS")
-            if !FileManager.default.fileExists(atPath: location.path) {
-                location = workspacePath.appendingPathComponent(".gitlab").appendingPathComponent("CODEOWNERS")
-                if !FileManager.default.fileExists(atPath: location.path) {
-                    location = workspacePath.appendingPathComponent(".docs").appendingPathComponent("CODEOWNERS")
-                    if !FileManager.default.fileExists(atPath: location.path) {
-                        return nil
-                    }
-                }
-            }
+        let locations = [
+            workspacePath.appendingPathComponent("CODEOWNERS"),
+            workspacePath.appendingPathComponent(".github").appendingPathComponent("CODEOWNERS"),
+            workspacePath.appendingPathComponent(".gitlab").appendingPathComponent("CODEOWNERS"),
+            workspacePath.appendingPathComponent(".docs").appendingPathComponent("CODEOWNERS")
+        ]
+        let fm = FileManager.default
+        guard let location = locations.first(where: { fm.fileExists(atPath: $0.path) }) else {
+            return nil
         }
-
         guard let codeOwnersContent = try? String(contentsOf: location) else {
             return nil
         }
-
         self.init(content: codeOwnersContent)
     }
 
@@ -60,32 +55,21 @@ struct CodeOwners {
             if let path = lineComponents.first,
                !owners.isEmpty
             {
-                var currentSection = section[currentSectionName]
-                if currentSection == nil {
-                    section[currentSectionName] = [CodeOwnerEntry]()
-                    currentSection = section[currentSectionName]
-                }
-                section[currentSectionName]?.append(CodeOwnerEntry(path: path, codeowners: owners.map { String($0) }))
+                var currentSection = section[currentSectionName] ?? []
+                currentSection.append(CodeOwnerEntry(path: path, codeowners: owners.map { String($0) }))
+                section[currentSectionName] = currentSection
             }
         }
     }
 
     func ownersForPath(_ path: String) -> String? {
-        var totalCodeowners = [String]()
-        for section in section.values {
-            for owner in section.reversed() {
-                if codeOwnersWildcard(path, pattern: owner.path) {
-                    totalCodeowners += owner.codeowners
-                    break
-                }
+        let fullPath = path.first == "/" ? path : "/" + path
+        let codeowners = section.values.reduce(into: []) { (res, section) in
+            section.last { codeOwnersWildcard(fullPath, pattern: $0.path) }.map {
+                res.append(contentsOf: $0.codeowners)
             }
         }
-
-        if totalCodeowners.isEmpty {
-            return nil
-        } else {
-            return "[\"" + totalCodeowners.joined(separator: "\",\"") + "\"]"
-        }
+        return codeowners.isEmpty ? nil : "[\"" + codeowners.joined(separator: "\",\"") + "\"]"
     }
 
     private func codeOwnersWildcard(_ string: String, pattern: String) -> Bool {

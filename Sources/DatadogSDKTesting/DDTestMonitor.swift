@@ -130,7 +130,7 @@ internal class DDTestMonitor {
                 /// As crash reporter is initialized in testBundleWillStart() method, we initialize it here
                 /// because dont have test observer
                 if !DDTestMonitor.config.disableCrashHandler {
-                    DDCrashes.install()
+                    DDCrashes.install(disableMach: DDTestMonitor.config.disableMachCrashHandler)
                     let launchedSpan = DDTestMonitor.tracer.createSpanFromLaunchContext()
                     let simpleSpan = SimpleSpanData(spanData: launchedSpan.toSpanData())
                     DDCrashes.setCustomData(customData: SimpleSpanSerializer.serializeSpan(simpleSpan: simpleSpan))

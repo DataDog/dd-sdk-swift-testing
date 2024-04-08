@@ -14,8 +14,36 @@ class DDTestObserver: NSObject, XCTestObservation {
     enum State {
         case none
         case module(DDTestModule)
-        case suite(DDTestSuite)
-        case test(DDTest)
+        case container(suite: ContainerSuite, inside: DDTestModule)
+        case suite(suite: DDTestSuite, inside: ContainerSuite?)
+        case test(test: DDTest, inside: ContainerSuite?)
+    }
+    
+    indirect enum ContainerSuite {
+        case simple(XCTestSuite)
+        case nested(XCTestSuite, parent: ContainerSuite)
+        
+        var suite: XCTestSuite {
+            switch self {
+            case .simple(let s): return s
+            case .nested(let s, parent: _): return s
+            }
+        }
+        
+        var parent: ContainerSuite? {
+            switch self {
+            case .nested(_, parent: let p): return p
+            case .simple(_): return nil
+            }
+        }
+        
+        init(suite: XCTestSuite, parent: ContainerSuite? = nil) {
+            if let parent = parent {
+                self = .nested(suite, parent: parent)
+            } else {
+                self = .simple(suite)
+            }
+        }
     }
 
     private(set) var state: State
@@ -52,7 +80,7 @@ class DDTestObserver: NSObject, XCTestObservation {
             return
         }
         guard module.bundleName == testBundle.name else {
-            Log.print("Bad module: \(testBundle.name), expected: \(module.bundleName)")
+            Log.print("testBundleDidFinish: Bad module: \(testBundle.name), expected: \(module.bundleName)")
             state = .none
             return
         }
@@ -63,8 +91,18 @@ class DDTestObserver: NSObject, XCTestObservation {
     }
 
     func testSuiteWillStart(_ testSuite: XCTestSuite) {
-        guard case .module(let module) = state else {
-            Log.print("testSuiteWillStart: Bad observer state: \(state), expected: .module")
+        let module: DDTestModule
+        let parent: ContainerSuite?
+        
+        switch state {
+        case .module(let mod):
+            module = mod
+            parent = nil
+        case .container(suite: let cont, inside: let mod):
+            module = mod
+            parent = cont
+        default:
+            Log.print("testSuiteWillStart: Bad observer state: \(state), expected: .module or .container")
             return
         }
         
@@ -77,6 +115,8 @@ class DDTestObserver: NSObject, XCTestObservation {
         guard let tests = testSuite.value(forKey: "_mutableTests") as? NSArray,
               (tests.count == 0 || tests.firstObject is XCTestCase)
         else {
+            Log.debug("testSuiteWillStart: container \(testSuite.name)")
+            state = .container(suite: ContainerSuite(suite: testSuite, parent: parent), inside: module)
             return
         }
 
@@ -85,8 +125,8 @@ class DDTestObserver: NSObject, XCTestObservation {
         }
         
         Log.debug("testSuiteWillStart: \(testSuite.name)")
-        state = .suite(module.suiteStart(name: testSuite.name))
-
+        state = .suite(suite: module.suiteStart(name: testSuite.name), inside: parent)
+        
         if let itr = DDTestMonitor.instance?.itr {
             let skippableTests = itr.skippableTests.filter { $0.suite == testSuite.name }.map { "-[\(testSuite.name) \($0.name)]" }
             
@@ -97,9 +137,9 @@ class DDTestObserver: NSObject, XCTestObservation {
             
             skippedTests.forEach { test in
                 self.testCaseWillStart(test as! XCTestCase)
-                guard case .test(let test) = self.state else { return }
+                guard case .test(test: let test, inside: let csuite) = self.state else { return }
                 test.end(status: .skip(itr: true))
-                self.state = .suite(test.suite)
+                self.state = .suite(suite: test.suite, inside: csuite)
             }
             
             if !skippedTests.isEmpty {
@@ -110,21 +150,29 @@ class DDTestObserver: NSObject, XCTestObservation {
     }
 
     func testSuiteDidFinish(_ testSuite: XCTestSuite) {
-        guard case .suite(let suite) = state else {
-            Log.print("testSuiteDidFinish: Bad observer state: \(state), expected: .suite")
-            return
+        switch state {
+        case .container(suite: let suite, inside: let module):
+            guard suite.suite.name == testSuite.name else {
+                Log.print("testSuiteDidFinish: Bad suite: \(testSuite.name), expected: \(suite.suite.name)")
+                return
+            }
+            state = suite.parent == nil ? .module(module) : .container(suite: suite.parent!, inside: module)
+            Log.debug("testSuiteDidFinish: container \(testSuite.name)")
+        case .suite(suite: let suite, inside: let parent):
+            guard suite.name == testSuite.name else {
+                Log.print("testSuiteDidFinish: Bad suite: \(testSuite.name), expected: \(suite.name)")
+                return
+            }
+            suite.end()
+            state = parent == nil ? .module(suite.module) : .container(suite: parent!, inside: suite.module)
+            Log.debug("testSuiteDidFinish: \(testSuite.name)")
+        default:
+            Log.print("testSuiteDidFinish: Bad observer state: \(state), expected: .suite or .container")
         }
-        guard suite.name == testSuite.name else {
-            Log.print("Bad suite: \(testSuite.name), expected: \(suite.name)")
-            return
-        }
-        suite.end()
-        state = .module(suite.module)
-        Log.debug("testSuiteDidFinish: \(suite.name)")
     }
 
     func testCaseWillStart(_ testCase: XCTestCase) {
-        guard case .suite(let suite) = state else {
+        guard case .suite(suite: let suite, inside: let parentSuite) = state else {
             Log.print("testCaseWillStart: Bad observer state: \(state), expected: .suite")
             return
         }
@@ -137,11 +185,11 @@ class DDTestObserver: NSObject, XCTestObservation {
             testName = testCase.name
         }
         Log.debug("testCaseWillStart: \(testName)")
-        state = .test(suite.testStart(name: testName))
+        state = .test(test: suite.testStart(name: testName), inside: parentSuite)
     }
 
     func testCaseDidFinish(_ testCase: XCTestCase) {
-        guard case .test(let test) = state else {
+        guard case .test(test: let test, inside: let parentSuite) = state else {
             Log.print("testCaseDidFinish: Bad observer state: \(state), expected: .test")
             return
         }
@@ -151,13 +199,13 @@ class DDTestObserver: NSObject, XCTestObservation {
         }
         addBenchmarkTagsIfNeeded(testCase: testCase, test: test)
         test.end(status: testCase.testRun?.status ?? .fail)
-        state = .suite(test.suite)
+        state = .suite(suite: test.suite, inside: parentSuite)
         Log.debug("testCaseDidFinish: \(test.name)")
     }
 
     #if swift(>=5.3)
     func testCase(_ testCase: XCTestCase, didRecord issue: XCTIssue) {
-        guard case .test(let test) = state else {
+        guard case .test(test: let test, inside: _) = state else {
             Log.print("testCase:didRecord: Bad observer state: \(state), expected: .test")
             return
         }
@@ -165,7 +213,7 @@ class DDTestObserver: NSObject, XCTestObservation {
     }
     #else
     func testCase(_ testCase: XCTestCase, didFailWithDescription description: String, inFile filePath: String?, atLine lineNumber: Int) {
-        guard case .test(let test) = state else {
+        guard case .test(test: let test, inside: _) = state else {
             Log.print("testCase:didFailWithDescription: Bad observer state: \(state), expected: .test")
             return
         }

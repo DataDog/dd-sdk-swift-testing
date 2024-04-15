@@ -5,9 +5,7 @@
  */
 
 import Foundation
-#if SWIFT_PACKAGE
-import DatadogSDKTestingObjc
-#endif
+import CDatadogSDKTesting
 
 /// It stores information about loaded mach images
 struct MachOImage {

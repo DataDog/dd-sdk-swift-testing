@@ -6,9 +6,7 @@
 
 import Foundation
 import MachO
-#if SWIFT_PACKAGE
-    import DatadogSDKTestingObjc
-#endif
+import CDatadogSDKTesting
 @_implementationOnly import EventsExporter
 
 enum DDSymbolicator {

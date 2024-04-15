@@ -11,6 +11,7 @@
  *  LLVM
  */
 
+#include "include/CodeCoverage.h"
 #include "CoverageExporterJson.h"
 #include "CoverageSummaryInfo.h"
 #include "llvm/ProfileData/Coverage/CoverageMapping.h"
@@ -30,7 +31,7 @@ thread_local static std::vector<std::unique_ptr<CoverageMappingReader>> Coverage
 /// The implementation of the coverage tool.
 class CodeCoverageTool {
 public:
-std::string getCoverageJson(std::string profdata, std::vector<std::string> covFilenames);
+std::string getCoverageJson(std::string profdata, std::vector<std::string> &covFilenames);
 
 private:
 /// Print the error message to the error output stream.
@@ -233,7 +234,7 @@ std::unique_ptr<CoverageMapping> CodeCoverageTool::loadCached() {
     return Coverage;
 }
 
-std::string CodeCoverageTool::getCoverageJson(std::string profdata, std::vector<std::string> covFilenames)  {
+std::string CodeCoverageTool::getCoverageJson(std::string profdata, std::vector<std::string> &covFilenames)  {
 
     PGOFilename = profdata;
 
@@ -271,8 +272,17 @@ void CodeCoverageTool::warning(const Twine &Message, StringRef Whence) {
     std::cout << getErrorString(Message, Whence, true);
 }
 
-std::string getCoverage(std::string profdata, std::vector<std::string> covFilenames) {
-
-    return CodeCoverageTool().getCoverageJson(profdata, covFilenames);
-
+extern "C" const char* LLVMCoverageInfoForProfile(const char* prof_data, const char* const* images, unsigned int image_count) {
+    std::vector<std::string> vectorList;
+    vectorList.reserve(image_count);
+    
+    for (unsigned int i = 0; i < image_count; i++) {
+        vectorList.push_back(std::string(images[i]));
+    }
+    
+    std::string result = CodeCoverageTool().getCoverageJson(std::string(prof_data), vectorList);
+    char* copied = new char[result.size()+1];
+    result.copy(copied, result.size()+1);
+    
+    return copied;
 }

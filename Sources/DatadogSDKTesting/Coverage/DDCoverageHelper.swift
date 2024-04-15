@@ -6,9 +6,7 @@
 
 @_implementationOnly import EventsExporter
 import Foundation
-#if SWIFT_PACKAGE
-import DatadogSDKTestingObjc
-#endif
+import CDatadogSDKTesting
 
 typealias cFunc = @convention(c) () -> Void
 
@@ -40,10 +38,10 @@ class DDCoverageHelper {
 
     func clearCounters() {
         BinaryImages.profileImages.forEach {
-            Profile_reset_counters($0.beginCountersFuncPtr,
-                                   $0.endCountersFuncPtr,
-                                   $0.beginDataFuncPtr,
-                                   $0.endCountersFuncPtr)
+            ProfileResetCounters($0.beginCountersFuncPtr,
+                                 $0.endCountersFuncPtr,
+                                 $0.beginDataFuncPtr,
+                                 $0.endCountersFuncPtr)
         }
     }
 

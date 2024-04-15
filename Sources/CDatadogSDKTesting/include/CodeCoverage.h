@@ -4,9 +4,14 @@
  * Copyright 2020-Present Datadog, Inc.
  */
 
-import Foundation
-@_implementationOnly import OpenTelemetrySdk
+#pragma once
 
-class DateClock: Clock {
-    var now: Date { Date() }
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+const char* _Nonnull LLVMCoverageInfoForProfile(const char* _Nonnull prof_data, const char* _Nonnull const* _Nullable images, unsigned int image_count);
+
+#ifdef __cplusplus
 }
+#endif

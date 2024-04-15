@@ -29,8 +29,10 @@ struct CrashedModuleInformation {
 
 internal class DDTestMonitor {
     static var instance: DDTestMonitor?
-    static var clock: OpenTelemetrySdk.Clock = {
-        DDTestMonitor.config.disableNTPClock ? DateClock() as OpenTelemetrySdk.Clock: NTPClock()
+    static var clock: Clock = {
+        let clock: Clock = DDTestMonitor.config.disableNTPClock ? DateClock() : NTPClock()
+        try! clock.sync()
+        return clock
     }()
 
     static let defaultPayloadSize = 1024

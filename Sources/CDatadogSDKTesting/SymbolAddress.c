@@ -4,12 +4,12 @@
  * Copyright 2020-Present Datadog, Inc.
  */
 
-#import "include/DDSymbolAddress.h"
+#include "include/SymbolAddress.h"
 
-#import <string.h>
-#import <mach-o/nlist.h>
+#include <string.h>
+#include <mach-o/nlist.h>
 
-void * FindSymbolInImage(const char *symbol, const struct mach_header *image, intptr_t slide)
+void *FindSymbolInImage(const char *symbol, const struct mach_header *image, intptr_t slide)
 {
 	if ((image == NULL) || (symbol == NULL)) {
 		return NULL;
@@ -118,7 +118,7 @@ typedef struct ValueProfNode {
     struct ValueProfNode *Next;
 } ValueProfNode;
 
-void Profile_reset_counters(void *beginCounters, void *endCounters, void *beginData, void *endData)
+void ProfileResetCounters(void *beginCounters, void *endCounters, void *beginData, void *endData)
 {
     uint64_t * (*llvm_profile_begin_counters_ptr)(void) = beginCounters;
     uint64_t * (*llvm_profile_end_counters_ptr)(void) = endCounters;

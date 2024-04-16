@@ -29,11 +29,7 @@ struct CrashedModuleInformation {
 
 internal class DDTestMonitor {
     static var instance: DDTestMonitor?
-    static var clock: Clock = {
-        let clock: Clock = DDTestMonitor.config.disableNTPClock ? DateClock() : NTPClock()
-        try! clock.sync()
-        return clock
-    }()
+    static var clock: Clock = DDTestMonitor.config.disableNTPClock ? DateClock() : NTPClock()
 
     static let defaultPayloadSize = 1024
 
@@ -64,7 +60,7 @@ internal class DDTestMonitor {
     let itrWorkQueue = OperationQueue()
     let gitUploadQueue = OperationQueue()
 
-    static let developerMachineHostName: String = Spawn.commandWithResult("hostname").trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+    static let developerMachineHostName: String = try! Spawn.commandWithResult("hostname").trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
 
     static var baseConfigurationTags = [
         DDOSTags.osPlatform: env.platform.osName,

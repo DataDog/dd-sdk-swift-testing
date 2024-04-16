@@ -51,6 +51,9 @@
 		A7E2332E2BC81B680087D8F8 /* AutoLoad.h in Headers */ = {isa = PBXBuildFile; fileRef = A7E233202BC819A70087D8F8 /* AutoLoad.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A7E233312BC82CD10087D8F8 /* Kronos in Frameworks */ = {isa = PBXBuildFile; productRef = A7E233302BC82CD10087D8F8 /* Kronos */; };
 		A7E233332BC93D100087D8F8 /* Synced.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E233322BC93D100087D8F8 /* Synced.swift */; };
+		A7E233352BCD39E30087D8F8 /* Swift+C.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E233342BCD39E30087D8F8 /* Swift+C.swift */; };
+		A7E233372BCD6A000087D8F8 /* Subprocess.h in Headers */ = {isa = PBXBuildFile; fileRef = A7E233362BCD6A000087D8F8 /* Subprocess.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7E233392BCD6B240087D8F8 /* Subprocess.c in Sources */ = {isa = PBXBuildFile; fileRef = A7E233382BCD6B240087D8F8 /* Subprocess.c */; };
 		A7FC256E2BA1E83500067E26 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */; };
 		A7FC25882BA1E87400067E26 /* EventsExporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25802BA1E87400067E26 /* EventsExporter.framework */; };
 		A7FC25B42BA1EADF00067E26 /* DDTestObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA07025231F4700ED8AEF /* DDTestObserver.swift */; };
@@ -199,7 +202,6 @@
 		A7FC26EB2BA866BB00067E26 /* NIO in Frameworks */ = {isa = PBXBuildFile; productRef = A7FC26EA2BA866BB00067E26 /* NIO */; };
 		A7FC26ED2BA866D000067E26 /* NIOHTTP1 in Frameworks */ = {isa = PBXBuildFile; productRef = A7FC26EC2BA866D000067E26 /* NIOHTTP1 */; };
 		A7FC26F52BA867BA00067E26 /* OpenTelemetryApi in Frameworks */ = {isa = PBXBuildFile; productRef = A7FC26F42BA867BA00067E26 /* OpenTelemetryApi */; };
-		A7FC27012BA8818300067E26 /* Subprocess.c in Sources */ = {isa = PBXBuildFile; fileRef = A7FC27002BA8818300067E26 /* Subprocess.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -318,6 +320,9 @@
 		A7E233162BC7FA590087D8F8 /* CDatadogSDKTesting.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CDatadogSDKTesting.h; sourceTree = "<group>"; };
 		A7E233202BC819A70087D8F8 /* AutoLoad.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AutoLoad.h; sourceTree = "<group>"; };
 		A7E233322BC93D100087D8F8 /* Synced.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Synced.swift; sourceTree = "<group>"; };
+		A7E233342BCD39E30087D8F8 /* Swift+C.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Swift+C.swift"; sourceTree = "<group>"; };
+		A7E233362BCD6A000087D8F8 /* Subprocess.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Subprocess.h; sourceTree = "<group>"; };
+		A7E233382BCD6B240087D8F8 /* Subprocess.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Subprocess.c; sourceTree = "<group>"; };
 		A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = DatadogSDKTesting.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7FC256D2BA1E83500067E26 /* DatadogSDKTestingTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DatadogSDKTestingTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7FC25802BA1E87400067E26 /* EventsExporter.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = EventsExporter.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -332,7 +337,6 @@
 		A7FC26D02BA214CE00067E26 /* SimpleSpanData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleSpanData.swift; sourceTree = "<group>"; };
 		A7FC26D92BA2181A00067E26 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A7FC26E42BA8648300067E26 /* EventsExporter.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = EventsExporter.xctestplan; sourceTree = "<group>"; };
-		A7FC27002BA8818300067E26 /* Subprocess.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Subprocess.c; sourceTree = "<group>"; };
 		E10034D92703599D00439C9C /* DDTestModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTestModule.swift; sourceTree = "<group>"; };
 		E10A7E0D2806D68F00B464C9 /* LLVMSimpleCoverageFormat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LLVMSimpleCoverageFormat.swift; sourceTree = "<group>"; };
 		E11295BA25F2483D002719E7 /* FileLocator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileLocator.swift; sourceTree = "<group>"; };
@@ -598,6 +602,7 @@
 				A7E232F22BC6EB470087D8F8 /* Error.cpp */,
 				A7E233002BC6EF220087D8F8 /* AutoLoad.c */,
 				A7E233022BC6F01B0087D8F8 /* SymbolAddress.c */,
+				A7E233382BCD6B240087D8F8 /* Subprocess.c */,
 			);
 			path = CDatadogSDKTesting;
 			sourceTree = "<group>";
@@ -608,6 +613,7 @@
 				A7E233202BC819A70087D8F8 /* AutoLoad.h */,
 				A7E233042BC6F03C0087D8F8 /* SymbolAddress.h */,
 				A7E232E42BC6E80A0087D8F8 /* CodeCoverage.h */,
+				A7E233362BCD6A000087D8F8 /* Subprocess.h */,
 			);
 			path = include;
 			sourceTree = "<group>";
@@ -800,7 +806,6 @@
 		E143CF0027D7790200F4018A /* Utils */ = {
 			isa = PBXGroup;
 			children = (
-				A7FC27002BA8818300067E26 /* Subprocess.c */,
 				81894A4E29B0A28B00108C51 /* Retrying.swift */,
 				E1F69C2A28C72FAD0042156E /* Log.swift */,
 				E1665A7225D12D7500BA53CD /* Spawn.swift */,
@@ -814,6 +819,7 @@
 				E143CF0527D7790200F4018A /* DateFormatting.swift */,
 				E143CF0627D7790200F4018A /* EncodableValue.swift */,
 				E143CF0927D7790200F4018A /* Device.swift */,
+				A7E233342BCD39E30087D8F8 /* Swift+C.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -1079,9 +1085,10 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A7E232E52BC6E80A0087D8F8 /* CodeCoverage.h in Headers */,
 				A7E2332E2BC81B680087D8F8 /* AutoLoad.h in Headers */,
 				A7E233172BC7FA590087D8F8 /* CDatadogSDKTesting.h in Headers */,
+				A7E232E52BC6E80A0087D8F8 /* CodeCoverage.h in Headers */,
+				A7E233372BCD6A000087D8F8 /* Subprocess.h in Headers */,
 				A7E233052BC6F03C0087D8F8 /* SymbolAddress.h in Headers */,
 				A7E232FF2BC6EB470087D8F8 /* CoverageExporterJson.h in Headers */,
 				A7E232FB2BC6EB470087D8F8 /* CoverageExporter.h in Headers */,
@@ -1393,6 +1400,7 @@
 				A7E232F72BC6EB470087D8F8 /* CoverageSummaryInfo.cpp in Sources */,
 				A7E232FE2BC6EB470087D8F8 /* CoverageReport.cpp in Sources */,
 				A7E233032BC6F01B0087D8F8 /* SymbolAddress.c in Sources */,
+				A7E233392BCD6B240087D8F8 /* Subprocess.c in Sources */,
 				A7E232F52BC6EB470087D8F8 /* CoverageExporterJson.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1509,7 +1517,6 @@
 				A7FC26462BA1ECEF00067E26 /* FilesOrchestrator.swift in Sources */,
 				A7FC26482BA1ECEF00067E26 /* FileWriter.swift in Sources */,
 				A7FC263C2BA1ECCF00067E26 /* DataCompression.swift in Sources */,
-				A7FC27012BA8818300067E26 /* Subprocess.c in Sources */,
 				A7FC261A2BA1EC5A00067E26 /* DataUploadStatus.swift in Sources */,
 				A7FC263A2BA1ECCF00067E26 /* EncodableValue.swift in Sources */,
 				A7FC26352BA1ECCF00067E26 /* PerformancePreset.swift in Sources */,
@@ -1532,6 +1539,7 @@
 				A7FC263B2BA1ECCF00067E26 /* Feature.swift in Sources */,
 				A7FC26342BA1ECC500067E26 /* SpanSanitizer.swift in Sources */,
 				A7FC26382BA1ECCF00067E26 /* Spawn.swift in Sources */,
+				A7E233352BCD39E30087D8F8 /* Swift+C.swift in Sources */,
 				A7FC26412BA1ECCF00067E26 /* DateFormatting.swift in Sources */,
 				A7FC26392BA1ECCF00067E26 /* DateProvider.swift in Sources */,
 				A7FC26182BA1EC5A00067E26 /* HTTPClient.swift in Sources */,

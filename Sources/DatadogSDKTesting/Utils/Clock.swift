@@ -71,7 +71,7 @@ final class NTPClock: Clock {
             
             Kronos.Clock.sync(
                 from: Self.datadogNTPServers.randomElement()!,
-                samples: 1, first: nil
+                samples: 2, first: nil
             ) { date, _ in
                 if date != nil {
                     self._state = .synced({ Kronos.Clock.now! })

@@ -70,35 +70,35 @@ struct GitUploader {
         guard !GitUploader.workspacePath.isEmpty else {
             return false
         }
-        let status = Spawn.commandWithResult(#"git -C "\#(GitUploader.workspacePath)" status --short -uno"#).trimmingCharacters(in: .whitespacesAndNewlines)
+        let status = try! Spawn.commandWithResult(#"git -C "\#(GitUploader.workspacePath)" status --short -uno"#).trimmingCharacters(in: .whitespacesAndNewlines)
         Log.debug("Git status: \(status)")
         return status.isEmpty
     }
 
     private func handleShallowClone(repository: String) {
         // Check if is a shallow repository
-        let isShallow = Spawn.commandWithResult(#"git -C "\#(GitUploader.workspacePath)" rev-parse --is-shallow-repository"#).trimmingCharacters(in: .whitespacesAndNewlines)
+        let isShallow = try! Spawn.commandWithResult(#"git -C "\#(GitUploader.workspacePath)" rev-parse --is-shallow-repository"#).trimmingCharacters(in: .whitespacesAndNewlines)
         Log.debug("isShallow: \(isShallow)")
         if isShallow != "true" {
             return
         }
 
         // Count if number of returned lines is greater than 1
-        let lineLength = Spawn.commandWithResult(#"git -C "\#(GitUploader.workspacePath)" log --format=oneline -n 2"#).trimmingCharacters(in: .whitespacesAndNewlines)
+        let lineLength = try! Spawn.commandWithResult(#"git -C "\#(GitUploader.workspacePath)" log --format=oneline -n 2"#).trimmingCharacters(in: .whitespacesAndNewlines)
         Log.debug("lineLength: \(lineLength)")
         guard !lineLength.contains("\n") else {
             return
         }
         // Fetch remaining tree info
-        let configResult = Spawn.commandWithResult(#"git -C "\#(GitUploader.workspacePath)" config remote.origin.partialclonefilter "blob:none""#)
+        let configResult = try! Spawn.commandWithResult(#"git -C "\#(GitUploader.workspacePath)" config remote.origin.partialclonefilter "blob:none""#)
         Log.debug("configResult: \(configResult)")
 
-        let unshallowResult = Spawn.commandWithResult(#"git -C "\#(GitUploader.workspacePath)" fetch --shallow-since="1 month ago" --update-shallow --refetch"#)
+        let unshallowResult = try! Spawn.commandWithResult(#"git -C "\#(GitUploader.workspacePath)" fetch --shallow-since="1 month ago" --update-shallow --refetch"#)
         Log.debug("unshallowResult: \(unshallowResult)")
     }
 
     private func getLatestCommits() -> [String] {
-        let latestCommits = Spawn.commandWithResult(#"git -C "\#(GitUploader.workspacePath)" log --format=%H -n 1000 --since="1 month ago""#).trimmingCharacters(in: .whitespacesAndNewlines)
+        let latestCommits = try! Spawn.commandWithResult(#"git -C "\#(GitUploader.workspacePath)" log --format=%H -n 1000 --since="1 month ago""#).trimmingCharacters(in: .whitespacesAndNewlines)
         let commitsArray = latestCommits.components(separatedBy: .newlines)
         return commitsArray
     }
@@ -114,11 +114,11 @@ struct GitUploader {
         let revlistCommand = #"git -C "\#(GitUploader.workspacePath)" rev-list --objects --no-object-names --filter=blob:none HEAD --since="1 month ago" \#(exclusionList)"#
         Log.debug("rev-list command: \(revlistCommand)")
         Log.debug("rev-list command without exclusion: \(#"git -C "\#(GitUploader.workspacePath)" rev-list --objects --no-object-names --filter=blob:none HEAD --since="1 month ago" \#(exclusionList)"#)")
-        let missingCommits = Spawn.commandWithResult(revlistCommand).trimmingCharacters(in: .whitespacesAndNewlines)
+        let missingCommits = try! Spawn.commandWithResult(revlistCommand).trimmingCharacters(in: .whitespacesAndNewlines)
         Log.debug("rev-list result: \(missingCommits)")
         
         let revlistCommandWithoutExclusion = #"git -C "\#(GitUploader.workspacePath)" rev-list --objects --no-object-names --filter=blob:none HEAD --since="1 month ago""#
-        let missingCommitsWithoutExclusion = Spawn.commandWithResult(revlistCommandWithoutExclusion).trimmingCharacters(in: .whitespacesAndNewlines)
+        let missingCommitsWithoutExclusion = try! Spawn.commandWithResult(revlistCommandWithoutExclusion).trimmingCharacters(in: .whitespacesAndNewlines)
         Log.debug("rev-list result without exclusion: \(missingCommitsWithoutExclusion)")
 
         guard !missingCommits.isEmpty else { return [] }
@@ -130,12 +130,12 @@ struct GitUploader {
         var uploadPackfileDirectory = packFilesdirectory
         Log.measure(name: "packObjects") {
             let commitList = commits.joined(separator: "\n")
-            let aux = Spawn.commandWithResult(#"git -C "\#(GitUploader.workspacePath)" pack-objects --quiet --compression=9 --max-pack-size=3m "\#(packFilesdirectory.url.path + "/" + UUID().uuidString)" <<< "\#(commitList)""#)
+            let aux = try! Spawn.commandWithResult(#"git -C "\#(GitUploader.workspacePath)" pack-objects --quiet --compression=9 --max-pack-size=3m "\#(packFilesdirectory.url.path + "/" + UUID().uuidString)" <<< "\#(commitList)""#)
             if aux.hasPrefix("fatal:") {
                 let uploadPackfilePath = GitUploader.workspacePath + "/" + UUID().uuidString
                 try? FileManager.default.createDirectory(atPath: uploadPackfilePath, withIntermediateDirectories: true)
                 uploadPackfileDirectory = Directory(url: URL(fileURLWithPath: uploadPackfilePath))
-                Spawn.command(#"git -C "\#(GitUploader.workspacePath)" pack-objects --quiet --compression=9 --max-pack-size=3m "\#(uploadPackfileDirectory.url.path + "/" + UUID().uuidString)" <<< "\#(commitList)""#)
+                try! Spawn.command(#"git -C "\#(GitUploader.workspacePath)" pack-objects --quiet --compression=9 --max-pack-size=3m "\#(uploadPackfileDirectory.url.path + "/" + UUID().uuidString)" <<< "\#(commitList)""#)
             }
         }
         Log.measure(name: "uploadExistingPackfiles") {

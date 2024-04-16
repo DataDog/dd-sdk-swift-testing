@@ -8,4 +8,5 @@
 
 #include <CDatadogSDKTesting/AutoLoad.h>
 #include <CDatadogSDKTesting/CodeCoverage.h>
+#include <CDatadogSDKTesting/Subprocess.h>
 #include <CDatadogSDKTesting/SymbolAddress.h>

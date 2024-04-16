@@ -6,6 +6,10 @@
       "options" : {
         "environmentVariableEntries" : [
           {
+            "key" : "DD_DISABLE_CRASH_HANDLER",
+            "value" : "1"
+          },
+          {
             "key" : "SRCROOT",
             "value" : "$(SRCROOT)"
           },

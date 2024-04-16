@@ -151,7 +151,7 @@ enum DDSymbolicator {
         let dSYMFileURL = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent(binaryURL.lastPathComponent)
 
-        Spawn.command("/usr/bin/dsymutil --flat \"\(binaryPath)\" --out \"\(dSYMFileURL.path)\"")
+        try? Spawn.command("/usr/bin/dsymutil --flat \"\(binaryPath)\" --out \"\(dSYMFileURL.path)\"")
         if FileManager.default.fileExists(atPath: dSYMFileURL.path) {
             dSYMFiles.append(dSYMFileURL)
             return dSYMFileURL.path
@@ -246,7 +246,7 @@ enum DDSymbolicator {
     }
 
     private static func symbolWithAtos(objectPath: String, libraryAdress: String, callAddress: String) -> String {
-        var symbol = Spawn.commandWithResult("/usr/bin/atos --fullPath -o \"\(objectPath)\" -l \(libraryAdress) \(callAddress)")
+        var symbol = try! Spawn.commandWithResult("/usr/bin/atos --fullPath -o \"\(objectPath)\" -l \(libraryAdress) \(callAddress)")
             .trimmingCharacters(in: .whitespacesAndNewlines)
         if symbol.hasPrefix("atos cannot load") {
             return ""
@@ -267,7 +267,7 @@ enum DDSymbolicator {
         let imagePath = dSYMFiles.first(where: { $0.lastPathComponent == library })?.path ?? imageAddress.path
 
         let librarySlide = String(format: "%016llx", imageAddress.slide)
-        var symbol = Spawn.commandWithResult("/usr/bin/atos --fullPath -o \"\(imagePath)\" -s \(librarySlide) \(callAddress)")
+        var symbol = try! Spawn.commandWithResult("/usr/bin/atos --fullPath -o \"\(imagePath)\" -s \(librarySlide) \(callAddress)")
             .trimmingCharacters(in: .whitespacesAndNewlines)
 
         if symbol.isEmpty || symbol.hasPrefix("atos cannot load") || symbol == callAddress {
@@ -290,7 +290,7 @@ enum DDSymbolicator {
         let symbolsOutputURL = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent("symbols_output")
         FileManager.default.createFile(atPath: symbolsOutputURL.path, contents: nil, attributes: nil)
-        Spawn.commandToFile("/usr/bin/symbols -fullSourcePath -lazy \"\(imagePath)\"", outputPath: symbolsOutputURL.path)
+        try! Spawn.commandToFile("/usr/bin/symbols -fullSourcePath -lazy \"\(imagePath)\"", outputPath: symbolsOutputURL.path)
         return symbolsOutputURL
     }
 

@@ -13,7 +13,7 @@ struct DDCoverageConversor {
         let input = profrawFile.path
         let outputPath = outputURL.path
         let commandToRun = #"xcrun llvm-profdata merge -sparse "\#(input)" -o "\#(outputPath)""#
-        Spawn.command(commandToRun)
+        try! Spawn.command(commandToRun)
         return outputURL
     }
 

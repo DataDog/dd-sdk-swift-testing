@@ -95,7 +95,7 @@ class DDCoverageHelper {
         let input = profrawFile.path
         let outputPath = outputURL.path
         let commandToRun = #"xcrun llvm-profdata merge -sparse "\#(input)" -o "\#(outputPath)""#
-        let llvmProfDataOutput = Spawn.commandWithResult(commandToRun)
+        let llvmProfDataOutput = try! Spawn.commandWithResult(commandToRun)
         Log.debug("llvm-profdata output: \(llvmProfDataOutput)")
         return outputURL
     }
@@ -106,7 +106,7 @@ class DDCoverageHelper {
         let covJsonURL = profDataURL.deletingLastPathComponent().appendingPathComponent("coverageFile").appendingPathExtension("json")
         let binariesPath = binaryImagePaths.map { #""\#($0)""# }.joined(separator: " -object ")
         let commandToRun = #"xcrun llvm-cov export -instr-profile "\#(profDataURL.path)" \#(binariesPath) > "\#(covJsonURL.path)""#
-        let llvmCovOutput = Spawn.commandWithResult(commandToRun)
+        let llvmCovOutput = try! Spawn.commandWithResult(commandToRun)
         Log.debug("llvm-cov output: \(llvmCovOutput)")
         return LLVMTotalsCoverageFormat(fromURL: covJsonURL)
     }

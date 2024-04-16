@@ -43,7 +43,7 @@ public class FrameworkLoadHandler: NSObject {
                 testObserver = DDTestObserver()
                 testObserver?.startObserving()
                 DispatchQueue.global().async {
-                    _ = DDTestMonitor.clock
+                    try! DDTestMonitor.clock.sync()
                 }
             } else if config.isBinaryUnderUITesting {
                 NSLog("[DatadogSDKTesting] Application launched from UITest while being instrumented")

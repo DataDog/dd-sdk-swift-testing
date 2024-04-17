@@ -21,17 +21,10 @@ struct DDCoverageConversor {
                                    spanId: UInt64, workspacePath: String?, binaryImagePaths: [String]) -> DDCoverageFormat? {
 #if swift(>=5.3)
         // LLVM Support is dependant on binary target, swift 5.3 is needed
-        let images = binaryImagePaths.map {
-            $0.utf8CString.withUnsafeBufferPointer {
-                let cImage = UnsafeMutablePointer<CChar>.allocate(capacity: $0.count)
-                cImage.initialize(from: $0.baseAddress!, count: $0.count)
-                return UnsafePointer(cImage)
-            }
-        }
 
-        let json = LLVMCoverageInfoForProfile(profdataFile.path, images, UInt32(images.count))
-        
-        images.forEach { $0.deallocate() }
+        let json = binaryImagePaths.withCStringsArray { images in
+            LLVMCoverageInfoForProfile(profdataFile.path, images, UInt32(images.count))
+        }
         
         let jsonStr = String(cString: json)
         json.deallocate()

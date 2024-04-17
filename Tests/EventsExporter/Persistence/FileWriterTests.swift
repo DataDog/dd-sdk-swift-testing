@@ -144,7 +144,7 @@ class FileWriterTests: XCTestCase {
     }
     
     private var isGithub: Bool {
-        ProcessInfo.processInfo.environment["GITHUB_ACTION"] != nil ||
-        ProcessInfo.processInfo.environment["GITHUB_ACTIONS"] != nil
+        ProcessInfo.processInfo.environment["GITHUB_ACTION"] ?? "" != "" ||
+        ProcessInfo.processInfo.environment["GITHUB_ACTIONS"] ?? "" != ""
     }
 }

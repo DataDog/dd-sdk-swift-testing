@@ -6,9 +6,8 @@
 
 import Foundation
 
-class SanitizerHelper: NSObject {
+enum SanitizerHelper {
     static let santizerQueue = DispatchQueue(label: "civisibility.sanitizerQueue", attributes: .concurrent)
-    override init() {}
 
     private static var sanitizerInfo = ""
 

@@ -62,7 +62,7 @@ func startApp() {
 
 // Simple network request that we will validate is generated in the test output
 func createNetworkRequest() {
-    let url = URL(string: "http://httpbin.org/get")!
+    let url = URL(string: "https://httpbin.org/get")!
     let request = URLRequest(url: url)
     let semaphore = DispatchSemaphore(value: 0)
 

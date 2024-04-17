@@ -35,7 +35,7 @@ class DDNetworkInstrumentationTests: XCTestCase {
     func testItInterceptsDataTaskWithURL() throws {
         var testSpan: RecordEventsReadableSpan
 
-        let url = URL(string: "http://httpbin.org/get")!
+        let url = URL(string: "https://httpbin.org/get")!
         let expec = expectation(description: "GET \(url)")
         var task: URLSessionTask
         task = URLSession.shared.dataTask(with: url) { _, _, _ in
@@ -50,9 +50,9 @@ class DDNetworkInstrumentationTests: XCTestCase {
         let spanData = testSpan.toSpanData()
         XCTAssertEqual(spanData.name, "HTTP GET")
         XCTAssertNotNil(spanData.attributes["http.status_code"]?.description)
-        XCTAssertEqual(spanData.attributes["http.scheme"]?.description, "http")
+        XCTAssertEqual(spanData.attributes["http.scheme"]?.description, "https")
         XCTAssertEqual(spanData.attributes["net.peer.name"]?.description, "httpbin.org")
-        XCTAssertEqual(spanData.attributes["http.url"]?.description, "http://httpbin.org/get")
+        XCTAssertEqual(spanData.attributes["http.url"]?.description, "https://httpbin.org/get")
         XCTAssertEqual(spanData.attributes["http.method"]?.description, "GET")
         XCTAssertEqual(spanData.attributes["http.target"]?.description, "/get")
         XCTAssertFalse(spanData.attributes["http.request.headers"]?.description.isEmpty ?? true)
@@ -66,7 +66,7 @@ class DDNetworkInstrumentationTests: XCTestCase {
         DDInstrumentationControl.startPayloadCapture()
         DDInstrumentationControl.stopInjectingHeaders()
 
-        let url = URL(string: "http://httpbin.org/get")!
+        let url = URL(string: "https://httpbin.org/get")!
         let urlRequest = URLRequest(url: url)
         let expec = expectation(description: "GET \(url)")
         var task: URLSessionTask
@@ -82,9 +82,9 @@ class DDNetworkInstrumentationTests: XCTestCase {
         let spanData = testSpan.toSpanData()
         XCTAssertEqual(spanData.name, "HTTP GET")
         XCTAssertEqual(spanData.attributes["http.status_code"]?.description, "200")
-        XCTAssertEqual(spanData.attributes["http.scheme"]?.description, "http")
+        XCTAssertEqual(spanData.attributes["http.scheme"]?.description, "https")
         XCTAssertEqual(spanData.attributes["net.peer.name"]?.description, "httpbin.org")
-        XCTAssertEqual(spanData.attributes["http.url"]?.description, "http://httpbin.org/get")
+        XCTAssertEqual(spanData.attributes["http.url"]?.description, "https://httpbin.org/get")
         XCTAssertEqual(spanData.attributes["http.method"]?.description, "GET")
         XCTAssertEqual(spanData.attributes["http.target"]?.description, "/get")
         XCTAssertTrue(spanData.attributes["http.request.headers"]?.description.isEmpty ?? true)
@@ -98,7 +98,7 @@ class DDNetworkInstrumentationTests: XCTestCase {
     func testItReturnsErrorStatusForHTTPErrorStatus() throws {
         var testSpan: RecordEventsReadableSpan
 
-        let url = URL(string: "http://httpbin.org/status/404")!
+        let url = URL(string: "https://httpbin.org/status/404")!
         let expec = expectation(description: "GET \(url)")
         var task: URLSessionTask
         task = URLSession.shared.dataTask(with: url) { _, _, _ in
@@ -136,7 +136,7 @@ class DDNetworkInstrumentationTests: XCTestCase {
     }
 
     func testItInjectTracingHeaders() throws {
-        let url = URL(string: "http://httpbin.org/headers")!
+        let url = URL(string: "https://httpbin.org/headers")!
         let expec = expectation(description: "Headers \(url)")
         var task: URLSessionTask
 

@@ -31,6 +31,9 @@
 		A71E647D2BAA0AA100F2ACA5 /* CIEnvironmentReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64672BAA0AA100F2ACA5 /* CIEnvironmentReader.swift */; };
 		A71E647E2BAA0AA100F2ACA5 /* EnvironmentReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64682BAA0AA100F2ACA5 /* EnvironmentReader.swift */; };
 		A71E64802BAB442300F2ACA5 /* ConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E647F2BAB442300F2ACA5 /* ConfigTests.swift */; };
+		A7B39C6C2BCFC799007F98B2 /* CDatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7E232DC2BC6E68B0087D8F8 /* CDatadogSDKTesting.framework */; };
+		A7B39C702BCFCD77007F98B2 /* SubprocessWait.c in Sources */ = {isa = PBXBuildFile; fileRef = A7B39C6F2BCFCD77007F98B2 /* SubprocessWait.c */; };
+		A7B39C722BCFD234007F98B2 /* SubprocessWait.h in Headers */ = {isa = PBXBuildFile; fileRef = A7B39C712BCFD234007F98B2 /* SubprocessWait.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A7E232E52BC6E80A0087D8F8 /* CodeCoverage.h in Headers */ = {isa = PBXBuildFile; fileRef = A7E232E42BC6E80A0087D8F8 /* CodeCoverage.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A7E232F52BC6EB470087D8F8 /* CoverageExporterJson.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7E232EA2BC6EB460087D8F8 /* CoverageExporterJson.cpp */; };
 		A7E232F62BC6EB470087D8F8 /* CoverageReport.h in Headers */ = {isa = PBXBuildFile; fileRef = A7E232EB2BC6EB460087D8F8 /* CoverageReport.h */; };
@@ -52,8 +55,8 @@
 		A7E233312BC82CD10087D8F8 /* Kronos in Frameworks */ = {isa = PBXBuildFile; productRef = A7E233302BC82CD10087D8F8 /* Kronos */; };
 		A7E233332BC93D100087D8F8 /* Synced.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E233322BC93D100087D8F8 /* Synced.swift */; };
 		A7E233352BCD39E30087D8F8 /* Swift+C.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E233342BCD39E30087D8F8 /* Swift+C.swift */; };
-		A7E233372BCD6A000087D8F8 /* Subprocess.h in Headers */ = {isa = PBXBuildFile; fileRef = A7E233362BCD6A000087D8F8 /* Subprocess.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7E233392BCD6B240087D8F8 /* Subprocess.c in Sources */ = {isa = PBXBuildFile; fileRef = A7E233382BCD6B240087D8F8 /* Subprocess.c */; };
+		A7E233372BCD6A000087D8F8 /* SubprocessSpawn.h in Headers */ = {isa = PBXBuildFile; fileRef = A7E233362BCD6A000087D8F8 /* SubprocessSpawn.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7E233392BCD6B240087D8F8 /* SubprocessSpawn.c in Sources */ = {isa = PBXBuildFile; fileRef = A7E233382BCD6B240087D8F8 /* SubprocessSpawn.c */; };
 		A7FC256E2BA1E83500067E26 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */; };
 		A7FC25882BA1E87400067E26 /* EventsExporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25802BA1E87400067E26 /* EventsExporter.framework */; };
 		A7FC25B42BA1EADF00067E26 /* DDTestObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA07025231F4700ED8AEF /* DDTestObserver.swift */; };
@@ -205,6 +208,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		A7B39C6D2BCFC7CE007F98B2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E1ABA04125231E2500ED8AEF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A7E232DB2BC6E68B0087D8F8;
+			remoteInfo = CDatadogSDKTesting;
+		};
 		A7E233092BC6F46F0087D8F8 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = E1ABA04125231E2500ED8AEF /* Project object */;
@@ -301,6 +311,8 @@
 		A71E64672BAA0AA100F2ACA5 /* CIEnvironmentReader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CIEnvironmentReader.swift; sourceTree = "<group>"; };
 		A71E64682BAA0AA100F2ACA5 /* EnvironmentReader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EnvironmentReader.swift; sourceTree = "<group>"; };
 		A71E647F2BAB442300F2ACA5 /* ConfigTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigTests.swift; sourceTree = "<group>"; };
+		A7B39C6F2BCFCD77007F98B2 /* SubprocessWait.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = SubprocessWait.c; sourceTree = "<group>"; };
+		A7B39C712BCFD234007F98B2 /* SubprocessWait.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SubprocessWait.h; sourceTree = "<group>"; };
 		A7C292122B9B2B39009C2979 /* fixtures */ = {isa = PBXFileReference; lastKnownFileType = folder; path = fixtures; sourceTree = "<group>"; };
 		A7C292162B9B2DE0009C2979 /* DatadogSDKTesting.podspec */ = {isa = PBXFileReference; lastKnownFileType = text; path = DatadogSDKTesting.podspec; sourceTree = "<group>"; };
 		A7E232DC2BC6E68B0087D8F8 /* CDatadogSDKTesting.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CDatadogSDKTesting.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -321,8 +333,8 @@
 		A7E233202BC819A70087D8F8 /* AutoLoad.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AutoLoad.h; sourceTree = "<group>"; };
 		A7E233322BC93D100087D8F8 /* Synced.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Synced.swift; sourceTree = "<group>"; };
 		A7E233342BCD39E30087D8F8 /* Swift+C.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Swift+C.swift"; sourceTree = "<group>"; };
-		A7E233362BCD6A000087D8F8 /* Subprocess.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Subprocess.h; sourceTree = "<group>"; };
-		A7E233382BCD6B240087D8F8 /* Subprocess.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Subprocess.c; sourceTree = "<group>"; };
+		A7E233362BCD6A000087D8F8 /* SubprocessSpawn.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SubprocessSpawn.h; sourceTree = "<group>"; };
+		A7E233382BCD6B240087D8F8 /* SubprocessSpawn.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = SubprocessSpawn.c; sourceTree = "<group>"; };
 		A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = DatadogSDKTesting.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7FC256D2BA1E83500067E26 /* DatadogSDKTestingTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DatadogSDKTestingTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7FC25802BA1E87400067E26 /* EventsExporter.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = EventsExporter.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -516,8 +528,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A7FC26ED2BA866D000067E26 /* NIOHTTP1 in Frameworks */,
+				A7B39C6C2BCFC799007F98B2 /* CDatadogSDKTesting.framework in Frameworks */,
 				A7FC25882BA1E87400067E26 /* EventsExporter.framework in Frameworks */,
+				A7FC26ED2BA866D000067E26 /* NIOHTTP1 in Frameworks */,
 				A7FC26EB2BA866BB00067E26 /* NIO in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -586,6 +599,13 @@
 			path = CI;
 			sourceTree = "<group>";
 		};
+		A7B39C6B2BCFC799007F98B2 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		A7E232DD2BC6E68B0087D8F8 /* CDatadogSDKTesting */ = {
 			isa = PBXGroup;
 			children = (
@@ -602,7 +622,8 @@
 				A7E232F22BC6EB470087D8F8 /* Error.cpp */,
 				A7E233002BC6EF220087D8F8 /* AutoLoad.c */,
 				A7E233022BC6F01B0087D8F8 /* SymbolAddress.c */,
-				A7E233382BCD6B240087D8F8 /* Subprocess.c */,
+				A7E233382BCD6B240087D8F8 /* SubprocessSpawn.c */,
+				A7B39C6F2BCFCD77007F98B2 /* SubprocessWait.c */,
 			);
 			path = CDatadogSDKTesting;
 			sourceTree = "<group>";
@@ -613,7 +634,8 @@
 				A7E233202BC819A70087D8F8 /* AutoLoad.h */,
 				A7E233042BC6F03C0087D8F8 /* SymbolAddress.h */,
 				A7E232E42BC6E80A0087D8F8 /* CodeCoverage.h */,
-				A7E233362BCD6A000087D8F8 /* Subprocess.h */,
+				A7E233362BCD6A000087D8F8 /* SubprocessSpawn.h */,
+				A7B39C712BCFD234007F98B2 /* SubprocessWait.h */,
 			);
 			path = include;
 			sourceTree = "<group>";
@@ -953,6 +975,7 @@
 				E1ABA05725231E2500ED8AEF /* Tests */,
 				E1224A42264ABCCE00305968 /* IntegrationTests */,
 				E1ABA04B25231E2500ED8AEF /* Products */,
+				A7B39C6B2BCFC799007F98B2 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -1088,7 +1111,8 @@
 				A7E2332E2BC81B680087D8F8 /* AutoLoad.h in Headers */,
 				A7E233172BC7FA590087D8F8 /* CDatadogSDKTesting.h in Headers */,
 				A7E232E52BC6E80A0087D8F8 /* CodeCoverage.h in Headers */,
-				A7E233372BCD6A000087D8F8 /* Subprocess.h in Headers */,
+				A7E233372BCD6A000087D8F8 /* SubprocessSpawn.h in Headers */,
+				A7B39C722BCFD234007F98B2 /* SubprocessWait.h in Headers */,
 				A7E233052BC6F03C0087D8F8 /* SymbolAddress.h in Headers */,
 				A7E232FF2BC6EB470087D8F8 /* CoverageExporterJson.h in Headers */,
 				A7E232FB2BC6EB470087D8F8 /* CoverageExporter.h in Headers */,
@@ -1221,9 +1245,10 @@
 			buildRules = (
 			);
 			dependencies = (
+				A7B39C6E2BCFC7CE007F98B2 /* PBXTargetDependency */,
+				A7FC258A2BA1E87400067E26 /* PBXTargetDependency */,
 				A7FC26E82BA8653D00067E26 /* PBXTargetDependency */,
 				A7FC26E62BA864FB00067E26 /* PBXTargetDependency */,
-				A7FC258A2BA1E87400067E26 /* PBXTargetDependency */,
 			);
 			name = EventsExporterTests;
 			packageProductDependencies = (
@@ -1400,7 +1425,8 @@
 				A7E232F72BC6EB470087D8F8 /* CoverageSummaryInfo.cpp in Sources */,
 				A7E232FE2BC6EB470087D8F8 /* CoverageReport.cpp in Sources */,
 				A7E233032BC6F01B0087D8F8 /* SymbolAddress.c in Sources */,
-				A7E233392BCD6B240087D8F8 /* Subprocess.c in Sources */,
+				A7E233392BCD6B240087D8F8 /* SubprocessSpawn.c in Sources */,
+				A7B39C702BCFCD77007F98B2 /* SubprocessWait.c in Sources */,
 				A7E232F52BC6EB470087D8F8 /* CoverageExporterJson.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1609,6 +1635,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		A7B39C6E2BCFC7CE007F98B2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A7E232DB2BC6E68B0087D8F8 /* CDatadogSDKTesting */;
+			targetProxy = A7B39C6D2BCFC7CE007F98B2 /* PBXContainerItemProxy */;
+		};
 		A7E2330A2BC6F46F0087D8F8 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = A7E232DB2BC6E68B0087D8F8 /* CDatadogSDKTesting */;
@@ -1711,7 +1742,6 @@
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,3";
 			};
 			name = Debug;
@@ -1752,7 +1782,6 @@
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,3";
 			};
 			name = Release;
@@ -1854,7 +1883,6 @@
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,3";
 			};
 			name = Debug;
@@ -1874,7 +1902,6 @@
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,3";
 			};
 			name = Release;
@@ -1975,7 +2002,6 @@
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,3";
 			};
 			name = Debug;
@@ -2000,7 +2026,6 @@
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,3";
 			};
 			name = Release;
@@ -2047,7 +2072,6 @@
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,3";
 			};
 			name = Debug;
@@ -2093,7 +2117,6 @@
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,3";
 			};
 			name = Release;
@@ -2119,7 +2142,6 @@
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,3";
 				TEST_TARGET_NAME = IntegrationTestsApp;
 			};
@@ -2145,7 +2167,6 @@
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,3";
 				TEST_TARGET_NAME = IntegrationTestsApp;
 			};

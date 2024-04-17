@@ -4,19 +4,15 @@
  * Copyright 2020-Present Datadog, Inc.
  */
 
-#include "include/Subprocess.h"
-#include <stdlib.h>
-#include <sys/wait.h>
-#include <errno.h>
-#include <string.h>
+#include "include/SubprocessSpawn.h"
 
 extern int posix_spawn_file_actions_init(posix_spawn_file_actions_t *);
 extern int posix_spawn_file_actions_destroy(posix_spawn_file_actions_t *);
 extern int posix_spawn_file_actions_addclose(posix_spawn_file_actions_t *, int);
 extern int posix_spawn_file_actions_adddup2(posix_spawn_file_actions_t *, int, int);
-extern int posix_spawn_file_actions_addopen(posix_spawn_file_actions_t * __restrict, int, const char * __restrict, int, mode_t);
+extern int posix_spawn_file_actions_addopen(posix_spawn_file_actions_t * __restrict, int, const char * __restrict, int, dd_mode_t);
 
-extern int posix_spawn(pid_t * __restrict, const char * __restrict,
+extern int posix_spawn(dd_pid_t * __restrict, const char * __restrict,
                        const posix_spawn_file_actions_t *,
                        const posix_spawnattr_t * __restrict,
                        char *const __argv[__restrict],
@@ -34,37 +30,21 @@ int dd_posix_spawn_file_actions_addclose(posix_spawn_file_actions_t *actions, in
     return posix_spawn_file_actions_addclose(actions, fd);
 }
 
-int dd_posix_spawn_file_actions_adddup2(posix_spawn_file_actions_t *actions, int fromfd, int tofd) {
-    return posix_spawn_file_actions_adddup2(actions, fromfd, tofd);
+int dd_posix_spawn_file_actions_adddup2(posix_spawn_file_actions_t *actions, int fd, int newfd) {
+    return posix_spawn_file_actions_adddup2(actions, fd, newfd);
 }
 
 int dd_posix_spawn_file_actions_addopen(posix_spawn_file_actions_t * __restrict actions, int fd,
-                                        const char * __restrict path, int flags, mode_t mode)
+                                        const char * __restrict file, int oflag, dd_mode_t mode)
 {
-    return posix_spawn_file_actions_addopen(actions, fd, path, flags, mode);
+    return posix_spawn_file_actions_addopen(actions, fd, file, oflag, mode);
 }
 
-int dd_posix_spawn(pid_t * __restrict pid, const char * __restrict command,
+int dd_posix_spawn(dd_pid_t * __restrict pid, const char * __restrict command,
                    const posix_spawn_file_actions_t *actions,
-                   const posix_spawnattr_t * __restrict attrs,
+                   const posix_spawnattr_t * __restrict attrp,
                    char *const argv[__restrict],
                    char *const envp[__restrict])
 {
-    return posix_spawn(pid, command, actions, attrs, argv, envp);
-}
-
-run_result_t dd_wait_for_process(pid_t pid) {
-    run_result_t result;
-    
-    while (waitid(P_PID, (id_t)pid, &result.status, WEXITED) != 0) {
-        int err = errno;
-        if (err != EINTR) {
-            result.is_error = true;
-            result.error = err;
-            return result;
-        }
-    }
-    
-    result.is_error = false;
-    return result;
+    return posix_spawn(pid, command, actions, attrp, argv, envp);
 }

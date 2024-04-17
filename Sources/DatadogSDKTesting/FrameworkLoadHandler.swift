@@ -7,10 +7,8 @@
 import Foundation
 import CDatadogSDKTesting
 
-public class FrameworkLoadHandler: NSObject {
+enum FrameworkLoadHandler {
     static var testObserver: DDTestObserver?
-
-    override private init() {}
     
     public static func handleLoad() {
         libraryLoaded()

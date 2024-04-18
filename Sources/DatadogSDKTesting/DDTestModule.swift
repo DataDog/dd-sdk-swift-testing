@@ -45,6 +45,8 @@ public class DDTestModule: NSObject, Encodable {
         self.duration = 0
         self.status = .pass
         self.bundleName = bundleName
+        
+        try! DDTestMonitor.clock.sync()
 
         let beforeLoadingTime = DDTestMonitor.clock.now
         if DDTestMonitor.instance == nil {

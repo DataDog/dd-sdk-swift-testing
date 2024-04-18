@@ -5,6 +5,7 @@
  */
 
 import Foundation
+import CDatadogSDKTesting
 
 struct DDCoverageConversor {
     static func generateProfData(profrawFile: URL) -> URL {
@@ -12,19 +13,30 @@ struct DDCoverageConversor {
         let input = profrawFile.path
         let outputPath = outputURL.path
         let commandToRun = #"xcrun llvm-profdata merge -sparse "\#(input)" -o "\#(outputPath)""#
-        Spawn.command(commandToRun)
+        try! Spawn.command(commandToRun)
         return outputURL
     }
 
-    static func getDatadogCoverage(profdataFile: URL, testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64, workspacePath: String?, binaryImagePaths: [String]) -> DDCoverageFormat? {
+    static func getDatadogCoverage(profdataFile: URL, testSessionId: UInt64, testSuiteId: UInt64,
+                                   spanId: UInt64, workspacePath: String?, binaryImagePaths: [String]) -> DDCoverageFormat? {
 #if swift(>=5.3)
         // LLVM Support is dependant on binary target, swift 5.3 is needed
-        let llvmJSON = LLVMCodeCoverageBridge.coverageInfo(forProfile: profdataFile.path, images: binaryImagePaths)
-        guard let llvmCov = LLVMSimpleCoverageFormat(llvmJSON) else {
+
+        let json = binaryImagePaths.withCStringsArray { images in
+            LLVMCoverageInfoForProfile(profdataFile.path, images, UInt32(images.count))
+        }
+        
+        let jsonStr = String(cString: json)
+        json.deallocate()
+        
+        guard let llvmCov = LLVMSimpleCoverageFormat(jsonStr) else {
             return nil
         }
+        
         var datadogCoverage = DDCoverageFormat()
-        datadogCoverage.addCoverage(llvmFormat: llvmCov, testSessionId: testSessionId, testSuiteId: testSuiteId, spanId: spanId, workspacePath: workspacePath)
+        datadogCoverage.addCoverage(llvmFormat: llvmCov, testSessionId: testSessionId,
+                                    testSuiteId: testSuiteId, spanId: spanId,
+                                    workspacePath: workspacePath)
 
         if datadogCoverage.coverages.count > 0 {
             return datadogCoverage

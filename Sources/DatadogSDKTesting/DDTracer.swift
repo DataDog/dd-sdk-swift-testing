@@ -123,6 +123,9 @@ internal class DDTracer {
             spanProcessor = SimpleSpanProcessor(spanExporter: exporterToUse)
         }
 
+        // sync clock
+        try! DDTestMonitor.clock.sync()
+        
         tracerProviderSdk = TracerProviderBuilder().with(sampler: Samplers.alwaysOn)
             .with(spanLimits: SpanLimits().settingAttributeCountLimit(attributeCountLimit))
             .with(clock: DDTestMonitor.clock)

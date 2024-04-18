@@ -5,18 +5,16 @@
  */
 
 import Foundation
+import CDatadogSDKTesting
 
-public class FrameworkLoadHandler: NSObject {
+enum FrameworkLoadHandler {
     static var testObserver: DDTestObserver?
-
-    override private init() {}
-
-    @objc
+    
     public static func handleLoad() {
         libraryLoaded()
     }
 
-    static func libraryLoaded() {
+    fileprivate static func libraryLoaded() {
         let config = DDTestMonitor.config
         /// Only initialize test observer if user configured so and is running tests
         guard let enabled = config.isEnabled else {
@@ -43,7 +41,7 @@ public class FrameworkLoadHandler: NSObject {
                 testObserver = DDTestObserver()
                 testObserver?.startObserving()
                 DispatchQueue.global().async {
-                    _ = DDTestMonitor.clock
+                    try! DDTestMonitor.clock.sync()
                 }
             } else if config.isBinaryUnderUITesting {
                 NSLog("[DatadogSDKTesting] Application launched from UITest while being instrumented")
@@ -55,4 +53,12 @@ public class FrameworkLoadHandler: NSObject {
             NSLog("[DatadogSDKTesting] Framework loaded but not in test mode")
         }
     }
+    
+    // this method should not be called. It's needed for linking
+    static func __noop() { AutoLoadHandler() }
+}
+
+@_cdecl("__AutoLoadHook")
+internal func __AutoLoadHook() {
+    FrameworkLoadHandler.libraryLoaded()
 }

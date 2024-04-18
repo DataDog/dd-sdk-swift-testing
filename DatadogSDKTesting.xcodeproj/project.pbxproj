@@ -31,6 +31,32 @@
 		A71E647D2BAA0AA100F2ACA5 /* CIEnvironmentReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64672BAA0AA100F2ACA5 /* CIEnvironmentReader.swift */; };
 		A71E647E2BAA0AA100F2ACA5 /* EnvironmentReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64682BAA0AA100F2ACA5 /* EnvironmentReader.swift */; };
 		A71E64802BAB442300F2ACA5 /* ConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E647F2BAB442300F2ACA5 /* ConfigTests.swift */; };
+		A7B39C6C2BCFC799007F98B2 /* CDatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7E232DC2BC6E68B0087D8F8 /* CDatadogSDKTesting.framework */; };
+		A7B39C702BCFCD77007F98B2 /* SubprocessWait.c in Sources */ = {isa = PBXBuildFile; fileRef = A7B39C6F2BCFCD77007F98B2 /* SubprocessWait.c */; };
+		A7B39C722BCFD234007F98B2 /* SubprocessWait.h in Headers */ = {isa = PBXBuildFile; fileRef = A7B39C712BCFD234007F98B2 /* SubprocessWait.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7E232E52BC6E80A0087D8F8 /* CodeCoverage.h in Headers */ = {isa = PBXBuildFile; fileRef = A7E232E42BC6E80A0087D8F8 /* CodeCoverage.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7E232F52BC6EB470087D8F8 /* CoverageExporterJson.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7E232EA2BC6EB460087D8F8 /* CoverageExporterJson.cpp */; };
+		A7E232F62BC6EB470087D8F8 /* CoverageReport.h in Headers */ = {isa = PBXBuildFile; fileRef = A7E232EB2BC6EB460087D8F8 /* CoverageReport.h */; };
+		A7E232F72BC6EB470087D8F8 /* CoverageSummaryInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7E232EC2BC6EB460087D8F8 /* CoverageSummaryInfo.cpp */; };
+		A7E232F92BC6EB470087D8F8 /* CoverageSummaryInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = A7E232EE2BC6EB460087D8F8 /* CoverageSummaryInfo.h */; };
+		A7E232FB2BC6EB470087D8F8 /* CoverageExporter.h in Headers */ = {isa = PBXBuildFile; fileRef = A7E232F02BC6EB470087D8F8 /* CoverageExporter.h */; };
+		A7E232FC2BC6EB470087D8F8 /* CodeCoverage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7E232F12BC6EB470087D8F8 /* CodeCoverage.cpp */; };
+		A7E232FD2BC6EB470087D8F8 /* Error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7E232F22BC6EB470087D8F8 /* Error.cpp */; };
+		A7E232FE2BC6EB470087D8F8 /* CoverageReport.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7E232F32BC6EB470087D8F8 /* CoverageReport.cpp */; };
+		A7E232FF2BC6EB470087D8F8 /* CoverageExporterJson.h in Headers */ = {isa = PBXBuildFile; fileRef = A7E232F42BC6EB470087D8F8 /* CoverageExporterJson.h */; };
+		A7E233032BC6F01B0087D8F8 /* SymbolAddress.c in Sources */ = {isa = PBXBuildFile; fileRef = A7E233022BC6F01B0087D8F8 /* SymbolAddress.c */; };
+		A7E233052BC6F03C0087D8F8 /* SymbolAddress.h in Headers */ = {isa = PBXBuildFile; fileRef = A7E233042BC6F03C0087D8F8 /* SymbolAddress.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7E233072BC6F46F0087D8F8 /* CDatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7E232DC2BC6E68B0087D8F8 /* CDatadogSDKTesting.framework */; };
+		A7E2330D2BC6F4780087D8F8 /* llvm-xcframework in Frameworks */ = {isa = PBXBuildFile; productRef = A7E2330C2BC6F4780087D8F8 /* llvm-xcframework */; };
+		A7E2330F2BC6F4E70087D8F8 /* CDatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7E232DC2BC6E68B0087D8F8 /* CDatadogSDKTesting.framework */; };
+		A7E233172BC7FA590087D8F8 /* CDatadogSDKTesting.h in Headers */ = {isa = PBXBuildFile; fileRef = A7E233162BC7FA590087D8F8 /* CDatadogSDKTesting.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7E2332D2BC81B5D0087D8F8 /* AutoLoad.c in Sources */ = {isa = PBXBuildFile; fileRef = A7E233002BC6EF220087D8F8 /* AutoLoad.c */; };
+		A7E2332E2BC81B680087D8F8 /* AutoLoad.h in Headers */ = {isa = PBXBuildFile; fileRef = A7E233202BC819A70087D8F8 /* AutoLoad.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7E233312BC82CD10087D8F8 /* Kronos in Frameworks */ = {isa = PBXBuildFile; productRef = A7E233302BC82CD10087D8F8 /* Kronos */; };
+		A7E233332BC93D100087D8F8 /* Synced.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E233322BC93D100087D8F8 /* Synced.swift */; };
+		A7E233352BCD39E30087D8F8 /* Swift+C.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E233342BCD39E30087D8F8 /* Swift+C.swift */; };
+		A7E233372BCD6A000087D8F8 /* SubprocessSpawn.h in Headers */ = {isa = PBXBuildFile; fileRef = A7E233362BCD6A000087D8F8 /* SubprocessSpawn.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7E233392BCD6B240087D8F8 /* SubprocessSpawn.c in Sources */ = {isa = PBXBuildFile; fileRef = A7E233382BCD6B240087D8F8 /* SubprocessSpawn.c */; };
 		A7FC256E2BA1E83500067E26 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */; };
 		A7FC25882BA1E87400067E26 /* EventsExporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25802BA1E87400067E26 /* EventsExporter.framework */; };
 		A7FC25B42BA1EADF00067E26 /* DDTestObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA07025231F4700ED8AEF /* DDTestObserver.swift */; };
@@ -47,25 +73,16 @@
 		A7FC25C02BA1EAEB00067E26 /* LLVMTotalsCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81EDADB2292698A200279027 /* LLVMTotalsCoverageFormat.swift */; };
 		A7FC25C12BA1EAF500067E26 /* GitUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E146BC392869AEA80057C37B /* GitUploader.swift */; };
 		A7FC25C22BA1EAF500067E26 /* IntelligentTestRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E137366128A3BE3600420E26 /* IntelligentTestRunner.swift */; };
-		A7FC25C32BA1EB1000067E26 /* DatadogSDKTesting.h in Headers */ = {isa = PBXBuildFile; fileRef = E1ABA04D25231E2500ED8AEF /* DatadogSDKTesting.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A7FC25D02BA1EB2900067E26 /* SimpleSpanData.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FB483F253891CE0083B263 /* SimpleSpanData.swift */; };
 		A7FC25D12BA1EB2900067E26 /* DDCrashes.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FB483E253891CE0083B263 /* DDCrashes.swift */; };
 		A7FC25D22BA1EB2900067E26 /* SimpleSpanSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FB483D253891CE0083B263 /* SimpleSpanSerializer.swift */; };
 		A7FC25D32BA1EB3400067E26 /* DDSymbolicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1665A8025D13BBB00BA53CD /* DDSymbolicator.swift */; };
 		A7FC25D42BA1EB3400067E26 /* BinaryImages.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C8DEF7268367AB005B5411 /* BinaryImages.swift */; };
 		A7FC25D52BA1EB3F00067E26 /* DDNetworkInstrumentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F595D32609FC3000AE92B7 /* DDNetworkInstrumentation.swift */; };
-		A7FC25D62BA1EB6400067E26 /* DDSymbolAddress.c in Sources */ = {isa = PBXBuildFile; fileRef = E11295C725F63BA8002719E7 /* DDSymbolAddress.c */; };
-		A7FC25D72BA1EB6400067E26 /* LibraryInitializer.m in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA06C25231F3200ED8AEF /* LibraryInitializer.m */; };
-		A7FC25D82BA1EB6400067E26 /* SanitizerMessageHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = E1293F8428DB510200D31DD6 /* SanitizerMessageHandler.m */; };
-		A7FC25DA2BA1EB8D00067E26 /* DDSymbolAddress.h in Headers */ = {isa = PBXBuildFile; fileRef = E1D6EFA125F6563000E8C3AE /* DDSymbolAddress.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7FC25DB2BA1EB8D00067E26 /* NTPServer.h in Headers */ = {isa = PBXBuildFile; fileRef = E13B5F3627ECD08B006F8E2D /* NTPServer.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7FC25DC2BA1EB9B00067E26 /* NTPTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = E114C130274F8A0000B57E08 /* NTPTypes.h */; };
-		A7FC25DD2BA1EBA900067E26 /* NTPTypes.c in Sources */ = {isa = PBXBuildFile; fileRef = E114C12F274F8A0000B57E08 /* NTPTypes.c */; };
-		A7FC25DE2BA1EBA900067E26 /* NTPServer.m in Sources */ = {isa = PBXBuildFile; fileRef = E114C12E274F8A0000B57E08 /* NTPServer.m */; };
 		A7FC25DF2BA1EBF300067E26 /* StdoutCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E126DD2C253F366200700A40 /* StdoutCapture.swift */; };
 		A7FC25E02BA1EBF300067E26 /* StderrCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E126DD2E253F367600700A40 /* StderrCapture.swift */; };
 		A7FC26082BA1EC0500067E26 /* FileLocator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E11295BA25F2483D002719E7 /* FileLocator.swift */; };
-		A7FC26092BA1EC0500067E26 /* NTPClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1550C44274F7FF700006F11 /* NTPClock.swift */; };
+		A7FC26092BA1EC0500067E26 /* Clock.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1550C44274F7FF700006F11 /* Clock.swift */; };
 		A7FC260A2BA1EC0500067E26 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C189B8270F193F00188C0E /* Log.swift */; };
 		A7FC260B2BA1EC0500067E26 /* InternalError.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1AD07A8252F5CB8003705C1 /* InternalError.swift */; };
 		A7FC260C2BA1EC0500067E26 /* GitInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14405A225D6A80800FE3D3C /* GitInfo.swift */; };
@@ -77,7 +94,6 @@
 		A7FC26122BA1EC0500067E26 /* SwiftExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E116D7DA25248C390022779D /* SwiftExtensions.swift */; };
 		A7FC26132BA1EC0500067E26 /* CodeOwners.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A63F5B26789915002F48FA /* CodeOwners.swift */; };
 		A7FC26142BA1EC0500067E26 /* XCUIApplicationSwizzler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12515E4254892C500670D23 /* XCUIApplicationSwizzler.swift */; };
-		A7FC26152BA1EC0500067E26 /* DateClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA23503D2AE949DF003FB1A9 /* DateClock.swift */; };
 		A7FC26162BA1EC5A00067E26 /* DataUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1C27D7790300F4018A /* DataUploader.swift */; };
 		A7FC26172BA1EC5A00067E26 /* DatadogEndpoints.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1D27D7790300F4018A /* DatadogEndpoints.swift */; };
 		A7FC26182BA1EC5A00067E26 /* HTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1F27D7790300F4018A /* HTTPClient.swift */; };
@@ -91,13 +107,6 @@
 		A7FC26202BA1EC6200067E26 /* SearchCommitFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E146BC3E2869C3BB0057C37B /* SearchCommitFormat.swift */; };
 		A7FC26212BA1EC6200067E26 /* ITRConfigFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E19B258328D1B43400B84FCD /* ITRConfigFormat.swift */; };
 		A7FC26222BA1EC6200067E26 /* ITRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E146BC372865D55A0057C37B /* ITRService.swift */; };
-		A7FC26232BA1EC6F00067E26 /* CoverageSummaryInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D78452818364A00758E2A /* CoverageSummaryInfo.cpp */; };
-		A7FC26242BA1EC6F00067E26 /* CodeCoverage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D7848281838D200758E2A /* CodeCoverage.cpp */; };
-		A7FC26252BA1EC6F00067E26 /* CoverageReport.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D784128182BDA00758E2A /* CoverageReport.cpp */; };
-		A7FC26262BA1EC6F00067E26 /* Error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E131592D281A7DDB00B29123 /* Error.cpp */; };
-		A7FC26272BA1EC6F00067E26 /* LLVMCodeCoverageBridge.mm in Sources */ = {isa = PBXBuildFile; fileRef = E15D7851281972BA00758E2A /* LLVMCodeCoverageBridge.mm */; };
-		A7FC26282BA1EC6F00067E26 /* CoverageExporterJson.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E15D78392818262500758E2A /* CoverageExporterJson.cpp */; };
-		A7FC262D2BA1ECA000067E26 /* LLVMCodeCoverageBridge.h in Headers */ = {isa = PBXBuildFile; fileRef = E15D7850281972BA00758E2A /* LLVMCodeCoverageBridge.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A7FC262E2BA1ECBD00067E26 /* LLVMSimpleCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10A7E0D2806D68F00B464C9 /* LLVMSimpleCoverageFormat.swift */; };
 		A7FC262F2BA1ECBD00067E26 /* DDCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12C5838280D809900A31763 /* DDCoverageFormat.swift */; };
 		A7FC26302BA1ECBD00067E26 /* CoverageExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1743F5628490141006CBFF8 /* CoverageExporter.swift */; };
@@ -127,20 +136,14 @@
 		A7FC26482BA1ECEF00067E26 /* FileWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1227D7790300F4018A /* FileWriter.swift */; };
 		A7FC26492BA1ECF800067E26 /* Directory.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1727D7790300F4018A /* Directory.swift */; };
 		A7FC264A2BA1ECF800067E26 /* File.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1827D7790300F4018A /* File.swift */; };
-		A7FC264B2BA1ED0000067E26 /* EventsExporter.h in Headers */ = {isa = PBXBuildFile; fileRef = E1DCAF31284A1F0D00F44BE3 /* EventsExporter.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A7FC264C2BA1ED0C00067E26 /* ExporterConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0C27D7790300F4018A /* ExporterConfiguration.swift */; };
 		A7FC264D2BA1ED1200067E26 /* EventsExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1927D7790300F4018A /* EventsExporter.swift */; };
 		A7FC264E2BA1EFEC00067E26 /* OpenTelemetrySdk in Frameworks */ = {isa = PBXBuildFile; productRef = E1DCAF6A284A1FE000F44BE3 /* OpenTelemetrySdk */; };
-		A7FC264F2BA1EFEC00067E26 /* llvm-xcframework in Frameworks */ = {isa = PBXBuildFile; productRef = E1E51D4F28B5099200E0E206 /* llvm-xcframework */; };
 		A7FC26502BA1F1E600067E26 /* CrashReporter in Frameworks */ = {isa = PBXBuildFile; productRef = E157A718256E9D1D00CBCA52 /* CrashReporter */; };
 		A7FC26512BA1F1E600067E26 /* SigmaSwiftStatistics in Frameworks */ = {isa = PBXBuildFile; productRef = E157A71A256E9D1D00CBCA52 /* SigmaSwiftStatistics */; };
 		A7FC26522BA1F1E600067E26 /* InMemoryExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E1BE9B5B2732B2A300B92AD4 /* InMemoryExporter */; };
 		A7FC26532BA1F1E600067E26 /* URLSessionInstrumentation in Frameworks */ = {isa = PBXBuildFile; productRef = E1BE9B5D2732B2A300B92AD4 /* URLSessionInstrumentation */; };
 		A7FC26552BA1F1F900067E26 /* EventsExporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25802BA1E87400067E26 /* EventsExporter.framework */; };
-		A7FC265A2BA1F61800067E26 /* CoverageSummaryInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = E15D78442818364A00758E2A /* CoverageSummaryInfo.h */; };
-		A7FC265B2BA1F61800067E26 /* CoverageExporterJson.h in Headers */ = {isa = PBXBuildFile; fileRef = E15D783A2818262500758E2A /* CoverageExporterJson.h */; };
-		A7FC265C2BA1F61800067E26 /* CoverageExporter.h in Headers */ = {isa = PBXBuildFile; fileRef = E15D783D2818263600758E2A /* CoverageExporter.h */; };
-		A7FC265D2BA1F61800067E26 /* CoverageReport.h in Headers */ = {isa = PBXBuildFile; fileRef = E15D784028182BDA00758E2A /* CoverageReport.h */; };
 		A7FC265E2BA1F65200067E26 /* fixtures in Resources */ = {isa = PBXBuildFile; fileRef = A7C292122B9B2B39009C2979 /* fixtures */; };
 		A7FC265F2BA1F66E00067E26 /* DDTestSessionApiTests.m in Sources */ = {isa = PBXBuildFile; fileRef = E171DC91270DBCAB00A12B79 /* DDTestSessionApiTests.m */; };
 		A7FC26602BA1F67800067E26 /* SimpleSpanSerializerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FB4844253891E70083B263 /* SimpleSpanSerializerTests.swift */; };
@@ -202,10 +205,30 @@
 		A7FC26EB2BA866BB00067E26 /* NIO in Frameworks */ = {isa = PBXBuildFile; productRef = A7FC26EA2BA866BB00067E26 /* NIO */; };
 		A7FC26ED2BA866D000067E26 /* NIOHTTP1 in Frameworks */ = {isa = PBXBuildFile; productRef = A7FC26EC2BA866D000067E26 /* NIOHTTP1 */; };
 		A7FC26F52BA867BA00067E26 /* OpenTelemetryApi in Frameworks */ = {isa = PBXBuildFile; productRef = A7FC26F42BA867BA00067E26 /* OpenTelemetryApi */; };
-		A7FC27012BA8818300067E26 /* Subprocess.c in Sources */ = {isa = PBXBuildFile; fileRef = A7FC27002BA8818300067E26 /* Subprocess.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		A7B39C6D2BCFC7CE007F98B2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E1ABA04125231E2500ED8AEF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A7E232DB2BC6E68B0087D8F8;
+			remoteInfo = CDatadogSDKTesting;
+		};
+		A7E233092BC6F46F0087D8F8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E1ABA04125231E2500ED8AEF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A7E232DB2BC6E68B0087D8F8;
+			remoteInfo = CDatadogSDKTesting;
+		};
+		A7E233112BC6F4E70087D8F8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E1ABA04125231E2500ED8AEF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A7E232DB2BC6E68B0087D8F8;
+			remoteInfo = CDatadogSDKTesting;
+		};
 		A7FC256F2BA1E83500067E26 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = E1ABA04125231E2500ED8AEF /* Project object */;
@@ -237,6 +260,16 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		A7E2332C2BC81A880087D8F8 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A7FC26E02BA21B7D00067E26 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -278,8 +311,30 @@
 		A71E64672BAA0AA100F2ACA5 /* CIEnvironmentReader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CIEnvironmentReader.swift; sourceTree = "<group>"; };
 		A71E64682BAA0AA100F2ACA5 /* EnvironmentReader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EnvironmentReader.swift; sourceTree = "<group>"; };
 		A71E647F2BAB442300F2ACA5 /* ConfigTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigTests.swift; sourceTree = "<group>"; };
+		A7B39C6F2BCFCD77007F98B2 /* SubprocessWait.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = SubprocessWait.c; sourceTree = "<group>"; };
+		A7B39C712BCFD234007F98B2 /* SubprocessWait.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SubprocessWait.h; sourceTree = "<group>"; };
 		A7C292122B9B2B39009C2979 /* fixtures */ = {isa = PBXFileReference; lastKnownFileType = folder; path = fixtures; sourceTree = "<group>"; };
 		A7C292162B9B2DE0009C2979 /* DatadogSDKTesting.podspec */ = {isa = PBXFileReference; lastKnownFileType = text; path = DatadogSDKTesting.podspec; sourceTree = "<group>"; };
+		A7E232DC2BC6E68B0087D8F8 /* CDatadogSDKTesting.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CDatadogSDKTesting.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A7E232E42BC6E80A0087D8F8 /* CodeCoverage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CodeCoverage.h; sourceTree = "<group>"; };
+		A7E232EA2BC6EB460087D8F8 /* CoverageExporterJson.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CoverageExporterJson.cpp; sourceTree = "<group>"; };
+		A7E232EB2BC6EB460087D8F8 /* CoverageReport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CoverageReport.h; sourceTree = "<group>"; };
+		A7E232EC2BC6EB460087D8F8 /* CoverageSummaryInfo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CoverageSummaryInfo.cpp; sourceTree = "<group>"; };
+		A7E232EE2BC6EB460087D8F8 /* CoverageSummaryInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CoverageSummaryInfo.h; sourceTree = "<group>"; };
+		A7E232F02BC6EB470087D8F8 /* CoverageExporter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CoverageExporter.h; sourceTree = "<group>"; };
+		A7E232F12BC6EB470087D8F8 /* CodeCoverage.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CodeCoverage.cpp; sourceTree = "<group>"; };
+		A7E232F22BC6EB470087D8F8 /* Error.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Error.cpp; sourceTree = "<group>"; };
+		A7E232F32BC6EB470087D8F8 /* CoverageReport.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CoverageReport.cpp; sourceTree = "<group>"; };
+		A7E232F42BC6EB470087D8F8 /* CoverageExporterJson.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CoverageExporterJson.h; sourceTree = "<group>"; };
+		A7E233002BC6EF220087D8F8 /* AutoLoad.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = AutoLoad.c; sourceTree = "<group>"; };
+		A7E233022BC6F01B0087D8F8 /* SymbolAddress.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SymbolAddress.c; sourceTree = "<group>"; };
+		A7E233042BC6F03C0087D8F8 /* SymbolAddress.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SymbolAddress.h; sourceTree = "<group>"; };
+		A7E233162BC7FA590087D8F8 /* CDatadogSDKTesting.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CDatadogSDKTesting.h; sourceTree = "<group>"; };
+		A7E233202BC819A70087D8F8 /* AutoLoad.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AutoLoad.h; sourceTree = "<group>"; };
+		A7E233322BC93D100087D8F8 /* Synced.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Synced.swift; sourceTree = "<group>"; };
+		A7E233342BCD39E30087D8F8 /* Swift+C.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Swift+C.swift"; sourceTree = "<group>"; };
+		A7E233362BCD6A000087D8F8 /* SubprocessSpawn.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SubprocessSpawn.h; sourceTree = "<group>"; };
+		A7E233382BCD6B240087D8F8 /* SubprocessSpawn.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = SubprocessSpawn.c; sourceTree = "<group>"; };
 		A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = DatadogSDKTesting.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7FC256D2BA1E83500067E26 /* DatadogSDKTestingTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DatadogSDKTestingTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7FC25802BA1E87400067E26 /* EventsExporter.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = EventsExporter.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -294,16 +349,9 @@
 		A7FC26D02BA214CE00067E26 /* SimpleSpanData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleSpanData.swift; sourceTree = "<group>"; };
 		A7FC26D92BA2181A00067E26 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A7FC26E42BA8648300067E26 /* EventsExporter.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = EventsExporter.xctestplan; sourceTree = "<group>"; };
-		A7FC27002BA8818300067E26 /* Subprocess.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Subprocess.c; sourceTree = "<group>"; };
-		DA23503D2AE949DF003FB1A9 /* DateClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateClock.swift; sourceTree = "<group>"; };
 		E10034D92703599D00439C9C /* DDTestModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTestModule.swift; sourceTree = "<group>"; };
 		E10A7E0D2806D68F00B464C9 /* LLVMSimpleCoverageFormat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LLVMSimpleCoverageFormat.swift; sourceTree = "<group>"; };
 		E11295BA25F2483D002719E7 /* FileLocator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileLocator.swift; sourceTree = "<group>"; };
-		E11295C725F63BA8002719E7 /* DDSymbolAddress.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = DDSymbolAddress.c; sourceTree = "<group>"; };
-		E114C12E274F8A0000B57E08 /* NTPServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NTPServer.m; sourceTree = "<group>"; };
-		E114C12F274F8A0000B57E08 /* NTPTypes.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = NTPTypes.c; sourceTree = "<group>"; };
-		E114C130274F8A0000B57E08 /* NTPTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NTPTypes.h; sourceTree = "<group>"; };
-		E114C13D274F8A2600B57E08 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		E116D7DA25248C390022779D /* SwiftExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftExtensions.swift; sourceTree = "<group>"; };
 		E117CFC626307B9A00ACE977 /* SpySpanProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpySpanProcessor.swift; sourceTree = "<group>"; };
 		E1193F8C272C24F900E4154E /* UIIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIIntegrationTests.swift; sourceTree = "<group>"; };
@@ -315,12 +363,9 @@
 		E12515E4254892C500670D23 /* XCUIApplicationSwizzler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XCUIApplicationSwizzler.swift; sourceTree = "<group>"; };
 		E126DD2C253F366200700A40 /* StdoutCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StdoutCapture.swift; sourceTree = "<group>"; };
 		E126DD2E253F367600700A40 /* StderrCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StderrCapture.swift; sourceTree = "<group>"; };
-		E1293F8428DB510200D31DD6 /* SanitizerMessageHandler.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SanitizerMessageHandler.m; sourceTree = "<group>"; };
 		E1293F8828DB515F00D31DD6 /* SanitizerHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SanitizerHelper.swift; sourceTree = "<group>"; };
 		E12C5838280D809900A31763 /* DDCoverageFormat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DDCoverageFormat.swift; sourceTree = "<group>"; };
-		E131592D281A7DDB00B29123 /* Error.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Error.cpp; sourceTree = "<group>"; };
 		E137366128A3BE3600420E26 /* IntelligentTestRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntelligentTestRunner.swift; sourceTree = "<group>"; };
-		E13B5F3627ECD08B006F8E2D /* NTPServer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NTPServer.h; sourceTree = "<group>"; };
 		E13D0BC92546E29C00C37D56 /* SignalUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalUtils.swift; sourceTree = "<group>"; };
 		E141CF5F256FD513008B6B70 /* PlatformUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformUtils.swift; sourceTree = "<group>"; };
 		E141EADD27EB3B9E0057D747 /* SpansExporterTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpansExporterTests.swift; sourceTree = "<group>"; };
@@ -388,19 +433,9 @@
 		E14AA0BF2555A9A1003FA711 /* DDNetworkInstrumentationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDNetworkInstrumentationTests.swift; sourceTree = "<group>"; };
 		E14AA0C9255AE8D3003FA711 /* SignalUtilsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalUtilsTests.swift; sourceTree = "<group>"; };
 		E15264AE25FA3C16008B8665 /* DDSymbolicatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDSymbolicatorTests.swift; sourceTree = "<group>"; };
-		E1550C44274F7FF700006F11 /* NTPClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NTPClock.swift; sourceTree = "<group>"; };
+		E1550C44274F7FF700006F11 /* Clock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Clock.swift; sourceTree = "<group>"; };
 		E158E2DB25471DA000DBCD6C /* DDInstrumentationControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDInstrumentationControl.swift; sourceTree = "<group>"; };
 		E15C79672722AD0500E9DBAD /* DDCoverageConversor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDCoverageConversor.swift; sourceTree = "<group>"; };
-		E15D78392818262500758E2A /* CoverageExporterJson.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CoverageExporterJson.cpp; sourceTree = "<group>"; };
-		E15D783A2818262500758E2A /* CoverageExporterJson.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CoverageExporterJson.h; sourceTree = "<group>"; };
-		E15D783D2818263600758E2A /* CoverageExporter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CoverageExporter.h; sourceTree = "<group>"; };
-		E15D784028182BDA00758E2A /* CoverageReport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CoverageReport.h; sourceTree = "<group>"; };
-		E15D784128182BDA00758E2A /* CoverageReport.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CoverageReport.cpp; sourceTree = "<group>"; };
-		E15D78442818364A00758E2A /* CoverageSummaryInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CoverageSummaryInfo.h; sourceTree = "<group>"; };
-		E15D78452818364A00758E2A /* CoverageSummaryInfo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CoverageSummaryInfo.cpp; sourceTree = "<group>"; };
-		E15D7848281838D200758E2A /* CodeCoverage.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CodeCoverage.cpp; sourceTree = "<group>"; };
-		E15D7850281972BA00758E2A /* LLVMCodeCoverageBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LLVMCodeCoverageBridge.h; sourceTree = "<group>"; };
-		E15D7851281972BA00758E2A /* LLVMCodeCoverageBridge.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = LLVMCodeCoverageBridge.mm; sourceTree = "<group>"; };
 		E160A11125275CC1003121A5 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		E1665A7225D12D7500BA53CD /* Spawn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spawn.swift; sourceTree = "<group>"; };
 		E1665A8025D13BBB00BA53CD /* DDSymbolicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDSymbolicator.swift; sourceTree = "<group>"; };
@@ -415,8 +450,6 @@
 		E19B258328D1B43400B84FCD /* ITRConfigFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ITRConfigFormat.swift; sourceTree = "<group>"; };
 		E1A63F5B26789915002F48FA /* CodeOwners.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeOwners.swift; sourceTree = "<group>"; };
 		E1A63F5F2678C1FD002F48FA /* CodeOwnersTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeOwnersTests.swift; sourceTree = "<group>"; };
-		E1ABA04D25231E2500ED8AEF /* DatadogSDKTesting.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DatadogSDKTesting.h; sourceTree = "<group>"; };
-		E1ABA06C25231F3200ED8AEF /* LibraryInitializer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LibraryInitializer.m; sourceTree = "<group>"; };
 		E1ABA07025231F4700ED8AEF /* DDTestObserver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DDTestObserver.swift; sourceTree = "<group>"; };
 		E1ABA07125231F4700ED8AEF /* DDTags.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DDTags.swift; sourceTree = "<group>"; };
 		E1ABA07225231F4700ED8AEF /* FrameworkLoadHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FrameworkLoadHandler.swift; sourceTree = "<group>"; };
@@ -437,8 +470,6 @@
 		E1C8DEF4268363EC005B5411 /* DDCoverageHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDCoverageHelper.swift; sourceTree = "<group>"; };
 		E1C8DEF7268367AB005B5411 /* BinaryImages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinaryImages.swift; sourceTree = "<group>"; };
 		E1D476A525DD369F00832592 /* BinaryParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinaryParser.swift; sourceTree = "<group>"; };
-		E1D6EFA125F6563000E8C3AE /* DDSymbolAddress.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DDSymbolAddress.h; sourceTree = "<group>"; };
-		E1DCAF31284A1F0D00F44BE3 /* EventsExporter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EventsExporter.h; sourceTree = "<group>"; };
 		E1EBBD4627F1FFE70059BC3E /* SpanSanitizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpanSanitizer.swift; sourceTree = "<group>"; };
 		E1EBBD4A27F200210059BC3E /* AttributesSanitizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AttributesSanitizer.swift; sourceTree = "<group>"; };
 		E1EBBD4E27F200A50059BC3E /* SpanSanitizerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpanSanitizerTests.swift; sourceTree = "<group>"; };
@@ -453,15 +484,25 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		A7E232D92BC6E68B0087D8F8 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A7E2330D2BC6F4780087D8F8 /* llvm-xcframework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A7FC25612BA1E83500067E26 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				A7FC26532BA1F1E600067E26 /* URLSessionInstrumentation in Frameworks */,
+				A7E233312BC82CD10087D8F8 /* Kronos in Frameworks */,
 				A7FC26502BA1F1E600067E26 /* CrashReporter in Frameworks */,
 				A7FC26512BA1F1E600067E26 /* SigmaSwiftStatistics in Frameworks */,
 				A7FC26522BA1F1E600067E26 /* InMemoryExporter in Frameworks */,
 				A7FC26552BA1F1F900067E26 /* EventsExporter.framework in Frameworks */,
+				A7E233072BC6F46F0087D8F8 /* CDatadogSDKTesting.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -478,8 +519,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				A7FC264E2BA1EFEC00067E26 /* OpenTelemetrySdk in Frameworks */,
-				A7FC264F2BA1EFEC00067E26 /* llvm-xcframework in Frameworks */,
 				A7FC26F52BA867BA00067E26 /* OpenTelemetryApi in Frameworks */,
+				A7E2330F2BC6F4E70087D8F8 /* CDatadogSDKTesting.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -487,8 +528,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A7FC26ED2BA866D000067E26 /* NIOHTTP1 in Frameworks */,
+				A7B39C6C2BCFC799007F98B2 /* CDatadogSDKTesting.framework in Frameworks */,
 				A7FC25882BA1E87400067E26 /* EventsExporter.framework in Frameworks */,
+				A7FC26ED2BA866D000067E26 /* NIOHTTP1 in Frameworks */,
 				A7FC26EB2BA866BB00067E26 /* NIO in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -557,6 +599,47 @@
 			path = CI;
 			sourceTree = "<group>";
 		};
+		A7B39C6B2BCFC799007F98B2 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		A7E232DD2BC6E68B0087D8F8 /* CDatadogSDKTesting */ = {
+			isa = PBXGroup;
+			children = (
+				A7E232E32BC6E7E90087D8F8 /* include */,
+				A7E233162BC7FA590087D8F8 /* CDatadogSDKTesting.h */,
+				A7E232F12BC6EB470087D8F8 /* CodeCoverage.cpp */,
+				A7E232F02BC6EB470087D8F8 /* CoverageExporter.h */,
+				A7E232EA2BC6EB460087D8F8 /* CoverageExporterJson.cpp */,
+				A7E232F42BC6EB470087D8F8 /* CoverageExporterJson.h */,
+				A7E232F32BC6EB470087D8F8 /* CoverageReport.cpp */,
+				A7E232EB2BC6EB460087D8F8 /* CoverageReport.h */,
+				A7E232EC2BC6EB460087D8F8 /* CoverageSummaryInfo.cpp */,
+				A7E232EE2BC6EB460087D8F8 /* CoverageSummaryInfo.h */,
+				A7E232F22BC6EB470087D8F8 /* Error.cpp */,
+				A7E233002BC6EF220087D8F8 /* AutoLoad.c */,
+				A7E233022BC6F01B0087D8F8 /* SymbolAddress.c */,
+				A7E233382BCD6B240087D8F8 /* SubprocessSpawn.c */,
+				A7B39C6F2BCFCD77007F98B2 /* SubprocessWait.c */,
+			);
+			path = CDatadogSDKTesting;
+			sourceTree = "<group>";
+		};
+		A7E232E32BC6E7E90087D8F8 /* include */ = {
+			isa = PBXGroup;
+			children = (
+				A7E233202BC819A70087D8F8 /* AutoLoad.h */,
+				A7E233042BC6F03C0087D8F8 /* SymbolAddress.h */,
+				A7E232E42BC6E80A0087D8F8 /* CodeCoverage.h */,
+				A7E233362BCD6A000087D8F8 /* SubprocessSpawn.h */,
+				A7B39C712BCFD234007F98B2 /* SubprocessWait.h */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
 		A7FC26B72BA20C1B00067E26 /* App */ = {
 			isa = PBXGroup;
 			children = (
@@ -584,6 +667,7 @@
 		E116D7D925248C280022779D /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				A7E233322BC93D100087D8F8 /* Synced.swift */,
 				E1293F8828DB515F00D31DD6 /* SanitizerHelper.swift */,
 				E1AD07A8252F5CB8003705C1 /* InternalError.swift */,
 				E1D476A525DD369F00832592 /* BinaryParser.swift */,
@@ -595,9 +679,8 @@
 				E12515E4254892C500670D23 /* XCUIApplicationSwizzler.swift */,
 				E11295BA25F2483D002719E7 /* FileLocator.swift */,
 				E1A63F5B26789915002F48FA /* CodeOwners.swift */,
-				E1550C44274F7FF700006F11 /* NTPClock.swift */,
+				E1550C44274F7FF700006F11 /* Clock.swift */,
 				81AA244A2978589600DE8F8A /* DDFileReader.swift */,
-				DA23503D2AE949DF003FB1A9 /* DateClock.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -720,14 +803,12 @@
 			children = (
 				E143CF1A27D7790300F4018A /* Upload */,
 				E146BC362865D51E0057C37B /* IntelligentTestRunner */,
-				E15D77FE281821B600758E2A /* llvm-cov */,
 				E1743F552849012A006CBFF8 /* CoverageExporter */,
 				E143CEFD27D7790200F4018A /* Spans */,
 				E143CF0027D7790200F4018A /* Utils */,
 				E143CF0D27D7790300F4018A /* Logs */,
 				E143CF1127D7790300F4018A /* Persistence */,
 				E143CF1627D7790300F4018A /* Files */,
-				E1DCAF31284A1F0D00F44BE3 /* EventsExporter.h */,
 				E143CF0C27D7790300F4018A /* ExporterConfiguration.swift */,
 				E143CF1927D7790300F4018A /* EventsExporter.swift */,
 			);
@@ -747,7 +828,6 @@
 		E143CF0027D7790200F4018A /* Utils */ = {
 			isa = PBXGroup;
 			children = (
-				A7FC27002BA8818300067E26 /* Subprocess.c */,
 				81894A4E29B0A28B00108C51 /* Retrying.swift */,
 				E1F69C2A28C72FAD0042156E /* Log.swift */,
 				E1665A7225D12D7500BA53CD /* Spawn.swift */,
@@ -761,6 +841,7 @@
 				E143CF0527D7790200F4018A /* DateFormatting.swift */,
 				E143CF0627D7790200F4018A /* EncodableValue.swift */,
 				E143CF0927D7790200F4018A /* Device.swift */,
+				A7E233342BCD39E30087D8F8 /* Swift+C.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -831,44 +912,6 @@
 			path = IntelligentTestRunner;
 			sourceTree = "<group>";
 		};
-		E1550C32274F7E7900006F11 /* NTPKit */ = {
-			isa = PBXGroup;
-			children = (
-				E114C13D274F8A2600B57E08 /* LICENSE */,
-				E114C12E274F8A0000B57E08 /* NTPServer.m */,
-				E114C12F274F8A0000B57E08 /* NTPTypes.c */,
-				E114C130274F8A0000B57E08 /* NTPTypes.h */,
-			);
-			path = NTPKit;
-			sourceTree = "<group>";
-		};
-		E15D77FE281821B600758E2A /* llvm-cov */ = {
-			isa = PBXGroup;
-			children = (
-				E15D7848281838D200758E2A /* CodeCoverage.cpp */,
-				E15D78452818364A00758E2A /* CoverageSummaryInfo.cpp */,
-				E15D78442818364A00758E2A /* CoverageSummaryInfo.h */,
-				E15D784128182BDA00758E2A /* CoverageReport.cpp */,
-				E15D784028182BDA00758E2A /* CoverageReport.h */,
-				E15D783D2818263600758E2A /* CoverageExporter.h */,
-				E15D78392818262500758E2A /* CoverageExporterJson.cpp */,
-				E15D783A2818262500758E2A /* CoverageExporterJson.h */,
-				E131592D281A7DDB00B29123 /* Error.cpp */,
-				E15D7850281972BA00758E2A /* LLVMCodeCoverageBridge.h */,
-				E15D7851281972BA00758E2A /* LLVMCodeCoverageBridge.mm */,
-			);
-			path = "llvm-cov";
-			sourceTree = "<group>";
-		};
-		E160A113252B3A6B003121A5 /* include */ = {
-			isa = PBXGroup;
-			children = (
-				E1D6EFA125F6563000E8C3AE /* DDSymbolAddress.h */,
-				E13B5F3627ECD08B006F8E2D /* NTPServer.h */,
-			);
-			path = include;
-			sourceTree = "<group>";
-		};
 		E171DC90270DBC6A00A12B79 /* ObjCApi */ = {
 			isa = PBXGroup;
 			children = (
@@ -905,10 +948,8 @@
 				E1FB483C253891CE0083B263 /* Crashes */,
 				E1C8DEF626836783005B5411 /* ImageSymbols */,
 				E1798CCA2524C1E2008DEBB9 /* NetworkInstrumentation */,
-				E1ABA06B25231F3200ED8AEF /* Objc */,
 				E126DD27253F355F00700A40 /* OutputCapture */,
 				E116D7D925248C280022779D /* Utils */,
-				E1ABA04D25231E2500ED8AEF /* DatadogSDKTesting.h */,
 				A71E64512BAA0AA100F2ACA5 /* Config.swift */,
 				E158E2DB25471DA000DBCD6C /* DDInstrumentationControl.swift */,
 				8194A2242940B33100B4B592 /* DDTestSession.swift */,
@@ -934,6 +975,7 @@
 				E1ABA05725231E2500ED8AEF /* Tests */,
 				E1224A42264ABCCE00305968 /* IntegrationTests */,
 				E1ABA04B25231E2500ED8AEF /* Products */,
+				A7B39C6B2BCFC799007F98B2 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -946,6 +988,7 @@
 				A7FC25872BA1E87400067E26 /* EventsExporterTests.xctest */,
 				A7FC26A82BA20A6500067E26 /* IntegrationTestsApp.app */,
 				A7FC26C02BA20D1200067E26 /* IntegrationTestsUITests.xctest */,
+				A7E232DC2BC6E68B0087D8F8 /* CDatadogSDKTesting.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -953,6 +996,7 @@
 		E1ABA04C25231E2500ED8AEF /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				A7E232DD2BC6E68B0087D8F8 /* CDatadogSDKTesting */,
 				E1798E0925260BC4008DEBB9 /* DatadogSDKTesting */,
 				E143CEF827D7790200F4018A /* EventsExporter */,
 			);
@@ -967,18 +1011,6 @@
 				E141EADB27EB3B9E0057D747 /* EventsExporter */,
 			);
 			path = Tests;
-			sourceTree = "<group>";
-		};
-		E1ABA06B25231F3200ED8AEF /* Objc */ = {
-			isa = PBXGroup;
-			children = (
-				E1550C32274F7E7900006F11 /* NTPKit */,
-				E160A113252B3A6B003121A5 /* include */,
-				E1ABA06C25231F3200ED8AEF /* LibraryInitializer.m */,
-				E1293F8428DB510200D31DD6 /* SanitizerMessageHandler.m */,
-				E11295C725F63BA8002719E7 /* DDSymbolAddress.c */,
-			);
-			path = Objc;
 			sourceTree = "<group>";
 		};
 		E1AD0736252E1E1A003705C1 /* DatadogSDKTesting */ = {
@@ -1072,14 +1104,27 @@
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
+		A7E232D72BC6E68B0087D8F8 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A7E2332E2BC81B680087D8F8 /* AutoLoad.h in Headers */,
+				A7E233172BC7FA590087D8F8 /* CDatadogSDKTesting.h in Headers */,
+				A7E232E52BC6E80A0087D8F8 /* CodeCoverage.h in Headers */,
+				A7E233372BCD6A000087D8F8 /* SubprocessSpawn.h in Headers */,
+				A7B39C722BCFD234007F98B2 /* SubprocessWait.h in Headers */,
+				A7E233052BC6F03C0087D8F8 /* SymbolAddress.h in Headers */,
+				A7E232FF2BC6EB470087D8F8 /* CoverageExporterJson.h in Headers */,
+				A7E232FB2BC6EB470087D8F8 /* CoverageExporter.h in Headers */,
+				A7E232F62BC6EB470087D8F8 /* CoverageReport.h in Headers */,
+				A7E232F92BC6EB470087D8F8 /* CoverageSummaryInfo.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A7FC255F2BA1E83500067E26 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A7FC25DB2BA1EB8D00067E26 /* NTPServer.h in Headers */,
-				A7FC25C32BA1EB1000067E26 /* DatadogSDKTesting.h in Headers */,
-				A7FC25DA2BA1EB8D00067E26 /* DDSymbolAddress.h in Headers */,
-				A7FC25DC2BA1EB9B00067E26 /* NTPTypes.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1087,18 +1132,33 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A7FC264B2BA1ED0000067E26 /* EventsExporter.h in Headers */,
-				A7FC262D2BA1ECA000067E26 /* LLVMCodeCoverageBridge.h in Headers */,
-				A7FC265D2BA1F61800067E26 /* CoverageReport.h in Headers */,
-				A7FC265A2BA1F61800067E26 /* CoverageSummaryInfo.h in Headers */,
-				A7FC265B2BA1F61800067E26 /* CoverageExporterJson.h in Headers */,
-				A7FC265C2BA1F61800067E26 /* CoverageExporter.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		A7E232DB2BC6E68B0087D8F8 /* CDatadogSDKTesting */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A7E232E22BC6E68B0087D8F8 /* Build configuration list for PBXNativeTarget "CDatadogSDKTesting" */;
+			buildPhases = (
+				A7E232D72BC6E68B0087D8F8 /* Headers */,
+				A7E232D82BC6E68B0087D8F8 /* Sources */,
+				A7E232D92BC6E68B0087D8F8 /* Frameworks */,
+				A7E232DA2BC6E68B0087D8F8 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CDatadogSDKTesting;
+			packageProductDependencies = (
+				A7E2330C2BC6F4780087D8F8 /* llvm-xcframework */,
+			);
+			productName = CDatadogSDKTesting;
+			productReference = A7E232DC2BC6E68B0087D8F8 /* CDatadogSDKTesting.framework */;
+			productType = "com.apple.product-type.framework";
+		};
 		A7FC25632BA1E83500067E26 /* DatadogSDKTesting */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = A7FC25792BA1E83500067E26 /* Build configuration list for PBXNativeTarget "DatadogSDKTesting" */;
@@ -1107,6 +1167,7 @@
 				A7FC25602BA1E83500067E26 /* Sources */,
 				A7FC25612BA1E83500067E26 /* Frameworks */,
 				A7FC25622BA1E83500067E26 /* Resources */,
+				A7E2332C2BC81A880087D8F8 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -1116,6 +1177,7 @@
 				A7FC26F92BA87E4000067E26 /* PBXTargetDependency */,
 				A7FC26F72BA87E2900067E26 /* PBXTargetDependency */,
 				A7FC26582BA1F1F900067E26 /* PBXTargetDependency */,
+				A7E2330A2BC6F46F0087D8F8 /* PBXTargetDependency */,
 			);
 			name = DatadogSDKTesting;
 			packageProductDependencies = (
@@ -1123,6 +1185,7 @@
 				E157A71A256E9D1D00CBCA52 /* SigmaSwiftStatistics */,
 				E1BE9B5B2732B2A300B92AD4 /* InMemoryExporter */,
 				E1BE9B5D2732B2A300B92AD4 /* URLSessionInstrumentation */,
+				A7E233302BC82CD10087D8F8 /* Kronos */,
 			);
 			productName = DatadogSDKTesting;
 			productReference = A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */;
@@ -1159,13 +1222,12 @@
 			);
 			dependencies = (
 				A7FC26F32BA867B000067E26 /* PBXTargetDependency */,
-				A7FC26F12BA8677900067E26 /* PBXTargetDependency */,
 				A7FC26EF2BA8676A00067E26 /* PBXTargetDependency */,
+				A7E233122BC6F4E70087D8F8 /* PBXTargetDependency */,
 			);
 			name = EventsExporter;
 			packageProductDependencies = (
 				E1DCAF6A284A1FE000F44BE3 /* OpenTelemetrySdk */,
-				E1E51D4F28B5099200E0E206 /* llvm-xcframework */,
 				A7FC26F42BA867BA00067E26 /* OpenTelemetryApi */,
 			);
 			productName = EventsExporter;
@@ -1183,9 +1245,10 @@
 			buildRules = (
 			);
 			dependencies = (
+				A7B39C6E2BCFC7CE007F98B2 /* PBXTargetDependency */,
+				A7FC258A2BA1E87400067E26 /* PBXTargetDependency */,
 				A7FC26E82BA8653D00067E26 /* PBXTargetDependency */,
 				A7FC26E62BA864FB00067E26 /* PBXTargetDependency */,
-				A7FC258A2BA1E87400067E26 /* PBXTargetDependency */,
 			);
 			name = EventsExporterTests;
 			packageProductDependencies = (
@@ -1242,6 +1305,9 @@
 				LastSwiftUpdateCheck = 1430;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
+					A7E232DB2BC6E68B0087D8F8 = {
+						CreatedOnToolsVersion = 14.3.1;
+					};
 					A7FC25632BA1E83500067E26 = {
 						CreatedOnToolsVersion = 14.3.1;
 					};
@@ -1278,11 +1344,13 @@
 				E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */,
 				E141EB5727EB44400057D747 /* XCRemoteSwiftPackageReference "swift-nio" */,
 				E1E51D4E28B5099200E0E206 /* XCRemoteSwiftPackageReference "llvm-xcframework" */,
+				A7E2332F2BC82CD10087D8F8 /* XCRemoteSwiftPackageReference "Kronos" */,
 			);
 			productRefGroup = E1ABA04B25231E2500ED8AEF /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
+				A7E232DB2BC6E68B0087D8F8 /* CDatadogSDKTesting */,
 				A7FC25632BA1E83500067E26 /* DatadogSDKTesting */,
 				A7FC257F2BA1E87400067E26 /* EventsExporter */,
 				A7FC256C2BA1E83500067E26 /* DatadogSDKTestingTests */,
@@ -1294,6 +1362,13 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		A7E232DA2BC6E68B0087D8F8 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A7FC25622BA1E83500067E26 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1340,23 +1415,37 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		A7E232D82BC6E68B0087D8F8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A7E232FC2BC6EB470087D8F8 /* CodeCoverage.cpp in Sources */,
+				A7E232FD2BC6EB470087D8F8 /* Error.cpp in Sources */,
+				A7E2332D2BC81B5D0087D8F8 /* AutoLoad.c in Sources */,
+				A7E232F72BC6EB470087D8F8 /* CoverageSummaryInfo.cpp in Sources */,
+				A7E232FE2BC6EB470087D8F8 /* CoverageReport.cpp in Sources */,
+				A7E233032BC6F01B0087D8F8 /* SymbolAddress.c in Sources */,
+				A7E233392BCD6B240087D8F8 /* SubprocessSpawn.c in Sources */,
+				A7B39C702BCFCD77007F98B2 /* SubprocessWait.c in Sources */,
+				A7E232F52BC6EB470087D8F8 /* CoverageExporterJson.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A7FC25602BA1E83500067E26 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				A7FC25BB2BA1EADF00067E26 /* DDTestMonitor.swift in Sources */,
-				A7FC25D62BA1EB6400067E26 /* DDSymbolAddress.c in Sources */,
 				A7FC260A2BA1EC0500067E26 /* Log.swift in Sources */,
 				A71E64712BAA0AA100F2ACA5 /* AppveyorCI.swift in Sources */,
 				A7FC26142BA1EC0500067E26 /* XCUIApplicationSwizzler.swift in Sources */,
 				A71E64722BAA0AA100F2ACA5 /* BuildkiteCI.swift in Sources */,
 				A7FC260B2BA1EC0500067E26 /* InternalError.swift in Sources */,
 				A7FC25BF2BA1EAEB00067E26 /* DDCoverageHelper.swift in Sources */,
-				A7FC25DE2BA1EBA900067E26 /* NTPServer.m in Sources */,
 				A7FC25B52BA1EADF00067E26 /* DDInstrumentationControl.swift in Sources */,
 				A71E646E2BAA0AA100F2ACA5 /* GithubCI.swift in Sources */,
 				A7FC25B82BA1EADF00067E26 /* DDTracer.swift in Sources */,
-				A7FC26092BA1EC0500067E26 /* NTPClock.swift in Sources */,
+				A7FC26092BA1EC0500067E26 /* Clock.swift in Sources */,
 				A7FC260E2BA1EC0500067E26 /* PlatformUtils.swift in Sources */,
 				A71E646C2BAA0AA100F2ACA5 /* TeamcityCI.swift in Sources */,
 				A71E64692BAA0AA100F2ACA5 /* Config.swift in Sources */,
@@ -1364,25 +1453,22 @@
 				A7FC26082BA1EC0500067E26 /* FileLocator.swift in Sources */,
 				A7FC26132BA1EC0500067E26 /* CodeOwners.swift in Sources */,
 				A7FC25B72BA1EADF00067E26 /* DDTestSession.swift in Sources */,
-				A7FC25DD2BA1EBA900067E26 /* NTPTypes.c in Sources */,
 				A71E64702BAA0AA100F2ACA5 /* TravisCI.swift in Sources */,
 				A7FC25BC2BA1EADF00067E26 /* FrameworkLoadHandler.swift in Sources */,
 				A7FC26122BA1EC0500067E26 /* SwiftExtensions.swift in Sources */,
 				A7FC260C2BA1EC0500067E26 /* GitInfo.swift in Sources */,
 				A7FC26112BA1EC0500067E26 /* DDFileReader.swift in Sources */,
 				A71E647E2BAA0AA100F2ACA5 /* EnvironmentReader.swift in Sources */,
-				A7FC25D72BA1EB6400067E26 /* LibraryInitializer.m in Sources */,
 				A71E647A2BAA0AA100F2ACA5 /* CircleCI.swift in Sources */,
 				A71E646D2BAA0AA100F2ACA5 /* JenkinsCI.swift in Sources */,
 				A71E646F2BAA0AA100F2ACA5 /* AwsCodeBuildCI.swift in Sources */,
 				A7FC26102BA1EC0500067E26 /* SanitizerHelper.swift in Sources */,
-				A7FC25D82BA1EB6400067E26 /* SanitizerMessageHandler.m in Sources */,
 				A7FC25D52BA1EB3F00067E26 /* DDNetworkInstrumentation.swift in Sources */,
 				A71E64792BAA0AA100F2ACA5 /* GitlabCI.swift in Sources */,
-				A7FC26152BA1EC0500067E26 /* DateClock.swift in Sources */,
 				A71E647B2BAA0AA100F2ACA5 /* BitbucketCI.swift in Sources */,
 				A7FC25B42BA1EADF00067E26 /* DDTestObserver.swift in Sources */,
 				A7FC260D2BA1EC0500067E26 /* SignalUtils.swift in Sources */,
+				A7E233332BC93D100087D8F8 /* Synced.swift in Sources */,
 				A7FC25D42BA1EB3400067E26 /* BinaryImages.swift in Sources */,
 				A7FC25B62BA1EADF00067E26 /* DDTestModule.swift in Sources */,
 				A71E646A2BAA0AA100F2ACA5 /* Environment.swift in Sources */,
@@ -1455,11 +1541,8 @@
 				A7FC261D2BA1EC5A00067E26 /* MultipartFormDataRequest.swift in Sources */,
 				A7FC26322BA1ECC500067E26 /* SpansExporter.swift in Sources */,
 				A7FC26462BA1ECEF00067E26 /* FilesOrchestrator.swift in Sources */,
-				A7FC26272BA1EC6F00067E26 /* LLVMCodeCoverageBridge.mm in Sources */,
 				A7FC26482BA1ECEF00067E26 /* FileWriter.swift in Sources */,
-				A7FC26262BA1EC6F00067E26 /* Error.cpp in Sources */,
 				A7FC263C2BA1ECCF00067E26 /* DataCompression.swift in Sources */,
-				A7FC27012BA8818300067E26 /* Subprocess.c in Sources */,
 				A7FC261A2BA1EC5A00067E26 /* DataUploadStatus.swift in Sources */,
 				A7FC263A2BA1ECCF00067E26 /* EncodableValue.swift in Sources */,
 				A7FC26352BA1ECCF00067E26 /* PerformancePreset.swift in Sources */,
@@ -1468,14 +1551,11 @@
 				A7FC26372BA1ECCF00067E26 /* JSONGeneric.swift in Sources */,
 				A7FC26222BA1EC6200067E26 /* ITRService.swift in Sources */,
 				A7FC26172BA1EC5A00067E26 /* DatadogEndpoints.swift in Sources */,
-				A7FC26232BA1EC6F00067E26 /* CoverageSummaryInfo.cpp in Sources */,
 				A7FC262E2BA1ECBD00067E26 /* LLVMSimpleCoverageFormat.swift in Sources */,
 				A7FC26332BA1ECC500067E26 /* SpanEncoder.swift in Sources */,
 				A7FC26492BA1ECF800067E26 /* Directory.swift in Sources */,
 				A7FC26202BA1EC6200067E26 /* SearchCommitFormat.swift in Sources */,
 				A7FC261F2BA1EC6200067E26 /* SkipTestsFormat.swift in Sources */,
-				A7FC26282BA1EC6F00067E26 /* CoverageExporterJson.cpp in Sources */,
-				A7FC26252BA1EC6F00067E26 /* CoverageReport.cpp in Sources */,
 				A7FC26192BA1EC5A00067E26 /* DataUploadDelay.swift in Sources */,
 				A7FC26212BA1EC6200067E26 /* ITRConfigFormat.swift in Sources */,
 				A7FC264A2BA1ECF800067E26 /* File.swift in Sources */,
@@ -1485,10 +1565,10 @@
 				A7FC263B2BA1ECCF00067E26 /* Feature.swift in Sources */,
 				A7FC26342BA1ECC500067E26 /* SpanSanitizer.swift in Sources */,
 				A7FC26382BA1ECCF00067E26 /* Spawn.swift in Sources */,
+				A7E233352BCD39E30087D8F8 /* Swift+C.swift in Sources */,
 				A7FC26412BA1ECCF00067E26 /* DateFormatting.swift in Sources */,
 				A7FC26392BA1ECCF00067E26 /* DateProvider.swift in Sources */,
 				A7FC26182BA1EC5A00067E26 /* HTTPClient.swift in Sources */,
-				A7FC26242BA1EC6F00067E26 /* CodeCoverage.cpp in Sources */,
 				A7FC26402BA1ECCF00067E26 /* JSONUtils.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1555,6 +1635,21 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		A7B39C6E2BCFC7CE007F98B2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A7E232DB2BC6E68B0087D8F8 /* CDatadogSDKTesting */;
+			targetProxy = A7B39C6D2BCFC7CE007F98B2 /* PBXContainerItemProxy */;
+		};
+		A7E2330A2BC6F46F0087D8F8 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A7E232DB2BC6E68B0087D8F8 /* CDatadogSDKTesting */;
+			targetProxy = A7E233092BC6F46F0087D8F8 /* PBXContainerItemProxy */;
+		};
+		A7E233122BC6F4E70087D8F8 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A7E232DB2BC6E68B0087D8F8 /* CDatadogSDKTesting */;
+			targetProxy = A7E233112BC6F4E70087D8F8 /* PBXContainerItemProxy */;
+		};
 		A7FC25702BA1E83500067E26 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = A7FC25632BA1E83500067E26 /* DatadogSDKTesting */;
@@ -1587,10 +1682,6 @@
 			isa = PBXTargetDependency;
 			productRef = A7FC26EE2BA8676A00067E26 /* OpenTelemetrySdk */;
 		};
-		A7FC26F12BA8677900067E26 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			productRef = A7FC26F02BA8677900067E26 /* llvm-xcframework */;
-		};
 		A7FC26F32BA867B000067E26 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			productRef = A7FC26F22BA867B000067E26 /* OpenTelemetryApi */;
@@ -1614,6 +1705,87 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		A7E232E02BC6E68B0087D8F8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_WARN_COMMA = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2020-Present Datadog, Inc.";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.CDatadogSDKTesting;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SDKROOT = auto;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2,3";
+			};
+			name = Debug;
+		};
+		A7E232E12BC6E68B0087D8F8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_WARN_COMMA = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2020-Present Datadog, Inc.";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.CDatadogSDKTesting;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SDKROOT = auto;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2,3";
+			};
+			name = Release;
+		};
 		A7FC25752BA1E83500067E26 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1651,7 +1823,6 @@
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,3";
 			};
 			name = Debug;
@@ -1692,7 +1863,6 @@
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,3";
 			};
 			name = Release;
@@ -1713,7 +1883,6 @@
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,3";
 			};
 			name = Debug;
@@ -1733,7 +1902,6 @@
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,3";
 			};
 			name = Release;
@@ -1772,7 +1940,6 @@
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,3";
 			};
 			name = Debug;
@@ -1810,7 +1977,6 @@
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,3";
 			};
 			name = Release;
@@ -1836,7 +2002,6 @@
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,3";
 			};
 			name = Debug;
@@ -1861,7 +2026,6 @@
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,3";
 			};
 			name = Release;
@@ -1908,7 +2072,6 @@
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,3";
 			};
 			name = Debug;
@@ -1954,7 +2117,6 @@
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,3";
 			};
 			name = Release;
@@ -1980,7 +2142,6 @@
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,3";
 				TEST_TARGET_NAME = IntegrationTestsApp;
 			};
@@ -2006,7 +2167,6 @@
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,3";
 				TEST_TARGET_NAME = IntegrationTestsApp;
 			};
@@ -2162,6 +2322,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		A7E232E22BC6E68B0087D8F8 /* Build configuration list for PBXNativeTarget "CDatadogSDKTesting" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A7E232E02BC6E68B0087D8F8 /* Debug */,
+				A7E232E12BC6E68B0087D8F8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		A7FC25792BA1E83500067E26 /* Build configuration list for PBXNativeTarget "DatadogSDKTesting" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -2228,6 +2397,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		A7E2332F2BC82CD10087D8F8 /* XCRemoteSwiftPackageReference "Kronos" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/MobileNativeFoundation/Kronos.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.2.2;
+			};
+		};
 		E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/open-telemetry/opentelemetry-swift";
@@ -2287,6 +2464,16 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		A7E2330C2BC6F4780087D8F8 /* llvm-xcframework */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E1E51D4E28B5099200E0E206 /* XCRemoteSwiftPackageReference "llvm-xcframework" */;
+			productName = "llvm-xcframework";
+		};
+		A7E233302BC82CD10087D8F8 /* Kronos */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A7E2332F2BC82CD10087D8F8 /* XCRemoteSwiftPackageReference "Kronos" */;
+			productName = Kronos;
+		};
 		A7FC26E52BA864FB00067E26 /* NIO */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = E141EB5727EB44400057D747 /* XCRemoteSwiftPackageReference "swift-nio" */;
@@ -2311,11 +2498,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
 			productName = OpenTelemetrySdk;
-		};
-		A7FC26F02BA8677900067E26 /* llvm-xcframework */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E1E51D4E28B5099200E0E206 /* XCRemoteSwiftPackageReference "llvm-xcframework" */;
-			productName = "llvm-xcframework";
 		};
 		A7FC26F22BA867B000067E26 /* OpenTelemetryApi */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -2371,11 +2553,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
 			productName = OpenTelemetrySdk;
-		};
-		E1E51D4F28B5099200E0E206 /* llvm-xcframework */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E1E51D4E28B5099200E0E206 /* XCRemoteSwiftPackageReference "llvm-xcframework" */;
-			productName = "llvm-xcframework";
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

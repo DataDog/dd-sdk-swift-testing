@@ -104,7 +104,7 @@ class NetworkIntegration: XCTestCase {
     func testNetworkIntegration() throws {
         print("NetworkIntegration")
 
-        let url = URL(string: "http://httpbin.org/get")!
+        let url = URL(string: "https://httpbin.org/get")!
         let expec = expectation(description: "GET \(url)")
 
         let task = URLSession.shared.dataTask(with: url) { data, _, _ in

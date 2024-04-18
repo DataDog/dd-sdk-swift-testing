@@ -61,7 +61,7 @@ internal class CoverageExporter {
         let profData = DDCoverageConversor.generateProfData(profrawFile: coverage)
         let ddCoverage = DDCoverageConversor.getDatadogCoverage(profdataFile: profData, testSessionId: testSessionId, testSuiteId: testSuiteId, spanId: spanId, workspacePath: workspacePath, binaryImagePaths: binaryImagePaths)
 
-        if Log.debugMode == false {
+        if Log.isDebug == false {
             try? FileManager.default.removeItem(at: coverage)
             try? FileManager.default.removeItem(at: profData)
         }

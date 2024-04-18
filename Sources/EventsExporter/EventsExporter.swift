@@ -16,6 +16,7 @@ public class EventsExporter: SpanExporter {
 
     public init(config: ExporterConfiguration) throws {
         self.configuration = config
+        Log.setLogger(config.logger)
         spansExporter = try SpansExporter(config: configuration)
         logsExporter = try LogsExporter(config: configuration)
         coverageExporter = try CoverageExporter(config: configuration)

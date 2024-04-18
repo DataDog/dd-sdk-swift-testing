@@ -6,25 +6,34 @@
 
 import Foundation
 
+public protocol Logger {
+    var isDebug: Bool { get }
+    func print(_ message: String)
+    func debug(_ wrapped: @autoclosure () -> String)
+    func measure<T>(name: String, _ operation: () throws -> T) rethrows -> T
+}
+
 struct Log {
-    static var debugMode = false
+    private static var _logger: Logger? = nil
+    
+    static var isDebug: Bool {
+        _logger?.isDebug ?? false
+    }
+    
+    static func setLogger(_ logger: Logger) {
+        _logger = logger
+    }
 
     static func debug(_ string: @autoclosure () -> String) {
-        if debugMode {
-            NSLog("[Debug][DatadogSDKTesting] " + string() + "\n")
-        }
+        _logger?.debug(string())
     }
 
     static func print(_ string: String) {
-        if debugMode {
-            NSLog("[DatadogSDKTesting] " + string + "\n")
-        } else {
-            Swift.print("[DatadogSDKTesting] " + string + "\n")
-        }
+        _logger?.print(string)
     }
 
     static func runOnDebug(_ function: @autoclosure () -> Void) {
-        if debugMode {
+        if _logger?.isDebug ?? false {
             function()
         }
     }

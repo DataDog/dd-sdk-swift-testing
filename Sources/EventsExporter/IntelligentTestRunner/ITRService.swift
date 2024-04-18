@@ -124,6 +124,7 @@ internal class ITRService {
     }
 
     func uploadPackFiles(packFilesDirectory: Directory, commit: String, repository: String) throws {
+        Log.debug("Uploading packfiles from: \(packFilesDirectory) for commit: \(commit) in repo: \(repository)")
         try packFilesDirectory.files()
             .filter { $0.name.hasSuffix(".pack") }
             .forEach {

@@ -5,12 +5,7 @@
  */
 
 import Foundation
-
-protocol Logger {
-    func print(_ message: String)
-    func debug(_ wrapped: @autoclosure () -> String)
-    func measure<T>(name: String, _ operation: () throws -> T) rethrows -> T
-}
+@_implementationOnly import EventsExporter
 
 final class Log: Logger {
     var isDebug: Bool = false
@@ -61,8 +56,7 @@ extension Log {
     private var symbolicator: DDSymbolicator.Type? { DDSymbolicator.self }
     static var instance: Log = {
         let log = Log(env: DDTestMonitor.envReader)
-        log.isDebug = DDTestMonitor.config.extraDebug
-        log.isDebugTracerCallStack = DDTestMonitor.config.extraDebugCallStack
+        log.boostrap(config: DDTestMonitor.config)
         return log
     }()
     

@@ -8,7 +8,7 @@ import Foundation
 
 /// An abstraction over file system directory where SDK stores its files.
 public struct Directory {
-    public let url: URL
+    public private(set) var url: URL!
 
     /// Creates subdirectory with given path under system caches directory.
     /// RUMM-2169: Use `Directory.cache().createSubdirectory(path:)` instead.
@@ -88,6 +88,11 @@ public struct Directory {
         if FileManager.default.fileExists(atPath: temporaryDirectory.url.path) {
             try FileManager.default.removeItem(at: temporaryDirectory.url)
         }
+    }
+    
+    public mutating func delete() throws {
+        try FileManager.default.removeItem(at: url)
+        url = nil
     }
 
     /// Moves all files from this directory to `destinationDirectory`.

@@ -50,7 +50,7 @@ class LogsExporterTests: XCTestCase {
                                                   ),
                                                   performancePreset: .instantDataDelivery,
                                                   exporterId: "exporterId",
-                                                  debugMode: false)
+                                                  logger: Log())
 
         let logsExporter = try LogsExporter(config: configuration)
 

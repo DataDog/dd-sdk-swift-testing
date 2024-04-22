@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		A71119A22BA8A4F400118323 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */; };
+		A71D89262BD6CACD00531A90 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71D89252BD6CACD00531A90 /* Logger.swift */; };
 		A71E64692BAA0AA100F2ACA5 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64512BAA0AA100F2ACA5 /* Config.swift */; };
 		A71E646A2BAA0AA100F2ACA5 /* Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64532BAA0AA100F2ACA5 /* Environment.swift */; };
 		A71E646B2BAA0AA100F2ACA5 /* Span+Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64542BAA0AA100F2ACA5 /* Span+Environment.swift */; };
@@ -288,6 +289,7 @@
 		8194A2242940B33100B4B592 /* DDTestSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTestSession.swift; sourceTree = "<group>"; };
 		81AA244A2978589600DE8F8A /* DDFileReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDFileReader.swift; sourceTree = "<group>"; };
 		81EDADB2292698A200279027 /* LLVMTotalsCoverageFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLVMTotalsCoverageFormat.swift; sourceTree = "<group>"; };
+		A71D89252BD6CACD00531A90 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		A71E64512BAA0AA100F2ACA5 /* Config.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
 		A71E64532BAA0AA100F2ACA5 /* Environment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Environment.swift; sourceTree = "<group>"; };
 		A71E64542BAA0AA100F2ACA5 /* Span+Environment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Span+Environment.swift"; sourceTree = "<group>"; };
@@ -783,6 +785,7 @@
 				E141EAF627EB3B9E0057D747 /* ServerMock.swift */,
 				E141EAF127EB3B9E0057D747 /* SwiftExtensions.swift */,
 				E141EAF227EB3B9E0057D747 /* TestsDirectory.swift */,
+				A71D89252BD6CACD00531A90 /* Logger.swift */,
 			);
 			path = Helpers;
 			sourceTree = "<group>";
@@ -1584,6 +1587,7 @@
 				A7FC26792BA1F80800067E26 /* EventsExporterTests.swift in Sources */,
 				A7FC267B2BA1F80E00067E26 /* FileWriterTests.swift in Sources */,
 				A7FC268D2BA1F82300067E26 /* DataUploadDelayTests.swift in Sources */,
+				A71D89262BD6CACD00531A90 /* Logger.swift in Sources */,
 				A7FC26812BA1F81D00067E26 /* HttpTestServer.swift in Sources */,
 				A7FC267C2BA1F80E00067E26 /* FilesOrchestratorTests.swift in Sources */,
 				A7FC26862BA1F81D00067E26 /* EquatableInTests.swift in Sources */,

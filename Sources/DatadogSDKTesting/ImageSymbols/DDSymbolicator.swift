@@ -246,8 +246,11 @@ enum DDSymbolicator {
     }
 
     private static func symbolWithAtos(objectPath: String, libraryAdress: String, callAddress: String) -> String {
-        var symbol = try! Spawn.commandWithResult("/usr/bin/atos --fullPath -o \"\(objectPath)\" -l \(libraryAdress) \(callAddress)")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard var symbol = Spawn.tryCommandWithResult("/usr/bin/atos --fullPath -o \"\(objectPath)\" -l \(libraryAdress) \(callAddress)",
+                                                      log: Log.instance)?.trimmingCharacters(in: .whitespacesAndNewlines) else
+        {
+            return ""
+        }
         if symbol.hasPrefix("atos cannot load") {
             return ""
         } else if symbol.hasPrefix("Invalid connection: com.apple.coresymbolicationd\n") {
@@ -267,8 +270,8 @@ enum DDSymbolicator {
         let imagePath = dSYMFiles.first(where: { $0.lastPathComponent == library })?.path ?? imageAddress.path
 
         let librarySlide = String(format: "%016llx", imageAddress.slide)
-        var symbol = try! Spawn.commandWithResult("/usr/bin/atos --fullPath -o \"\(imagePath)\" -s \(librarySlide) \(callAddress)")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+        var symbol = (try? Spawn.commandWithResult("/usr/bin/atos --fullPath -o \"\(imagePath)\" -s \(librarySlide) \(callAddress)"))?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
         if symbol.isEmpty || symbol.hasPrefix("atos cannot load") || symbol == callAddress {
             return nil
@@ -290,7 +293,12 @@ enum DDSymbolicator {
         let symbolsOutputURL = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent("symbols_output")
         FileManager.default.createFile(atPath: symbolsOutputURL.path, contents: nil, attributes: nil)
-        try! Spawn.commandToFile("/usr/bin/symbols -fullSourcePath -lazy \"\(imagePath)\"", outputPath: symbolsOutputURL.path)
+        do {
+            try Spawn.commandToFile("/usr/bin/symbols -fullSourcePath -lazy \"\(imagePath)\"", outputPath: symbolsOutputURL.path)
+        } catch {
+            Log.debug("symbolsInfo for \(library) failed: \(error)")
+            return nil
+        }
         return symbolsOutputURL
     }
 

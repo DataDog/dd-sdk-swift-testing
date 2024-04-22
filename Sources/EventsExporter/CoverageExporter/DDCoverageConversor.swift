@@ -8,12 +8,12 @@ import Foundation
 import CDatadogSDKTesting
 
 struct DDCoverageConversor {
-    static func generateProfData(profrawFile: URL) -> URL {
+    static func generateProfData(profrawFile: URL) throws -> URL {
         let outputURL = profrawFile.deletingPathExtension().appendingPathExtension("profdata")
         let input = profrawFile.path
         let outputPath = outputURL.path
         let commandToRun = #"xcrun llvm-profdata merge -sparse "\#(input)" -o "\#(outputPath)""#
-        try! Spawn.command(commandToRun)
+        try Spawn.command(commandToRun)
         return outputURL
     }
 

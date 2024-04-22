@@ -94,6 +94,8 @@ internal class DDTestMonitor {
     static var localRepositoryURLPath: String {
         return env.git.repositoryURL?.spanAttribute ?? ""
     }
+    
+    private var isGitUploadSucceded: Bool = false
 
     static func installTestMonitor() -> Bool {
         guard DDTestMonitor.config.apiKey != nil else {
@@ -171,19 +173,39 @@ internal class DDTestMonitor {
 
     func startGitUpload() {
         /// Check Git is up to date and no local changes
-        guard DDTestMonitor.env.isCI || GitUploader.statusUpToDate() else {
-            Log.debug("Git status not up to date")
+        let workspace = DDTestMonitor.env.workspacePath ?? ""
+        guard DDTestMonitor.env.isCI || GitUploader.statusUpToDate(workspace: workspace, log: Log.instance) else {
+            Log.print("Git status is not up to date")
             return
         }
 
         DDTestMonitor.instance?.gitUploadQueue.addOperation {
             if DDTestMonitor.config.gitUploadEnabled {
                 Log.debug("Git Upload Enabled")
-                DDTestMonitor.instance?.gitUploader = GitUploader()
+                guard let exporter = DDTestMonitor.tracer.eventsExporter else {
+                    Log.print("GitUpload error: event exporter is nil")
+                    self.isGitUploadSucceded = false
+                    return
+                }
+                DDTestMonitor.instance?.gitUploader = GitUploader(
+                    log: Log.instance, exporter: exporter, workspace: workspace,
+                    commitFolder: DDTestMonitor.commitFolder
+                )
             } else {
                 Log.debug("Git Upload Disabled")
+                self.isGitUploadSucceded = false
+                return
             }
-            DDTestMonitor.instance?.gitUploader?.sendGitInfo()
+            
+            guard let commit = DDTestMonitor.env.git.commitSHA else {
+                Log.print("Commit SHA is empty. GitUpload failed")
+                self.isGitUploadSucceded = false
+                return
+            }
+            
+            self.isGitUploadSucceded = DDTestMonitor.instance?.gitUploader?.sendGitInfo(
+                repositoryURL: DDTestMonitor.localRepositoryURLPath, commit: commit
+            ) ?? false
         }
     }
 
@@ -239,7 +261,10 @@ internal class DDTestMonitor {
                     return
                 }
                 gitUploadQueue.waitUntilAllOperationsAreFinished()
-                itr = IntelligentTestRunner(configurations: DDTestMonitor.baseConfigurationTags)
+                
+                if isGitUploadSucceded {
+                    itr = IntelligentTestRunner(configurations: DDTestMonitor.baseConfigurationTags)
+                }
                 itr?.start()
             } else {
                 Log.debug("ITR Disabled")

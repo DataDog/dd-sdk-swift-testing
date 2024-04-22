@@ -66,3 +66,19 @@ public enum Spawn {
         }
     }
 }
+
+
+extension Spawn {
+    public static func tryCommandWithResult(_ command: String, log: any Logger, debug: Bool = true) -> String? {
+        do {
+            return try Spawn.commandWithResult(command)
+        } catch {
+            if debug {
+                Log.debug("Command \(command) failed with error \(error)")
+            } else {
+                Log.print("Command \(command) failed with error \(error)")
+            }
+            return nil
+        }
+    }
+}

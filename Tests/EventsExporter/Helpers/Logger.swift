@@ -14,11 +14,11 @@ class Log: Logger {
         self.isDebug = isDebug
     }
     
-    func print(_ message: String) { print("[LOG] " + message) }
+    func print(_ message: String) { Swift.print("[LOG] " + message) }
     
     func debug(_ wrapped: @autoclosure () -> String) {
         if isDebug {
-            print("[LOG][D] " + wrapped())
+            Swift.print("[LOG][D] " + wrapped())
         }
     }
     

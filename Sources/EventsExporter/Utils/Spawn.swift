@@ -8,9 +8,30 @@ import Foundation
 import CDatadogSDKTesting
 
 public enum Spawn {
-    struct ExitCode: Swift.Error {
-        let code: Int32
-        let output: String?
+    enum RunError: Error, CustomDebugStringConvertible {
+        case code(Int32, String?)
+        case signal(Int32, String?)
+        
+        var debugDescription: String {
+            let prefix: String
+            let output: String?
+            switch self {
+            case .code(let c, let o):
+                prefix = "Code: \(c)"
+                output = o
+            case .signal(let s, let o):
+                prefix = "Signal: \(s)"
+                output = o
+            }
+            return "RunError::\(prefix)" + (output.map {": \($0)"} ?? "")
+        }
+        
+        func with(output: String?) -> Self {
+            switch self {
+            case .code(let c, let o): return .code(c, output ?? o)
+            case .signal(let s, let o): return .signal(s, output ?? o)
+            }
+        }
     }
     
     public static func command(_ command: String) throws {
@@ -31,8 +52,8 @@ public enum Spawn {
         do {
             try commandToFile(command, outputPath: tempOutput.path)
             return (try? String(contentsOf: tempOutput)) ?? ""
-        } catch let e as ExitCode {
-            throw ExitCode(code: e.code, output: (try? String(contentsOf: tempOutput)) ?? e.output)
+        } catch let e as RunError {
+            throw e.with(output: (try? String(contentsOf: tempOutput)))
         }
     }
 
@@ -62,7 +83,9 @@ public enum Spawn {
             throw POSIXError(POSIXError.Code(rawValue: status.error) ?? .ELAST)
         }
         guard status.status.si_code == CLD_EXITED && status.status.si_status == 0 else {
-            throw ExitCode(code: status.status.si_status, output: nil)
+            throw status.status.si_code == CLD_EXITED
+                ? RunError.code(status.status.si_status, "")
+                : RunError.signal(status.status.si_status, "")
         }
     }
 }

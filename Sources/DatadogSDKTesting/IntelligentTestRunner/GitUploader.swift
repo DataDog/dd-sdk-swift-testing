@@ -90,9 +90,7 @@ struct GitUploader {
         guard !workspace.isEmpty else {
             return false
         }
-        guard let status = Spawn.tryCommandWithResult(#"git -C "\#(workspace)" status --short -uno"#, log: log)?
-            .trimmingCharacters(in: .whitespacesAndNewlines) else
-        {
+        guard let status = Spawn.output(try: #"git -C "\#(workspace)" status --short -uno"#, log: log) else {
             return false
         }
         log.debug("Git status: \(status)")
@@ -101,9 +99,9 @@ struct GitUploader {
 
     private func handleShallowClone(repository: String) -> Bool {
         // Check if is a shallow repository
-        guard let isShallow = Spawn.tryCommandWithResult(#"git -C "\#(workspacePath)" rev-parse --is-shallow-repository"#,
-                                                         log: log)?.trimmingCharacters(in: .whitespacesAndNewlines) else
-        {
+        guard let isShallow = Spawn.output(
+            try: #"git -C "\#(workspacePath)" rev-parse --is-shallow-repository"#, log: log
+        ) else {
             return false
         }
         log.debug("isShallow: \(isShallow)")
@@ -112,9 +110,9 @@ struct GitUploader {
         }
 
         // Count if number of returned lines is greater than 1
-        guard let lineLength = Spawn.tryCommandWithResult(#"git -C "\#(workspacePath)" log --format=oneline -n 2"#, log: log)?
-            .trimmingCharacters(in: .whitespacesAndNewlines) else
-        {
+        guard let lineLength = Spawn.output(
+            try: #"git -C "\#(workspacePath)" log --format=oneline -n 2"#, log: log
+        ) else {
             return false
         }
         log.debug("lineLength: \(lineLength)")
@@ -123,15 +121,15 @@ struct GitUploader {
         }
         
         // Fetch remaining tree info
-        guard let configResult = Spawn.tryCommandWithResult(
-            #"git -C "\#(workspacePath)" config remote.origin.partialclonefilter "blob:none""#, log: log
+        guard let configResult = Spawn.output(
+            try: #"git -C "\#(workspacePath)" config remote.origin.partialclonefilter "blob:none""#, log: log
         ) else {
             return false
         }
         log.debug("configResult: \(configResult)")
 
-        guard let unshallowResult = Spawn.tryCommandWithResult(
-            #"git -C "\#(workspacePath)" fetch --shallow-since="1 month ago" --update-shallow --refetch"#, log: log
+        guard let unshallowResult = Spawn.output(
+            try: #"git -C "\#(workspacePath)" fetch --shallow-since="1 month ago" --update-shallow --refetch"#, log: log
         ) else {
             return false
         }
@@ -140,9 +138,9 @@ struct GitUploader {
     }
 
     private func getLatestCommits() -> [String]? {
-        let latestCommits = Spawn.tryCommandWithResult(
-            #"git -C "\#(workspacePath)" log --format=%H -n 1000 --since="1 month ago""#, log: log
-        )?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let latestCommits = Spawn.output(
+            try: #"git -C "\#(workspacePath)" log --format=%H -n 1000 --since="1 month ago""#, log: log
+        )
         return latestCommits?.components(separatedBy: .newlines)
     }
 
@@ -161,15 +159,12 @@ struct GitUploader {
         Log.debug("rev-list command: \(revlistCommand)")
         Log.debug("rev-list command without exclusion: \(revlistCommandWithoutExclusion)")
         
-        guard let missingCommits = Spawn.tryCommandWithResult(revlistCommand, log: log)?.trimmingCharacters(in: .whitespacesAndNewlines) else {
+        guard let missingCommits = Spawn.output(try: revlistCommand, log: log) else {
             return nil
         }
         Log.debug("rev-list result: \(missingCommits)")
         
-        guard let missingCommitsWithoutExclusion = Spawn
-            .tryCommandWithResult(revlistCommandWithoutExclusion, log: log)?
-            .trimmingCharacters(in: .whitespacesAndNewlines) else
-        {
+        guard let missingCommitsWithoutExclusion = Spawn.output(try: revlistCommandWithoutExclusion, log: log) else {
             return nil
         }
         Log.debug("rev-list result without exclusion: \(missingCommitsWithoutExclusion)")
@@ -180,31 +175,35 @@ struct GitUploader {
     }
 
     private func generatePackFilesFromCommits(commits: [String], repository: String) -> Directory? {
-        var uploadPackfileDirectory = packFilesDirectory.url.path + "/" + UUID().uuidString
-        
-        let packed = log.measure(name: "packObjects") {
-            let commitList = commits.joined(separator: "\n")
-            
-            let cacheDirCommand = #"git -C "\#(workspacePath)" pack-objects --quiet --compression=9 --max-pack-size=3m "\#(uploadPackfileDirectory)" <<< "\#(commitList)""#
-            let toCache = Spawn.tryCommandWithResult(cacheDirCommand, log: log)
-            guard toCache?.hasPrefix("fatal:") ?? true else { return true } // we created pack files
-            // Can't write to cache. Let's try to workspace folder
-            uploadPackfileDirectory = workspacePath + "/" + UUID().uuidString
+        let generate = { (ws: String, dir: String, list: String) in
             do {
-                try FileManager.default.createDirectory(atPath: uploadPackfileDirectory, withIntermediateDirectories: true)
+                try FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
             } catch {
                 return false
             }
-            let workspaceCommand = #"git -C "\#(workspacePath)" pack-objects --quiet --compression=9 --max-pack-size=3m "\#(uploadPackfileDirectory)" <<< "\#(commitList)""#
-            guard let toWS = Spawn.tryCommandWithResult(workspaceCommand, log: log) else {
+            let cmd = #"git -C "\#(ws)" pack-objects --quiet --compression=9 --max-pack-size=3m "\#(dir)" <<< "\#(list)""#
+            guard let (_, err) = Spawn.command(try: cmd, log: log) else {
                 return false
             }
-            return !toWS.hasPrefix("fatal:")
+            return !err.contains("fatal:")
         }
-        guard packed else {
+        
+        return log.measure(name: "packObjects") {
+            var uploadPackfileDirectory = packFilesDirectory.url.path + "/" + UUID().uuidString
+            let commitList = commits.joined(separator: "\n")
+            
+            if generate(workspacePath, uploadPackfileDirectory, commitList) {
+                return Directory(url: URL(fileURLWithPath: uploadPackfileDirectory))
+            }
+            
+            // Can't write to cache. Let's try to workspace folder
+            uploadPackfileDirectory = workspacePath + "/" + UUID().uuidString
+            if generate(workspacePath, uploadPackfileDirectory, commitList) {
+                return Directory(url: URL(fileURLWithPath: uploadPackfileDirectory))
+            }
+            
             log.debug("packfile generation failed")
             return nil
         }
-        return Directory(url: URL(fileURLWithPath: uploadPackfileDirectory))
     }
 }

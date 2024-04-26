@@ -60,7 +60,7 @@ internal class DDTestMonitor {
     let itrWorkQueue = OperationQueue()
     let gitUploadQueue = OperationQueue()
 
-    static let developerMachineHostName: String = try! Spawn.commandWithResult("hostname").trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+    static let developerMachineHostName: String = try! Spawn.output("hostname")
 
     static var baseConfigurationTags = [
         DDOSTags.osPlatform: env.platform.osName,

@@ -12,6 +12,12 @@ import CDatadogSDKTesting
 enum DDSymbolicator {
     private static let crashLineRegex = try! NSRegularExpression(pattern: "^([0-9]+)(\\s+)((?:[\\w.] *[\\w.]*)+)(\\s+)(0x[0-9a-fA-F]+)([ \t]+)(0x[0-9a-fA-F]+)([ \t]+\\+[ \t]+[0-9]+)$?", options: .anchorsMatchLines)
     private static let callStackRegex = try! NSRegularExpression(pattern: "^([0-9]+)(\\s+)((?:[\\w.] *[\\w.]*)+)(\\s+)(0x[0-9a-fA-F]+)", options: .anchorsMatchLines)
+    
+    internal static let dsymFilesPath: URL = {
+        let dir = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("DD-DSYMS-"+UUID().uuidString)
+        try! FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir
+    }()
 
     internal static var dSYMFiles: [URL] = {
         var dSYMFiles = [URL]()
@@ -148,10 +154,15 @@ enum DDSymbolicator {
             return nil
         }
         let binaryURL = URL(fileURLWithPath: binaryPath)
-        let dSYMFileURL = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent(binaryURL.lastPathComponent)
-
-        try? Spawn.command("/usr/bin/dsymutil --flat \"\(binaryPath)\" --out \"\(dSYMFileURL.path)\"")
+        let dSYMFileURL = dsymFilesPath.appendingPathComponent(binaryURL.lastPathComponent)
+        
+        do {
+            try Spawn.command("/usr/bin/dsymutil --flat \"\(binaryPath)\" --out \"\(dSYMFileURL.path)\"")
+        } catch {
+            Log.debug("DSYM \(binaryPath) generation failed \(error)")
+            return nil
+        }
+        
         if FileManager.default.fileExists(atPath: dSYMFileURL.path) {
             dSYMFiles.append(dSYMFileURL)
             return dSYMFileURL.path
@@ -246,17 +257,15 @@ enum DDSymbolicator {
     }
 
     private static func symbolWithAtos(objectPath: String, libraryAdress: String, callAddress: String) -> String {
-        guard var symbol = Spawn.tryCommandWithResult("/usr/bin/atos --fullPath -o \"\(objectPath)\" -l \(libraryAdress) \(callAddress)",
-                                                      log: Log.instance)?.trimmingCharacters(in: .whitespacesAndNewlines) else
-        {
+        guard let response = Spawn.command(
+            try: "/usr/bin/atos --fullPath -o \"\(objectPath)\" -l \(libraryAdress) \(callAddress)", log: Log.instance
+        ) else {
             return ""
         }
-        if symbol.hasPrefix("atos cannot load") {
+        if response.error.hasPrefix("atos cannot load") {
             return ""
-        } else if symbol.hasPrefix("Invalid connection: com.apple.coresymbolicationd\n") {
-            symbol = String(symbol.dropFirst("Invalid connection: com.apple.coresymbolicationd\n".count))
         }
-
+        var symbol = response.output
         if let workspacePath = DDTestMonitor.env.workspacePath {
             symbol = symbol.replacingOccurrences(of: workspacePath + "/", with: "")
         }
@@ -264,19 +273,20 @@ enum DDSymbolicator {
     }
 
     static func atosSymbol(forAddress callAddress: String, library: String) -> String? {
-        guard let imageAddress = BinaryImages.imageAddresses[library]
-        else { return nil }
+        guard let imageAddress = BinaryImages.imageAddresses[library] else { return nil }
 
         let imagePath = dSYMFiles.first(where: { $0.lastPathComponent == library })?.path ?? imageAddress.path
 
         let librarySlide = String(format: "%016llx", imageAddress.slide)
-        var symbol = (try? Spawn.commandWithResult("/usr/bin/atos --fullPath -o \"\(imagePath)\" -s \(librarySlide) \(callAddress)"))?
-            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-
-        if symbol.isEmpty || symbol.hasPrefix("atos cannot load") || symbol == callAddress {
+        
+        guard let response = Spawn.command(
+            try: "/usr/bin/atos --fullPath -o \"\(imagePath)\" -s \(librarySlide) \(callAddress)", log: Log.instance
+        ) else {
             return nil
-        } else if symbol.hasPrefix("Invalid connection: com.apple.coresymbolicationd\n") {
-            symbol = String(symbol.dropFirst("Invalid connection: com.apple.coresymbolicationd\n".count))
+        }
+        var symbol = response.output
+        if response.error.hasPrefix("atos cannot load") || symbol.isEmpty || symbol == callAddress {
+            return nil
         }
         if let workspacePath = DDTestMonitor.env.workspacePath {
             symbol = symbol.replacingOccurrences(of: workspacePath + "/", with: "")
@@ -289,14 +299,12 @@ enum DDSymbolicator {
         guard let imagePath = dSYMFiles.first(where: { $0.lastPathComponent == library })?.path else {
             return nil
         }
-
-        let symbolsOutputURL = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent("symbols_output")
-        FileManager.default.createFile(atPath: symbolsOutputURL.path, contents: nil, attributes: nil)
+        let symbolsOutputURL = dsymFilesPath.appendingPathComponent("\(library).symbols")
         do {
-            try Spawn.commandToFile("/usr/bin/symbols -fullSourcePath -lazy \"\(imagePath)\"", outputPath: symbolsOutputURL.path)
+            try Spawn.command("/usr/bin/symbols -fullSourcePath -lazy \"\(imagePath)\"", output: symbolsOutputURL)
         } catch {
             Log.debug("symbolsInfo for \(library) failed: \(error)")
+            try? FileManager.default.removeItem(at: symbolsOutputURL)
             return nil
         }
         return symbolsOutputURL

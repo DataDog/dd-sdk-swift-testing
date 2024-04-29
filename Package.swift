@@ -4,7 +4,7 @@
 import PackageDescription
 
 let releaseVersion = "2.4.0"
-let relaseChecksum = "f9a6ad184b45f998c26b7c4ea3b8e9d9d6c2f2ea06c3293d8f188564f5b90623"
+let relaseChecksum = "e96c741dc021149c70f65a605d9ef7456a68f6f8664d60ba720aa4c6a96ed455"
 let url = "https://popovy.ch/wp-content/uploads/2024/04/DatadogSDKTesting.xcframework.zip"
 
 let package = Package(

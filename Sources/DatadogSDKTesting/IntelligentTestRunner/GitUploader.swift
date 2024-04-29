@@ -116,7 +116,7 @@ struct GitUploader {
             return false
         }
         log.debug("lineLength: \(lineLength)")
-        guard !lineLength.contains("\n") else {
+        if lineLength.contains("\n") {
             return true
         }
         

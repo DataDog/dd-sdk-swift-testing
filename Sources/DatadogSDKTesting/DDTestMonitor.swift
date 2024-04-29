@@ -260,11 +260,14 @@ internal class DDTestMonitor {
                     Log.print("APPLICATION_KEY env variable is not set, this is needed for Intelligent Test Runner")
                     return
                 }
-                gitUploadQueue.waitUntilAllOperationsAreFinished()
                 
-                if isGitUploadSucceded {
-                    itr = IntelligentTestRunner(configurations: DDTestMonitor.baseConfigurationTags)
+                gitUploadQueue.waitUntilAllOperationsAreFinished()
+                guard isGitUploadSucceded else {
+                    Log.print("IRT is enabled but Git Upload failed. Disabling ITR")
+                    return
                 }
+                
+                itr = IntelligentTestRunner(configurations: DDTestMonitor.baseConfigurationTags)
                 itr?.start()
             } else {
                 Log.debug("ITR Disabled")

@@ -58,19 +58,27 @@ internal class CoverageExporter {
 
     func exportCoverage(coverage: URL, testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64, workspacePath: String?, binaryImagePaths: [String]) {
         Log.debug("Start processing coverage: \(coverage.path)")
-        let profData = DDCoverageConversor.generateProfData(profrawFile: coverage)
-        let ddCoverage = DDCoverageConversor.getDatadogCoverage(profdataFile: profData, testSessionId: testSessionId, testSuiteId: testSuiteId, spanId: spanId, workspacePath: workspacePath, binaryImagePaths: binaryImagePaths)
+        let profData: URL
+        do {
+            profData = try DDCoverageConversor.generateProfData(profrawFile: coverage)
+        } catch {
+            Log.debug("Prof Data genetation failed: \(error)")
+            return
+        }
+        
+        let ddCoverage = DDCoverageConversor.getDatadogCoverage(profdataFile: profData, testSessionId: testSessionId,
+                                                                testSuiteId: testSuiteId, spanId: spanId, workspacePath: workspacePath,
+                                                                binaryImagePaths: binaryImagePaths)
 
-        if Log.debugMode == false {
+        if Log.isDebug == false {
             try? FileManager.default.removeItem(at: coverage)
             try? FileManager.default.removeItem(at: profData)
-        }
-        Log.runOnDebug({
+        } else {
             let data = try? JSONEncoder.default().encode(ddCoverage)
             let testName = coverage.deletingPathExtension().lastPathComponent.components(separatedBy: "__").last!
             let jsonURL = coverage.deletingLastPathComponent().appendingPathComponent(testName).appendingPathExtension("json")
             try? data?.write(to: jsonURL)
-        }())
+        }
         coverageStorage.writer.write(value: ddCoverage)
         Log.debug("End processing coverage: \(coverage.path)")
     }

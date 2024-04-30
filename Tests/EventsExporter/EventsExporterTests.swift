@@ -59,7 +59,7 @@ class EventsExporterTests: XCTestCase {
                                                               logsURL: URL(string: "http://localhost:33333/logs")!
                                                           ),
                                                           exporterId: "exporterId",
-                                                          debugMode: false)
+                                                          logger: Log())
 
         let datadogExporter = try! EventsExporter(config: exporterConfiguration)
 

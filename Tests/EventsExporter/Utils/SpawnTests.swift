@@ -7,14 +7,14 @@ class SpawnTests: XCTestCase {
     }
 
     func testSpawnCommandWithResult() throws {
-        let output = try Spawn.commandWithResult("echo Hello World")
-        XCTAssertEqual(output, "Hello World\n")
+        let output = try Spawn.output("echo Hello World")
+        XCTAssertEqual(output, "Hello World")
     }
 
     func testSpawnCommandToFile() throws {
         let tempURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
-        FileManager.default.createFile(atPath: tempURL.path, contents: nil, attributes: nil)
-        try Spawn.commandToFile("echo Hello World", outputPath: tempURL.path)
+        defer { try? FileManager.default.removeItem(at: tempURL) }
+        try Spawn.command("echo Hello World", output: tempURL)
         let writtenData = try String(contentsOf: tempURL, encoding: .ascii)
         XCTAssertEqual(writtenData, "Hello World\n")
     }

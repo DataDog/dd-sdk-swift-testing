@@ -16,6 +16,7 @@ public class EventsExporter: SpanExporter {
 
     public init(config: ExporterConfiguration) throws {
         self.configuration = config
+        Log.setLogger(config.logger)
         spansExporter = try SpansExporter(config: configuration)
         logsExporter = try LogsExporter(config: configuration)
         coverageExporter = try CoverageExporter(config: configuration)
@@ -65,10 +66,8 @@ public class EventsExporter: SpanExporter {
         return itrService.searchExistingCommits(repositoryURL: repositoryURL, commits: commits)
     }
 
-    public func uploadPackFiles(packFilesDirectory: Directory, commit: String, repository: String) {
-        try? itrService.uploadPackFiles(packFilesDirectory: packFilesDirectory,
-                                        commit: commit,
-                                        repository: repository)
+    public func uploadPackFiles(packFilesDirectory: Directory, commit: String, repository: String) throws {
+        try itrService.uploadPackFiles(packFilesDirectory: packFilesDirectory, commit: commit, repository: repository)
     }
 
     public func skippableTests(repositoryURL: String, sha: String, configurations: [String: String], customConfigurations: [String: String]) -> [SkipTestPublicFormat] {

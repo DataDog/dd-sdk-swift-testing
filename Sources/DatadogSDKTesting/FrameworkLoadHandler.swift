@@ -53,12 +53,14 @@ enum FrameworkLoadHandler {
             NSLog("[DatadogSDKTesting] Framework loaded but not in test mode")
         }
     }
-    
-    // this method should not be called. It's needed for linking
-    static func __noop() { AutoLoadHandler() }
 }
 
 @_cdecl("__AutoLoadHook")
 internal func __AutoLoadHook() {
     FrameworkLoadHandler.libraryLoaded()
 }
+
+// Don't delete this. It simply tells compiler not to remove AutoLoadHandler from binary
+// This method can be called from C only. Swift will hide it
+@_cdecl("__load_handler__")
+internal func __load_handler__() { AutoLoadHandler() }

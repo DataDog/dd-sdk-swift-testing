@@ -17,7 +17,7 @@ struct GitUploader {
     
     private let commitFolder: Directory
     private let packFilesDirectory: Directory
-
+    
     init?(log: Logger, exporter: EventsExporter, workspace: String, commitFolder: Directory?) {
         guard !workspace.isEmpty,
               let commitFolder = commitFolder,
@@ -38,54 +38,77 @@ struct GitUploader {
         self.commitFolder = commitFolder
         self.log = log
     }
-
-    mutating func sendGitInfo(repositoryURL: String, commit: String) -> Bool {
-        guard !repositoryURL.isEmpty else {
-            log.print("sendGitInfo failed, repository not found")
-            return false
-        }
-        log.measure(name: "handleShallowClone") {
-            /// Check if the repository is a shallow clone, if so fetch more info
-            let _ = handleShallowClone(repository: repositoryURL)
-        }
-
-        let existingCommits = log.measure(name: "searchRepositoryCommits") {
-            searchRepositoryCommits(repository: repositoryURL) ?? []
-        }
-        log.debug("Existing commits: \(existingCommits)")
-
-        let commitsToUpload = log.measure(name: "getCommitsAndTreesExcluding") {
-            getCommitsAndTreesExcluding(excluded: existingCommits) ?? []
-        }
-        log.debug("Commits To Upload: \(commitsToUpload)")
-
-        guard let commitFile = try? commitFolder.createFile(named: Self.uploadedCommitFile) else {
-            return false
-        }
-        
-        if !commitsToUpload.isEmpty {
-            guard var directory = generatePackFilesFromCommits(commits: commitsToUpload, repository: repositoryURL) else {
-                try? commitFile.delete()
+    
+    func sendGitInfo(repositoryURL: URL?, commit: String) -> Bool {
+        let repository: String
+        if let url = repositoryURL {
+            repository = url.spanAttribute
+        } else {
+            guard let rURL = git("ls-remote --get-url"), let pURL = URL(string: rURL) else {
+                log.print("sendGitInfo failed, repository URL not found")
                 return false
             }
-            do {
-                try log.measure(name: "uploadExistingPackfiles") {
-                    try exporter.uploadPackFiles(packFilesDirectory: directory, commit: commit, repository: repositoryURL)
+            repository = pURL.spanAttribute
+        }
+        
+        guard var newCommits = searchForNewCommits(repositoryURL: repository) else {
+            log.print("Can't obtain new commits")
+            return false
+        }
+        log.debug("New commits: \(newCommits)")
+        
+        guard let commitsFile = try? commitFolder.createFile(named: Self.uploadedCommitFile) else {
+            log.print("Can't create commits file")
+            return false
+        }
+        if newCommits.isEmpty {
+            saveCommits(file: commitsFile, commits: newCommits)
+            return true
+        }
+        
+        /// Check if the repository is a shallow clone, if so fetch more info and calculate one more time
+        if isShallowRepository {
+            let unshallowed = log.measure(name: "handleShallowClone") {
+                handleShallowClone(repository: repository)
+            }
+            if unshallowed {
+                guard let newCommitsUnshallow = searchForNewCommits(repositoryURL: repository) else {
+                    log.print("Can't obtain new commits after unshallow")
+                    try? commitsFile.delete()
+                    return false
                 }
-            } catch {
-                log.print("packfiles upload failed: \(error)")
-                try? directory.delete()
-                try? commitFile.delete()
-                return false
+                log.debug("New commits after unshallow: \(newCommitsUnshallow)")
+                if newCommitsUnshallow.isEmpty {
+                    saveCommits(file: commitsFile, commits: newCommitsUnshallow)
+                    return true
+                }
+                newCommits = newCommitsUnshallow
             }
         }
         
-        if let commits = try? JSONEncoder().encode(commitsToUpload) {
-            try? commitFile.append(data: commits)
+        // Generate pack files for the new commits
+        guard let directory = generatePackFilesFromCommits(commits: newCommits, repository: repository) else {
+            try? commitsFile.delete()
+            return false
         }
+        
+        // Upload pack files for the new commits
+        do {
+            try log.measure(name: "uploadExistingPackfiles") {
+                try exporter.uploadPackFiles(packFilesDirectory: directory, commit: commit, repository: repository)
+            }
+        } catch {
+            log.print("packfiles upload failed: \(error)")
+            try? commitsFile.delete()
+            try? directory.delete()
+            return false
+        }
+        
+        try? directory.delete()
+        saveCommits(file: commitsFile, commits: newCommits)
         return true
     }
-
+    
     static func statusUpToDate(workspace: String, log: Logger) -> Bool {
         guard !workspace.isEmpty else {
             return false
@@ -96,82 +119,87 @@ struct GitUploader {
         log.debug("Git status: \(status)")
         return status.isEmpty
     }
-
-    private func handleShallowClone(repository: String) -> Bool {
+    
+    private func searchForNewCommits(repositoryURL: String) -> [String]? {
+        guard let latestCommits = log.measure(name: "getLatestCommits", getLatestCommits),
+              !latestCommits.isEmpty else
+        {
+            log.print("sendGitInfo failed, can't get latest commits")
+            return nil
+        }
+        let existingCommits = log.measure(name: "searchRepositoryCommits") {
+            exporter.searchCommits(repositoryURL: repositoryURL, commits: latestCommits)
+        }
+        let commits = Set(latestCommits).subtracting(existingCommits)
+        if commits.isEmpty { return [] }
+        return log.measure(name: "getCommitsAndTrees") {
+            getCommitsAndTrees(included: Array(commits), excluded: existingCommits)
+        }
+    }
+    
+    private var isShallowRepository: Bool {
         // Check if is a shallow repository
-        guard let isShallow = Spawn.output(
-            try: #"git -C "\#(workspacePath)" rev-parse --is-shallow-repository"#, log: log
-        ) else {
+        guard let isShallow = git("rev-parse --is-shallow-repository") else {
             return false
         }
         log.debug("isShallow: \(isShallow)")
-        guard isShallow == "true" else {
-            return true
-        }
-
+        return isShallow == "true"
+    }
+    
+    private func handleShallowClone(repository: String) -> Bool {
         // Count if number of returned lines is greater than 1
-        guard let lineLength = Spawn.output(
-            try: #"git -C "\#(workspacePath)" log --format=oneline -n 2"#, log: log
-        ) else {
+        guard let last2Commits = git("log --format=oneline -n 2") else {
             return false
         }
-        log.debug("lineLength: \(lineLength)")
-        if lineLength.contains("\n") {
+        log.debug("last2Commits: \(last2Commits)")
+        if last2Commits.contains("\n") {
             return true
         }
         
-        // Fetch remaining tree info
-        guard let configResult = Spawn.output(
-            try: #"git -C "\#(workspacePath)" config remote.origin.partialclonefilter "blob:none""#, log: log
-        ) else {
+        guard let head = git("rev-parse HEAD") else {
             return false
         }
-        log.debug("configResult: \(configResult)")
-
-        guard let unshallowResult = Spawn.output(
-            try: #"git -C "\#(workspacePath)" fetch --shallow-since="1 month ago" --update-shallow --refetch"#, log: log
+        
+        guard let remote = git("config --default origin --get clone.defaultRemoteName") else {
+            return false
+        }
+        
+        guard let unshallowResult = git(
+            #"fetch --shallow-since="1 month ago" --update-shallow --filter="blob:none" --recurse-submodules=no \#(remote) \#(head)"#
         ) else {
             return false
         }
         log.debug("unshallowResult: \(unshallowResult)")
         return true
     }
-
-    private func getLatestCommits() -> [String]? {
-        let latestCommits = Spawn.output(
-            try: #"git -C "\#(workspacePath)" log --format=%H -n 1000 --since="1 month ago""#, log: log
-        )
-        return latestCommits?.components(separatedBy: .newlines)
-    }
-
-    private func searchRepositoryCommits(repository: String) -> [String]? {
-        getLatestCommits().map { commits in
-            exporter.searchCommits(repositoryURL: repository, commits: commits)
+    
+    private func saveCommits(file: File, commits: [String]) {
+        if let data = try? JSONEncoder().encode(commits) {
+            try? file.append(data: data)
         }
     }
+    
+    private func git(_ cmd: String) -> String? {
+        Spawn.output(try: "git -C \"\(workspacePath)\" \(cmd)", log: log)
+    }
 
-    private func getCommitsAndTreesExcluding(excluded: [String]) -> [String]? {
-        let exclusionList = excluded.map { "^\($0)" }.joined(separator: " ")
+    private func getLatestCommits() -> [String]? {
+        git(#"log --format=%H -n 1000 --since="1 month ago""#)?.components(separatedBy: .newlines)
+    }
+    
+    private func getCommitsAndTrees(included: [String], excluded: [String]) -> [String]? {
+        let incl = included.joined(separator: " ")
+        let excl = excluded.map { "^\($0)" }.joined(separator: " ")
         
-        let revlistCommand = #"git -C "\#(workspacePath)" rev-list --objects --no-object-names --filter=blob:none HEAD --since="1 month ago" \#(exclusionList)"#
-        let revlistCommandWithoutExclusion = #"git -C "\#(workspacePath)" rev-list --objects --no-object-names --filter=blob:none HEAD --since="1 month ago""#
+        let cmd = #"rev-list --objects --no-object-names --filter=blob:none --since="1 month ago" \#(excl) \#(incl)"#
+        Log.debug("rev-list command: \(cmd)")
         
-        Log.debug("rev-list command: \(revlistCommand)")
-        Log.debug("rev-list command without exclusion: \(revlistCommandWithoutExclusion)")
-        
-        guard let missingCommits = Spawn.output(try: revlistCommand, log: log) else {
+        guard let missingCommits = git(cmd) else {
             return nil
         }
         Log.debug("rev-list result: \(missingCommits)")
         
-        guard let missingCommitsWithoutExclusion = Spawn.output(try: revlistCommandWithoutExclusion, log: log) else {
-            return nil
-        }
-        Log.debug("rev-list result without exclusion: \(missingCommitsWithoutExclusion)")
-        
-        guard !missingCommits.isEmpty else { return [] }
-        let missingCommitsArray = missingCommits.components(separatedBy: .newlines)
-        return missingCommitsArray
+        return missingCommits.components(separatedBy: .newlines)
     }
 
     private func generatePackFilesFromCommits(commits: [String], repository: String) -> Directory? {
@@ -182,10 +210,11 @@ struct GitUploader {
                 return false
             }
             let cmd = #"git -C "\#(ws)" pack-objects --quiet --compression=9 --max-pack-size=3m "\#(dir)" <<< "\#(list)""#
-            guard let (_, err) = Spawn.command(try: cmd, log: log) else {
+            guard let (_, err) = Spawn.command(try: cmd, log: log), !err.contains("fatal:") else {
+                try? FileManager.default.removeItem(atPath: dir)
                 return false
             }
-            return !err.contains("fatal:")
+            return true
         }
         
         return log.measure(name: "packObjects") {

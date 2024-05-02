@@ -90,10 +90,6 @@ internal class DDTestMonitor {
             privateCurrentTest = newValue
         }
     }
-
-    static var localRepositoryURLPath: String {
-        return env.git.repositoryURL?.spanAttribute ?? ""
-    }
     
     private var isGitUploadSucceded: Bool = false
 
@@ -204,7 +200,7 @@ internal class DDTestMonitor {
             }
             
             self.isGitUploadSucceded = DDTestMonitor.instance?.gitUploader?.sendGitInfo(
-                repositoryURL: DDTestMonitor.localRepositoryURLPath, commit: commit
+                repositoryURL: DDTestMonitor.env.git.repositoryURL, commit: commit
             ) ?? false
         }
     }
@@ -221,7 +217,7 @@ internal class DDTestMonitor {
                 Log.measure(name: "itrBackendConfig") {
                     itrBackendConfig = eventsExporter.itrSetting(service: service,
                                                                  env: DDTestMonitor.env.environment,
-                                                                 repositoryURL: DDTestMonitor.localRepositoryURLPath,
+                                                                 repositoryURL: DDTestMonitor.env.git.repositoryURL?.spanAttribute ?? "",
                                                                  branch: branch,
                                                                  sha: commit,
                                                                  configurations: DDTestMonitor.baseConfigurationTags,

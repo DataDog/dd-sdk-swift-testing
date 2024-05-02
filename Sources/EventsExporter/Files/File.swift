@@ -133,3 +133,7 @@ public struct File: WritableFile, ReadableFile {
         try FileManager.default.removeItem(at: url)
     }
 }
+
+extension File: CustomDebugStringConvertible {
+    public var debugDescription: String { url.path }
+}

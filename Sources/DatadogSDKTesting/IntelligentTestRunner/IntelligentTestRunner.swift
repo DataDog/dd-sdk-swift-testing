@@ -32,14 +32,16 @@ class IntelligentTestRunner {
 
         } else {
             createITRFolder()
-            getSkippableTests(repository: DDTestMonitor.localRepositoryURLPath)
+            getSkippableTests(repository: DDTestMonitor.env.git.repositoryURL)
             saveSkippableTestsToDisk()
         }
     }
 
-    func getSkippableTests(repository: String) {
-        guard let commit = DDTestMonitor.env.git.commitSHA else { return }
-        skippableTests = DDTestMonitor.tracer.eventsExporter?.skippableTests(repositoryURL: repository, sha: commit, configurations: configurations, customConfigurations: DDTestMonitor.config.customConfigurations) ?? []
+    func getSkippableTests(repository: URL?) {
+        guard let commit = DDTestMonitor.env.git.commitSHA, let url = repository else { return }
+        skippableTests = DDTestMonitor.tracer.eventsExporter?.skippableTests(repositoryURL: url.spanAttribute, sha: commit,
+                                                                             configurations: configurations,
+                                                                             customConfigurations: DDTestMonitor.config.customConfigurations) ?? []
         Log.debug("Skippable Tests: \(skippableTests)")
     }
 

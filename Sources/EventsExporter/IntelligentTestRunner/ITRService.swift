@@ -130,7 +130,7 @@ internal class ITRService {
             .forEach {
                 packFileRequestBuilder.addFieldsCallback = { request, data in
                     request.addDataField(named: "packfile", data: data, mimeType: .applicationOctetStream)
-                    request.addDataField(named: "pushedSha", data: #"{"data":{"id":"\#(commit)","type":"commit"}, "meta":{"repository_url":"\#(repository)"}}"#.data(using: .utf8)!, mimeType: .applicationJSON)
+                    request.addDataField(named: "pushedSha", data: PushedSHA(id: commit, repoURL: repository).bytes!, mimeType: .applicationJSON)
                 }
                 _ = packFileUploader.upload(data: try $0.read())
             }
@@ -204,5 +204,30 @@ internal class ITRService {
         Log.debug("itrSetting response: \(String(decoding: response, as: UTF8.self))")
 
         return (itrConfig.data.attributes.code_coverage, itrConfig.data.attributes.tests_skipping)
+    }
+}
+
+private struct PushedSHA: Encodable {
+    struct _Data: Encodable {
+        let id: String
+        let type: String
+    }
+    
+    struct _Meta: Encodable {
+        let repositoryUrl: String
+    }
+    
+    let data: _Data
+    let meta: _Meta
+    
+    init(id: String, repoURL: String) {
+        data = _Data(id: id, type: "commit")
+        meta = _Meta(repositoryUrl: repoURL)
+    }
+    
+    var bytes: Data? {
+        let encoder = JSONEncoder()
+        encoder.keyEncodingStrategy = .convertToSnakeCase
+        return try? encoder.encode(self)
     }
 }

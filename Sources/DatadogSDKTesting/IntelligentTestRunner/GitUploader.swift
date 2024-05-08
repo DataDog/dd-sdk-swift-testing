@@ -146,16 +146,7 @@ struct GitUploader {
         return isShallow == "true"
     }
     
-    private func handleShallowClone(repository: String) -> Bool {
-        // Count if number of returned lines is greater than 1
-        guard let last2Commits = git("log --format=oneline -n 2") else {
-            return false
-        }
-        log.debug("last2Commits: \(last2Commits)")
-        if last2Commits.contains("\n") {
-            return true
-        }
-        
+    private func handleShallowClone(repository: String) -> Bool {        
         guard let head = git("rev-parse HEAD") else {
             return false
         }

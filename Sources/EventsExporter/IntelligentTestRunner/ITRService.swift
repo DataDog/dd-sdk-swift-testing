@@ -136,7 +136,7 @@ internal class ITRService {
             }
     }
 
-    func skippableTests(repositoryURL: String, sha: String, configurations: [String: String], customConfigurations: [String: String]) -> [SkipTestPublicFormat] {
+    func skippableTests(repositoryURL: String, sha: String, configurations: [String: String], customConfigurations: [String: String]) -> SkipTests? {
         var itrConfig: [String: JSONGeneric] = configurations.mapValues { .string($0) }
         itrConfig["custom"] = .stringDict(customConfigurations)
 
@@ -151,15 +151,15 @@ internal class ITRService {
               let response = skippableTestsUploader.uploadWithResponse(data: jsonData)
         else {
             Log.debug("skippableTests no response")
-            return []
+            return nil
         }
 
         guard let skipTests = try? JSONDecoder().decode(SkipTestsResponseFormat.self, from: response) else {
             Log.debug("skippableTests invalid response: \(String(decoding: response, as: UTF8.self))")
-            return []
+            return nil
         }
 
-        return skipTests.data.map { skipTest in
+        let tests = skipTests.data.map { skipTest in
             let customConfigurations: [String: String]?
             if case .stringDict(let dict) = skipTest.attributes.configuration?["custom"] {
                 customConfigurations = dict
@@ -181,6 +181,7 @@ internal class ITRService {
                                         configuration: configurations,
                                         customConfiguration: customConfigurations)
         }
+        return SkipTests(correlationId: skipTests.meta.correlation_id, tests: tests)
     }
 
     func itrSetting(service: String, env: String, repositoryURL: String, branch: String, sha: String, configurations: [String: String], customConfigurations: [String: String]) -> (codeCoverage: Bool, testsSkipping: Bool)? {

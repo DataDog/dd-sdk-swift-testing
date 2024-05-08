@@ -191,6 +191,7 @@ internal enum DDTagValues {
 
 internal enum DDItrTags {
     static let itrSkippedTests = "_dd.ci.itr.tests_skipped"
+    static let itrCorrelationId = "itr_correlation_id"
 }
 
 internal enum DDCFMessageID {

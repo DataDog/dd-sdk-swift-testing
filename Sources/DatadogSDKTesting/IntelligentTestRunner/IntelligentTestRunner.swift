@@ -10,10 +10,15 @@ import Foundation
 class IntelligentTestRunner {
     private let itrCachePath = "itr"
     private let skippableFileName = "skippableTests"
+    private var _skippableTests: SkipTests? = nil
 
     var configurations: [String: String]
-    var skippableTests: [SkipTestPublicFormat] = []
     var itrFolder: Directory?
+    
+    var skippableTests: [SkipTestPublicFormat] {
+        _skippableTests?.tests ?? []
+    }
+    var correlationId: String? { _skippableTests?.correlationId }
 
     init(configurations: [String: String]) {
         self.configurations = configurations
@@ -39,10 +44,12 @@ class IntelligentTestRunner {
 
     func getSkippableTests(repository: URL?) {
         guard let commit = DDTestMonitor.env.git.commitSHA, let url = repository else { return }
-        skippableTests = DDTestMonitor.tracer.eventsExporter?.skippableTests(repositoryURL: url.spanAttribute, sha: commit,
-                                                                             configurations: configurations,
-                                                                             customConfigurations: DDTestMonitor.config.customConfigurations) ?? []
-        Log.debug("Skippable Tests: \(skippableTests)")
+        _skippableTests = DDTestMonitor.tracer.eventsExporter?.skippableTests(
+            repositoryURL: url.spanAttribute, sha: commit,
+            configurations: configurations, customConfigurations: DDTestMonitor.config.customConfigurations
+        )
+        Log.debug("Skippable Tests: \(_skippableTests.map {"\($0)"} ?? "nil")")
+        
     }
 
     private func createITRFolder() {
@@ -54,11 +61,11 @@ class IntelligentTestRunner {
 
     private func loadSkippableTestsFromDisk() {
         if let skippableData = try? itrFolder?.file(named: skippableFileName).read(),
-           let skippableTests = try? JSONDecoder().decode([SkipTestPublicFormat].self, from: skippableData)
+           let skippableTests = try? JSONDecoder().decode(SkipTests.self, from: skippableData)
         {
-            self.skippableTests = skippableTests
+            _skippableTests = skippableTests
         }
-        Log.debug("Skippable Tests: \(skippableTests)")
+        Log.debug("Skippable Tests: \(_skippableTests.map {"\($0)"} ?? "nil")")
     }
 
     private func saveSkippableTestsToDisk() {
@@ -66,9 +73,9 @@ class IntelligentTestRunner {
             return
         }
         let skippableTestsFile = try? itrFolder.createFile(named: skippableFileName)
-
-        if let skippableData = try? JSONEncoder().encode(skippableTests) {
-            try? skippableTestsFile?.append(data: skippableData)
+        
+        if let tests = _skippableTests, let data = try? JSONEncoder().encode(tests) {
+            try? skippableTestsFile?.append(data: data)
         }
     }
 }

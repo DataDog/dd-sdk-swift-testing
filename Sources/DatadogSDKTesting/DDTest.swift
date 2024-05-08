@@ -75,6 +75,10 @@ public class DDTest: NSObject {
                 span.setAttribute(key: DDTestTags.testCodeowners, value: owners)
             }
         }
+        
+        if let correlationId = DDTestMonitor.instance?.itr?.correlationId {
+            span.setAttribute(key: DDItrTags.itrCorrelationId, value: .string(correlationId))
+        }
 
         if let testSpan = span as? RecordEventsReadableSpan {
             let simpleSpan = SimpleSpanData(spanData: testSpan.toSpanData(), moduleStartTime: module.startTime, suiteStartTime: suite.startTime)

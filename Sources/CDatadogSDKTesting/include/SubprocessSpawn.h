@@ -12,10 +12,14 @@ extern "C" {
 
 #ifdef __INT32_TYPE__
 typedef __INT32_TYPE__  dd_pid_t;
+#else
+typedef int dd_pid_t;
 #endif
 
-#ifdef __INT16_TYPE__
+#ifdef __UINT16_TYPE__
 typedef __UINT16_TYPE__ dd_mode_t;
+#else
+typedef unsigned short dd_mode_t;
 #endif
 
 typedef  void *posix_spawnattr_t;

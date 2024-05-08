@@ -6,12 +6,12 @@
 
 #pragma once
 
+#include <stdbool.h>
+#include <sys/signal.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <stdbool.h>
-#include <sys/signal.h>
 
 typedef struct run_result_s {
     bool is_error;

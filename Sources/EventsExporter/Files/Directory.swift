@@ -8,7 +8,7 @@ import Foundation
 
 /// An abstraction over file system directory where SDK stores its files.
 public struct Directory {
-    public private(set) var url: URL!
+    public let url: URL
 
     /// Creates subdirectory with given path under system caches directory.
     /// RUMM-2169: Use `Directory.cache().createSubdirectory(path:)` instead.
@@ -90,9 +90,8 @@ public struct Directory {
         }
     }
     
-    public mutating func delete() throws {
+    public func delete() throws {
         try FileManager.default.removeItem(at: url)
-        url = nil
     }
 
     /// Moves all files from this directory to `destinationDirectory`.
@@ -118,4 +117,8 @@ extension Directory {
         }
         return Directory(url: cachesDirectoryURL)
     }
+}
+
+extension Directory: CustomDebugStringConvertible {
+    public var debugDescription: String { url.path }
 }

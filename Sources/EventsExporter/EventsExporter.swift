@@ -70,8 +70,13 @@ public class EventsExporter: SpanExporter {
         try itrService.uploadPackFiles(packFilesDirectory: packFilesDirectory, commit: commit, repository: repository)
     }
 
-    public func skippableTests(repositoryURL: String, sha: String, configurations: [String: String], customConfigurations: [String: String]) -> [SkipTestPublicFormat] {
-        return itrService.skippableTests(repositoryURL: repositoryURL, sha: sha, configurations: configurations, customConfigurations: customConfigurations)
+    public func skippableTests(
+        repositoryURL: String, sha: String, configurations: [String: String],
+        customConfigurations: [String: String]) -> SkipTests?
+    {
+        itrService.skippableTests(repositoryURL: repositoryURL, sha: sha,
+                                  configurations: configurations,
+                                  customConfigurations: customConfigurations)
     }
 
     public func itrSetting(service: String, env: String, repositoryURL: String, branch: String, sha: String, configurations: [String: String], customConfigurations: [String: String]) -> (codeCoverage: Bool, testsSkipping: Bool)? {

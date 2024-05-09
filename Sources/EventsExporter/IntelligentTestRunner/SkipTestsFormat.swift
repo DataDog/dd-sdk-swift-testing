@@ -32,7 +32,12 @@ struct SkipTestsRequestFormat: Codable, JSONable {
 }
 
 struct SkipTestsResponseFormat: Decodable {
+    let meta: Meta
     var data: [SkipTestsResponseData]
+    
+    struct Meta: Decodable {
+        let correlation_id: String
+    }
 
     struct SkipTestResponseAttributes: Decodable {
         var name: String
@@ -57,4 +62,9 @@ public struct SkipTestPublicFormat: CustomStringConvertible, Codable {
     public var description: String {
         return "{name:\(name), suite:\(suite), configuration: \(configuration ?? [:]), customConfiguration: \(customConfiguration ?? [:])}"
     }
+}
+
+public struct SkipTests: Codable {
+    public let correlationId: String
+    public let tests: [SkipTestPublicFormat]
 }

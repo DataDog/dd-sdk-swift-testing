@@ -25,7 +25,7 @@ let temporaryDirectory = obtainUniqueTemporaryDirectory()
 /// Provides handy methods to create / delete files and directires.
 extension Directory {
     /// Creates empty directory with given attributes .
-    func create(attributes: [FileAttributeKey: Any]? = nil, file: StaticString = #file, line: UInt = #line) {
+    func testCreate(attributes: [FileAttributeKey: Any]? = nil, file: StaticString = #file, line: UInt = #line) {
         do {
             try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true, attributes: attributes)
             let initialFilesCount = try files().count
@@ -36,7 +36,7 @@ extension Directory {
     }
 
     /// Deletes entire directory with its content.
-    func delete(file: StaticString = #file, line: UInt = #line) {
+    func testDelete(file: StaticString = #file, line: UInt = #line) {
         if FileManager.default.fileExists(atPath: url.path) {
             do {
                 try FileManager.default.removeItem(at: url)

@@ -15,7 +15,7 @@ class DirectoryTests: XCTestCase {
 
     func testGivenSubdirectoryName_itCreatesIt() throws {
         let directory = try Directory(withSubdirectoryPath: uniqueSubdirectoryName)
-        defer { directory.delete() }
+        defer { directory.testDelete() }
 
         XCTAssertTrue(fileManager.fileExists(atPath: directory.url.path))
     }
@@ -23,7 +23,7 @@ class DirectoryTests: XCTestCase {
     func testGivenSubdirectoryPath_itCreatesIt() throws {
         let path = uniqueSubdirectoryName + "/subdirectory/another-subdirectory"
         let directory = try Directory(withSubdirectoryPath: path)
-        defer { directory.delete() }
+        defer { directory.testDelete() }
 
         XCTAssertTrue(fileManager.fileExists(atPath: directory.url.path))
     }
@@ -31,7 +31,7 @@ class DirectoryTests: XCTestCase {
     func testWhenDirectoryExists_itDoesNothing() throws {
         let path = uniqueSubdirectoryName + "/subdirectory/another-subdirectory"
         let originalDirectory = try Directory(withSubdirectoryPath: path)
-        defer { originalDirectory.delete() }
+        defer { originalDirectory.testDelete() }
         _ = try originalDirectory.createFile(named: "abcd")
 
         // Try again when directory exists
@@ -46,7 +46,7 @@ class DirectoryTests: XCTestCase {
     func testItCreatesFile() throws {
         let path = uniqueSubdirectoryName + "/subdirectory/another-subdirectory"
         let directory = try Directory(withSubdirectoryPath: path)
-        defer { directory.delete() }
+        defer { directory.testDelete() }
 
         let file = try directory.createFile(named: "abcd")
 
@@ -56,7 +56,7 @@ class DirectoryTests: XCTestCase {
 
     func testItRetrievesFile() throws {
         let directory = try Directory(withSubdirectoryPath: uniqueSubdirectoryName)
-        defer { directory.delete() }
+        defer { directory.testDelete() }
         _ = try directory.createFile(named: "abcd")
 
         let file = try directory.file(named: "abcd")
@@ -66,7 +66,7 @@ class DirectoryTests: XCTestCase {
 
     func testItRetrievesAllFiles() throws {
         let directory = try Directory(withSubdirectoryPath: uniqueSubdirectoryName)
-        defer { directory.delete() }
+        defer { directory.testDelete() }
         _ = try directory.createFile(named: "f1")
         _ = try directory.createFile(named: "f2")
         _ = try directory.createFile(named: "f3")

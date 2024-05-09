@@ -12,11 +12,11 @@ class FilesOrchestratorTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        temporaryDirectory.create()
+        temporaryDirectory.testCreate()
     }
 
     override func tearDown() {
-        temporaryDirectory.delete()
+        temporaryDirectory.testDelete()
         super.tearDown()
     }
 

@@ -4,8 +4,8 @@
 import PackageDescription
 
 let releaseVersion = "2.4.0"
-let relaseChecksum = "0c6f04cb72a7db1bf624595db1863bd178ac750de004492e48c92742ff03d988"
-let url = "https://popovy.ch/wp-content/uploads/2024/05/DatadogSDKTesting.xcframework.zip"
+let relaseChecksum = "6789599ea4013d8aeadd201ea6e8ba30a0565a0eceb9130fda60e249e262a43a"
+let url = "https://github.com/DataDog/dd-sdk-swift-testing/releases/download/\(releaseVersion)/DatadogSDKTesting.zip"
 
 let package = Package(
     name: "dd-sdk-swift-testing",

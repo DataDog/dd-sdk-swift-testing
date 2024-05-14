@@ -53,6 +53,7 @@ internal class DDTestMonitor {
     var launchNotificationObserver: NSObjectProtocol?
     var didBecomeActiveNotificationObserver: NSObjectProtocol?
     var isRumActive: Bool = false
+    let messageChannelUUID: String
 
     var crashedModuleInfo: CrashedModuleInformation?
 
@@ -92,6 +93,7 @@ internal class DDTestMonitor {
     }
     
     private var isGitUploadSucceded: Bool = false
+    private var serverTestingPort: CFMessagePort? = nil
 
     static func installTestMonitor() -> Bool {
         guard DDTestMonitor.config.apiKey != nil else {
@@ -118,6 +120,8 @@ internal class DDTestMonitor {
     }
 
     init() {
+        messageChannelUUID = DDTestMonitor.config.messageChannelUUID ?? UUID().uuidString
+        
         if DDTestMonitor.config.isBinaryUnderUITesting {
             launchNotificationObserver = NotificationCenter.default.addObserver(
                 forName: launchNotificationName,
@@ -143,16 +147,18 @@ internal class DDTestMonitor {
                     #if os(iOS)
                         data[DDUISettingsTags.uiSettingsOrientation] = PlatformUtils.getOrientation()
                     #endif
-                    let encoded = try? JSONSerialization.data(withJSONObject: data)
-                    let timeout: CFTimeInterval = 1.0
-                    let remotePort = CFMessagePortCreateRemote(nil, "DatadogTestingPort" as CFString)
-                    if remotePort == nil {
+                    guard let port = self.testingPort else {
                         Log.debug("DatadogTestingPort CFMessagePortCreateRemote failed")
                         return
                     }
-                    let status = CFMessagePortSendRequest(remotePort,
+                    guard let encoded = try? JSONSerialization.data(withJSONObject: data) else {
+                        Log.debug("Json encoding failed for: \(data)")
+                        return
+                    }
+                    let timeout: CFTimeInterval = 1.0
+                    let status = CFMessagePortSendRequest(port,
                                                           DDCFMessageID.setCustomTags,
-                                                          encoded as CFData?,
+                                                          encoded as CFData,
                                                           timeout,
                                                           timeout,
                                                           nil,
@@ -349,8 +355,22 @@ internal class DDTestMonitor {
     func stopStderrCapture() {
         StderrCapture.stopCapturing()
     }
+    
+    var rumPort: CFMessagePort? {
+        guard isRumActive else { return nil }
+        return CFMessagePortCreateRemote(nil, "DatadogRUMTestingPort-\(messageChannelUUID)" as CFString)
+    }
+    
+    private var testingPort: CFMessagePort? {
+        CFMessagePortCreateRemote(nil, "DatadogTestingPort-\(messageChannelUUID)" as CFString)
+    }
 
     func startAttributeListener() {
+        rLock.lock()
+        defer { rLock.unlock() }
+        
+        guard serverTestingPort == nil else { return }
+        
         func attributeCallback(port: CFMessagePort?, msgid: Int32, data: CFData?, info: UnsafeMutableRawPointer?) -> Unmanaged<CFData>? {
             switch msgid {
                 case DDCFMessageID.setCustomTags:
@@ -373,12 +393,15 @@ internal class DDTestMonitor {
             return nil
         }
 
-        let port = CFMessagePortCreateLocal(nil, "DatadogTestingPort" as CFString, attributeCallback, nil, nil)
-        if port == nil {
+        serverTestingPort = CFMessagePortCreateLocal(
+            nil, "DatadogTestingPort-\(messageChannelUUID)" as CFString,
+            attributeCallback, nil, nil
+        )
+        guard let port = serverTestingPort else {
             Log.debug("DatadogTestingPort CFMessagePortCreateLocal failed")
             return
         }
         let runLoopSource = CFMessagePortCreateRunLoopSource(nil, port, 0)
-        CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, CFRunLoopMode.commonModes)
+        CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, CFRunLoopMode.commonModes)
     }
 }

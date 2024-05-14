@@ -29,13 +29,15 @@ extension XCUIApplication {
     func swizzled_launch() {
         DDTestMonitor.instance?.currentTest?.setIsUITest(true)
         if let testSpanContext = DDTracer.activeSpan?.context {
-            self.launchEnvironment["ENVIRONMENT_TRACER_SPANID"] = testSpanContext.spanId.hexString
-            self.launchEnvironment["ENVIRONMENT_TRACER_TRACEID"] = testSpanContext.traceId.hexString
-            addPropagationsHeadersToEnvironment(tracer: DDTestMonitor.tracer)
-            for value in EnvironmentKey.childKeys {
-                addProcessEnvironmentToLaunch(value.rawValue)
-            }
+            self.launchEnvironment[EnvironmentKey.tracerSpanId.rawValue] = testSpanContext.spanId.hexString
+            self.launchEnvironment[EnvironmentKey.tracerTraceId.rawValue] = testSpanContext.traceId.hexString
         }
+        addPropagationsHeadersToEnvironment(tracer: DDTestMonitor.tracer)
+        for value in EnvironmentKey.childKeys {
+            addProcessEnvironmentToLaunch(value.rawValue)
+        }
+        self.launchEnvironment[EnvironmentKey.messageChannelUUID.rawValue] =
+            DDTestMonitor.instance?.messageChannelUUID
         DDTestMonitor.instance?.startAttributeListener()
         swizzled_launch()
     }

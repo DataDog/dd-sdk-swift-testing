@@ -64,6 +64,9 @@ final class Config {
     var tracerTraceId: String? = nil
     var tracerSpanId: String? = nil
     
+    /// UUID for message channels between App and tests
+    var messageChannelUUID: String? = nil
+    
     /// The framework has been launched with extra debug information
     var extraDebug: Bool = false
     var extraDebugCallStack: Bool = false
@@ -125,6 +128,8 @@ final class Config {
         /// UI testing properties
         tracerTraceId = env[.tracerTraceId]
         tracerSpanId = env[.tracerSpanId]
+        
+        messageChannelUUID = env[.messageChannelUUID]
         
         endpoint = env[.site] ?? env[.endpoint]
         disableTracesExporting = env[.dontExport] ?? false

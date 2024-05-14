@@ -48,6 +48,8 @@ internal enum EnvironmentKey: String, CaseIterable {
     case testOutputFile = "TEST_OUTPUT_FILE"
     case tracerTraceId = "ENVIRONMENT_TRACER_TRACEID"
     case tracerSpanId = "ENVIRONMENT_TRACER_SPANID"
+    case messageChannelUUID = "CI_VISIBILITY_MESSAGE_CHANNEL_UUID"
+    case testExecutionId = "CI_VISIBILITY_TEST_EXECUTION_ID"
 }
 
 extension EnvironmentKey {
@@ -58,8 +60,8 @@ extension EnvironmentKey {
          .instrumentationExtraHeaders, .excludedURLs, .enableRecordPayload, disableNetworkCallStack,
          .enableNetworkCallStackSymbolicated, .disableRumIntegration, .maxPayloadSize,
          .enableCiVisibilityLogs, .enableStdoutInstrumentation, .enableStderrInstrumentation,
-         .disableSdkIosIntegration, .disableCrashHandler, .site, .endpoint, .dontExport, .traceDebug,
-         .traceDebugCallStack, .disableNTPClock]
+         .disableSdkIosIntegration, .disableCrashHandler, .disableMachCrashHandler,
+         .site, .endpoint, .dontExport, .traceDebug, .traceDebugCallStack, .disableNTPClock]
     }
 }
 

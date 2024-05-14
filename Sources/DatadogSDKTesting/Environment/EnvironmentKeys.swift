@@ -60,8 +60,8 @@ extension EnvironmentKey {
          .instrumentationExtraHeaders, .excludedURLs, .enableRecordPayload, disableNetworkCallStack,
          .enableNetworkCallStackSymbolicated, .disableRumIntegration, .maxPayloadSize,
          .enableCiVisibilityLogs, .enableStdoutInstrumentation, .enableStderrInstrumentation,
-         .disableSdkIosIntegration, .disableCrashHandler, .site, .endpoint, .dontExport, .traceDebug,
-         .traceDebugCallStack, .disableNTPClock]
+         .disableSdkIosIntegration, .disableCrashHandler, .disableMachCrashHandler,
+         .site, .endpoint, .dontExport, .traceDebug, .traceDebugCallStack, .disableNTPClock]
     }
 }
 

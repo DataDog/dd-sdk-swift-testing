@@ -69,7 +69,7 @@ struct GitUploader {
         /// Check if the repository is a shallow clone, if so fetch more info and calculate one more time
         if isShallowRepository {
             let unshallowed = log.measure(name: "handleShallowClone") {
-                handleShallowClone(repository: repository)
+                handleShallowClone()
             }
             if unshallowed {
                 guard let newCommitsUnshallow = searchForNewCommits(repositoryURL: repository) else {
@@ -146,22 +146,29 @@ struct GitUploader {
         return isShallow == "true"
     }
     
-    private func handleShallowClone(repository: String) -> Bool {        
-        guard let head = git("rev-parse HEAD") else {
-            return false
-        }
-        
+    private func handleShallowClone() -> Bool {
         guard let remote = git("config --default origin --get clone.defaultRemoteName") else {
             return false
         }
         
-        guard let unshallowResult = git(
-            #"fetch --shallow-since="1 month ago" --update-shallow --filter="blob:none" --recurse-submodules=no \#(remote) \#(head)"#
-        ) else {
-            return false
+        if let head = git("rev-parse HEAD"), let result = unshallow(remote, head) {
+            log.debug("Unshallow Result: \(result)")
+            return true
         }
-        log.debug("unshallowResult: \(unshallowResult)")
-        return true
+        
+        if let head = git("rev-parse --abbrev-ref --symbolic-full-name @{upstream}"),
+           let result = unshallow(remote, head)
+        {
+            log.debug("Unshallow Result: \(result)")
+            return true
+        }
+        
+        if let result = unshallow(remote, nil) {
+            log.debug("Unshallow Result: \(result)")
+            return true
+        }
+        
+        return false
     }
     
     private func saveCommits(file: File, commits: [String]) {
@@ -182,7 +189,10 @@ struct GitUploader {
         let incl = included.joined(separator: " ")
         let excl = excluded.map { "^\($0)" }.joined(separator: " ")
         
-        let cmd = #"rev-list --objects --no-object-names --filter=blob:none --since="1 month ago" \#(excl) \#(incl)"#
+        let cmd = """
+        rev-list --objects --no-object-names --filter=blob:none \
+        --since="1 month ago" \(excl) \(incl)
+        """
         Log.debug("rev-list command: \(cmd)")
         
         guard let missingCommits = git(cmd) else {
@@ -192,6 +202,14 @@ struct GitUploader {
         
         return missingCommits.components(separatedBy: .newlines)
     }
+    
+    private func unshallow(_ remote: String, _ head: String?) -> String? {
+        let cmd = """
+        fetch --shallow-since="1 month ago" --update-shallow --filter="blob:none" \
+        --recurse-submodules=no \(remote)\(head.map{" "+$0} ?? "")
+        """
+        return git(cmd)
+    }
 
     private func generatePackFilesFromCommits(commits: [String], repository: String) -> Directory? {
         let generate = { (ws: String, dir: String, list: String) in
@@ -200,7 +218,9 @@ struct GitUploader {
             } catch {
                 return false
             }
-            let cmd = #"git -C "\#(ws)" pack-objects --quiet --compression=9 --max-pack-size=3m "\#(dir)" <<< "\#(list)""#
+            let cmd = """
+            git -C "\(ws)" pack-objects --quiet --compression=9 --max-pack-size=3m "\(dir)" <<< "\(list)"
+            """
             guard let (_, err) = Spawn.command(try: cmd, log: log), !err.contains("fatal:") else {
                 try? FileManager.default.removeItem(atPath: dir)
                 return false
@@ -216,7 +236,8 @@ struct GitUploader {
                 return Directory(url: URL(fileURLWithPath: uploadPackfileDirectory))
             }
             
-            // Can't write to cache. Let's try to workspace folder
+            log.debug("Can't write packfile to cache path. Trying to workspace...")
+            
             uploadPackfileDirectory = workspacePath + "/" + UUID().uuidString
             if generate(workspacePath, uploadPackfileDirectory, commitList) {
                 return Directory(url: URL(fileURLWithPath: uploadPackfileDirectory))

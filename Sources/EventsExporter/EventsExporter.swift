@@ -79,8 +79,15 @@ public class EventsExporter: SpanExporter {
                                   customConfigurations: customConfigurations)
     }
 
-    public func itrSetting(service: String, env: String, repositoryURL: String, branch: String, sha: String, configurations: [String: String], customConfigurations: [String: String]) -> (codeCoverage: Bool, testsSkipping: Bool)? {
-        return itrService.itrSetting(service: service, env: env, repositoryURL: repositoryURL, branch: branch, sha: sha, configurations: configurations, customConfigurations: customConfigurations)
+    public func itrSetting(
+        service: String, env: String, repositoryURL: String, branch: String, sha: String,
+        testLevel: ITRTestLevel, configurations: [String: String], customConfigurations: [String: String]
+    ) -> ITRSettings? {
+        itrService.itrSetting(
+            service: service, env: env, repositoryURL: repositoryURL,
+            branch: branch, sha: sha, testLevel: testLevel, configurations: configurations,
+            customConfigurations: customConfigurations
+        )
     }
 
     public func shutdown(explicitTimeout: TimeInterval?) {

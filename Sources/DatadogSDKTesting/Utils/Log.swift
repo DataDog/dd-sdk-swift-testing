@@ -73,8 +73,8 @@ extension Log {
         instance.print(message)
     }
 
-    static func measure(name: String, _ operation: () -> Void) {
-        instance.measure(name: name, operation)
+    static func measure<T>(name: String, _ operation: () throws -> T) rethrows -> T {
+        try instance.measure(name: name, operation)
     }
     
     static func runOnDebug(_ function: @autoclosure () -> Void) {

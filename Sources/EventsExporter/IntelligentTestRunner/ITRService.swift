@@ -184,11 +184,16 @@ internal class ITRService {
         return SkipTests(correlationId: skipTests.meta.correlation_id, tests: tests)
     }
 
-    func itrSetting(service: String, env: String, repositoryURL: String, branch: String, sha: String, configurations: [String: String], customConfigurations: [String: String]) -> (codeCoverage: Bool, testsSkipping: Bool)? {
+    func itrSetting(
+        service: String, env: String, repositoryURL: String, branch: String, sha: String,
+        testLevel: ITRTestLevel, configurations: [String: String], customConfigurations: [String: String]
+    ) -> ITRSettings? {
         var configurations: [String: JSONGeneric] = configurations.mapValues { .string($0) }
         configurations["custom"] = .stringDict(customConfigurations)
 
-        let itrConfigPayload = ITRConfigRequesFormat(service: service, env: env, repositoryURL: repositoryURL, branch: branch, sha: sha, configurations: configurations)
+        let itrConfigPayload = ITRConfigRequesFormat(service: service, env: env, repositoryURL: repositoryURL,
+                                                     branch: branch, sha: sha, configurations: configurations,
+                                                     testLevel: testLevel)
 
         guard let jsonData = itrConfigPayload.jsonData,
               let response = itrConfigUploader.uploadWithResponse(data: jsonData)
@@ -204,7 +209,7 @@ internal class ITRService {
         }
         Log.debug("itrSetting response: \(String(decoding: response, as: UTF8.self))")
 
-        return (itrConfig.data.attributes.code_coverage, itrConfig.data.attributes.tests_skipping)
+        return ITRSettings(attrs: itrConfig.data.attributes)
     }
 }
 
@@ -216,6 +221,10 @@ private struct PushedSHA: Encodable {
     
     struct _Meta: Encodable {
         let repositoryUrl: String
+        
+        enum CodingKeys: String, CodingKey {
+            case repositoryUrl = "repository_url"
+        }
     }
     
     let data: _Data
@@ -226,9 +235,5 @@ private struct PushedSHA: Encodable {
         meta = _Meta(repositoryUrl: repoURL)
     }
     
-    var bytes: Data? {
-        let encoder = JSONEncoder()
-        encoder.keyEncodingStrategy = .convertToSnakeCase
-        return try? encoder.encode(self)
-    }
+    var bytes: Data? { try? JSONEncoder().encode(self) }
 }

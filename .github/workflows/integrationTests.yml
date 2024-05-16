@@ -22,7 +22,7 @@ jobs:
       run: make tests/unit/pretty
 
   test-Integration-macOS:
-    runs-on: macos-latest
+    runs-on: macos-13
     env:
       DD_API_KEY: '${{ secrets.DD_API_KEY }}'
     steps:
@@ -32,7 +32,7 @@ jobs:
       run: make tests/integration/macOS/pretty
 
   test-Integration-iOS:
-    runs-on: macos-latest
+    runs-on: macos-13
     env:
       DD_API_KEY: '${{ secrets.DD_API_KEY }}'
     steps:
@@ -42,7 +42,7 @@ jobs:
       run: make tests/integration/iOS/pretty
 
   test-Integration-tvOS:
-    runs-on: macos-latest
+    runs-on: macos-13
     env:
       DD_API_KEY: '${{ secrets.DD_API_KEY }}'
     steps:

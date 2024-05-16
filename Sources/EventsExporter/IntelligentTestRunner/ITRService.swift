@@ -136,7 +136,8 @@ internal class ITRService {
             }
     }
 
-    func skippableTests(repositoryURL: String, sha: String, configurations: [String: String], customConfigurations: [String: String]) -> SkipTests? {
+    func skippableTests(repositoryURL: String, sha: String, testLevel: ITRTestLevel,
+                        configurations: [String: String], customConfigurations: [String: String]) -> SkipTests? {
         var itrConfig: [String: JSONGeneric] = configurations.mapValues { .string($0) }
         itrConfig["custom"] = .stringDict(customConfigurations)
 
@@ -144,6 +145,7 @@ internal class ITRService {
                                                       service: exporterConfiguration.serviceName,
                                                       repositoryURL: repositoryURL,
                                                       sha: sha,
+                                                      testLevel: testLevel,
                                                       configurations: itrConfig)
 
         Log.debug("SkipTestsRequestFormat payload: \(skippablePayload.jsonString)")
@@ -181,7 +183,7 @@ internal class ITRService {
                                         configuration: configurations,
                                         customConfiguration: customConfigurations)
         }
-        return SkipTests(correlationId: skipTests.meta.correlation_id, tests: tests)
+        return SkipTests(correlationId: skipTests.meta.correlationId, tests: tests)
     }
 
     func itrSetting(

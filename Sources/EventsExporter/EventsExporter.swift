@@ -71,10 +71,11 @@ public class EventsExporter: SpanExporter {
     }
 
     public func skippableTests(
-        repositoryURL: String, sha: String, configurations: [String: String],
-        customConfigurations: [String: String]) -> SkipTests?
+        repositoryURL: String, sha: String, testLevel: ITRTestLevel,
+        configurations: [String: String], customConfigurations: [String: String]) -> SkipTests?
     {
         itrService.skippableTests(repositoryURL: repositoryURL, sha: sha,
+                                  testLevel: testLevel,
                                   configurations: configurations,
                                   customConfigurations: customConfigurations)
     }

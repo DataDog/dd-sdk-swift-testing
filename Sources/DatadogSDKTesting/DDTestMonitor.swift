@@ -58,7 +58,7 @@ internal class DDTestMonitor {
     var crashedModuleInfo: CrashedModuleInformation?
 
     let instrumentationWorkQueue = OperationQueue()
-    let itrWorkQueue = OperationQueue()
+    private let itrWorkQueue = OperationQueue()
     let gitUploadQueue = OperationQueue()
 
     static let developerMachineHostName: String = try! Spawn.output("hostname")
@@ -243,6 +243,7 @@ internal class DDTestMonitor {
         
         let updateItrSettings = BlockOperation { [self] in
             itrBackendConfig = getItrConfig("Get ITR Config")
+            Log.debug("ITR config: \(String(describing: itrBackendConfig))")
             if itrBackendConfig?.requireGit ?? false {
                 Log.debug("ITR requires Git upload")
                 gitUploadQueue.waitUntilAllOperationsAreFinished()
@@ -252,6 +253,7 @@ internal class DDTestMonitor {
                     return
                 }
                 itrBackendConfig = getItrConfig("Get ITR Config after git upload")
+                Log.debug("ITR config: \(String(describing: itrBackendConfig))")
             }
         }
         itrWorkQueue.addOperation(updateItrSettings)
@@ -428,5 +430,9 @@ internal class DDTestMonitor {
         }
         let runLoopSource = CFMessagePortCreateRunLoopSource(nil, port, 0)
         CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, CFRunLoopMode.commonModes)
+    }
+    
+    func ensureITRStarted() {
+        itrWorkQueue.waitUntilAllOperationsAreFinished()
     }
 }

@@ -28,6 +28,8 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
+    - name: Select Xcode
+      run: sudo xcode-select --switch /Applications/Xcode_14.3.1.app
     - name: tests macOS
       run: make tests/integration/macOS/pretty
 
@@ -38,6 +40,8 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
+    - name: Select Xcode
+      run: sudo xcode-select --switch /Applications/Xcode_14.3.1.app
     - name: tests iOS
       run: make tests/integration/iOS/pretty
 
@@ -48,5 +52,7 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
+    - name: Select Xcode
+      run: sudo xcode-select --switch /Applications/Xcode_14.3.1.app
     - name: tests tvOS
       run: make tests/integration/tvOS/pretty

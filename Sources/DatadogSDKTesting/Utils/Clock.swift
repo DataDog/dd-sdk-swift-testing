@@ -77,7 +77,7 @@ final class NTPClock: Clock {
                     self._state = .synced({ Kronos.Clock.now! })
                 } else {
                     self._state = .synced({ Date() })
-                    Log.debug("NTP server sync failed")
+                    Log.print("NTP server sync failed")
                 }
                 waiter.signal()
             }

@@ -6,8 +6,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  test-13-Integration-Unit:
-    name: Run Tests macOS 13.0
+  test-13-Unit:
+    name: Run Unit Tests macOS 13.0
     runs-on: macos-13
     strategy:
       fail-fast: false
@@ -19,34 +19,34 @@ jobs:
     - name: Select ${{ matrix.xcode }}
       run: sudo xcode-select --switch /Applications/${{ matrix.xcode }}.app
     - name: Unit tests
-      run: make tests/unit/pretty
+      run: make XC_LOG=unit tests/unit
+    - name: Attach Xcode logs
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.xcode }}-unit-logs
+        path: "*-unit.log"
 
-  test-Integration-macOS:
-    runs-on: macos-latest
+  test-13-Integration:
+    name: Run Integration Tests macOS 13.0 Xcode 14.3.1
+    runs-on: macos-13
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: ["macOS", "iOSsim", "tvOSsim"]
     env:
       DD_API_KEY: '${{ secrets.DD_API_KEY }}'
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-    - name: tests macOS
-      run: make tests/integration/macOS/pretty
+    - name: Select Xcode
+      run: sudo xcode-select --switch /Applications/Xcode_14.3.1.app
+    - name: Run tests for ${{ matrix.platform }}
+      run: make XC_LOG=integration tests/integration/${{ matrix.platform }}
+    - name: Attach Xcode logs
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v4
+      with:
+        name: Xcode_14.3.1-${{ matrix.platform }}-integration-log
+        path: "*-integration.log"
 
-  test-Integration-iOS:
-    runs-on: macos-latest
-    env:
-      DD_API_KEY: '${{ secrets.DD_API_KEY }}'
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: tests iOS
-      run: make tests/integration/iOS/pretty
-
-  test-Integration-tvOS:
-    runs-on: macos-latest
-    env:
-      DD_API_KEY: '${{ secrets.DD_API_KEY }}'
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: tests tvOS
-      run: make tests/integration/tvOS/pretty

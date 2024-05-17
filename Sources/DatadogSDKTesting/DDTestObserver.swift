@@ -120,8 +120,8 @@ class DDTestObserver: NSObject, XCTestObservation {
             return
         }
 
-        Log.measure(name: "waiting itrWorkQueue") {
-            DDTestMonitor.instance?.itrWorkQueue.waitUntilAllOperationsAreFinished()
+        Log.measure(name: "waiting for ITR") {
+            DDTestMonitor.instance?.ensureITRStarted()
         }
         
         Log.debug("testSuiteWillStart: \(testSuite.name)")

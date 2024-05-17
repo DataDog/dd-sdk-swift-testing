@@ -58,7 +58,7 @@ internal class DDTestMonitor {
     var crashedModuleInfo: CrashedModuleInformation?
 
     let instrumentationWorkQueue = OperationQueue()
-    let itrWorkQueue = OperationQueue()
+    private let itrWorkQueue = OperationQueue()
     let gitUploadQueue = OperationQueue()
 
     static let developerMachineHostName: String = try! Spawn.output("hostname")
@@ -212,80 +212,107 @@ internal class DDTestMonitor {
     }
 
     func startITR() {
-        var itrBackendConfig: (codeCoverage: Bool, testsSkipping: Bool)?
-
-        itrWorkQueue.addOperation {
+        var itrBackendConfig: ITRSettings? = nil
+        itr = nil
+        coverageHelper = nil
+        
+        guard let branch = DDTestMonitor.env.git.branch,
+              let commit = DDTestMonitor.env.git.commitSHA else {
+            Log.print("Unknown branch and commit. ITR can't be started")
+            return
+        }
+        
+        let getItrConfig = { (log: String) in
             if let service = DDTestMonitor.config.service ?? DDTestMonitor.env.git.repositoryName,
-               let branch = DDTestMonitor.env.git.branch,
-               let commit = DDTestMonitor.env.git.commitSHA,
                let eventsExporter = DDTestMonitor.tracer.eventsExporter
             {
-                Log.measure(name: "itrBackendConfig") {
-                    itrBackendConfig = eventsExporter.itrSetting(service: service,
-                                                                 env: DDTestMonitor.env.environment,
-                                                                 repositoryURL: DDTestMonitor.env.git.repositoryURL?.spanAttribute ?? "",
-                                                                 branch: branch,
-                                                                 sha: commit,
-                                                                 configurations: DDTestMonitor.baseConfigurationTags,
-                                                                 customConfigurations: DDTestMonitor.config.customConfigurations)
+                return Log.measure(name: log) {
+                    eventsExporter.itrSetting(service: service,
+                                              env: DDTestMonitor.env.environment,
+                                              repositoryURL: DDTestMonitor.env.git.repositoryURL?.spanAttribute ?? "",
+                                              branch: branch,
+                                              sha: commit,
+                                              testLevel: .test,
+                                              configurations: DDTestMonitor.baseConfigurationTags,
+                                              customConfigurations: DDTestMonitor.config.customConfigurations)
                 }
             } else {
-                itrBackendConfig = nil
+                return nil
             }
         }
-
-        itrWorkQueue.waitUntilAllOperationsAreFinished()
-        itrWorkQueue.addOperation { [self] in
-            let excludedBranches = DDTestMonitor.config.excludedBranches
-            /// Check branch is not excluded
-            if let currentBranch = DDTestMonitor.env.git.branch {
-                if excludedBranches.contains(currentBranch) {
-                    Log.debug("Excluded branch: \(currentBranch)")
-                    itr = nil
-                    return
-                }
-                let wildcardBranches = excludedBranches.filter { $0.hasSuffix("*") }.map { $0.dropLast() }
-                for branch in wildcardBranches {
-                    if currentBranch.hasPrefix(branch) {
-                        Log.debug("Excluded branch with wildcard: \(currentBranch)")
-                        itr = nil
-                        return
-                    }
-                }
-            }
-
-            // Activate Intelligent Test Runner
-            if DDTestMonitor.config.itrEnabled && itrBackendConfig?.testsSkipping ?? false {
-                Log.debug("ITR Enabled")
-
-                if DDTestMonitor.config.applicationKey == nil {
-                    Log.print("APPLICATION_KEY env variable is not set, this is needed for Intelligent Test Runner")
-                    return
-                }
-                
+        
+        let updateItrSettings = BlockOperation { [self] in
+            itrBackendConfig = getItrConfig("Get ITR Config")
+            Log.debug("ITR config: \(String(describing: itrBackendConfig))")
+            if itrBackendConfig?.requireGit ?? false {
+                Log.debug("ITR requires Git upload")
                 gitUploadQueue.waitUntilAllOperationsAreFinished()
                 guard isGitUploadSucceded else {
-                    Log.print("IRT is enabled but Git Upload failed. Disabling ITR")
+                    Log.print("ITR requires Git but Git Upload failed. Disabling ITR")
+                    itrBackendConfig = nil
                     return
                 }
-                
-                itr = IntelligentTestRunner(configurations: DDTestMonitor.baseConfigurationTags)
-                itr?.start()
-            } else {
-                Log.debug("ITR Disabled")
-                itr = nil
+                itrBackendConfig = getItrConfig("Get ITR Config after git upload")
+                Log.debug("ITR config: \(String(describing: itrBackendConfig))")
             }
         }
-
-        itrWorkQueue.addOperation { [self] in
-            // Activate Coverage
-            if DDTestMonitor.config.coverageEnabled && itrBackendConfig?.codeCoverage ?? false {
-                Log.debug("Coverage Enabled")
-                coverageHelper = DDCoverageHelper()
-            } else {
-                Log.debug("Coverage Disabled")
-                coverageHelper = nil
+        itrWorkQueue.addOperation(updateItrSettings)
+        
+        if DDTestMonitor.config.itrEnabled {
+            let isExcluded = { (branch: String) in
+                let excludedBranches = DDTestMonitor.config.excludedBranches
+                if excludedBranches.contains(branch) {
+                    Log.debug("Excluded branch: \(branch)")
+                    return true
+                }
+                let match = excludedBranches
+                    .filter { $0.hasSuffix("*") }
+                    .map { $0.dropLast() }
+                    .first { branch.hasPrefix($0) }
+                if let wildcard = match {
+                    Log.debug("Excluded branch: \(branch) with wildcard: \(wildcard)*")
+                    return true
+                }
+                return false
             }
+            
+            if !isExcluded(branch) {
+                let itrSetup = BlockOperation { [self] in
+                    // Activate Intelligent Test Runner
+                    if itrBackendConfig?.testsSkipping ?? false {
+                        Log.debug("ITR Enabled")
+
+                        if DDTestMonitor.config.applicationKey == nil {
+                            Log.print("APPLICATION_KEY env variable is not set, this is needed for Intelligent Test Runner")
+                            itr = nil
+                            return
+                        }
+                        
+                        itr = IntelligentTestRunner(configurations: DDTestMonitor.baseConfigurationTags)
+                        itr?.start()
+                    } else {
+                        Log.debug("ITR Disabled")
+                    }
+                }
+                itrSetup.addDependency(updateItrSettings)
+                itrWorkQueue.addOperation(itrSetup)
+            }
+        }
+        
+        if DDTestMonitor.config.coverageEnabled {
+            let coverageSetup = BlockOperation { [self] in
+                // Activate Coverage
+                if itrBackendConfig?.codeCoverage ?? false {
+                    Log.debug("Coverage Enabled")
+                    coverageHelper = DDCoverageHelper()
+                } else {
+                    Log.debug("Coverage Disabled")
+                    coverageHelper = nil
+                }
+                
+            }
+            coverageSetup.addDependency(updateItrSettings)
+            itrWorkQueue.addOperation(coverageSetup)
         }
     }
 
@@ -403,5 +430,9 @@ internal class DDTestMonitor {
         }
         let runLoopSource = CFMessagePortCreateRunLoopSource(nil, port, 0)
         CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, CFRunLoopMode.commonModes)
+    }
+    
+    func ensureITRStarted() {
+        itrWorkQueue.waitUntilAllOperationsAreFinished()
     }
 }

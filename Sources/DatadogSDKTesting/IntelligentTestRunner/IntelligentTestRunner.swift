@@ -45,11 +45,10 @@ class IntelligentTestRunner {
     func getSkippableTests(repository: URL?) {
         guard let commit = DDTestMonitor.env.git.commitSHA, let url = repository else { return }
         _skippableTests = DDTestMonitor.tracer.eventsExporter?.skippableTests(
-            repositoryURL: url.spanAttribute, sha: commit,
+            repositoryURL: url.spanAttribute, sha: commit, testLevel: .test,
             configurations: configurations, customConfigurations: DDTestMonitor.config.customConfigurations
         )
         Log.debug("Skippable Tests: \(_skippableTests.map {"\($0)"} ?? "nil")")
-        
     }
 
     private func createITRFolder() {

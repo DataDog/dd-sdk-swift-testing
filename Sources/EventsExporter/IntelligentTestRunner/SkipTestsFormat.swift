@@ -7,49 +7,65 @@
 import Foundation
 
 struct SkipTestsRequestFormat: Codable, JSONable {
-    var data: SkipTestsRequestData
+    let data: SkipTestsRequestData
 
     struct SkipTestRequestAttributes: Codable {
-        var env: String
-        var service: String
-        var repository_url: String
-        var sha: String
-        var configurations: [String: JSONGeneric]
-    }
-
-    struct SkipTestsRequestData: Codable {
-        var type = "test_params"
-        var attributes: SkipTestRequestAttributes
-
-        init(env: String, service: String, repositoryURL: String, sha: String, configurations: [String: JSONGeneric]) {
-            self.attributes = SkipTestRequestAttributes(env: env, service: service, repository_url: repositoryURL, sha: sha, configurations: configurations)
+        let env: String
+        let service: String
+        let repositoryUrl: String
+        let sha: String
+        let configurations: [String: JSONGeneric]
+        let testLevel: ITRTestLevel
+        
+        enum CodingKeys: String, CodingKey {
+            case env
+            case service
+            case repositoryUrl = "repository_url"
+            case sha
+            case configurations
+            case testLevel = "test_level"
         }
     }
 
-    init(env: String, service: String, repositoryURL: String, sha: String, configurations: [String: JSONGeneric]) {
-        self.data = SkipTestsRequestData(env: env, service: service, repositoryURL: repositoryURL, sha: sha, configurations: configurations)
+    struct SkipTestsRequestData: Codable {
+        var type: String = "test_params"
+        let attributes: SkipTestRequestAttributes
+
+        init(env: String, service: String, repositoryURL: String, sha: String, testLevel: ITRTestLevel, configurations: [String: JSONGeneric]) {
+            self.attributes = SkipTestRequestAttributes(env: env, service: service, repositoryUrl: repositoryURL,
+                                                        sha: sha, configurations: configurations, testLevel: testLevel)
+        }
+    }
+
+    init(env: String, service: String, repositoryURL: String, sha: String, testLevel: ITRTestLevel, configurations: [String: JSONGeneric]) {
+        self.data = SkipTestsRequestData(env: env, service: service, repositoryURL: repositoryURL,
+                                         sha: sha, testLevel: testLevel, configurations: configurations)
     }
 }
 
 struct SkipTestsResponseFormat: Decodable {
     let meta: Meta
-    var data: [SkipTestsResponseData]
+    let data: [SkipTestsResponseData]
     
     struct Meta: Decodable {
-        let correlation_id: String
+        let correlationId: String
+        
+        enum CodingKeys: String, CodingKey {
+            case correlationId = "correlation_id"
+        }
     }
 
     struct SkipTestResponseAttributes: Decodable {
-        var name: String
-        var parameters: String?
-        var suite: String
-        var configuration: [String: JSONGeneric]?
+        let name: String
+        let parameters: String?
+        let suite: String
+        let configuration: [String: JSONGeneric]?
     }
 
     struct SkipTestsResponseData: Decodable {
-        var type = "test"
-        var id: String
-        var attributes: SkipTestResponseAttributes
+        var type: String = "test"
+        let id: String
+        let attributes: SkipTestResponseAttributes
     }
 }
 

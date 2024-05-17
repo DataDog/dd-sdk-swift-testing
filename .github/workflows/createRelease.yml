@@ -14,7 +14,13 @@ jobs:
     - name: Select Xcode 14
       run: sudo xcode-select --switch /Applications/Xcode_14.1.app
     - name: Test
-      run: make tests/pretty
+      run: make XC_LOG=tests tests
+    - name: Attach Xcode logs
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v4
+      with:
+        name: xcode-tests-logs
+        path: "*-tests.log"
 
   release:
     needs: [test]
@@ -27,4 +33,10 @@ jobs:
     - name: Build and upload XCFrameworks, recreate tag
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: make version=${{ github.event.release.tag_name }} github
+      run: make XC_LOG=archive version=${{ github.event.release.tag_name }} github
+    - name: Attach Xcode logs
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v4
+      with:
+        name: xcode-archive-logs
+        path: "*-archive.log"

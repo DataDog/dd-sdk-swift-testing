@@ -6,8 +6,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  test-13-Integration-Unit:
-    name: Run Tests macOS 13.0
+  test-13-Unit:
+    name: Run Unit Tests macOS 13.0
     runs-on: macos-13
     strategy:
       fail-fast: false
@@ -19,10 +19,20 @@ jobs:
     - name: Select ${{ matrix.xcode }}
       run: sudo xcode-select --switch /Applications/${{ matrix.xcode }}.app
     - name: Unit tests
-      run: make tests/unit/pretty
+      run: make XC_PRETTY_LOG=xcode_full.log tests/unit
+    - name: Attach Xcode logs
+      uses: actions/upload-artifact@v4
+      with:
+        name: xcode-log
+        path: xcode_full.log
 
-  test-Integration-macOS:
+  test-13-Integration:
+    name: Run Integration Tests macOS 13.0 Xcode 14.3.1
     runs-on: macos-13
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: ["macOS", "iOSsim", "tvOSsim"]
     env:
       DD_API_KEY: '${{ secrets.DD_API_KEY }}'
     steps:
@@ -30,29 +40,11 @@ jobs:
       uses: actions/checkout@v4
     - name: Select Xcode
       run: sudo xcode-select --switch /Applications/Xcode_14.3.1.app
-    - name: tests macOS
-      run: make tests/integration/macOS/pretty
+    - name: Run tests for ${{ matrix.platform }}
+      run: make XC_PRETTY_LOG=xcode_full.log tests/integration/${{ matrix.platform }}
+    - name: Attach Xcode logs
+      uses: actions/upload-artifact@v4
+      with:
+        name: xcode-${{ matrix.platform }}-log
+        path: xcode_full.log
 
-  test-Integration-iOS:
-    runs-on: macos-13
-    env:
-      DD_API_KEY: '${{ secrets.DD_API_KEY }}'
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Select Xcode
-      run: sudo xcode-select --switch /Applications/Xcode_14.3.1.app
-    - name: tests iOS
-      run: make tests/integration/iOS/pretty
-
-  test-Integration-tvOS:
-    runs-on: macos-13
-    env:
-      DD_API_KEY: '${{ secrets.DD_API_KEY }}'
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Select Xcode
-      run: sudo xcode-select --switch /Applications/Xcode_14.3.1.app
-    - name: tests tvOS
-      run: make tests/integration/tvOS/pretty

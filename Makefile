@@ -10,7 +10,7 @@ define xctest
 	$(if $(filter $2,iOSsim),$(eval SDK=iphonesimulator)$(eval DEST='platform=iOS Simulator,name=iPhone 14'),)
 	$(if $(filter $2,tvOSsim),$(eval SDK=appletvsimulator)$(eval DEST='platform=tvOS Simulator,name=Apple TV'),)
 	$(if $3,\
-		set -o pipefail; xcodebuild -scheme $1 -sdk $(SDK) -destination $(DEST) test | tee $3 | xcbeautify,\
+		set -o pipefail; xcodebuild -scheme $1 -sdk $(SDK) -destination $(DEST) test | tee $1-$2-$3.log | xcbeautify,\
 		xcodebuild -scheme $1 -sdk $(SDK) -destination $(DEST) test)
 endef
 
@@ -18,28 +18,28 @@ endef
 define xcarchive
 	$(if $5,\
 		set -o pipefail; xcodebuild archive -scheme $1 -sdk $2 -destination $3 -archivePath \
-			build/$1/$4.xcarchive SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES | tee $5 | xcbeautify,\
+			build/$1/$4.xcarchive SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES | tee $1-$4-$5.log | xcbeautify,\
 		xcodebuild archive -scheme $1 -sdk $2 -destination $3 -archivePath build/$1/$4.xcarchive SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES)
 endef
 
 build/%/iphoneos.xcarchive:
-	$(call xcarchive,$*,iphoneos,'generic/platform=iOS',iphoneos,$(XC_PRETTY_LOG))
+	$(call xcarchive,$*,iphoneos,'generic/platform=iOS',iphoneos,$(XC_LOG))
 
 build/%/iphonesimulator.xcarchive:
-	$(call xcarchive,$*,iphonesimulator,'generic/platform=iOS Simulator',iphonesimulator,$(XC_PRETTY_LOG))
+	$(call xcarchive,$*,iphonesimulator,'generic/platform=iOS Simulator',iphonesimulator,$(XC_LOG))
 	
 build/%/macos.xcarchive:
-	$(call xcarchive,$*,macosx,'generic/platform=macOS',macos,$(XC_PRETTY_LOG))
+	$(call xcarchive,$*,macosx,'generic/platform=macOS',macos,$(XC_LOG))
 
 build/%/maccatalyst.xcarchive:
 	$(eval platform = 'generic/platform=macOS,variant=Mac Catalyst')
-	$(call xcarchive,$*,macosx,$(platform),maccatalyst,$(XC_PRETTY_LOG))
+	$(call xcarchive,$*,macosx,$(platform),maccatalyst,$(XC_LOG))
 
 build/%/appletvos.xcarchive:
-	$(call xcarchive,$*,appletvos,'generic/platform=tvOS',appletvos,$(XC_PRETTY_LOG))
+	$(call xcarchive,$*,appletvos,'generic/platform=tvOS',appletvos,$(XC_LOG))
 
 build/%/appletvsimulator.xcarchive:
-	$(call xcarchive,$*,appletvsimulator,'generic/platform=tvOS Simulator',appletvsimulator,$(XC_PRETTY_LOG))
+	$(call xcarchive,$*,appletvsimulator,'generic/platform=tvOS Simulator',appletvsimulator,$(XC_LOG))
 
 build/xcframework/%.xcframework: \
 build/%/iphoneos.xcarchive build/%/iphonesimulator.xcarchive \
@@ -100,12 +100,12 @@ clean:
 	rm -rf ./build
 
 tests/unit/%:
-	$(call xctest,$*,macOS,$(XC_PRETTY_LOG))
-	$(call xctest,$*,iOSsim,$(XC_PRETTY_LOG))
-	$(call xctest,$*,tvOSsim,$(XC_PRETTY_LOG))
+	$(call xctest,$*,macOS,$(XC_LOG))
+	$(call xctest,$*,iOSsim,$(XC_LOG))
+	$(call xctest,$*,tvOSsim,$(XC_LOG))
 	
 tests/integration/%:
-	$(call xctest,IntegrationTests,$*,$(XC_PRETTY_LOG))
+	$(call xctest,IntegrationTests,$*,$(XC_LOG))
 
 tests/unit: tests/unit/EventsExporter tests/unit/DatadogSDKTesting
 

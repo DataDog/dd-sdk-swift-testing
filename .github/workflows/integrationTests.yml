@@ -19,12 +19,13 @@ jobs:
     - name: Select ${{ matrix.xcode }}
       run: sudo xcode-select --switch /Applications/${{ matrix.xcode }}.app
     - name: Unit tests
-      run: make XC_PRETTY_LOG=xcode_full.log tests/unit
+      run: make XC_LOG=unit tests/unit
     - name: Attach Xcode logs
+      if: '!cancelled()'
       uses: actions/upload-artifact@v4
       with:
-        name: xcode-log
-        path: xcode_full.log
+        name: ${{ matrix.xcode }}-unit-logs
+        path: "*-unit.log"
 
   test-13-Integration:
     name: Run Integration Tests macOS 13.0 Xcode 14.3.1
@@ -41,10 +42,11 @@ jobs:
     - name: Select Xcode
       run: sudo xcode-select --switch /Applications/Xcode_14.3.1.app
     - name: Run tests for ${{ matrix.platform }}
-      run: make XC_PRETTY_LOG=xcode_full.log tests/integration/${{ matrix.platform }}
+      run: make XC_LOG=integration tests/integration/${{ matrix.platform }}
     - name: Attach Xcode logs
+      if: '!cancelled()'
       uses: actions/upload-artifact@v4
       with:
-        name: xcode-${{ matrix.platform }}-log
-        path: xcode_full.log
+        name: Xcode_14.3.1-${{ matrix.platform }}-integration-log
+        path: "*-integration.log"
 

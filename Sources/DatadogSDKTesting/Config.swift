@@ -14,7 +14,6 @@ final class Config {
     
     /// Datatog Configuration values
     var apiKey: String? = nil
-    var applicationKey: String? = nil
     var service: String? = nil
     var tags: [String: String] = [:]
     var customConfigurations: [String: String] = [:]
@@ -77,7 +76,6 @@ final class Config {
         isEnabled = env.has(.isEnabled) ? env[.isEnabled] ?? false : nil
         
         apiKey = env[.apiKey] ?? env.get(info: "DatadogApiKey")
-        applicationKey = env[.applicationKey] ?? env[.appKey] ?? env.get(info: "DatadogApplicationKey")
         environment = env[.environment]
         
         let tracerUnderTesting = env.has(env: .testOutputFile)

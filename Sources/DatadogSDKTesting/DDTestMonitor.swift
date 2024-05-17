@@ -281,12 +281,6 @@ internal class DDTestMonitor {
                     // Activate Intelligent Test Runner
                     if itrBackendConfig?.testsSkipping ?? false {
                         Log.debug("ITR Enabled")
-
-                        if DDTestMonitor.config.applicationKey == nil {
-                            Log.print("APPLICATION_KEY env variable is not set, this is needed for Intelligent Test Runner")
-                            itr = nil
-                            return
-                        }
                         
                         itr = IntelligentTestRunner(configurations: DDTestMonitor.baseConfigurationTags)
                         itr?.start()

@@ -66,11 +66,6 @@ struct HTTPHeader {
     }
 
     /// Datadog request Application Key authentication header.
-    static func applicationKeyHeader(applicationKey: String) -> HTTPHeader {
-        return HTTPHeader(field: applicationKeyHeaderField, value: .constant(applicationKey))
-    }
-
-    /// Datadog request Application Key authentication header.
     static func hostnameHeader(hostname: String) -> HTTPHeader {
         return HTTPHeader(field: hostnameHeaderField, value: .constant(hostname))
     }

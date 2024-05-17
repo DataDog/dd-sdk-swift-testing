@@ -21,7 +21,6 @@ public struct ExporterConfiguration {
 
     /// API key for authentication
     var apiKey: String
-    var applicationKey: String
 
     /// Endpoint that will be used for reporting.
     var endpoint: Endpoint
@@ -37,7 +36,7 @@ public struct ExporterConfiguration {
     
     var logger: Logger
 
-    public init(serviceName: String, libraryVersion: String, applicationName: String, applicationVersion: String, environment: String, hostname: String?, apiKey: String, applicationKey: String, endpoint: Endpoint, payloadCompression: Bool = true, source: String = "ios", performancePreset: PerformancePreset = .default, exporterId: String, logger: Logger) {
+    public init(serviceName: String, libraryVersion: String, applicationName: String, applicationVersion: String, environment: String, hostname: String?, apiKey: String, endpoint: Endpoint, payloadCompression: Bool = true, source: String = "ios", performancePreset: PerformancePreset = .default, exporterId: String, logger: Logger) {
         self.serviceName = serviceName
         self.libraryVersion = libraryVersion
         self.applicationName = applicationName
@@ -45,7 +44,6 @@ public struct ExporterConfiguration {
         self.environment = environment
         self.hostname = hostname
         self.apiKey = apiKey
-        self.applicationKey = applicationKey
         self.endpoint = endpoint
         self.payloadCompression = payloadCompression
         self.source = source

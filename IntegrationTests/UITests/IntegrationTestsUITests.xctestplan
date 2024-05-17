@@ -58,6 +58,10 @@
       {
         "key" : "GITHUB_WORKFLOW",
         "value" : "$(GITHUB_WORKFLOW)"
+      },
+      {
+        "key" : "DD_TRACE_DEBUG",
+        "value" : "1"
       }
     ],
     "targetForVariableExpansion" : {

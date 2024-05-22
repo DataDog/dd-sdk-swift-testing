@@ -15,7 +15,6 @@ enum FrameworkLoadHandler {
     }
 
     fileprivate static func libraryLoaded() {
-        Log.print("args \(ProcessInfo.processInfo.processName) \(ProcessInfo.processInfo.arguments)")
         let config = DDTestMonitor.config
         /// Only initialize test observer if user configured so and is running tests
         guard let enabled = config.isEnabled else {

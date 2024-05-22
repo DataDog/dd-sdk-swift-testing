@@ -41,8 +41,6 @@ internal enum EnvironmentKey: String, CaseIterable {
     case ciVisibilityExcludedBranches = "DD_CIVISIBILITY_EXCLUDED_BRANCHES"
     case ciVisibilityReportHostname = "DD_CIVISIBILITY_REPORT_HOSTNAME"
     case disableSourceLocation = "DD_DISABLE_SOURCE_LOCATION"
-    case applicationKey = "DD_APPLICATION_KEY"
-    case appKey = "DD_APP_KEY"
     case localTestEnvironmentPort = "DD_LOCAL_TEST_ENVIRONMENT_PORT"
     case disableGitInformation = "DD_DISABLE_GIT_INFORMATION"
     case testOutputFile = "TEST_OUTPUT_FILE"

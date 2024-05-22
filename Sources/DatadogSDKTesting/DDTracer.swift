@@ -96,7 +96,6 @@ internal class DDTracer {
             environment: env.environment,
             hostname: hostnameToReport,
             apiKey: conf.apiKey ?? "",
-            applicationKey: conf.applicationKey ?? "",
             endpoint: endpoint,
             payloadCompression: payloadCompression,
             performancePreset: .instantDataDelivery,

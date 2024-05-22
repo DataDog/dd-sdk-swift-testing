@@ -29,7 +29,6 @@ internal class ITRService {
                     device: Device.current
                 ),
                 .apiKeyHeader(apiKey: config.apiKey),
-                .applicationKeyHeader(applicationKey: config.applicationKey),
                 .traceIDHeader(traceID: config.exporterId),
                 .parentSpanIDHeader(parentSpanID: config.exporterId),
                 .samplingPriorityHeader()
@@ -46,7 +45,6 @@ internal class ITRService {
                     device: Device.current
                 ),
                 .apiKeyHeader(apiKey: config.apiKey),
-                .applicationKeyHeader(applicationKey: config.applicationKey),
                 .traceIDHeader(traceID: config.exporterId),
                 .parentSpanIDHeader(parentSpanID: config.exporterId),
                 .samplingPriorityHeader()
@@ -63,7 +61,6 @@ internal class ITRService {
                     device: Device.current
                 ),
                 .apiKeyHeader(apiKey: config.apiKey),
-                .applicationKeyHeader(applicationKey: config.applicationKey),
                 .traceIDHeader(traceID: config.exporterId),
                 .parentSpanIDHeader(parentSpanID: config.exporterId),
                 .samplingPriorityHeader()
@@ -80,7 +77,6 @@ internal class ITRService {
                     device: Device.current
                 ),
                 .apiKeyHeader(apiKey: config.apiKey),
-                .applicationKeyHeader(applicationKey: config.applicationKey),
                 .traceIDHeader(traceID: config.exporterId),
                 .parentSpanIDHeader(parentSpanID: config.exporterId),
                 .samplingPriorityHeader()

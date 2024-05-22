@@ -112,9 +112,7 @@ class DDTestObserver: NSObject, XCTestObservation {
             exit(1)
         }
 
-        guard let tests = testSuite.value(forKey: "_mutableTests") as? NSArray,
-              (tests.count == 0 || tests.firstObject is XCTestCase)
-        else {
+        guard var tests = testSuite.tests as? [XCTestCase] else {
             Log.debug("testSuiteWillStart: container \(testSuite.name)")
             state = .container(suite: ContainerSuite(suite: testSuite, parent: parent), inside: module)
             return
@@ -129,23 +127,10 @@ class DDTestObserver: NSObject, XCTestObservation {
         
         if let itr = DDTestMonitor.instance?.itr {
             let skippableTests = itr.skippableTests.filter { $0.suite == testSuite.name }.map { "-[\(testSuite.name) \($0.name)]" }
-            
-            let skippedTests = tests.filter { skippableTests.contains(($0 as! XCTest).name) }
-            
-            let finalTests = tests.filter { !skippableTests.contains(($0 as! XCTest).name) }
-            testSuite.setValue(finalTests, forKey: "_mutableTests")
-            
-            skippedTests.forEach { test in
-                self.testCaseWillStart(test as! XCTestCase)
-                guard case .test(test: let test, inside: let csuite) = self.state else { return }
-                test.end(status: .skip(itr: true))
-                self.state = .suite(suite: test.suite, inside: csuite)
+            tests = tests.map {
+                skippableTests.contains($0.name) ? SkippedTest(for: $0) : $0
             }
-            
-            if !skippedTests.isEmpty {
-                Log.print("ITR skipped \(skippedTests.count) tests")
-                module.itrSkipped = true
-            }
+            testSuite.setValue(tests, forKey: "_mutableTests")
         }
     }
 
@@ -197,8 +182,13 @@ class DDTestObserver: NSObject, XCTestObservation {
             Log.print("Bad test: \(testCase), expected: \(test.name)")
             return
         }
-        addBenchmarkTagsIfNeeded(testCase: testCase, test: test)
-        test.end(status: testCase.testRun?.status ?? .fail)
+        if testCase is SkippedTest {
+            test.end(status: .skip(itr: true))
+            test.suite.module.itrSkipped = true
+        } else {
+            addBenchmarkTagsIfNeeded(testCase: testCase, test: test)
+            test.end(status: testCase.testRun?.status ?? .fail)
+        }
         state = .suite(suite: test.suite, inside: parentSuite)
         Log.debug("testCaseDidFinish: \(test.name)")
     }

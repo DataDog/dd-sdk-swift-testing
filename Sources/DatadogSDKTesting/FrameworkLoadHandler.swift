@@ -15,6 +15,7 @@ enum FrameworkLoadHandler {
     }
 
     fileprivate static func libraryLoaded() {
+        Log.print("args \(ProcessInfo.processInfo.processName) \(ProcessInfo.processInfo.arguments)")
         let config = DDTestMonitor.config
         /// Only initialize test observer if user configured so and is running tests
         guard let enabled = config.isEnabled else {
@@ -53,6 +54,11 @@ enum FrameworkLoadHandler {
             NSLog("[DatadogSDKTesting] Framework loaded but not in test mode")
         }
     }
+    
+    fileprivate static func libraryUnloaded() {
+        testObserver?.stopObserving()
+        testObserver = nil
+    }
 }
 
 @_cdecl("__AutoLoadHook")
@@ -60,7 +66,15 @@ internal func __AutoLoadHook() {
     FrameworkLoadHandler.libraryLoaded()
 }
 
+@_cdecl("__AutoUnloadHook")
+internal func __AutoUnloadHook() {
+    FrameworkLoadHandler.libraryUnloaded()
+}
+
 // Don't delete this. It simply tells compiler not to remove AutoLoadHandler from binary
 // This method can be called from C only. Swift will hide it
 @_cdecl("__load_handler__")
-internal func __load_handler__() { AutoLoadHandler() }
+internal func __load_handler__() {
+    AutoLoadHandler()
+    AutoUnloadHandler()
+}

@@ -12,3 +12,9 @@
 __attribute__((constructor)) void AutoLoadHandler(void) {
     __AutoLoadHook();
 }
+
+// This code will run when the framework is unloaded from memory.
+// Reference: https://developer.apple.com/documentation/objectivec/nsobject/1418815-load
+__attribute__((destructor)) void AutoUnloadHandler(void) {
+    __AutoUnloadHook();
+}

@@ -32,6 +32,7 @@
 		A71E647D2BAA0AA100F2ACA5 /* CIEnvironmentReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64672BAA0AA100F2ACA5 /* CIEnvironmentReader.swift */; };
 		A71E647E2BAA0AA100F2ACA5 /* EnvironmentReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64682BAA0AA100F2ACA5 /* EnvironmentReader.swift */; };
 		A71E64802BAB442300F2ACA5 /* ConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E647F2BAB442300F2ACA5 /* ConfigTests.swift */; };
+		A78557812BFE015B0031E2D8 /* SkippedTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = A78557802BFE015B0031E2D8 /* SkippedTest.swift */; };
 		A7B39C6C2BCFC799007F98B2 /* CDatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7E232DC2BC6E68B0087D8F8 /* CDatadogSDKTesting.framework */; };
 		A7B39C702BCFCD77007F98B2 /* SubprocessWait.c in Sources */ = {isa = PBXBuildFile; fileRef = A7B39C6F2BCFCD77007F98B2 /* SubprocessWait.c */; };
 		A7B39C722BCFD234007F98B2 /* SubprocessWait.h in Headers */ = {isa = PBXBuildFile; fileRef = A7B39C712BCFD234007F98B2 /* SubprocessWait.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -313,6 +314,7 @@
 		A71E64672BAA0AA100F2ACA5 /* CIEnvironmentReader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CIEnvironmentReader.swift; sourceTree = "<group>"; };
 		A71E64682BAA0AA100F2ACA5 /* EnvironmentReader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EnvironmentReader.swift; sourceTree = "<group>"; };
 		A71E647F2BAB442300F2ACA5 /* ConfigTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigTests.swift; sourceTree = "<group>"; };
+		A78557802BFE015B0031E2D8 /* SkippedTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkippedTest.swift; sourceTree = "<group>"; };
 		A7B39C6F2BCFCD77007F98B2 /* SubprocessWait.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = SubprocessWait.c; sourceTree = "<group>"; };
 		A7B39C712BCFD234007F98B2 /* SubprocessWait.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SubprocessWait.h; sourceTree = "<group>"; };
 		A7C292122B9B2B39009C2979 /* fixtures */ = {isa = PBXFileReference; lastKnownFileType = folder; path = fixtures; sourceTree = "<group>"; };
@@ -911,6 +913,7 @@
 			children = (
 				E146BC392869AEA80057C37B /* GitUploader.swift */,
 				E137366128A3BE3600420E26 /* IntelligentTestRunner.swift */,
+				A78557802BFE015B0031E2D8 /* SkippedTest.swift */,
 			);
 			path = IntelligentTestRunner;
 			sourceTree = "<group>";
@@ -1444,6 +1447,7 @@
 				A7FC26142BA1EC0500067E26 /* XCUIApplicationSwizzler.swift in Sources */,
 				A71E64722BAA0AA100F2ACA5 /* BuildkiteCI.swift in Sources */,
 				A7FC260B2BA1EC0500067E26 /* InternalError.swift in Sources */,
+				A78557812BFE015B0031E2D8 /* SkippedTest.swift in Sources */,
 				A7FC25BF2BA1EAEB00067E26 /* DDCoverageHelper.swift in Sources */,
 				A7FC25B52BA1EADF00067E26 /* DDInstrumentationControl.swift in Sources */,
 				A71E646E2BAA0AA100F2ACA5 /* GithubCI.swift in Sources */,

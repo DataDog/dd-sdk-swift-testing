@@ -14,8 +14,13 @@ extern "C" {
 // Implement it in your Swift code as @_cdecl
 void __AutoLoadHook(void);
 
-// Never call this method directly. It will be called on framework load
+// This hook will be called by library.
+// Implement it in your Swift code as @_cdecl
+void __AutoUnloadHook(void);
+
+// Never call this methods directly. They will be called by system dynamic loader
 extern void AutoLoadHandler(void);
+extern void AutoUnloadHandler(void);
 
 #ifdef __cplusplus
 }

@@ -174,7 +174,7 @@ struct GitInfo {
         var indexFile: URL?
         var packOffset: UInt64 = 0
 
-        guard let commitAsData = Data(hexString: commit) else {
+        guard let commitAsData = Data(hex: commit) else {
             throw InternalError(description: "Incorrect Git object")
         }
 

@@ -126,9 +126,19 @@ class DDTestObserver: NSObject, XCTestObservation {
         state = .suite(suite: module.suiteStart(name: testSuite.name), inside: parent)
         
         if let itr = DDTestMonitor.instance?.itr {
-            let skippableTests = itr.skippableTests.filter { $0.suite == testSuite.name }.map { "-[\(testSuite.name) \($0.name)]" }
+            let skippableTests = itr.skippableTests.filter { $0.suite == testSuite.name }.map { "-[\($0.suite) \($0.name)]" }.asSet
+            let unskippableTests = tests.reduce(into: (Set<ObjectIdentifier>(), Set<String>())) { state, test in
+                guard let unskip = test as? ITRUnskippabble else { return }
+                let testType = type(of: test)
+                let testTypeId = ObjectIdentifier(testType)
+                guard !state.0.contains(testTypeId) else { return }
+                state.0.insert(testTypeId)
+                state.1.formUnion(unskip.itrNeverSkipTests ?? testType.allTestNames)
+            }.1.map { "-[\(testSuite.name) \($0)]" }.asSet
+            
             tests = tests.map {
-                skippableTests.contains($0.name) ? SkippedTest(for: $0) : $0
+                unskippableTests.contains($0.name) ? $0 :
+                    skippableTests.contains($0.name) ? SkippedTest(for: $0) : $0
             }
             testSuite.setValue(tests, forKey: "_mutableTests")
         }

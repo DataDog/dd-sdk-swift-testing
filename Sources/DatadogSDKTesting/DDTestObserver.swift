@@ -128,12 +128,11 @@ class DDTestObserver: NSObject, XCTestObservation {
         if let itr = DDTestMonitor.instance?.itr {
             let skippableTests = itr.skippableTests.filter { $0.suite == testSuite.name }.map { "-[\($0.suite) \($0.name)]" }.asSet
             let unskippableTests = tests.reduce(into: (Set<ObjectIdentifier>(), Set<String>())) { state, test in
-                guard let unskip = test as? ITRUnskippabble else { return }
                 let testType = type(of: test)
                 let testTypeId = ObjectIdentifier(testType)
                 guard !state.0.contains(testTypeId) else { return }
                 state.0.insert(testTypeId)
-                state.1.formUnion(unskip.itrNeverSkipTests ?? testType.allTestNames)
+                state.1.formUnion(testType.unskippableMethods)
             }.1.map { "-[\(testSuite.name) \($0)]" }.asSet
             
             tests = tests.map {

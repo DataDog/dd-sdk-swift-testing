@@ -32,11 +32,13 @@
 		A71E647D2BAA0AA100F2ACA5 /* CIEnvironmentReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64672BAA0AA100F2ACA5 /* CIEnvironmentReader.swift */; };
 		A71E647E2BAA0AA100F2ACA5 /* EnvironmentReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64682BAA0AA100F2ACA5 /* EnvironmentReader.swift */; };
 		A71E64802BAB442300F2ACA5 /* ConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E647F2BAB442300F2ACA5 /* ConfigTests.swift */; };
-		A74246002BFF94FA00F7EC64 /* ITRUnskippabble.swift in Sources */ = {isa = PBXBuildFile; fileRef = A74245FF2BFF94FA00F7EC64 /* ITRUnskippabble.swift */; };
+		A74246002BFF94FA00F7EC64 /* ITRSkippabble.swift in Sources */ = {isa = PBXBuildFile; fileRef = A74245FF2BFF94FA00F7EC64 /* ITRSkippabble.swift */; };
 		A78557812BFE015B0031E2D8 /* SkippedTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = A78557802BFE015B0031E2D8 /* SkippedTest.swift */; };
 		A7B39C6C2BCFC799007F98B2 /* CDatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7E232DC2BC6E68B0087D8F8 /* CDatadogSDKTesting.framework */; };
 		A7B39C702BCFCD77007F98B2 /* SubprocessWait.c in Sources */ = {isa = PBXBuildFile; fileRef = A7B39C6F2BCFCD77007F98B2 /* SubprocessWait.c */; };
 		A7B39C722BCFD234007F98B2 /* SubprocessWait.h in Headers */ = {isa = PBXBuildFile; fileRef = A7B39C712BCFD234007F98B2 /* SubprocessWait.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7CC6D862C07D624003C13BC /* Tags.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7CC6D852C07D624003C13BC /* Tags.swift */; };
+		A7CC6D882C0F3F83003C13BC /* Tags+ObjC.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7CC6D872C0F3F83003C13BC /* Tags+ObjC.swift */; };
 		A7E232E52BC6E80A0087D8F8 /* CodeCoverage.h in Headers */ = {isa = PBXBuildFile; fileRef = A7E232E42BC6E80A0087D8F8 /* CodeCoverage.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A7E232F52BC6EB470087D8F8 /* CoverageExporterJson.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7E232EA2BC6EB460087D8F8 /* CoverageExporterJson.cpp */; };
 		A7E232F62BC6EB470087D8F8 /* CoverageReport.h in Headers */ = {isa = PBXBuildFile; fileRef = A7E232EB2BC6EB460087D8F8 /* CoverageReport.h */; };
@@ -315,12 +317,14 @@
 		A71E64672BAA0AA100F2ACA5 /* CIEnvironmentReader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CIEnvironmentReader.swift; sourceTree = "<group>"; };
 		A71E64682BAA0AA100F2ACA5 /* EnvironmentReader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EnvironmentReader.swift; sourceTree = "<group>"; };
 		A71E647F2BAB442300F2ACA5 /* ConfigTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigTests.swift; sourceTree = "<group>"; };
-		A74245FF2BFF94FA00F7EC64 /* ITRUnskippabble.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ITRUnskippabble.swift; sourceTree = "<group>"; };
+		A74245FF2BFF94FA00F7EC64 /* ITRSkippabble.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ITRSkippabble.swift; sourceTree = "<group>"; };
 		A78557802BFE015B0031E2D8 /* SkippedTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkippedTest.swift; sourceTree = "<group>"; };
 		A7B39C6F2BCFCD77007F98B2 /* SubprocessWait.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = SubprocessWait.c; sourceTree = "<group>"; };
 		A7B39C712BCFD234007F98B2 /* SubprocessWait.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SubprocessWait.h; sourceTree = "<group>"; };
 		A7C292122B9B2B39009C2979 /* fixtures */ = {isa = PBXFileReference; lastKnownFileType = folder; path = fixtures; sourceTree = "<group>"; };
 		A7C292162B9B2DE0009C2979 /* DatadogSDKTesting.podspec */ = {isa = PBXFileReference; lastKnownFileType = text; path = DatadogSDKTesting.podspec; sourceTree = "<group>"; };
+		A7CC6D852C07D624003C13BC /* Tags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tags.swift; sourceTree = "<group>"; };
+		A7CC6D872C0F3F83003C13BC /* Tags+ObjC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Tags+ObjC.swift"; sourceTree = "<group>"; };
 		A7E232DC2BC6E68B0087D8F8 /* CDatadogSDKTesting.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CDatadogSDKTesting.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7E232E42BC6E80A0087D8F8 /* CodeCoverage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CodeCoverage.h; sourceTree = "<group>"; };
 		A7E232EA2BC6EB460087D8F8 /* CoverageExporterJson.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CoverageExporterJson.cpp; sourceTree = "<group>"; };
@@ -916,7 +920,7 @@
 				E146BC392869AEA80057C37B /* GitUploader.swift */,
 				E137366128A3BE3600420E26 /* IntelligentTestRunner.swift */,
 				A78557802BFE015B0031E2D8 /* SkippedTest.swift */,
-				A74245FF2BFF94FA00F7EC64 /* ITRUnskippabble.swift */,
+				A74245FF2BFF94FA00F7EC64 /* ITRSkippabble.swift */,
 			);
 			path = IntelligentTestRunner;
 			sourceTree = "<group>";
@@ -970,6 +974,8 @@
 				E1ABA08A252341EA00ED8AEF /* DDTestMonitor.swift */,
 				E1798CC52524B9BD008DEBB9 /* DDTracer.swift */,
 				E1ABA07225231F4700ED8AEF /* FrameworkLoadHandler.swift */,
+				A7CC6D852C07D624003C13BC /* Tags.swift */,
+				A7CC6D872C0F3F83003C13BC /* Tags+ObjC.swift */,
 			);
 			path = DatadogSDKTesting;
 			sourceTree = "<group>";
@@ -1494,6 +1500,7 @@
 				A71E647C2BAA0AA100F2ACA5 /* EnvironmentKeys.swift in Sources */,
 				A7FC25C02BA1EAEB00067E26 /* LLVMTotalsCoverageFormat.swift in Sources */,
 				A7FC25BD2BA1EADF00067E26 /* DDTestSuite.swift in Sources */,
+				A7CC6D882C0F3F83003C13BC /* Tags+ObjC.swift in Sources */,
 				A7FC25D12BA1EB2900067E26 /* DDCrashes.swift in Sources */,
 				A71E64762BAA0AA100F2ACA5 /* XcodeCI.swift in Sources */,
 				A7FC25D02BA1EB2900067E26 /* SimpleSpanData.swift in Sources */,
@@ -1503,7 +1510,8 @@
 				A71E64732BAA0AA100F2ACA5 /* BitriseCI.swift in Sources */,
 				A71E64742BAA0AA100F2ACA5 /* AwsCodePipelineCI.swift in Sources */,
 				A7FC25C22BA1EAF500067E26 /* IntelligentTestRunner.swift in Sources */,
-				A74246002BFF94FA00F7EC64 /* ITRUnskippabble.swift in Sources */,
+				A7CC6D862C07D624003C13BC /* Tags.swift in Sources */,
+				A74246002BFF94FA00F7EC64 /* ITRSkippabble.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

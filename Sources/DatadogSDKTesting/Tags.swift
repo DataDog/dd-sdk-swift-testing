@@ -231,6 +231,10 @@ public extension TypeTags {
     func tags(for type: TagType) -> [AttachedTag<AnyTag>] {
         tags(for: type, prefixed: nil)
     }
+    @inlinable
+    func tagged<V>(dynamic tag: DynamicTag<V>, prefixed prefix: String? = nil) -> [AttachedTag<DynamicTag<V>>] {
+        tagged(by: tag, prefixed: prefix)
+    }
 }
 
 public protocol MaybeTaggedType {
@@ -328,12 +332,10 @@ public struct TypeTagger<T: MaybeTaggedType> {
         typeTags[AttachedTag(tag: tag, to: name).any] = value
     }
     
-    public mutating func set(any tag: AnyTag, to value: Any, for name: String) throws {
-        guard type(of: value) == tag.valueType else {
-            throw TagValueTypeError(expectedValueType: tag.valueType,
-                                    providedValueType: type(of: value))
-        }
+    public mutating func set(any tag: AnyTag, to value: Any, for name: String) -> Bool {
+        guard type(of: value) == tag.valueType else { return false }
         set(some: tag, to: value, for: name)
+        return true
     }
     
     @inlinable

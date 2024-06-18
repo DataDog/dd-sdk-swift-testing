@@ -21,23 +21,19 @@ public extension DynamicTag where V == Bool {
 }
 
 @objc public final class DDSuiteTagItrSkippable: DDTag {
-    @objc static func tag() -> DDSuiteTagItrSkippable {
-        DDSuiteTagItrSkippable(tag: DynamicTag.itrSkippableType.any)
-    }
+    @objc public init() { super.init(tag: .itrSkippableType) }
 }
 
 @objc public final class DDTestTagItrSkippable: DDTag {
-    @objc static func tag() -> DDTestTagItrSkippable {
-        DDTestTagItrSkippable(tag: DynamicTag.itrSkippableInstanceMethod.any)
-    }
+    @objc public init() { super.init(tag: .itrSkippableInstanceMethod) }
 }
 
 extension XCTestCase {
     class var unskippableMethods: [String] {
         guard let tags = maybeTypeTags else { return [] }
-        let skippable = tags.tagged(by: DynamicTag.itrSkippableInstanceMethod, prefixed: "test")
+        let skippable = tags.tagged(dynamic: .itrSkippableInstanceMethod, prefixed: "test")
         // Our type was marked as "skippable = false"
-        if let typeTag = tags.tagged(by: DynamicTag.itrSkippableType).first, !tags[typeTag]! {
+        if let typeTag = tags.tagged(dynamic: .itrSkippableType).first, !tags[typeTag]! {
             // Check do we have tests explicitly marked as skippable
             let canSkip = skippable.filter { tags[$0]! }.map { $0.to }.asSet
             // We don't have them

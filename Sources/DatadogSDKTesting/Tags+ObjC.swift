@@ -14,17 +14,65 @@ import Foundation
     @objc public var valueType: AnyClass? { tag.valueType as? AnyClass }
     @objc public var valueTypeName: String { String(describing: tag.valueType) }
     
-    public init(tag: AnyTag) {
-        self.tag = tag
+    public init<V>(tag: DynamicTag<V>) {
+        self.tag = tag.any
         super.init()
     }
     
-    @objc public convenience init(name: String, type ttype: TagType, class ctype: AnyClass) {
+    @objc public convenience init(name: String, andType ttype: TagType, forClass ctype: AnyClass) {
         self.init(tag: AnyTag(name: name, tagType: ttype, valueType: ctype))
     }
     
-    @objc public convenience init(name: String, type ttype: TagType, value: Any) {
-        self.init(tag: AnyTag(name: name, tagType: ttype, valueType: type(of: value)))
+    @objc public convenience init(asInt name: String, withType ttype: TagType) {
+        self.init(tag: DynamicTag<Int>(name: name, tagType: ttype))
+    }
+    
+    @objc public convenience init(asUInt name: String, withType ttype: TagType) {
+        self.init(tag: DynamicTag<UInt>(name: name, tagType: ttype))
+    }
+    
+    @objc public convenience init(asBool name: String, withType ttype: TagType) {
+        self.init(tag: DynamicTag<Bool>(name: name, tagType: ttype))
+    }
+    
+    @objc public convenience init(asDouble name: String, withType ttype: TagType) {
+        self.init(tag: DynamicTag<Double>(name: name, tagType: ttype))
+    }
+    
+    @objc public convenience init(asString name: String, withType ttype: TagType) {
+        self.init(tag: DynamicTag<String>(name: name, tagType: ttype))
+    }
+    
+    @objc public convenience init(asDate name: String, withType ttype: TagType) {
+        self.init(tag: DynamicTag<Date>(name: name, tagType: ttype))
+    }
+    
+    @objc public convenience init(asData name: String, withType ttype: TagType) {
+        self.init(tag: DynamicTag<Data>(name: name, tagType: ttype))
+    }
+    
+    @objc public convenience init(asArray name: String, withType ttype: TagType) {
+        self.init(tag: DynamicTag<[Any]>(name: name, tagType: ttype))
+    }
+    
+    @objc public convenience init(asDictionary name: String, withType ttype: TagType) {
+        self.init(tag: DynamicTag<[String: Any]>(name: name, tagType: ttype))
+    }
+    
+    public func tryConvert(value: Any) -> Any? {
+        switch ObjectIdentifier(tag.valueType) {
+        case ObjectIdentifier(Int.self):  return value as? Int
+        case ObjectIdentifier(UInt.self): return value as? UInt
+        case ObjectIdentifier(Bool.self): return value as? Bool
+        case ObjectIdentifier(Double.self): return value as? Double
+        case ObjectIdentifier(String.self): return value as? String
+        case ObjectIdentifier(Date.self): return value as? Date
+        case ObjectIdentifier(Data.self): return value as? Data
+        case ObjectIdentifier([Any].self): return value as? [Any]
+        case ObjectIdentifier([String: Any].self): return value as? [String: Any]
+        case ObjectIdentifier(type(of: value)): return value
+        default: return nil
+        }
     }
 }
 
@@ -38,7 +86,7 @@ import Foundation
     }
     
     @inlinable
-    public convenience init(tag: AnyTag, to: String) {
+    public convenience init<V>(tag: DynamicTag<V>, to: String) {
         self.init(tag: DDTag(tag: tag), to: to)
     }
     
@@ -66,21 +114,21 @@ public extension AttachedTag {
         self.tags = tags
     }
     
-    @objc public func tagged(by tag: DDTag, prefixed prefix: String?) -> [DDAttachedTag] {
+    @objc public func tagged(byTag tag: DDTag, withPrefix prefix: String?) -> [DDAttachedTag] {
         tagged(by: tag.tag, prefixed: prefix).map{$0.objcTag}
     }
     
-    @objc public func tags(for type: TagType, prefixed prefix: String?) -> [DDAttachedTag] {
+    @objc public func tags(forType type: TagType, withPrefix prefix: String?) -> [DDAttachedTag] {
         tags(for: type, prefixed: prefix).map{$0.objcTag}
     }
     
-    @objc public subscript(tag: DDAttachedTag) -> Any? {
+    @objc public func value(forTag tag: DDAttachedTag) -> Any? {
         self[tag.swiftTag]
     }
 }
 
 @objc public protocol DDTaggedType: NSObjectProtocol {
-    @objc static var associatedTypeTags: DDTypeTags { get }
+    @objc static func associatedTypeTags() -> DDTypeTags
 }
 
 @objc public final class DDTypeTagger: NSObject {
@@ -91,18 +139,23 @@ public extension AttachedTag {
         super.init()
     }
     
-    @objc public func set(tag: DDTag, to value: Any, for name: String) throws {
-        try tagger.set(any: tag.tag, to: value, for: name)
-    }
-    
-    @objc public func set(tag: DDTag, to value: Any, forMethod method: Selector) throws {
-        guard tag.tagType == .instanceMethod || tag.tagType == .staticMethod else {
-            throw TagTypeError(type: tag.tagType)
+    @discardableResult
+    @objc public func set(tag: DDTag, toValue value: Any, forName name: String) -> Bool {
+        guard let converted = tag.tryConvert(value: value) else {
+            return false
         }
-        try set(tag: tag, to: value, for: method.description)
+        return tagger.set(any: tag.tag, to: converted, for: name)
     }
     
-    @objc static func forType(_ type: NSObject.Type) -> DDTypeTagger? {
+    @discardableResult
+    @objc public func set(tag: DDTag, toValue value: Any, forMethod method: Selector) -> Bool {
+        guard tag.tagType == .instanceMethod || tag.tagType == .staticMethod else {
+            return false
+        }
+        return set(tag: tag, toValue: value, forName: method.description)
+    }
+    
+    @objc public static func forType(_ type: AnyClass) -> DDTypeTagger? {
         (type as? (DDTaggedType & MaybeTaggedType).Type).map { Self(for: $0) }
     }
     
@@ -119,12 +172,8 @@ extension NSObject: MaybeTaggedType {
     public static var maybeTypeTags: TypeTags? {
         switch self {
         case let tagged as TaggedType.Type: return tagged.dynamicTypeTags
-        case let tagged as DDTaggedType.Type: return tagged.associatedTypeTags
+        case let tagged as DDTaggedType.Type: return tagged.associatedTypeTags()
         default: return nil
         }
     }
-}
-
-public struct TagTypeError: Error {
-    let type: TagType
 }

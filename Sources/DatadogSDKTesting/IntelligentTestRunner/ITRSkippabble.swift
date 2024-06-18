@@ -8,31 +8,36 @@ import Foundation
 @_implementationOnly import XCTest
 
 public extension InstanceMethodTag where T: NSObject, V == Bool {
-    static var itrSkippable: Self { Self(name: "ITRSkippable") }
+    static var itrSkippable: Self { "ITRSkippable" }
 }
 
 public extension TypeTag where T: NSObject, V == Bool {
-    static var itrSkippable: Self { Self(name: "ITRSkippable") }
+    static var itrSkippable: Self { "ITRSkippable" }
 }
 
-@objc public final class DDCaseTagItrSkippable: DDTag {
-    @objc static func tag() -> DDCaseTagItrSkippable {
-        DDCaseTagItrSkippable(tag: TypeTag.itrSkippable.any)
+public extension DynamicTag where V == Bool {
+    static var itrSkippableType: Self { Self(name: "ITRSkippable", tagType: .forType) }
+    static var itrSkippableInstanceMethod: Self { Self(name: "ITRSkippable", tagType: .instanceMethod) }
+}
+
+@objc public final class DDSuiteTagItrSkippable: DDTag {
+    @objc static func tag() -> DDSuiteTagItrSkippable {
+        DDSuiteTagItrSkippable(tag: DynamicTag.itrSkippableType.any)
     }
 }
 
 @objc public final class DDTestTagItrSkippable: DDTag {
     @objc static func tag() -> DDTestTagItrSkippable {
-        DDTestTagItrSkippable(tag: InstanceMethodTag.itrSkippable.any)
+        DDTestTagItrSkippable(tag: DynamicTag.itrSkippableInstanceMethod.any)
     }
 }
 
 extension XCTestCase {
     class var unskippableMethods: [String] {
-        let tags = anyTypeTags
-        let skippable = tags.tagged(by: InstanceMethodTag.itrSkippable, prefixed: "test")
+        guard let tags = maybeTypeTags else { return [] }
+        let skippable = tags.tagged(by: DynamicTag.itrSkippableInstanceMethod, prefixed: "test")
         // Our type was marked as "skippable = false"
-        if let typeTag = tags.tagged(by: TypeTag.itrSkippable).first, !tags[typeTag]! {
+        if let typeTag = tags.tagged(by: DynamicTag.itrSkippableType).first, !tags[typeTag]! {
             // Check do we have tests explicitly marked as skippable
             let canSkip = skippable.filter { tags[$0]! }.map { $0.to }.asSet
             // We don't have them
@@ -55,5 +60,3 @@ extension XCTestCase {
         }.filter { $0.hasPrefix("test") && !$0.hasSuffix(":") }
     }
 }
-
-

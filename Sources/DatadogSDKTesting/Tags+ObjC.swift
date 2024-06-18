@@ -1,9 +1,8 @@
-//
-//  File.swift
-//  
-//
-//  Created by Yehor Popovych on 04/06/2024.
-//
+/*
+ * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
+ * This product includes software developed at Datadog (https://www.datadoghq.com/).
+ * Copyright 2020-Present Datadog, Inc.
+ */
 
 import Foundation
 
@@ -21,11 +20,11 @@ import Foundation
     }
     
     @objc public convenience init(name: String, type ttype: TagType, class ctype: AnyClass) {
-        self.init(tag: AnyTag(name: name, valueType: ctype, tagType: ttype))
+        self.init(tag: AnyTag(name: name, tagType: ttype, valueType: ctype))
     }
     
     @objc public convenience init(name: String, type ttype: TagType, value: Any) {
-        self.init(tag: AnyTag(name: name, valueType: type(of: value), tagType: ttype))
+        self.init(tag: AnyTag(name: name, tagType: ttype, valueType: type(of: value)))
     }
 }
 
@@ -58,85 +57,71 @@ public extension AttachedTag {
     var objcTag: DDAttachedTag { DDAttachedTag(tag: self) }
 }
 
-@objc public final class DDTypeTags: NSObject, TypeTags {
-    public let tags: any TypeTags
+@objc public final class DDTypeTags: NSObject, TypeTags, TypeTagsBase {
+    let parent: TypeTags?
+    let tags: [AttachedTag<AnyTag>: Any]
     
-    public init(tags: any TypeTags) {
+    public init(parent: TypeTags?, tags: [AttachedTag<AnyTag> : Any]) {
+        self.parent = parent
         self.tags = tags
     }
     
-    @inlinable
-    public func tagged<T: SomeTag>(by tag: T, prefixed prefix: String?) -> [AttachedTag<T>] {
-        tags.tagged(by: tag, prefixed: prefix)
-    }
-    
-    @inlinable
-    public func tags(for type: TagType, prefixed prefix: String?) -> [AttachedTag<AnyTag>] {
-        tags.tags(for: type, prefixed: prefix)
-    }
-    
-    @inlinable
-    public subscript<T: SomeTag>(tag: AttachedTag<T>) -> T.Value? {
-        tags[tag]
-    }
-    
     @objc public func tagged(by tag: DDTag, prefixed prefix: String?) -> [DDAttachedTag] {
-        tags.tagged(by: tag.tag, prefixed: prefix).map{$0.objcTag}
+        tagged(by: tag.tag, prefixed: prefix).map{$0.objcTag}
     }
     
     @objc public func tags(for type: TagType, prefixed prefix: String?) -> [DDAttachedTag] {
-        tags.tags(for: type, prefixed: prefix).map{$0.objcTag}
+        tags(for: type, prefixed: prefix).map{$0.objcTag}
     }
     
-    @inlinable
-    public subscript(tag: DDAttachedTag) -> Any? {
-        tags[tag.swiftTag]
+    @objc public subscript(tag: DDAttachedTag) -> Any? {
+        self[tag.swiftTag]
     }
 }
 
 @objc public protocol DDTaggedType: NSObjectProtocol {
-    @objc static var associatedTags: DDTypeTags { get }
+    @objc static var associatedTypeTags: DDTypeTags { get }
 }
 
 @objc public final class DDTypeTagger: NSObject {
     public private(set) var tagger: TypeTagger<NSObject>
     
-    init<T: TaggedType>(for type: T.Type) {
+    private init<T: DDTaggedType & MaybeTaggedType>(for type: T.Type) {
         self.tagger = TypeTagger<NSObject>(type: T.self)
         super.init()
     }
     
-    @objc public func set(value: Any, for tag: DDTag, to name: String) throws {
-        try tagger.set(value: value, for: tag.tag, to: name)
+    @objc public func set(tag: DDTag, to value: Any, for name: String) throws {
+        try tagger.set(any: tag.tag, to: value, for: name)
     }
     
-    @objc public func set(value: Any, for tag: DDTag, method: Selector) throws {
+    @objc public func set(tag: DDTag, to value: Any, forMethod method: Selector) throws {
         guard tag.tagType == .instanceMethod || tag.tagType == .staticMethod else {
             throw TagTypeError(type: tag.tagType)
         }
-        try set(value: value, for: tag, to: method.description)
+        try set(tag: tag, to: value, for: method.description)
     }
     
-    @objc public func build() -> DDTypeTags {
-        DDTypeTags(tags: tagger.build())
+    @objc static func forType(_ type: NSObject.Type) -> DDTypeTagger? {
+        (type as? (DDTaggedType & MaybeTaggedType).Type).map { Self(for: $0) }
+    }
+    
+    @objc public func tags() -> DDTypeTags { tagger.tags() }
+}
+
+public extension TypeTagger where T: NSObject {
+    func tags() -> DDTypeTags {
+        DDTypeTags(parent: parentTags, tags: typeTags)
     }
 }
 
-extension NSObject: TaggedType {
-    public class var typeTags: any TypeTags { associatedTags }
-}
-
-@objc extension NSObject: DDTaggedType {
-    @objc public class var associatedTags: DDTypeTags {
-        withTagger {_ in}
-    }
-}
-
-@objc extension NSObject {
-    @objc public static func withTagger( _ builder: (DDTypeTagger) -> Void) -> DDTypeTags {
-        let tagger = DDTypeTagger(for: self)
-        builder(tagger)
-        return tagger.build()
+extension NSObject: MaybeTaggedType {
+    public static var maybeTypeTags: TypeTags? {
+        switch self {
+        case let tagged as TaggedType.Type: return tagged.dynamicTypeTags
+        case let tagged as DDTaggedType.Type: return tagged.associatedTypeTags
+        default: return nil
+        }
     }
 }
 

@@ -1,9 +1,8 @@
-//
-//  File.swift
-//  
-//
-//  Created by Yehor Popovych on 04/06/2024.
-//
+/*
+ * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
+ * This product includes software developed at Datadog (https://www.datadoghq.com/).
+ * Copyright 2020-Present Datadog, Inc.
+ */
 
 import Foundation
 
@@ -50,7 +49,10 @@ public extension SomeTag {
     }
 }
 
-public protocol StaticTag: SomeTag {
+public protocol StaticTag<ForType>: SomeTag, ExpressibleByStringLiteral
+    where StringLiteralType == String
+{
+    associatedtype ForType: TaggedType
     init(name: String)
     static var tagType: TagType { get }
 }
@@ -66,34 +68,54 @@ public extension StaticTag {
         }
         self.init(name: tag.name)
     }
+    
+    @inlinable
+    init(stringLiteral: String) {
+        self.init(name: stringLiteral)
+    }
 }
 
-public struct AnyTag: SomeTag {
-    public typealias Value = Any
+public typealias AnyTag = DynamicTag<Any>
+
+public struct DynamicTag<V>: SomeTag {
+    public typealias Value = V
     
     public let name: String
     public let tagType: TagType
     public let valueType: Any.Type
     
-    public init<T: SomeTag>(tag: T) {
+    public init(name: String, tagType: TagType) {
+        self.name = name
+        self.tagType = tagType
+        self.valueType = V.self
+    }
+    
+    public init?(any tag: AnyTag) {
+        guard Value.self == Any.self || tag.valueType == Value.self else {
+            return nil
+        }
+        self.name = tag.name
+        self.tagType = tag.tagType
+        self.valueType = tag.valueType
+    }
+}
+
+public extension DynamicTag where V == Any {
+    init<T: SomeTag>(tag: T) {
         self.name = tag.name
         self.tagType = tag.tagType
         self.valueType = tag.valueType
     }
     
-    @inlinable
-    public init?(any tag: AnyTag) {
-        self = tag
-    }
-    
-    public init(name: String, valueType: Any.Type, tagType: TagType) {
+    init(name: String, tagType: TagType, valueType: Any.Type) {
         self.name = name
         self.valueType = valueType
         self.tagType = tagType
     }
 }
 
-public struct InstancePropertyTag<T, V>: StaticTag {
+public struct InstancePropertyTag<T: TaggedType, V>: StaticTag {
+    public typealias ForType = T
     public typealias Value = V
     
     public let name: String
@@ -105,7 +127,8 @@ public struct InstancePropertyTag<T, V>: StaticTag {
     public static var tagType: TagType { .instanceProperty }
 }
 
-public struct StaticPropertyTag<T, V>: StaticTag {
+public struct StaticPropertyTag<T: TaggedType, V>: StaticTag {
+    public typealias ForType = T
     public typealias Value = V
     
     public let name: String
@@ -117,7 +140,8 @@ public struct StaticPropertyTag<T, V>: StaticTag {
     public static var tagType: TagType { .staticProperty }
 }
 
-public struct InstanceMethodTag<T, V>: StaticTag {
+public struct InstanceMethodTag<T: TaggedType, V>: StaticTag {
+    public typealias ForType = T
     public typealias Value = V
     
     public let name: String
@@ -129,7 +153,8 @@ public struct InstanceMethodTag<T, V>: StaticTag {
     public static var tagType: TagType { .instanceMethod }
 }
 
-public struct StaticMethodTag<T, V>: StaticTag {
+public struct StaticMethodTag<T: TaggedType, V>: StaticTag {
+    public typealias ForType = T
     public typealias Value = V
     
     public let name: String
@@ -141,7 +166,8 @@ public struct StaticMethodTag<T, V>: StaticTag {
     public static var tagType: TagType { .staticMethod }
 }
 
-public struct TypeTag<T, V>: StaticTag {
+public struct TypeTag<T: TaggedType, V>: StaticTag {
+    public typealias ForType = T
     public typealias Value = V
     
     public let name: String
@@ -207,23 +233,28 @@ public extension TypeTags {
     }
 }
 
-public protocol TaggedType {
-    static var typeTags: any TypeTags { get }
+public protocol MaybeTaggedType {
+    static var maybeTypeTags: TypeTags? { get }
+}
+
+public protocol TaggedType: MaybeTaggedType {
+    static var typeTags: TypeTags { get }
+}
+
+public protocol ExtendableTaggedType: AnyObject, TaggedType {
+    static var extendableTypeTags: ExtendableTypeTags { get }
 }
 
 public protocol FinalTaggedType: TaggedType {
     static var finalTypeTags: FinalTypeTags<Self> { get }
 }
 
-public struct FinalTypeTags<T: TaggedType>: TypeTags {
-    private let parent: (any TypeTags)?
-    private let tags: [AttachedTag<AnyTag>: Any]
-    
-    public init(parent: (any TypeTags)?, tags: [AttachedTag<AnyTag>: Any]) {
-        self.parent = parent
-        self.tags = tags
-    }
-    
+protocol TypeTagsBase: TypeTags {
+    var parent: TypeTags? { get }
+    var tags: [AttachedTag<AnyTag>: Any] { get }
+}
+
+extension TypeTagsBase {
     public func tagged<Tg: SomeTag>(by tag: Tg, prefixed prefix: String?) -> [AttachedTag<Tg>] {
         var tags = tags.keys.filter { atag in
             atag.tag.eq(to: tag) && (prefix.map { atag.to.hasPrefix($0) } ?? true)
@@ -252,109 +283,144 @@ public struct FinalTypeTags<T: TaggedType>: TypeTags {
     }
 }
 
-public struct TypeTagger<T: TaggedType> {
-    private let parentTags: TypeTags?
-    private var tags: [AttachedTag<AnyTag>: Any]
+public struct ExtendableTypeTags: TypeTags, TypeTagsBase {
+    let parent: TypeTags?
+    let tags: [AttachedTag<AnyTag>: Any]
+    
+    public init(parent: TypeTags?, tags: [AttachedTag<AnyTag>: Any]) {
+        self.parent = parent
+        self.tags = tags
+    }
+}
+
+public struct FinalTypeTags<T: FinalTaggedType>: TypeTags, TypeTagsBase {
+    let parent: TypeTags?
+    let tags: [AttachedTag<AnyTag>: Any]
+    
+    public init(parent: TypeTags?, tags: [AttachedTag<AnyTag>: Any]) {
+        self.parent = parent
+        self.tags = tags
+    }
+    
+    public func tagged<Tg: StaticTag<T>>(typed tag: Tg, prefixed prefix: String? = nil) -> [AttachedTag<Tg>] {
+        tagged(by: tag, prefixed: prefix)
+    }
+    
+    public subscript<Tg: StaticTag<T>>(typed tag: AttachedTag<Tg>) -> Tg.Value? {
+        self[tag]
+    }
+}
+
+public struct TypeTagger<T: MaybeTaggedType> {
+    let parentTags: TypeTags?
+    var typeTags: [AttachedTag<AnyTag>: Any]
     
     init(parent tags: TypeTags?) {
         self.parentTags = tags
-        self.tags = [:]
+        self.typeTags = [:]
     }
     
-    init(type: TaggedType.Type = T.self) {
-        self.init(parent: (Swift._getSuperclass(type) as? TaggedType.Type)?.anyTypeTags)
+    init(type: MaybeTaggedType.Type = T.self) {
+        self.init(parent: (Swift._getSuperclass(type) as? MaybeTaggedType.Type)?.maybeTypeTags)
     }
     
-    public mutating func set<Tg: SomeTag>(value: Tg.Value, some tag: Tg, to name: String) {
-        tags[AttachedTag(tag: tag, to: name).any] = value
+    public mutating func set<Tg: SomeTag>(some tag: Tg, to value: Tg.Value, for name: String) {
+        typeTags[AttachedTag(tag: tag, to: name).any] = value
     }
     
-    public mutating func set(value: Any, for tag: AnyTag, to name: String) throws {
+    public mutating func set(any tag: AnyTag, to value: Any, for name: String) throws {
         guard type(of: value) == tag.valueType else {
             throw TagValueTypeError(expectedValueType: tag.valueType,
                                     providedValueType: type(of: value))
         }
-        set(value: value, some: tag, to: name)
+        set(some: tag, to: value, for: name)
     }
     
     @inlinable
-    public mutating func set<V>(value: V, for tag: InstancePropertyTag<T, V>, instance property: PartialKeyPath<T>) {
-        set(value: value, some: tag, to: String(describing: property))
+    public mutating func set<V>(instance tag: InstancePropertyTag<T, V>, to value: V, for property: PartialKeyPath<T>) {
+        set(some: tag, to: value, for: String(describing: property))
     }
     
     @inlinable
-    public mutating func set<V>(value: V, for tag: InstancePropertyTag<T, V>, instance property: String) {
-        set(value: value, some: tag, to: property)
+    public mutating func set<V>(instance tag: InstancePropertyTag<T, V>, to value: V, for property: String) {
+        set(some: tag, to: value, for: property)
     }
     
     @inlinable
-    public mutating func set<V>(value: V, for tag: StaticPropertyTag<T, V>, static property: String) {
-        set(value: value, some: tag, to: property)
+    public mutating func set<V>(static tag: StaticPropertyTag<T, V>, to value: V, for property: String) {
+        set(some: tag, to: value, for: property)
     }
     
     @inlinable
-    public mutating func set<V>(value: V, for tag: InstanceMethodTag<T, V>, instance method: String) {
-        set(value: value, some: tag, to: method)
+    public mutating func set<V>(instance tag: InstanceMethodTag<T, V>, to value: V, for method: String) {
+        set(some: tag, to: value, for: method)
     }
     
     @inlinable
-    public mutating func set<V>(value: V, for tag: StaticMethodTag<T, V>, static method: String) {
-        set(value: value, some: tag, to: method)
+    public mutating func set<V>(static tag: StaticMethodTag<T, V>, to value: V, for method: String) {
+        set(some: tag, to: value, for: method)
     }
     
     @inlinable
-    public mutating func set<V>(value: V, for tag: TypeTag<T, V>) {
-        set(value: value, some: tag, to: String(describing: T.self))
-    }
-    
-    public func build() -> any TypeTags { _build() }
-    
-    private func _build() -> FinalTypeTags<T> {
-        FinalTypeTags(parent: parentTags, tags: tags)
+    public mutating func set<V>(type tag: TypeTag<T, V>, to value: V) {
+        set(some: tag, to: value, for: String(describing: T.self))
     }
 }
 
+public extension TypeTagger where T: ExtendableTaggedType {
+    func tags() -> ExtendableTypeTags { ExtendableTypeTags(parent: parentTags, tags: typeTags)}
+}
+
 public extension TypeTagger where T: FinalTaggedType {
-    func buildFinal() -> FinalTypeTags<T> { _build() }
+    func tags() -> FinalTypeTags<T> { FinalTypeTags(parent: parentTags, tags: typeTags) }
 }
 
 public extension TypeTagger where T: NSObjectProtocol {
     @inlinable
-    mutating func set<V>(value: V, for tag: InstanceMethodTag<T, V>, instance method: Selector) {
-        set(value: value, some: tag, to: method.description)
+    mutating func set<V>(instance tag: InstanceMethodTag<T, V>, to value: V, for method: Selector) {
+        set(some: tag, to: value, for: method.description)
     }
     @inlinable
-    mutating func set<V>(value: V, for tag: StaticMethodTag<T, V>, static method: Selector) {
-        set(value: value, some: tag, to: method.description)
+    mutating func set<V>(static tag: StaticMethodTag<T, V>, to value: V, for method: Selector) {
+        set(some: tag, to: value, for: method.description)
     }
 }
 
-public extension TaggedType {
-    static func withTagger(_ builder: (inout TypeTagger<Self>) -> Void) -> TypeTags {
+public extension ExtendableTaggedType {
+    static func withTagger(_ builder: (inout TypeTagger<Self>) -> Void) -> ExtendableTypeTags {
         var tagger = TypeTagger<Self>()
         builder(&tagger)
-        return tagger.build()
+        return tagger.tags()
     }
 }
 
 public extension FinalTaggedType {
-    static var typeTags: TypeTags { erasedTypeTags }
-    
     static var erasedTypeTags: TypeTags { finalTypeTags }
 
     static func withTagger(_ builder: (inout TypeTagger<Self>) -> Void) -> FinalTypeTags<Self> {
         var tagger = TypeTagger<Self>()
         builder(&tagger)
-        return tagger.buildFinal()
+        return tagger.tags()
     }
 }
 
 public extension TaggedType {
-    static var anyTypeTags: TypeTags {
-        if let strong = self as? any FinalTaggedType.Type {
-            return strong.erasedTypeTags
+    @inlinable
+    static var typeTags: TypeTags {
+        guard let tags = dynamicTypeTags else {
+            preconditionFailure("Unknown tagged type protocol: \(String(describing: self))")
         }
-        return typeTags
+        return tags
+    }
+    
+    @inlinable static var maybeTypeTags: TypeTags? { dynamicTypeTags }
+    
+    @inlinable static var dynamicTypeTags: TypeTags? {
+        switch self {
+        case let strong as any FinalTaggedType.Type: return strong.erasedTypeTags
+        case let ext as ExtendableTaggedType.Type: return ext.extendableTypeTags
+        default: return nil
+        }
     }
 }
 

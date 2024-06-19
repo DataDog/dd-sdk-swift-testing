@@ -20,12 +20,9 @@ public extension DynamicTag where V == Bool {
     static var itrSkippableInstanceMethod: Self { Self(name: "ITRSkippable", tagType: .instanceMethod) }
 }
 
-@objc public final class DDSuiteTagItrSkippable: DDTag {
-    @objc public init() { super.init(tag: .itrSkippableType) }
-}
-
-@objc public final class DDTestTagItrSkippable: DDTag {
-    @objc public init() { super.init(tag: .itrSkippableInstanceMethod) }
+@objc public extension DDTag {
+    @objc static var itrSkippableType: DDTag { DDTag(tag: .itrSkippableType) }
+    @objc static var itrSkippableInstanceMethod: DDTag { DDTag(tag: .itrSkippableInstanceMethod) }
 }
 
 extension XCTestCase {

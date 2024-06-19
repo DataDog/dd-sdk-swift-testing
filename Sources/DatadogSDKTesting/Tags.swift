@@ -25,8 +25,6 @@ public protocol SomeTag<Value>: Hashable, Equatable {
 }
 
 public extension SomeTag {
-    var valueType: Any.Type { Value.self }
-    
     @inlinable
     var any: AnyTag { AnyTag(tag: self) }
     
@@ -44,7 +42,7 @@ public extension SomeTag {
     
     @inlinable
     func eq<V>(to tag: any SomeTag<V>) -> Bool {
-        name == tag.name && tagType == tagType &&
+        name == tag.name && tagType == tag.tagType &&
             ObjectIdentifier(valueType) == ObjectIdentifier(tag.valueType)
     }
 }
@@ -58,6 +56,9 @@ public protocol StaticTag<ForType>: SomeTag, ExpressibleByStringLiteral
 }
 
 public extension StaticTag {
+    @inlinable
+    var valueType: Any.Type { Value.self }
+    
     @inlinable
     var tagType: TagType { Self.tagType }
     
@@ -206,7 +207,7 @@ public struct AttachedTag<Tg: SomeTag>: Hashable, Equatable {
     
     @inlinable
     public func eq<Tg2: SomeTag>(to other: AttachedTag<Tg2>) -> Bool {
-        tag.eq(to: other.tag) && to == to
+        tag.eq(to: other.tag) && to == other.to
     }
 }
 
@@ -317,24 +318,37 @@ public struct FinalTypeTags<T: FinalTaggedType>: TypeTags, TypeTagsBase {
 
 public struct TypeTagger<T: MaybeTaggedType> {
     let parentTags: TypeTags?
+    let dynamicType: MaybeTaggedType.Type
     var typeTags: [AttachedTag<AnyTag>: Any]
     
-    init(parent tags: TypeTags?) {
+    init(parent tags: TypeTags?, type: MaybeTaggedType.Type = T.self) {
         self.parentTags = tags
         self.typeTags = [:]
+        self.dynamicType = type
     }
     
     init(type: MaybeTaggedType.Type = T.self) {
-        self.init(parent: (Swift._getSuperclass(type) as? MaybeTaggedType.Type)?.maybeTypeTags)
+        self.init(parent: (Swift._getSuperclass(type) as? MaybeTaggedType.Type)?.maybeTypeTags,
+                  type: type)
     }
     
-    public mutating func set<Tg: SomeTag>(some tag: Tg, to value: Tg.Value, for name: String) {
-        typeTags[AttachedTag(tag: tag, to: name).any] = value
+    public mutating func set<Tg: SomeTag>(some tag: Tg, to value: Tg.Value, for member: String) {
+        typeTags[AttachedTag(tag: tag, to: member).any] = value
     }
     
-    public mutating func set(any tag: AnyTag, to value: Any, for name: String) -> Bool {
+    public mutating func set<Tg: SomeTag>(someType tag: Tg, to value: Tg.Value) {
+        typeTags[AttachedTag(tag: tag, to: "\(dynamicType).Type").any] = value
+    }
+    
+    public mutating func set(any tag: AnyTag, to value: Any, for member: String) -> Bool {
         guard type(of: value) == tag.valueType else { return false }
-        set(some: tag, to: value, for: name)
+        set(some: tag, to: value, for: member)
+        return true
+    }
+    
+    public mutating func set(anyType tag: AnyTag, to value: Any) -> Bool {
+        guard type(of: value) == tag.valueType else { return false }
+        set(someType: tag, to: value)
         return true
     }
     
@@ -365,7 +379,7 @@ public struct TypeTagger<T: MaybeTaggedType> {
     
     @inlinable
     public mutating func set<V>(type tag: TypeTag<T, V>, to value: V) {
-        set(some: tag, to: value, for: String(describing: T.self))
+        set(someType: tag, to: value)
     }
 }
 
@@ -417,6 +431,7 @@ public extension TaggedType {
     
     @inlinable static var maybeTypeTags: TypeTags? { dynamicTypeTags }
     
+    // We can have inheritance case ExtendableTaggedType -> FinalTaggedType so we do dynamic check
     @inlinable static var dynamicTypeTags: TypeTags? {
         switch self {
         case let strong as any FinalTaggedType.Type: return strong.erasedTypeTags
@@ -424,9 +439,4 @@ public extension TaggedType {
         default: return nil
         }
     }
-}
-
-public struct TagValueTypeError: Error {
-    let expectedValueType: Any.Type
-    let providedValueType: Any.Type
 }

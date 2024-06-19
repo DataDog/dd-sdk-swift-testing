@@ -6,17 +6,24 @@
 
 import Foundation
 
-@objc public class DDTag: NSObject {
+@objc public class DDTag: NSObject, SomeTag {
+    public typealias Value = Any
+    
     public let tag: AnyTag
+    public var valueType: Any.Type { tag.valueType }
     
     @objc public var name: String { tag.name }
     @objc public var tagType: TagType { tag.tagType }
-    @objc public var valueType: AnyClass? { tag.valueType as? AnyClass }
+    @objc public var valueTypeClass: AnyClass? { tag.valueType as? AnyClass }
     @objc public var valueTypeName: String { String(describing: tag.valueType) }
     
     public init<V>(tag: DynamicTag<V>) {
         self.tag = tag.any
         super.init()
+    }
+    
+    public convenience required init?(any tag: AnyTag) {
+        self.init(tag: tag)
     }
     
     @objc public convenience init(name: String, andType ttype: TagType, forClass ctype: AnyClass) {
@@ -140,7 +147,7 @@ public extension AttachedTag {
     }
     
     @discardableResult
-    @objc public func set(tag: DDTag, toValue value: Any, forName name: String) -> Bool {
+    @objc public func set(tag: DDTag, toValue value: Any, forMember name: String) -> Bool {
         guard let converted = tag.tryConvert(value: value) else {
             return false
         }
@@ -148,11 +155,20 @@ public extension AttachedTag {
     }
     
     @discardableResult
+    @objc public func set(typeTag tag: DDTag, toValue value: Any) -> Bool {
+        guard tag.tagType == .forType else { return false }
+        guard let converted = tag.tryConvert(value: value) else {
+            return false
+        }
+        return tagger.set(anyType: tag.tag, to: value)
+    }
+    
+    @discardableResult
     @objc public func set(tag: DDTag, toValue value: Any, forMethod method: Selector) -> Bool {
         guard tag.tagType == .instanceMethod || tag.tagType == .staticMethod else {
             return false
         }
-        return set(tag: tag, toValue: value, forName: method.description)
+        return set(tag: tag, toValue: value, forMember: method.description)
     }
     
     @objc public static func forType(_ type: AnyClass) -> DDTypeTagger? {
@@ -168,6 +184,8 @@ public extension TypeTagger where T: NSObject {
     }
 }
 
+// All NSObjects are MaybeTagged.
+// We don't have default implementations for protocols in ObjC
 extension NSObject: MaybeTaggedType {
     public static var maybeTypeTags: TypeTags? {
         switch self {

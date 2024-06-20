@@ -184,9 +184,30 @@ public struct AttachedTag<Tg: SomeTag>: Hashable, Equatable {
     public let tag: Tg
     public let to: String
     
-    public init(tag: Tg, to: String) {
+    public init(tag: Tg, to member: String) {
         self.tag = tag
-        self.to = to
+        self.to = member
+    }
+    
+    @inlinable
+    public init?(tag: Tg, to type: Any.Type) {
+        guard tag.tagType == .forType else { return nil }
+        self.init(tag: tag, to: "\(type).Type")
+    }
+    
+    public init?<T>(tag: Tg, to property: PartialKeyPath<T>) {
+        guard tag.tagType == .instanceProperty else { return nil }
+        var name = String(describing: property)
+        if name.hasPrefix("\\"), let index = name.firstIndex(of: ".") {
+            name = String(name[name.index(after: index)...])
+        }
+        self.init(tag: tag, to: name)
+    }
+    
+    @inlinable
+    public init?(tag: Tg, to method: Selector) {
+        guard tag.tagType == .staticMethod || tag.tagType == .instanceMethod else { return nil }
+        self.init(tag: tag, to: method.description)
     }
     
     @inlinable
@@ -208,6 +229,73 @@ public struct AttachedTag<Tg: SomeTag>: Hashable, Equatable {
     @inlinable
     public func eq<Tg2: SomeTag>(to other: AttachedTag<Tg2>) -> Bool {
         tag.eq(to: other.tag) && to == other.to
+    }
+    
+    @inlinable
+    public static func to<T: TaggedType, V>(type tag: TypeTag<T, V>) -> AttachedTag<TypeTag<T, V>> {
+        AttachedTag<_>(tag: tag, to: T.self)!
+    }
+    
+    @inlinable
+    public static func to<V>(type: Any.Type, dynamic tag: DynamicTag<V>) -> AttachedTag<DynamicTag<V>>? {
+        AttachedTag<_>(tag: tag, to: type)
+    }
+    
+    @inlinable
+    public static func to<T: TaggedType, V>(method named: String, static tag: StaticMethodTag<T, V>) -> AttachedTag<StaticMethodTag<T, V>> {
+        AttachedTag<_>(tag: tag, to: named)
+    }
+    
+    @inlinable
+    public static func to<T: TaggedType, V>(method named: String, instance tag: InstanceMethodTag<T, V>) -> AttachedTag<InstanceMethodTag<T, V>> {
+        AttachedTag<_>(tag: tag, to: named)
+    }
+    
+    @inlinable
+    public static func to<T: NSObjectProtocol & TaggedType, V>(method selector: Selector, static tag: StaticMethodTag<T, V>) -> AttachedTag<StaticMethodTag<T, V>> {
+        AttachedTag<_>(tag: tag, to: selector)!
+    }
+    
+    @inlinable
+    public static func to<T: NSObjectProtocol & TaggedType, V>(method selector: Selector, instance tag: InstanceMethodTag<T, V>) -> AttachedTag<InstanceMethodTag<T, V>> {
+        AttachedTag<_>(tag: tag, to: selector)!
+    }
+    
+    @inlinable
+    public static func to<V>(method named: String, dynamic tag: DynamicTag<V>) -> AttachedTag<DynamicTag<V>>? {
+        guard tag.tagType == .instanceMethod || tag.tagType == .staticMethod else { return nil }
+        return AttachedTag<_>(tag: tag, to: named)
+    }
+    
+    @inlinable
+    public static func to<V>(method selector: Selector, dynamic tag: DynamicTag<V>) -> AttachedTag<DynamicTag<V>>? {
+       AttachedTag<_>(tag: tag, to: selector)
+    }
+    
+    @inlinable
+    public static func to<T: TaggedType, V>(property named: String, static tag: StaticPropertyTag<T, V>) -> AttachedTag<StaticPropertyTag<T, V>> {
+        AttachedTag<_>(tag: tag, to: named)
+    }
+    
+    @inlinable
+    public static func to<T: TaggedType, V>(property named: String, instance tag: InstancePropertyTag<T, V>) -> AttachedTag<InstancePropertyTag<T, V>> {
+        AttachedTag<_>(tag: tag, to: named)
+    }
+    
+    @inlinable
+    public static func to<T: TaggedType, V>(property path: PartialKeyPath<T>, instance tag: InstancePropertyTag<T, V>) -> AttachedTag<InstancePropertyTag<T, V>> {
+        AttachedTag<_>(tag: tag, to: path)!
+    }
+    
+    @inlinable
+    public static func to<V>(property named: String, dynamic tag: DynamicTag<V>) -> AttachedTag<DynamicTag<V>>? {
+        guard tag.tagType == .instanceProperty || tag.tagType == .staticProperty else { return nil }
+        return AttachedTag<_>(tag: tag, to: named)
+    }
+    
+    @inlinable
+    public static func to<T, V>(property path: PartialKeyPath<T>, dynamic tag: DynamicTag<V>) -> AttachedTag<DynamicTag<V>>? {
+        AttachedTag<_>(tag: tag, to: path)
     }
 }
 
@@ -332,54 +420,55 @@ public struct TypeTagger<T: MaybeTaggedType> {
                   type: type)
     }
     
-    public mutating func set<Tg: SomeTag>(some tag: Tg, to value: Tg.Value, for member: String) {
-        typeTags[AttachedTag(tag: tag, to: member).any] = value
+    public mutating func set<Tg: SomeTag>(tag: AttachedTag<Tg>, to value: Tg.Value) {
+        typeTags[tag.any] = value
     }
     
-    public mutating func set<Tg: SomeTag>(someType tag: Tg, to value: Tg.Value) {
-        typeTags[AttachedTag(tag: tag, to: "\(dynamicType).Type").any] = value
-    }
-    
+    @inlinable
     public mutating func set(any tag: AnyTag, to value: Any, for member: String) -> Bool {
-        guard type(of: value) == tag.valueType else { return false }
-        set(some: tag, to: value, for: member)
+        guard type(of: value) == tag.valueType, tag.tagType != .forType else { return false }
+        set(tag: AttachedTag(tag: tag, to: member), to: value)
         return true
     }
     
     public mutating func set(anyType tag: AnyTag, to value: Any) -> Bool {
-        guard type(of: value) == tag.valueType else { return false }
-        set(someType: tag, to: value)
+        guard type(of: value) == tag.valueType,
+              let atag = AttachedTag<AnyTag>.to(type: dynamicType, dynamic: tag) else
+        {
+            return false
+        }
+        set(tag: atag, to: value)
         return true
     }
     
     @inlinable
     public mutating func set<V>(instance tag: InstancePropertyTag<T, V>, to value: V, for property: PartialKeyPath<T>) {
-        set(some: tag, to: value, for: String(describing: property))
+        set(tag: .to(property: property, instance: tag), to: value)
     }
     
     @inlinable
     public mutating func set<V>(instance tag: InstancePropertyTag<T, V>, to value: V, for property: String) {
-        set(some: tag, to: value, for: property)
+        set(tag: .to(property: property, instance: tag), to: value)
     }
     
     @inlinable
     public mutating func set<V>(static tag: StaticPropertyTag<T, V>, to value: V, for property: String) {
-        set(some: tag, to: value, for: property)
+        set(tag: .to(property: property, static: tag), to: value)
     }
     
     @inlinable
     public mutating func set<V>(instance tag: InstanceMethodTag<T, V>, to value: V, for method: String) {
-        set(some: tag, to: value, for: method)
+        set(tag: .to(method: method, instance: tag), to: value)
     }
     
     @inlinable
     public mutating func set<V>(static tag: StaticMethodTag<T, V>, to value: V, for method: String) {
-        set(some: tag, to: value, for: method)
+        set(tag: .to(method: method, static: tag), to: value)
     }
     
     @inlinable
     public mutating func set<V>(type tag: TypeTag<T, V>, to value: V) {
-        set(someType: tag, to: value)
+        set(tag: .to(type: tag), to: value)
     }
 }
 
@@ -394,11 +483,11 @@ public extension TypeTagger where T: FinalTaggedType {
 public extension TypeTagger where T: NSObjectProtocol {
     @inlinable
     mutating func set<V>(instance tag: InstanceMethodTag<T, V>, to value: V, for method: Selector) {
-        set(some: tag, to: value, for: method.description)
+        set(tag: .to(method: method, instance: tag), to: value)
     }
     @inlinable
     mutating func set<V>(static tag: StaticMethodTag<T, V>, to value: V, for method: Selector) {
-        set(some: tag, to: value, for: method.description)
+        set(tag: .to(method: method, static: tag), to: value)
     }
 }
 

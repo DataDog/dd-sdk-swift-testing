@@ -156,11 +156,10 @@ public extension AttachedTag {
     
     @discardableResult
     @objc public func set(typeTag tag: DDTag, toValue value: Any) -> Bool {
-        guard tag.tagType == .forType else { return false }
         guard let converted = tag.tryConvert(value: value) else {
             return false
         }
-        return tagger.set(anyType: tag.tag, to: value)
+        return tagger.set(anyType: tag.tag, to: converted)
     }
     
     @discardableResult

@@ -6,15 +6,25 @@
 
 import Foundation
 
-@objc public enum TagType: Int, Hashable, Equatable {
+@objc public enum TagType: Int, Hashable, Equatable, CustomDebugStringConvertible {
     case forType
     case staticMethod
     case staticProperty
     case instanceMethod
     case instanceProperty
+    
+    public var debugDescription: String {
+        switch self {
+        case .forType: return "TypeTag"
+        case .instanceMethod: return "InstanceMethodTag"
+        case .instanceProperty: return "InstancePropertyTag"
+        case .staticMethod: return "StaticMethodTag"
+        case .staticProperty: return "StaticPropertyTag"
+        }
+    }
 }
 
-public protocol SomeTag<Value>: Hashable, Equatable {
+public protocol SomeTag<Value>: Hashable, Equatable, CustomDebugStringConvertible {
     associatedtype Value
     
     var tagType: TagType { get }
@@ -45,6 +55,8 @@ public extension SomeTag {
         name == tag.name && tagType == tag.tagType &&
             ObjectIdentifier(valueType) == ObjectIdentifier(tag.valueType)
     }
+    
+    var debugDescription: String { "\(tagType)<\(valueType)>.\(name)" }
 }
 
 public protocol StaticTag<ForType>: SomeTag, ExpressibleByStringLiteral
@@ -180,7 +192,7 @@ public struct TypeTag<T: TaggedType, V>: StaticTag {
     public static var tagType: TagType { .forType }
 }
 
-public struct AttachedTag<Tg: SomeTag>: Hashable, Equatable {
+public struct AttachedTag<Tg: SomeTag>: Hashable, Equatable, CustomDebugStringConvertible {
     public let tag: Tg
     public let to: String
     
@@ -192,7 +204,7 @@ public struct AttachedTag<Tg: SomeTag>: Hashable, Equatable {
     @inlinable
     public init?(tag: Tg, to type: Any.Type) {
         guard tag.tagType == .forType else { return nil }
-        self.init(tag: tag, to: "\(type).Type")
+        self.init(tag: tag, to: "\(type)")
     }
     
     public init?<T>(tag: Tg, to property: PartialKeyPath<T>) {
@@ -225,6 +237,8 @@ public struct AttachedTag<Tg: SomeTag>: Hashable, Equatable {
         tag.hash(into: &hasher)
         hasher.combine(to)
     }
+    
+    public var debugDescription: String { "\(tag)[\"\(to)\"]" }
     
     @inlinable
     public func eq<Tg2: SomeTag>(to other: AttachedTag<Tg2>) -> Bool {
@@ -342,7 +356,7 @@ public protocol FinalTaggedType: TaggedType {
     static var finalTypeTags: FinalTypeTags<Self> { get }
 }
 
-protocol TypeTagsBase: TypeTags {
+protocol TypeTagsBase: TypeTags, CustomDebugStringConvertible {
     var parent: TypeTags? { get }
     var tags: [AttachedTag<AnyTag>: Any] { get }
 }
@@ -373,6 +387,19 @@ extension TypeTagsBase {
             return val as? Tg.Value
         }
         return parent?[tag]
+    }
+    
+    public var debugDescription: String {
+        var desc: String = ""
+        for elem in tags {
+            desc.append("\(elem.key) = \(elem.value)\n")
+        }
+        if let parent = parent {
+            desc.append("\(parent)")
+        } else if desc.count > 0 {
+            desc.removeLast()
+        }
+        return desc
     }
 }
 

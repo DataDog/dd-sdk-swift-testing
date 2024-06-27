@@ -30,23 +30,156 @@ final class TagsTests: XCTestCase {
         mtags.map { checkTags(tags: $0, type: ttype) }
     }
     
-    private func checkTags(tags: TypeTags, type: Any.Type, child: Bool = false) {
+    func testCanFetchAndFilterFinalClassTags() {
+        checkFinalTags(tags: TestFinalClass.finalTypeTags)
+        checkTags(tags: TestFinalClass.typeTags, type: TestFinalClass.self)
+        let dtags = TestFinalClass.dynamicTypeTags
+        XCTAssertNotNil(dtags)
+        dtags.map { checkTags(tags: $0, type: TestFinalClass.self) }
+        let mtags = TestFinalClass.maybeTypeTags
+        XCTAssertNotNil(mtags)
+        mtags.map { checkTags(tags: $0, type: TestFinalClass.self) }
+    }
+    
+    func testCanFetchAndFilterFinalClassTagsDynamic() {
+        let ttype: TaggedType.Type = TestFinalClass.self
+        checkTags(tags: ttype.typeTags, type: ttype)
+        let dtags = ttype.dynamicTypeTags
+        XCTAssertNotNil(dtags)
+        dtags.map { checkTags(tags: $0, type: ttype) }
+        let mtags = ttype.maybeTypeTags
+        XCTAssertNotNil(mtags)
+        mtags.map { checkTags(tags: $0, type: ttype) }
+    }
+    
+    func testCanFetchAndFilterClassTags() {
+        checkTags(tags: TestClass.extendableTypeTags, type: TestClass.self)
+        let dtags = TestClass.dynamicTypeTags
+        XCTAssertNotNil(dtags)
+        dtags.map { checkTags(tags: $0, type: TestClass.self) }
+        let mtags = TestClass.maybeTypeTags
+        XCTAssertNotNil(mtags)
+        mtags.map { checkTags(tags: $0, type: TestClass.self) }
+    }
+    
+    func testCanFetchAndFilterClassTagsDynamic() {
+        let ttype: TaggedType.Type = TestClass.self
+        checkTags(tags: ttype.typeTags, type: ttype)
+        let dtags = ttype.dynamicTypeTags
+        XCTAssertNotNil(dtags)
+        dtags.map { checkTags(tags: $0, type: ttype) }
+        let mtags = ttype.maybeTypeTags
+        XCTAssertNotNil(mtags)
+        mtags.map { checkTags(tags: $0, type: ttype) }
+    }
+    
+    func testCanFetchAndFilterInheritedClassTags() {
+        checkTags(tags: TestInheritedClass.extendableTypeTags,
+                  type: TestClass.self,
+                  cType: TestInheritedClass.self)
+        let dtags = TestInheritedClass.dynamicTypeTags
+        XCTAssertNotNil(dtags)
+        dtags.map { checkTags(tags: $0, type: TestClass.self, cType: TestInheritedClass.self) }
+        let mtags = TestInheritedClass.maybeTypeTags
+        XCTAssertNotNil(mtags)
+        mtags.map { checkTags(tags: $0, type: TestClass.self, cType: TestInheritedClass.self) }
+    }
+    
+    func testCanFetchAndFilterInheritedClassTagsDynamic() {
+        let ttype: TaggedType.Type = TestInheritedClass.self
+        checkTags(tags: ttype.typeTags, type: TestClass.self, cType: ttype)
+        let dtags = ttype.dynamicTypeTags
+        XCTAssertNotNil(dtags)
+        dtags.map { checkTags(tags: $0, type: TestClass.self, cType: ttype) }
+        let mtags = ttype.maybeTypeTags
+        XCTAssertNotNil(mtags)
+        mtags.map { checkTags(tags: $0, type: TestClass.self, cType: ttype) }
+    }
+    
+    private func checkTags(tags: TypeTags, type: Any.Type, cType: Any.Type? = nil) {
+        checkTypeTags(tags: tags, type: type, cType: cType)
+    }
+    
+    private func checkTypeTags(tags: TypeTags, type: Any.Type, cType: Any.Type?) {
+        // Check String
         let typeStr1 = tags.tagged(dynamic: .testTypeStringTag)
         let typeStr2 = tags.tagged(dynamic: .testTypeStringTag, prefixed: "Test")
         let typeStr3 = tags.tagged(dynamic: .testTypeStringTag, prefixed: "bad")
-        XCTAssertEqual(typeStr1.count, 1)
         XCTAssertEqual(typeStr1, typeStr2)
         XCTAssertEqual(typeStr3, [])
-        XCTAssertEqual(typeStr1.first?.tag, .testTypeStringTag)
-        XCTAssertEqual(typeStr1.first?.to, "\(type).Type")
-        XCTAssertEqual(tags[.to(type: type, dynamic: .testTypeStringTag)!],
-                       child ? "testOverrideString" : "testTypeString")
-        XCTAssertEqual(tags[typeStr1[0]], child ? "testOverrideString" : "testTypeString")
-        
+        if let cType = cType {
+            XCTAssertEqual(typeStr1.count, 2)
+            XCTAssertEqual(typeStr1[0].tag, .testTypeStringTag)
+            XCTAssertEqual(typeStr1[0].to, "\(cType)")
+            XCTAssertEqual(typeStr1[1].tag, .testTypeStringTag)
+            XCTAssertEqual(typeStr1[1].to, "\(type)")
+            XCTAssertEqual(tags[.to(type: cType, dynamic: .testTypeStringTag)!], "testOverrideString")
+            XCTAssertEqual(tags[.to(type: type, dynamic: .testTypeStringTag)!], "testTypeString")
+            XCTAssertEqual(tags[typeStr1[0]], "testOverrideString")
+            XCTAssertEqual(tags[typeStr1[1]], "testTypeString")
+        } else {
+            XCTAssertEqual(typeStr1.count, 1)
+            XCTAssertEqual(typeStr1[0].tag, .testTypeStringTag)
+            XCTAssertEqual(typeStr1[0].to, "\(type)")
+            XCTAssertEqual(tags[.to(type: type, dynamic: .testTypeStringTag)!], "testTypeString")
+            XCTAssertEqual(tags[typeStr1[0]], "testTypeString")
+        }
+        // Check Bool
+        let typeBool1 = tags.tagged(dynamic: .testTypeBoolTag)
+        let typeBool2 = tags.tagged(dynamic: .testTypeBoolTag, prefixed: "Test")
+        let typeBool3 = tags.tagged(dynamic: .testTypeBoolTag, prefixed: "bad")
+        XCTAssertEqual(typeBool1.count, 1)
+        XCTAssertEqual(typeBool1, typeBool2)
+        XCTAssertEqual(typeBool3, [])
+        XCTAssertEqual(typeBool1.first?.tag, .testTypeBoolTag)
+        XCTAssertEqual(typeBool1.first?.to, "\(type)")
+        XCTAssertEqual(tags[.to(type: type, dynamic: .testTypeBoolTag)!], true)
+        XCTAssertEqual(tags[typeBool1[0]], true)
+        // check int
+        let typeInt1 = tags.tagged(dynamic: .testTypeIntTag)
+        let typeInt2 = tags.tagged(dynamic: .testTypeIntTag, prefixed: "Test")
+        let typeInt3 = tags.tagged(dynamic: .testTypeIntTag, prefixed: "bad")
+        XCTAssertEqual(typeInt3, [])
+        if let cType = cType {
+            XCTAssertEqual(typeInt1.count, 1)
+            XCTAssertEqual(typeInt1, typeInt2)
+            XCTAssertEqual(typeInt3, [])
+            XCTAssertEqual(typeInt1.first?.tag, .testTypeIntTag)
+            XCTAssertEqual(typeInt1.first?.to, "\(cType)")
+            XCTAssertEqual(tags[.to(type: cType, dynamic: .testTypeIntTag)!], 9999)
+            XCTAssertEqual(tags[typeInt1[0]], 9999)
+        } else {
+            XCTAssertEqual(typeInt1, [])
+            XCTAssertEqual(typeInt2, [])
+        }
+        // Check all
+        let typeAll1 = tags.tags(for: .forType)
+        let typeAll2 = tags.tags(for: .forType, prefixed: "Test")
+        let typeAll3 = tags.tags(for: .forType, prefixed: "bad")
+        XCTAssertEqual(typeAll1, typeAll2)
+        XCTAssertEqual(typeAll3, [])
+        XCTAssertEqual(typeAll1.count, cType != nil ? 4 : 2)
+        // all bool
+        let allBool = typeAll1.filter { $0.tag.eq(to: DynamicTag.testTypeBoolTag) }
+        XCTAssertEqual(allBool.count, 1)
+        XCTAssertEqual(allBool.first?.to, "\(type)")
+        if let cType = cType {
+            let allString = typeAll1.filter { $0.tag.eq(to: DynamicTag.testTypeStringTag) }
+            XCTAssertEqual(allString.count, 2)
+            XCTAssertEqual(allString[0].to, "\(cType)")
+            XCTAssertEqual(allString[1].to, "\(type)")
+            let allInt = typeAll1.filter { $0.tag.eq(to: DynamicTag.testTypeIntTag) }
+            XCTAssertEqual(allInt.count, 1)
+            XCTAssertEqual(allInt.first?.to, "\(cType)")
+        } else {
+            let allString = typeAll1.filter { $0.tag.eq(to: DynamicTag.testTypeStringTag) }
+            XCTAssertEqual(allString.count, 1)
+            XCTAssertEqual(allString.first?.to, "\(type)")
+        }
     }
     
-    private func checkFinalTags<T: FinalTaggedType>(tags: FinalTypeTags<T>) {
-        checkTags(tags: tags, type: T.self)
+    private func checkFinalTags<T: FinalTaggedType>(tags: FinalTypeTags<T>, cType: Any.Type? = nil) {
+        checkTags(tags: tags, type: T.self, cType: cType)
     }
 }
 
@@ -192,7 +325,7 @@ extension TagsTestsChildMarker {
     static func test14staticFunc() -> Double { 654.321 }
     static func setChildTags(tagger: inout TypeTagger<Self>) {
         tagger.set(type: .testTypeStringTag, to: "testOverrideString")
-        tagger.set(type: .testTypeBoolTag, to: false)
+        tagger.set(type: .testTypeIntTag, to: 9999)
         tagger.set(instance: .testInstancePropertyIntTag, to: 123, for: \.test11var)
         tagger.set(instance: .testInstancePropertyBoolTag, to: true, for: \.test11var)
         tagger.set(instance: .testInstancePropertyBoolTag, to: false, for: \.test1var)
@@ -211,6 +344,10 @@ extension TypeTag where T: TagsTestsMarker, V == String {
 
 extension TypeTag where T: TagsTestsMarker, V == Bool {
     static var testTypeBoolTag: Self { "testBoolTag" }
+}
+
+extension TypeTag where T: TagsTestsMarker, V == Int {
+    static var testTypeIntTag: Self { "testIntTag" }
 }
 
 extension InstanceMethodTag where T: TagsTestsMarker, V == Int {
@@ -258,6 +395,7 @@ extension DynamicTag where V == Bool {
 }
 
 extension DynamicTag where V == Int {
+    static var testTypeIntTag: Self {  Self(name: "testIntTag", tagType: .forType) }
     static var testInstanceMethodIntTag: Self { Self(name: "testIntTag", tagType: .instanceMethod) }
     static var testInstancePropertyIntTag: Self { Self(name: "testIntTag", tagType: .instanceProperty) }
     static var testStaticMethodIntTag: Self { Self(name: "testIntTag", tagType: .staticMethod) }

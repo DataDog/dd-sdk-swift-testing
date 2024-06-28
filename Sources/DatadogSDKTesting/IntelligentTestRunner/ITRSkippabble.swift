@@ -25,31 +25,33 @@ public extension DynamicTag where V == Bool {
     @objc static var itrSkippableInstanceMethod: DDTag { DDTag(tag: .itrSkippableInstanceMethod) }
 }
 
-extension XCTestCase {
-    class var unskippableMethods: [String] {
-        guard let tags = maybeTypeTags else { return [] }
-        let skippable = tags.tagged(dynamic: .itrSkippableInstanceMethod, prefixed: "test")
-        // Our type was marked as "skippable = false"
-        if let typeTag = tags.tagged(dynamic: .itrSkippableType).first, !tags[typeTag]! {
-            // Check do we have tests explicitly marked as skippable
-            let canSkip = skippable.filter { tags[$0]! }.map { $0.to }.asSet
-            // We don't have them
-            guard canSkip.count > 0 else { return allTestNames }
-            // We have them. Filter them from all tests.
-            return allTestNames.filter { !canSkip.contains($0) }
+final class UnskippableMethodChecker {
+    let allUnskippable: Bool
+    let mSkippable: [String: Bool]
+    
+    init(for type: XCTestCase.Type) {
+        if let tags = type.maybeTypeTags {
+            let pairs = tags.tagged(dynamic: .itrSkippableInstanceMethod,
+                                    prefixed: "test")
+                .compactMap { tag in
+                    tags[tag].map { (tag.to, $0) }
+                }
+            mSkippable = Dictionary(uniqueKeysWithValues: pairs)
+            allUnskippable = tags.tagged(dynamic: .itrSkippableType).first
+                .flatMap { tags[$0] }.map { !$0 } ?? false
+        } else {
+            allUnskippable = false
+            mSkippable = [:]
         }
-        // Our type was not marked. Check all methods where skippable == false
-        return skippable.filter { !tags[$0]! }.map { $0.to }
     }
     
-    private static var allTestNames: [String] {
-        var count: Int32 = 0
-        guard let methods = class_copyMethodList(self, &count) else {
-            return []
-        }
-        defer { free(methods) }
-        return (0 ..< Int(count)).compactMap {
-            String(cString: sel_getName(method_getName(methods[$0])))
-        }.filter { $0.hasPrefix("test") && !$0.hasSuffix(":") }
+    @inlinable func canSkip(method name: String) -> Bool {
+        mSkippable[name] ?? !allUnskippable
+    }
+}
+
+extension XCTestCase {
+    class var unskippableMethods: UnskippableMethodChecker {
+        UnskippableMethodChecker(for: self)
     }
 }

@@ -126,18 +126,19 @@ class DDTestObserver: NSObject, XCTestObservation {
         state = .suite(suite: module.suiteStart(name: testSuite.name), inside: parent)
         
         if let itr = DDTestMonitor.instance?.itr {
-            let skippableTests = itr.skippableTests.filter { $0.suite == testSuite.name }.map { "-[\($0.suite) \($0.name)]" }.asSet
-            let unskippableTests = tests.reduce(into: (Set<ObjectIdentifier>(), Set<String>())) { state, test in
+            let skippableTests = itr.skippableTests
+            var unskippableCache: [ObjectIdentifier: UnskippableMethodChecker] = [:]
+            tests = tests.map { test in
+                guard let match = Self.testNameRegex.firstMatch(in: test.name, range: NSRange(0..<test.name.count)),
+                      let suiteRange = Range(match.range(at: 1), in: test.name),
+                      let funcRange = Range(match.range(at: 2), in: test.name) else { return test }
+                let testSuite = String(test.name[suiteRange])
+                let testFunc = String(test.name[funcRange])
                 let testType = type(of: test)
                 let testTypeId = ObjectIdentifier(testType)
-                guard !state.0.contains(testTypeId) else { return }
-                state.0.insert(testTypeId)
-                state.1.formUnion(testType.unskippableMethods)
-            }.1.map { "-[\(testSuite.name) \($0)]" }.asSet
-            
-            tests = tests.map {
-                unskippableTests.contains($0.name) ? $0 :
-                    skippableTests.contains($0.name) ? SkippedTest(for: $0) : $0
+                let checker = unskippableCache.get(key: testTypeId, or: testType.unskippableMethods)
+                return checker.canSkip(method: testFunc) ?
+                    (skippableTests[testSuite]?[testFunc] != nil ? SkippedTest(for: test) : test) : test
             }
             testSuite.setValue(tests, forKey: "_mutableTests")
         }

@@ -469,28 +469,28 @@ public struct TypeTagger<T: MaybeTaggedType> {
     }
     
     @inlinable
-    public mutating func set<V>(instance tag: InstancePropertyTag<T, V>, to value: V, for property: PartialKeyPath<T>) {
-        set(tag: .to(property: property, instance: tag), to: value)
+    public mutating func set<V>(instance tag: InstancePropertyTag<T, V>, to value: V, property path: PartialKeyPath<T>) {
+        set(tag: .to(property: path, instance: tag), to: value)
     }
     
     @inlinable
-    public mutating func set<V>(instance tag: InstancePropertyTag<T, V>, to value: V, for property: String) {
-        set(tag: .to(property: property, instance: tag), to: value)
+    public mutating func set<V>(instance tag: InstancePropertyTag<T, V>, to value: V, property name: String) {
+        set(tag: .to(property: name, instance: tag), to: value)
     }
     
     @inlinable
-    public mutating func set<V>(static tag: StaticPropertyTag<T, V>, to value: V, for property: String) {
-        set(tag: .to(property: property, static: tag), to: value)
+    public mutating func set<V>(static tag: StaticPropertyTag<T, V>, to value: V, property name: String) {
+        set(tag: .to(property: name, static: tag), to: value)
     }
     
     @inlinable
-    public mutating func set<V>(instance tag: InstanceMethodTag<T, V>, to value: V, for method: String) {
-        set(tag: .to(method: method, instance: tag), to: value)
+    public mutating func set<V>(instance tag: InstanceMethodTag<T, V>, to value: V, method name: String) {
+        set(tag: .to(method: name, instance: tag), to: value)
     }
     
     @inlinable
-    public mutating func set<V>(static tag: StaticMethodTag<T, V>, to value: V, for method: String) {
-        set(tag: .to(method: method, static: tag), to: value)
+    public mutating func set<V>(static tag: StaticMethodTag<T, V>, to value: V, method name: String) {
+        set(tag: .to(method: name, static: tag), to: value)
     }
     
     @inlinable
@@ -509,12 +509,12 @@ public extension TypeTagger where T: FinalTaggedType {
 
 public extension TypeTagger where T: NSObjectProtocol {
     @inlinable
-    mutating func set<V>(instance tag: InstanceMethodTag<T, V>, to value: V, for method: Selector) {
-        set(tag: .to(method: method, instance: tag), to: value)
+    mutating func set<V>(instance tag: InstanceMethodTag<T, V>, to value: V, method sel: Selector) {
+        set(tag: .to(method: sel, instance: tag), to: value)
     }
     @inlinable
-    mutating func set<V>(static tag: StaticMethodTag<T, V>, to value: V, for method: Selector) {
-        set(tag: .to(method: method, static: tag), to: value)
+    mutating func set<V>(static tag: StaticMethodTag<T, V>, to value: V, method sel: Selector) {
+        set(tag: .to(method: sel, static: tag), to: value)
     }
 }
 

@@ -10,18 +10,30 @@ import Foundation
 class IntelligentTestRunner {
     private let itrCachePath = "itr"
     private let skippableFileName = "skippableTests"
-    private var _skippableTests: SkipTests? = nil
+    private var _skippableTests: SkipTests? = nil {
+        didSet {
+            skippableTests.removeAll()
+            guard let newTests = _skippableTests else { return }
+            for test in newTests.tests {
+                skippableTests.get(key: test.suite, or: [:]) { methods in
+                    methods.get(key: test.name, or: []) { $0.append(test) }
+                }
+            }
+        }
+    }
 
     var configurations: [String: String]
     var itrFolder: Directory?
+
+    // [suite: [name: [info]]]
+    private(set) var skippableTests: [String: [String: [SkipTestPublicFormat]]]
+    var skippableTestsList: [SkipTestPublicFormat] { _skippableTests?.tests ?? [] }
     
-    var skippableTests: [SkipTestPublicFormat] {
-        _skippableTests?.tests ?? []
-    }
     var correlationId: String? { _skippableTests?.correlationId }
 
     init(configurations: [String: String]) {
         self.configurations = configurations
+        skippableTests = [:]
         itrFolder = try? DDTestMonitor.commitFolder?
             .subdirectory(path: itrCachePath)
             .subdirectory(path: DDTestMonitor.env.environment +

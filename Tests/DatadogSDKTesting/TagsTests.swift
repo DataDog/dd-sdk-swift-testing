@@ -307,14 +307,14 @@ extension TagsTestsMarker {
     static func setTags(tagger: inout TypeTagger<Self>) {
         tagger.set(type: .testTypeStringTag, to: "testTypeString")
         tagger.set(type: .testTypeBoolTag, to: true)
-        tagger.set(instance: .testInstancePropertyIntTag, to: 123, for: \.test1var)
-        tagger.set(instance: .testInstancePropertyBoolTag, to: true, for: \.test1var)
-        tagger.set(instance: .testInstanceMethodIntTag, to: 345, for: "test2func")
-        tagger.set(instance: .testInstanceMethodBoolTag, to: false, for: "test2func")
-        tagger.set(static: .testStaticPropertyIntTag, to: 567, for: "test3staticVar")
-        tagger.set(static: .testStaticPropertyStringTag, to: "staticProp", for: "test3staticVar")
-        tagger.set(static: .testStaticMethodIntTag, to: 7890, for: "test4staticFunc")
-        tagger.set(static: .testStaticMethodBoolTag, to: true, for: "test4staticFunc")
+        tagger.set(instance: .testInstancePropertyIntTag, to: 123, property: \.test1var)
+        tagger.set(instance: .testInstancePropertyBoolTag, to: true, property: \.test1var)
+        tagger.set(instance: .testInstanceMethodIntTag, to: 345, method: "test2func")
+        tagger.set(instance: .testInstanceMethodBoolTag, to: false, method: "test2func")
+        tagger.set(static: .testStaticPropertyIntTag, to: 567, property: "test3staticVar")
+        tagger.set(static: .testStaticPropertyStringTag, to: "staticProp", property: "test3staticVar")
+        tagger.set(static: .testStaticMethodIntTag, to: 7890, method: "test4staticFunc")
+        tagger.set(static: .testStaticMethodBoolTag, to: true, method: "test4staticFunc")
     }
 }
 
@@ -326,15 +326,15 @@ extension TagsTestsChildMarker {
     static func setChildTags(tagger: inout TypeTagger<Self>) {
         tagger.set(type: .testTypeStringTag, to: "testOverrideString")
         tagger.set(type: .testTypeIntTag, to: 9999)
-        tagger.set(instance: .testInstancePropertyIntTag, to: 123, for: \.test11var)
-        tagger.set(instance: .testInstancePropertyBoolTag, to: true, for: \.test11var)
-        tagger.set(instance: .testInstancePropertyBoolTag, to: false, for: \.test1var)
-        tagger.set(instance: .testInstanceMethodIntTag, to: 345, for: "test12func")
-        tagger.set(instance: .testInstanceMethodBoolTag, to: false, for: "test12func")
-        tagger.set(static: .testStaticPropertyIntTag, to: 567, for: "test13staticVar")
-        tagger.set(static: .testStaticPropertyStringTag, to: "staticProp", for: "test13staticVar")
-        tagger.set(static: .testStaticMethodIntTag, to: 7890, for: "test14staticFunc")
-        tagger.set(static: .testStaticMethodBoolTag, to: true, for: "test14staticFunc")
+        tagger.set(instance: .testInstancePropertyIntTag, to: 123, property: \.test11var)
+        tagger.set(instance: .testInstancePropertyBoolTag, to: true, property: \.test11var)
+        tagger.set(instance: .testInstancePropertyBoolTag, to: false, property: \.test1var)
+        tagger.set(instance: .testInstanceMethodIntTag, to: 345, method: "test12func")
+        tagger.set(instance: .testInstanceMethodBoolTag, to: false, method: "test12func")
+        tagger.set(static: .testStaticPropertyIntTag, to: 567, property: "test13staticVar")
+        tagger.set(static: .testStaticPropertyStringTag, to: "staticProp", property: "test13staticVar")
+        tagger.set(static: .testStaticMethodIntTag, to: 7890, method: "test14staticFunc")
+        tagger.set(static: .testStaticMethodBoolTag, to: true, method: "test14staticFunc")
     }
 }
 

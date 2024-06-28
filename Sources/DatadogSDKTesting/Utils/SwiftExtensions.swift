@@ -261,3 +261,24 @@ extension Sequence where Element: Hashable {
     @inlinable
     var asSet: Set<Element> { Set(self) }
 }
+
+extension Dictionary where Value: AnyObject {
+    mutating func get(key: Key, or create: @autoclosure () throws -> Value) rethrows -> Value {
+        if let value = self[key] { return value }
+        let value = try create()
+        self[key] = value
+        return value
+    }
+}
+
+extension Dictionary {
+    mutating func get<R>(key: Key,
+                         or create: @autoclosure () throws -> Value,
+                         _ cb: (inout Value) throws -> R) rethrows -> R
+    {
+        var value = try self[key] ?? create()
+        let result = try cb(&value)
+        self[key] = value
+        return result
+    }
+}

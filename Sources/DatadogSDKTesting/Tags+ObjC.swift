@@ -129,6 +129,10 @@ public extension AttachedTag {
         tags(for: type, prefixed: prefix).map{$0.objcTag}
     }
     
+    @objc public func tags(named name: String, withPrefix prefix: String?) -> [DDAttachedTag] {
+        tags(named: name, prefixed: prefix).map{$0.objcTag}
+    }
+    
     @objc public func value(forTag tag: DDAttachedTag) -> Any? {
         self[tag.swiftTag]
     }

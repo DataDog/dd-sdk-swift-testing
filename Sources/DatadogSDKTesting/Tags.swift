@@ -322,6 +322,7 @@ extension AttachedTag where Tg == AnyTag {
 public protocol TypeTags {
     func tagged<T: SomeTag>(by tag: T, prefixed prefix: String?) -> [AttachedTag<T>]
     func tags(for type: TagType, prefixed prefix: String?) -> [AttachedTag<AnyTag>]
+    func tags(named name: String, prefixed prefix: String?) -> [AttachedTag<AnyTag>]
     subscript<T: SomeTag>(_ tag: AttachedTag<T>) -> T.Value? { get }
 }
 
@@ -333,6 +334,10 @@ public extension TypeTags {
     @inlinable
     func tags(for type: TagType) -> [AttachedTag<AnyTag>] {
         tags(for: type, prefixed: nil)
+    }
+    @inlinable
+    func tags(named name: String) -> [AttachedTag<AnyTag>] {
+        tags(named: name, prefixed: nil)
     }
     @inlinable
     func tagged<V>(dynamic tag: DynamicTag<V>, prefixed prefix: String? = nil) -> [AttachedTag<DynamicTag<V>>] {
@@ -369,7 +374,7 @@ extension TypeTagsBase {
         if let parent = self.parent {
             tags.append(contentsOf: parent.tagged(by: tag, prefixed: prefix))
         }
-        return tags
+        return tags.unique()
     }
     
     public func tags(for type: TagType, prefixed prefix: String?) -> [AttachedTag<AnyTag>] {
@@ -379,7 +384,17 @@ extension TypeTagsBase {
         if let parent = self.parent {
             tags.append(contentsOf: parent.tags(for: type, prefixed: prefix))
         }
-        return tags
+        return tags.unique()
+    }
+    
+    public func tags(named name: String, prefixed prefix: String?) -> [AttachedTag<AnyTag>] {
+        var tags = tags.keys.filter { atag in
+            atag.tag.name == name && (prefix.map { atag.to.hasPrefix($0) } ?? true)
+        }
+        if let parent = self.parent {
+            tags.append(contentsOf: parent.tags(named: name, prefixed: prefix))
+        }
+        return tags.unique()
     }
     
     public subscript<Tg: SomeTag>(tag: AttachedTag<Tg>) -> Tg.Value? {

@@ -257,9 +257,14 @@ extension Bundle {
     }
 }
 
-extension Sequence where Element: Hashable {
+extension Sequence where Iterator.Element: Hashable {
     @inlinable
     var asSet: Set<Element> { Set(self) }
+    
+    func unique() -> [Iterator.Element] {
+        var seen: Set<Iterator.Element> = []
+        return filter { seen.insert($0).inserted }
+    }
 }
 
 extension Dictionary where Value: AnyObject {

@@ -98,6 +98,64 @@ final class TagsTests: XCTestCase {
     
     private func checkTags(tags: TypeTags, type: Any.Type, cType: Any.Type? = nil) {
         checkTypeTags(tags: tags, type: type, cType: cType)
+        
+        // Int instance property
+        let instancePropertyInt1 = tags.tagged(dynamic: .testInstancePropertyIntTag)
+        let instancePropertyInt2 = tags.tagged(dynamic: .testInstancePropertyIntTag, prefixed: "test")
+        let instancePropertyInt3 = tags.tagged(dynamic: .testInstancePropertyIntTag, prefixed: "test2")
+        XCTAssertEqual(instancePropertyInt1, instancePropertyInt2)
+        XCTAssertEqual(instancePropertyInt3, [])
+        if cType != nil {
+            XCTAssertEqual(instancePropertyInt1.count, 2)
+            let parent = instancePropertyInt1.filter { $0.to == "test1var" }
+            let child = instancePropertyInt1.filter { $0.to == "test11var" }
+            XCTAssertNotEqual(parent, [])
+            XCTAssertNotEqual(child, [])
+            XCTAssertEqual(parent, tags.tagged(by: .testInstancePropertyIntTag, prefixed: "test1v"))
+            XCTAssertEqual(child, tags.tagged(by: .testInstancePropertyIntTag, prefixed: "test11"))
+            XCTAssertEqual(parent.first.map{tags[$0]}, 123)
+            XCTAssertEqual(child.first.map{tags[$0]}, 22)
+        } else {
+            XCTAssertEqual(instancePropertyInt1.count, 1)
+            XCTAssertEqual(instancePropertyInt1.first.map{tags[$0]}, 123)
+            XCTAssertEqual(instancePropertyInt1.first?.to, "test1var")
+        }
+        // Bool instance property
+        let instancePropertyBool1 = tags.tagged(dynamic: .testInstancePropertyBoolTag)
+        let instancePropertyBool2 = tags.tagged(dynamic: .testInstancePropertyBoolTag, prefixed: "test")
+        let instancePropertyBool3 = tags.tagged(dynamic: .testInstancePropertyBoolTag, prefixed: "test2")
+        XCTAssertEqual(instancePropertyBool1, instancePropertyBool2)
+        XCTAssertEqual(instancePropertyBool3, [])
+        if cType != nil {
+            XCTAssertEqual(instancePropertyBool1.count, 2)
+            let parent = instancePropertyBool1.filter { $0.to == "test1var" }
+            let child = instancePropertyBool1.filter { $0.to == "test11var" }
+            XCTAssertNotEqual(parent, [])
+            XCTAssertNotEqual(child, [])
+            XCTAssertEqual(parent, tags.tagged(by: .testInstancePropertyBoolTag, prefixed: "test1v"))
+            XCTAssertEqual(child, tags.tagged(by: .testInstancePropertyBoolTag, prefixed: "test11"))
+            XCTAssertEqual(parent.first.map{tags[$0]}, false)
+            XCTAssertEqual(child.first.map{tags[$0]}, true)
+        } else {
+            XCTAssertEqual(instancePropertyBool1.count, 1)
+            XCTAssertEqual(instancePropertyBool1.first.map{tags[$0]}, true)
+            XCTAssertEqual(instancePropertyBool1.first?.to, "test1var")
+        }
+        //
+        let instanceProperty1 = tags.tags(for: .instanceMethod)
+        let instanceProperty2 = tags.tags(for: .instanceMethod, prefixed: "test")
+        let instanceProperty3 = tags.tags(for: .instanceMethod, prefixed: "test3")
+        XCTAssertEqual(instanceProperty1, instanceProperty2)
+        XCTAssertEqual(instanceProperty3, [])
+//        tagger.set(instance: .testInstancePropertyIntTag, to: 123, property: \.test1var)
+//        tagger.set(instance: .testInstancePropertyBoolTag, to: true, property: \.test1var)
+//        tagger.set(instance: .testInstanceMethodIntTag, to: 345, method: "test2func")
+//        tagger.set(instance: .testInstanceMethodBoolTag, to: false, method: "test2func")
+//        tagger.set(static: .testStaticPropertyIntTag, to: 567, property: "test3staticVar")
+//        tagger.set(static: .testStaticPropertyStringTag, to: "staticProp", property: "test3staticVar")
+//        tagger.set(static: .testStaticMethodIntTag, to: 7890, method: "test4staticFunc")
+//        tagger.set(static: .testStaticMethodBoolTag, to: true, method: "test4staticFunc")
+        
     }
     
     private func checkTypeTags(tags: TypeTags, type: Any.Type, cType: Any.Type?) {
@@ -326,14 +384,14 @@ extension TagsTestsChildMarker {
     static func setChildTags(tagger: inout TypeTagger<Self>) {
         tagger.set(type: .testTypeStringTag, to: "testOverrideString")
         tagger.set(type: .testTypeIntTag, to: 9999)
-        tagger.set(instance: .testInstancePropertyIntTag, to: 123, property: \.test11var)
+        tagger.set(instance: .testInstancePropertyIntTag, to: 22, property: \.test11var)
         tagger.set(instance: .testInstancePropertyBoolTag, to: true, property: \.test11var)
         tagger.set(instance: .testInstancePropertyBoolTag, to: false, property: \.test1var)
-        tagger.set(instance: .testInstanceMethodIntTag, to: 345, method: "test12func")
+        tagger.set(instance: .testInstanceMethodIntTag, to: 333, method: "test12func")
         tagger.set(instance: .testInstanceMethodBoolTag, to: false, method: "test12func")
-        tagger.set(static: .testStaticPropertyIntTag, to: 567, property: "test13staticVar")
+        tagger.set(static: .testStaticPropertyIntTag, to: 4444, property: "test13staticVar")
         tagger.set(static: .testStaticPropertyStringTag, to: "staticProp", property: "test13staticVar")
-        tagger.set(static: .testStaticMethodIntTag, to: 7890, method: "test14staticFunc")
+        tagger.set(static: .testStaticMethodIntTag, to: 55555, method: "test14staticFunc")
         tagger.set(static: .testStaticMethodBoolTag, to: true, method: "test14staticFunc")
     }
 }

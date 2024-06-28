@@ -14,7 +14,7 @@ class UnskippableTypeTaggedTests: XCTestCase, ExtendableTaggedType {
         XCTAssertFalse(skip.canSkip(method: "testItrSkippable123"))
     }
     
-    static var extendableTypeTags: ExtendableTypeTags {
+    static func extendableTypeTags() -> ExtendableTypeTags {
         withTagger { tagger in
             tagger.set(type: .itrSkippable, to: false)
         }
@@ -37,17 +37,17 @@ final class UnskippableTypeTaggedOverrideTests: XCTestCase, FinalTaggedType {
         XCTAssertFalse(skip.canSkip(method: "testItrSkippable456"))
     }
     
-    static var finalTypeTags: FinalTypeTags<UnskippableTypeTaggedOverrideTests> {
+    static let finalTypeTags: FinalTypeTags<UnskippableTypeTaggedOverrideTests> = {
         withTagger { tagger in
             tagger.set(type: .itrSkippable, to: false)
             tagger.set(instance: .itrSkippable, to: true, method: "testItrSkippable")
             tagger.set(instance: .itrSkippable, to: false, method: "testItrSkippable456")
         }
-    }
+    }()
 }
 
 
-class UnskippableMethodTaggedTests: XCTestCase, ExtendableTaggedType {
+class UnskippableMethodTaggedTests: XCTestCase, DDTaggedType {
     func testItrSkippable() {
         let skip = type(of: self).unskippableMethods
         XCTAssertFalse(skip.canSkip(method: "testItrSkippable"))
@@ -55,10 +55,8 @@ class UnskippableMethodTaggedTests: XCTestCase, ExtendableTaggedType {
         XCTAssertTrue(skip.canSkip(method: "testItrSkippable456"))
     }
     
-    static var extendableTypeTags: ExtendableTypeTags {
-        withTagger { tagger in
-            tagger.set(instance: .itrSkippable, to: false, method: "testItrSkippable")
-            tagger.set(instance: .itrSkippable, to: true, method: "testItrSkippable456")
-        }
+    static func addTypeTags(_ tagger: DDTypeTagger) {
+        tagger.set(tag: .itrSkippableInstanceMethod, toValue: false, forMember: "testItrSkippable")
+        tagger.set(tag: .itrSkippableInstanceMethod, toValue: true, forMember: "testItrSkippable456")
     }
 }

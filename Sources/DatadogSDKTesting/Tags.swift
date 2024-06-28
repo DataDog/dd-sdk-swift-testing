@@ -354,7 +354,7 @@ public protocol TaggedType: MaybeTaggedType {
 }
 
 public protocol ExtendableTaggedType: AnyObject, TaggedType {
-    static var extendableTypeTags: ExtendableTypeTags { get }
+    static func extendableTypeTags() -> ExtendableTypeTags
 }
 
 public protocol FinalTaggedType: TaggedType {
@@ -542,7 +542,8 @@ public extension ExtendableTaggedType {
 }
 
 public extension FinalTaggedType {
-    static var erasedTypeTags: TypeTags { finalTypeTags }
+    @inlinable
+    static func erasedTypeTags() -> TypeTags { finalTypeTags }
 
     static func withTagger(_ builder: (inout TypeTagger<Self>) -> Void) -> FinalTypeTags<Self> {
         var tagger = TypeTagger<Self>()
@@ -565,8 +566,8 @@ public extension TaggedType {
     // We can have inheritance case ExtendableTaggedType -> FinalTaggedType so we do dynamic check
     @inlinable static var dynamicTypeTags: TypeTags? {
         switch self {
-        case let strong as any FinalTaggedType.Type: return strong.erasedTypeTags
-        case let ext as ExtendableTaggedType.Type: return ext.extendableTypeTags
+        case let strong as any FinalTaggedType.Type: return strong.erasedTypeTags()
+        case let ext as ExtendableTaggedType.Type: return ext.extendableTypeTags()
         default: return nil
         }
     }

@@ -139,13 +139,13 @@ public extension AttachedTag {
 }
 
 @objc public protocol DDTaggedType: NSObjectProtocol {
-    @objc static func associatedTypeTags() -> DDTypeTags
+    @objc static func addTypeTags(_ tagger: DDTypeTagger)
 }
 
 @objc public final class DDTypeTagger: NSObject {
     public private(set) var tagger: TypeTagger<NSObject>
     
-    private init<T: DDTaggedType & MaybeTaggedType>(for type: T.Type) {
+    public init<T: DDTaggedType & MaybeTaggedType>(for type: T.Type) {
         self.tagger = TypeTagger<NSObject>(type: T.self)
         super.init()
     }
@@ -174,10 +174,6 @@ public extension AttachedTag {
         return set(tag: tag, toValue: value, forMember: method.description)
     }
     
-    @objc public static func forType(_ type: AnyClass) -> DDTypeTagger? {
-        (type as? (DDTaggedType & MaybeTaggedType).Type).map { Self(for: $0) }
-    }
-    
     @objc public func tags() -> DDTypeTags { tagger.tags() }
 }
 
@@ -193,7 +189,10 @@ extension NSObject: MaybeTaggedType {
     public static var maybeTypeTags: TypeTags? {
         switch self {
         case let tagged as TaggedType.Type: return tagged.dynamicTypeTags
-        case let tagged as DDTaggedType.Type: return tagged.associatedTypeTags()
+        case let tagged as (DDTaggedType & MaybeTaggedType).Type:
+            let tagger = DDTypeTagger(for: tagged)
+            tagged.addTypeTags(tagger)
+            return tagger.tags()
         default: return nil
         }
     }

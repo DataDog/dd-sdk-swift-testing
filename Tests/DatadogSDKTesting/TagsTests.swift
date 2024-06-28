@@ -53,7 +53,8 @@ final class TagsTests: XCTestCase {
     }
     
     func testCanFetchAndFilterClassTags() {
-        checkTags(tags: TestClass.extendableTypeTags, type: TestClass.self)
+        checkTags(tags: TestClass.extendableTypeTags(), type: TestClass.self)
+        checkTags(tags: TestClass.typeTags, type: TestClass.self)
         let dtags = TestClass.dynamicTypeTags
         XCTAssertNotNil(dtags)
         dtags.map { checkTags(tags: $0, type: TestClass.self) }
@@ -74,9 +75,10 @@ final class TagsTests: XCTestCase {
     }
     
     func testCanFetchAndFilterInheritedClassTags() {
-        checkTags(tags: TestInheritedClass.extendableTypeTags,
+        checkTags(tags: TestInheritedClass.extendableTypeTags(),
                   type: TestClass.self,
                   cType: TestInheritedClass.self)
+        checkTags(tags: TestInheritedClass.typeTags, type: TestClass.self, cType: TestInheritedClass.self)
         let dtags = TestInheritedClass.dynamicTypeTags
         XCTAssertNotNil(dtags)
         dtags.map { checkTags(tags: $0, type: TestClass.self, cType: TestInheritedClass.self) }
@@ -243,23 +245,23 @@ final class TagsTests: XCTestCase {
 
 extension TagsTests {
     struct TestStruct: TagsTestsMarker, FinalTaggedType {
-        static var finalTypeTags: FinalTypeTags<Self> {
+        static let finalTypeTags: FinalTypeTags<Self> = {
             withTagger { tagger in
                 setTags(tagger: &tagger)
             }
-        }
+        }()
     }
     
     final class TestFinalClass: TagsTestsMarker, FinalTaggedType {
-        static var finalTypeTags: FinalTypeTags<TestFinalClass> {
+        static let finalTypeTags: FinalTypeTags<TestFinalClass> = {
             withTagger { tagger in
                 setTags(tagger: &tagger)
             }
-        }
+        }()
     }
     
     class TestClass: TagsTestsMarker, ExtendableTaggedType {
-        class var extendableTypeTags: ExtendableTypeTags {
+        class func extendableTypeTags() -> ExtendableTypeTags {
             withTagger { tagger in
                 setTags(tagger: &tagger)
             }
@@ -272,7 +274,7 @@ extension TagsTests {
         static var test13staticVar: Bool = false
         static func test14staticFunc() -> Double? { nil }
         
-        override class var extendableTypeTags: ExtendableTypeTags {
+        override class func extendableTypeTags() -> ExtendableTypeTags {
             withTagger { tagger in
                 setChildTags(tagger: &tagger)
             }
@@ -293,7 +295,7 @@ extension TagsTests {
     }
     
     @objc class TestObjcClass: NSObject, ExtendableTaggedType, TagsTestsMarker {
-        class var extendableTypeTags: ExtendableTypeTags {
+        class func extendableTypeTags() -> ExtendableTypeTags {
             withTagger { tagger in
                 setTags(tagger: &tagger)
             }
@@ -306,8 +308,7 @@ extension TagsTests {
         @objc static var test3staticVar: Bool = false
         @objc static func test4staticFunc() -> Double { 0 }
         
-        static func associatedTypeTags() -> DDTypeTags {
-            let tagger = DDTypeTagger.forType(TestObjcDDClass.self)!
+        static func addTypeTags(_ tagger: DDTypeTagger) {
             // how they will be called from ObjC
             tagger.set(typeTag: .testTypeStringTag, toValue: NSString("testTypeString"))
             tagger.set(typeTag: .testTypeBoolTag, toValue: NSNumber(true))
@@ -320,8 +321,6 @@ extension TagsTests {
             // lets try call from Swift
             tagger.set(tag: .testInstanceMethodIntTag, toValue: 345, forMethod: #selector(test2func))
             tagger.set(tag: .testInstanceMethodBoolTag, toValue: false, forMethod: #selector(test2func))
-            // return tags
-            return tagger.tags()
         }
     }
     

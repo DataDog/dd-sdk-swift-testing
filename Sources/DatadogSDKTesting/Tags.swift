@@ -410,12 +410,24 @@ public struct FinalTypeTags<T: FinalTaggedType>: TypeTags, CustomDebugStringConv
         self.allTags = tags
     }
     
-    public func tagged<Tg: StaticTag<T>>(typed tag: Tg, prefixed prefix: String? = nil) -> [AttachedTag<Tg>] {
+    public func tagged<V>(type tag: TypeTag<T, V>, prefixed prefix: String? = nil) -> [AttachedTag<TypeTag<T, V>>] {
         tagged(by: tag, prefixed: prefix)
     }
     
-    public subscript<Tg: StaticTag<T>>(typed tag: AttachedTag<Tg>) -> Tg.Value? {
-        self[tag]
+    public func tagged<V>(instance tag: InstanceMethodTag<T, V>, prefixed prefix: String? = nil) -> [AttachedTag<InstanceMethodTag<T, V>>] {
+        tagged(by: tag, prefixed: prefix)
+    }
+    
+    public func tagged<V>(instance tag: InstancePropertyTag<T, V>, prefixed prefix: String? = nil) -> [AttachedTag<InstancePropertyTag<T, V>>] {
+        tagged(by: tag, prefixed: prefix)
+    }
+    
+    public func tagged<V>(static tag: StaticMethodTag<T, V>, prefixed prefix: String? = nil) -> [AttachedTag<StaticMethodTag<T, V>>] {
+        tagged(by: tag, prefixed: prefix)
+    }
+    
+    public func tagged<V>(static tag: StaticPropertyTag<T, V>, prefixed prefix: String? = nil) -> [AttachedTag<StaticPropertyTag<T, V>>] {
+        tagged(by: tag, prefixed: prefix)
     }
 }
 

@@ -46,7 +46,6 @@ final class UnskippableTypeTaggedOverrideTests: XCTestCase, FinalTaggedType {
     }()
 }
 
-
 class UnskippableMethodTaggedTests: XCTestCase, DDTaggedType {
     func testItrSkippable() {
         let skip = type(of: self).unskippableMethods

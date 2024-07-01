@@ -202,9 +202,9 @@ public struct AttachedTag<Tg: SomeTag>: Hashable, Equatable, CustomDebugStringCo
     }
     
     @inlinable
-    public init?(tag: Tg, to type: Any.Type) {
+    public init?(type tag: Tg) {
         guard tag.tagType == .forType else { return nil }
-        self.init(tag: tag, to: "\(type)")
+        self.init(tag: tag, to: "@")
     }
     
     public init?<T>(tag: Tg, to property: PartialKeyPath<T>) {
@@ -247,12 +247,12 @@ public struct AttachedTag<Tg: SomeTag>: Hashable, Equatable, CustomDebugStringCo
     
     @inlinable
     public static func to<T: TaggedType, V>(type tag: TypeTag<T, V>) -> AttachedTag<TypeTag<T, V>> {
-        AttachedTag<_>(tag: tag, to: T.self)!
+        AttachedTag<_>(type: tag)!
     }
     
     @inlinable
-    public static func to<V>(type: Any.Type, dynamic tag: DynamicTag<V>) -> AttachedTag<DynamicTag<V>>? {
-        AttachedTag<_>(tag: tag, to: type)
+    public static func to<V>(typeDynamic tag: DynamicTag<V>) -> AttachedTag<DynamicTag<V>>? {
+        AttachedTag<_>(type: tag)
     }
     
     @inlinable
@@ -320,6 +320,7 @@ extension AttachedTag where Tg == AnyTag {
 }
 
 public protocol TypeTags {
+    var allTags: [AttachedTag<AnyTag>: Any] { get }
     func tagged<T: SomeTag>(by tag: T, prefixed prefix: String?) -> [AttachedTag<T>]
     func tags(for type: TagType, prefixed prefix: String?) -> [AttachedTag<AnyTag>]
     func tags(named name: String, prefixed prefix: String?) -> [AttachedTag<AnyTag>]
@@ -361,80 +362,52 @@ public protocol FinalTaggedType: TaggedType {
     static var finalTypeTags: FinalTypeTags<Self> { get }
 }
 
-protocol TypeTagsBase: TypeTags, CustomDebugStringConvertible {
-    var parent: TypeTags? { get }
-    var tags: [AttachedTag<AnyTag>: Any] { get }
-}
-
-extension TypeTagsBase {
+extension TypeTags {
     public func tagged<Tg: SomeTag>(by tag: Tg, prefixed prefix: String?) -> [AttachedTag<Tg>] {
-        var tags = tags.keys.filter { atag in
+        allTags.keys.filter { atag in
             atag.tag.eq(to: tag) && (prefix.map { atag.to.hasPrefix($0) } ?? true)
         }.compactMap { $0.cast(to: Tg.self) }
-        if let parent = self.parent {
-            tags.append(contentsOf: parent.tagged(by: tag, prefixed: prefix))
-        }
-        return tags.unique()
     }
     
     public func tags(for type: TagType, prefixed prefix: String?) -> [AttachedTag<AnyTag>] {
-        var tags = tags.keys.filter { atag in
+        allTags.keys.filter { atag in
             atag.tag.tagType == type && (prefix.map { atag.to.hasPrefix($0) } ?? true)
         }
-        if let parent = self.parent {
-            tags.append(contentsOf: parent.tags(for: type, prefixed: prefix))
-        }
-        return tags.unique()
     }
     
     public func tags(named name: String, prefixed prefix: String?) -> [AttachedTag<AnyTag>] {
-        var tags = tags.keys.filter { atag in
+        allTags.keys.filter { atag in
             atag.tag.name == name && (prefix.map { atag.to.hasPrefix($0) } ?? true)
         }
-        if let parent = self.parent {
-            tags.append(contentsOf: parent.tags(named: name, prefixed: prefix))
-        }
-        return tags.unique()
     }
     
     public subscript<Tg: SomeTag>(tag: AttachedTag<Tg>) -> Tg.Value? {
-        if let val = tags[tag.any] {
+        if let val = allTags[tag.any] {
             return val as? Tg.Value
         }
-        return parent?[tag]
+        return nil
     }
     
     public var debugDescription: String {
-        var desc: String = ""
-        for elem in tags {
+        String(allTags.reduce(into: "") { desc, elem in
             desc.append("\(elem.key) = \(elem.value)\n")
-        }
-        if let parent = parent {
-            desc.append("\(parent)")
-        } else if desc.count > 0 {
-            desc.removeLast()
-        }
-        return desc
+        }.dropLast(1))
     }
 }
 
-public struct ExtendableTypeTags: TypeTags, TypeTagsBase {
-    let parent: TypeTags?
-    let tags: [AttachedTag<AnyTag>: Any]
+public struct ExtendableTypeTags: TypeTags, CustomDebugStringConvertible {
+    public let allTags: [AttachedTag<AnyTag> : Any]
     
-    public init(parent: TypeTags?, tags: [AttachedTag<AnyTag>: Any]) {
-        self.parent = parent
-        self.tags = tags
+    public init(tags: [AttachedTag<AnyTag>: Any]) {
+        self.allTags = tags
     }
 }
 
-public struct FinalTypeTags<T: FinalTaggedType>: TypeTags, TypeTagsBase {
-    let parent: TypeTags?
-    let tags: [AttachedTag<AnyTag>: Any]
+public struct FinalTypeTags<T: FinalTaggedType>: TypeTags, CustomDebugStringConvertible {
+    public let allTags: [AttachedTag<AnyTag> : Any]
     
-    public init(parent: TypeTags?, tags: [AttachedTag<AnyTag>: Any]) {
-        self.parent = parent
-        self.tags = tags
+    public init(tags: [AttachedTag<AnyTag>: Any]) {
+        self.allTags = tags
     }
     
     public func tagged<Tg: StaticTag<T>>(typed tag: Tg, prefixed prefix: String? = nil) -> [AttachedTag<Tg>] {
@@ -447,13 +420,11 @@ public struct FinalTypeTags<T: FinalTaggedType>: TypeTags, TypeTagsBase {
 }
 
 public struct TypeTagger<T: MaybeTaggedType> {
-    let parentTags: TypeTags?
     let dynamicType: MaybeTaggedType.Type
     var typeTags: [AttachedTag<AnyTag>: Any]
     
     init(parent tags: TypeTags?, type: MaybeTaggedType.Type = T.self) {
-        self.parentTags = tags
-        self.typeTags = [:]
+        self.typeTags = tags?.allTags ?? [:]
         self.dynamicType = type
     }
     
@@ -475,7 +446,7 @@ public struct TypeTagger<T: MaybeTaggedType> {
     
     public mutating func set(anyType tag: AnyTag, to value: Any) -> Bool {
         guard type(of: value) == tag.valueType,
-              let atag = AttachedTag<AnyTag>.to(type: dynamicType, dynamic: tag) else
+              let atag = AttachedTag<AnyTag>.to(typeDynamic: tag) else
         {
             return false
         }
@@ -515,11 +486,11 @@ public struct TypeTagger<T: MaybeTaggedType> {
 }
 
 public extension TypeTagger where T: ExtendableTaggedType {
-    func tags() -> ExtendableTypeTags { ExtendableTypeTags(parent: parentTags, tags: typeTags)}
+    func tags() -> ExtendableTypeTags { ExtendableTypeTags(tags: typeTags) }
 }
 
 public extension TypeTagger where T: FinalTaggedType {
-    func tags() -> FinalTypeTags<T> { FinalTypeTags(parent: parentTags, tags: typeTags) }
+    func tags() -> FinalTypeTags<T> { FinalTypeTags(tags: typeTags) }
 }
 
 public extension TypeTagger where T: NSObjectProtocol {
@@ -542,8 +513,7 @@ public extension ExtendableTaggedType {
 }
 
 public extension FinalTaggedType {
-    @inlinable
-    static func erasedTypeTags() -> TypeTags { finalTypeTags }
+    fileprivate static var _erasedTypeTags: TypeTags { finalTypeTags }
 
     static func withTagger(_ builder: (inout TypeTagger<Self>) -> Void) -> FinalTypeTags<Self> {
         var tagger = TypeTagger<Self>()
@@ -564,9 +534,9 @@ public extension TaggedType {
     @inlinable static var maybeTypeTags: TypeTags? { dynamicTypeTags }
     
     // We can have inheritance case ExtendableTaggedType -> FinalTaggedType so we do dynamic check
-    @inlinable static var dynamicTypeTags: TypeTags? {
+    static var dynamicTypeTags: TypeTags? {
         switch self {
-        case let strong as any FinalTaggedType.Type: return strong.erasedTypeTags()
+        case let strong as any FinalTaggedType.Type: return strong._erasedTypeTags
         case let ext as ExtendableTaggedType.Type: return ext.extendableTypeTags()
         default: return nil
         }

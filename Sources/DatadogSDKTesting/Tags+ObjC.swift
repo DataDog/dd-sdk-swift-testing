@@ -112,13 +112,11 @@ public extension AttachedTag {
     var objcTag: DDAttachedTag { DDAttachedTag(tag: self) }
 }
 
-@objc public final class DDTypeTags: NSObject, TypeTags, TypeTagsBase {
-    let parent: TypeTags?
-    let tags: [AttachedTag<AnyTag>: Any]
+@objc public final class DDTypeTags: NSObject, TypeTags {
+    public let allTags: [AttachedTag<AnyTag> : Any]
     
-    public init(parent: TypeTags?, tags: [AttachedTag<AnyTag> : Any]) {
-        self.parent = parent
-        self.tags = tags
+    public init(tags: [AttachedTag<AnyTag> : Any]) {
+        self.allTags = tags
     }
     
     @objc public func tagged(byTag tag: DDTag, withPrefix prefix: String?) -> [DDAttachedTag] {
@@ -178,9 +176,7 @@ public extension AttachedTag {
 }
 
 public extension TypeTagger where T: NSObject {
-    func tags() -> DDTypeTags {
-        DDTypeTags(parent: parentTags, tags: typeTags)
-    }
+    func tags() -> DDTypeTags { DDTypeTags(tags: typeTags) }
 }
 
 // All NSObjects are MaybeTagged.

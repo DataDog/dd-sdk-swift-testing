@@ -54,8 +54,10 @@ class UnskippableMethodTaggedTests: XCTestCase, DDTaggedType {
         XCTAssertTrue(skip.canSkip(method: "testItrSkippable456"))
     }
     
-    static func addTypeTags(_ tagger: DDTypeTagger) {
+    static func attachedTypeTags() -> DDTypeTags {
+        let tagger = DDTypeTagger.forType(self)!
         tagger.set(tag: .itrSkippableInstanceMethod, toValue: false, forMember: "testItrSkippable")
         tagger.set(tag: .itrSkippableInstanceMethod, toValue: true, forMember: "testItrSkippable456")
+        return tagger.tags()
     }
 }

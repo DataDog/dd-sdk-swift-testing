@@ -96,7 +96,68 @@ final class TagsTests: XCTestCase {
         mtags.map { checkTags(tags: $0, child: true) }
     }
     
-    private func checkTags(tags: TypeTags, child: Bool = false) {
+    func testCanFetchAndFilterFinalInheritedClassTags() {
+        checkFinalTags(tags: TestFinalInheritedClass.finalTypeTags)
+        checkTags(tags: TestFinalInheritedClass.typeTags)
+        let dtags = TestFinalInheritedClass.dynamicTypeTags
+        XCTAssertNotNil(dtags)
+        dtags.map { checkTags(tags: $0) }
+        let mtags = TestFinalInheritedClass.maybeTypeTags
+        XCTAssertNotNil(mtags)
+        mtags.map { checkTags(tags: $0) }
+    }
+    
+    func testCanFetchAndFilterFinalInheritedClassTagsDynamic() {
+        let ttype: TaggedType.Type = TestFinalInheritedClass.self
+        checkTags(tags: ttype.typeTags)
+        let dtags = ttype.dynamicTypeTags
+        XCTAssertNotNil(dtags)
+        dtags.map { checkTags(tags: $0) }
+        let mtags = ttype.maybeTypeTags
+        XCTAssertNotNil(mtags)
+        mtags.map { checkTags(tags: $0) }
+    }
+    
+    func testCanFetchAndFilterObjcClassTags() {
+        checkTags(tags: TestObjcClass.extendableTypeTags())
+        checkTags(tags: TestObjcClass.typeTags)
+        let dtags = TestObjcClass.dynamicTypeTags
+        XCTAssertNotNil(dtags)
+        dtags.map { checkTags(tags: $0) }
+        let mtags = TestObjcClass.maybeTypeTags
+        XCTAssertNotNil(mtags)
+        mtags.map { checkTags(tags: $0) }
+    }
+    
+    func testCanFetchAndFilterObjcClassTagsDynamic() {
+        let ttype: TaggedType.Type = TestObjcClass.self
+        checkTags(tags: ttype.typeTags)
+        let dtags = ttype.dynamicTypeTags
+        XCTAssertNotNil(dtags)
+        dtags.map { checkTags(tags: $0) }
+        let mtags = ttype.maybeTypeTags
+        XCTAssertNotNil(mtags)
+        mtags.map { checkTags(tags: $0) }
+    }
+    
+    func testCanFetchAndFilterObjcDDClassTags() {
+        checkTags(tags: TestObjcDDClass.attachedTypeTags())
+        let mtags = TestObjcDDClass.maybeTypeTags
+        XCTAssertNotNil(mtags)
+        mtags.map { checkTags(tags: $0) }
+    }
+    
+    func testCanFetchAndFilterObjcDDClassTagsDynamic() {
+        let ttype: (DDTaggedType & MaybeTaggedType).Type = TestObjcDDClass.self
+        checkTags(tags: ttype.attachedTypeTags())
+        let mtags = ttype.maybeTypeTags
+        XCTAssertNotNil(mtags)
+        mtags.map { checkTags(tags: $0) }
+    }
+}
+
+private extension TagsTests {
+    func checkTags(tags: TypeTags, child: Bool = false) {
         checkTypeTags(tags: tags, child: child)
         checkInstancePropertyTags(tags: tags, child: child)
         checkInstanceMethodTags(tags: tags, child: child)
@@ -104,7 +165,7 @@ final class TagsTests: XCTestCase {
         checkStaticMethodTags(tags: tags, child: child)
     }
     
-    private func checkInstancePropertyTags(tags: TypeTags, child: Bool) {
+    func checkInstancePropertyTags(tags: TypeTags, child: Bool) {
         // Int instance property
         let tagsInt1 = tags.tagged(dynamic: .testInstancePropertyIntTag)
         let tagsInt2 = tags.tagged(dynamic: .testInstancePropertyIntTag, prefixed: "test")
@@ -182,7 +243,7 @@ final class TagsTests: XCTestCase {
         }
     }
     
-    private func checkInstanceMethodTags(tags: TypeTags, child: Bool) {
+    func checkInstanceMethodTags(tags: TypeTags, child: Bool) {
         // Int instance method
         let tagsInt1 = tags.tagged(dynamic: .testInstanceMethodIntTag)
         let tagsInt2 = tags.tagged(dynamic: .testInstanceMethodIntTag, prefixed: "test")
@@ -260,7 +321,7 @@ final class TagsTests: XCTestCase {
         }
     }
     
-    private func checkStaticPropertyTags(tags: TypeTags, child: Bool) {
+    func checkStaticPropertyTags(tags: TypeTags, child: Bool) {
         // Int static property
         let tagsInt1 = tags.tagged(dynamic: .testStaticPropertyIntTag)
         let tagsInt2 = tags.tagged(dynamic: .testStaticPropertyIntTag, prefixed: "test")
@@ -338,7 +399,7 @@ final class TagsTests: XCTestCase {
         }
     }
     
-    private func checkStaticMethodTags(tags: TypeTags, child: Bool) {
+    func checkStaticMethodTags(tags: TypeTags, child: Bool) {
         // Int instance method
         let tagsInt1 = tags.tagged(dynamic: .testStaticMethodIntTag)
         let tagsInt2 = tags.tagged(dynamic: .testStaticMethodIntTag, prefixed: "test")
@@ -416,33 +477,33 @@ final class TagsTests: XCTestCase {
         }
     }
     
-    private func checkTypeTags(tags: TypeTags, child: Bool) {
+    func checkTypeTags(tags: TypeTags, child: Bool) {
         // Check String
         let typeStr1 = tags.tagged(dynamic: .testTypeStringTag)
-        let typeStr2 = tags.tagged(dynamic: .testTypeStringTag, prefixed: "@")
+        let typeStr2 = tags.tagged(dynamic: .testTypeStringTag, prefixed: "self")
         let typeStr3 = tags.tagged(dynamic: .testTypeStringTag, prefixed: "bad")
         let typeStrValue = child ? "testOverrideString" : "testTypeString"
         XCTAssertEqual(typeStr1, typeStr2)
         XCTAssertEqual(typeStr3, [])
         XCTAssertEqual(typeStr1.count, 1)
         XCTAssertEqual(typeStr1.first?.tag, .testTypeStringTag)
-        XCTAssertEqual(typeStr1.first?.to, "@")
+        XCTAssertEqual(typeStr1.first?.to, "self")
         XCTAssertEqual(tags[.to(typeDynamic: .testTypeStringTag)!], typeStrValue)
         XCTAssertEqual(tags[typeStr1[0]], typeStrValue)
         // Check Bool
         let typeBool1 = tags.tagged(dynamic: .testTypeBoolTag)
-        let typeBool2 = tags.tagged(dynamic: .testTypeBoolTag, prefixed: "@")
+        let typeBool2 = tags.tagged(dynamic: .testTypeBoolTag, prefixed: "self")
         let typeBool3 = tags.tagged(dynamic: .testTypeBoolTag, prefixed: "bad")
         XCTAssertEqual(typeBool1.count, 1)
         XCTAssertEqual(typeBool1, typeBool2)
         XCTAssertEqual(typeBool3, [])
         XCTAssertEqual(typeBool1.first?.tag, .testTypeBoolTag)
-        XCTAssertEqual(typeBool1.first?.to, "@")
+        XCTAssertEqual(typeBool1.first?.to, "self")
         XCTAssertEqual(tags[.to(typeDynamic: .testTypeBoolTag)!], true)
         XCTAssertEqual(tags[typeBool1[0]], true)
         // check int
         let typeInt1 = tags.tagged(dynamic: .testTypeIntTag)
-        let typeInt2 = tags.tagged(dynamic: .testTypeIntTag, prefixed: "@")
+        let typeInt2 = tags.tagged(dynamic: .testTypeIntTag, prefixed: "self")
         let typeInt3 = tags.tagged(dynamic: .testTypeIntTag, prefixed: "bad")
         XCTAssertEqual(typeInt3, [])
         if child {
@@ -450,7 +511,7 @@ final class TagsTests: XCTestCase {
             XCTAssertEqual(typeInt1, typeInt2)
             XCTAssertEqual(typeInt3, [])
             XCTAssertEqual(typeInt1.first?.tag, .testTypeIntTag)
-            XCTAssertEqual(typeInt1.first?.to, "@")
+            XCTAssertEqual(typeInt1.first?.to, "self")
             XCTAssertEqual(tags[.to(typeDynamic: .testTypeIntTag)!], 9999)
             XCTAssertEqual(tags[typeInt1[0]], 9999)
         } else {
@@ -459,7 +520,7 @@ final class TagsTests: XCTestCase {
         }
         // Check all
         let typeAll1 = tags.tags(for: .forType)
-        let typeAll2 = tags.tags(for: .forType, prefixed: "@")
+        let typeAll2 = tags.tags(for: .forType, prefixed: "self")
         let typeAll3 = tags.tags(for: .forType, prefixed: "bad")
         XCTAssertEqual(typeAll1, typeAll2)
         XCTAssertEqual(typeAll3, [])
@@ -467,18 +528,18 @@ final class TagsTests: XCTestCase {
         // Filter by type
         let allBool = typeAll1.filter { $0.tag.eq(to: DynamicTag.testTypeBoolTag) }
         XCTAssertEqual(allBool.count, 1)
-        XCTAssertEqual(allBool.first?.to, "@")
+        XCTAssertEqual(allBool.first?.to, "self")
         let allString = typeAll1.filter { $0.tag.eq(to: DynamicTag.testTypeStringTag) }
         XCTAssertEqual(allString.count, 1)
-        XCTAssertEqual(allString.first?.to, "@")
+        XCTAssertEqual(allString.first?.to, "self")
         if child {
             let allInt = typeAll1.filter { $0.tag.eq(to: DynamicTag.testTypeIntTag) }
             XCTAssertEqual(allInt.count, 1)
-            XCTAssertEqual(allInt.first?.to, "@")
+            XCTAssertEqual(allInt.first?.to, "self")
         }
     }
     
-    private func checkFinalTags<T: FinalTaggedType & TagsTestsMarker>(tags: FinalTypeTags<T>, child: Bool = false) {
+    func checkFinalTags<T: FinalTaggedType & TagsTestsMarker>(tags: FinalTypeTags<T>, child: Bool = false) {
         checkTags(tags: tags, child: child)
         tagsArrEq(tags.tagged(dynamic: .testTypeBoolTag), tags.tagged(type: .testTypeBoolTag))
         tagsArrEq(tags.tagged(dynamic: .testTypeIntTag), tags.tagged(type: .testTypeIntTag))
@@ -497,7 +558,7 @@ final class TagsTests: XCTestCase {
         tagsArrEq(tags.tagged(dynamic: .testStaticMethodIntTag), tags.tagged(static: .testStaticMethodIntTag))
     }
     
-    private func tagsArrEq<T1: SomeTag, T2: SomeTag>(_ arr1: [AttachedTag<T1>], _ arr2: [AttachedTag<T2>]) {
+    func tagsArrEq<T1: SomeTag, T2: SomeTag>(_ arr1: [AttachedTag<T1>], _ arr2: [AttachedTag<T2>]) {
         XCTAssertEqual(arr1.count, arr2.count, "\(arr1) != \(arr2)")
         for xy in zip(arr1, arr2) {
             XCTAssertTrue(xy.0.eq(to: xy.1), "\(arr1) != \(arr2)")
@@ -570,37 +631,101 @@ extension TagsTests {
         @objc static var test3staticVar: Bool = false
         @objc static func test4staticFunc() -> Double { 0 }
         
-        static func addTypeTags(_ tagger: DDTypeTagger) {
+        class func attachedTypeTags() -> DDTypeTags {
+            let tagger = DDTypeTagger.forType(self)!
             // how they will be called from ObjC
             tagger.set(typeTag: .testTypeStringTag, toValue: NSString("testTypeString"))
             tagger.set(typeTag: .testTypeBoolTag, toValue: NSNumber(true))
             tagger.set(tag: .testInstancePropertyIntTag, toValue: NSNumber(123), forMember: "test1var")
             tagger.set(tag: .testInstancePropertyBoolTag, toValue: NSNumber(true), forMember: "test1var")
             tagger.set(tag: .testStaticPropertyIntTag, toValue: NSNumber(567), forMember: "test3staticVar")
-            tagger.set(tag: .testStaticPropertyStringTag, toValue: "staticProp", forMember: "test3staticVar")
             tagger.set(tag: .testStaticMethodIntTag, toValue: NSNumber(7890), forMethod: #selector(test4staticFunc))
             tagger.set(tag: .testStaticMethodBoolTag, toValue: NSNumber(true), forMethod: #selector(test4staticFunc))
-            // lets try call from Swift
+            // also we can use Swift types
+            tagger.set(tag: .testStaticPropertyStringTag, toValue: "staticProp", forMember: "test3staticVar")
             tagger.set(tag: .testInstanceMethodIntTag, toValue: 345, forMethod: #selector(test2func))
             tagger.set(tag: .testInstanceMethodBoolTag, toValue: false, forMethod: #selector(test2func))
+            return tagger.tags()
         }
     }
     
-//    @objc class TestInheritedObjcClass: TestObjcClass, DDTaggedType {
-//
-//    }
-//
-//    @objc class TestFinalInheritedObjcClass: TestObjcClass, FinalTaggedType {
-//
-//    }
-//
-//    @objc class TestInheritedObjcDDClass: TestObjcDDClass {
-//
-//    }
-//
-//    @objc class TestFinalInheritedObjcDDClass: TestInheritedObjcDDClass, FinalTaggedType {
-//
-//    }
+    @objc class TestInheritedObjcClass: TestObjcClass, TagsTestsChildMarker {
+        override class func extendableTypeTags() -> ExtendableTypeTags {
+            withTagger { tagger in
+                setChildTags(tagger: &tagger)
+            }
+        }
+    }
+    
+    @objc class TestInheritedObjcDDClass: TestObjcDDClass {
+        @objc var test11var: String { "test" }
+        @objc func test12func() -> Int { 123 }
+        @objc static var test13staticVar: Bool { false }
+        @objc static func test14staticFunc() -> Double { 654.321 }
+        
+        override class func attachedTypeTags() -> DDTypeTags {
+            let tagger = DDTypeTagger.forType(self)!
+            tagger.set(typeTag: .testTypeStringTag, toValue: NSString("testOverrideString"))
+            tagger.set(typeTag: .testTypeIntTag, toValue: NSNumber(9999))
+            tagger.set(tag: .testInstancePropertyIntTag, toValue: NSNumber(22), forMember: "test11var")
+            tagger.set(tag: .testInstancePropertyBoolTag, toValue: NSNumber(true), forMember: "test11var")
+            tagger.set(tag: .testInstancePropertyBoolTag, toValue: NSNumber(false), forMember: "test1var")
+            tagger.set(tag: .testInstanceMethodIntTag, toValue: NSNumber(333), forMethod: #selector(test12func))
+            tagger.set(tag: .testInstanceMethodBoolTag, toValue: NSNumber(false), forMethod: #selector(test12func))
+            tagger.set(tag: .testStaticPropertyIntTag, toValue: NSNumber(4444), forMember: "test13staticVar")
+            tagger.set(tag: .testStaticPropertyStringTag, toValue: NSString("staticProp1"), forMember: "test13staticVar")
+            tagger.set(tag: .testStaticMethodIntTag, toValue: NSNumber(55555), forMethod: #selector(test14staticFunc))
+            tagger.set(tag: .testStaticMethodBoolTag, toValue: NSNumber(true), forMethod: #selector(test14staticFunc))
+            return tagger.tags()
+        }
+    }
+    
+    @objc class TestInheritedSwiftObjcDDClass: TestObjcClass, DDTaggedType {
+        @objc var test11var: String { "test" }
+        @objc func test12func() -> Int { 123 }
+        @objc static var test13staticVar: Bool { false }
+        @objc static func test14staticFunc() -> Double { 654.321 }
+        
+        class func attachedTypeTags() -> DDTypeTags {
+            let tagger = DDTypeTagger.forType(self)!
+            tagger.set(typeTag: .testTypeStringTag, toValue: NSString("testOverrideString"))
+            tagger.set(typeTag: .testTypeIntTag, toValue: NSNumber(9999))
+            tagger.set(tag: .testInstancePropertyIntTag, toValue: NSNumber(22), forMember: "test11var")
+            tagger.set(tag: .testInstancePropertyBoolTag, toValue: NSNumber(true), forMember: "test11var")
+            tagger.set(tag: .testInstancePropertyBoolTag, toValue: NSNumber(false), forMember: "test1var")
+            tagger.set(tag: .testInstanceMethodIntTag, toValue: NSNumber(333), forMethod: #selector(test12func))
+            tagger.set(tag: .testInstanceMethodBoolTag, toValue: NSNumber(false), forMethod: #selector(test12func))
+            tagger.set(tag: .testStaticPropertyIntTag, toValue: NSNumber(4444), forMember: "test13staticVar")
+            tagger.set(tag: .testStaticPropertyStringTag, toValue: NSString("staticProp1"), forMember: "test13staticVar")
+            tagger.set(tag: .testStaticMethodIntTag, toValue: NSNumber(55555), forMethod: #selector(test14staticFunc))
+            tagger.set(tag: .testStaticMethodBoolTag, toValue: NSNumber(true), forMethod: #selector(test14staticFunc))
+            return tagger.tags()
+        }
+    }
+    
+    @objc final class TestFinalInheritedObjcClass: TestObjcClass, FinalTaggedType, TagsTestsChildMarker {
+        static var finalTypeTags: FinalTypeTags<TestFinalInheritedObjcClass> {
+            withTagger { tagger in
+                setChildTags(tagger: &tagger)
+            }
+        }
+    }
+    
+    @objc class TestInheritedObjcDDSwiftClass: TestObjcDDClass, ExtendableTaggedType, TagsTestsChildMarker {
+        static func extendableTypeTags() -> ExtendableTypeTags {
+            withTagger { tagger in
+                setChildTags(tagger: &tagger)
+            }
+        }
+    }
+
+    @objc final class TestFinalInheritedObjcDDSwiftClass: TestObjcDDClass, FinalTaggedType, TagsTestsChildMarker {
+        static var finalTypeTags: FinalTypeTags<TestFinalInheritedObjcDDSwiftClass> {
+            withTagger { tagger in
+                setChildTags(tagger: &tagger)
+            }
+        }
+    }
 }
 
 protocol TagsTestsMarker: TaggedType {
@@ -730,6 +855,7 @@ extension DDTag {
     static var testInstancePropertyBoolTag: DDTag { DDTag(tag: .testInstancePropertyBoolTag) }
     static var testStaticMethodBoolTag: DDTag { DDTag(tag: .testStaticMethodBoolTag) }
     
+    static var testTypeIntTag: DDTag {  DDTag(tag: .testTypeIntTag) }
     static var testInstanceMethodIntTag: DDTag { DDTag(tag: .testInstanceMethodIntTag) }
     static var testInstancePropertyIntTag: DDTag { DDTag(tag: .testInstancePropertyIntTag) }
     static var testStaticMethodIntTag: DDTag { DDTag(tag: .testStaticMethodIntTag) }

@@ -204,7 +204,7 @@ public struct AttachedTag<Tg: SomeTag>: Hashable, Equatable, CustomDebugStringCo
     @inlinable
     public init?(type tag: Tg) {
         guard tag.tagType == .forType else { return nil }
-        self.init(tag: tag, to: "@")
+        self.init(tag: tag, to: "self")
     }
     
     public init?<T>(tag: Tg, to property: PartialKeyPath<T>) {
@@ -432,21 +432,25 @@ public struct FinalTypeTags<T: FinalTaggedType>: TypeTags, CustomDebugStringConv
 }
 
 public struct TypeTagger<T: MaybeTaggedType> {
-    let dynamicType: MaybeTaggedType.Type
-    var typeTags: [AttachedTag<AnyTag>: Any]
+    public let dynamicType: MaybeTaggedType.Type
+    public private(set) var typeTags: [AttachedTag<AnyTag>: Any]
     
-    init(parent tags: TypeTags?, type: MaybeTaggedType.Type = T.self) {
+    public init(parent tags: TypeTags?, type: MaybeTaggedType.Type = T.self) {
         self.typeTags = tags?.allTags ?? [:]
         self.dynamicType = type
     }
     
-    init(type: MaybeTaggedType.Type = T.self) {
+    public init(type: MaybeTaggedType.Type = T.self) {
         self.init(parent: (Swift._getSuperclass(type) as? MaybeTaggedType.Type)?.maybeTypeTags,
                   type: type)
     }
     
     public mutating func set<Tg: SomeTag>(tag: AttachedTag<Tg>, to value: Tg.Value) {
         typeTags[tag.any] = value
+    }
+    
+    public mutating func remove<Tg: SomeTag>(tag: AttachedTag<Tg>) {
+        typeTags.removeValue(forKey: tag.any)
     }
     
     @inlinable
@@ -456,6 +460,12 @@ public struct TypeTagger<T: MaybeTaggedType> {
         return true
     }
     
+    @inlinable
+    public mutating func remove(any tag: AnyTag, for member: String) {
+        remove(tag: AttachedTag(tag: tag, to: member))
+    }
+    
+    @inlinable
     public mutating func set(anyType tag: AnyTag, to value: Any) -> Bool {
         guard type(of: value) == tag.valueType,
               let atag = AttachedTag<AnyTag>.to(typeDynamic: tag) else
@@ -467,8 +477,20 @@ public struct TypeTagger<T: MaybeTaggedType> {
     }
     
     @inlinable
+    public mutating func remove(anyType tag: AnyTag) {
+        if let atag = AttachedTag<AnyTag>.to(typeDynamic: tag) {
+            remove(tag: atag)
+        }
+    }
+    
+    @inlinable
     public mutating func set<V>(instance tag: InstancePropertyTag<T, V>, to value: V, property path: PartialKeyPath<T>) {
         set(tag: .to(property: path, instance: tag), to: value)
+    }
+    
+    @inlinable
+    public mutating func remove<V>(instance tag: InstancePropertyTag<T, V>, property path: PartialKeyPath<T>) {
+        remove(tag: .to(property: path, instance: tag))
     }
     
     @inlinable
@@ -477,8 +499,18 @@ public struct TypeTagger<T: MaybeTaggedType> {
     }
     
     @inlinable
+    public mutating func remove<V>(instance tag: InstancePropertyTag<T, V>, property name: String) {
+        remove(tag: .to(property: name, instance: tag))
+    }
+    
+    @inlinable
     public mutating func set<V>(static tag: StaticPropertyTag<T, V>, to value: V, property name: String) {
         set(tag: .to(property: name, static: tag), to: value)
+    }
+    
+    @inlinable
+    public mutating func remove<V>(static tag: StaticPropertyTag<T, V>, property name: String) {
+        remove(tag: .to(property: name, static: tag))
     }
     
     @inlinable
@@ -487,13 +519,28 @@ public struct TypeTagger<T: MaybeTaggedType> {
     }
     
     @inlinable
+    public mutating func remove<V>(instance tag: InstanceMethodTag<T, V>, method name: String) {
+        remove(tag: .to(method: name, instance: tag))
+    }
+    
+    @inlinable
     public mutating func set<V>(static tag: StaticMethodTag<T, V>, to value: V, method name: String) {
         set(tag: .to(method: name, static: tag), to: value)
     }
     
     @inlinable
+    public mutating func remove<V>(static tag: StaticMethodTag<T, V>, method name: String) {
+        remove(tag: .to(method: name, static: tag))
+    }
+    
+    @inlinable
     public mutating func set<V>(type tag: TypeTag<T, V>, to value: V) {
         set(tag: .to(type: tag), to: value)
+    }
+    
+    @inlinable
+    public mutating func remove<V>(type tag: TypeTag<T, V>) {
+        remove(tag: .to(type: tag))
     }
 }
 
@@ -511,8 +558,16 @@ public extension TypeTagger where T: NSObjectProtocol {
         set(tag: .to(method: sel, instance: tag), to: value)
     }
     @inlinable
+    mutating func remove<V>(instance tag: InstanceMethodTag<T, V>, method sel: Selector) {
+        remove(tag: .to(method: sel, instance: tag))
+    }
+    @inlinable
     mutating func set<V>(static tag: StaticMethodTag<T, V>, to value: V, method sel: Selector) {
         set(tag: .to(method: sel, static: tag), to: value)
+    }
+    @inlinable
+    mutating func remove<V>(static tag: StaticMethodTag<T, V>, method sel: Selector) {
+        remove(tag: .to(method: sel, static: tag))
     }
 }
 

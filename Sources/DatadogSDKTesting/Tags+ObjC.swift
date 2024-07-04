@@ -148,7 +148,8 @@ public extension AttachedTag where Tg == AnyTag {
     public private(set) var tagger: TypeTagger<NSObject>
     
     public init<T: DDTaggedType & MaybeTaggedType>(for type: T.Type) {
-        self.tagger = TypeTagger<NSObject>(type: T.self)
+        self.tagger = TypeTagger<NSObject>(parent: type.parentTaggedType?.maybeTypeTags,
+                                           type: type)
         super.init()
     }
     
@@ -204,10 +205,34 @@ public extension TypeTagger where T: NSObject {
 extension NSObject: MaybeTaggedType {
     public static var maybeTypeTags: TypeTags? {
         switch self {
-        case let tagged as TaggedType.Type: return tagged.dynamicTypeTags
-        case let tagged as (DDTaggedType & MaybeTaggedType).Type: return tagged.attachedTypeTags()
+        case let strong as any FinalTaggedType.Type: return strong._erasedTypeTags
+        case let ext as ExtendableTaggedType.Type: return ext.extendableTypeTags()
+        case let objc as DDTaggedType.Type: return objc.attachedTypeTags()
         default: return nil
         }
+    }
+}
+
+extension NSObject: ExtendableDynamicHook {
+    // Hook to be called from ExtendableTaggedType
+    // This hook exists for handling DDTaggedType -> ExtendableTaggedType situation
+    // We call ExtendableTaggedType method, but someone subclassed it with DDTaggedType class
+    // So we have to call DDTaggedType method instead, and it will call us after
+    public static func fetchDynamicTags(selfType: ExtendableDynamicHook.Type,
+                                        implType: ExtendableDynamicHook.Type) -> (any TypeTags)?
+    {
+        // Check that there are some types on top of extendable implementstion
+        // And that subclass implemented DDTaggedType
+        guard selfType != implType, let tObjc = selfType as? DDTaggedType.Type else {
+            return nil
+        }
+        let sel = NSSelectorFromString("attachedTypeTags")
+        // check that attachedTypeTags is overriden somewhere beetween subclass
+        // and last ExtendableTaggedType implementation in the class chain
+        if class_getClassMethod(tObjc, sel) != class_getClassMethod(implType, sel) {
+            return tObjc.attachedTypeTags()
+        }
+        return nil
     }
 }
 

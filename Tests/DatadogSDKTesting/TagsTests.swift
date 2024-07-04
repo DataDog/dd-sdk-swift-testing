@@ -11,9 +11,6 @@ final class TagsTests: XCTestCase {
     func testCanFetchAndFilterStructTags() {
         checkFinalTags(tags: TestStruct.finalTypeTags)
         checkTags(tags: TestStruct.typeTags)
-        let dtags = TestStruct.dynamicTypeTags
-        XCTAssertNotNil(dtags)
-        dtags.map { checkTags(tags: $0) }
         let mtags = TestStruct.maybeTypeTags
         XCTAssertNotNil(mtags)
         mtags.map { checkTags(tags: $0) }
@@ -22,9 +19,6 @@ final class TagsTests: XCTestCase {
     func testCanFetchAndFilterStructTagsDynamic() {
         let ttype: TaggedType.Type = TestStruct.self
         checkTags(tags: ttype.typeTags)
-        let dtags = ttype.dynamicTypeTags
-        XCTAssertNotNil(dtags)
-        dtags.map { checkTags(tags: $0) }
         let mtags = ttype.maybeTypeTags
         XCTAssertNotNil(mtags)
         mtags.map { checkTags(tags: $0) }
@@ -33,9 +27,6 @@ final class TagsTests: XCTestCase {
     func testCanFetchAndFilterFinalClassTags() {
         checkFinalTags(tags: TestFinalClass.finalTypeTags)
         checkTags(tags: TestFinalClass.typeTags)
-        let dtags = TestFinalClass.dynamicTypeTags
-        XCTAssertNotNil(dtags)
-        dtags.map { checkTags(tags: $0) }
         let mtags = TestFinalClass.maybeTypeTags
         XCTAssertNotNil(mtags)
         mtags.map { checkTags(tags: $0) }
@@ -44,9 +35,6 @@ final class TagsTests: XCTestCase {
     func testCanFetchAndFilterFinalClassTagsDynamic() {
         let ttype: TaggedType.Type = TestFinalClass.self
         checkTags(tags: ttype.typeTags)
-        let dtags = ttype.dynamicTypeTags
-        XCTAssertNotNil(dtags)
-        dtags.map { checkTags(tags: $0) }
         let mtags = ttype.maybeTypeTags
         XCTAssertNotNil(mtags)
         mtags.map { checkTags(tags: $0) }
@@ -55,9 +43,6 @@ final class TagsTests: XCTestCase {
     func testCanFetchAndFilterClassTags() {
         checkTags(tags: TestClass.extendableTypeTags())
         checkTags(tags: TestClass.typeTags)
-        let dtags = TestClass.dynamicTypeTags
-        XCTAssertNotNil(dtags)
-        dtags.map { checkTags(tags: $0) }
         let mtags = TestClass.maybeTypeTags
         XCTAssertNotNil(mtags)
         mtags.map { checkTags(tags: $0) }
@@ -66,9 +51,6 @@ final class TagsTests: XCTestCase {
     func testCanFetchAndFilterClassTagsDynamic() {
         let ttype: TaggedType.Type = TestClass.self
         checkTags(tags: ttype.typeTags)
-        let dtags = ttype.dynamicTypeTags
-        XCTAssertNotNil(dtags)
-        dtags.map { checkTags(tags: $0) }
         let mtags = ttype.maybeTypeTags
         XCTAssertNotNil(mtags)
         mtags.map { checkTags(tags: $0) }
@@ -77,9 +59,6 @@ final class TagsTests: XCTestCase {
     func testCanFetchAndFilterInheritedClassTags() {
         checkTags(tags: TestInheritedClass.extendableTypeTags(), child: true)
         checkTags(tags: TestInheritedClass.typeTags, child: true)
-        let dtags = TestInheritedClass.dynamicTypeTags
-        XCTAssertNotNil(dtags)
-        dtags.map { checkTags(tags: $0, child: true) }
         let mtags = TestInheritedClass.maybeTypeTags
         XCTAssertNotNil(mtags)
         mtags.map { checkTags(tags: $0, child: true) }
@@ -88,9 +67,6 @@ final class TagsTests: XCTestCase {
     func testCanFetchAndFilterInheritedClassTagsDynamic() {
         let ttype: TaggedType.Type = TestInheritedClass.self
         checkTags(tags: ttype.typeTags, child: true)
-        let dtags = ttype.dynamicTypeTags
-        XCTAssertNotNil(dtags)
-        dtags.map { checkTags(tags: $0, child: true) }
         let mtags = ttype.maybeTypeTags
         XCTAssertNotNil(mtags)
         mtags.map { checkTags(tags: $0, child: true) }
@@ -99,9 +75,6 @@ final class TagsTests: XCTestCase {
     func testCanFetchAndFilterFinalInheritedClassTags() {
         checkFinalTags(tags: TestFinalInheritedClass.finalTypeTags)
         checkTags(tags: TestFinalInheritedClass.typeTags)
-        let dtags = TestFinalInheritedClass.dynamicTypeTags
-        XCTAssertNotNil(dtags)
-        dtags.map { checkTags(tags: $0) }
         let mtags = TestFinalInheritedClass.maybeTypeTags
         XCTAssertNotNil(mtags)
         mtags.map { checkTags(tags: $0) }
@@ -110,9 +83,6 @@ final class TagsTests: XCTestCase {
     func testCanFetchAndFilterFinalInheritedClassTagsDynamic() {
         let ttype: TaggedType.Type = TestFinalInheritedClass.self
         checkTags(tags: ttype.typeTags)
-        let dtags = ttype.dynamicTypeTags
-        XCTAssertNotNil(dtags)
-        dtags.map { checkTags(tags: $0) }
         let mtags = ttype.maybeTypeTags
         XCTAssertNotNil(mtags)
         mtags.map { checkTags(tags: $0) }
@@ -121,9 +91,6 @@ final class TagsTests: XCTestCase {
     func testCanFetchAndFilterObjcClassTags() {
         checkTags(tags: TestObjcClass.extendableTypeTags())
         checkTags(tags: TestObjcClass.typeTags)
-        let dtags = TestObjcClass.dynamicTypeTags
-        XCTAssertNotNil(dtags)
-        dtags.map { checkTags(tags: $0) }
         let mtags = TestObjcClass.maybeTypeTags
         XCTAssertNotNil(mtags)
         mtags.map { checkTags(tags: $0) }
@@ -132,9 +99,6 @@ final class TagsTests: XCTestCase {
     func testCanFetchAndFilterObjcClassTagsDynamic() {
         let ttype: TaggedType.Type = TestObjcClass.self
         checkTags(tags: ttype.typeTags)
-        let dtags = ttype.dynamicTypeTags
-        XCTAssertNotNil(dtags)
-        dtags.map { checkTags(tags: $0) }
         let mtags = ttype.maybeTypeTags
         XCTAssertNotNil(mtags)
         mtags.map { checkTags(tags: $0) }
@@ -153,6 +117,71 @@ final class TagsTests: XCTestCase {
         let mtags = ttype.maybeTypeTags
         XCTAssertNotNil(mtags)
         mtags.map { checkTags(tags: $0) }
+    }
+    
+    func testCanFetchAndFilterInheritedObjcClassTags() {
+        checkTags(tags: TestInheritedObjcClass.extendableTypeTags(), child: true)
+        checkTags(tags: TestInheritedObjcClass.typeTags, child: true)
+        let mtags = TestInheritedObjcClass.maybeTypeTags
+        XCTAssertNotNil(mtags)
+        mtags.map { checkTags(tags: $0, child: true) }
+    }
+    
+    func testCanFetchAndFilterInheritedObjcClassTagsDynamic() {
+        let ttype: TaggedType.Type = TestInheritedObjcClass.self
+        checkTags(tags: ttype.typeTags, child: true)
+        let mtags = ttype.maybeTypeTags
+        XCTAssertNotNil(mtags)
+        mtags.map { checkTags(tags: $0, child: true) }
+    }
+    
+    func testCanFetchAndFilterInheritedSwiftObjcDDClassTags() {
+        checkTags(tags: TestInheritedSwiftObjcDDClass.attachedTypeTags(), child: true)
+        checkTags(tags: TestInheritedSwiftObjcDDClass.typeTags, child: true)
+        let mtags = TestInheritedSwiftObjcDDClass.maybeTypeTags
+        XCTAssertNotNil(mtags)
+        mtags.map { checkTags(tags: $0, child: true) }
+    }
+    
+    func testCanFetchAndFilterInheritedSwiftObjcDDClassTagsDynamic() {
+        let ttype: (DDTaggedType & TaggedType).Type = TestInheritedSwiftObjcDDClass.self
+        checkTags(tags: ttype.attachedTypeTags(), child: true)
+        checkTags(tags: TestInheritedSwiftObjcDDClass.typeTags, child: true)
+        let mtags = ttype.maybeTypeTags
+        XCTAssertNotNil(mtags)
+        mtags.map { checkTags(tags: $0, child: true) }
+    }
+    
+    func testCanFetchAndFilterFinalInheritedObjcClassTags() {
+        checkFinalTags(tags: TestFinalInheritedObjcClass.finalTypeTags, child: true)
+        checkTags(tags: TestFinalInheritedObjcClass.typeTags, child: true)
+        let mtags = TestFinalInheritedObjcClass.maybeTypeTags
+        XCTAssertNotNil(mtags)
+        mtags.map { checkTags(tags: $0, child: true) }
+    }
+    
+    func testCanFetchAndFilterFinalInheritedObjClassTagsDynamic() {
+        let ttype: TaggedType.Type = TestFinalInheritedObjcClass.self
+        checkTags(tags: ttype.typeTags, child: true)
+        let mtags = ttype.maybeTypeTags
+        XCTAssertNotNil(mtags)
+        mtags.map { checkTags(tags: $0, child: true) }
+    }
+    
+    func testCanFetchAndFilterInheritedObjcDDSwiftClassTags() {
+        checkTags(tags: TestInheritedObjcDDSwiftClass.extendableTypeTags(), child: true)
+        checkTags(tags: TestInheritedObjcDDSwiftClass.typeTags, child: true)
+        let mtags = TestInheritedObjcDDSwiftClass.maybeTypeTags
+        XCTAssertNotNil(mtags)
+        mtags.map { checkTags(tags: $0, child: true) }
+    }
+    
+    func testCanFetchAndFilterInheritedObjcDDSwiftClassTagsDynamic() {
+        let ttype: TaggedType.Type = TestInheritedObjcDDSwiftClass.self
+        checkTags(tags: ttype.typeTags, child: true)
+        let mtags = ttype.maybeTypeTags
+        XCTAssertNotNil(mtags)
+        mtags.map { checkTags(tags: $0, child: true) }
     }
 }
 
@@ -712,7 +741,7 @@ extension TagsTests {
     }
     
     @objc class TestInheritedObjcDDSwiftClass: TestObjcDDClass, ExtendableTaggedType, TagsTestsChildMarker {
-        static func extendableTypeTags() -> ExtendableTypeTags {
+        class func extendableTypeTags() -> ExtendableTypeTags {
             withTagger { tagger in
                 setChildTags(tagger: &tagger)
             }
@@ -723,6 +752,26 @@ extension TagsTests {
         static var finalTypeTags: FinalTypeTags<TestFinalInheritedObjcDDSwiftClass> {
             withTagger { tagger in
                 setChildTags(tagger: &tagger)
+            }
+        }
+    }
+    
+    @objc class TestDoubleInheritedObjcDDSwiftClass: TestInheritedObjcDDSwiftClass {
+        var test21var: Bool { false }
+        
+        override class func extendableTypeTags() -> ExtendableTypeTags {
+            withTagger { tagger in
+                tagger.set(instance: .testInstancePropertyIntTag, to: 12345, property: \.test21var)
+            }
+        }
+    }
+    
+    @objc final class TestFinalDoubleInheritedObjcDDSwiftClass: TestInheritedObjcDDSwiftClass, FinalTaggedType {
+        var test21var: Int { 0 }
+        
+        static var finalTypeTags: FinalTypeTags<TestFinalDoubleInheritedObjcDDSwiftClass> {
+            withTagger { tagger in
+                tagger.set(instance: .testInstancePropertyIntTag, to: 12345, property: \.test21var)
             }
         }
     }

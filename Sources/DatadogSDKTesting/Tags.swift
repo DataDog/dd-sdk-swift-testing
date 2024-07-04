@@ -354,7 +354,12 @@ public protocol TaggedType: MaybeTaggedType {
     static var typeTags: TypeTags { get }
 }
 
-public protocol ExtendableTaggedType: AnyObject, TaggedType {
+public protocol ExtendableDynamicHook: AnyObject {
+    static func fetchDynamicTags(selfType: ExtendableDynamicHook.Type,
+                                 implType: ExtendableDynamicHook.Type) -> (any TypeTags)?
+}
+
+public protocol ExtendableTaggedType: AnyObject, TaggedType, ExtendableDynamicHook {
     static func extendableTypeTags() -> ExtendableTypeTags
 }
 
@@ -435,14 +440,9 @@ public struct TypeTagger<T: MaybeTaggedType> {
     public let dynamicType: MaybeTaggedType.Type
     public private(set) var typeTags: [AttachedTag<AnyTag>: Any]
     
-    public init(parent tags: TypeTags?, type: MaybeTaggedType.Type = T.self) {
+    public init(parent tags: TypeTags?, type: MaybeTaggedType.Type) {
         self.typeTags = tags?.allTags ?? [:]
         self.dynamicType = type
-    }
-    
-    public init(type: MaybeTaggedType.Type = T.self) {
-        self.init(parent: (Swift._getSuperclass(type) as? MaybeTaggedType.Type)?.maybeTypeTags,
-                  type: type)
     }
     
     public mutating func set<Tg: SomeTag>(tag: AttachedTag<Tg>, to value: Tg.Value) {
@@ -573,17 +573,29 @@ public extension TypeTagger where T: NSObjectProtocol {
 
 public extension ExtendableTaggedType {
     static func withTagger(_ builder: (inout TypeTagger<Self>) -> Void) -> ExtendableTypeTags {
-        var tagger = TypeTagger<Self>()
+        // Extension point for ObjC tags. Check implementation in ObjC file
+        if let tags = fetchDynamicTags(selfType: self, implType: Self.self) {
+            return ExtendableTypeTags(tags: tags.allTags)
+        }
+        // We don't have overriden tags. Creating own tags.
+        var tagger = TypeTagger<Self>(parent: parentTaggedType?.maybeTypeTags, type: self)
         builder(&tagger)
         return tagger.tags()
+    }
+    
+    // Default empty hook implementation
+    static func fetchDynamicTags(selfType: ExtendableDynamicHook.Type,
+                                 implType: ExtendableDynamicHook.Type) -> (any TypeTags)?
+    {
+        return nil
     }
 }
 
 public extension FinalTaggedType {
-    fileprivate static var _erasedTypeTags: TypeTags { finalTypeTags }
-
+    internal static var _erasedTypeTags: TypeTags { finalTypeTags }
+    
     static func withTagger(_ builder: (inout TypeTagger<Self>) -> Void) -> FinalTypeTags<Self> {
-        var tagger = TypeTagger<Self>()
+        var tagger = TypeTagger<Self>(parent: parentTaggedType?.maybeTypeTags, type: self)
         builder(&tagger)
         return tagger.tags()
     }
@@ -592,20 +604,26 @@ public extension FinalTaggedType {
 public extension TaggedType {
     @inlinable
     static var typeTags: TypeTags {
-        guard let tags = dynamicTypeTags else {
-            preconditionFailure("Unknown tagged type protocol: \(String(describing: self))")
+        guard let tags = maybeTypeTags else {
+            preconditionFailure("Unknown tagged type protocol for: \(String(describing: self))")
         }
         return tags
     }
     
-    @inlinable static var maybeTypeTags: TypeTags? { dynamicTypeTags }
-    
     // We can have inheritance case ExtendableTaggedType -> FinalTaggedType so we do dynamic check
-    static var dynamicTypeTags: TypeTags? {
+    // It will never be called for NSObject inherited classes, because NSObject has own implementation
+    // So we handle only Swift types here
+    static var maybeTypeTags: TypeTags? {
         switch self {
         case let strong as any FinalTaggedType.Type: return strong._erasedTypeTags
         case let ext as ExtendableTaggedType.Type: return ext.extendableTypeTags()
         default: return nil
         }
+    }
+}
+
+public extension MaybeTaggedType {
+    static var parentTaggedType: MaybeTaggedType.Type? {
+        Swift._getSuperclass(self) as? MaybeTaggedType.Type
     }
 }

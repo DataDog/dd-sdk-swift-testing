@@ -10,14 +10,16 @@ import Foundation
 class IntelligentTestRunner {
     private let itrCachePath = "itr"
     private let skippableFileName = "skippableTests"
-    private var _skippableTests: SkipTests? = nil
+    private var _skippableTests: SkipTests? = nil {
+        didSet {
+            skippableTests = _skippableTests.map { SkippableTests(tests: $0.tests) }
+        }
+    }
 
     var configurations: [String: String]
     var itrFolder: Directory?
-    
-    var skippableTests: [SkipTestPublicFormat] {
-        _skippableTests?.tests ?? []
-    }
+
+    private(set) var skippableTests: SkippableTests? = nil
     var correlationId: String? { _skippableTests?.correlationId }
 
     init(configurations: [String: String]) {
@@ -77,4 +79,41 @@ class IntelligentTestRunner {
             try? skippableTestsFile?.append(data: data)
         }
     }
+}
+
+struct SkippableTests {
+    struct Configuration {
+        let standard: [String: String]?
+        let custom: [String: String]?
+    }
+    
+    struct Test {
+        let name: String
+        var configurations: [Configuration]
+    }
+    
+    struct Suite {
+        let name: String
+        var methods: [String: Test]
+        
+        subscript(_ method: String) -> Test? { methods[method] }
+    }
+    
+    let suites: [String: Suite]
+    
+    init(tests: [SkipTestPublicFormat]) {
+        var suites = [String: Suite]()
+        for test in tests {
+            suites.get(key: test.suite, or: Suite(name: test.suite, methods: [:])) { suite in
+                suite.methods.get(key: test.name, or: Test(name: test.name, configurations: [])) {
+                    $0.configurations.append(Configuration(standard: test.configuration, custom: test.customConfiguration))
+                }
+            }
+        }
+        self.suites = suites
+    }
+    
+    subscript(_ suite: String) -> Suite? { suites[suite] }
+    
+    subscript(_ suite: String, _ name: String) -> Test? { self[suite]?[name] }
 }

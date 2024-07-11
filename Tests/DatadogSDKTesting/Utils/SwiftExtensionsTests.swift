@@ -7,6 +7,7 @@
 @testable import DatadogSDKTesting
 import Foundation
 import XCTest
+import Compression
 
 internal class SwiftExtensionsTests: XCTestCase {
     func testAverageInEmptyArray_returnsZero() {
@@ -67,5 +68,49 @@ internal class SwiftExtensionsTests: XCTestCase {
     func testCamelCase_returns_correctly10() {
         let string = "APITests"
         XCTAssertEqual(string.separatedByWords, "APITests")
+    }
+}
+
+class DataExtensionsTests: XCTestCase {
+    func testHexStringToDataGood() {
+        let data1 = Data(hex: "0x0123456789abcdef")
+        let data2 = Data(hex: "0123456789ABCDEF")
+        XCTAssertNotNil(data1)
+        XCTAssertNotNil(data2)
+        XCTAssertEqual(data1, data2)
+        XCTAssertEqual(data1, Data([0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF]))
+    }
+    
+    func testHexStringToDataBad() {
+        let data1 = Data(hex: "0123456789abcde")
+        let data2 = Data(hex: "0123456789ABCDEFGH")
+        XCTAssertNil(data1)
+        XCTAssertNil(data2)
+    }
+    
+    func testDataToHexString() {
+        XCTAssertEqual(Data(repeating: 0x00, count: 5).hex(prefix: false), Array(repeating: "00", count: 5).joined())
+        XCTAssertEqual(Data(repeating: 0x00, count: 5).hex(prefix: true), "0x" + Array(repeating: "00", count: 5).joined())
+        XCTAssertEqual(Data(repeating: 0xff, count: 5).hex(prefix: false), Array(repeating: "ff", count: 5).joined())
+        XCTAssertEqual(Data(repeating: 0x10, count: 5).hex(prefix: false), Array(repeating: "10", count: 5).joined())
+        XCTAssertEqual(Data(repeating: 0xf0, count: 5).hex(prefix: false), Array(repeating: "f0", count: 5).joined())
+    }
+    
+    func testZlibDecompress() {
+        for pos in 1...10 {
+            let bytes = Data((0..<pos*1000).map { _ in UInt8.random(in: 0...255) })
+            let compressed = withUnsafeTemporaryAllocation(of: UInt8.self, capacity: bytes.count + 8) { buffer in
+                buffer[0] = 0x78
+                buffer[1] = 0x9c
+                let size = bytes.withUnsafeBytes {
+                    compression_encode_buffer(buffer.baseAddress! + 2, buffer.count - 2,
+                                              $0.baseAddress!, $0.count, nil, COMPRESSION_ZLIB)
+                }
+                return Data(bytes: buffer.baseAddress!, count: 2 + size)
+            }
+            XCTAssertEqual(bytes, compressed.zlibDecompress(expectedSize: bytes.count))
+            XCTAssertEqual(bytes, compressed.zlibDecompress())
+            XCTAssertEqual(bytes[0..<bytes.count-1], compressed.zlibDecompress(expectedSize: bytes.count-1))
+        }
     }
 }

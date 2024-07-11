@@ -82,7 +82,8 @@ struct GitInfo {
             .appendingPathComponent(String(filename))
         let objectContent: String
         if FileManager.default.fileExists(atPath: commitObject.path) {
-            objectContent = try Data(contentsOf: commitObject).zlibDecompress()
+            objectContent = try String(decoding: Data(contentsOf: commitObject).zlibDecompress(),
+                                       as: UTF8.self)
             let gitObject = try GitObject(objectContent: objectContent)
             return try parseCommit(gitFolder: gitFolder, gitObject: gitObject)
         } else {
@@ -154,7 +155,8 @@ struct GitInfo {
 
         packData = filehandler.readData(ofLength: objectSize)
 
-        let decompressedString = packData.zlibDecompress(minimumSize: objectSize)
+        let decompressedString = String(decoding: packData.zlibDecompress(expectedSize: objectSize),
+                                        as: UTF8.self)
         if type == typeCommit {
             return CommitInfo(content: decompressedString)
         } else {
@@ -174,7 +176,7 @@ struct GitInfo {
         var indexFile: URL?
         var packOffset: UInt64 = 0
 
-        guard let commitAsData = Data(hexString: commit) else {
+        guard let commitAsData = Data(hex: commit) else {
             throw InternalError(description: "Incorrect Git object")
         }
 

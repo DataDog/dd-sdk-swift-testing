@@ -53,46 +53,61 @@ extension String {
 }
 
 extension Data {
-    func zlibDecompress(minimumSize: Int = 0) -> String {
-        let expectedSize = minimumSize < 0x10000 ? 0x10000 : 0x10000
-        let result: String
-        // #if swift(>=5.6)
-//        result = withUnsafeTemporaryAllocation(of: UInt8.self, capacity: expectedSize) { buffer in
-//            self.subdata(in: 2 ..< self.count).withUnsafeBytes {
-//                let read = compression_decode_buffer(buffer.baseAddress!, expectedSize, $0.baseAddress!.bindMemory(to: UInt8.self, capacity: 1), self.count - 2, nil, COMPRESSION_ZLIB)
-//                return String(decoding: Data(bytes: buffer.baseAddress!, count: read), as: UTF8.self)
-//            } as String
-//        }
-        // #else
-        let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: expectedSize)
-        result = self.subdata(in: 2 ..< self.count).withUnsafeBytes {
-            let read = compression_decode_buffer(buffer, expectedSize, $0.baseAddress!.bindMemory(to: UInt8.self, capacity: 1), self.count - 2, nil, COMPRESSION_ZLIB)
-            return String(decoding: Data(bytes: buffer, count: read), as: UTF8.self)
-        } as String
-        buffer.deallocate()
-        // #endif
-        return result
-    }
-
-    var hexString: String {
-        return self.map { String(format: "%02x", $0) }.joined()
-    }
-
-    init?(hexString: String) {
-        let length = hexString.count / 2
-        var data = Data(capacity: length)
-        for i in 0 ..< length {
-            let j = hexString.index(hexString.startIndex, offsetBy: i * 2)
-            let k = hexString.index(j, offsetBy: 2)
-            let bytes = hexString[j ..< k]
-            if var byte = UInt8(bytes, radix: 16) {
-                data.append(&byte, count: 1)
-            } else {
-                return nil
+    func zlibDecompress(expectedSize: Int? = nil) -> Data {
+        let size = expectedSize ?? (count * 30) // zlib compresses 3-5 times normally
+        return withUnsafeTemporaryAllocation(of: UInt8.self, capacity: size) { buffer in
+            self.subdata(in: 2 ..< self.count).withUnsafeBytes {
+                let read = compression_decode_buffer(buffer.baseAddress!, buffer.count,
+                                                     $0.baseAddress!, $0.count, nil, COMPRESSION_ZLIB)
+                return Data(buffer[..<read])
             }
         }
-        self = data
     }
+    
+    init?(hex: String) {
+        let utf8 = hex.utf8
+        guard utf8.count % 2 == 0 else { return nil }
+        let prefix = hex.hasPrefix("0x") ? 2 : 0
+        var result = Data()
+        result.reserveCapacity((utf8.count - prefix) / 2)
+        var current: UInt8? = nil
+        for char in utf8.suffix(from: utf8.index(utf8.startIndex, offsetBy: prefix)) {
+            let v: UInt8
+            switch char {
+            case let c where c >= 48 && c <= 57: v = c - 48 // 0-9
+            case let c where c >= 65 && c <= 70: v = c - 55 // A-F
+            case let c where c >= 97 && c <= 102: v = c - 87 // a-f
+            default: return nil
+            }
+            if let val = current {
+                result.append(val << 4 | v)
+                current = nil
+            } else {
+                current = v
+            }
+        }
+        self = result
+    }
+
+    func hex(prefix: Bool = false) -> String {
+        withUnsafeBytes { data in
+            var result = Data()
+            result.reserveCapacity(data.count * 2 + (prefix ? 2 : 0))
+            if prefix {
+                result.append(UInt8(ascii: "0"))
+                result.append(UInt8(ascii: "x"))
+            }
+            Self._hexCharacters.withUnsafeBytes { (hex: UnsafeRawBufferPointer) in
+                for byte in data {
+                    result.append(hex[Int(byte >> 4)])
+                    result.append(hex[Int(byte & 0x0F)])
+                }
+            }
+            return String(bytes: result, encoding: .ascii)!
+        }
+    }
+    
+    private static let _hexCharacters = Data("0123456789abcdef".utf8)
 }
 
 #if !os(macOS)
@@ -226,7 +241,40 @@ extension Dictionary where Key == String, Value == String {
 }
 
 extension Bundle {
+    @inlinable
     var name: String {
         bundleURL.deletingPathExtension().lastPathComponent
+    }
+}
+
+extension Sequence where Iterator.Element: Hashable {
+    @inlinable
+    var asSet: Set<Element> { Set(self) }
+    
+    func unique() -> [Iterator.Element] {
+        var seen: Set<Iterator.Element> = []
+        return filter { seen.insert($0).inserted }
+    }
+}
+
+extension Dictionary where Value: AnyObject {
+    mutating func get(key: Key, or create: @autoclosure () throws -> Value) rethrows -> Value {
+        if let value = self[key] { return value }
+        let value = try create()
+        self[key] = value
+        return value
+    }
+}
+
+extension Dictionary {
+    mutating func get<R>(
+        key: Key,
+        or create: @autoclosure () throws -> Value,
+        _ cb: (inout Value) throws -> R
+    ) rethrows -> R {
+        var value = try self[key] ?? create()
+        let result = try cb(&value)
+        self[key] = value
+        return result
     }
 }

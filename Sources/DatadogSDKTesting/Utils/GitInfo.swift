@@ -82,7 +82,8 @@ struct GitInfo {
             .appendingPathComponent(String(filename))
         let objectContent: String
         if FileManager.default.fileExists(atPath: commitObject.path) {
-            objectContent = try Data(contentsOf: commitObject).zlibDecompress()
+            objectContent = try String(decoding: Data(contentsOf: commitObject).zlibDecompress(),
+                                       as: UTF8.self)
             let gitObject = try GitObject(objectContent: objectContent)
             return try parseCommit(gitFolder: gitFolder, gitObject: gitObject)
         } else {
@@ -154,7 +155,8 @@ struct GitInfo {
 
         packData = filehandler.readData(ofLength: objectSize)
 
-        let decompressedString = packData.zlibDecompress(minimumSize: objectSize)
+        let decompressedString = String(decoding: packData.zlibDecompress(expectedSize: objectSize),
+                                        as: UTF8.self)
         if type == typeCommit {
             return CommitInfo(content: decompressedString)
         } else {

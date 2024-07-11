@@ -53,25 +53,15 @@ extension String {
 }
 
 extension Data {
-    func zlibDecompress(minimumSize: Int = 0) -> String {
-        let expectedSize = minimumSize < 0x10000 ? 0x10000 : 0x10000
-        let result: String
-        // #if swift(>=5.6)
-//        result = withUnsafeTemporaryAllocation(of: UInt8.self, capacity: expectedSize) { buffer in
-//            self.subdata(in: 2 ..< self.count).withUnsafeBytes {
-//                let read = compression_decode_buffer(buffer.baseAddress!, expectedSize, $0.baseAddress!.bindMemory(to: UInt8.self, capacity: 1), self.count - 2, nil, COMPRESSION_ZLIB)
-//                return String(decoding: Data(bytes: buffer.baseAddress!, count: read), as: UTF8.self)
-//            } as String
-//        }
-        // #else
-        let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: expectedSize)
-        result = self.subdata(in: 2 ..< self.count).withUnsafeBytes {
-            let read = compression_decode_buffer(buffer, expectedSize, $0.baseAddress!.bindMemory(to: UInt8.self, capacity: 1), self.count - 2, nil, COMPRESSION_ZLIB)
-            return String(decoding: Data(bytes: buffer, count: read), as: UTF8.self)
-        } as String
-        buffer.deallocate()
-        // #endif
-        return result
+    func zlibDecompress(expectedSize: Int? = nil) -> Data {
+        let size = expectedSize ?? (count * 30) // zlib compresses 3-5 times normally
+        return withUnsafeTemporaryAllocation(of: UInt8.self, capacity: size) { buffer in
+            self.subdata(in: 2 ..< self.count).withUnsafeBytes {
+                let read = compression_decode_buffer(buffer.baseAddress!, buffer.count,
+                                                     $0.baseAddress!, $0.count, nil, COMPRESSION_ZLIB)
+                return Data(buffer[..<read])
+            }
+        }
     }
     
     init?(hex: String) {
@@ -277,10 +267,11 @@ extension Dictionary where Value: AnyObject {
 }
 
 extension Dictionary {
-    mutating func get<R>(key: Key,
-                         or create: @autoclosure () throws -> Value,
-                         _ cb: (inout Value) throws -> R) rethrows -> R
-    {
+    mutating func get<R>(
+        key: Key,
+        or create: @autoclosure () throws -> Value,
+        _ cb: (inout Value) throws -> R
+    ) rethrows -> R {
         var value = try self[key] ?? create()
         let result = try cb(&value)
         self[key] = value

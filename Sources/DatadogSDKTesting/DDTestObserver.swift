@@ -125,20 +125,22 @@ class DDTestObserver: NSObject, XCTestObservation {
         Log.debug("testSuiteWillStart: \(testSuite.name)")
         state = .suite(suite: module.suiteStart(name: testSuite.name), inside: parent)
         
-        if let itr = DDTestMonitor.instance?.itr {
-            let skippableTests = itr.skippableTests
+        if let itr = DDTestMonitor.instance?.itr, let skippableTests = itr.skippableTests {
             var unskippableCache: [ObjectIdentifier: UnskippableMethodChecker] = [:]
             tests = tests.map { test in
                 guard let match = Self.testNameRegex.firstMatch(in: test.name, range: NSRange(0..<test.name.count)),
                       let suiteRange = Range(match.range(at: 1), in: test.name),
-                      let funcRange = Range(match.range(at: 2), in: test.name) else { return test }
+                      let funcRange = Range(match.range(at: 2), in: test.name) else
+                {
+                    return test
+                }
                 let testSuite = String(test.name[suiteRange])
                 let testFunc = String(test.name[funcRange])
                 let testType = type(of: test)
                 let testTypeId = ObjectIdentifier(testType)
                 let checker = unskippableCache.get(key: testTypeId, or: testType.unskippableMethods)
                 return checker.canSkip(method: testFunc) ?
-                    (skippableTests[testSuite]?[testFunc] != nil ? SkippedTest(for: test) : test) : test
+                    (skippableTests[testSuite, testFunc] != nil ? SkippedTest(for: test) : test) : test
             }
             testSuite.setValue(tests, forKey: "_mutableTests")
         }

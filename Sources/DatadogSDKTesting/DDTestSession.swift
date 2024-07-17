@@ -34,7 +34,7 @@ public class DDTestSession: NSObject, Encodable {
         self.meta[DDGenericTags.type] = DDTagValues.typeSessionEnd
 
         // Remove tags that dont belong to sessions
-        self.meta[DDTestTags.testBundle] = nil
+        self.meta[DDTestTags.testModule] = nil
         self.meta[DDTestSuiteVisibilityTags.testModuleId] = nil
         self.meta[DDUISettingsTags.uiSettingsModuleLocalization] = nil
 

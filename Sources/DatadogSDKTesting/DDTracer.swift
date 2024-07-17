@@ -257,7 +257,7 @@ internal class DDTracer {
         }
         return [DDTestTags.testName: AttributeValue.string(currentTest.name),
                 DDTestTags.testSuite: AttributeValue.string(currentTest.suite.name),
-                DDTestTags.testBundle: AttributeValue.string(currentTest.module.bundleName)]
+                DDTestTags.testModule: AttributeValue.string(currentTest.module.bundleName)]
     }
 
     private func attributesForString(_ string: String) -> [String: AttributeValue] {

@@ -45,7 +45,7 @@ internal enum DDGenericTags {
 internal enum DDTestTags {
     static let testName = "test.name"
     static let testSuite = "test.suite"
-    static let testBundle = "test.bundle"
+    static let testModule = "test.module"
     static let testFramework = "test.framework"
     static let testType = "test.type"
     static let testStatus = "test.status"

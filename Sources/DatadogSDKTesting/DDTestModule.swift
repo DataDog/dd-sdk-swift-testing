@@ -50,7 +50,7 @@ public class DDTestModule: NSObject, Encodable {
 
         let beforeLoadingTime = DDTestMonitor.clock.now
         if DDTestMonitor.instance == nil {
-            DDTestMonitor.baseConfigurationTags[DDTestTags.testBundle] = bundleName
+            DDTestMonitor.baseConfigurationTags[DDTestTags.testModule] = bundleName
             var success = false
             Log.measure(name: "installTestMonitor") {
                 success = DDTestMonitor.installTestMonitor()

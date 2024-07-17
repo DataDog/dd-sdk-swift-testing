@@ -128,7 +128,6 @@ struct PlatformUtils {
         #endif
     }
 
-
     #if os(iOS)
         static func getOrientation() -> String {
             let orientation: UIInterfaceOrientation

@@ -14,54 +14,58 @@ public class DDTest: NSObject {
     var currentTestExecutionOrder: Int
     var initialProcessId = Int(ProcessInfo.processInfo.processIdentifier)
 
-    var name: String
-    var span: Span
+    let name: String
+    let span: Span
 
-    var module: DDTestModule
-    var suite: DDTestSuite
+//    var module: DDTestModule
+    let suite: DDTestSuite
 
     private var isUITest: Bool
 
     private var errorInfo: ErrorInfo?
+    
+    private(set) var status: DDTestStatus.ITR
+    private(set) var itrSkipped: Bool
+    
+    var suiteName: String { suite.name }
+    var moduleName: String { suite.moduleName }
 
-    init(name: String, suite: DDTestSuite, module: DDTestModule, startTime: Date? = nil) {
+    init(name: String, suite: DDTestSuite, startTime: Date? = nil) {
         let testStartTime = startTime ?? DDTestMonitor.clock.now
         self.name = name
         self.suite = suite
-        self.module = module
+        self.status = .pass
         self.isUITest = false
+        self.itrSkipped = false
 
-        currentTestExecutionOrder = module.currentExecutionOrder
+        currentTestExecutionOrder = suite.currentExecutionOrder
 
         let attributes: [String: String] = [
             DDGenericTags.type: DDTagValues.typeTest,
             DDGenericTags.resource: "\(suite.name).\(name)",
-            DDGenericTags.language: "swift",
-            DDDeviceTags.deviceName: DDTestMonitor.env.platform.deviceName,
             DDTestTags.testName: name,
             DDTestTags.testSuite: suite.name,
-            DDTestTags.testFramework: module.testFramework,
+            DDTestTags.testFramework: suite.testFramework,
             DDTestTags.testType: DDTagValues.typeTest,
             DDTestTags.testExecutionOrder: "\(currentTestExecutionOrder)",
             DDTestTags.testExecutionProcessId: "\(initialProcessId)",
             DDTestTags.testIsUITest: "false",
-            DDTestSuiteVisibilityTags.testSessionId: module.sessionId.hexString,
-            DDTestSuiteVisibilityTags.testModuleId: module.id.hexString,
-            DDTestSuiteVisibilityTags.testSuiteId: suite.id.hexString,
+            DDTestSuiteVisibilityTags.testSessionId: suite.suiteId.session.hexString,
+            DDTestSuiteVisibilityTags.testModuleId: suite.suiteId.module.hexString,
+            DDTestSuiteVisibilityTags.testSuiteId: suite.suiteId.suite.hexString,
             DDUISettingsTags.uiSettingsSuiteLocalization: suite.localization,
-            DDUISettingsTags.uiSettingsModuleLocalization: module.localization,
+            DDUISettingsTags.uiSettingsModuleLocalization: suite.module.localization,
         ].merging(DDTestMonitor.baseConfigurationTags) { old, _ in old }
 
-        span = DDTestMonitor.tracer.startSpan(name: "\(module.testFramework).test", attributes: attributes, startTime: testStartTime)
+        span = DDTestMonitor.tracer.startSpan(name: "\(suite.testFramework).test", attributes: attributes, startTime: testStartTime)
 
         super.init()
-        DDTestMonitor.instance?.currentTest = self
 
         DDTestMonitor.tracer.addPropagationsHeadersToEnvironment()
         span.addTags(from: DDTestMonitor.env)
 
         let functionName = suite.name + "." + name
-        if let functionInfo = DDTestModule.bundleFunctionInfo[functionName] {
+        if let functionInfo = suite.moduleFunctionInfo[functionName] {
             var filePath = functionInfo.file
             if let workspacePath = DDTestMonitor.env.workspacePath,
                let workspaceRange = filePath.range(of: workspacePath + "/")
@@ -71,7 +75,7 @@ public class DDTest: NSObject {
             span.setAttribute(key: DDTestTags.testSourceFile, value: filePath)
             span.setAttribute(key: DDTestTags.testSourceStartLine, value: functionInfo.startLine)
             span.setAttribute(key: DDTestTags.testSourceEndLine, value: functionInfo.endLine)
-            if let owners = DDTestModule.codeOwners?.ownersForPath(filePath) {
+            if let owners = suite.codeOwners?.ownersForPath(filePath) {
                 span.setAttribute(key: DDTestTags.testCodeowners, value: owners)
             }
         }
@@ -80,18 +84,14 @@ public class DDTest: NSObject {
             span.setAttribute(key: DDItrTags.itrCorrelationId, value: correlationId)
         }
 
-        if let testSpan = span as? RecordEventsReadableSpan {
-            let simpleSpan = SimpleSpanData(spanData: testSpan.toSpanData(), moduleStartTime: module.startTime, suiteStartTime: suite.startTime)
-            DDCrashes.setCustomData(customData: SimpleSpanSerializer.serializeSpan(simpleSpan: simpleSpan))
-        }
-
         if let coverageHelper = DDTestMonitor.instance?.coverageHelper {
             coverageHelper.setTest(name: name,
-                                   testSessionId: module.sessionId.rawValue,
-                                   testSuiteId: suite.id.rawValue,
+                                   testSessionId: suite.suiteId.session.rawValue,
+                                   testSuiteId: suite.suiteId.suite.rawValue,
                                    spanId: span.context.spanId.rawValue)
             coverageHelper.clearCounters()
         }
+        suite.test(started: self)
     }
 
     func setIsUITest(_ value: Bool) {
@@ -109,9 +109,8 @@ public class DDTest: NSObject {
                 setTag(key: DDUISettingsTags.uiSettingsOrientation, value: PlatformUtils.getOrientation())
             }
 #endif
-            let simpleSpan = SimpleSpanData(spanData: testSpan.toSpanData(), moduleStartTime: module.startTime, suiteStartTime: suite.startTime)
-            DDCrashes.setCustomData(customData: SimpleSpanSerializer.serializeSpan(simpleSpan: simpleSpan))
         }
+        suite.test(updated: self)
     }
 
     /// Adds a extra tag or attribute to the test, any number of tags can be reported
@@ -121,6 +120,7 @@ public class DDTest: NSObject {
     ///   - value: The value of the tag, can be a number or a string.
     @objc public func setTag(key: String, value: Any) {
         span.setAttribute(key: key, value: AttributeValue(value))
+        suite.test(updated: self)
     }
 
     /// Adds error information to the test, several errors can be added. Only first will set the error type, but all error messages
@@ -217,27 +217,29 @@ public class DDTest: NSObject {
 extension DDTest {
     func end(status: DDTestStatus.ITR, endTime: Date? = nil) {
         let testEndTime = endTime ?? DDTestMonitor.clock.now
-        
+        self.status = status
         switch status {
         case .pass:
             span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusPass)
             span.status = .ok
         case .fail:
             span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusFail)
-            suite.status = .fail
-            module.status = .fail
             span.status = .error(description: "Test failed")
             setErrorInformation()
         case .skip(itr: let itr):
             span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusSkip)
-            if itr { span.setAttribute(key: DDTestTags.testSkippedByITR, value: true) }
+            if itr {
+                span.setAttribute(key: DDTestTags.testSkippedByITR, value: true)
+                itrSkipped = true
+            }
             span.status = .ok
         }
 
         if let coverageHelper = DDTestMonitor.instance?.coverageHelper {
             coverageHelper.writeProfile()
-            let testSessionId = module.sessionId.rawValue
-            let testSuiteId = suite.id.rawValue
+            
+            let testSessionId = suite.suiteId.session.rawValue
+            let testSuiteId = suite.suiteId.suite.rawValue
             let spanId = span.context.spanId.rawValue
             let coverageFileURL = coverageHelper.getURLForTest(name: name, testSessionId: testSessionId, testSuiteId: testSuiteId, spanId: spanId)
             coverageHelper.coverageWorkQueue.addOperation {
@@ -247,13 +249,13 @@ extension DDTest {
                 DDTestMonitor.tracer.eventsExporter?.export(coverage: coverageFileURL, testSessionId: testSessionId, testSuiteId: testSuiteId, spanId: spanId, workspacePath: DDTestMonitor.env.workspacePath, binaryImagePaths: BinaryImages.binaryImagesPath)
             }
         }
-
         StderrCapture.syncData()
         span.end(time: testEndTime)
         DDTestMonitor.instance?.networkInstrumentation?.endAndCleanAliveSpans()
-        DDCrashes.setCustomData(customData: Data())
-        DDTestMonitor.instance?.currentTest = nil
+        suite.test(ended: self)
     }
+    
+    var spanData: SpanData? { (span as? ReadableSpan)?.toSpanData() }
 }
 
 extension DDTestStatus {

@@ -9,7 +9,6 @@ import Foundation
 
 class DDTestObserver: NSObject, XCTestObservation {
     static let testNameRegex = try! NSRegularExpression(pattern: "([\\w]+) ([\\w]+)", options: .caseInsensitive)
-    static let tracerVersion = (Bundle(for: DDTestObserver.self).infoDictionary?["CFBundleShortVersionString"] as? String) ?? "unknown"
     
     enum State {
         case none
@@ -69,9 +68,12 @@ class DDTestObserver: NSObject, XCTestObservation {
         }
         let bundleName = testBundle.name
         Log.debug("testBundleWillStart: \(bundleName)")
-        let module = DDTestModule.start(bundleName: bundleName)
-        module.testFramework = "XCTest"
-        state = .module(module)
+        let framework = "XCTest"
+        let session = DDTestSession(name: "\(framework).session",
+                                    service: DDTestMonitor.service,
+                                    testFramework: framework,
+                                    command: "test \(bundleName)")
+        state = .module(session.moduleStart(bundleName: bundleName))
     }
 
     func testBundleDidFinish(_ testBundle: Bundle) {
@@ -86,6 +88,7 @@ class DDTestObserver: NSObject, XCTestObservation {
         }
         /// We need to wait for all the traces to be written to the backend before exiting
         module.end()
+        module.session.end()
         state = .none
         Log.debug("testBundleDidFinish: \(module.bundleName)")
     }
@@ -196,7 +199,6 @@ class DDTestObserver: NSObject, XCTestObservation {
         }
         if testCase is SkippedTest {
             test.end(status: .skip(itr: true))
-            test.suite.module.itrSkipped = true
         } else {
             addBenchmarkTagsIfNeeded(testCase: testCase, test: test)
             test.end(status: testCase.testRun?.status ?? .fail)

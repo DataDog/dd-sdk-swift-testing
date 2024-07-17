@@ -18,16 +18,17 @@
     let didBecomeActiveNotificationName = NSApplication.didBecomeActiveNotification
 #endif
 
-struct CrashedModuleInformation {
+struct CrashedSessionInformation {
     var crashedSessionId: SpanId
     var crashedModuleId: SpanId
     var crashedSuiteId: SpanId
     var crashedSuiteName: String
+    var sessionStartTime: Date?
     var moduleStartTime: Date?
     var suiteStartTime: Date?
 }
 
-internal class DDTestMonitor {
+internal final class DDTestMonitor {
     static var instance: DDTestMonitor?
     static var clock: Clock = DDTestMonitor.config.disableNTPClock ? DateClock() : NTPClock()
 
@@ -45,6 +46,8 @@ internal class DDTestMonitor {
         guard let commit = DDTestMonitor.env.git.commitSHA else { return nil }
         return try? DDTestMonitor.cacheDir?.createSubdirectory(path: commit)
     }()
+    
+    static var version: String? = Bundle(for: DDTestMonitor.self).infoDictionary?["CFBundleShortVersionString"] as? String
 
     var networkInstrumentation: DDNetworkInstrumentation?
     var injectHeaders: Bool = false
@@ -55,7 +58,7 @@ internal class DDTestMonitor {
     var isRumActive: Bool = false
     let messageChannelUUID: String
 
-    var crashedModuleInfo: CrashedModuleInformation?
+    var crashedSessionInfo: CrashedSessionInformation?
 
     let instrumentationWorkQueue = OperationQueue()
     private let itrWorkQueue = OperationQueue()
@@ -63,15 +66,21 @@ internal class DDTestMonitor {
 
     static let developerMachineHostName: String = try! Spawn.output("hostname")
 
-    static var baseConfigurationTags = [
-        DDOSTags.osPlatform: env.platform.osName,
-        DDOSTags.osArchitecture: env.platform.osArchitecture,
-        DDOSTags.osVersion: env.platform.osVersion,
-        DDDeviceTags.deviceModel: env.platform.deviceModel,
-        DDRuntimeTags.runtimeName: env.platform.runtimeName,
-        DDRuntimeTags.runtimeVersion: env.platform.runtimeVersion,
-        DDUISettingsTags.uiSettingsLocalization: env.platform.localization,
-    ]
+    static var baseConfigurationTags = {
+        var tags: [String: String] = [
+            DDOSTags.osPlatform: env.platform.osName,
+            DDOSTags.osArchitecture: env.platform.osArchitecture,
+            DDOSTags.osVersion: env.platform.osVersion,
+            DDDeviceTags.deviceName: env.platform.deviceName,
+            DDDeviceTags.deviceModel: env.platform.deviceModel,
+            DDRuntimeTags.runtimeName: env.platform.runtimeName,
+            DDRuntimeTags.runtimeVersion: env.platform.runtimeVersion,
+            DDUISettingsTags.uiSettingsLocalization: env.platform.localization,
+            DDGenericTags.language: "swift",
+            DDGenericTags.library_version: version ?? "unknown"
+        ]
+        return tags
+    }()
 
     var coverageHelper: DDCoverageHelper?
     var gitUploader: GitUploader?
@@ -90,6 +99,10 @@ internal class DDTestMonitor {
             defer { rLock.unlock() }
             privateCurrentTest = newValue
         }
+    }
+    
+    static var service: String {
+        config.service ?? env.git.repositoryName ?? "unknown-swift-repo"
     }
     
     private var isGitUploadSucceded: Bool = false

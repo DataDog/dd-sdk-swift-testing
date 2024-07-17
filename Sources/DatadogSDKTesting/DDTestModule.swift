@@ -7,19 +7,10 @@
 import Foundation
 @_implementationOnly import OpenTelemetryApi
 
-@objc public enum DDTestStatus: Int {
-    case pass
-    case fail
-    case skip
-}
-
-public class DDTestModule: NSObject, Encodable {
-    var bundleName = ""
-    static var bundleFunctionInfo = FunctionMap()
-    static var codeOwners: CodeOwners?
-    var testFramework = "Swift API"
+@objc public class DDTestModule: NSObject, Encodable {
+    let session: DDTestSession
+    let bundleName = ""
     var id: SpanId
-    var sessionId: SpanId
     let startTime: Date
     var duration: UInt64
     var meta: [String: String] = [:]
@@ -27,40 +18,29 @@ public class DDTestModule: NSObject, Encodable {
     var status: DDTestStatus
     var localization: String
     var configError = false
-    var itrSkipped = false
+    private(set) var itrSkipped = false
     var linesCovered: Double?
+    
+    let functionInfo: FunctionMap
+//    static var bundleFunctionInfo = FunctionMap()
+//    static var codeOwners: CodeOwners?
 
-    private let executionLock = NSLock()
-    private var privateCurrentExecutionOrder = 0
-    var currentExecutionOrder: Int {
-        executionLock.lock()
-        defer {
-            privateCurrentExecutionOrder += 1
-            executionLock.unlock()
-        }
-        return privateCurrentExecutionOrder
-    }
+    var name: String { bundleName }
+    var testFramework: String { session.testFramework }
+    var codeOwners: CodeOwners? { session.codeOwners }
+    var crashedInfo: CrashedSessionInformation? { session.crashedInfo }
+    var currentExecutionOrder: Int { session.currentExecutionOrder }
+    var service: String { session.service }
 
-    init(bundleName: String, startTime: Date?) {
+    init(session: DDTestSession, bundleName: String, startTime: Date?) {
         self.duration = 0
         self.status = .pass
         self.bundleName = bundleName
-        
-        try! DDTestMonitor.clock.sync()
+        self.session = session
 
         let beforeLoadingTime = DDTestMonitor.clock.now
-        if DDTestMonitor.instance == nil {
-            DDTestMonitor.baseConfigurationTags[DDTestTags.testBundle] = bundleName
-            var success = false
-            Log.measure(name: "installTestMonitor") {
-                success = DDTestMonitor.installTestMonitor()
-            }
-            if !success {
-                configError = true
-            }
-        }
-        Log.debug("Install Test monitor time interval: \(DDTestMonitor.clock.now.timeIntervalSince(beforeLoadingTime))")
-
+        
+        var functionInfo = FunctionMap()
 #if targetEnvironment(simulator) || os(macOS)
         if !DDTestMonitor.config.disableSourceLocation {
             DDTestMonitor.instance?.instrumentationWorkQueue.addOperation {
@@ -69,75 +49,47 @@ public class DDTestModule: NSObject, Encodable {
                     DDSymbolicator.createDSYMFileIfNeeded(forImageName: bundleName)
                 }
                 Log.measure(name: "testFunctionsInModule") {
-                    DDTestModule.bundleFunctionInfo = FileLocator.testFunctionsInModule(bundleName)
-                }
-            }
-            DDTestMonitor.instance?.instrumentationWorkQueue.addOperation {
-                if let workspacePath = DDTestMonitor.env.workspacePath {
-                    Log.measure(name: "createCodeOwners") {
-                        DDTestModule.codeOwners = CodeOwners(workspacePath: URL(fileURLWithPath: workspacePath))
-                    }
+                    functionInfo = FileLocator.testFunctionsInModule(bundleName)
                 }
             }
         }
 #endif
-
         Log.measure(name: "waiting InstrumentationQueue") {
             DDTestMonitor.instance?.instrumentationWorkQueue.waitUntilAllOperationsAreFinished()
         }
-
-        if !DDTestMonitor.config.disableCrashHandler {
-            Log.measure(name: "DDCrashesInstall") {
-                DDCrashes.install(disableMach: DDTestMonitor.config.disableMachCrashHandler)
-            }
-        }
+        
+        self.functionInfo = functionInfo
+        
         let moduleStartTime = startTime ?? beforeLoadingTime
-        if let crashedModuleInfo = DDTestMonitor.instance?.crashedModuleInfo {
+        if let crashedInfo = session.crashedInfo {
             self.status = .fail
-            self.id = crashedModuleInfo.crashedModuleId
-            self.sessionId = crashedModuleInfo.crashedSessionId
-            self.startTime = crashedModuleInfo.moduleStartTime ?? moduleStartTime
+            self.id = crashedInfo.crashedModuleId
+            self.startTime = crashedInfo.moduleStartTime ?? moduleStartTime
         } else {
             self.id = SpanId.random()
-            self.sessionId = SpanId.random()
             self.startTime = moduleStartTime
         }
         self.localization = PlatformUtils.getLocalization()
-
         Log.debug("Module loading time interval: \(DDTestMonitor.clock.now.timeIntervalSince(beforeLoadingTime))")
     }
 
     private func internalEnd(endTime: Date? = nil) {
         duration = (endTime ?? DDTestMonitor.clock.now).timeIntervalSince(startTime).toNanoseconds
 
-        let moduleStatus: String
-
         // If there is a Sanitizer message, we fail the module so error can be shown
         if let sanitizerInfo = SanitizerHelper.getSaniziterInfo() {
-            moduleStatus = DDTagValues.statusFail
+            status = .fail
             meta[DDTags.errorType] = "Sanitizer Error"
             meta[DDTags.errorStack] = sanitizerInfo
-
-        } else {
-            switch status {
-            case .pass:
-                moduleStatus = DDTagValues.statusPass
-            case .fail:
-                moduleStatus = DDTagValues.statusFail
-            case .skip:
-                moduleStatus = DDTagValues.statusSkip
-            }
         }
 
         /// Export module event
         let defaultAttributes: [String: String] = [
             DDGenericTags.type: DDTagValues.typeModuleEnd,
-            DDGenericTags.language: "swift",
-            DDDeviceTags.deviceName: DDTestMonitor.env.platform.deviceName,
-            DDTestTags.testSuite: bundleName,
-            DDTestTags.testFramework: testFramework,
-            DDTestTags.testStatus: moduleStatus,
             DDTestSuiteVisibilityTags.testModuleId: String(id.rawValue),
+            DDTestTags.testModule: bundleName,
+            DDTestTags.testFramework: testFramework,
+            DDTestTags.testStatus: status.tagValue,
         ]
 
         meta.merge(DDTestMonitor.baseConfigurationTags) { _, new in new }
@@ -145,6 +97,7 @@ public class DDTestModule: NSObject, Encodable {
         meta.merge(DDTestMonitor.env.gitAttributes) { _, new in new }
         meta.merge(DDTestMonitor.env.ciAttributes) { _, new in new }
         meta[DDUISettingsTags.uiSettingsModuleLocalization] = localization
+        
         meta[DDItrTags.itrSkippedTests] = itrSkipped ? "true" : "false"
         meta[DDTestSessionTags.testSkippingEnabled] = (DDTestMonitor.instance?.itr != nil) ? "true" : "false"
         meta[DDTestSessionTags.codeCoverageEnabled] = (DDTestMonitor.instance?.coverageHelper != nil) ? "true" : "false"
@@ -166,37 +119,33 @@ public class DDTestModule: NSObject, Encodable {
         }
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: DDTestModuleEnvelope(self))
         Log.debug("Exported module_end event moduleId: \(self.id)")
-
-        let testSession = DDTestSession(testModule: self)
-        DDTestMonitor.tracer.eventsExporter?.exportEvent(event: DDTestSession.DDTestSessionEnvelope(testSession))
-        Log.debug("Exported session_end event sessionId: \(self.sessionId)")
-
-        if let coverageHelper = DDTestMonitor.instance?.coverageHelper {
-            /// We need to wait for all the traces to be written to the backend before exiting
-            coverageHelper.coverageWorkQueue.maxConcurrentOperationCount = ProcessInfo.processInfo.activeProcessorCount
-            coverageHelper.coverageWorkQueue.waitUntilAllOperationsAreFinished()
-        }
-
-        DDTestMonitor.tracer.flush()
-        DDTestMonitor.instance?.gitUploadQueue.waitUntilAllOperationsAreFinished()
+        session.module(ended: self)
+    }
+    
+    var moduleId: (session: SpanId, module: SpanId) { (session.id, id) }
+    
+    func test(started test: DDTest, in suite: DDTestSuite) {
+        session.test(started: test, in: self, suite: suite)
+    }
+    
+    func test(updated test: DDTest, in suite: DDTestSuite) {
+        session.test(updated: test, in: self, suite: suite)
+    }
+    
+    func test(ended test: DDTest, in suite: DDTestSuite) {
+        session.test(ended: test, in: self, suite: suite)
+    }
+    
+    func suite(started suite: DDTestSuite) {}
+    
+    func suite(ended suite: DDTestSuite) {
+        if case .fail = suite.status { status = .fail }
+        if suite.itrSkipped { itrSkipped = true }
     }
 }
 
 /// Public interface for DDTestModule
 public extension DDTestModule {
-    /// Starts the module
-    /// - Parameters:
-    ///   - bundleName: name of the module or bundle to test.
-    ///   - startTime: Optional, the time where the module started
-    @objc static func start(bundleName: String, startTime: Date? = nil) -> DDTestModule {
-        let module = DDTestModule(bundleName: bundleName, startTime: startTime)
-        return module
-    }
-
-    @objc static func start(bundleName: String) -> DDTestModule {
-        return start(bundleName: bundleName, startTime: nil)
-    }
-
     /// Ends the module
     /// - Parameters:
     ///   - endTime: Optional, the time where the module ended
@@ -204,28 +153,27 @@ public extension DDTestModule {
         internalEnd(endTime: endTime)
     }
 
-    @objc func end() {
-        return end(endTime: nil)
-    }
+    @objc func end() { end(endTime: nil) }
 
     /// Adds a extra tag or attribute to the test module, any number of tags can be reported
     /// - Parameters:
     ///   - key: The name of the tag, if a tag exists with the name it will be
     ///     replaced with the new value
     ///   - value: The value of the tag, can be a number or a string.
-    @objc func setTag(key: String, value: Any) {}
+    @objc func setTag(key: String, value: Any) {
+        meta[key] = AttributeValue(value)?.description
+    }
 
     /// Starts a suite in this module
     /// - Parameters:
     ///   - name: name of the suite
     ///   - startTime: Optional, the time where the suite started
     @objc func suiteStart(name: String, startTime: Date? = nil) -> DDTestSuite {
-        let suite = DDTestSuite(name: name, module: self, startTime: startTime)
-        return suite
+        DDTestSuite(name: name, module: self, startTime: startTime)
     }
 
     @objc func suiteStart(name: String) -> DDTestSuite {
-        return suiteStart(name: name, startTime: nil)
+        suiteStart(name: name, startTime: nil)
     }
 }
 
@@ -254,6 +202,7 @@ extension DDTestModule {
         try container.encode(status == .fail ? 1 : 0, forKey: .error)
         try container.encode("\(testFramework).module", forKey: .name)
         try container.encode("\(bundleName)", forKey: .resource)
+        try container.encode(meta[DDTags.service], forKey: .service)
         try container.encode(DDTestMonitor.config.service ?? DDTestMonitor.env.git.repositoryName ?? "unknown-swift-repo", forKey: .service)
     }
 

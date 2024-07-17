@@ -89,8 +89,8 @@ internal class DDTracer {
         let hostnameToReport: String? = (conf.reportHostname && !DDTestMonitor.developerMachineHostName.isEmpty) ? DDTestMonitor.developerMachineHostName : nil
 
         let exporterConfiguration = ExporterConfiguration(
-            serviceName: conf.service ?? env.git.repositoryName ?? "unknown-swift-repo",
-            libraryVersion: DDTestObserver.tracerVersion,
+            serviceName: DDTestMonitor.service,
+            libraryVersion: DDTestMonitor.version!,
             applicationName: identifier,
             applicationVersion: version,
             environment: env.environment,
@@ -255,9 +255,9 @@ internal class DDTracer {
         guard let currentTest = DDTestMonitor.instance?.currentTest else {
             return [:]
         }
-        return [DDTestTags.testName: AttributeValue.string(currentTest.name),
-                DDTestTags.testSuite: AttributeValue.string(currentTest.suite.name),
-                DDTestTags.testBundle: AttributeValue.string(currentTest.module.bundleName)]
+        return [DDTestTags.testName: .string(currentTest.name),
+                DDTestTags.testSuite: .string(currentTest.suiteName),
+                DDTestTags.testModule: .string(currentTest.moduleName)]
     }
 
     private func attributesForString(_ string: String) -> [String: AttributeValue] {

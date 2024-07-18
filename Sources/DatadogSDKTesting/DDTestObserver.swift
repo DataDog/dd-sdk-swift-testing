@@ -105,9 +105,9 @@ class DDTestObserver: NSObject, XCTestObservation {
                 let testFunc = String(test.name[funcRange])
                 let testType = type(of: test)
                 let checker = unskippableCache.get(key: ObjectIdentifier(testType), or: testType.unskippableMethods)
-                if checker.isSuiteUnskippable { unskippable = true }
                 let status = DDTest.ITRStatus(canBeSkipped: skippableTests[testSuite, testFunc] != nil,
                                               markedUnskippable: !checker.canSkip(method: testFunc))
+                if status.markedUnskippable { unskippable = true }
                 itrTests[ObjectIdentifier(test)] = status
                 return status.skipped ? SkippedTest(for: test) : test
             }

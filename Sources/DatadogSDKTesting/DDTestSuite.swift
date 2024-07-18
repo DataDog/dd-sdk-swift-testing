@@ -15,6 +15,7 @@ public class DDTestSuite: NSObject, Encodable {
     var duration: UInt64
     var meta: [String: String] = [:]
     var status: DDTestStatus
+    var unskippable: Bool = false
     var localization: String
 
     init(name: String, module: DDTestModule, startTime: Date? = nil) {
@@ -61,7 +62,8 @@ public class DDTestSuite: NSObject, Encodable {
             DDTestTags.testFramework: module.testFramework,
             DDTestTags.testStatus: suiteStatus,
             DDTestSuiteVisibilityTags.testModuleId: String(module.id.rawValue),
-            DDTestSuiteVisibilityTags.testSuiteId: String(id.rawValue)
+            DDTestSuiteVisibilityTags.testSuiteId: String(id.rawValue),
+            DDItrTags.itrUnskippable: unskippable ? "true" : "false"
         ]
 
         meta.merge(DDTestMonitor.baseConfigurationTags) { _, new in new }

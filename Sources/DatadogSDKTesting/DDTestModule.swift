@@ -27,7 +27,7 @@ public class DDTestModule: NSObject, Encodable {
     var status: DDTestStatus
     var localization: String
     var configError = false
-    var itrSkipped = false
+    var itrSkipped: UInt = 0
     var linesCovered: Double?
 
     private let executionLock = NSLock()
@@ -145,10 +145,11 @@ public class DDTestModule: NSObject, Encodable {
         meta.merge(DDTestMonitor.env.gitAttributes) { _, new in new }
         meta.merge(DDTestMonitor.env.ciAttributes) { _, new in new }
         meta[DDUISettingsTags.uiSettingsModuleLocalization] = localization
-        meta[DDItrTags.itrSkippedTests] = itrSkipped ? "true" : "false"
+        meta[DDTestSessionTags.testItrSkippingType] = DDTagValues.typeTest
+        meta[DDTestSessionTags.testItrSkippingCount] = String(itrSkipped)
         meta[DDTestSessionTags.testSkippingEnabled] = (DDTestMonitor.instance?.itr != nil) ? "true" : "false"
-        meta[DDTestSessionTags.codeCoverageEnabled] = (DDTestMonitor.instance?.coverageHelper != nil) ? "true" : "false"
-        if !itrSkipped {
+        meta[DDTestSessionTags.testCodeCoverageEnabled] = (DDTestMonitor.instance?.coverageHelper != nil) ? "true" : "false"
+        if itrSkipped == 0 {
             if let llvmProfilePath = DDTestMonitor.envReader.get(env: "LLVM_PROFILE_FILE", String.self) {
                 let profileFolder = URL(fileURLWithPath: llvmProfilePath).deletingLastPathComponent()
                 // Locate proper file
@@ -162,7 +163,7 @@ public class DDTestModule: NSObject, Encodable {
                     }
                 }
             }
-            metrics[DDTestSuiteVisibilityTags.testCoverageLines] = linesCovered
+            metrics[DDTestSessionTags.testCoverageLines] = linesCovered
         }
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: DDTestModuleEnvelope(self))
         Log.debug("Exported module_end event moduleId: \(self.id)")

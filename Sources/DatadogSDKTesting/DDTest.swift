@@ -152,7 +152,7 @@ public class DDTest: NSObject {
     ///   - status: the status reported for this test
     ///   - endTime: Optional, the time where the test ended
     @objc public func end(status: DDTestStatus, endTime: Date? = nil) {
-        self.end(status: status.itr, endTime: endTime)
+        self.end(status: status, itr: .none, endTime: endTime)
     }
 
     @objc public func end(status: DDTestStatus) {
@@ -215,22 +215,25 @@ public class DDTest: NSObject {
 }
 
 extension DDTest {
-    func end(status: DDTestStatus.ITR, endTime: Date? = nil) {
+    func end(status: DDTestStatus, itr: ITRStatus, endTime: Date? = nil) {
         let testEndTime = endTime ?? DDTestMonitor.clock.now
         
+        span.setAttribute(key: DDItrTags.itrUnskippable, value: itr.markedUnskippable)
         switch status {
         case .pass:
             span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusPass)
+            span.setAttribute(key: DDItrTags.itrForcedRun, value: itr.forcedRun)
             span.status = .ok
         case .fail:
             span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusFail)
+            span.setAttribute(key: DDItrTags.itrForcedRun, value: itr.forcedRun)
             suite.status = .fail
             module.status = .fail
-            span.status = .error(description: "Test failed")
             setErrorInformation()
-        case .skip(itr: let itr):
+            span.status = .error(description: "Test failed")
+        case .skip:
             span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusSkip)
-            if itr { span.setAttribute(key: DDTestTags.testSkippedByITR, value: true) }
+            span.setAttribute(key: DDTestTags.testSkippedByITR, value: itr.skipped)
             span.status = .ok
         }
 
@@ -254,21 +257,16 @@ extension DDTest {
         DDCrashes.setCustomData(customData: Data())
         DDTestMonitor.instance?.currentTest = nil
     }
-}
-
-extension DDTestStatus {
-    enum ITR: Equatable {
-        case pass
-        case fail
-        case skip(itr: Bool)
-    }
     
-    var itr: ITR {
-        switch self {
-        case .pass: return .pass
-        case .fail: return .fail
-        case .skip: return .skip(itr: false)
-        }
+    struct ITRStatus {
+        let canBeSkipped: Bool
+        let markedUnskippable: Bool
+        
+        var forcedRun: Bool { canBeSkipped && markedUnskippable }
+        var skipped: Bool { canBeSkipped && !markedUnskippable }
+        
+        @inlinable
+        static var none: ITRStatus { ITRStatus(canBeSkipped: false, markedUnskippable: false) }
     }
 }
 

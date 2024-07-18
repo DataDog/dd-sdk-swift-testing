@@ -25,17 +25,17 @@ final class SkippedTest: XCTestCase {
         get { _test.executionTimeAllowance }
         set { _test.executionTimeAllowance = newValue }
     }
-        
+    
     override func setUpWithError() throws {
         throw XCTSkip("ITR")
     }
-
+    
     convenience init(for test: XCTestCase) {
         self.init(selector: #selector(Self._empty))
         self._test = test
     }
-        
+    
     override var ddRealTest: XCTestCase { _test }
-
+    
     @objc func _empty() {}
 }

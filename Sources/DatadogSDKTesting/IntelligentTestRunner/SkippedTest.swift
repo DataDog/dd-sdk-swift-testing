@@ -9,6 +9,14 @@ import Foundation
 
 extension XCTestCase {
     var ddRealTest: XCTestCase { self }
+    
+    var testId: (suite: String, test: String) {
+        let parts = name.trimmingCharacters(in: Self._trimmedCharacters).split(separator: " ")
+        assert(parts.count == 2, "unknown test name format \(name)")
+        return (String(parts[0]), String(parts[1]))
+    }
+    
+    private static var _trimmedCharacters: CharacterSet = CharacterSet(charactersIn: "-[]")
 }
 
 final class SkippedTest: XCTestCase {

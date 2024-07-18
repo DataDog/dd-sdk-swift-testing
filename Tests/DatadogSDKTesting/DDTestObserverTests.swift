@@ -23,7 +23,7 @@ internal class DDTestObserverTests: XCTestCase {
     }
 
     override func tearDown() {
-        XCTestObservationCenter.shared.removeTestObserver(testObserver)
+        testObserver.stopObserving()
         testObserver = nil
         DDTestMonitor._env_recreate()
         XCTAssertNil(DDTracer.activeSpan)

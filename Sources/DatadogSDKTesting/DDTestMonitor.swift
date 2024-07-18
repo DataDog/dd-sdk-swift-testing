@@ -67,6 +67,7 @@ internal class DDTestMonitor {
         DDOSTags.osPlatform: env.platform.osName,
         DDOSTags.osArchitecture: env.platform.osArchitecture,
         DDOSTags.osVersion: env.platform.osVersion,
+        DDDeviceTags.deviceName: env.platform.deviceName,
         DDDeviceTags.deviceModel: env.platform.deviceModel,
         DDRuntimeTags.runtimeName: env.platform.runtimeName,
         DDRuntimeTags.runtimeVersion: env.platform.runtimeVersion,

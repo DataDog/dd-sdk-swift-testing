@@ -10,7 +10,6 @@ import Foundation
 @_implementationOnly import SigmaSwiftStatistics
 
 public class DDTest: NSObject {
-    static let testNameRegex = try! NSRegularExpression(pattern: "([\\w]+) ([\\w]+)", options: .caseInsensitive)
     var currentTestExecutionOrder: Int
     var initialProcessId = Int(ProcessInfo.processInfo.processIdentifier)
 

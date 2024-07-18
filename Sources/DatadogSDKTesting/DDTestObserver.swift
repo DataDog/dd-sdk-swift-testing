@@ -8,7 +8,6 @@ import Foundation
 @_implementationOnly import XCTest
 
 class DDTestObserver: NSObject, XCTestObservation {
-    static let testNameRegex = try! NSRegularExpression(pattern: "([\\w]+) ([\\w]+)", options: .caseInsensitive)
     static let tracerVersion = (Bundle(for: DDTestObserver.self).infoDictionary?["CFBundleShortVersionString"] as? String) ?? "unknown"
 
     private(set) var state: State
@@ -95,14 +94,7 @@ class DDTestObserver: NSObject, XCTestObservation {
         {
             var unskippableCache: [ObjectIdentifier: UnskippableMethodChecker] = [:]
             tests = tests.map { test in
-                guard let match = Self.testNameRegex.firstMatch(in: test.name, range: NSRange(0..<test.name.count)),
-                      let suiteRange = Range(match.range(at: 1), in: test.name),
-                      let funcRange = Range(match.range(at: 2), in: test.name) else
-                {
-                    return test
-                }
-                let testSuite = String(test.name[suiteRange])
-                let testFunc = String(test.name[funcRange])
+                let (testSuite, testFunc) = test.testId
                 let testType = type(of: test)
                 let checker = unskippableCache.get(key: ObjectIdentifier(testType), or: testType.unskippableMethods)
                 let status = DDTest.ITRStatus(canBeSkipped: skippableTests[testSuite, testFunc] != nil,
@@ -147,14 +139,7 @@ class DDTestObserver: NSObject, XCTestObservation {
             Log.print("testCaseWillStart: Bad observer state: \(state), expected: .suite")
             return
         }
-        let testName: String
-        if let match = DDTestObserver.testNameRegex.firstMatch(in: testCase.name, range: NSRange(location: 0, length: testCase.name.count)),
-           let range = Range(match.range(at: 2), in: testCase.name)
-        {
-            testName = String(testCase.name[range])
-        } else {
-            testName = testCase.name
-        }
+        let testName: String = testCase.testId.test
         Log.debug("testCaseWillStart: \(testName)")
         state = .test(test: suite.testStart(name: testName), context: context)
     }

@@ -28,7 +28,7 @@ public class DDTestModule: NSObject, Encodable {
     var localization: String
     var configError = false
     var itrSkipped: UInt = 0
-    var linesCovered: Double?
+    var linesCovered: Double? = nil
 
     private let executionLock = NSLock()
     private var privateCurrentExecutionOrder = 0
@@ -149,8 +149,8 @@ public class DDTestModule: NSObject, Encodable {
         
         if DDTestMonitor.instance?.itr != nil {
             meta[DDTestSessionTags.testItrSkippingType] = DDTagValues.typeTest
-            meta[DDTestSessionTags.testItrSkippingCount] = String(itrSkipped)
             meta[DDTestSessionTags.testSkippingEnabled] = "true"
+            metrics[DDTestSessionTags.testItrSkippingCount] = Double(itrSkipped)
         } else {
             meta[DDTestSessionTags.testSkippingEnabled] = "false"
         }

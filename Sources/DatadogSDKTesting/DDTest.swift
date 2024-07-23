@@ -217,22 +217,30 @@ extension DDTest {
     func end(status: DDTestStatus, itr: ITRStatus, endTime: Date? = nil) {
         let testEndTime = endTime ?? DDTestMonitor.clock.now
         
-        span.setAttribute(key: DDItrTags.itrUnskippable, value: itr.markedUnskippable)
+        if itr.markedUnskippable {
+            span.setAttribute(key: DDItrTags.itrUnskippable, value: "true")
+        }
         switch status {
         case .pass:
             span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusPass)
-            span.setAttribute(key: DDItrTags.itrForcedRun, value: itr.forcedRun)
+            if itr.forcedRun {
+                span.setAttribute(key: DDItrTags.itrForcedRun, value: "true")
+            }
             span.status = .ok
         case .fail:
             span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusFail)
-            span.setAttribute(key: DDItrTags.itrForcedRun, value: itr.forcedRun)
+            if itr.forcedRun {
+                span.setAttribute(key: DDItrTags.itrForcedRun, value: "true")
+            }
             suite.status = .fail
             module.status = .fail
             setErrorInformation()
             span.status = .error(description: "Test failed")
         case .skip:
             span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusSkip)
-            span.setAttribute(key: DDTestTags.testSkippedByITR, value: itr.skipped)
+            if itr.skipped {
+                span.setAttribute(key: DDTestTags.testSkippedByITR, value: "true")
+            }
             span.status = .ok
         }
 

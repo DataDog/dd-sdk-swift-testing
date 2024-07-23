@@ -62,8 +62,7 @@ public class DDTestSuite: NSObject, Encodable {
             DDTestTags.testFramework: module.testFramework,
             DDTestTags.testStatus: suiteStatus,
             DDTestSuiteVisibilityTags.testModuleId: String(module.id.rawValue),
-            DDTestSuiteVisibilityTags.testSuiteId: String(id.rawValue),
-            DDItrTags.itrUnskippable: unskippable ? "true" : "false"
+            DDTestSuiteVisibilityTags.testSuiteId: String(id.rawValue)
         ]
 
         meta.merge(DDTestMonitor.baseConfigurationTags) { _, new in new }
@@ -72,11 +71,13 @@ public class DDTestSuite: NSObject, Encodable {
         meta.merge(DDTestMonitor.env.ciAttributes) { _, new in new }
         meta[DDUISettingsTags.uiSettingsSuiteLocalization] = localization
         meta[DDUISettingsTags.uiSettingsModuleLocalization] = module.localization
+        if unskippable { meta[DDItrTags.itrUnskippable] = "true" }
+        
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: DDTestSuiteEnvelope(self))
         Log.debug("Exported suite_end event suiteId: \(self.id)")
     }
 
-    /// Ends the test suite
+    /// Ends the test suite 
     /// - Parameters:
     ///   - endTime: Optional, the time where the suite ended
     @objc(endWithTime:) public func end(endTime: Date? = nil) { internalEnd(endTime: endTime) }

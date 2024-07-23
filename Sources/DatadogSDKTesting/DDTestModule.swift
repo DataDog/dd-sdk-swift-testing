@@ -145,10 +145,16 @@ public class DDTestModule: NSObject, Encodable {
         meta.merge(DDTestMonitor.env.gitAttributes) { _, new in new }
         meta.merge(DDTestMonitor.env.ciAttributes) { _, new in new }
         meta[DDUISettingsTags.uiSettingsModuleLocalization] = localization
-        meta[DDTestSessionTags.testItrSkippingType] = DDTagValues.typeTest
-        meta[DDTestSessionTags.testItrSkippingCount] = String(itrSkipped)
-        meta[DDTestSessionTags.testSkippingEnabled] = (DDTestMonitor.instance?.itr != nil) ? "true" : "false"
         meta[DDTestSessionTags.testCodeCoverageEnabled] = (DDTestMonitor.instance?.coverageHelper != nil) ? "true" : "false"
+        
+        if DDTestMonitor.instance?.itr != nil {
+            meta[DDTestSessionTags.testItrSkippingType] = DDTagValues.typeTest
+            meta[DDTestSessionTags.testItrSkippingCount] = String(itrSkipped)
+            meta[DDTestSessionTags.testSkippingEnabled] = "true"
+        } else {
+            meta[DDTestSessionTags.testSkippingEnabled] = "false"
+        }
+        
         if itrSkipped == 0 {
             if let llvmProfilePath = DDTestMonitor.envReader.get(env: "LLVM_PROFILE_FILE", String.self) {
                 let profileFolder = URL(fileURLWithPath: llvmProfilePath).deletingLastPathComponent()

@@ -12,24 +12,27 @@ typealias cFunc = @convention(c) () -> Void
 
 class DDCoverageHelper {
     var llvmProfileURL: URL
-    var storageProfileURL: URL
+    var storagePath: Directory
     var initialCoverageSaved: Bool
     let coverageWorkQueue: OperationQueue
 
-    init?() {
-        guard let profilePath = DDTestMonitor.envReader.get(env: "LLVM_PROFILE_FILE", String.self),
-              BinaryImages.profileImages.count > 0
-        else {
+    init?(storagePath: Directory) {
+        guard let profilePath = Self.profileGetFileName(), BinaryImages.profileImages.count > 0 else {
             Log.print("Coverage not properly enabled in project, check documentation")
-            Log.debug("LLVM_PROFILE_FILE: \(DDTestMonitor.envReader.get(env: "LLVM_PROFILE_FILE") ?? "NIL")")
+            Log.debug("LLVM_PROFILE_FILE: \(Self.profileGetFileName() ?? "NIL")")
             Log.debug("Profile Images count: \(BinaryImages.profileImages.count)")
+            return nil
+        }
+        
+        guard let path = try? storagePath.createSubdirectory(path: "coverage") else {
+            Log.debug("Can't create subdirectory in: \(storagePath)")
             return nil
         }
 
         llvmProfileURL = URL(fileURLWithPath: profilePath)
-        storageProfileURL = llvmProfileURL.deletingLastPathComponent().appendingPathComponent("DDTestingCoverage")
+        self.storagePath = path
         Log.debug("LLVM Coverage location: \(llvmProfileURL.path)")
-        Log.debug("DDCoverageHelper location: \(storageProfileURL.path)")
+        Log.debug("DDCoverageHelper location: \(path.url.path)")
         initialCoverageSaved = false
         coverageWorkQueue = OperationQueue()
         coverageWorkQueue.qualityOfService = .background
@@ -51,17 +54,13 @@ class DDCoverageHelper {
             internalWriteProfile()
             initialCoverageSaved = true
         }
-
-        if !FileManager.default.fileExists(atPath: storageProfileURL.path) {
-            try? FileManager.default.createDirectory(at: storageProfileURL, withIntermediateDirectories: true, attributes: nil)
-        }
         let saveURL = getURLForTest(name: name, testSessionId: testSessionId, testSuiteId: testSuiteId, spanId: spanId)
         profileSetFilename(url: saveURL)
     }
 
     func getURLForTest(name: String, testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64) -> URL {
         let finalName = String(testSessionId) + "__" + String(testSuiteId) + "__" + String(spanId) + "__" + name
-        return storageProfileURL.appendingPathComponent(finalName).appendingPathExtension("profraw")
+        return storagePath.url.appendingPathComponent(finalName).appendingPathExtension("profraw")
     }
 
     func writeProfile() {
@@ -71,6 +70,10 @@ class DDCoverageHelper {
         // Write to llvm original destination
         profileSetFilename(url: llvmProfileURL)
         internalWriteProfile()
+    }
+    
+    func removeStoragePath() {
+        try? storagePath.delete()
     }
 
     private func internalWriteProfile() {
@@ -88,6 +91,10 @@ class DDCoverageHelper {
                 llvm_profile_initialize_file()
             }
         }
+    }
+    
+    private static func profileGetFileName() -> String? {
+        getenv("LLVM_PROFILE_FILE").map { String(cString: $0) }
     }
 
     fileprivate static func generateProfData(profrawFile: URL) -> URL? {
@@ -114,6 +121,7 @@ class DDCoverageHelper {
             return nil
         }
         Log.debug("llvm-cov output: \(llvmCovOutput)")
+        defer { try? FileManager.default.removeItem(at: covJsonURL) }
         return LLVMTotalsCoverageFormat(fromURL: covJsonURL)
     }
 }

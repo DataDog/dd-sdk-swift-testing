@@ -45,6 +45,8 @@ internal class DDTestMonitor {
         guard let commit = DDTestMonitor.env.git.commitSHA else { return nil }
         return try? DDTestMonitor.cacheDir?.createSubdirectory(path: commit)
     }()
+    
+    var tempDir: Directory? = try? Directory.temporary().createSubdirectory(path: UUID().uuidString)
 
     var networkInstrumentation: DDNetworkInstrumentation?
     var injectHeaders: Bool = false
@@ -118,6 +120,14 @@ internal class DDTestMonitor {
             DDTestMonitor.instance?.startITR()
         }
         return true
+    }
+    
+    static func removeTestMonitor() {
+        guard let monitor = DDTestMonitor.instance else { return }
+        DDTestMonitor.instance = nil
+        Log.debug("Clearing monitor")
+        monitor.coverageHelper?.removeStoragePath()
+        try? monitor.tempDir?.delete()
     }
 
     init() {
@@ -299,7 +309,12 @@ internal class DDTestMonitor {
                 // Activate Coverage
                 if itrBackendConfig?.codeCoverage ?? false {
                     Log.debug("Coverage Enabled")
-                    coverageHelper = DDCoverageHelper()
+                    guard let temp = tempDir else {
+                        Log.print("Coverage init failed. Can't create temp directiry.")
+                        coverageHelper = nil
+                        return
+                    }
+                    coverageHelper = DDCoverageHelper(storagePath: temp)
                 } else {
                     Log.debug("Coverage Disabled")
                     coverageHelper = nil

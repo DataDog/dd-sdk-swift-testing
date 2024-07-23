@@ -24,6 +24,7 @@ class DDTestObserver: NSObject, XCTestObservation {
     
     func stopObserving() {
         XCTestObservationCenter.shared.removeTestObserver(self)
+        DDTestMonitor.removeTestMonitor()
     }
 
     func testBundleWillStart(_ testBundle: Bundle) {

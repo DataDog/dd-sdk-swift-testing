@@ -35,6 +35,7 @@ enum FrameworkLoadHandler {
             {
                 let newEnv = profilePath.replacingOccurrences(of: "%c", with: "")
                 setenv("LLVM_PROFILE_FILE", newEnv, 1)
+                DDTestMonitor.envReader = ProcessEnvironmentReader()
             }
             
             if config.isTestObserverNeeded && !config.disableTestInstrumenting {

@@ -140,9 +140,8 @@ class DDTestObserver: NSObject, XCTestObservation {
             Log.print("testCaseWillStart: Bad observer state: \(state), expected: .suite")
             return
         }
-        let testName: String = testCase.testId.test
-        Log.debug("testCaseWillStart: \(testName)")
-        state = .test(test: suite.testStart(name: testName), context: context)
+        state = context.new(test: testCase, in: suite)
+        Log.debug("testCaseWillStart: \(testCase.name)")
     }
 
     func testCaseDidFinish(_ testCase: XCTestCase) {
@@ -155,7 +154,7 @@ class DDTestObserver: NSObject, XCTestObservation {
             return
         }
         addBenchmarkTagsIfNeeded(testCase: testCase, test: test)
-        test.end(status: testCase.testRun?.status ?? .fail, itr: context.itr(for: testCase))
+        test.end(status: testCase.testRun?.status ?? .fail)
         state = context.back(from: test)
         Log.debug("testCaseDidFinish: \(test.name)")
     }
@@ -331,6 +330,10 @@ extension DDTestObserver {
         
         func back(from suite: DDTestSuite) -> State {
             parent == nil ? .module(suite.module) : .container(suite: parent!, inside: suite.module)
+        }
+        
+        func new(test: XCTestCase, in suite: DDTestSuite) -> State {
+            .test(test: suite.testStart(name: test.testId.test, itr: itr(for: test)), context: self)
         }
         
         func itr(for test: XCTestCase) -> DDTest.ITRStatus {

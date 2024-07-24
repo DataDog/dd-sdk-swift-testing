@@ -18,16 +18,18 @@ public class DDTest: NSObject {
 
     var module: DDTestModule
     var suite: DDTestSuite
+    var itr: ITRStatus
 
     private var isUITest: Bool
 
     private var errorInfo: ErrorInfo?
 
-    init(name: String, suite: DDTestSuite, module: DDTestModule, startTime: Date? = nil) {
+    init(name: String, suite: DDTestSuite, module: DDTestModule, itr: ITRStatus, startTime: Date? = nil) {
         let testStartTime = startTime ?? DDTestMonitor.clock.now
         self.name = name
         self.suite = suite
         self.module = module
+        self.itr = itr
         self.isUITest = false
 
         currentTestExecutionOrder = module.currentExecutionOrder
@@ -78,13 +80,13 @@ public class DDTest: NSObject {
         if let correlationId = DDTestMonitor.instance?.itr?.correlationId {
             span.setAttribute(key: DDItrTags.itrCorrelationId, value: correlationId)
         }
-
+        
         if let testSpan = span as? RecordEventsReadableSpan {
             let simpleSpan = SimpleSpanData(spanData: testSpan.toSpanData(), moduleStartTime: module.startTime, suiteStartTime: suite.startTime)
             DDCrashes.setCustomData(customData: SimpleSpanSerializer.serializeSpan(simpleSpan: simpleSpan))
         }
-
-        if let coverageHelper = DDTestMonitor.instance?.coverageHelper {
+        
+        if !itr.skipped, let coverageHelper = DDTestMonitor.instance?.coverageHelper {
             coverageHelper.setTest(name: name,
                                    testSessionId: module.sessionId.rawValue,
                                    testSuiteId: suite.id.rawValue,
@@ -151,11 +153,11 @@ public class DDTest: NSObject {
     ///   - status: the status reported for this test
     ///   - endTime: Optional, the time where the test ended
     @objc public func end(status: DDTestStatus, endTime: Date? = nil) {
-        self.end(status: status, itr: .none, endTime: endTime)
+        internalEnd(status: status, endTime: endTime)
     }
 
     @objc public func end(status: DDTestStatus) {
-        self.end(status: status, endTime: nil)
+        end(status: status, endTime: nil)
     }
 
     /// Adds benchmark information to the test, it also changes the test to be of type
@@ -214,7 +216,7 @@ public class DDTest: NSObject {
 }
 
 extension DDTest {
-    func end(status: DDTestStatus, itr: ITRStatus, endTime: Date? = nil) {
+    func internalEnd(status: DDTestStatus, endTime: Date? = nil) {
         let testEndTime = endTime ?? DDTestMonitor.clock.now
         
         if itr.markedUnskippable {
@@ -244,7 +246,7 @@ extension DDTest {
             span.status = .ok
         }
 
-        if let coverageHelper = DDTestMonitor.instance?.coverageHelper {
+        if !itr.skipped, let coverageHelper = DDTestMonitor.instance?.coverageHelper {
             coverageHelper.writeProfile()
             let testSessionId = module.sessionId.rawValue
             let testSuiteId = suite.id.rawValue

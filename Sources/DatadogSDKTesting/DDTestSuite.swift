@@ -76,6 +76,10 @@ public class DDTestSuite: NSObject, Encodable {
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: DDTestSuiteEnvelope(self))
         Log.debug("Exported suite_end event suiteId: \(self.id)")
     }
+    
+    func testStart(name: String, itr: DDTest.ITRStatus, startTime: Date? = nil) -> DDTest {
+        DDTest(name: name, suite: self, module: module, itr: itr, startTime: startTime)
+    }
 
     /// Ends the test suite 
     /// - Parameters:
@@ -95,11 +99,11 @@ public class DDTestSuite: NSObject, Encodable {
     ///   - name: name of the suite
     ///   - startTime: Optional, the time where the test started
     @objc public func testStart(name: String, startTime: Date? = nil) -> DDTest {
-        return DDTest(name: name, suite: self, module: module, startTime: startTime)
+        testStart(name: name, itr: .none, startTime: startTime)
     }
 
     @objc public func testStart(name: String) -> DDTest {
-        return testStart(name: name, startTime: nil)
+        testStart(name: name, startTime: nil)
     }
 }
 

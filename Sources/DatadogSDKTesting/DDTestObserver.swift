@@ -107,9 +107,8 @@ class DDTestObserver: NSObject, XCTestObservation {
             testSuite.setValue(tests, forKey: "_mutableTests")
         }
         
-        let suite = module.suiteStart(name: testSuite.name)
-        suite.unskippable = unskippable
-        state = .suite(suite: suite, context: SuiteContext(parent: parent, itr: itrTests))
+        state = SuiteContext(parent: parent, itr: itrTests)
+            .new(suite: testSuite, in: module, unskippable: unskippable)
         Log.debug("testSuiteWillStart: \(testSuite.name)")
     }
 
@@ -330,6 +329,12 @@ extension DDTestObserver {
         
         func back(from suite: DDTestSuite) -> State {
             parent == nil ? .module(suite.module) : .container(suite: parent!, inside: suite.module)
+        }
+        
+        func new(suite: XCTestSuite, in module: DDTestModule, unskippable: Bool) -> State {
+            let suite = module.suiteStart(name: suite.name)
+            suite.unskippable = unskippable
+            return .suite(suite: suite, context: self)
         }
         
         func new(test: XCTestCase, in suite: DDTestSuite) -> State {

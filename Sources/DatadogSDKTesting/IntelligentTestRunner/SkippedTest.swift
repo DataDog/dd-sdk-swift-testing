@@ -111,9 +111,9 @@ extension XCTestCase {
                 .map { ($0 as! NSNumber).boolValue } ?? false
         }
         set {
-            return objc_setAssociatedObject(self, &_swizzled_key,
-                                            NSNumber(value: newValue),
-                                            .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            objc_setAssociatedObject(self, &_swizzled_key,
+                                     NSNumber(value: newValue),
+                                     .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         }
     }
     

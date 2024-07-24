@@ -102,7 +102,7 @@ class DDTestObserver: NSObject, XCTestObservation {
                                               markedUnskippable: !checker.canSkip(method: testFunc))
                 if status.markedUnskippable { unskippable = true }
                 itrTests[ObjectIdentifier(test)] = status
-                return status.skipped ? SkippedTest(for: test) : test
+                return status.skipped ? test.toSkipped() : test
             }
             testSuite.setValue(tests, forKey: "_mutableTests")
         }

@@ -37,8 +37,6 @@ public class DDTest: NSObject {
         let attributes: [String: String] = [
             DDGenericTags.type: DDTagValues.typeTest,
             DDGenericTags.resource: "\(suite.name).\(name)",
-            DDGenericTags.language: "swift",
-            DDDeviceTags.deviceName: DDTestMonitor.env.platform.deviceName,
             DDTestTags.testName: name,
             DDTestTags.testSuite: suite.name,
             DDTestTags.testFramework: module.testFramework,

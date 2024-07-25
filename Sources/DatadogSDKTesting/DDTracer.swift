@@ -90,7 +90,7 @@ internal class DDTracer {
 
         let exporterConfiguration = ExporterConfiguration(
             serviceName: conf.service ?? env.git.repositoryName ?? "unknown-swift-repo",
-            libraryVersion: DDTestObserver.tracerVersion,
+            libraryVersion: DDTestMonitor.tracerVersion,
             applicationName: identifier,
             applicationVersion: version,
             environment: env.environment,

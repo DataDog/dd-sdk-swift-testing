@@ -54,10 +54,7 @@ public class DDTestSuite: NSObject, Encodable {
         }
 
         let defaultAttributes: [String: String] = [
-            DDTags.service: DDTestMonitor.config.service ?? DDTestMonitor.env.git.repositoryName ?? "unknown-swift-repo",
             DDGenericTags.type: DDTagValues.typeSuiteEnd,
-            DDGenericTags.language: "swift",
-            DDDeviceTags.deviceName: DDTestMonitor.env.platform.deviceName,
             DDTestTags.testSuite: name,
             DDTestTags.testFramework: module.testFramework,
             DDTestTags.testStatus: suiteStatus,

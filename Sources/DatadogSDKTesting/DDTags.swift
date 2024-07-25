@@ -39,7 +39,7 @@ internal enum DDGenericTags {
     static let type = "type"
     static let resource = "resource"
     static let language = "language"
-    static let library_version = "library_version"
+    static let libraryVersion = "library_version"
 }
 
 internal enum DDTestTags {

@@ -8,8 +8,6 @@ import Foundation
 @_implementationOnly import XCTest
 
 class DDTestObserver: NSObject, XCTestObservation {
-    static let tracerVersion = (Bundle(for: DDTestObserver.self).infoDictionary?["CFBundleShortVersionString"] as? String) ?? "unknown"
-
     private(set) var state: State
 
     override init() {

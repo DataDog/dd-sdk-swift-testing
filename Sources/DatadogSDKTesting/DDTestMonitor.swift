@@ -38,6 +38,8 @@ internal class DDTestMonitor {
     static var config: Config = Config(env: envReader)
     
     static var envReader: EnvironmentReader = ProcessEnvironmentReader()
+    
+    static let tracerVersion = (Bundle(for: DDTestMonitor.self).infoDictionary?["CFBundleShortVersionString"] as? String) ?? "unknown"
 
     static var dataPath: Directory? = try? Directory(withSubdirectoryPath: "com.datadog.civisibility")
     static var cacheDir: Directory? = try? dataPath?.createSubdirectory(path: "caches")

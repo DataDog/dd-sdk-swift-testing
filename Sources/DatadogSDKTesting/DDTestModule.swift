@@ -132,8 +132,6 @@ public class DDTestModule: NSObject, Encodable {
         /// Export module event
         let defaultAttributes: [String: String] = [
             DDGenericTags.type: DDTagValues.typeModuleEnd,
-            DDGenericTags.language: "swift",
-            DDDeviceTags.deviceName: DDTestMonitor.env.platform.deviceName,
             DDTestTags.testSuite: bundleName,
             DDTestTags.testFramework: testFramework,
             DDTestTags.testStatus: moduleStatus,

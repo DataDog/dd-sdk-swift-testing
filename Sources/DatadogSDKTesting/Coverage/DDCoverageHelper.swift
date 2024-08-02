@@ -51,7 +51,7 @@ class DDCoverageHelper {
     func setTest(name: String, testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64) {
         if !self.initialCoverageSaved {
             profileSetFilename(url: llvmProfileURL)
-            internalWriteProfile()
+            Self.internalWriteProfile()
             initialCoverageSaved = true
         }
         let saveURL = getURLForTest(name: name, testSessionId: testSessionId, testSuiteId: testSuiteId, spanId: spanId)
@@ -63,20 +63,20 @@ class DDCoverageHelper {
         return storagePath.url.appendingPathComponent(finalName).appendingPathExtension("profraw")
     }
 
-    func writeProfile() {
+    func writeTestProfile() {
         // Write first to our test file
-        internalWriteProfile()
+        Self.internalWriteProfile()
 
         // Write to llvm original destination
         profileSetFilename(url: llvmProfileURL)
-        internalWriteProfile()
+        Self.internalWriteProfile()
     }
     
     func removeStoragePath() {
         try? storagePath.delete()
     }
 
-    private func internalWriteProfile() {
+    private static func internalWriteProfile() {
         BinaryImages.profileImages.forEach {
             let llvm_profile_write_file = unsafeBitCast($0.writeFileFuncPtr, to: cFunc.self)
             llvm_profile_write_file()
@@ -123,5 +123,30 @@ class DDCoverageHelper {
         Log.debug("llvm-cov output: \(llvmCovOutput)")
         defer { try? FileManager.default.removeItem(at: covJsonURL) }
         return LLVMTotalsCoverageFormat(fromURL: covJsonURL)
+    }
+    
+    static func getLineCodeCoverage() -> Double? {
+        guard let llvmProfilePath = profileGetFileName() else { return nil }
+        let profileFolder = URL(fileURLWithPath: llvmProfilePath).deletingLastPathComponent()
+        // Locate profraw file
+        guard let file = FileManager.default
+            .enumerator(at: profileFolder, includingPropertiesForKeys: nil, options: .skipsSubdirectoryDescendants)
+            .flatMap({ $0.first { ($0 as? URL)?.pathExtension == "profraw" } })
+            .map({ $0 as! URL })
+        else { return nil }
+        // we found profraw file. Save all data
+        internalWriteProfile()
+        // get coverage
+        let images = BinaryImages.binaryImagesPath
+        let coverage = DDCoverageHelper.getModuleCoverage(profrawFile: file, binaryImagePaths: images)
+        return coverage?.data.first?.totals.lines.percent
+    }
+    
+    static func load() -> Bool {
+        guard let llvmProfilePath = profileGetFileName() else { return false }
+        let newEnv = llvmProfilePath.replacingOccurrences(of: "%c", with: "")
+        setenv("LLVM_PROFILE_FILE", newEnv, 1)
+        Log.debug("DDCoverageHelper patched environment")
+        return true
     }
 }

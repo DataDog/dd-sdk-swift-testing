@@ -240,12 +240,13 @@ extension DDTest {
             span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusSkip)
             if itr.skipped {
                 span.setAttribute(key: DDTestTags.testSkippedByITR, value: "true")
+                module.itrSkipped.update { $0 += 1 }
             }
             span.status = .ok
         }
 
         if !itr.skipped, let coverageHelper = DDTestMonitor.instance?.coverageHelper {
-            coverageHelper.writeProfile()
+            coverageHelper.writeTestProfile()
             let testSessionId = module.sessionId.rawValue
             let testSuiteId = suite.id.rawValue
             let spanId = span.context.spanId.rawValue

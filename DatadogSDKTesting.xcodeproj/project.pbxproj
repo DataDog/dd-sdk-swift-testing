@@ -39,6 +39,7 @@
 		A7B39C722BCFD234007F98B2 /* SubprocessWait.h in Headers */ = {isa = PBXBuildFile; fileRef = A7B39C712BCFD234007F98B2 /* SubprocessWait.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A7B4D4C12C21DC510059F39B /* TagsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B4D4C02C21DC510059F39B /* TagsTests.swift */; };
 		A7B6602F2C2E08A900AEBA6C /* UnskippableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B6602E2C2E08A900AEBA6C /* UnskippableTests.swift */; };
+		A7B70E3C2C5CDE8B00E4AE09 /* Endpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B70E3B2C5CDE8B00E4AE09 /* Endpoint.swift */; };
 		A7CC6D862C07D624003C13BC /* Tags.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7CC6D852C07D624003C13BC /* Tags.swift */; };
 		A7CC6D882C0F3F83003C13BC /* Tags+ObjC.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7CC6D872C0F3F83003C13BC /* Tags+ObjC.swift */; };
 		A7E232E52BC6E80A0087D8F8 /* CodeCoverage.h in Headers */ = {isa = PBXBuildFile; fileRef = A7E232E42BC6E80A0087D8F8 /* CodeCoverage.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -325,6 +326,7 @@
 		A7B39C712BCFD234007F98B2 /* SubprocessWait.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SubprocessWait.h; sourceTree = "<group>"; };
 		A7B4D4C02C21DC510059F39B /* TagsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagsTests.swift; sourceTree = "<group>"; };
 		A7B6602E2C2E08A900AEBA6C /* UnskippableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnskippableTests.swift; sourceTree = "<group>"; };
+		A7B70E3B2C5CDE8B00E4AE09 /* Endpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Endpoint.swift; sourceTree = "<group>"; };
 		A7C292122B9B2B39009C2979 /* fixtures */ = {isa = PBXFileReference; lastKnownFileType = folder; path = fixtures; sourceTree = "<group>"; };
 		A7C292162B9B2DE0009C2979 /* DatadogSDKTesting.podspec */ = {isa = PBXFileReference; lastKnownFileType = text; path = DatadogSDKTesting.podspec; sourceTree = "<group>"; };
 		A7CC6D852C07D624003C13BC /* Tags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tags.swift; sourceTree = "<group>"; };
@@ -968,6 +970,7 @@
 				E126DD27253F355F00700A40 /* OutputCapture */,
 				E116D7D925248C280022779D /* Utils */,
 				A71E64512BAA0AA100F2ACA5 /* Config.swift */,
+				A7B70E3B2C5CDE8B00E4AE09 /* Endpoint.swift */,
 				E158E2DB25471DA000DBCD6C /* DDInstrumentationControl.swift */,
 				8194A2242940B33100B4B592 /* DDTestSession.swift */,
 				E10034D92703599D00439C9C /* DDTestModule.swift */,
@@ -1484,6 +1487,7 @@
 				A71E647A2BAA0AA100F2ACA5 /* CircleCI.swift in Sources */,
 				A71E646D2BAA0AA100F2ACA5 /* JenkinsCI.swift in Sources */,
 				A71E646F2BAA0AA100F2ACA5 /* AwsCodeBuildCI.swift in Sources */,
+				A7B70E3C2C5CDE8B00E4AE09 /* Endpoint.swift in Sources */,
 				A7FC26102BA1EC0500067E26 /* SanitizerHelper.swift in Sources */,
 				A7FC25D52BA1EB3F00067E26 /* DDNetworkInstrumentation.swift in Sources */,
 				A71E64792BAA0AA100F2ACA5 /* GitlabCI.swift in Sources */,

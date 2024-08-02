@@ -30,12 +30,10 @@ enum FrameworkLoadHandler {
         if config.isInTestMode {
             // When code coverage is enabled modify profile name so it disables countinuous profiling
             // or we cannot recover coverage manually
-            if config.coverageEnabled || config.itrEnabled,
-               let profilePath = DDTestMonitor.envReader["LLVM_PROFILE_FILE", String.self]
-            {
-                let newEnv = profilePath.replacingOccurrences(of: "%c", with: "")
-                setenv("LLVM_PROFILE_FILE", newEnv, 1)
-                DDTestMonitor.envReader = ProcessEnvironmentReader()
+            if config.coverageEnabled || config.itrEnabled {
+                if DDCoverageHelper.load() {
+                    DDTestMonitor.envReader = ProcessEnvironmentReader()
+                }
             }
             
             if config.isTestObserverNeeded && !config.disableTestInstrumenting {

@@ -126,16 +126,17 @@ class DDCoverageHelper {
     }
     
     static func getLineCodeCoverage() -> Double? {
+        // Check do we have profiling enabled
         guard let llvmProfilePath = profileGetFileName() else { return nil }
-        let profileFolder = URL(fileURLWithPath: llvmProfilePath).deletingLastPathComponent()
+        // Save all profiling data
+        internalWriteProfile()
         // Locate profraw file
+        let profileFolder = URL(fileURLWithPath: llvmProfilePath).deletingLastPathComponent()
         guard let file = FileManager.default
             .enumerator(at: profileFolder, includingPropertiesForKeys: nil, options: .skipsSubdirectoryDescendants)
             .flatMap({ $0.first { ($0 as? URL)?.pathExtension == "profraw" } })
             .map({ $0 as! URL })
         else { return nil }
-        // we found profraw file. Save all data
-        internalWriteProfile()
         // get coverage
         let images = BinaryImages.binaryImagesPath
         let coverage = DDCoverageHelper.getModuleCoverage(profrawFile: file, binaryImagePaths: images)

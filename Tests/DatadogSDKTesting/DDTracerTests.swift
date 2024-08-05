@@ -105,7 +105,7 @@ class DDTracerTests: XCTestCase {
     }
 
     func testEndpointChangeToUS() {
-        setEnv(env: ["DD_ENDPOINT": "US"])
+        setEnv(env: ["DD_SITE": "US"])
 
         let tracer = DDTracer()
         XCTAssertTrue(tracer.endpointURLs().contains("https://citestcycle-intake.datadoghq.com/api/v2/citestcycle"))
@@ -113,7 +113,7 @@ class DDTracerTests: XCTestCase {
     }
 
     func testEndpointChangeToUS3() {
-        setEnv(env: ["DD_ENDPOINT": "us3"])
+        setEnv(env: ["DD_SITE": "us3"])
 
         let tracer = DDTracer()
         XCTAssertTrue(tracer.endpointURLs().contains("https://citestcycle-intake.us3.datadoghq.com/api/v2/citestcycle"))
@@ -121,34 +121,34 @@ class DDTracerTests: XCTestCase {
     }
 
     func testEndpointChangeToUS5() {
-        setEnv(env: ["DD_ENDPOINT": "us5"])
+        setEnv(env: ["DD_SITE": "us5"])
         let tracer = DDTracer()
         XCTAssertTrue(tracer.endpointURLs().contains("https://citestcycle-intake.us5.datadoghq.com/api/v2/citestcycle"))
         XCTAssertTrue(tracer.endpointURLs().contains("https://logs.browser-intake-us5-datadoghq.com/api/v2/logs"))
     }
 
     func testEndpointChangeToEU() {
-        setEnv(env: ["DD_ENDPOINT": "eu"])
+        setEnv(env: ["DD_SITE": "eu"])
         let tracer = DDTracer()
         XCTAssertTrue(tracer.endpointURLs().contains("https://citestcycle-intake.datadoghq.eu/api/v2/citestcycle"))
         XCTAssertTrue(tracer.endpointURLs().contains("https://mobile-http-intake.logs.datadoghq.eu/api/v2/logs"))
     }
     
     func testEndpointChangeToAP1() {
-        setEnv(env: ["DD_ENDPOINT": "ap1"])
+        setEnv(env: ["DD_SITE": "ap1"])
         let tracer = DDTracer()
         XCTAssertTrue(tracer.endpointURLs().contains("https://citestcycle-intake.ap1.datadoghq.com/api/v2/citestcycle"))
         XCTAssertTrue(tracer.endpointURLs().contains("https://logs.browser-intake-ap1-datadoghq.com/api/v2/logs"))
     }
 
 //    func testEndpointChangeToGov() {
-//        DDEnvironmentValues.environment["DD_ENDPOINT"] = "GOV"
+//        DDEnvironmentValues.environment["DD_SITE"] = "GOV"
 //        resetEnvironmentVariables()
 //
 //        let tracer = DDTracer()
 //        XCTAssertTrue(tracer.endpointURLs().contains("https://trace.browser-intake-ddog-gov.com/api/v2/spans"))
 //        XCTAssertTrue(tracer.endpointURLs().contains("https://logs.browser-intake-ddog-gov.com/api/v2/logs"))
-//        DDEnvironmentValues.environment["DD_ENDPOINT"] = nil
+//        DDEnvironmentValues.environment["DD_SITE"] = nil
 //    }
 
     func testEnvironmentContext() {

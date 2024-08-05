@@ -282,7 +282,8 @@ extern "C" const char* LLVMCoverageInfoForProfile(const char* prof_data, const c
     
     std::string result = CodeCoverageTool().getCoverageJson(std::string(prof_data), vectorList);
     char* copied = new char[result.size()+1];
-    result.copy(copied, result.size()+1);
+    result.copy(copied, result.size());
+    copied[result.size()] = '\0';
     
     return copied;
 }

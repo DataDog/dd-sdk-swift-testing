@@ -111,11 +111,15 @@ extension Directory {
     /// Returns `Directory` pointing to `/Library/Caches`.
     /// - `/Library/Caches` is exclduded from iTunes and iCloud backups by default.
     /// - System may delete data in `/Library/Cache` to free up disk space which reduces the impact on devices working under heavy space pressure.
-    static func cache() throws -> Directory {
+    public static func cache() throws -> Directory {
         guard let cachesDirectoryURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else {
             throw ExporterError(description: "Cannot obtain `/Library/Caches/` url.")
         }
         return Directory(url: cachesDirectoryURL)
+    }
+    
+    public static func temporary() -> Directory {
+        Directory(url:  FileManager.default.temporaryDirectory)
     }
 }
 

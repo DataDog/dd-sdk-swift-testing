@@ -56,7 +56,6 @@ internal final class DataUploader: DataUploaderType {
 
         let semaphore = DispatchSemaphore(value: 0)
 
-        
         httpClient.sendWithResult(request: request) { result in
             switch result {
                 case .success(let data):

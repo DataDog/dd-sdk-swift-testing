@@ -53,40 +53,45 @@ final class NTPClock: Clock {
         }
     }
     
-    private var _state: State = .nonsynced
+    private var _state: Synced<State> = Synced(.nonsynced)
     
     func sync() throws {
-        let sema = Thread.isMainThread ? _sync() : DispatchQueue.main.sync { self._sync() }
-        sema?.wait()
+        _state.update { state -> RunLoopWaiter? in
+            switch state {
+            case .synced(_): return nil
+            case .syncing(let w): return w
+            case .nonsynced:
+                let waiter = RunLoopWaiter()
+                state = .syncing(waiter)
+                
+                if Thread.isMainThread {
+                    self._sync(waiter: waiter)
+                } else {
+                    DispatchQueue.main.async { self._sync(waiter: waiter) }
+                }
+                
+                return waiter
+            }
+        }?.wait()
     }
     
     // Should be called on the main thread
-    private func _sync() -> RunLoopWaiter? {
-        switch _state {
-        case .synced(_): return nil
-        case .syncing(let w): return w
-        case .nonsynced:
-            let waiter = RunLoopWaiter()
-            _state = .syncing(waiter)
-            
-            Kronos.Clock.sync(
-                from: Self.datadogNTPServers.randomElement()!,
-                samples: 2, first: nil
-            ) { date, _ in
-                if date != nil {
-                    self._state = .synced({ Kronos.Clock.now! })
-                } else {
-                    self._state = .synced({ Date() })
-                    Log.print("NTP server sync failed")
-                }
-                waiter.signal()
+    private func _sync(waiter: RunLoopWaiter) {
+        Kronos.Clock.sync(
+            from: Self.datadogNTPServers.randomElement()!,
+            samples: 2, first: nil
+        ) { date, _ in
+            if date != nil {
+                self._state.update { $0 = .synced({ Kronos.Clock.now! }) }
+            } else {
+                self._state.update { $0 = .synced({ Date() }) }
+                Log.print("NTP server sync failed")
             }
-            
-            return waiter
+            waiter.signal()
         }
     }
 
-    var now: Date { try! _state.now() }
+    var now: Date { try! _state.value.now() }
 }
 
 final class DateClock: Clock {

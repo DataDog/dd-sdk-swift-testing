@@ -27,8 +27,8 @@ public class DDTestModule: NSObject, Encodable {
     var status: DDTestStatus
     var localization: String
     var configError = false
-    var itrSkipped = false
-    var linesCovered: Double?
+    var itrSkipped: Synced<UInt> = Synced(0)
+    var linesCovered: Double? = nil
 
     private let executionLock = NSLock()
     private var privateCurrentExecutionOrder = 0
@@ -50,7 +50,7 @@ public class DDTestModule: NSObject, Encodable {
 
         let beforeLoadingTime = DDTestMonitor.clock.now
         if DDTestMonitor.instance == nil {
-            DDTestMonitor.baseConfigurationTags[DDTestTags.testBundle] = bundleName
+            DDTestMonitor.baseConfigurationTags[DDTestTags.testModule] = bundleName
             var success = false
             Log.measure(name: "installTestMonitor") {
                 success = DDTestMonitor.installTestMonitor()
@@ -132,8 +132,6 @@ public class DDTestModule: NSObject, Encodable {
         /// Export module event
         let defaultAttributes: [String: String] = [
             DDGenericTags.type: DDTagValues.typeModuleEnd,
-            DDGenericTags.language: "swift",
-            DDDeviceTags.deviceName: DDTestMonitor.env.platform.deviceName,
             DDTestTags.testSuite: bundleName,
             DDTestTags.testFramework: testFramework,
             DDTestTags.testStatus: moduleStatus,
@@ -145,25 +143,27 @@ public class DDTestModule: NSObject, Encodable {
         meta.merge(DDTestMonitor.env.gitAttributes) { _, new in new }
         meta.merge(DDTestMonitor.env.ciAttributes) { _, new in new }
         meta[DDUISettingsTags.uiSettingsModuleLocalization] = localization
-        meta[DDItrTags.itrSkippedTests] = itrSkipped ? "true" : "false"
-        meta[DDTestSessionTags.testSkippingEnabled] = (DDTestMonitor.instance?.itr != nil) ? "true" : "false"
-        meta[DDTestSessionTags.codeCoverageEnabled] = (DDTestMonitor.instance?.coverageHelper != nil) ? "true" : "false"
-        if !itrSkipped {
-            if let llvmProfilePath = DDTestMonitor.envReader.get(env: "LLVM_PROFILE_FILE", String.self) {
-                let profileFolder = URL(fileURLWithPath: llvmProfilePath).deletingLastPathComponent()
-                // Locate proper file
-                if let enumerator = FileManager.default.enumerator(at: profileFolder, includingPropertiesForKeys: nil, options: .skipsSubdirectoryDescendants) {
-                    for element in enumerator {
-                        if let file = element as? URL, file.pathExtension == "profraw" {
-                            let coverage = DDCoverageHelper.getModuleCoverage(profrawFile: file, binaryImagePaths: BinaryImages.binaryImagesPath)
-                            linesCovered = coverage?.data.first?.totals.lines.percent
-                            break
-                        }
-                    }
-                }
-            }
-            metrics[DDTestSuiteVisibilityTags.testCoverageLines] = linesCovered
+        meta[DDTestSessionTags.testCodeCoverageEnabled] = (DDTestMonitor.instance?.coverageHelper != nil) ? "true" : "false"
+        
+        let itrSkipped = self.itrSkipped.value
+        
+        if DDTestMonitor.instance?.itr != nil {
+            meta[DDTestSessionTags.testItrSkippingType] = DDTagValues.typeTest
+            meta[DDTestSessionTags.testSkippingEnabled] = "true"
+            metrics[DDTestSessionTags.testItrSkippingCount] = Double(itrSkipped)
+        } else {
+            meta[DDTestSessionTags.testSkippingEnabled] = "false"
         }
+        
+        if itrSkipped == 0 {
+            meta[DDItrTags.itrSkippedTests] = "false"
+            meta[DDTestSessionTags.testItrSkipped] = "false"
+            metrics[DDTestSessionTags.testCoverageLines] = DDCoverageHelper.getLineCodeCoverage()
+        } else {
+            meta[DDItrTags.itrSkippedTests] = "true"
+            meta[DDTestSessionTags.testItrSkipped] = "true"
+        }
+        
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: DDTestModuleEnvelope(self))
         Log.debug("Exported module_end event moduleId: \(self.id)")
 
@@ -174,6 +174,7 @@ public class DDTestModule: NSObject, Encodable {
         if let coverageHelper = DDTestMonitor.instance?.coverageHelper {
             /// We need to wait for all the traces to be written to the backend before exiting
             coverageHelper.coverageWorkQueue.maxConcurrentOperationCount = ProcessInfo.processInfo.activeProcessorCount
+            coverageHelper.coverageWorkQueue.qualityOfService = .userInteractive
             coverageHelper.coverageWorkQueue.waitUntilAllOperationsAreFinished()
         }
 

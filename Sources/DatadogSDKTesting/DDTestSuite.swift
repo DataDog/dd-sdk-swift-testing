@@ -15,6 +15,7 @@ public class DDTestSuite: NSObject, Encodable {
     var duration: UInt64
     var meta: [String: String] = [:]
     var status: DDTestStatus
+    var unskippable: Bool = false
     var localization: String
 
     init(name: String, module: DDTestModule, startTime: Date? = nil) {
@@ -53,10 +54,7 @@ public class DDTestSuite: NSObject, Encodable {
         }
 
         let defaultAttributes: [String: String] = [
-            DDTags.service: DDTestMonitor.config.service ?? DDTestMonitor.env.git.repositoryName ?? "unknown-swift-repo",
             DDGenericTags.type: DDTagValues.typeSuiteEnd,
-            DDGenericTags.language: "swift",
-            DDDeviceTags.deviceName: DDTestMonitor.env.platform.deviceName,
             DDTestTags.testSuite: name,
             DDTestTags.testFramework: module.testFramework,
             DDTestTags.testStatus: suiteStatus,
@@ -70,11 +68,17 @@ public class DDTestSuite: NSObject, Encodable {
         meta.merge(DDTestMonitor.env.ciAttributes) { _, new in new }
         meta[DDUISettingsTags.uiSettingsSuiteLocalization] = localization
         meta[DDUISettingsTags.uiSettingsModuleLocalization] = module.localization
+        if unskippable { meta[DDItrTags.itrUnskippable] = "true" }
+        
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: DDTestSuiteEnvelope(self))
         Log.debug("Exported suite_end event suiteId: \(self.id)")
     }
+    
+    func testStart(name: String, itr: DDTest.ITRStatus, startTime: Date? = nil) -> DDTest {
+        DDTest(name: name, suite: self, module: module, itr: itr, startTime: startTime)
+    }
 
-    /// Ends the test suite
+    /// Ends the test suite 
     /// - Parameters:
     ///   - endTime: Optional, the time where the suite ended
     @objc(endWithTime:) public func end(endTime: Date? = nil) { internalEnd(endTime: endTime) }
@@ -92,11 +96,11 @@ public class DDTestSuite: NSObject, Encodable {
     ///   - name: name of the suite
     ///   - startTime: Optional, the time where the test started
     @objc public func testStart(name: String, startTime: Date? = nil) -> DDTest {
-        return DDTest(name: name, suite: self, module: module, startTime: startTime)
+        testStart(name: name, itr: .none, startTime: startTime)
     }
 
     @objc public func testStart(name: String) -> DDTest {
-        return testStart(name: name, startTime: nil)
+        testStart(name: name, startTime: nil)
     }
 }
 

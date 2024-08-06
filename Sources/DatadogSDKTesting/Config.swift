@@ -45,10 +45,7 @@ final class Config {
     var excludedBranches: Set<String> = []
     
     /// Datadog Endpoint
-    var endpoint: String? = nil
-    
-    /// The tracer send result to a localhost server (for testing purposes)
-    var localTestEnvironmentPort: Int? = nil
+    var endpoint: Endpoint = .us1
     
     /// Avoids configuring the traces exporter
     var disableTracesExporting: Bool = false
@@ -83,8 +80,6 @@ final class Config {
         service = env[.service].map {
             tracerUnderTesting ? $0 + "-internal-tests" : $0
         }
-        
-        localTestEnvironmentPort = env[.localTestEnvironmentPort]
         
         tags = Config.expand(tags: env[.tags] ?? [:], env: env)
         let customConf = tags.compactMap {
@@ -129,7 +124,15 @@ final class Config {
         
         messageChannelUUID = env[.messageChannelUUID]
         
-        endpoint = env[.site] ?? env[.endpoint]
+        if let endpt = env[.site, Endpoint.self] {
+            endpoint = endpt
+        } else if let custom = env[.customURL, URL.self] {
+            endpoint = .other(testsBaseURL: custom, logsBaseURL: custom)
+        } else if let port = env[.localTestEnvironmentPort, Int.self], port < 65535 {
+            let url = URL(string: "http://localhost:\(port)")!
+            endpoint = .other(testsBaseURL: url, logsBaseURL: url)
+        }
+        
         disableTracesExporting = env[.dontExport] ?? false
         reportHostname = env[.ciVisibilityReportHostname] ?? false
         extraDebugCallStack = env[.traceDebugCallStack] ?? false

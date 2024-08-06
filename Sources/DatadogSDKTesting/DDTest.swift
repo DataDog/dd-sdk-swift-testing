@@ -10,7 +10,6 @@ import Foundation
 @_implementationOnly import SigmaSwiftStatistics
 
 public class DDTest: NSObject {
-    static let testNameRegex = try! NSRegularExpression(pattern: "([\\w]+) ([\\w]+)", options: .caseInsensitive)
     var currentTestExecutionOrder: Int
     var initialProcessId = Int(ProcessInfo.processInfo.processIdentifier)
 
@@ -19,16 +18,18 @@ public class DDTest: NSObject {
 
     var module: DDTestModule
     var suite: DDTestSuite
+    var itr: ITRStatus
 
     private var isUITest: Bool
 
     private var errorInfo: ErrorInfo?
 
-    init(name: String, suite: DDTestSuite, module: DDTestModule, startTime: Date? = nil) {
+    init(name: String, suite: DDTestSuite, module: DDTestModule, itr: ITRStatus, startTime: Date? = nil) {
         let testStartTime = startTime ?? DDTestMonitor.clock.now
         self.name = name
         self.suite = suite
         self.module = module
+        self.itr = itr
         self.isUITest = false
 
         currentTestExecutionOrder = module.currentExecutionOrder
@@ -36,8 +37,6 @@ public class DDTest: NSObject {
         let attributes: [String: String] = [
             DDGenericTags.type: DDTagValues.typeTest,
             DDGenericTags.resource: "\(suite.name).\(name)",
-            DDGenericTags.language: "swift",
-            DDDeviceTags.deviceName: DDTestMonitor.env.platform.deviceName,
             DDTestTags.testName: name,
             DDTestTags.testSuite: suite.name,
             DDTestTags.testFramework: module.testFramework,
@@ -79,13 +78,13 @@ public class DDTest: NSObject {
         if let correlationId = DDTestMonitor.instance?.itr?.correlationId {
             span.setAttribute(key: DDItrTags.itrCorrelationId, value: correlationId)
         }
-
+        
         if let testSpan = span as? RecordEventsReadableSpan {
             let simpleSpan = SimpleSpanData(spanData: testSpan.toSpanData(), moduleStartTime: module.startTime, suiteStartTime: suite.startTime)
             DDCrashes.setCustomData(customData: SimpleSpanSerializer.serializeSpan(simpleSpan: simpleSpan))
         }
-
-        if let coverageHelper = DDTestMonitor.instance?.coverageHelper {
+        
+        if !itr.skipped, let coverageHelper = DDTestMonitor.instance?.coverageHelper {
             coverageHelper.setTest(name: name,
                                    testSessionId: module.sessionId.rawValue,
                                    testSuiteId: suite.id.rawValue,
@@ -152,11 +151,11 @@ public class DDTest: NSObject {
     ///   - status: the status reported for this test
     ///   - endTime: Optional, the time where the test ended
     @objc public func end(status: DDTestStatus, endTime: Date? = nil) {
-        self.end(status: status.itr, endTime: endTime)
+        internalEnd(status: status, endTime: endTime)
     }
 
     @objc public func end(status: DDTestStatus) {
-        self.end(status: status, endTime: nil)
+        end(status: status, endTime: nil)
     }
 
     /// Adds benchmark information to the test, it also changes the test to be of type
@@ -215,27 +214,39 @@ public class DDTest: NSObject {
 }
 
 extension DDTest {
-    func end(status: DDTestStatus.ITR, endTime: Date? = nil) {
+    func internalEnd(status: DDTestStatus, endTime: Date? = nil) {
         let testEndTime = endTime ?? DDTestMonitor.clock.now
         
+        if itr.markedUnskippable {
+            span.setAttribute(key: DDItrTags.itrUnskippable, value: "true")
+        }
         switch status {
         case .pass:
             span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusPass)
+            if itr.forcedRun {
+                span.setAttribute(key: DDItrTags.itrForcedRun, value: "true")
+            }
             span.status = .ok
         case .fail:
             span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusFail)
+            if itr.forcedRun {
+                span.setAttribute(key: DDItrTags.itrForcedRun, value: "true")
+            }
             suite.status = .fail
             module.status = .fail
-            span.status = .error(description: "Test failed")
             setErrorInformation()
-        case .skip(itr: let itr):
+            span.status = .error(description: "Test failed")
+        case .skip:
             span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusSkip)
-            if itr { span.setAttribute(key: DDTestTags.testSkippedByITR, value: true) }
+            if itr.skipped {
+                span.setAttribute(key: DDTestTags.testSkippedByITR, value: "true")
+                module.itrSkipped.update { $0 += 1 }
+            }
             span.status = .ok
         }
 
-        if let coverageHelper = DDTestMonitor.instance?.coverageHelper {
-            coverageHelper.writeProfile()
+        if !itr.skipped, let coverageHelper = DDTestMonitor.instance?.coverageHelper {
+            coverageHelper.writeTestProfile()
             let testSessionId = module.sessionId.rawValue
             let testSuiteId = suite.id.rawValue
             let spanId = span.context.spanId.rawValue
@@ -254,21 +265,16 @@ extension DDTest {
         DDCrashes.setCustomData(customData: Data())
         DDTestMonitor.instance?.currentTest = nil
     }
-}
-
-extension DDTestStatus {
-    enum ITR: Equatable {
-        case pass
-        case fail
-        case skip(itr: Bool)
-    }
     
-    var itr: ITR {
-        switch self {
-        case .pass: return .pass
-        case .fail: return .fail
-        case .skip: return .skip(itr: false)
-        }
+    struct ITRStatus {
+        let canBeSkipped: Bool
+        let markedUnskippable: Bool
+        
+        var forcedRun: Bool { canBeSkipped && markedUnskippable }
+        var skipped: Bool { canBeSkipped && !markedUnskippable }
+        
+        @inlinable
+        static var none: ITRStatus { ITRStatus(canBeSkipped: false, markedUnskippable: false) }
     }
 }
 

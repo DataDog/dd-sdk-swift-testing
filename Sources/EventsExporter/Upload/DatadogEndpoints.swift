@@ -28,96 +28,105 @@ public enum Endpoint {
     /// Staging servers.
     /// Sends data to [app.datadoghq.eu](https://dd.datad0g.com/).
     case staging
-    /// User-defined server.
+    // Datadog path scheme compatible server
+    case other(testsBaseURL: URL, logsBaseURL: URL)
+    /// Fully-custom user-defined server.
     case custom(testsURL: URL, logsURL: URL)
 
     internal var logsURL: URL {
-        let endpoint = "api/v2/logs"
+        let endpoint = "/api/v2/logs"
         switch self {
-            case .us1: return URL(string: "https://logs.browser-intake-datadoghq.com/" + endpoint)!
-            case .us3: return URL(string: "https://logs.browser-intake-us3-datadoghq.com/" + endpoint)!
-            case .us5: return URL(string: "https://logs.browser-intake-us5-datadoghq.com/" + endpoint)!
-            case .eu1: return URL(string: "https://mobile-http-intake.logs.datadoghq.eu/" + endpoint)!
-            case .ap1: return URL(string: "https://logs.browser-intake-ap1-datadoghq.com/" + endpoint)!
-            case .staging: return URL(string: "https://logs.browser-intake-datad0g.com/" + endpoint)!
+            case .us1: return URL(string: "https://logs.browser-intake-datadoghq.com" + endpoint)!
+            case .us3: return URL(string: "https://logs.browser-intake-us3-datadoghq.com" + endpoint)!
+            case .us5: return URL(string: "https://logs.browser-intake-us5-datadoghq.com" + endpoint)!
+            case .eu1: return URL(string: "https://mobile-http-intake.logs.datadoghq.eu" + endpoint)!
+            case .ap1: return URL(string: "https://logs.browser-intake-ap1-datadoghq.com" + endpoint)!
+            case .staging: return URL(string: "https://logs.browser-intake-datad0g.com" + endpoint)!
+            case let .other(testsBaseURL: _, logsBaseURL: url): return url.appendingPathComponent(endpoint)
             case let .custom(_, logsURL: logsUrl): return logsUrl
         }
     }
 
     internal var spansURL: URL {
-        let endpoint = "api/v2/citestcycle"
+        let endpoint = "/api/v2/citestcycle"
         switch self {
-            case .us1: return URL(string: "https://citestcycle-intake.datadoghq.com/" + endpoint)!
-            case .us3: return URL(string: "https://citestcycle-intake.us3.datadoghq.com/" + endpoint)!
-            case .us5: return URL(string: "https://citestcycle-intake.us5.datadoghq.com/" + endpoint)!
-            case .eu1: return URL(string: "https://citestcycle-intake.datadoghq.eu/" + endpoint)!
-            case .ap1: return URL(string: "https://citestcycle-intake.ap1.datadoghq.com/" + endpoint)!
-            case .staging: return URL(string: "https://citestcycle-intake.datad0g.com/" + endpoint)!
+            case .us1: return URL(string: "https://citestcycle-intake.datadoghq.com" + endpoint)!
+            case .us3: return URL(string: "https://citestcycle-intake.us3.datadoghq.com" + endpoint)!
+            case .us5: return URL(string: "https://citestcycle-intake.us5.datadoghq.com" + endpoint)!
+            case .eu1: return URL(string: "https://citestcycle-intake.datadoghq.eu" + endpoint)!
+            case .ap1: return URL(string: "https://citestcycle-intake.ap1.datadoghq.com" + endpoint)!
+            case .staging: return URL(string: "https://citestcycle-intake.datad0g.com" + endpoint)!
+            case let .other(testsBaseURL: url, logsBaseURL: _): return url.appendingPathComponent(endpoint)
             case let .custom(testsURL: testsURL, _): return testsURL
         }
     }
 
     internal var coverageURL: URL {
-        let endpoint = "api/v2/citestcov"
+        let endpoint = "/api/v2/citestcov"
         switch self {
-            case .us1: return URL(string: "https://event-platform-intake.datadoghq.com/" + endpoint)!
-            case .us3: return URL(string: "https://event-platform-intake.us3.datadoghq.com/" + endpoint)!
-            case .us5: return URL(string: "https://event-platform-intake.us5.datadoghq.com/" + endpoint)!
-            case .eu1: return URL(string: "https://event-platform-intake.datadoghq.eu/" + endpoint)!
-            case .ap1: return URL(string: "https://event-platform-intake.ap1.datadoghq.com/" + endpoint)!
-            case .staging: return URL(string: "https://event-platform-intake.datad0g.com/" + endpoint)!
+            case .us1: return URL(string: "https://event-platform-intake.datadoghq.com" + endpoint)!
+            case .us3: return URL(string: "https://event-platform-intake.us3.datadoghq.com" + endpoint)!
+            case .us5: return URL(string: "https://event-platform-intake.us5.datadoghq.com" + endpoint)!
+            case .eu1: return URL(string: "https://event-platform-intake.datadoghq.eu" + endpoint)!
+            case .ap1: return URL(string: "https://event-platform-intake.ap1.datadoghq.com" + endpoint)!
+            case .staging: return URL(string: "https://event-platform-intake.datad0g.com" + endpoint)!
+            case let .other(testsBaseURL: url, logsBaseURL: _): return url.appendingPathComponent(endpoint)
             case let .custom(testsURL: testsURL, _): return testsURL
         }
     }
 
     internal var searchCommitsURL: URL {
-        let endpoint = "api/v2/git/repository/search_commits"
+        let endpoint = "/api/v2/git/repository/search_commits"
         switch self {
-            case .us1: return URL(string: "https://api.datadoghq.com/" + endpoint)!
-            case .us3: return URL(string: "https://api.us3.datadoghq.com/" + endpoint)!
-            case .us5: return URL(string: "https://api.us5.datadoghq.com/" + endpoint)!
-            case .eu1: return URL(string: "https://api.datadoghq.eu/" + endpoint)!
-            case .ap1: return URL(string: "https://api.ap1.datadoghq.com/" + endpoint)!
-            case .staging: return URL(string: "https://api.datad0g.com/" + endpoint)!
+            case .us1: return URL(string: "https://api.datadoghq.com" + endpoint)!
+            case .us3: return URL(string: "https://api.us3.datadoghq.com" + endpoint)!
+            case .us5: return URL(string: "https://api.us5.datadoghq.com" + endpoint)!
+            case .eu1: return URL(string: "https://api.datadoghq.eu" + endpoint)!
+            case .ap1: return URL(string: "https://api.ap1.datadoghq.com" + endpoint)!
+            case .staging: return URL(string: "https://api.datad0g.com" + endpoint)!
+            case let .other(testsBaseURL: url, logsBaseURL: _): return url.appendingPathComponent(endpoint)
             case let .custom(testsURL: testsURL, _): return testsURL
         }
     }
 
     internal var skippableTestsURL: URL {
-        let endpoint = "api/v2/ci/tests/skippable"
+        let endpoint = "/api/v2/ci/tests/skippable"
         switch self {
-            case .us1: return URL(string: "https://api.datadoghq.com/" + endpoint)!
-            case .us3: return URL(string: "https://api.us3.datadoghq.com/" + endpoint)!
-            case .us5: return URL(string: "https://api.us5.datadoghq.com/" + endpoint)!
-            case .eu1: return URL(string: "https://api.datadoghq.eu/" + endpoint)!
-            case .ap1: return URL(string: "https://api.ap1.datadoghq.com/" + endpoint)!
-            case .staging: return URL(string: "https://api.datad0g.com/" + endpoint)!
+            case .us1: return URL(string: "https://api.datadoghq.com" + endpoint)!
+            case .us3: return URL(string: "https://api.us3.datadoghq.com" + endpoint)!
+            case .us5: return URL(string: "https://api.us5.datadoghq.com" + endpoint)!
+            case .eu1: return URL(string: "https://api.datadoghq.eu" + endpoint)!
+            case .ap1: return URL(string: "https://api.ap1.datadoghq.com" + endpoint)!
+            case .staging: return URL(string: "https://api.datad0g.com" + endpoint)!
+            case let .other(testsBaseURL: url, logsBaseURL: _): return url.appendingPathComponent(endpoint)
             case let .custom(testsURL: testsURL, _): return testsURL
         }
     }
 
     internal var packfileURL: URL {
-        let endpoint = "api/v2/git/repository/packfile"
+        let endpoint = "/api/v2/git/repository/packfile"
         switch self {
-            case .us1: return URL(string: "https://api.datadoghq.com/" + endpoint)!
-            case .us3: return URL(string: "https://api.us3.datadoghq.com/" + endpoint)!
-            case .us5: return URL(string: "https://api.us5.datadoghq.com/" + endpoint)!
-            case .eu1: return URL(string: "https://api.datadoghq.eu/" + endpoint)!
-            case .ap1: return URL(string: "https://api.ap1.datadoghq.com/" + endpoint)!
-            case .staging: return URL(string: "https://api.datad0g.com/" + endpoint)!
+            case .us1: return URL(string: "https://api.datadoghq.com" + endpoint)!
+            case .us3: return URL(string: "https://api.us3.datadoghq.com" + endpoint)!
+            case .us5: return URL(string: "https://api.us5.datadoghq.com" + endpoint)!
+            case .eu1: return URL(string: "https://api.datadoghq.eu" + endpoint)!
+            case .ap1: return URL(string: "https://api.ap1.datadoghq.com" + endpoint)!
+            case .staging: return URL(string: "https://api.datad0g.com" + endpoint)!
+            case let .other(testsBaseURL: url, logsBaseURL: _): return url.appendingPathComponent(endpoint)
             case let .custom(testsURL: testsURL, _): return testsURL
         }
     }
 
     internal var itrSettingsURL: URL {
-        let endpoint = "api/v2/libraries/tests/services/setting"
+        let endpoint = "/api/v2/libraries/tests/services/setting"
         switch self {
-            case .us1: return URL(string: "https://api.datadoghq.com/" + endpoint)!
-            case .us3: return URL(string: "https://api.us3.datadoghq.com/" + endpoint)!
-            case .us5: return URL(string: "https://api.us5.datadoghq.com/" + endpoint)!
-            case .eu1: return URL(string: "https://api.datadoghq.eu/" + endpoint)!
-            case .ap1: return URL(string: "https://api.ap1.datadoghq.com/" + endpoint)!
-            case .staging: return URL(string: "https://api.datad0g.com/" + endpoint)!
+            case .us1: return URL(string: "https://api.datadoghq.com" + endpoint)!
+            case .us3: return URL(string: "https://api.us3.datadoghq.com" + endpoint)!
+            case .us5: return URL(string: "https://api.us5.datadoghq.com" + endpoint)!
+            case .eu1: return URL(string: "https://api.datadoghq.eu" + endpoint)!
+            case .ap1: return URL(string: "https://api.ap1.datadoghq.com" + endpoint)!
+            case .staging: return URL(string: "https://api.datad0g.com" + endpoint)!
+            case let .other(testsBaseURL: url, logsBaseURL: _): return url.appendingPathComponent(endpoint)
             case let .custom(testsURL: testsURL, _): return testsURL
         }
     }

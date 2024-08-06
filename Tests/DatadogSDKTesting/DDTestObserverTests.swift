@@ -23,7 +23,7 @@ internal class DDTestObserverTests: XCTestCase {
     }
 
     override func tearDown() {
-        XCTestObservationCenter.shared.removeTestObserver(testObserver)
+        testObserver.stopObserving()
         testObserver = nil
         DDTestMonitor._env_recreate()
         XCTAssertNil(DDTracer.activeSpan)
@@ -53,7 +53,6 @@ internal class DDTestObserverTests: XCTestCase {
         let spanData = span.toSpanData()
 
         XCTAssertEqual(spanData.name, "XCTest.test")
-        XCTAssertEqual(spanData.attributes[DDGenericTags.language]?.description, "swift")
         XCTAssertEqual(spanData.attributes[DDGenericTags.type]?.description, DDTagValues.typeTest)
         XCTAssertEqual(spanData.attributes[DDGenericTags.resource]?.description, "\(testSuite).\(testName)")
         XCTAssertEqual(spanData.attributes[DDTestTags.testName]?.description, testName)

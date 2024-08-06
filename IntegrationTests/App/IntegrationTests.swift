@@ -5,32 +5,41 @@
  */
 
 @_implementationOnly import OpenTelemetryApi
+import DatadogSDKTesting
 import XCTest
 
 let tracer = OpenTelemetry.instance.tracerProvider.get(instrumentationName: "Custom Tracer", instrumentationVersion: nil)
 
-class BasicPass: XCTestCase {
+class UnskippableTestCase: XCTestCase, ExtendableTaggedType {
+    static func extendableTypeTags() -> ExtendableTypeTags {
+        withTagger { tagger in
+            tagger.set(type: .itrSkippable, to: false)
+        }
+    }
+}
+
+class BasicPass: UnskippableTestCase {
     func testBasicPass() throws {
         print("BasicPass")
         XCTAssert(true)
     }
 }
 
-class BasicSkip: XCTestCase {
+class BasicSkip: UnskippableTestCase {
     func testBasicSkip() throws {
         print("BasicSkip")
         try XCTSkipIf(true)
     }
 }
 
-class BasicError: XCTestCase {
+class BasicError: UnskippableTestCase {
     func testBasicError() throws {
         print("BasicError")
         XCTAssert(false)
     }
 }
 
-class AsynchronousPass: XCTestCase {
+class AsynchronousPass: UnskippableTestCase {
     func testAsynchronousPass() throws {
         print("AsynchronousPass")
         let expec = expectation(description: "AsynchronousPass")
@@ -50,7 +59,7 @@ class AsynchronousPass: XCTestCase {
     }
 }
 
-class AsynchronousSkip: XCTestCase {
+class AsynchronousSkip: UnskippableTestCase {
     func testAsynchronousSkip() throws {
         print("AsynchronousSkip")
         let expec = expectation(description: "AsynchronousPass")
@@ -71,7 +80,7 @@ class AsynchronousSkip: XCTestCase {
     }
 }
 
-class AsynchronousError: XCTestCase {
+class AsynchronousError: UnskippableTestCase {
     func testAsynchronousError() throws {
         print("AsynchronousError")
         let expec = expectation(description: "AsynchronousPass")
@@ -92,7 +101,7 @@ class AsynchronousError: XCTestCase {
     }
 }
 
-class Benchmark: XCTestCase {
+class Benchmark: UnskippableTestCase {
     func testBenchmark() throws {
         measure {
             print("Benchmark")
@@ -100,7 +109,7 @@ class Benchmark: XCTestCase {
     }
 }
 
-class NetworkIntegration: XCTestCase {
+class NetworkIntegration: UnskippableTestCase {
     func testNetworkIntegration() throws {
         print("NetworkIntegration")
 

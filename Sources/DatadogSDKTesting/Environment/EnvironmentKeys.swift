@@ -29,7 +29,7 @@ internal enum EnvironmentKey: String, CaseIterable {
     case disableCrashHandler = "DD_DISABLE_CRASH_HANDLER"
     case disableMachCrashHandler = "DD_DISABLE_MACH_CRASH_HANDLER"
     case site = "DD_SITE"
-    case endpoint = "DD_ENDPOINT"
+    case customURL = "DD_CIVISIBILITY_AGENTLESS_URL"
     case dontExport = "DD_DONT_EXPORT"
     case traceDebug = "DD_TRACE_DEBUG"
     case traceDebugCallStack = "DD_TRACE_DEBUG_CALLSTACK"
@@ -59,7 +59,7 @@ extension EnvironmentKey {
          .enableNetworkCallStackSymbolicated, .disableRumIntegration, .maxPayloadSize,
          .enableCiVisibilityLogs, .enableStdoutInstrumentation, .enableStderrInstrumentation,
          .disableSdkIosIntegration, .disableCrashHandler, .disableMachCrashHandler,
-         .site, .endpoint, .dontExport, .traceDebug, .traceDebugCallStack, .disableNTPClock]
+         .site, .customURL, .dontExport, .traceDebug, .traceDebugCallStack, .disableNTPClock]
     }
 }
 

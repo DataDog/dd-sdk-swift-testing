@@ -26,8 +26,8 @@ public extension DynamicTag where V == Bool {
 }
 
 final class UnskippableMethodChecker {
-    let allUnskippable: Bool
-    let mSkippable: [String: Bool]
+    let isSuiteUnskippable: Bool
+    let skippableMethods: [String: Bool]
     
     init(for type: XCTestCase.Type) {
         if let tags = type.maybeTypeTags {
@@ -36,17 +36,17 @@ final class UnskippableMethodChecker {
                 .compactMap { tag in
                     tags[tag].map { (tag.to, $0) }
                 }
-            mSkippable = Dictionary(uniqueKeysWithValues: pairs)
-            allUnskippable = tags.tagged(dynamic: .itrSkippableType).first
+            skippableMethods = Dictionary(uniqueKeysWithValues: pairs)
+            isSuiteUnskippable = tags.tagged(dynamic: .itrSkippableType).first
                 .flatMap { tags[$0] }.map { !$0 } ?? false
         } else {
-            allUnskippable = false
-            mSkippable = [:]
+            isSuiteUnskippable = false
+            skippableMethods = [:]
         }
     }
     
     @inlinable func canSkip(method name: String) -> Bool {
-        mSkippable[name] ?? !allUnskippable
+        skippableMethods[name] ?? !isSuiteUnskippable
     }
 }
 

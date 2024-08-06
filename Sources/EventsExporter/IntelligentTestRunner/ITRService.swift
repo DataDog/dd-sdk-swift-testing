@@ -28,11 +28,12 @@ internal class ITRService {
                     appVersion: exporterConfiguration.version,
                     device: Device.current
                 ),
+                .contentTypeHeader(contentType: .applicationJSON),
                 .apiKeyHeader(apiKey: config.apiKey),
                 .traceIDHeader(traceID: config.exporterId),
                 .parentSpanIDHeader(parentSpanID: config.exporterId),
                 .samplingPriorityHeader()
-            ] // + (configuration.payloadCompression ? [HTTPHeader.contentEncodingHeader(contentEncoding: .deflate)] : [])
+            ] //+ (exporterConfiguration.payloadCompression ? [HTTPHeader.contentEncodingHeader(contentEncoding: .deflate)] : [])
         )
 
         packFileRequestBuilder = MultipartRequestBuilder(
@@ -60,6 +61,7 @@ internal class ITRService {
                     appVersion: exporterConfiguration.version,
                     device: Device.current
                 ),
+                .contentTypeHeader(contentType: .applicationJSON),
                 .apiKeyHeader(apiKey: config.apiKey),
                 .traceIDHeader(traceID: config.exporterId),
                 .parentSpanIDHeader(parentSpanID: config.exporterId),
@@ -76,6 +78,7 @@ internal class ITRService {
                     appVersion: exporterConfiguration.version,
                     device: Device.current
                 ),
+                .contentTypeHeader(contentType: .applicationJSON),
                 .apiKeyHeader(apiKey: config.apiKey),
                 .traceIDHeader(traceID: config.exporterId),
                 .parentSpanIDHeader(parentSpanID: config.exporterId),

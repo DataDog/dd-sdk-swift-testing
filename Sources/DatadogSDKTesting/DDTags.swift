@@ -97,9 +97,9 @@ internal enum DDTestSessionTags {
     static let testCoverageLines = "test.code_coverage.lines_pct"
     static let testItrSkippingType = "test.itr.tests_skipping.type"
     static let testItrSkippingCount = "test.itr.tests_skipping.count"
+    static let testItrSkipped = "test.itr.tests_skipping.tests_skipped"
     static let testToolchain = "test.toolchain"
 }
-
 
 internal enum DDGitTags {
     static let gitRepository = "git.repository_url"
@@ -195,6 +195,7 @@ internal enum DDItrTags {
     static let itrCorrelationId = "itr_correlation_id"
     static let itrUnskippable = "test.itr.unskippable"
     static let itrForcedRun = "test.itr.forced_run"
+    static let itrSkippedTests = "_dd.ci.itr.tests_skipped"
 }
 
 internal enum DDCFMessageID {

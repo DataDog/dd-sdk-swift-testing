@@ -62,7 +62,7 @@ build/%/appletvos.xcarchive build/%/appletvsimulator.xcarchive
 		mkdir -p $(PWD)/build/symbols/$*/$$name ;\
 		cp -R $$archive/dSYMs/*.dSYM $(PWD)/build/symbols/$*/$$name/ ;\
 	done
-	@cd $(PWD)/build/symbols/$*; zip -ry ../$*.symbols.zip ./*
+	@cd $(PWD)/build/symbols/$*; zip -ry ../$*.zip ./*
 
 build: build/xcframework/DatadogSDKTesting.zip build/symbols/DatadogSDKTesting.zip
 
@@ -77,10 +77,12 @@ set_hash:
 	sed -i "" "s|:sha256 =>.*|:sha256 => '$(HASH)'|g" DatadogSDKTesting.podspec
 	sed -i "" "s|let[[:blank:]]*relaseChecksum.*|let relaseChecksum = \"$(HASH)\"|g" Package.swift
 
-release: set_version build set_hash
+release:
+	@$(MAKE) set_version
+	@$(MAKE) build
+	@$(MAKE) set_hash
 
 github: release
-	@:$(call check_defined, version, release version)
 	@:$(call check_defined, GH_TOKEN, GitHub token)
 	# Upload binary file to GitHub release
 	brew list gh &>/dev/null || brew install gh

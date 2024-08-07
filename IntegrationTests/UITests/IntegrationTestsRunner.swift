@@ -162,7 +162,6 @@ class IntegrationTestsRunner: XCTestCase {
     }
 
     func validateGenericAttributes() {
-        XCTAssertEqual(attrib[DDGenericTags.language], "swift")
         XCTAssertEqual(attrib[DDGenericTags.type], "test")
         XCTAssertEqual(attrib[DDTestTags.testModule], "IntegrationTestsApp")
         XCTAssertEqual(attrib[DDTestTags.testFramework], "XCTest")

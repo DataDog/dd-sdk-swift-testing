@@ -84,7 +84,6 @@ github: release
 	@:$(call check_defined, GITHUB_TOKEN, GitHub token)
 	# Upload binary file to GitHub release
 	brew list gh &>/dev/null || brew install gh
-	gh auth login
 	# upload xcframework
 	gh release upload $(version) ./build/xcframework/DatadogSDKTesting.zip --clobber
 	# upload symbols

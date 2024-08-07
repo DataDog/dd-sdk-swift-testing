@@ -12,7 +12,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
     - name: Select Xcode 14
-      run: sudo xcode-select --switch /Applications/Xcode_14.1.app
+      run: sudo xcode-select --switch /Applications/Xcode_14.3.1.app
     - name: Test
       run: make XC_LOG=tests tests
     - name: Attach Xcode logs
@@ -29,10 +29,10 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
     - name: Select Xcode 14
-      run: sudo xcode-select --switch /Applications/Xcode_14.1.app
+      run: sudo xcode-select --switch /Applications/Xcode_14.3.1.app
     - name: Build and upload XCFrameworks, recreate tag
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: make XC_LOG=archive version=${{ github.event.release.tag_name }} github
     - name: Attach Xcode logs
       if: '!cancelled()'

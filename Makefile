@@ -81,7 +81,7 @@ release: set_version build set_hash
 
 github: release
 	@:$(call check_defined, version, release version)
-	@:$(call check_defined, GITHUB_TOKEN, GitHub token)
+	@:$(call check_defined, GH_TOKEN, GitHub token)
 	# Upload binary file to GitHub release
 	brew list gh &>/dev/null || brew install gh
 	# upload xcframework

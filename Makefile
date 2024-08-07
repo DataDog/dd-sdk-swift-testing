@@ -84,12 +84,12 @@ github: release
 	@:$(call check_defined, GITHUB_TOKEN, GitHub token)
 	# Upload binary file to GitHub release
 	brew list gh &>/dev/null || brew install gh
-	@echo $(GITHUB_TOKEN) | gh auth login --with-token
+	gh auth login
 	# upload xcframework
 	gh release upload $(version) ./build/xcframework/DatadogSDKTesting.zip --clobber
 	# upload symbols
-	rm -f build/symbols/DatadogSDKTesting.symbols.zip
-	mv build/symbols/DatadogSDKTesting.zip build/symbols/DatadogSDKTesting.symbols.zip
+	@rm -f build/symbols/DatadogSDKTesting.symbols.zip
+	@mv build/symbols/DatadogSDKTesting.zip build/symbols/DatadogSDKTesting.symbols.zip
 	gh release upload $(version) ./build/symbols/DatadogSDKTesting.symbols.zip --clobber
 	# Commit updated xcodeproj, Package.swift and DatadogSDKTesting.podspec
 	git add Package.swift DatadogSDKTesting.podspec DatadogSDKTesting.xcodeproj/project.pbxproj

@@ -2,8 +2,8 @@ Pod::Spec.new do |s|
   s.name          = 'DatadogSDKTesting'
   s.module_name   = 'DatadogSDKTesting'
   s.version       = '2.5.0-alpha1'
-  s.summary       = 'Swift testing framework for Datadog's CI Visibility product'
-  s.license       = { :type => 'Apache', :file => 'LICENSE' }
+  s.summary       = "Swift testing framework for Datadog's CI Visibility product"
+  s.license       = 'Apache 2.0'
   s.homepage      = 'https://www.datadoghq.com'
   s.social_media_url = 'https://twitter.com/datadoghq'
   

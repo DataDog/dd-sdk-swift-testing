@@ -84,6 +84,7 @@ release:
 
 github: release
 	@:$(call check_defined, GH_TOKEN, GitHub token)
+	@:$(call check_defined, COCOAPODS_TRUNK_TOKEN, CocoaPods trunk token)
 	# Upload binary file to GitHub release
 	brew list gh &>/dev/null || brew install gh
 	# upload xcframework
@@ -98,6 +99,8 @@ github: release
 	git commit -m "Updated binary package version to $(version)"
 	git tag -f $(version)
 	git push -f --tags origin update-binary
+	# Push Podfile
+	pod trunk push --allow-warnings DatadogSDKTesting.podspec
 
 clean:
 	rm -rf ./build

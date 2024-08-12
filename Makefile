@@ -68,7 +68,7 @@ build: build/xcframework/DatadogSDKTesting.zip build/symbols/DatadogSDKTesting.z
 
 set_version:
 	@:$(call check_defined, version, release version)
-	sed -i "" "s|MARKETING_VERSION =.*|MARKETING_VERSION = $(version);|g" DatadogSDKTesting.xcodeproj/project.pbxproj
+	sed -i "" "s|MARKETING_VERSION =.*|MARKETING_VERSION = \"$(version)\";|g" DatadogSDKTesting.xcodeproj/project.pbxproj
 	sed -i "" "s|s\.version\([[:blank:]]*\)=.*|s.version\1= '$(version)'|g" DatadogSDKTesting.podspec
 	sed -i "" "s|let[[:blank:]]*releaseVersion.*|let releaseVersion = \"$(version)\"|g" Package.swift
 

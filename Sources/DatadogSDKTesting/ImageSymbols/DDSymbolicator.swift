@@ -6,7 +6,7 @@
 
 import Foundation
 import MachO
-import CDatadogSDKTesting
+@_implementationOnly import CDatadogSDKTesting
 @_implementationOnly import EventsExporter
 
 enum DDSymbolicator {

@@ -20,8 +20,8 @@ endef
 define xcarchive
 	$(if $5,\
 		set -o pipefail; xcodebuild archive -scheme $1 -sdk $2 -destination $3 -archivePath \
-			build/$1/$4.xcarchive SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES | tee $1-$4-$5.log | xcbeautify,\
-		xcodebuild archive -scheme $1 -sdk $2 -destination $3 -archivePath build/$1/$4.xcarchive SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES)
+			build/$1/$4.xcarchive SKIP_INSTALL=NO | tee $1-$4-$5.log | xcbeautify,\
+		xcodebuild archive -scheme $1 -sdk $2 -destination $3 -archivePath build/$1/$4.xcarchive SKIP_INSTALL=NO)
 endef
 
 build/%/iphoneos.xcarchive:

@@ -4,9 +4,9 @@
  * Copyright 2020-Present Datadog, Inc.
  */
 
-@_implementationOnly import EventsExporter
 import Foundation
-import CDatadogSDKTesting
+@_implementationOnly import EventsExporter
+@_implementationOnly import CDatadogSDKTesting
 
 typealias cFunc = @convention(c) () -> Void
 

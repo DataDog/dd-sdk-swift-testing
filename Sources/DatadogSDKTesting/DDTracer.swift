@@ -80,7 +80,8 @@ internal class DDTracer {
             payloadCompression: payloadCompression,
             performancePreset: .instantDataDelivery,
             exporterId: String(SpanId.random().rawValue),
-            logger: Log.instance
+            logger: Log.instance,
+            debugNetwork: conf.extraDebugNetwork
         )
         eventsExporter = try? EventsExporter(config: exporterConfiguration)
 

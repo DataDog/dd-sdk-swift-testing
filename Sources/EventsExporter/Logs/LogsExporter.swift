@@ -70,7 +70,8 @@ internal class LogsExporter {
         logsUpload = FeatureUpload(featureName: "logsUpload",
                                    storage: logsStorage,
                                    requestBuilder: requestBuilder,
-                                   performance: configuration.performancePreset)
+                                   performance: configuration.performancePreset,
+                                   debug: config.debugNetwork)
     }
 
     func exportLogs(fromSpan span: SpanData) {

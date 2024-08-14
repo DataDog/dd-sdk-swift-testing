@@ -65,7 +65,8 @@ internal class SpansExporter {
         spansUpload = FeatureUpload(featureName: "spansUpload",
                                     storage: spansStorage,
                                     requestBuilder: requestBuilder,
-                                    performance: configuration.performancePreset)
+                                    performance: configuration.performancePreset,
+                                    debug: config.debugNetwork)
     }
 
     func exportSpan(span: SpanData) {

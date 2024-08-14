@@ -35,8 +35,10 @@ public struct ExporterConfiguration {
     var exporterId: String
     
     var logger: Logger
+    
+    var debugNetwork: Bool
 
-    public init(serviceName: String, libraryVersion: String, applicationName: String, applicationVersion: String, environment: String, hostname: String?, apiKey: String, endpoint: Endpoint, payloadCompression: Bool = true, source: String = "ios", performancePreset: PerformancePreset = .default, exporterId: String, logger: Logger) {
+    public init(serviceName: String, libraryVersion: String, applicationName: String, applicationVersion: String, environment: String, hostname: String?, apiKey: String, endpoint: Endpoint, payloadCompression: Bool = true, source: String = "ios", performancePreset: PerformancePreset = .default, exporterId: String, logger: Logger, debugNetwork: Bool) {
         self.serviceName = serviceName
         self.libraryVersion = libraryVersion
         self.applicationName = applicationName
@@ -50,5 +52,6 @@ public struct ExporterConfiguration {
         self.performancePreset = performancePreset
         self.exporterId = exporterId
         self.logger = logger
+        self.debugNetwork = debugNetwork
     }
 }

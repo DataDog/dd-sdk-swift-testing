@@ -65,6 +65,7 @@ final class Config {
     
     /// The framework has been launched with extra debug information
     var extraDebug: Bool = false
+    var extraDebugNetwork: Bool = false
     var extraDebugCallStack: Bool = false
     
     init(env: EnvironmentReader? = nil) {
@@ -136,7 +137,8 @@ final class Config {
         disableTracesExporting = env[.dontExport] ?? false
         reportHostname = env[.ciVisibilityReportHostname] ?? false
         extraDebugCallStack = env[.traceDebugCallStack] ?? false
-        extraDebug = env[.traceDebug] ?? extraDebugCallStack
+        extraDebugNetwork = env[.traceDebugNetwork] ?? false
+        extraDebug = env[.traceDebug] ?? extraDebugCallStack || extraDebugNetwork
         
         disableMachCrashHandler = env[.disableMachCrashHandler] ?? extraDebug
         

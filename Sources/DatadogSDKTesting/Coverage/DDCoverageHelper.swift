@@ -59,7 +59,8 @@ class DDCoverageHelper {
     }
 
     func getURLForTest(name: String, testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64) -> URL {
-        let finalName = String(testSessionId) + "__" + String(testSuiteId) + "__" + String(spanId) + "__" + name
+        let cleanedName = name.components(separatedBy: Self.nameNotAllowed).joined(separator: "+")
+        let finalName = "\(testSessionId)__\(testSuiteId)__\(spanId)__\(cleanedName)"
         return storagePath.url.appendingPathComponent(finalName).appendingPathExtension("profraw")
     }
 
@@ -145,9 +146,12 @@ class DDCoverageHelper {
     
     static func load() -> Bool {
         guard let llvmProfilePath = profileGetFileName() else { return false }
+        Log.debug("DDCoverageHelper patching environment: \(llvmProfilePath)")
         let newEnv = llvmProfilePath.replacingOccurrences(of: "%c", with: "")
         setenv("LLVM_PROFILE_FILE", newEnv, 1)
         Log.debug("DDCoverageHelper patched environment")
         return true
     }
+    
+    private static let nameNotAllowed: CharacterSet = .alphanumerics.union(.init(charactersIn: "-._")).inverted
 }

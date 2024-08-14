@@ -87,22 +87,22 @@ internal class ITRService {
         )
 
         searchCommitUploader = DataUploader(
-            httpClient: HTTPClient(),
+            httpClient: HTTPClient(debug: config.debugNetwork),
             requestBuilder: searchCommitRequestBuilder
         )
 
         packFileUploader = DataUploader(
-            httpClient: HTTPClient(),
+            httpClient: HTTPClient(debug: config.debugNetwork),
             requestBuilder: packFileRequestBuilder
         )
 
         skippableTestsUploader = DataUploader(
-            httpClient: HTTPClient(),
+            httpClient: HTTPClient(debug: config.debugNetwork),
             requestBuilder: skippableTestsRequestBuilder
         )
 
         itrConfigUploader = DataUploader(
-            httpClient: HTTPClient(),
+            httpClient: HTTPClient(debug: config.debugNetwork),
             requestBuilder: itrConfigRequestBuilder
         )
     }
@@ -113,7 +113,7 @@ internal class ITRService {
               let response = searchCommitUploader.uploadWithResponse(data: jsonData),
               let commitResponse = try? JSONDecoder().decode(CommitResponseFormat.self, from: response)
         else {
-            Log.debug("CommitRequesFormat payload: \(commitPayload.jsonString)")
+            Log.debug("CommitRequestFormat payload: \(commitPayload.jsonString)")
             Log.debug("searchCommits invalid response")
             return []
         }

@@ -11,9 +11,10 @@ extension XCTestCase {
     var ddRealTest: XCTestCase { self }
     
     var testId: (suite: String, test: String) {
-        let parts = name.trimmingCharacters(in: Self._trimmedCharacters).split(separator: " ")
-        assert(parts.count == 2, "unknown test name format \(name)")
-        return (String(parts[0]), String(parts[1]))
+        let cleaned = name.trimmingCharacters(in: Self._trimmedCharacters)
+        let index = cleaned.firstIndex(of: " ")
+        precondition(index != nil, "unknown test name format \(name)")
+        return (String(cleaned[..<index!]), String(cleaned[cleaned.index(after: index!)...]))
     }
     
     private static let _trimmedCharacters: CharacterSet = CharacterSet(charactersIn: "-[]")

@@ -52,7 +52,6 @@ internal class DataUploadWorker: DataUploadWorkerType {
                 // Delete or keep batch depending on the upload status
                 if uploadStatus.needsRetry {
                     self.delay.increase()
-
                 } else {
                     self.fileReader.markBatchAsRead(batch)
                     self.delay.decrease()

@@ -34,10 +34,11 @@ internal struct FeatureUpload {
         featureName: String,
         storage: FeatureStorage,
         requestBuilder: RequestBuilder,
-        performance: PerformancePreset
+        performance: PerformancePreset,
+        debug: Bool
     ) {
         let dataUploader = DataUploader(
-            httpClient: HTTPClient(),
+            httpClient: HTTPClient(debug: debug),
             requestBuilder: requestBuilder
         )
 

@@ -21,7 +21,7 @@ public class EventsExporter: SpanExporter {
         logsExporter = try LogsExporter(config: configuration)
         coverageExporter = try CoverageExporter(config: configuration)
         itrService = try ITRService(config: configuration)
-        Log.debug("EventsExporter created: \(spansExporter.runtimeId)")
+        Log.debug("EventsExporter created: \(spansExporter.runtimeId), endpoint: \(config.endpoint)")
     }
 
     public func export(spans: [SpanData], explicitTimeout: TimeInterval?) -> SpanExporterResultCode {

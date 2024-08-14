@@ -6,7 +6,7 @@
 
 import Foundation
 
-public enum Endpoint {
+public enum Endpoint: CustomDebugStringConvertible {
     /// US based servers.
     /// Sends data to [app.datadoghq.com](https://app.datadoghq.com/).
     case us1
@@ -128,6 +128,19 @@ public enum Endpoint {
             case .staging: return URL(string: "https://api.datad0g.com" + endpoint)!
             case let .other(testsBaseURL: url, logsBaseURL: _): return url.appendingPathComponent(endpoint)
             case let .custom(testsURL: testsURL, _): return testsURL
+        }
+    }
+    
+    public var debugDescription: String {
+        switch self {
+        case .us1: return "us1"
+        case .us3: return "us3"
+        case .us5: return "us5"
+        case .eu1: return "eu1"
+        case .ap1: return "ap1"
+        case .staging: return "staging"
+        case let .other(testsBaseURL: tUrl, logsBaseURL: lUrl): return "other(tests: \(tUrl), logs: \(lUrl))"
+        case let .custom(testsURL: tUrl, logsURL: lUrl): return "custom(tests: \(tUrl), logs: \(lUrl))"
         }
     }
 }

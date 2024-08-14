@@ -52,7 +52,8 @@ internal class CoverageExporter {
         coverageUpload = FeatureUpload(featureName: "coverageUpload",
                                        storage: coverageStorage,
                                        requestBuilder: requestBuilder,
-                                       performance: configuration.performancePreset)
+                                       performance: configuration.performancePreset,
+                                       debug: config.debugNetwork)
         requestBuilder.addFieldsCallback = addCoverage
     }
 

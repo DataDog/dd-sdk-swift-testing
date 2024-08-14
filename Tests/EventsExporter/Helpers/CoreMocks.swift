@@ -128,7 +128,7 @@ extension SingleRequestBuilder: AnyMockable {
 
 extension HTTPClient {
     static func mockAny() -> HTTPClient {
-        return HTTPClient(session: URLSession(configuration: URLSessionConfiguration.default))
+        return HTTPClient(session: URLSession(configuration: URLSessionConfiguration.default), debug: false)
     }
 }
 

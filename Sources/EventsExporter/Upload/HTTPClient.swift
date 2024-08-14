@@ -54,8 +54,7 @@ internal final class HTTPClient {
                 Log.debug("[NET] => \(request)\n\tERR: \(err)\n\tRES: \(res)\n\tDATA: \(data))")
                 return
             }
-            let resData = data.flatMap{ String(data: $0, encoding: .utf8) }
-            var log = """
+            let log = """
             [NET] => \(request.url!)
                 RES CODE: \(httpres.statusCode)
                 ERROR: \(error?.localizedDescription ?? "")

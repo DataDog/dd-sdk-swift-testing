@@ -50,7 +50,8 @@ class SpansExporterTests: XCTestCase {
                                                   ),
                                                   performancePreset: .instantDataDelivery,
                                                   exporterId: "exporterId",
-                                                  logger: Log())
+                                                  logger: Log(),
+                                                  debugNetwork: false)
 
         let spansExporter = try SpansExporter(config: configuration)
 

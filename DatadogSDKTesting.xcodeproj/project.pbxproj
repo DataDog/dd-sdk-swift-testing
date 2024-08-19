@@ -2435,10 +2435,10 @@
 		};
 		E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/ypopovych/opentelemetry-swift.git";
+			repositoryURL = "https://github.com/open-telemetry/opentelemetry-swift.git";
 			requirement = {
-				branch = main;
-				kind = branch;
+				kind = revision;
+				revision = f745a6435bad737dcb29807cd451326f63327a87;
 			};
 		};
 		E141EB5727EB44400057D747 /* XCRemoteSwiftPackageReference "swift-nio" */ = {

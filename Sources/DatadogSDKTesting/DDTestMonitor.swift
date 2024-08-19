@@ -31,8 +31,6 @@ internal class DDTestMonitor {
     static var instance: DDTestMonitor?
     static var clock: Clock = DDTestMonitor.config.disableNTPClock ? DateClock() : NTPClock()
 
-    static let defaultPayloadSize = 1024
-
     static var tracer = DDTracer()
     static var env = Environment(config: config, env: envReader, log: Log.instance)
     static var config: Config = Config(env: envReader)
@@ -53,7 +51,7 @@ internal class DDTestMonitor {
     var networkInstrumentation: DDNetworkInstrumentation?
     var injectHeaders: Bool = false
     var recordPayload: Bool = false
-    var maxPayloadSize: Int = defaultPayloadSize
+    var maxPayloadSize: Int
     var launchNotificationObserver: NSObjectProtocol?
     var didBecomeActiveNotificationObserver: NSObjectProtocol?
     var isRumActive: Bool = false
@@ -133,6 +131,9 @@ internal class DDTestMonitor {
     }
 
     init() {
+        Log.debug("Config:\n\(DDTestMonitor.config)")
+        Log.debug("Environment:\n\(DDTestMonitor.env)")
+        maxPayloadSize = DDTestMonitor.config.maxPayloadSize
         messageChannelUUID = DDTestMonitor.config.messageChannelUUID ?? UUID().uuidString
         
         if DDTestMonitor.config.isBinaryUnderUITesting {
@@ -345,9 +346,6 @@ internal class DDTestMonitor {
                 }
                 if DDTestMonitor.config.enableRecordPayload {
                     recordPayload = true
-                }
-                if let maxPayload = DDTestMonitor.config.maxPayloadSize {
-                    maxPayloadSize = maxPayload
                 }
             }
         }

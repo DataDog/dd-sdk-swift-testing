@@ -204,7 +204,7 @@ internal final class Environment {
 }
 
 internal extension Environment {
-    struct Platform {
+    struct Platform: CustomDebugStringConvertible {
         /// Device Information
         let deviceName: String
         let deviceModel: String
@@ -219,12 +219,26 @@ internal extension Environment {
         let runtimeVersion: String
         
         let localization: String
+        
+        var debugDescription: String {
+            """
+            Platform:
+              Device Name: \(deviceName)
+              Device Model: \(deviceModel)
+              OS Name: \(osName)
+              OS Architecture: \(osArchitecture)
+              OS Version: \(osVersion)
+              Runtime Name: \(runtimeName)
+              Runtime Version: \(runtimeVersion)
+              Localization: \(localization)
+            """
+        }
     }
 }
 
 
 internal extension Environment {
-    struct CI {
+    struct CI: CustomDebugStringConvertible {
         // ci.provider.name
         let provider: String
         
@@ -280,11 +294,29 @@ internal extension Environment {
             }
             return path
         }
+        
+        var debugDescription: String {
+            """
+            CI:
+              Provider: \(provider),
+              Pipeline ID: \(pipelineId ?? "")
+              Pipeline Name: \(pipelineName ?? "")
+              Pipeline Number: \(pipelineNumber ?? "")
+              Pipeline URL: \(pipelineURL?.spanAttribute ?? "")
+              Stage Name: \(stageName ?? "")
+              Job Name: \(jobName ?? "")
+              Job URL: \(jobURL?.spanAttribute ?? "")
+              Workspace Path: \(workspacePath ?? "")
+              Node Name: \(nodeName ?? "")
+              Node Labels: \(nodeLabels ?? [])
+              Environment: \(environment.map { "\n    \($0.key): \($0.value)" }.joined())
+            """
+        }
     }
 }
 
 internal extension Environment {
-    struct Git {
+    struct Git: CustomDebugStringConvertible {
         // git.*
         let repositoryURL: URL?
         let branch: String?
@@ -382,5 +414,38 @@ internal extension Environment {
             }
             return (result, isTag)
         }
+        
+        var debugDescription: String {
+            """
+            GIT:
+              Repository Name: \(repositoryName ?? "")
+              Repository URL: \(repositoryURL?.spanAttribute ?? "")
+              Branch: \(branch ?? "")
+              Tag: \(tag ?? "")
+              Commit SHA: \(commitSHA ?? "")
+              Commit Message: \(commitMessage ?? "")
+              Author Name: \(authorName ?? "")
+              Author Email: \(authorEmail ?? "")
+              Author Date: \(authorDate ?? "")
+              Committer Name: \(committerName ?? "")
+              Committer Email: \(committerEmail ?? "")
+              Committer Date: \(committerDate ?? "")
+            """
+        }
+    }
+}
+
+extension Environment: CustomDebugStringConvertible {
+    var debugDescription: String {
+        """
+        Source Root: \(sourceRoot ?? "nil")
+        Workspace: \(workspacePath ?? "nil")
+        \(platform)
+        \(ci?.debugDescription ?? "CI: nil")
+        \(git)
+        Attributes:
+        CI: \(ciAttributes.map { "\n  \($0.key): \($0.value)" }.joined())
+        GIT: \(gitAttributes.map { "\n  \($0.key): \($0.value)" }.joined())
+        """
     }
 }

@@ -25,7 +25,7 @@ final class Config {
     var enableRecordPayload: Bool = false
     var disableNetworkCallStack: Bool = false
     var enableNetworkCallStackSymbolicated: Bool = false
-    var maxPayloadSize: Int? = nil
+    var maxPayloadSize: Int = 1024
     var enableStdoutInstrumentation: Bool = false
     var enableStderrInstrumentation: Bool = false
     var extraHTTPHeaders: Set<String>? = nil
@@ -99,7 +99,7 @@ final class Config {
         disableNetworkCallStack = env[.disableNetworkCallStack] ?? false
         disableGitInformation = env[.disableGitInformation] ?? false
         enableNetworkCallStackSymbolicated = env[.enableNetworkCallStackSymbolicated] ?? false
-        maxPayloadSize = env[.maxPayloadSize]
+        maxPayloadSize = env[.maxPayloadSize] ?? maxPayloadSize
 
         let envLogsEnabled = env[.enableCiVisibilityLogs] ?? false
         enableStdoutInstrumentation = envLogsEnabled || env[.enableStdoutInstrumentation] ?? false
@@ -164,5 +164,52 @@ final class Config {
             }
             return value
         }
+    }
+}
+
+extension Config: CustomDebugStringConvertible {
+    var debugDescription: String {
+        """
+        Enabled: \(isEnabled?.description ?? "nil")
+        Is In Test Mode: \(isInTestMode)
+        Is Tracer Under Testing: \(isTracerUnderTesting)
+        Is Binary Under UI Testing: \(isBinaryUnderUITesting)
+        Is Test Observer Needed: \(isTestObserverNeeded)
+        Api Key: \(apiKey.map {_ in "*****" } ?? "nil")
+        Service \(service ?? "nil")
+        Environment: \(environment ?? "nil")
+        Endpoint: \(endpoint.exporterEndpoint)
+        Tags: \(tags.map { "\n  \($0.key): \($0.value)" }.joined())
+        Custom Configurations: \(customConfigurations.map { "\n  \($0.key): \($0.value)" }.joined())
+        Disable Network Instrumentation: \(disableNetworkInstrumentation)
+        Disable Headers Injection: \(disableHeadersInjection)
+        Enable Record Payload: \(enableRecordPayload)
+        Disable Network CallStack: \(disableNetworkCallStack)
+        Enable Network Call Stack Symbolicated: \(enableNetworkCallStackSymbolicated)
+        Max Payload Size: \(maxPayloadSize)
+        Enable Stdout Instrumentation: \(enableStdoutInstrumentation)
+        Enable Stderr Instrumentation: \(enableStderrInstrumentation)
+        Extra HTTP Headers: \(extraHTTPHeaders ?? [])
+        Excluded URLs: \(excludedURLS ?? [])
+        Disable RUM Integration: \(disableRUMIntegration)
+        Disable Crash Handler: \(disableCrashHandler)
+        Disable Mach Crash Handler: \(disableMachCrashHandler)
+        Disable Test Instrumenting: \(disableTestInstrumenting)
+        Disable Source Location: \(disableSourceLocation)
+        Disable NTP Clock: \(disableNTPClock)
+        Disable Git Information: \(disableGitInformation)
+        Git Upload Enabled: \(gitUploadEnabled)
+        Coverage Enabled: \(coverageEnabled)
+        ITR Enabled: \(itrEnabled)
+        Excluded Branches: \(excludedBranches)
+        Disable Traces Exporting: \(disableTracesExporting)
+        Report Hostname: \(reportHostname)
+        Tracer Trace Id: \(tracerTraceId ?? "nil")
+        Tracer Span Id: \(tracerSpanId ?? "nil")
+        Message Channel UUID: \(messageChannelUUID ?? "nil")
+        Extra Debug: \(extraDebug)
+        Extra Debug Network: \(extraDebugNetwork)
+        Extra Debug Call Stack: \(extraDebugCallStack)
+        """
     }
 }

@@ -150,10 +150,13 @@ public class DDTest: NSObject {
     /// - Parameters:
     ///   - status: the status reported for this test
     ///   - endTime: Optional, the time where the test ended
-    @objc public func end(status: DDTestStatus, endTime: Date? = nil) {
+    @objc public func end(status: DDTestStatus, endTime: Date?) {
         internalEnd(status: status, endTime: endTime)
     }
 
+    /// Ends the test
+    /// - Parameters:
+    ///   - status: the status reported for this test
     @objc public func end(status: DDTestStatus) {
         end(status: status, endTime: nil)
     }
@@ -211,6 +214,9 @@ public class DDTest: NSObject {
             span.setAttribute(key: tag + DDBenchmarkTags.statisticsP90, value: percentile90)
         }
     }
+    
+    /// Current active test
+    @objc public static var current: DDTest? { DDTestMonitor.instance?.currentTest }
 }
 
 extension DDTest {

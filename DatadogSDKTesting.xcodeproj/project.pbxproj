@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 53;
+	objectVersion = 55;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -43,6 +43,7 @@
 		A7B747C02C60E1E7009B4B93 /* SwiftUtilsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B747BF2C60E1E7009B4B93 /* SwiftUtilsTests.swift */; };
 		A7CC6D862C07D624003C13BC /* Tags.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7CC6D852C07D624003C13BC /* Tags.swift */; };
 		A7CC6D882C0F3F83003C13BC /* Tags+ObjC.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7CC6D872C0F3F83003C13BC /* Tags+ObjC.swift */; };
+		A7E0056D2C766EF7004D4B78 /* CoreTelephony.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7E0056C2C766EF7004D4B78 /* CoreTelephony.framework */; platformFilters = (ios, maccatalyst, macos, ); };
 		A7E232E52BC6E80A0087D8F8 /* CodeCoverage.h in Headers */ = {isa = PBXBuildFile; fileRef = A7E232E42BC6E80A0087D8F8 /* CodeCoverage.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A7E232F52BC6EB470087D8F8 /* CoverageExporterJson.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7E232EA2BC6EB460087D8F8 /* CoverageExporterJson.cpp */; };
 		A7E232F62BC6EB470087D8F8 /* CoverageReport.h in Headers */ = {isa = PBXBuildFile; fileRef = A7E232EB2BC6EB460087D8F8 /* CoverageReport.h */; };
@@ -333,6 +334,7 @@
 		A7C292162B9B2DE0009C2979 /* DatadogSDKTesting.podspec */ = {isa = PBXFileReference; lastKnownFileType = text; path = DatadogSDKTesting.podspec; sourceTree = "<group>"; };
 		A7CC6D852C07D624003C13BC /* Tags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tags.swift; sourceTree = "<group>"; };
 		A7CC6D872C0F3F83003C13BC /* Tags+ObjC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Tags+ObjC.swift"; sourceTree = "<group>"; };
+		A7E0056C2C766EF7004D4B78 /* CoreTelephony.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreTelephony.framework; path = System/Library/Frameworks/CoreTelephony.framework; sourceTree = SDKROOT; };
 		A7E232DC2BC6E68B0087D8F8 /* CDatadogSDKTesting.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CDatadogSDKTesting.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7E232E42BC6E80A0087D8F8 /* CodeCoverage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CodeCoverage.h; sourceTree = "<group>"; };
 		A7E232EA2BC6EB460087D8F8 /* CoverageExporterJson.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CoverageExporterJson.cpp; sourceTree = "<group>"; };
@@ -514,6 +516,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A7E0056D2C766EF7004D4B78 /* CoreTelephony.framework in Frameworks */,
 				A7FC26532BA1F1E600067E26 /* URLSessionInstrumentation in Frameworks */,
 				A7E233312BC82CD10087D8F8 /* Kronos in Frameworks */,
 				A7FC26502BA1F1E600067E26 /* CrashReporter in Frameworks */,
@@ -620,6 +623,7 @@
 		A7B39C6B2BCFC799007F98B2 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				A7E0056C2C766EF7004D4B78 /* CoreTelephony.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -1767,7 +1771,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = "2.5.0";
+				MARKETING_VERSION = 2.5.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++20";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.CDatadogSDKTesting;
@@ -1807,7 +1811,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = "2.5.0";
+				MARKETING_VERSION = 2.5.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++20";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.CDatadogSDKTesting;
@@ -2162,7 +2166,7 @@
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
-				MARKETING_VERSION = "2.5.0";
+				MARKETING_VERSION = 2.5.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.IntegrationTestsUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -2186,7 +2190,7 @@
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
-				MARKETING_VERSION = "2.5.0";
+				MARKETING_VERSION = 2.5.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.IntegrationTestsUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -2260,7 +2264,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = "2.5.0";
+				MARKETING_VERSION = 2.5.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -2332,7 +2336,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LLVM_LTO = YES_THIN;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = "2.5.0";
+				MARKETING_VERSION = 2.5.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;

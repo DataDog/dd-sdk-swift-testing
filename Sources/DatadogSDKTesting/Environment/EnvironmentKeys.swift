@@ -33,6 +33,7 @@ internal enum EnvironmentKey: String, CaseIterable {
     case dontExport = "DD_DONT_EXPORT"
     case traceDebug = "DD_TRACE_DEBUG"
     case traceDebugNetwork = "DD_TRACE_DEBUG_NETWORK"
+    case traceDebugCodeCoverage = "DD_TRACE_DEBUG_CODE_COVERAGE"
     case traceDebugCallStack = "DD_TRACE_DEBUG_CALLSTACK"
     case disableNTPClock = "DD_DISABLE_NTPCLOCK"
     case enableCiVisibilityLogs = "DD_CIVISIBILITY_LOGS_ENABLED"

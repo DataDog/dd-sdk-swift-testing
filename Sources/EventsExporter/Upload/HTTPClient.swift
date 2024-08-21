@@ -45,23 +45,20 @@ internal final class HTTPClient {
     
     private func log(request: URLRequest, response: (Data?, URLResponse?, Error?)) {
         guard debug else { return }
-        Log.runOnDebug({
-            let (data, urlres, error) = response
-            guard let httpres = urlres as? HTTPURLResponse else {
-                let res = urlres?.description ?? "nil"
-                let err = error?.localizedDescription ?? "nil"
-                let data = data?.description ?? "nil"
-                Log.debug("[NET] => \(request)\n\tERR: \(err)\n\tRES: \(res)\n\tDATA: \(data))")
-                return
-            }
-            let log = """
-            [NET] => \(request.url!)
-                RES CODE: \(httpres.statusCode)
-                ERROR: \(error?.localizedDescription ?? "")
-                DATA: \(data.flatMap{String(data: $0, encoding: .utf8)} ?? "")
-            """
-            Log.debug(log)
-        }())
+        let (data, urlres, error) = response
+        guard let httpres = urlres as? HTTPURLResponse else {
+            let res = urlres?.description ?? "nil"
+            let err = error?.localizedDescription ?? "nil"
+            let data = data?.description ?? "nil"
+            Log.debug("[NET] => \(request)\n\tERR: \(err)\n\tRES: \(res)\n\tDATA: \(data))")
+            return
+        }
+        Log.debug("""
+                  [NET] => \(request.url!)
+                  RES CODE: \(httpres.statusCode)
+                  ERROR: \(error?.localizedDescription ?? "")
+                  DATA: \(data.flatMap{String(data: $0, encoding: .utf8)} ?? "")
+                  """)
     }
 }
 

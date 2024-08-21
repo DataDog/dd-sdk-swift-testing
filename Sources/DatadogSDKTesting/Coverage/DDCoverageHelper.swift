@@ -59,7 +59,12 @@ class DDCoverageHelper {
     }
 
     func getURLForTest(name: String, testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64) -> URL {
-        let cleanedName = name.components(separatedBy: Self.nameNotAllowed).joined(separator: "+")
+        var cleanedName = name.components(separatedBy: Self.nameNotAllowed)
+            .filter { $0.count > 0 }
+            .joined(separator: "+")
+        if cleanedName.count > 20 {
+            cleanedName = "\(cleanedName.prefix(10))-\(cleanedName.suffix(10))"
+        }
         let finalName = "\(testSessionId)__\(testSuiteId)__\(spanId)__\(cleanedName)"
         return storagePath.url.appendingPathComponent(finalName).appendingPathExtension("profraw")
     }

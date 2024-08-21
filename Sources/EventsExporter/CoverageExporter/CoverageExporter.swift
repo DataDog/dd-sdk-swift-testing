@@ -53,7 +53,7 @@ internal class CoverageExporter {
                                        storage: coverageStorage,
                                        requestBuilder: requestBuilder,
                                        performance: configuration.performancePreset,
-                                       debug: config.debugNetwork)
+                                       debug: config.debug.logNetworkRequests)
         requestBuilder.addFieldsCallback = addCoverage
     }
 
@@ -71,14 +71,14 @@ internal class CoverageExporter {
                                                                 testSuiteId: testSuiteId, spanId: spanId, workspacePath: workspacePath,
                                                                 binaryImagePaths: binaryImagePaths)
 
-        if Log.isDebug == false {
-            try? FileManager.default.removeItem(at: coverage)
-            try? FileManager.default.removeItem(at: profData)
-        } else {
+        if configuration.debug.saveCodeCoverageFiles {
             let data = try? JSONEncoder.default().encode(ddCoverage)
             let testName = coverage.deletingPathExtension().lastPathComponent.components(separatedBy: "__").last!
             let jsonURL = coverage.deletingLastPathComponent().appendingPathComponent(testName).appendingPathExtension("json")
             try? data?.write(to: jsonURL)
+        } else {
+            try? FileManager.default.removeItem(at: coverage)
+            try? FileManager.default.removeItem(at: profData)
         }
         coverageStorage.writer.write(value: ddCoverage)
         Log.debug("End processing coverage: \(coverage.path)")

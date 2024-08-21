@@ -13,11 +13,8 @@ enum DDSymbolicator {
     private static let crashLineRegex = try! NSRegularExpression(pattern: "^([0-9]+)(\\s+)((?:[\\w.] *[\\w.]*)+)(\\s+)(0x[0-9a-fA-F]+)([ \t]+)(0x[0-9a-fA-F]+)([ \t]+\\+[ \t]+[0-9]+)$?", options: .anchorsMatchLines)
     private static let callStackRegex = try! NSRegularExpression(pattern: "^([0-9]+)(\\s+)((?:[\\w.] *[\\w.]*)+)(\\s+)(0x[0-9a-fA-F]+)", options: .anchorsMatchLines)
     
-    internal static let dsymFilesPath: URL = {
-        let dir = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("DD-DSYMS-"+UUID().uuidString)
-        try! FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        return dir
-    }()
+    internal static var dsymFilesPath: URL { dsymFilesDir.url }
+    internal static let dsymFilesDir: Directory = try! DDTestMonitor.tempDir!.createSubdirectory(path: "dsyms")
 
     internal static var dSYMFiles: [URL] = {
         var dSYMFiles = [URL]()

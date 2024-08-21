@@ -46,7 +46,7 @@ internal class DDTestMonitor {
         return try? DDTestMonitor.cacheDir?.createSubdirectory(path: commit)
     }()
     
-    var tempDir: Directory? = try? Directory.temporary().createSubdirectory(path: "com.datadog.civisibility-\(UUID().uuidString)")
+    static var tempDir: Directory? = try? Directory.temporary().createSubdirectory(path: "com.datadog.civisibility-\(UUID().uuidString)")
 
     var networkInstrumentation: DDNetworkInstrumentation?
     var injectHeaders: Bool = false
@@ -126,11 +126,12 @@ internal class DDTestMonitor {
         guard let monitor = DDTestMonitor.instance else { return }
         DDTestMonitor.instance = nil
         Log.debug("Clearing monitor")
+        try? DDSymbolicator.dsymFilesDir.delete()
         if !config.extraDebugCodeCoverage {
             monitor.coverageHelper?.removeStoragePath()
-            try? monitor.tempDir?.delete()
+            try? tempDir?.delete()
         } else {
-            Log.debug("Temp files stored at: \(monitor.tempDir?.url.absoluteString ?? "nil")")
+            Log.debug("Temp files stored at: \(tempDir?.url.absoluteString ?? "nil")")
         }
     }
 
@@ -316,7 +317,7 @@ internal class DDTestMonitor {
                 // Activate Coverage
                 if itrBackendConfig?.codeCoverage ?? false {
                     Log.debug("Coverage Enabled")
-                    guard let temp = tempDir else {
+                    guard let temp = DDTestMonitor.tempDir else {
                         Log.print("Coverage init failed. Can't create temp directiry.")
                         coverageHelper = nil
                         return

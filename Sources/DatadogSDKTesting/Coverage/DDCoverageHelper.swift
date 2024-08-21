@@ -35,8 +35,8 @@ class DDCoverageHelper {
         Log.debug("DDCoverageHelper location: \(path.url.path)")
         initialCoverageSaved = false
         coverageWorkQueue = OperationQueue()
-        coverageWorkQueue.qualityOfService = .background
-        coverageWorkQueue.maxConcurrentOperationCount = (ProcessInfo.processInfo.activeProcessorCount - 1)
+        coverageWorkQueue.qualityOfService = .utility
+        coverageWorkQueue.maxConcurrentOperationCount = max(ProcessInfo.processInfo.activeProcessorCount - 1, 1)
     }
 
     func clearCounters() {

@@ -22,27 +22,21 @@ struct GitInfo {
     init(gitFolder: URL) throws {
         workspacePath = gitFolder.deletingLastPathComponent().path
         let headPath = gitFolder.appendingPathComponent("HEAD")
-        var mergePath: String?
-        let head = try String(contentsOf: headPath)
+        let head = try String(contentsOf: headPath).trimmingCharacters(in: .whitespacesAndNewlines)
         if head.hasPrefix("ref:") {
-            mergePath = head.trimmingCharacters(in: .whitespacesAndNewlines)
-            mergePath!.removeFirst(4)
-            mergePath = mergePath!.trimmingCharacters(in: .whitespacesAndNewlines)
+            var mergePath = head
+            mergePath.removeFirst(4)
+            mergePath = mergePath.trimmingCharacters(in: .whitespacesAndNewlines)
             self.branch = mergePath
-            let refData = try String(contentsOf: gitFolder.appendingPathComponent(mergePath!))
+            let refData = try String(contentsOf: gitFolder.appendingPathComponent(mergePath))
             commit = refData.trimmingCharacters(in: .whitespacesAndNewlines)
         } else {
             let fetchHeadPath = gitFolder.appendingPathComponent("FETCH_HEAD")
-            if let fetchHead = try? String(contentsOf: fetchHeadPath),
-               let first = fetchHead.firstIndex(of: "'"),
-               let last = fetchHead[fetchHead.index(after: first)...].firstIndex(of: "'")
-            {
-                let auxBranch = fetchHead[fetchHead.index(after: first) ... fetchHead.index(before: last)]
-                if !auxBranch.isEmpty {
-                    self.branch = String(auxBranch)
-                }
+            if let records = FetchHeadRecord.from(file: fetchHeadPath)?
+                .filter({$0.commit == head && $0.type == "branch"}), records.count > 0 {
+                self.branch = records.first!.ref
             }
-            commit = head.trimmingCharacters(in: .whitespacesAndNewlines)
+            commit = head
         }
 
         let configPath = gitFolder.appendingPathComponent("config")
@@ -411,5 +405,37 @@ struct CommitInfo {
         }
 
         fullMessage = message
+    }
+}
+
+extension GitInfo {
+    struct FetchHeadRecord {
+        let commit: String
+        let modifier: String?
+        let type: String?
+        let ref: String
+        let info: String
+        
+        init?(line: String) {
+            let parts = line.components(separatedBy: "\t")
+            guard parts.count == 3 else { return nil }
+            let refInfo = parts[2]
+            guard let refStart = refInfo.firstIndex(of: "'"),
+                  let refEnd = refInfo[refInfo.index(after: refStart)...].firstIndex(of: "'") else { return nil }
+            commit = parts[0]
+            modifier = parts[1].count > 0 ? parts[1] : nil
+            type = refStart > refInfo.startIndex ?
+                refInfo[..<refStart].trimmingCharacters(in: .whitespaces) : nil
+            ref = String(refInfo[refInfo.index(after: refStart)..<refEnd])
+            info = String(refInfo[refInfo.index(after: refEnd)...])
+        }
+        
+        static func from(file url: URL) -> [Self]? {
+            (try? String(contentsOf: url)).map { Self.from(contents: $0) }
+        }
+        
+        static func from(contents string: String) -> [Self] {
+            string.components(separatedBy: .newlines).compactMap { .init(line: $0) }
+        }
     }
 }

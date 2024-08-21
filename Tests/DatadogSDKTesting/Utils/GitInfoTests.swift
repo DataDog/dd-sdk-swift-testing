@@ -88,4 +88,45 @@ class GitInfoTests: XCTestCase {
         XCTAssertEqual(gitInfo.committerEmail, "nacho.bonafontearruga@datadoghq.com")
         XCTAssertEqual(gitInfo.committerDate, "2021-05-06T08:03:32Z")
     }
+    
+    func testFetchHeadParsing() {
+        let git = fixturesURL.appendingPathComponent("git")
+        let records1 = GitInfo.FetchHeadRecord.from(file: git.appendingPathComponent("fetch_head_1"))
+        XCTAssertNotNil(records1)
+        XCTAssertEqual(records1?.count, 2)
+        
+        XCTAssertEqual(records1?[0].commit, "284cd8dcaf3ec6171bbc1565c8ddd8a41fac4eef")
+        XCTAssertNil(records1?[0].modifier)
+        XCTAssertNil(records1?[0].type)
+        XCTAssertEqual(records1?[0].ref, "refs/pipelines/42233408")
+        XCTAssertEqual(records1?[0].info, " of https://gitlab.ddbuild.io/DataDog/dd-sdk-ios")
+        
+        XCTAssertEqual(records1?[1].commit, "284cd8dcaf3ec6171bbc1565c8ddd8a41fac4eef")
+        XCTAssertNil(records1?[1].modifier)
+        XCTAssertEqual(records1?[1].type, "branch")
+        XCTAssertEqual(records1?[1].ref, "ncreated/chore/ci-test-viz-debug-branch-name")
+        XCTAssertEqual(records1?[1].info, " of https://gitlab.ddbuild.io/DataDog/dd-sdk-ios")
+        
+        let records2 = GitInfo.FetchHeadRecord.from(file: git.appendingPathComponent("fetch_head_2"))
+        XCTAssertNotNil(records2)
+        XCTAssertEqual(records2?.count, 3)
+        
+        XCTAssertEqual(records2?[0].commit, "2803d13cb33b06e2deb75428f19f59158468e370")
+        XCTAssertEqual(records2?[0].modifier, "not-for-merge")
+        XCTAssertEqual(records2?[0].type, "branch")
+        XCTAssertEqual(records2?[0].ref, "main")
+        XCTAssertEqual(records2?[0].info, " of github.com:DataDog/dd-sdk-swift-testing")
+        
+        XCTAssertEqual(records2?[1].commit, "836a91d263748a7ac857d2427f6f19fbc7cdb547")
+        XCTAssertEqual(records2?[1].modifier, "not-for-merge")
+        XCTAssertEqual(records2?[1].type, "branch")
+        XCTAssertEqual(records2?[1].ref, "update-binary")
+        XCTAssertEqual(records2?[1].info, " of github.com:DataDog/dd-sdk-swift-testing")
+        
+        XCTAssertEqual(records2?[2].commit, "5cba509698f41d8869253d5cc7966a5ef2d46f0a")
+        XCTAssertEqual(records2?[2].modifier, "not-for-merge")
+        XCTAssertEqual(records2?[2].type, "branch")
+        XCTAssertEqual(records2?[2].ref, "yehor-popovych/manual-api-refactoring")
+        XCTAssertEqual(records2?[2].info, " of github.com:DataDog/dd-sdk-swift-testing")
+    }
 }

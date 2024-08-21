@@ -66,6 +66,7 @@ final class Config {
     /// The framework has been launched with extra debug information
     var extraDebug: Bool = false
     var extraDebugNetwork: Bool = false
+    var extraDebugCodeCoverage: Bool = false
     var extraDebugCallStack: Bool = false
     
     init(env: EnvironmentReader? = nil) {
@@ -138,7 +139,8 @@ final class Config {
         reportHostname = env[.ciVisibilityReportHostname] ?? false
         extraDebugCallStack = env[.traceDebugCallStack] ?? false
         extraDebugNetwork = env[.traceDebugNetwork] ?? false
-        extraDebug = env[.traceDebug] ?? extraDebugCallStack || extraDebugNetwork
+        extraDebugCodeCoverage = env[.traceDebugCodeCoverage] ?? false
+        extraDebug = env[.traceDebug] ?? extraDebugCallStack || extraDebugNetwork || extraDebugCodeCoverage
         
         disableMachCrashHandler = env[.disableMachCrashHandler] ?? extraDebug
         
@@ -209,6 +211,7 @@ extension Config: CustomDebugStringConvertible {
         Message Channel UUID: \(messageChannelUUID ?? "nil")
         Extra Debug: \(extraDebug)
         Extra Debug Network: \(extraDebugNetwork)
+        Extra Debug Code Coverage: \(extraDebugCodeCoverage)
         Extra Debug Call Stack: \(extraDebugCallStack)
         """
     }

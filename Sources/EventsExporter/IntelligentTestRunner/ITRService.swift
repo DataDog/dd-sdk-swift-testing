@@ -87,22 +87,22 @@ internal class ITRService {
         )
 
         searchCommitUploader = DataUploader(
-            httpClient: HTTPClient(debug: config.debugNetwork),
+            httpClient: HTTPClient(debug: config.debug.logNetworkRequests),
             requestBuilder: searchCommitRequestBuilder
         )
 
         packFileUploader = DataUploader(
-            httpClient: HTTPClient(debug: config.debugNetwork),
+            httpClient: HTTPClient(debug: config.debug.logNetworkRequests),
             requestBuilder: packFileRequestBuilder
         )
 
         skippableTestsUploader = DataUploader(
-            httpClient: HTTPClient(debug: config.debugNetwork),
+            httpClient: HTTPClient(debug: config.debug.logNetworkRequests),
             requestBuilder: skippableTestsRequestBuilder
         )
 
         itrConfigUploader = DataUploader(
-            httpClient: HTTPClient(debug: config.debugNetwork),
+            httpClient: HTTPClient(debug: config.debug.logNetworkRequests),
             requestBuilder: itrConfigRequestBuilder
         )
     }

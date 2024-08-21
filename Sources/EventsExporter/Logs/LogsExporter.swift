@@ -71,7 +71,7 @@ internal class LogsExporter {
                                    storage: logsStorage,
                                    requestBuilder: requestBuilder,
                                    performance: configuration.performancePreset,
-                                   debug: config.debugNetwork)
+                                   debug: config.debug.logNetworkRequests)
     }
 
     func exportLogs(fromSpan span: SpanData) {

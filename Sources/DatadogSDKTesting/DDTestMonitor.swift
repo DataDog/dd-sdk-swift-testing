@@ -46,7 +46,7 @@ internal class DDTestMonitor {
         return try? DDTestMonitor.cacheDir?.createSubdirectory(path: commit)
     }()
     
-    var tempDir: Directory? = try? Directory.temporary().createSubdirectory(path: UUID().uuidString)
+    var tempDir: Directory? = try? Directory.temporary().createSubdirectory(path: "com.datadog.civisibility-\(UUID().uuidString)")
 
     var networkInstrumentation: DDNetworkInstrumentation?
     var injectHeaders: Bool = false
@@ -126,8 +126,12 @@ internal class DDTestMonitor {
         guard let monitor = DDTestMonitor.instance else { return }
         DDTestMonitor.instance = nil
         Log.debug("Clearing monitor")
-        monitor.coverageHelper?.removeStoragePath()
-        try? monitor.tempDir?.delete()
+        if !config.extraDebugCodeCoverage {
+            monitor.coverageHelper?.removeStoragePath()
+            try? monitor.tempDir?.delete()
+        } else {
+            Log.debug("Temp files stored at: \(monitor.tempDir?.url.absoluteString ?? "nil")")
+        }
     }
 
     init() {

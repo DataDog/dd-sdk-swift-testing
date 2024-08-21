@@ -66,7 +66,7 @@ internal class SpansExporter {
                                     storage: spansStorage,
                                     requestBuilder: requestBuilder,
                                     performance: configuration.performancePreset,
-                                    debug: config.debugNetwork)
+                                    debug: config.debug.logNetworkRequests)
     }
 
     func exportSpan(span: SpanData) {

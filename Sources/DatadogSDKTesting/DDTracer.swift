@@ -81,7 +81,8 @@ internal class DDTracer {
             performancePreset: .instantDataDelivery,
             exporterId: String(SpanId.random().rawValue),
             logger: Log.instance,
-            debugNetwork: conf.extraDebugNetwork
+            debug: .init(logNetworkRequests: conf.extraDebugNetwork,
+                         saveCodeCoverageFiles: conf.extraDebugCodeCoverage)
         )
         eventsExporter = try? EventsExporter(config: exporterConfiguration)
 

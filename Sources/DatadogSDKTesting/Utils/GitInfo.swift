@@ -32,9 +32,14 @@ struct GitInfo {
             commit = refData.trimmingCharacters(in: .whitespacesAndNewlines)
         } else {
             let fetchHeadPath = gitFolder.appendingPathComponent("FETCH_HEAD")
-            if let records = FetchHeadRecord.from(file: fetchHeadPath)?
-                .filter({$0.commit == head && $0.type == "branch"}), records.count > 0 {
-                self.branch = records.first!.ref
+            if let records = FetchHeadRecord.from(file: fetchHeadPath)?.filter({$0.commit == head}),
+               records.count > 0
+            {
+                if let branchRef = records.first(where: { $0.type == "branch" }) {
+                    self.branch = branchRef.ref
+                } else { // Seems as we have only a tag ref
+                    self.branch = records.first!.ref
+                }
             }
             commit = head
         }

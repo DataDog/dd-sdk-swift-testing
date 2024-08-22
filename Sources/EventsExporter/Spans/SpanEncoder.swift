@@ -68,6 +68,7 @@ internal struct DDSpan: Encodable {
     let sessionID: UInt64?
     let moduleID: UInt64?
     let suiteID: UInt64?
+    let itrCorrelationId: String?
 
     // MARK: - Meta
 
@@ -77,7 +78,9 @@ internal struct DDSpan: Encodable {
     var tags: [String: AttributeValue]
 
     static let filteredTagKeys: Set<String> = [
-        "error.message", "error.type", "error.stack", "test_module_id", "test_suite_id"
+        "error.message", "error.type", "error.stack",
+        "test_module_id", "test_suite_id", "test_session_id",
+        "itr_correlation_id"
     ]
 
     func encode(to encoder: Encoder) throws {
@@ -121,16 +124,18 @@ internal struct DDSpan: Encodable {
             self.sessionID = UInt64(spanData.attributes["test_session_id"]?.description ?? "0", radix: 16) ?? 0
             self.moduleID = UInt64(spanData.attributes["test_module_id"]?.description ?? "0", radix: 16) ?? 0
             self.suiteID = UInt64(spanData.attributes["test_suite_id"]?.description ?? "0", radix: 16) ?? 0
+            self.itrCorrelationId = spanData.attributes["itr_correlation_id"]?.description
         } else {
             self.sessionID = nil
             self.moduleID = nil
             self.suiteID = nil
+            self.itrCorrelationId = nil
         }
 
         self.applicationVersion = applicationVersion
         self.tags = spanData.attributes.filter {
             !DDSpan.filteredTagKeys.contains($0.key)
-        }.mapValues { $0 }
+        }
     }
 }
 
@@ -156,6 +161,7 @@ internal struct SpanEncoder {
         case errorMessage = "error.message"
         case errorType = "error.type"
         case errorStack = "error.stack"
+        case itrCorrelationId = "itr_correlation_id"
 
         // MARK: - Metrics
 
@@ -204,6 +210,10 @@ internal struct SpanEncoder {
 
         try container.encode(span.startTime, forKey: .start)
         try container.encode(span.duration, forKey: .duration)
+        
+        if let correlationId = span.itrCorrelationId {
+            try container.encode(correlationId, forKey: .itrCorrelationId)
+        }
 
         var meta = container.nestedContainer(keyedBy: DynamicCodingKey.self, forKey: .meta)
         var metrics = container.nestedContainer(keyedBy: DynamicCodingKey.self, forKey: .metrics)

@@ -32,15 +32,17 @@ class IntelligentTestRunner {
     }
 
     func start() {
-        if itrFolder != nil {
-            // Previous commit folder exists, load from file
-            Log.debug("Skippable tests loaded from disk")
-            loadSkippableTestsFromDisk()
-
-        } else {
+        if itrFolder == nil {
             createITRFolder()
+        } else {
+            // Previous commit folder exists, load from file
+            loadSkippableTestsFromDisk()
+        }
+        if _skippableTests == nil {
             getSkippableTests(repository: DDTestMonitor.env.git.repositoryURL)
             saveSkippableTestsToDisk()
+        } else {
+            Log.debug("Skippable tests loaded from disk")
         }
     }
 
@@ -54,7 +56,8 @@ class IntelligentTestRunner {
     }
 
     private func createITRFolder() {
-        itrFolder = try? DDTestMonitor.commitFolder?.createSubdirectory(path: itrCachePath)
+        itrFolder = try? DDTestMonitor.commitFolder?
+            .createSubdirectory(path: itrCachePath)
             .createSubdirectory(path: DDTestMonitor.env.environment +
                 String(configurations.stableHash) +
                 String(DDTestMonitor.config.customConfigurations.stableHash))
@@ -66,7 +69,7 @@ class IntelligentTestRunner {
         {
             _skippableTests = skippableTests
         }
-        Log.debug("Skippable Tests: \(_skippableTests.map {"\($0)"} ?? "nil")")
+        Log.debug("Load Skippable Tests: \(_skippableTests.map {"\($0)"} ?? "nil")")
     }
 
     private func saveSkippableTestsToDisk() {

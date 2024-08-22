@@ -51,7 +51,6 @@ public enum Spawn {
         
         var childActions: posix_spawn_file_actions_t?
         dd_posix_spawn_file_actions_init(&childActions)
-        defer { dd_posix_spawn_file_actions_destroy(&childActions) }
         
         let outFile: URL?
         let errFile: URL?
@@ -84,6 +83,8 @@ public enum Spawn {
         let ret = arguments.withCStringsNilTerminatedArray { argv in
             dd_posix_spawn(&pid, command, &childActions, nil, argv, nil)
         }
+        
+        dd_posix_spawn_file_actions_destroy(&childActions)
         
         do {
             try _wait(spawn: ret, pid: pid)

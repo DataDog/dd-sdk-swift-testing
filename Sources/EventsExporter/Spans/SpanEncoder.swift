@@ -211,8 +211,8 @@ internal struct SpanEncoder {
         try container.encode(span.startTime, forKey: .start)
         try container.encode(span.duration, forKey: .duration)
         
-        if let itr = span.itrCorrelationId {
-            try container.encode(itr, forKey: .itrCorrelationId)
+        if let correlationId = span.itrCorrelationId {
+            try container.encode(correlationId, forKey: .itrCorrelationId)
         }
 
         var meta = container.nestedContainer(keyedBy: DynamicCodingKey.self, forKey: .meta)

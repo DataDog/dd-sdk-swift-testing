@@ -15,6 +15,18 @@
         "value" : "$(GITHUB_REPOSITORY)"
       },
       {
+        "key" : "GITHUB_REF",
+        "value" : "$(GITHUB_REF)"
+      },
+      {
+        "key" : "GITHUB_HEAD_REF",
+        "value" : "$(GITHUB_HEAD_REF)"
+      },
+      {
+        "key" : "GITHUB_ACTIONS",
+        "value" : "$(GITHUB_ACTIONS)"
+      },
+      {
         "key" : "DD_ENV",
         "value" : "internal-tests"
       },

@@ -63,7 +63,7 @@ internal class CoverageExporter {
         do {
             profData = try DDCoverageConversor.generateProfData(profrawFile: coverage)
         } catch {
-            Log.print("Profiler Data genetation failed: \(error)")
+            Log.print("Profiler Data generation failed: \(error)")
             return
         }
         

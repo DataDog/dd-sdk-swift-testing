@@ -37,6 +37,7 @@ class DDCoverageHelper {
         coverageWorkQueue = OperationQueue()
         coverageWorkQueue.qualityOfService = .utility
         coverageWorkQueue.maxConcurrentOperationCount = max(ProcessInfo.processInfo.activeProcessorCount - 1, 1)
+        setFileLimit()
     }
 
     func clearCounters() {
@@ -45,6 +46,23 @@ class DDCoverageHelper {
                                  $0.endCountersFuncPtr,
                                  $0.beginDataFuncPtr,
                                  $0.endCountersFuncPtr)
+        }
+    }
+    
+    private func setFileLimit() {
+        var limit = rlimit()
+        let filesMax = 4096
+        guard getrlimit(RLIMIT_NOFILE, &limit) == 0 else {
+            Log.debug("Can't get open file limit")
+            return
+        }
+        guard limit.rlim_cur < filesMax else { return }
+        limit.rlim_cur = rlim_t(filesMax)
+        limit.rlim_max = rlim_t(filesMax * 8)
+        if setrlimit(RLIMIT_NOFILE, &limit) == 0 {
+            Log.debug("Updated open file limit to \(filesMax)")
+        } else {
+            Log.debug("Can't increase open file limit")
         }
     }
 

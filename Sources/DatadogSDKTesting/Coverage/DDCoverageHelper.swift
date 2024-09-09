@@ -56,11 +56,14 @@ class DDCoverageHelper {
             Log.debug("Can't get open file limit")
             return
         }
-        guard limit.rlim_cur < filesMax else { return }
+        let curLimit = limit.rlim_cur
+        guard curLimit < filesMax else {
+            Log.debug("Open file limit is good: \(curLimit)")
+            return
+        }
         limit.rlim_cur = rlim_t(filesMax)
-        limit.rlim_max = rlim_t(filesMax * 8)
         if setrlimit(RLIMIT_NOFILE, &limit) == 0 {
-            Log.debug("Updated open file limit to \(filesMax)")
+            Log.debug("Updated open file limit to \(filesMax) from \(curLimit)")
         } else {
             Log.debug("Can't increase open file limit")
         }

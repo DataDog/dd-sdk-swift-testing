@@ -322,7 +322,8 @@ internal class DDTestMonitor {
                         coverageHelper = nil
                         return
                     }
-                    coverageHelper = DDCoverageHelper(storagePath: temp)
+                    coverageHelper = DDCoverageHelper(storagePath: temp,
+                                                      priority: DDTestMonitor.config.codeCoveragePriority)
                 } else {
                     Log.debug("Coverage Disabled")
                     coverageHelper = nil

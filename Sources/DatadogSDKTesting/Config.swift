@@ -43,6 +43,7 @@ final class Config {
     var coverageEnabled: Bool = true
     var itrEnabled: Bool = true
     var excludedBranches: Set<String> = []
+    var codeCoveragePriority: CodeCoveragePriority = .utility
     
     /// Datadog Endpoint
     var endpoint: Endpoint = .us1
@@ -134,6 +135,8 @@ final class Config {
             let url = URL(string: "http://localhost:\(port)")!
             endpoint = .other(testsBaseURL: url, logsBaseURL: url)
         }
+        
+        codeCoveragePriority = env[.ciVisibilityCodeCoveragePriority] ?? .utility
         
         disableTracesExporting = env[.dontExport] ?? false
         reportHostname = env[.ciVisibilityReportHostname] ?? false

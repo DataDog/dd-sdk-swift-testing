@@ -39,6 +39,7 @@ internal enum EnvironmentKey: String, CaseIterable {
     case enableCiVisibilityLogs = "DD_CIVISIBILITY_LOGS_ENABLED"
     case enableCiVisibilityGitUpload = "DD_CIVISIBILITY_GIT_UPLOAD_ENABLED"
     case enableCiVisibilityCodeCoverage = "DD_CIVISIBILITY_CODE_COVERAGE_ENABLED"
+    case ciVisibilityCodeCoveragePriority = "DD_CIVISIBILITY_CODE_COVERAGE_PRIORITY"
     case enableCiVisibilityITR = "DD_CIVISIBILITY_ITR_ENABLED"
     case ciVisibilityExcludedBranches = "DD_CIVISIBILITY_EXCLUDED_BRANCHES"
     case ciVisibilityReportHostname = "DD_CIVISIBILITY_REPORT_HOSTNAME"
@@ -58,7 +59,7 @@ extension EnvironmentKey {
         [.isEnabled, .apiKey, .environment, .service, .sourcesDir, .tags,
          .disableTestInstrumenting, .disableNetworkInstrumentation, .disableHeadersInjection,
          .instrumentationExtraHeaders, .excludedURLs, .enableRecordPayload, disableNetworkCallStack,
-         .enableNetworkCallStackSymbolicated, .disableRumIntegration, .maxPayloadSize,
+         .enableNetworkCallStackSymbolicated, .disableRumIntegration, .maxPayloadSize, .ciVisibilityCodeCoveragePriority,
          .enableCiVisibilityLogs, .enableStdoutInstrumentation, .enableStderrInstrumentation,
          .disableSdkIosIntegration, .disableCrashHandler, .disableMachCrashHandler, .site, .customURL,
          .dontExport, .traceDebug, .traceDebugNetwork, .traceDebugCallStack, .disableNTPClock]

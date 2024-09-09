@@ -16,7 +16,7 @@ class DDCoverageHelper {
     var initialCoverageSaved: Bool
     let coverageWorkQueue: OperationQueue
 
-    init?(storagePath: Directory) {
+    init?(storagePath: Directory, priority: CodeCoveragePriority) {
         guard let profilePath = Self.profileGetFileName(), BinaryImages.profileImages.count > 0 else {
             Log.print("Coverage not properly enabled in project, check documentation")
             Log.debug("LLVM_PROFILE_FILE: \(Self.profileGetFileName() ?? "NIL")")
@@ -35,7 +35,7 @@ class DDCoverageHelper {
         Log.debug("DDCoverageHelper location: \(path.url.path)")
         initialCoverageSaved = false
         coverageWorkQueue = OperationQueue()
-        coverageWorkQueue.qualityOfService = .utility
+        coverageWorkQueue.qualityOfService = priority.qos
         coverageWorkQueue.maxConcurrentOperationCount = max(ProcessInfo.processInfo.activeProcessorCount - 1, 1)
         setFileLimit()
     }

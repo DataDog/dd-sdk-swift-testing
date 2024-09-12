@@ -207,6 +207,7 @@ extension Config: CustomDebugStringConvertible {
         Coverage Enabled: \(coverageEnabled)
         ITR Enabled: \(itrEnabled)
         Excluded Branches: \(excludedBranches)
+        Code Coverage Priority: \(codeCoveragePriority)
         Disable Traces Exporting: \(disableTracesExporting)
         Report Hostname: \(reportHostname)
         Tracer Trace Id: \(tracerTraceId ?? "nil")

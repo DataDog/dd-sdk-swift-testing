@@ -6,7 +6,7 @@
 
 import Foundation
 
-enum CodeCoveragePriority: Int, EnvironmentValue {
+enum CodeCoveragePriority: Int, EnvironmentValue, CustomDebugStringConvertible {
     case background = 0
     case utility = 1
     case userInitiated = 2
@@ -29,5 +29,14 @@ enum CodeCoveragePriority: Int, EnvironmentValue {
             return nil
         }
         self = priority
+    }
+    
+    var debugDescription: String {
+        switch self {
+        case .background: return "background"
+        case .utility: return "utility"
+        case .userInitiated: return "userInitiated"
+        case .userInteractive: return "userInteractive"
+        }
     }
 }

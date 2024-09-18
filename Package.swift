@@ -3,8 +3,8 @@
 
 import PackageDescription
 
-let releaseVersion = "2.5.1-alpha3"
-let relaseChecksum = "6d7e90a116f0965b5693a1a51fa0b37c5f359311d6a9447d4e4f85892aa74371"
+let releaseVersion = "2.5.1"
+let relaseChecksum = "5c64be8bac9f6e094da3117bc397dfd96c887490ab0f2667ea39de44b75b6179"
 let url = "https://github.com/DataDog/dd-sdk-swift-testing/releases/download/\(releaseVersion)/DatadogSDKTesting.zip"
 
 let package = Package(

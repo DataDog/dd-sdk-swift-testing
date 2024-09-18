@@ -70,13 +70,14 @@ internal class DDTracer {
 
         let exporterConfiguration = ExporterConfiguration(
             serviceName: conf.service ?? env.git.repositoryName ?? "unknown-swift-repo",
-            libraryVersion: DDTestMonitor.tracerVersion,
             applicationName: identifier,
             applicationVersion: version,
             environment: env.environment,
             hostname: hostnameToReport,
             apiKey: conf.apiKey ?? "",
             endpoint: conf.endpoint.exporterEndpoint,
+            metadata: .init(libraryVersion: DDTestMonitor.tracerVersion,
+                            cpuCount: PlatformUtils.getCpuCount()),
             payloadCompression: payloadCompression,
             performancePreset: .instantDataDelivery,
             exporterId: String(SpanId.random().rawValue),
@@ -371,5 +372,14 @@ internal class DDTracer {
 
     func endpointURLs() -> Set<String> {
         return eventsExporter?.endpointURLs() ?? Set<String>()
+    }
+}
+
+private extension SpanMetadata {
+    init(libraryVersion: String, cpuCount: Int) {
+        self.init()
+        self[generic: "language"] = "swift"
+        self[generic: "library_version"] = libraryVersion
+        self[generic: "_dd.host.cpu_count"] = cpuCount
     }
 }

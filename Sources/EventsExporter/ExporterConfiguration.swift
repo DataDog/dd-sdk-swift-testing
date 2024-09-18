@@ -13,10 +13,8 @@ internal struct ExporterError: Error, CustomStringConvertible {
 public struct ExporterConfiguration {
     /// The name of the service, resource, version,... that will be reported to the backend.
     var serviceName: String
-    var libraryVersion: String
     var applicationName: String
     var version: String
-    var environment: String
     var hostname: String?
 
     /// API key for authentication
@@ -34,21 +32,26 @@ public struct ExporterConfiguration {
     /// Exporter ID for tracing
     var exporterId: String
     
+    var metadata: SpanMetadata
+    
+    var environment: String {
+        didSet { metadata[generic: "env"] = environment }
+    }
+    
     var logger: Logger
     var debug: Debug
 
     public init(
-        serviceName: String, libraryVersion: String, applicationName: String,
-        applicationVersion: String, environment: String, hostname: String?, apiKey: String,
-        endpoint: Endpoint, payloadCompression: Bool = true, source: String = "ios",
+        serviceName: String, applicationName: String, applicationVersion: String,
+        environment: String, hostname: String?, apiKey: String,
+        endpoint: Endpoint, metadata: SpanMetadata,
+        payloadCompression: Bool = true, source: String = "ios",
         performancePreset: PerformancePreset = .default, exporterId: String, logger: Logger,
         debug: Debug = .init()
     ) {
         self.serviceName = serviceName
-        self.libraryVersion = libraryVersion
         self.applicationName = applicationName
         self.version = applicationVersion
-        self.environment = environment
         self.hostname = hostname
         self.apiKey = apiKey
         self.endpoint = endpoint
@@ -56,8 +59,10 @@ public struct ExporterConfiguration {
         self.source = source
         self.performancePreset = performancePreset
         self.exporterId = exporterId
+        self.metadata = metadata
         self.logger = logger
         self.debug = debug
+        self.environment = environment
     }
 }
 

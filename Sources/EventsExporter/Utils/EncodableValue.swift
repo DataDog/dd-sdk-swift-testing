@@ -8,9 +8,9 @@ import Foundation
 
 /// Type erasure `Encodable` wrapper.
 internal struct EncodableValue: Encodable {
-    let value: Encodable
+    let value: any Encodable
 
-    init(_ value: Encodable) {
+    init(_ value: any Encodable) {
         self.value = value
     }
 

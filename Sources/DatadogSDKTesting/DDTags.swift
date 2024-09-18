@@ -61,6 +61,10 @@ internal enum DDTestTags {
     static let testSkippedByITR = "test.skipped_by_itr"
 }
 
+internal enum DDHostTags {
+    static let hostVCPUCount = "_dd.host.vcpu_count"
+}
+
 internal enum DDOSTags {
     static let osPlatform = "os.platform"
     static let osArchitecture = "os.architecture"

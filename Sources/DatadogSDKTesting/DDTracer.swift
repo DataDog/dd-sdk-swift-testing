@@ -378,8 +378,8 @@ internal class DDTracer {
 private extension SpanMetadata {
     init(libraryVersion: String, cpuCount: Int) {
         self.init()
-        self[generic: "language"] = "swift"
-        self[generic: "library_version"] = libraryVersion
-        self[generic: "_dd.host.vcpu_count"] = cpuCount
+        self[generic: DDGenericTags.language] = "swift"
+        self[generic: DDGenericTags.libraryVersion] = libraryVersion
+        self[generic: DDHostTags.hostVCPUCount] = cpuCount
     }
 }

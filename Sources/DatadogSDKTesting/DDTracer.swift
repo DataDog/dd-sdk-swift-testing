@@ -380,6 +380,6 @@ private extension SpanMetadata {
         self.init()
         self[generic: "language"] = "swift"
         self[generic: "library_version"] = libraryVersion
-        self[generic: "_dd.host.cpu_count"] = cpuCount
+        self[generic: "_dd.host.vcpu_count"] = cpuCount
     }
 }

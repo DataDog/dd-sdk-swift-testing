@@ -28,10 +28,12 @@ internal class SpansExporter {
         self.runtimeId = metadata[string: "runtime-id"] ?? UUID().uuidString
         metadata[string: "runtime-id"] = self.runtimeId
         
+        let encodedMetadata = String(data: try JSONEncoder().encode(metadata.metadata), encoding: .utf8)!
+        
         let prefix = """
         {
         "version": 1,
-        "metadata": \(try JSONEncoder().encode(metadata.metadata)),
+        "metadata": \(encodedMetadata),
         "events": [
         """
 

@@ -7,7 +7,7 @@
 import Foundation
 
 public struct SpanMetadata {
-    private var meta: [SpanType: [String: Value]]
+    private var meta: [String: [String: Value]]
     
     public subscript(bool key: String) -> Bool? {
         get { self[bool: .generic, key] }
@@ -30,11 +30,11 @@ public struct SpanMetadata {
     }
     
     public subscript(type: SpanType, key: String) -> Value? {
-        get { meta[type]?[key] }
+        get { meta[type.rawValue]?[key] }
         set {
-            var tStorage = meta[type] ?? [:]
+            var tStorage = meta[type.rawValue] ?? [:]
             tStorage[key] = newValue
-            meta[type] = tStorage
+            meta[type.rawValue] = tStorage
         }
     }
     
@@ -42,7 +42,7 @@ public struct SpanMetadata {
         self.meta = [:]
     }
     
-    public var metadata: [SpanType: [String: Value]] {
+    public var metadata: [String: [String: Value]] {
         meta.compactMapValues {
             let mapped = $0.compactMapValues { $0.forMetadata }
             return mapped.count > 0 ? mapped : nil
@@ -199,7 +199,7 @@ public extension SpanMetadata {
         set { self[type, key] = newValue.map { .double($0) } }
     }
     
-    var metrics: [SpanType: [String: Value]] {
+    var metrics: [String: [String: Value]] {
         meta.compactMapValues {
             let mapped = $0.compactMapValues { $0.forMetrics }
             return mapped.count > 0 ? mapped : nil

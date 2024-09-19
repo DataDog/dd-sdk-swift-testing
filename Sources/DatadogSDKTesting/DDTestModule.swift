@@ -139,6 +139,8 @@ public class DDTestModule: NSObject, Encodable {
         ]
 
         meta.merge(DDTestMonitor.baseConfigurationTags) { _, new in new }
+        metrics.merge(DDTestMonitor.baseMetrics) { _, new in new }
+        
         meta.merge(defaultAttributes) { _, new in new }
         meta.merge(DDTestMonitor.env.gitAttributes) { _, new in new }
         meta.merge(DDTestMonitor.env.ciAttributes) { _, new in new }

@@ -76,8 +76,7 @@ internal class DDTracer {
             hostname: hostnameToReport,
             apiKey: conf.apiKey ?? "",
             endpoint: conf.endpoint.exporterEndpoint,
-            metadata: .init(libraryVersion: DDTestMonitor.tracerVersion,
-                            cpuCount: PlatformUtils.getCpuCount()),
+            metadata: .init(libraryVersion: DDTestMonitor.tracerVersion),
             payloadCompression: payloadCompression,
             performancePreset: .instantDataDelivery,
             exporterId: String(SpanId.random().rawValue),
@@ -376,10 +375,9 @@ internal class DDTracer {
 }
 
 private extension SpanMetadata {
-    init(libraryVersion: String, cpuCount: Int) {
+    init(libraryVersion: String) {
         self.init()
-        self[generic: DDGenericTags.language] = "swift"
-        self[generic: DDGenericTags.libraryVersion] = libraryVersion
-        self[generic: DDHostTags.hostVCPUCount] = cpuCount
+        self[string: DDGenericTags.language] = "swift"
+        self[string: DDGenericTags.libraryVersion] = libraryVersion
     }
 }

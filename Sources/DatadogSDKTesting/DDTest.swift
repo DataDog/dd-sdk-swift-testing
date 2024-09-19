@@ -58,6 +58,10 @@ public class DDTest: NSObject {
 
         DDTestMonitor.tracer.addPropagationsHeadersToEnvironment()
         span.addTags(from: DDTestMonitor.env)
+        
+        for metric in DDTestMonitor.baseMetrics {
+            span.setAttribute(key: metric.key, value: metric.value)
+        }
 
         let functionName = suite.name + "." + name
         if let functionInfo = DDTestModule.bundleFunctionInfo[functionName] {

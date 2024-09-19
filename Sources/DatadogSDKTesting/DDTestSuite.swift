@@ -14,6 +14,7 @@ public class DDTestSuite: NSObject, Encodable {
     let startTime: Date
     var duration: UInt64
     var meta: [String: String] = [:]
+    var metrics: [String: Double] = [:]
     var status: DDTestStatus
     var unskippable: Bool = false
     var localization: String
@@ -63,6 +64,8 @@ public class DDTestSuite: NSObject, Encodable {
         ]
 
         meta.merge(DDTestMonitor.baseConfigurationTags) { _, new in new }
+        metrics.merge(DDTestMonitor.baseMetrics) { _, new in new }
+        
         meta.merge(defaultAttributes) { _, new in new }
         meta.merge(DDTestMonitor.env.gitAttributes) { _, new in new }
         meta.merge(DDTestMonitor.env.ciAttributes) { _, new in new }
@@ -112,6 +115,7 @@ extension DDTestSuite {
         case start
         case duration
         case meta
+        case metrics
         case error
         case name
         case resource
@@ -126,6 +130,7 @@ extension DDTestSuite {
         try container.encode(startTime.timeIntervalSince1970.toNanoseconds, forKey: .start)
         try container.encode(duration, forKey: .duration)
         try container.encode(meta, forKey: .meta)
+        try container.encode(metrics, forKey: .metrics)
         try container.encode(status == .fail ? 1 : 0, forKey: .error)
         try container.encode("\(module.testFramework).suite", forKey: .name)
         try container.encode("\(name)", forKey: .resource)

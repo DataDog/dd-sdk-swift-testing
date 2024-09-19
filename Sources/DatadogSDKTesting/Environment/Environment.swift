@@ -43,7 +43,8 @@ internal final class Environment {
                             osArchitecture: PlatformUtils.getPlatformArchitecture(),
                             osVersion: PlatformUtils.getDeviceVersion(),
                             runtimeName: runtimeName, runtimeVersion: runtimeVersion,
-                            localization: PlatformUtils.getLocalization())
+                            localization: PlatformUtils.getLocalization(),
+                            vCPUCount: PlatformUtils.getCpuCount())
         
         
         let ciInfo = ciReaders.reduce(nil) { (ci, reader) in
@@ -220,6 +221,8 @@ internal extension Environment {
         
         let localization: String
         
+        let vCPUCount: Int
+        
         var debugDescription: String {
             """
             Platform:
@@ -230,6 +233,7 @@ internal extension Environment {
               OS Version: \(osVersion)
               Runtime Name: \(runtimeName)
               Runtime Version: \(runtimeVersion)
+              vCPU Count: \(vCPUCount)
               Localization: \(localization)
             """
         }

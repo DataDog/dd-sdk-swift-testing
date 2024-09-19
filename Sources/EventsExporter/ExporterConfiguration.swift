@@ -35,7 +35,7 @@ public struct ExporterConfiguration {
     var metadata: SpanMetadata
     
     var environment: String {
-        didSet { metadata[generic: "env"] = environment }
+        didSet { metadata[string: "env"] = environment }
     }
     
     var logger: Logger

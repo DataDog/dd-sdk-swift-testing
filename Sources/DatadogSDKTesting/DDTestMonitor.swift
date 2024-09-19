@@ -75,6 +75,10 @@ internal class DDTestMonitor {
         DDRuntimeTags.runtimeVersion: env.platform.runtimeVersion,
         DDUISettingsTags.uiSettingsLocalization: env.platform.localization,
     ]
+    
+    static var baseMetrics = [
+        DDHostTags.hostVCPUCount: Double(env.platform.vCPUCount)
+    ]
 
     var coverageHelper: DDCoverageHelper?
     var gitUploader: GitUploader?

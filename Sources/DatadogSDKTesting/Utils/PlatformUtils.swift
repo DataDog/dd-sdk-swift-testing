@@ -88,6 +88,10 @@ struct PlatformUtils {
             return (ProcessInfo.processInfo.processName, (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "")
         }
     }
+    
+    static func getCpuCount() -> Int {
+        ProcessInfo.processInfo.processorCount
+    }
 
     static func getAppearance() -> String {
         #if os(iOS) || os(tvOS) || os(watchOS)

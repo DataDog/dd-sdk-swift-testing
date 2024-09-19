@@ -37,7 +37,7 @@ class LogsExporterTests: XCTestCase {
             }
         }
 
-        let configuration = ExporterConfiguration(serviceName: "serviceName", libraryVersion: "0.0",
+        let configuration = ExporterConfiguration(serviceName: "serviceName",
                                                   applicationName: "applicationName",
                                                   applicationVersion: "applicationVersion",
                                                   environment: "environment",
@@ -47,6 +47,7 @@ class LogsExporterTests: XCTestCase {
                                                       testsURL: URL(string: "http://localhost:33333/traces")!,
                                                       logsURL: URL(string: "http://localhost:33333/logs")!
                                                   ),
+                                                  metadata: .init(),
                                                   performancePreset: .instantDataDelivery,
                                                   exporterId: "exporterId",
                                                   logger: Log())

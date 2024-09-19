@@ -44,6 +44,7 @@
 		A7B747C02C60E1E7009B4B93 /* SwiftUtilsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B747BF2C60E1E7009B4B93 /* SwiftUtilsTests.swift */; };
 		A7CC6D862C07D624003C13BC /* Tags.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7CC6D852C07D624003C13BC /* Tags.swift */; };
 		A7CC6D882C0F3F83003C13BC /* Tags+ObjC.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7CC6D872C0F3F83003C13BC /* Tags+ObjC.swift */; };
+		A7D23AF82C9B10A8006AB41D /* SpanMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D23AF72C9B10A8006AB41D /* SpanMetadata.swift */; };
 		A7E0056D2C766EF7004D4B78 /* CoreTelephony.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7E0056C2C766EF7004D4B78 /* CoreTelephony.framework */; platformFilters = (ios, maccatalyst, macos, ); };
 		A7E232E52BC6E80A0087D8F8 /* CodeCoverage.h in Headers */ = {isa = PBXBuildFile; fileRef = A7E232E42BC6E80A0087D8F8 /* CodeCoverage.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A7E232F52BC6EB470087D8F8 /* CoverageExporterJson.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7E232EA2BC6EB460087D8F8 /* CoverageExporterJson.cpp */; };
@@ -336,6 +337,7 @@
 		A7C292162B9B2DE0009C2979 /* DatadogSDKTesting.podspec */ = {isa = PBXFileReference; lastKnownFileType = text; path = DatadogSDKTesting.podspec; sourceTree = "<group>"; };
 		A7CC6D852C07D624003C13BC /* Tags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tags.swift; sourceTree = "<group>"; };
 		A7CC6D872C0F3F83003C13BC /* Tags+ObjC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Tags+ObjC.swift"; sourceTree = "<group>"; };
+		A7D23AF72C9B10A8006AB41D /* SpanMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpanMetadata.swift; sourceTree = "<group>"; };
 		A7E0056C2C766EF7004D4B78 /* CoreTelephony.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreTelephony.framework; path = System/Library/Frameworks/CoreTelephony.framework; sourceTree = SDKROOT; };
 		A7E232DC2BC6E68B0087D8F8 /* CDatadogSDKTesting.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CDatadogSDKTesting.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7E232E42BC6E80A0087D8F8 /* CodeCoverage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CodeCoverage.h; sourceTree = "<group>"; };
@@ -848,6 +850,7 @@
 				E143CEFE27D7790200F4018A /* SpansExporter.swift */,
 				E143CEFF27D7790200F4018A /* SpanEncoder.swift */,
 				E1EBBD4627F1FFE70059BC3E /* SpanSanitizer.swift */,
+				A7D23AF72C9B10A8006AB41D /* SpanMetadata.swift */,
 			);
 			path = Spans;
 			sourceTree = "<group>";
@@ -1585,6 +1588,7 @@
 				A7FC26462BA1ECEF00067E26 /* FilesOrchestrator.swift in Sources */,
 				A7FC26482BA1ECEF00067E26 /* FileWriter.swift in Sources */,
 				A7FC263C2BA1ECCF00067E26 /* DataCompression.swift in Sources */,
+				A7D23AF82C9B10A8006AB41D /* SpanMetadata.swift in Sources */,
 				A7FC261A2BA1EC5A00067E26 /* DataUploadStatus.swift in Sources */,
 				A7FC263A2BA1ECCF00067E26 /* EncodableValue.swift in Sources */,
 				A7FC26352BA1ECCF00067E26 /* PerformancePreset.swift in Sources */,

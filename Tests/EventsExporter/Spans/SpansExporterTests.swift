@@ -38,7 +38,6 @@ class SpansExporterTests: XCTestCase {
         }
 
         let configuration = ExporterConfiguration(serviceName: "serviceName",
-                                                  libraryVersion: "0.0",
                                                   applicationName: "applicationName",
                                                   applicationVersion: "applicationVersion",
                                                   environment: "environment",
@@ -48,6 +47,7 @@ class SpansExporterTests: XCTestCase {
                                                       testsURL: URL(string: "http://localhost:33333/traces")!,
                                                       logsURL: URL(string: "http://localhost:33333/logs")!
                                                   ),
+                                                  metadata: .init(),
                                                   performancePreset: .instantDataDelivery,
                                                   exporterId: "exporterId",
                                                   logger: Log())

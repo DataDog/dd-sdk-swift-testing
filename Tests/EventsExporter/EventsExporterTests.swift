@@ -47,7 +47,6 @@ class EventsExporterTests: XCTestCase {
         let instrumentationLibraryVersion = "semver:0.1.0"
 
         let exporterConfiguration = ExporterConfiguration(serviceName: "serviceName",
-                                                          libraryVersion: "0.0",
                                                           applicationName: "applicationName",
                                                           applicationVersion: "applicationVersion",
                                                           environment: "environment",
@@ -57,6 +56,7 @@ class EventsExporterTests: XCTestCase {
                                                               testsURL: URL(string: "http://localhost:33333/traces")!,
                                                               logsURL: URL(string: "http://localhost:33333/logs")!
                                                           ),
+                                                          metadata: .init(),
                                                           exporterId: "exporterId",
                                                           logger: Log())
 

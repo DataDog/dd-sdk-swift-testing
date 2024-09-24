@@ -50,7 +50,6 @@ public class DDTestModule: NSObject, Encodable {
 
         let beforeLoadingTime = DDTestMonitor.clock.now
         if DDTestMonitor.instance == nil {
-            DDTestMonitor.baseConfigurationTags[DDTestTags.testModule] = bundleName
             var success = false
             Log.measure(name: "installTestMonitor") {
                 success = DDTestMonitor.installTestMonitor()
@@ -130,20 +129,18 @@ public class DDTestModule: NSObject, Encodable {
         }
 
         /// Export module event
-        let defaultAttributes: [String: String] = [
+        let moduleAttributes: [String: String] = [
             DDGenericTags.type: DDTagValues.typeModuleEnd,
-            DDTestTags.testSuite: bundleName,
+            DDTestTags.testModule: bundleName,
             DDTestTags.testFramework: testFramework,
             DDTestTags.testStatus: moduleStatus,
             DDTestSuiteVisibilityTags.testModuleId: String(id.rawValue),
         ]
-
-        meta.merge(DDTestMonitor.baseConfigurationTags) { _, new in new }
-        metrics.merge(DDTestMonitor.baseMetrics) { _, new in new }
+        meta.merge(moduleAttributes) { _, new in new }
         
-        meta.merge(defaultAttributes) { _, new in new }
-        meta.merge(DDTestMonitor.env.gitAttributes) { _, new in new }
-        meta.merge(DDTestMonitor.env.ciAttributes) { _, new in new }
+        // Move to the global when we will support global metrics
+        metrics.merge(DDTestMonitor.env.baseMetrics) { _, new in new }
+        
         meta[DDUISettingsTags.uiSettingsModuleLocalization] = localization
         meta[DDTestSessionTags.testCodeCoverageEnabled] = (DDTestMonitor.instance?.coverageHelper != nil) ? "true" : "false"
         

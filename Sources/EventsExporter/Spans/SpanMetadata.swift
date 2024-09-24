@@ -73,7 +73,7 @@ public extension SpanMetadata {
             try rawValue.encode(to: encoder)
         }
         
-        @inlinable static var generic: SpanType { "*" }
+        @inlinable public static var generic: SpanType { "*" }
     }
 }
 

@@ -7,7 +7,7 @@
 import Foundation
 
 internal struct AwsCodeBuildCIEnvironmentReader: CIEnvironmentReader {
-    func isActive(env: any EnvironmentReader) -> Bool { env.has(env: "CODEBUILD_BUILD_ID") }
+    func isActive(env: any EnvironmentReader) -> Bool { env["CODEBUILD_BUILD_ID"] ?? "" != "" }
     
     func read(env: any EnvironmentReader) -> (ci: Environment.CI, git: Environment.Git) {
         let idAndName = (env["CODEBUILD_BUILD_ID"] ?? "").components(separatedBy: ":")

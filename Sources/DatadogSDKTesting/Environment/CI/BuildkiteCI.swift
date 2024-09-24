@@ -7,7 +7,7 @@
 import Foundation
 
 internal struct BuildkiteCIEnvironmentReader: CIEnvironmentReader {
-    func isActive(env: any EnvironmentReader) -> Bool { env.has(env: "BUILDKITE") }
+    func isActive(env: any EnvironmentReader) -> Bool { env["BUILDKITE"] ?? "" != "" }
     
     func read(env: any EnvironmentReader) -> (ci: Environment.CI, git: Environment.Git) {
         let jobId = env["BUILDKITE_JOB_ID", String.self]

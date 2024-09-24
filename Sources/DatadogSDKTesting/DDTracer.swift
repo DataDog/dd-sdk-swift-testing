@@ -67,7 +67,10 @@ internal class DDTracer {
         }
 
         let hostnameToReport: String? = (conf.reportHostname && !DDTestMonitor.developerMachineHostName.isEmpty) ? DDTestMonitor.developerMachineHostName : nil
-
+        
+        let metadata = SpanMetadata(libraryVersion: DDTestMonitor.tracerVersion,
+                                    env: DDTestMonitor.env)
+        
         let exporterConfiguration = ExporterConfiguration(
             serviceName: conf.service ?? env.git.repositoryName ?? "unknown-swift-repo",
             applicationName: identifier,
@@ -76,7 +79,7 @@ internal class DDTracer {
             hostname: hostnameToReport,
             apiKey: conf.apiKey ?? "",
             endpoint: conf.endpoint.exporterEndpoint,
-            metadata: .init(libraryVersion: DDTestMonitor.tracerVersion),
+            metadata: metadata,
             payloadCompression: payloadCompression,
             performancePreset: .instantDataDelivery,
             exporterId: String(SpanId.random().rawValue),
@@ -374,10 +377,36 @@ internal class DDTracer {
     }
 }
 
-private extension SpanMetadata {
-    init(libraryVersion: String) {
+extension SpanMetadata {    
+    init(libraryVersion: String,
+         tags: [String: String],
+         git: [String: String],
+         ci: [String: String],
+         sessionName: String)
+    {
         self.init()
         self[string: DDGenericTags.language] = "swift"
         self[string: DDGenericTags.libraryVersion] = libraryVersion
+        for type in SpanType.allTest {
+            for tag in tags {
+                self[string: type, tag.key] = tag.value
+            }
+            for tag in git {
+                self[string: type, tag.key] = tag.value
+            }
+            for tag in ci {
+                self[string: type, tag.key] = tag.value
+            }
+            self[string: type, DDTestSessionTags.testSessionName] = sessionName
+        }
     }
+}
+
+extension SpanMetadata.SpanType {
+    static var module: Self { .init(DDTagValues.typeModuleEnd) }
+    static var session: Self { .init(DDTagValues.typeSessionEnd) }
+    static var suite: Self { .init(DDTagValues.typeSuiteEnd) }
+    static var test: Self { .init(DDTagValues.typeTest) }
+    
+    static var allTest: [Self] { [module, session, suite, test] }
 }

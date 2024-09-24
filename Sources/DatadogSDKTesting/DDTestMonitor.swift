@@ -65,21 +65,6 @@ internal class DDTestMonitor {
 
     static let developerMachineHostName: String = try! Spawn.output("hostname")
 
-    static var baseConfigurationTags = [
-        DDOSTags.osPlatform: env.platform.osName,
-        DDOSTags.osArchitecture: env.platform.osArchitecture,
-        DDOSTags.osVersion: env.platform.osVersion,
-        DDDeviceTags.deviceName: env.platform.deviceName,
-        DDDeviceTags.deviceModel: env.platform.deviceModel,
-        DDRuntimeTags.runtimeName: env.platform.runtimeName,
-        DDRuntimeTags.runtimeVersion: env.platform.runtimeVersion,
-        DDUISettingsTags.uiSettingsLocalization: env.platform.localization,
-    ]
-    
-    static var baseMetrics = [
-        DDHostTags.hostVCPUCount: Double(env.platform.vCPUCount)
-    ]
-
     var coverageHelper: DDCoverageHelper?
     var gitUploader: GitUploader?
     var itr: IntelligentTestRunner?
@@ -256,7 +241,7 @@ internal class DDTestMonitor {
                                               branch: branch,
                                               sha: commit,
                                               testLevel: .test,
-                                              configurations: DDTestMonitor.baseConfigurationTags,
+                                              configurations: DDTestMonitor.env.baseConfigurations,
                                               customConfigurations: DDTestMonitor.config.customConfigurations)
                 }
             } else {
@@ -305,7 +290,7 @@ internal class DDTestMonitor {
                     if itrBackendConfig?.testsSkipping ?? false {
                         Log.debug("ITR Enabled")
                         
-                        itr = IntelligentTestRunner(configurations: DDTestMonitor.baseConfigurationTags)
+                        itr = IntelligentTestRunner(configurations: DDTestMonitor.env.baseConfigurations)
                         itr?.start()
                     } else {
                         Log.debug("ITR Disabled")

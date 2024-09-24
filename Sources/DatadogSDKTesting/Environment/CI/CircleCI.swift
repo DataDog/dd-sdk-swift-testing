@@ -7,7 +7,7 @@
 import Foundation
 
 internal struct CircleCIEnvironmentReader: CIEnvironmentReader {
-    func isActive(env: any EnvironmentReader) -> Bool { env.has(env: "CIRCLECI") }
+    func isActive(env: any EnvironmentReader) -> Bool { env["CIRCLECI"] ?? "" != "" }
     
     func read(env: any EnvironmentReader) -> (ci: Environment.CI, git: Environment.Git) {
         let pipelineId = env["CIRCLE_WORKFLOW_ID", String.self]

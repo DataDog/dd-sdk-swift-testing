@@ -7,7 +7,7 @@
 import Foundation
 
 internal struct TravisCIEnvironmentReader: CIEnvironmentReader {
-    func isActive(env: any EnvironmentReader) -> Bool { env.has(env: "TRAVIS") }
+    func isActive(env: any EnvironmentReader) -> Bool { env["TRAVIS"] ?? "" != "" }
     
     func read(env: any EnvironmentReader) -> (ci: Environment.CI, git: Environment.Git) {
         let repositoryEnv: String? = env["TRAVIS_PULL_REQUEST_SLUG"] ?? env["TRAVIS_REPO_SLUG"]

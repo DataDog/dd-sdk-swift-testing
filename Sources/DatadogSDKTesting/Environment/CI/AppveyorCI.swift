@@ -7,7 +7,7 @@
 import Foundation
 
 internal struct AppveyorCIEnvironmentReader: CIEnvironmentReader {
-    func isActive(env: any EnvironmentReader) -> Bool { env.has(env: "APPVEYOR") }
+    func isActive(env: any EnvironmentReader) -> Bool { env["APPVEYOR"] ?? "" != "" }
     
     func read(env: any EnvironmentReader) -> (ci: Environment.CI, git: Environment.Git) {
         let pipelineId = env["APPVEYOR_BUILD_ID", String.self]

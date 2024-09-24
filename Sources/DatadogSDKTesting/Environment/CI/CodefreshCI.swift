@@ -7,7 +7,7 @@
 import Foundation
 
 internal struct CodefreshCIEnvironmentReader: CIEnvironmentReader {
-    func isActive(env: any EnvironmentReader) -> Bool { env.has(env: "CF_BUILD_ID") }
+    func isActive(env: any EnvironmentReader) -> Bool { env["CF_BUILD_ID"] ?? "" != "" }
     
     func read(env: any EnvironmentReader) -> (ci: Environment.CI, git: Environment.Git) {
         var environment = [String: SpanAttributeConvertible]()

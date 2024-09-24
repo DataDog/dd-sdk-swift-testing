@@ -7,7 +7,7 @@
 import Foundation
 
 internal struct TeamcityCIEnvironmentReader: CIEnvironmentReader {
-    func isActive(env: any EnvironmentReader) -> Bool { env.has(env: "TEAMCITY_VERSION") }
+    func isActive(env: any EnvironmentReader) -> Bool { env["TEAMCITY_VERSION"] ?? "" != "" }
     
     func read(env: any EnvironmentReader) -> (ci: Environment.CI, git: Environment.Git) {
         (

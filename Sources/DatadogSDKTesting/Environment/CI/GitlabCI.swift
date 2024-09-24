@@ -7,7 +7,7 @@
 import Foundation
 
 internal struct GitlabCIEnvironmentReader: CIEnvironmentReader {
-    func isActive(env: any EnvironmentReader) -> Bool { env.has(env: "GITLAB_CI") }
+    func isActive(env: any EnvironmentReader) -> Bool { env["GITLAB_CI"] ?? "" != "" }
     
     func read(env: any EnvironmentReader) -> (ci: Environment.CI, git: Environment.Git) {
         var authorName: String? = nil

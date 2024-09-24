@@ -17,21 +17,8 @@ struct FixtureError: Error, CustomStringConvertible {
 class EnvironmentTests: XCTestCase {
     // list of attributes stored as json
     let jsonAttributes = ["_dd.ci.env_vars", "ci.node.labels"]
-
-    var tracerProvider = TracerProviderSdk()
-    var tracerSdk: Tracer!
     
-    override func setUp() {
-        XCTAssertNil(DDTracer.activeSpan)
-        OpenTelemetry.registerTracerProvider(tracerProvider: tracerProvider)
-        tracerSdk = tracerProvider.get(instrumentationName: "SpanBuilderSdkTest", instrumentationVersion: nil)
-    }
-
-    override func tearDown() {
-        XCTAssertNil(DDTracer.activeSpan)
-    }
-
-    func testAddsTagsToSpan() {
+    func testAddTagsToMetadata() {
         var testEnvironment = [String: SpanAttributeConvertible]()
         testEnvironment["JENKINS_URL"] = "http://jenkins.com/"
         testEnvironment["GIT_URL"] = "/test/repo"
@@ -43,34 +30,57 @@ class EnvironmentTests: XCTestCase {
         testEnvironment["GIT_BRANCH"] = "/origin/develop"
         testEnvironment["JOB_NAME"] = "job1"
 
-        let span = createSimpleSpan()
-        let env = createEnv(testEnvironment)
-        span.addTags(from: env)
-
-        let spanData = span.toSpanData()
-
-        XCTAssertEqual(spanData.attributes["ci.provider.name"]?.description, "jenkins")
-        XCTAssertEqual(spanData.attributes["git.repository_url"]?.description, "/test/repo")
-        XCTAssertEqual(spanData.attributes["git.commit.sha"]?.description, "37e376448b0ac9b7f54404")
-        XCTAssertEqual(spanData.attributes["ci.workspace_path"]?.description, "/build")
-        XCTAssertEqual(spanData.attributes["ci.pipeline.id"]?.description, "pipeline1")
-        XCTAssertEqual(spanData.attributes["ci.pipeline.number"]?.description, "45")
-        XCTAssertEqual(spanData.attributes["ci.pipeline.url"]?.description, "http://jenkins.com/build")
-        XCTAssertEqual(spanData.attributes["ci.pipeline.name"]?.description, "job1")
-        XCTAssertEqual(spanData.attributes["git.branch"]?.description, "develop")
+        let metadata = SpanMetadata(libraryVersion: "1.0", env: createEnv(testEnvironment))
+        
+        for type in SpanMetadata.SpanType.allTest {
+            XCTAssertEqual(metadata[string: type, DDCITags.ciProvider], "jenkins")
+            XCTAssertEqual(metadata[string: type, DDCITags.ciPipelineId], "pipeline1")
+            XCTAssertEqual(metadata[string: type, DDCITags.ciPipelineNumber], "45")
+            XCTAssertEqual(metadata[string: type, DDCITags.ciPipelineURL], "http://jenkins.com/build")
+            XCTAssertEqual(metadata[string: type, DDCITags.ciPipelineName], "job1")
+            XCTAssertEqual(metadata[string: type, DDCITags.ciWorkspacePath], "/build")
+            XCTAssertEqual(metadata[string: type, DDGitTags.gitRepository], "/test/repo")
+            XCTAssertEqual(metadata[string: type, DDGitTags.gitCommit], "37e376448b0ac9b7f54404")
+            XCTAssertEqual(metadata[string: type, DDGitTags.gitBranch], "develop")
+            
+            XCTAssertEqual(metadata[string: type, DDOSTags.osArchitecture], PlatformUtils.getPlatformArchitecture())
+            XCTAssertEqual(metadata[string: type, DDOSTags.osPlatform], PlatformUtils.getRunningPlatform())
+            XCTAssertEqual(metadata[string: type, DDOSTags.osVersion], PlatformUtils.getDeviceVersion())
+            XCTAssertEqual(metadata[string: type, DDDeviceTags.deviceModel], PlatformUtils.getDeviceModel())
+            XCTAssertEqual(metadata[string: type, DDDeviceTags.deviceName], PlatformUtils.getDeviceName())
+            XCTAssertEqual(metadata[string: type, DDRuntimeTags.runtimeName], "Xcode")
+            XCTAssertEqual(metadata[string: type, DDRuntimeTags.runtimeVersion], PlatformUtils.getXcodeVersion())
+            XCTAssertEqual(metadata[string: type, DDUISettingsTags.uiSettingsLocalization], PlatformUtils.getLocalization())
+        }
     }
 
     func testWhenNotRunningInCI_CITagsAreNotAdded() {
         var testEnvironment = [String: SpanAttributeConvertible]()
         testEnvironment["SRCROOT"] = ProcessInfo.processInfo.environment["SRCROOT"]
 
-        let span = createSimpleSpan()
-        let env = createEnv(testEnvironment)
-        span.addTags(from: env)
-
-        let spanData = span.toSpanData()
-        XCTAssertNotNil(spanData.attributes[DDCITags.ciWorkspacePath])
-        XCTAssertNil(spanData.attributes[DDCITags.ciProvider])
+        let metadata = SpanMetadata(libraryVersion: "1.0", env: createEnv(testEnvironment))
+        
+        for type in SpanMetadata.SpanType.allTest {
+            XCTAssertNotNil(metadata[type, DDCITags.ciWorkspacePath])
+            XCTAssertNil(metadata[type, DDCITags.ciProvider])
+        }
+    }
+    
+    func testSessionName() {
+        let emptyEnv = createEnv([:])
+        let metadata1 = SpanMetadata(libraryVersion: "1.0",
+                                     env: createEnv([EnvironmentKey.sessionName.rawValue: "MyCoolSession"]))
+        let metadata2 = SpanMetadata(libraryVersion: "1.0",
+                                     env: createEnv(["GITLAB_CI": "1",
+                                                     "CI_JOB_NAME": "job1"]))
+        let metadata3 = SpanMetadata(libraryVersion: "1.0", env: emptyEnv)
+        
+        for type in SpanMetadata.SpanType.allTest {
+            XCTAssertEqual(metadata1[string: type, DDTestSessionTags.testSessionName], "MyCoolSession")
+            XCTAssertEqual(metadata2[string: type, DDTestSessionTags.testSessionName], "job1-\(emptyEnv.testCommand)")
+            XCTAssertEqual(metadata3[string: type, DDTestSessionTags.testSessionName], emptyEnv.testCommand)
+        }
+        
     }
 
     func testAddCustomTagsWithDDTags() {
@@ -78,23 +88,15 @@ class EnvironmentTests: XCTestCase {
         testEnvironment["DD_TAGS"] = "key1:value1 key2:value2 key3:value3 keyFoo:$FOO keyFooFoo:$FOOFOO keyMix:$FOO-v1"
         testEnvironment["FOO"] = "BAR"
         testEnvironment["SRCROOT"] = ProcessInfo.processInfo.environment["SRCROOT"]
-
-        let span = createSimpleSpan()
-        let env = createEnv(testEnvironment)
-        span.addTags(from: env)
-
-        let spanData = span.toSpanData()
-        XCTAssertEqual(spanData.attributes["key1"]?.description, "value1")
-        XCTAssertEqual(spanData.attributes["key2"]?.description, "value2")
-        XCTAssertEqual(spanData.attributes["key3"]?.description, "value3")
-        XCTAssertEqual(spanData.attributes["keyFoo"]?.description, "BAR")
-        XCTAssertEqual(spanData.attributes["keyFooFoo"]?.description, "$FOOFOO")
-        XCTAssertEqual(spanData.attributes["keyMix"]?.description, "BAR-v1")
-        XCTAssertNotNil(spanData.attributes[DDCITags.ciWorkspacePath])
-    }
-
-    private func createSimpleSpan() -> RecordEventsReadableSpan {
-        return tracerSdk.spanBuilder(spanName: "spanName").startSpan() as! RecordEventsReadableSpan
+        
+        let metadata = SpanMetadata(libraryVersion: "1.0", env: createEnv(testEnvironment))
+        XCTAssertEqual(metadata[string: .test, "key1"], "value1")
+        XCTAssertEqual(metadata[string: .test, "key2"], "value2")
+        XCTAssertEqual(metadata[string: .test, "key3"], "value3")
+        XCTAssertEqual(metadata[string: .test, "keyFoo"], "BAR")
+        XCTAssertEqual(metadata[string: .test, "keyFooFoo"], "$FOOFOO")
+        XCTAssertEqual(metadata[string: .test, "keyMix"], "BAR-v1")
+        XCTAssertNotNil(metadata[string: .test, DDCITags.ciWorkspacePath])
     }
 
     func testRepositoryName() {
@@ -199,14 +201,10 @@ class EnvironmentTests: XCTestCase {
                 throw FixtureError(description: "[FixtureError] spec invalid: \(specVal)")
             }
             
-            let span = createSimpleSpan()
-            let env = createEnv(spec[0])
-            
-            span.addTags(from: env)
-            let spanData = span.toSpanData()
+            let metadata = SpanMetadata(libraryVersion: "1.0", env: createEnv(spec[0]))
 
             spec[1].forEach {
-                let data = spanData.attributes[$0.key]?.description
+                let data = metadata[string: .test, $0.key]
                 if jsonAttributes.firstIndex(of: $0.key) != nil {
                     XCTAssertTrue(compareJsons(data, $0.value),
                                   "\(ci) > \($0.key): \(data ?? "nil") != \($0.value)")

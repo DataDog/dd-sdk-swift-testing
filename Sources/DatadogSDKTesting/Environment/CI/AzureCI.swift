@@ -7,7 +7,7 @@
 import Foundation
 
 internal struct AzureCIEnvironmentReader: CIEnvironmentReader {
-    func isActive(env: any EnvironmentReader) -> Bool { env.has(env: "TF_BUILD") }
+    func isActive(env: any EnvironmentReader) -> Bool { env["TF_BUILD"] ?? "" != "" }
     
     func read(env: any EnvironmentReader) -> (ci: Environment.CI, git: Environment.Git) {
         let pipelineId = env["BUILD_BUILDID", String.self]

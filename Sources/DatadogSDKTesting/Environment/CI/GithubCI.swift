@@ -8,7 +8,7 @@ import Foundation
 
 internal struct GithubCIEnvironmentReader: CIEnvironmentReader {
     func isActive(env: any EnvironmentReader) -> Bool {
-        env.has(env: "GITHUB_ACTIONS") || env.has(env: "GITHUB_ACTION")
+        env["GITHUB_ACTIONS"] ?? env["GITHUB_ACTION"] ?? "" != ""
     }
     
     func read(env: any EnvironmentReader) -> (ci: Environment.CI, git: Environment.Git) {

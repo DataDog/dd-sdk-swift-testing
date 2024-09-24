@@ -7,7 +7,7 @@
 import Foundation
 
 internal struct BuddyCIEnvironmentReader: CIEnvironmentReader {
-    func isActive(env: any EnvironmentReader) -> Bool { env.has(env: "BUDDY") }
+    func isActive(env: any EnvironmentReader) -> Bool { env["BUDDY"] ?? "" != "" }
     
     func read(env: any EnvironmentReader) -> (ci: Environment.CI, git: Environment.Git) {
         let pipelineId: String? = env["BUDDY_PIPELINE_ID"].flatMap { pId in

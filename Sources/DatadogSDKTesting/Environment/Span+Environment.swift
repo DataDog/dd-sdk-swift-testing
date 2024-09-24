@@ -5,6 +5,7 @@
  */
 
 import Foundation
+@_implementationOnly import EventsExporter
 @_implementationOnly import OpenTelemetryApi
 
 protocol SpanAttributeConvertible {
@@ -39,19 +40,15 @@ extension URL: SpanAttributeConvertible {
     }
 }
 
-extension Span {
-    func addTags(from env: Environment) {
+extension SpanMetadata {
+    init(libraryVersion: String, env: Environment) {
+        self.init(libraryVersion: libraryVersion,
+                  tags: env.baseConfigurations,
+                  git: env.gitAttributes,
+                  ci: env.ciAttributes,
+                  sessionName: env.sessionName)
         for tag in env.tags {
-            setAttribute(key: tag.key, value: tag.value)
-        }
-        if let workspace = env.workspacePath {
-            setAttribute(key: DDCITags.ciWorkspacePath, value: workspace)
-        }
-        for attr in env.gitAttributes {
-            setAttribute(key: attr.key, value: attr.value)
-        }
-        for attr in env.ciAttributes {
-            setAttribute(key: attr.key, value: attr.value)
+            self[string: .test, tag.key] = tag.value
         }
     }
 }

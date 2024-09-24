@@ -7,7 +7,7 @@
 import Foundation
 
 internal struct BitbucketCIEnvironmentReader: CIEnvironmentReader {
-    func isActive(env: any EnvironmentReader) -> Bool { env.has(env: "BITBUCKET_COMMIT") }
+    func isActive(env: any EnvironmentReader) -> Bool { env["BITBUCKET_COMMIT"] ?? "" != "" }
     
     func read(env: any EnvironmentReader) -> (ci: Environment.CI, git: Environment.Git) {
         let pipelineId = env["BITBUCKET_PIPELINE_UUID", String.self]

@@ -47,9 +47,8 @@ internal class DDTestObserverTests: XCTestCase {
         let testName = "testWhenTestCaseWillStartIsCalled_testSpanIsCreated"
         let testSuite = "DDTestObserverTests"
         //let testBundle = testObserver.module?.bundleName
-        let deviceModel = PlatformUtils.getDeviceModel()
-        let deviceVersion = PlatformUtils.getDeviceVersion()
         let span = OpenTelemetry.instance.contextProvider.activeSpan as! RecordEventsReadableSpan
+        
         let spanData = span.toSpanData()
 
         XCTAssertEqual(spanData.name, "XCTest.test")
@@ -59,15 +58,7 @@ internal class DDTestObserverTests: XCTestCase {
         XCTAssertEqual(spanData.attributes[DDTestTags.testSuite]?.description, testSuite)
         XCTAssertEqual(spanData.attributes[DDTestTags.testFramework]?.description, "XCTest")
         XCTAssertEqual(spanData.attributes[DDTestTags.testType]?.description, DDTagValues.typeTest)
-        XCTAssertEqual(spanData.attributes[DDOSTags.osArchitecture]?.description, PlatformUtils.getPlatformArchitecture())
-        XCTAssertEqual(spanData.attributes[DDOSTags.osPlatform]?.description, PlatformUtils.getRunningPlatform())
-        XCTAssertEqual(spanData.attributes[DDOSTags.osVersion]?.description, deviceVersion)
-        XCTAssertEqual(spanData.attributes[DDDeviceTags.deviceModel]?.description, deviceModel)
-        XCTAssertEqual(spanData.attributes[DDDeviceTags.deviceName]?.description, PlatformUtils.getDeviceName())
-        XCTAssertEqual(spanData.attributes[DDRuntimeTags.runtimeName]?.description, "Xcode")
-        XCTAssertEqual(spanData.attributes[DDRuntimeTags.runtimeVersion]?.description, PlatformUtils.getXcodeVersion())
-        XCTAssertNotNil(spanData.attributes[DDCITags.ciWorkspacePath])
-        XCTAssertNotNil(spanData.attributes[DDUISettingsTags.uiSettingsLocalization])
+        XCTAssertEqual(spanData.attributes[DDHostTags.hostVCPUCount]?.description, String(Double(PlatformUtils.getCpuCount())))
 
         testObserver.testCaseDidFinish(self)
         testObserver.testSuiteDidFinish(theSuite)

@@ -39,7 +39,7 @@ public class DDTestSession: NSObject, Encodable {
         self.meta[DDUISettingsTags.uiSettingsModuleLocalization] = nil
 
         // Add spacific tags for sessions
-        self.meta[DDTestTags.testCommand] = "test \(testModule.bundleName)"
+        self.meta[DDTestTags.testCommand] = DDTestMonitor.env.testCommand
         self.meta[DDTestSessionTags.testToolchain] = DDTestMonitor.env.platform.runtimeName.lowercased() + "-" + DDTestMonitor.env.platform.runtimeVersion
     }
 }

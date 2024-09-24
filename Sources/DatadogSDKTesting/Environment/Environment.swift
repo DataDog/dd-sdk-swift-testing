@@ -15,6 +15,9 @@ internal final class Environment {
     let ci: CI?
     let git: Git
     
+    let sessionName: String
+    let testCommand: String
+    
     var environment: String {
         config.environment ?? (ci != nil ? "ci" : "none")
     }
@@ -23,9 +26,6 @@ internal final class Environment {
     var isCI: Bool { ci != nil }
     
     let env: EnvironmentReader
-    
-    private(set) var gitAttributes: [String: String] = [:]
-    private(set) var ciAttributes: [String: String] = [:]
     
     private let config: Config
     
@@ -78,9 +78,68 @@ internal final class Environment {
         
         self.git = git.updated(with: Environment.gitOverrides(env: env))
         
-        initCiAttributes()
-        initGitAttributes()
+        testCommand = "test \(Bundle.testBundle?.name ?? Bundle.main.name)"
+        
+        if let sName = config.sessionName {
+            sessionName = sName
+        } else if let job = ci?.jobName {
+            sessionName = "\(job)-\(testCommand)"
+        } else {
+            sessionName = testCommand
+        }
+        
         validate(log: log)
+    }
+    
+    var ciAttributes: [String: String] {
+        var ciAttributes: [String: String] = [:]
+        ciAttributes[DDCITags.ciWorkspacePath] = workspacePath
+        guard let ci = self.ci else { return ciAttributes }
+        ciAttributes[DDCITags.ciProvider] = ci.provider
+        ciAttributes[DDCITags.ciPipelineId] = ci.pipelineId
+        ciAttributes[DDCITags.ciPipelineNumber] = ci.pipelineNumber
+        ciAttributes[DDCITags.ciPipelineURL] = ci.pipelineURL?.spanAttribute
+        ciAttributes[DDCITags.ciPipelineName] = ci.pipelineName
+        ciAttributes[DDCITags.ciNodeName] = ci.nodeName
+        ciAttributes[DDCITags.ciNodeLabels] = ci.nodeLabels?.description
+        ciAttributes[DDCITags.ciStageName] = ci.stageName
+        ciAttributes[DDCITags.ciStageName] = ci.stageName
+        ciAttributes[DDCITags.ciJobName] = ci.jobName
+        ciAttributes[DDCITags.ciJobURL] = ci.jobURL?.spanAttribute
+        ciAttributes[DDCITags.ciEnvVars] = ##"{\##(ci.environment.map { #""\#($0.0)":"\#($0.1.spanAttribute)""# }.joined(separator: ","))}"##
+        return ciAttributes
+    }
+    
+    var gitAttributes: [String: String] {
+        guard !config.disableGitInformation else { return [:] }
+        var gitAttributes: [String: String] = [:]
+        gitAttributes[DDGitTags.gitRepository] = git.repositoryURL?.spanAttribute
+        gitAttributes[DDGitTags.gitCommit] = git.commitSHA
+        gitAttributes[DDGitTags.gitBranch] = git.branch
+        gitAttributes[DDGitTags.gitTag] = git.tag
+        gitAttributes[DDGitTags.gitCommitMessage] = git.commitMessage
+        gitAttributes[DDGitTags.gitAuthorName] = git.authorName
+        gitAttributes[DDGitTags.gitAuthorEmail] = git.authorEmail
+        gitAttributes[DDGitTags.gitAuthorDate] = git.authorDate?.spanAttribute
+        gitAttributes[DDGitTags.gitCommitterName] = git.committerName
+        gitAttributes[DDGitTags.gitCommitterEmail] = git.committerEmail
+        gitAttributes[DDGitTags.gitCommitterDate] = git.committerDate?.spanAttribute
+        return gitAttributes
+    }
+    
+    var baseConfigurations: [String: String] {
+        [DDOSTags.osPlatform: platform.osName,
+         DDOSTags.osArchitecture: platform.osArchitecture,
+         DDOSTags.osVersion: platform.osVersion,
+         DDDeviceTags.deviceName: platform.deviceName,
+         DDDeviceTags.deviceModel: platform.deviceModel,
+         DDRuntimeTags.runtimeName: platform.runtimeName,
+         DDRuntimeTags.runtimeVersion: platform.runtimeVersion,
+         DDUISettingsTags.uiSettingsLocalization: platform.localization]
+    }
+    
+    var baseMetrics: [String: Double] {
+        [DDHostTags.hostVCPUCount: Double(platform.vCPUCount)]
     }
     
     private func validate(log: Logger) {
@@ -98,37 +157,6 @@ internal final class Environment {
             log.print("Please check: https://docs.datadoghq.com/continuous_integration/troubleshooting")
         }
         validateGitOverrides(log: log)
-    }
-    
-    private func initGitAttributes() {
-        guard !config.disableGitInformation else { return }
-        gitAttributes[DDGitTags.gitRepository] = git.repositoryURL?.spanAttribute
-        gitAttributes[DDGitTags.gitCommit] = git.commitSHA
-        gitAttributes[DDGitTags.gitBranch] = git.branch
-        gitAttributes[DDGitTags.gitTag] = git.tag
-        gitAttributes[DDGitTags.gitCommitMessage] = git.commitMessage
-        gitAttributes[DDGitTags.gitAuthorName] = git.authorName
-        gitAttributes[DDGitTags.gitAuthorEmail] = git.authorEmail
-        gitAttributes[DDGitTags.gitAuthorDate] = git.authorDate?.spanAttribute
-        gitAttributes[DDGitTags.gitCommitterName] = git.committerName
-        gitAttributes[DDGitTags.gitCommitterEmail] = git.committerEmail
-        gitAttributes[DDGitTags.gitCommitterDate] = git.committerDate?.spanAttribute
-    }
-
-    func initCiAttributes() {
-        guard let ci = self.ci else { return }
-        ciAttributes[DDCITags.ciProvider] = ci.provider
-        ciAttributes[DDCITags.ciPipelineId] = ci.pipelineId
-        ciAttributes[DDCITags.ciPipelineNumber] = ci.pipelineNumber
-        ciAttributes[DDCITags.ciPipelineURL] = ci.pipelineURL?.spanAttribute
-        ciAttributes[DDCITags.ciPipelineName] = ci.pipelineName
-        ciAttributes[DDCITags.ciNodeName] = ci.nodeName
-        ciAttributes[DDCITags.ciNodeLabels] = ci.nodeLabels?.description
-        ciAttributes[DDCITags.ciStageName] = ci.stageName
-        ciAttributes[DDCITags.ciStageName] = ci.stageName
-        ciAttributes[DDCITags.ciJobName] = ci.jobName
-        ciAttributes[DDCITags.ciJobURL] = ci.jobURL?.spanAttribute
-        ciAttributes[DDCITags.ciEnvVars] = ##"{\##(ci.environment.map { #""\#($0.0)":"\#($0.1.spanAttribute)""# }.joined(separator: ","))}"##
     }
     
     private func validateGitOverrides(log: Logger) {

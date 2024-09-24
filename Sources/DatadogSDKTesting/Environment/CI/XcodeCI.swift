@@ -7,7 +7,7 @@
 import Foundation
 
 internal struct XcodeCIEnvironmentReader: CIEnvironmentReader {
-    func isActive(env: any EnvironmentReader) -> Bool { env.has(env: "CI_WORKSPACE") }
+    func isActive(env: any EnvironmentReader) -> Bool { env["CI_WORKSPACE"] ?? "" != "" }
     
     func read(env: any EnvironmentReader) -> (ci: Environment.CI, git: Environment.Git) {
         return (

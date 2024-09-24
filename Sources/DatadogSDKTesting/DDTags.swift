@@ -103,6 +103,7 @@ internal enum DDTestSessionTags {
     static let testItrSkippingCount = "test.itr.tests_skipping.count"
     static let testItrSkipped = "test.itr.tests_skipping.tests_skipped"
     static let testToolchain = "test.toolchain"
+    static let testSessionName = "test_session.name"
 }
 
 internal enum DDGitTags {

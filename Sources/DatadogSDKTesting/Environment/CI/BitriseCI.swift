@@ -7,7 +7,7 @@
 import Foundation
 
 internal struct BitriseCIEnvironmentReader: CIEnvironmentReader {
-    func isActive(env: any EnvironmentReader) -> Bool { env.has(env: "BITRISE_BUILD_SLUG") }
+    func isActive(env: any EnvironmentReader) -> Bool { env["BITRISE_BUILD_SLUG"] ?? "" != "" }
     
     func read(env: any EnvironmentReader) -> (ci: Environment.CI, git: Environment.Git) {
         let commitMessage: String? = env["BITRISE_GIT_MESSAGE"] ?? env["GIT_CLONE_COMMIT_MESSAGE_SUBJECT"].flatMap({

@@ -34,9 +34,7 @@ internal struct ProcessEnvironmentReader: EnvironmentReader {
     
     @inlinable
     static var currentBundleInfoDictionary: [String: Any] {
-        Bundle.allBundles.first {
-            $0.bundlePath.hasSuffix(".xctest")
-        }?.infoDictionary ?? Bundle.main.infoDictionary ?? [:]
+        Bundle.testBundle?.infoDictionary ?? Bundle.main.infoDictionary ?? [:]
     }
     
     @inlinable

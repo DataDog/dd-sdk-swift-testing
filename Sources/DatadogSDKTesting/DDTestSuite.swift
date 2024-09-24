@@ -54,21 +54,20 @@ public class DDTestSuite: NSObject, Encodable {
                 suiteStatus = DDTagValues.statusSkip
         }
 
-        let defaultAttributes: [String: String] = [
+        let suiteAttributes: [String: String] = [
             DDGenericTags.type: DDTagValues.typeSuiteEnd,
             DDTestTags.testSuite: name,
+            DDTestTags.testModule: module.bundleName,
             DDTestTags.testFramework: module.testFramework,
             DDTestTags.testStatus: suiteStatus,
             DDTestSuiteVisibilityTags.testModuleId: String(module.id.rawValue),
             DDTestSuiteVisibilityTags.testSuiteId: String(id.rawValue)
         ]
-
-        meta.merge(DDTestMonitor.baseConfigurationTags) { _, new in new }
-        metrics.merge(DDTestMonitor.baseMetrics) { _, new in new }
+        meta.merge(suiteAttributes) { _, new in new }
         
-        meta.merge(defaultAttributes) { _, new in new }
-        meta.merge(DDTestMonitor.env.gitAttributes) { _, new in new }
-        meta.merge(DDTestMonitor.env.ciAttributes) { _, new in new }
+        // Move to the global when we will support global metrics
+        metrics.merge(DDTestMonitor.env.baseMetrics) { _, new in new }
+        
         meta[DDUISettingsTags.uiSettingsSuiteLocalization] = localization
         meta[DDUISettingsTags.uiSettingsModuleLocalization] = module.localization
         if unskippable { meta[DDItrTags.itrUnskippable] = "true" }

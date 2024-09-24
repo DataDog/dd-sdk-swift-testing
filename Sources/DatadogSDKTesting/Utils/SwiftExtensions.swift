@@ -245,6 +245,11 @@ extension Bundle {
     var name: String {
         bundleURL.deletingPathExtension().lastPathComponent
     }
+    
+    @inlinable
+    static var testBundle: Bundle? {
+        Bundle.allBundles.first { $0.bundlePath.hasSuffix(".xctest") }
+    }
 }
 
 extension Sequence where Iterator.Element: Hashable {

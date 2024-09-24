@@ -13,6 +13,7 @@ internal enum EnvironmentKey: String, CaseIterable {
     case service = "DD_SERVICE"
     case sourcesDir = "SRCROOT"
     case tags = "DD_TAGS"
+    case sessionName = "DD_TEST_SESSION_NAME"
     case disableTestInstrumenting = "DD_DISABLE_TEST_INSTRUMENTING"
     case disableNetworkInstrumentation = "DD_DISABLE_NETWORK_INSTRUMENTATION"
     case disableHeadersInjection = "DD_DISABLE_HEADERS_INJECTION"
@@ -56,7 +57,7 @@ internal enum EnvironmentKey: String, CaseIterable {
 extension EnvironmentKey {
     // These configuration values must be passed to the child app in an UI test
     static var childKeys: [Self] {
-        [.isEnabled, .apiKey, .environment, .service, .sourcesDir, .tags,
+        [.isEnabled, .apiKey, .environment, .service, .sourcesDir, .tags, .sessionName,
          .disableTestInstrumenting, .disableNetworkInstrumentation, .disableHeadersInjection,
          .instrumentationExtraHeaders, .excludedURLs, .enableRecordPayload, disableNetworkCallStack,
          .enableNetworkCallStackSymbolicated, .disableRumIntegration, .maxPayloadSize, .ciVisibilityCodeCoveragePriority,

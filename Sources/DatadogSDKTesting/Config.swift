@@ -18,6 +18,10 @@ final class Config {
     var tags: [String: String] = [:]
     var customConfigurations: [String: String] = [:]
     var environment: String? = nil
+    /// Datadog Endpoint
+    var endpoint: Endpoint = .us1
+    /// Session name
+    var sessionName: String? = nil
     
     /// Instrumentation configuration values
     var disableNetworkInstrumentation: Bool = false
@@ -44,9 +48,6 @@ final class Config {
     var itrEnabled: Bool = true
     var excludedBranches: Set<String> = []
     var codeCoveragePriority: CodeCoveragePriority = .utility
-    
-    /// Datadog Endpoint
-    var endpoint: Endpoint = .us1
     
     /// Avoids configuring the traces exporter
     var disableTracesExporting: Bool = false
@@ -91,6 +92,8 @@ final class Config {
                 : nil
         }
         customConfigurations = Dictionary(uniqueKeysWithValues: customConf)
+        
+        sessionName = env[.sessionName]
         
         /// Instrumentation configuration values
         disableNetworkInstrumentation = env[.disableNetworkInstrumentation] ?? false

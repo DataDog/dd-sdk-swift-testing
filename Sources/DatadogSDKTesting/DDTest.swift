@@ -39,6 +39,7 @@ public class DDTest: NSObject {
             DDGenericTags.resource: "\(suite.name).\(name)",
             DDTestTags.testName: name,
             DDTestTags.testSuite: suite.name,
+            DDTestTags.testModule: module.bundleName,
             DDTestTags.testFramework: module.testFramework,
             DDTestTags.testType: DDTagValues.typeTest,
             DDTestTags.testExecutionOrder: "\(currentTestExecutionOrder)",
@@ -49,7 +50,7 @@ public class DDTest: NSObject {
             DDTestSuiteVisibilityTags.testSuiteId: suite.id.hexString,
             DDUISettingsTags.uiSettingsSuiteLocalization: suite.localization,
             DDUISettingsTags.uiSettingsModuleLocalization: module.localization,
-        ].merging(DDTestMonitor.baseConfigurationTags) { old, _ in old }
+        ]
 
         span = DDTestMonitor.tracer.startSpan(name: "\(module.testFramework).test", attributes: attributes, startTime: testStartTime)
 
@@ -57,9 +58,9 @@ public class DDTest: NSObject {
         DDTestMonitor.instance?.currentTest = self
 
         DDTestMonitor.tracer.addPropagationsHeadersToEnvironment()
-        span.addTags(from: DDTestMonitor.env)
         
-        for metric in DDTestMonitor.baseMetrics {
+        // Move to the global when we will support global metrics
+        for metric in DDTestMonitor.env.baseMetrics {
             span.setAttribute(key: metric.key, value: metric.value)
         }
 

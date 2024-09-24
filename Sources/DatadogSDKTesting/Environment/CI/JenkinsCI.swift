@@ -7,7 +7,7 @@
 import Foundation
 
 internal struct JenkinsCIEnvironmentReader: CIEnvironmentReader {
-    func isActive(env: any EnvironmentReader) -> Bool { env.has(env: "JENKINS_URL") }
+    func isActive(env: any EnvironmentReader) -> Bool { env["JENKINS_URL"] ?? "" != "" }
     
     func read(env: any EnvironmentReader) -> (ci: Environment.CI, git: Environment.Git) {
         let (branch, isTag) = normalize(branchOrTag: env["GIT_BRANCH"])

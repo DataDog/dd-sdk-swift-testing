@@ -7,20 +7,33 @@
 import Foundation
 @_implementationOnly import XCTest
 
-class DDTestObserver: NSObject, DDXCTestObservation {
+class DDTestObserver: NSObject, XCTestObservation {
     private(set) var state: State
+    private var observers: [NSObjectProtocol]
 
     override init() {
         XCUIApplication.swizzleMethods
         state = .none
+        observers = []
         super.init()
     }
-
-    func startObserving() {
+    
+    func start() {
         XCTestObservationCenter.shared.addTestObserver(self)
+        observers.append(NotificationCenter.test.onTestRetryGroupWillStart { [weak self] group in
+            self?.testRetryGroupWillStart(group)
+        })
+        observers.append(NotificationCenter.test.onTestRetryGroupDidFinish { [weak self] group in
+            self?.testRetryGroupDidFinish(group)
+        })
+        observers.append(NotificationCenter.test.onTestCaseRetryWillRecordIssue { [weak self] tc, issue in
+            self?.testCaseRetry(tc, willRecord: issue)
+        })
     }
     
-    func stopObserving() {
+    func stop() {
+        observers.forEach { NotificationCenter.test.removeObserver($0) }
+        observers.removeAll()
         XCTestObservationCenter.shared.removeTestObserver(self)
         DDTestMonitor.removeTestMonitor()
     }
@@ -169,20 +182,26 @@ class DDTestObserver: NSObject, DDXCTestObservation {
         Log.debug("testCaseDidFinish: \(test.name)")
     }
     
-    func testCaseRetry(_ testCase: XCTestCase, didRecord issue: XCTIssue) -> DDXCTestCaseRetryRun.Error {
+    func testCaseRetry(_ testCase: XCTestCase, willRecord issue: XCTIssue) {
         guard case .test(test: let test, group: _, context: _) = state else {
-            Log.print("testCaseRetry:didRecord: Bad observer state: \(state), expected: .test")
-            return .report
+            Log.print("testCaseRetry:willRecord: Bad observer state: \(state), expected: .test")
+            return
         }
+        guard testCase.name.contains(test.name) else {
+            Log.print("testCaseRetry:willRecord: Bad test: \(testCase), expected: \(test.name)")
+            return
+        }
+        
         test.setErrorInfo(type: issue.compactDescription, message: issue.description, callstack: nil)
-        // TODO: Add retry logic
-        return .report
+        
+        if let testRun = testCase.testRun as? DDXCTestCaseRetryRun {
+            // TODO: Add retry logic
+            testRun.suppressFailure = true
+        }
     }
 }
 
 extension DDTestObserver {
-    typealias ITRTestParams = (skipped: Bool, unskippable: Bool)
-    
     enum State {
         case none
         case module(DDTestModule)

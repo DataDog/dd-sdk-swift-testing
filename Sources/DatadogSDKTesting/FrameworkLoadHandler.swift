@@ -38,7 +38,7 @@ enum FrameworkLoadHandler {
             
             if config.isTestObserverNeeded && !config.disableTestInstrumenting {
                 testObserver = DDTestObserver()
-                testObserver?.startObserving()
+                testObserver?.start()
                 DispatchQueue.global().async {
                     try! DDTestMonitor.clock.sync()
                 }
@@ -54,7 +54,7 @@ enum FrameworkLoadHandler {
     }
     
     fileprivate static func libraryUnloaded() {
-        testObserver?.stopObserving()
+        testObserver?.stop()
         testObserver = nil
     }
 }

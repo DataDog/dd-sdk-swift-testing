@@ -6,6 +6,11 @@
 
 import Foundation
 
+public enum ITRTestLevel: String, Codable {
+    case test
+    case suite
+}
+
 struct SkipTestsRequestFormat: Codable, JSONable {
     let data: SkipTestsRequestData
 

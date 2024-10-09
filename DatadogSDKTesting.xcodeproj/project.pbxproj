@@ -35,6 +35,7 @@
 		A74246002BFF94FA00F7EC64 /* ITRSkippabble.swift in Sources */ = {isa = PBXBuildFile; fileRef = A74245FF2BFF94FA00F7EC64 /* ITRSkippabble.swift */; };
 		A76174BD2CB3E3780098CE99 /* DDXCTestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = A76174BC2CB3E3780098CE99 /* DDXCTestCase.swift */; };
 		A76174BF2CB45F9B0098CE99 /* XCTestCase+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A76174BE2CB45F9B0098CE99 /* XCTestCase+Extensions.swift */; };
+		A76174C22CB685390098CE99 /* SettingsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A76174C02CB685250098CE99 /* SettingsService.swift */; };
 		A7A98C202C8F44BC00C93E59 /* CoveragePriority.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7A98C1F2C8F44BC00C93E59 /* CoveragePriority.swift */; };
 		A7B39C6C2BCFC799007F98B2 /* CDatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7E232DC2BC6E68B0087D8F8 /* CDatadogSDKTesting.framework */; };
 		A7B39C702BCFCD77007F98B2 /* SubprocessWait.c in Sources */ = {isa = PBXBuildFile; fileRef = A7B39C6F2BCFCD77007F98B2 /* SubprocessWait.c */; };
@@ -118,7 +119,6 @@
 		A7FC261E2BA1EC5A00067E26 /* HTTPHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1913528284F7A5F006480C9 /* HTTPHeader.swift */; };
 		A7FC261F2BA1EC6200067E26 /* SkipTestsFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E17E674C28A3E992000DE42E /* SkipTestsFormat.swift */; };
 		A7FC26202BA1EC6200067E26 /* SearchCommitFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E146BC3E2869C3BB0057C37B /* SearchCommitFormat.swift */; };
-		A7FC26212BA1EC6200067E26 /* ITRConfigFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E19B258328D1B43400B84FCD /* ITRConfigFormat.swift */; };
 		A7FC26222BA1EC6200067E26 /* ITRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E146BC372865D55A0057C37B /* ITRService.swift */; };
 		A7FC262E2BA1ECBD00067E26 /* LLVMSimpleCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10A7E0D2806D68F00B464C9 /* LLVMSimpleCoverageFormat.swift */; };
 		A7FC262F2BA1ECBD00067E26 /* DDCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12C5838280D809900A31763 /* DDCoverageFormat.swift */; };
@@ -328,6 +328,7 @@
 		A74245FF2BFF94FA00F7EC64 /* ITRSkippabble.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ITRSkippabble.swift; sourceTree = "<group>"; };
 		A76174BC2CB3E3780098CE99 /* DDXCTestCase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDXCTestCase.swift; sourceTree = "<group>"; };
 		A76174BE2CB45F9B0098CE99 /* XCTestCase+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "XCTestCase+Extensions.swift"; sourceTree = "<group>"; };
+		A76174C02CB685250098CE99 /* SettingsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsService.swift; sourceTree = "<group>"; };
 		A7A98C1F2C8F44BC00C93E59 /* CoveragePriority.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoveragePriority.swift; sourceTree = "<group>"; };
 		A7B39C6F2BCFCD77007F98B2 /* SubprocessWait.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = SubprocessWait.c; sourceTree = "<group>"; };
 		A7B39C712BCFD234007F98B2 /* SubprocessWait.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SubprocessWait.h; sourceTree = "<group>"; };
@@ -473,7 +474,6 @@
 		E17B7AA5253F010C0081D7F3 /* LICENSE-3rdparty.csv */ = {isa = PBXFileReference; lastKnownFileType = text; path = "LICENSE-3rdparty.csv"; sourceTree = "<group>"; };
 		E17E674C28A3E992000DE42E /* SkipTestsFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkipTestsFormat.swift; sourceTree = "<group>"; };
 		E1913528284F7A5F006480C9 /* HTTPHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPHeader.swift; sourceTree = "<group>"; };
-		E19B258328D1B43400B84FCD /* ITRConfigFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ITRConfigFormat.swift; sourceTree = "<group>"; };
 		E1A63F5B26789915002F48FA /* CodeOwners.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeOwners.swift; sourceTree = "<group>"; };
 		E1A63F5F2678C1FD002F48FA /* CodeOwnersTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeOwnersTests.swift; sourceTree = "<group>"; };
 		E1ABA07025231F4700ED8AEF /* DDTestObserver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DDTestObserver.swift; sourceTree = "<group>"; };
@@ -841,6 +841,7 @@
 				E143CF0D27D7790300F4018A /* Logs */,
 				E143CF1127D7790300F4018A /* Persistence */,
 				E143CF1627D7790300F4018A /* Files */,
+				A76174C02CB685250098CE99 /* SettingsService.swift */,
 				E143CF0C27D7790300F4018A /* ExporterConfiguration.swift */,
 				E143CF1927D7790300F4018A /* EventsExporter.swift */,
 			);
@@ -931,7 +932,6 @@
 				E146BC372865D55A0057C37B /* ITRService.swift */,
 				E146BC3E2869C3BB0057C37B /* SearchCommitFormat.swift */,
 				E17E674C28A3E992000DE42E /* SkipTestsFormat.swift */,
-				E19B258328D1B43400B84FCD /* ITRConfigFormat.swift */,
 			);
 			path = IntelligentTestRunner;
 			sourceTree = "<group>";
@@ -1606,8 +1606,8 @@
 				A7FC26492BA1ECF800067E26 /* Directory.swift in Sources */,
 				A7FC26202BA1EC6200067E26 /* SearchCommitFormat.swift in Sources */,
 				A7FC261F2BA1EC6200067E26 /* SkipTestsFormat.swift in Sources */,
+				A76174C22CB685390098CE99 /* SettingsService.swift in Sources */,
 				A7FC26192BA1EC5A00067E26 /* DataUploadDelay.swift in Sources */,
-				A7FC26212BA1EC6200067E26 /* ITRConfigFormat.swift in Sources */,
 				A7FC264A2BA1ECF800067E26 /* File.swift in Sources */,
 				A7FC264D2BA1ED1200067E26 /* EventsExporter.swift in Sources */,
 				A7FC26302BA1ECBD00067E26 /* CoverageExporter.swift in Sources */,

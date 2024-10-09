@@ -5,6 +5,7 @@
  */
 
 import Foundation
+@_implementationOnly import EventsExporter
 @_implementationOnly import XCTest
 
 class DDTestObserver: NSObject, XCTestObservation {
@@ -94,16 +95,25 @@ class DDTestObserver: NSObject, XCTestObservation {
             return
         }
 
-        Log.measure(name: "waiting for ITR") {
-            DDTestMonitor.instance?.ensureITRStarted()
+        Log.measure(name: "waiting for test optimization to be started") {
+            DDTestMonitor.instance?.ensureTestOptimizationStarted()
         }
         
         let wrappedTests = tests.map { DDXCTestRetryGroup(for: $0) }
         testSuite.setValue(wrappedTests, forKey: "_mutableTests")
         
+        let retries = DDTestMonitor.instance.flatMap { monitor in
+            monitor.failedTestRetriesCount > 0
+                ? (test: monitor.failedTestRetriesCount,
+                   total: monitor.failedTestRetriesTotalCount)
+                : nil
+        }
+        
         state = SuiteContext(
             parent: parent,
-            skippableTests: DDTestMonitor.instance?.itr?.skippableTests
+            skippableTests: DDTestMonitor.instance?.itr?.skippableTests,
+            efd: DDTestMonitor.instance?.earlyFlakeDetection ?? .init(),
+            retries: retries
         ).new(suite: testSuite, in: module)
         Log.debug("testSuiteWillStart: \(testSuite.name)")
     }
@@ -135,11 +145,11 @@ class DDTestObserver: NSObject, XCTestObservation {
             Log.print("testRetryGroupWillStart: Bad observer state: \(state), expected: .suite")
             return
         }
+        group.groupRun?.successStrategy = .atLeastOneSucceeded
         let itr = context.itr(for: group)
-        state = context.new(group: group, in: suite, itr: itr)
         if itr.markedUnskippable { suite.unskippable = true }
         if itr.skipped { group.skip(reason: "ITR") }
-        group.groupRun?.successStrategy = .atLeastOneSucceeded
+        state = context.new(group: group, in: suite, itr: itr)
         Log.debug("testRetryGroupWillStart: \(group.name)")
     }
     
@@ -161,7 +171,11 @@ class DDTestObserver: NSObject, XCTestObservation {
             Log.print("testCaseWillStart: Bad observer state: \(state), expected: .group")
             return
         }
-        state = context.new(test: testCase, in: group)
+        let test = context.suite.testStart(name: testCase.testId.test, itr: context.itr)
+        if group.groupRun?.executionCount ?? 0 > 0 { // Test is ReRun
+            test.setTag(key: DDEfdTags.isRetry, value: "true")
+        }
+        state = context.new(test: test, in: group)
         Log.debug("testCaseWillStart: \(testCase.name)")
     }
 
@@ -176,14 +190,12 @@ class DDTestObserver: NSObject, XCTestObservation {
         }
         test.addBenchmarkTagsIfNeeded(from: testCase)
         test.end(status: testCase.testRun?.status ?? .fail)
-        
-        // TODO: Add retry logic
         state = context.back(group: group)
         Log.debug("testCaseDidFinish: \(test.name)")
     }
     
     func testCaseRetry(_ testCase: XCTestCase, willRecord issue: XCTIssue) {
-        guard case .test(test: let test, group: _, context: _) = state else {
+        guard case .test(test: let test, group: let group, context: let context) = state else {
             Log.print("testCaseRetry:willRecord: Bad observer state: \(state), expected: .test")
             return
         }
@@ -193,10 +205,27 @@ class DDTestObserver: NSObject, XCTestObservation {
         }
         
         test.setErrorInfo(type: issue.compactDescription, message: issue.description, callstack: nil)
+        guard let testRun = testCase.testRun as? DDXCTestCaseRetryRun else {
+            Log.print("Unknown test run type: \(type(of: testCase.testRun)) for \(testCase)")
+            return
+        }
         
-        if let testRun = testCase.testRun as? DDXCTestCaseRetryRun {
-            // TODO: Add retry logic
-            testRun.suppressFailure = true
+        // Test can fail more than once. Handling this
+        guard testRun.totalSuppressedFailureCount == 0 else {
+            // We already registered failure for this test before.
+            if testRun.suppressedFailures > 0 { // Check if it was suppressed
+                testRun.suppressFailure = true // then suppress current error too
+            }
+            return
+        }
+        
+        // Auto Test Retries Logic
+        if let retries = context.retries, // ATR is enabled
+           let run = group.groupRun, run.executionCount <= retries.test, // and we can retry more
+           test.module.atrRetried.checkedAdd(1, max: retries.total) != nil // increased global retry counter
+        {
+            group.retry() // tell group to retry this test
+            testRun.suppressFailure = true // suppress current error
         }
     }
 }
@@ -241,11 +270,15 @@ extension DDTestObserver {
     final class SuiteContext {
         let parent: ContainerSuite?
         let skippableTests: SkippableTests?
-        var unskippableCache: [ObjectIdentifier: UnskippableMethodChecker]
+        let efd: TracerSettings.EFD
+        let retries: (test: UInt, total: UInt)?
+        private(set) var unskippableCache: [ObjectIdentifier: UnskippableMethodChecker]
         
-        init(parent: ContainerSuite?, skippableTests: SkippableTests?) {
+        init(parent: ContainerSuite?, skippableTests: SkippableTests?, efd: TracerSettings.EFD, retries: (test: UInt, total: UInt)?) {
             self.parent = parent
             self.skippableTests = skippableTests
+            self.efd = efd
+            self.retries = retries
             self.unskippableCache = [:]
         }
         
@@ -277,6 +310,9 @@ extension DDTestObserver {
         let suite: DDTestSuite
         let suiteContext: SuiteContext
         
+        var efd: TracerSettings.EFD { suiteContext.efd }
+        var retries: (test: UInt, total: UInt)? { suiteContext.retries }
+        
         init(itr: DDTest.ITRStatus, suite: DDTestSuite, suiteContext: SuiteContext) {
             self.itr = itr
             self.suite = suite
@@ -287,8 +323,8 @@ extension DDTestObserver {
             .suite(suite: suite, context: suiteContext)
         }
         
-        func new(test: XCTestCase, in group: DDXCTestRetryGroup) -> State {
-            .test(test: suite.testStart(name: test.testId.test, itr: itr), group: group, context: self)
+        func new(test: DDTest, in group: DDXCTestRetryGroup) -> State {
+            .test(test: test, group: group, context: self)
         }
         
         func back(group: DDXCTestRetryGroup) -> State {

@@ -21,14 +21,14 @@ final class DDXCTestCaseRetryRun: XCTestCaseRun, DDXCTestSuppressedFailureRun {
         return totalSuppressedFailureCount > 0
     }
     
-    var totalSuppressedFailureCount: Int { totalFailureCount + _suppressedFailures }
+    var totalSuppressedFailureCount: Int { totalFailureCount + suppressedFailures }
     
-    private(set) var _suppressedFailures: Int = 0
+    private(set) var suppressedFailures: Int = 0
     
     override func record(_ issue: XCTIssue) {
         NotificationCenter.test.postTestCaseRetry(test as! XCTestCase, willRecord: issue)
         if suppressFailure {
-            _suppressedFailures += 1
+            suppressedFailures += 1
             suppressFailure = false
         } else {
             super.record(issue)
@@ -154,13 +154,13 @@ final class DDXCTestRetryGroup: XCTest {
         while let test = currentTest {
             let testCaseRun = DDXCTestCaseRetryRun(test: test)
             test.setValue(testCaseRun, forKey: "testRun")
+            testRun.addTestRun(testCaseRun)
             if let reason = _skipReason {
                 _skipReason = nil
                 DDXCSkippedTestCase().set(reason: reason).perform(testCaseRun)
             } else {
                 test.perform(testCaseRun)
             }
-            testRun.addTestRun(testCaseRun)
             currentTest = _nextTest
             _nextTest = nil
         }

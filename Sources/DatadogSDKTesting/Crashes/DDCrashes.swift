@@ -94,7 +94,7 @@ internal enum DDCrashes {
                                                              errorMessage: errorMessage,
                                                              errorStack: crashLog)
                     if let executionOrderString = spanData.stringAttributes[DDTestTags.testExecutionOrder],
-                       let executionOrder = Int(executionOrderString),
+                       let executionOrder = UInt(executionOrderString),
                        let executionProcessIdString = spanData.stringAttributes[DDTestTags.testExecutionProcessId],
                        let processId = Int(executionProcessIdString),
                        let sessionID = spanData.stringAttributes[DDTestSuiteVisibilityTags.testSessionId],

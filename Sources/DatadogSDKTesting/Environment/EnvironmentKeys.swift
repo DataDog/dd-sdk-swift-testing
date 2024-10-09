@@ -44,6 +44,9 @@ internal enum EnvironmentKey: String, CaseIterable {
     case enableCiVisibilityITR = "DD_CIVISIBILITY_ITR_ENABLED"
     case ciVisibilityExcludedBranches = "DD_CIVISIBILITY_EXCLUDED_BRANCHES"
     case ciVisibilityReportHostname = "DD_CIVISIBILITY_REPORT_HOSTNAME"
+    case enableCiVisibilityFlakyRetries = "DD_CIVISIBILITY_FLAKY_RETRY_ENABLED"
+    case ciVisibilityFlakyRetryCount = "DD_CIVISIBILITY_FLAKY_RETRY_COUNT"
+    case ciVisibilityTotalFlakyRetryCount = "DD_CIVISIBILITY_TOTAL_FLAKY_RETRY_COUNT"
     case disableSourceLocation = "DD_DISABLE_SOURCE_LOCATION"
     case localTestEnvironmentPort = "DD_LOCAL_TEST_ENVIRONMENT_PORT"
     case disableGitInformation = "DD_DISABLE_GIT_INFORMATION"
@@ -60,7 +63,7 @@ extension EnvironmentKey {
         [.isEnabled, .apiKey, .environment, .service, .sourcesDir, .tags, .sessionName,
          .disableTestInstrumenting, .disableNetworkInstrumentation, .disableHeadersInjection,
          .instrumentationExtraHeaders, .excludedURLs, .enableRecordPayload, disableNetworkCallStack,
-         .enableNetworkCallStackSymbolicated, .disableRumIntegration, .maxPayloadSize, .ciVisibilityCodeCoveragePriority,
+         .enableNetworkCallStackSymbolicated, .disableRumIntegration, .maxPayloadSize,
          .enableCiVisibilityLogs, .enableStdoutInstrumentation, .enableStderrInstrumentation,
          .disableSdkIosIntegration, .disableCrashHandler, .disableMachCrashHandler, .site, .customURL,
          .dontExport, .traceDebug, .traceDebugNetwork, .traceDebugCallStack, .disableNTPClock]

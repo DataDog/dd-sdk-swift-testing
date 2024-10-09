@@ -13,6 +13,7 @@ public class EventsExporter: SpanExporter {
     var logsExporter: LogsExporter
     var coverageExporter: CoverageExporter
     var itrService: ITRService
+    var settingsService: SettingsService
 
     public init(config: ExporterConfiguration) throws {
         self.configuration = config
@@ -21,6 +22,7 @@ public class EventsExporter: SpanExporter {
         logsExporter = try LogsExporter(config: configuration)
         coverageExporter = try CoverageExporter(config: configuration)
         itrService = try ITRService(config: configuration)
+        settingsService = try SettingsService(config: configuration)
         Log.debug("EventsExporter created: \(spansExporter.runtimeId), endpoint: \(config.endpoint)")
     }
 
@@ -80,11 +82,11 @@ public class EventsExporter: SpanExporter {
                                   customConfigurations: customConfigurations)
     }
 
-    public func itrSetting(
+    public func tracerSettings(
         service: String, env: String, repositoryURL: String, branch: String, sha: String,
         testLevel: ITRTestLevel, configurations: [String: String], customConfigurations: [String: String]
-    ) -> ITRSettings? {
-        itrService.itrSetting(
+    ) -> TracerSettings? {
+        settingsService.settings(
             service: service, env: env, repositoryURL: repositoryURL,
             branch: branch, sha: sha, testLevel: testLevel, configurations: configurations,
             customConfigurations: customConfigurations
@@ -102,6 +104,6 @@ public class EventsExporter: SpanExporter {
                 configuration.endpoint.searchCommitsURL.absoluteString,
                 configuration.endpoint.skippableTestsURL.absoluteString,
                 configuration.endpoint.packfileURL.absoluteString,
-                configuration.endpoint.itrSettingsURL.absoluteString]
+                configuration.endpoint.settingsURL.absoluteString]
     }
 }

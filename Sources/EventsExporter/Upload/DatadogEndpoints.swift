@@ -116,8 +116,8 @@ public enum Endpoint: CustomDebugStringConvertible {
             case let .custom(testsURL: testsURL, _): return testsURL
         }
     }
-
-    internal var itrSettingsURL: URL {
+    
+    internal var settingsURL: URL {
         let endpoint = "/api/v2/libraries/tests/services/setting"
         switch self {
             case .us1: return URL(string: "https://api.datadoghq.com" + endpoint)!

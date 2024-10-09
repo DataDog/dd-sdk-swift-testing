@@ -163,7 +163,9 @@ class DDTestObserver: NSObject, XCTestObservation {
             return
         }
         state = context.back()
-        Log.debug("testRetryGroupDidFinish: \(group.name)")
+        Log.debug("testRetryGroupDidFinish: \(group.name), " +
+                  "executions: \(group.groupRun?.executionCount ?? 0), " +
+                  "failed: \(group.groupRun?.failedExecutions ?? 0)")
     }
 
     func testCaseWillStart(_ testCase: XCTestCase) {
@@ -203,7 +205,7 @@ class DDTestObserver: NSObject, XCTestObservation {
             Log.print("testCaseRetry:willRecord: Bad test: \(testCase), expected: \(test.name)")
             return
         }
-        
+        Log.debug("testCaseRetry:willRecord: \(testCase), issue: \(issue)")
         test.setErrorInfo(type: issue.compactDescription, message: issue.description, callstack: nil)
         guard let testRun = testCase.testRun as? DDXCTestCaseRetryRun else {
             Log.print("Unknown test run type: \(type(of: testCase.testRun)) for \(testCase)")
@@ -215,17 +217,19 @@ class DDTestObserver: NSObject, XCTestObservation {
             // We already registered failure for this test before.
             if testRun.suppressedFailures > 0 { // Check if it was suppressed
                 testRun.suppressFailure = true // then suppress current error too
+                Log.print("Suppressed issue: \(issue) for test: \(testCase)")
             }
             return
         }
         
         // Auto Test Retries Logic
         if let retries = context.retries, // ATR is enabled
-           let run = group.groupRun, run.executionCount <= retries.test, // and we can retry more
+           let run = group.groupRun, run.executionCount < retries.test, // and we can retry more
            test.module.atrRetried.checkedAdd(1, max: retries.total) != nil // increased global retry counter
         {
             group.retry() // tell group to retry this test
             testRun.suppressFailure = true // suppress current error
+            Log.print("Suppressed issue: \(issue) for test: \(testCase)")
         }
     }
 }

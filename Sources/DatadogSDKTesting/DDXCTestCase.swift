@@ -87,11 +87,11 @@ final class DDXCTestRetryGroupRun: XCTestRun, DDXCTestSuppressedFailureRun {
     }
     
     var failedExecutions: Int {
-        testRuns.reduce(0) { $0 + $1.totalSuppressedFailureCount == 0 ? 0 : 1 }
+        testRuns.reduce(0) { $0 + ($1.ddHasFailed ? 1 : 0) }
     }
     
     var skippedExecutions: Int {
-        testRuns.reduce(0) { $0 + $1.skipCount == 0 ? 0 : 1 }
+        testRuns.reduce(0) { $0 + ($1.hasBeenSkipped ? 0 : 1) }
     }
     
     override func start() {

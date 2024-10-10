@@ -34,7 +34,7 @@
 		A71E64802BAB442300F2ACA5 /* ConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E647F2BAB442300F2ACA5 /* ConfigTests.swift */; };
 		A74246002BFF94FA00F7EC64 /* ITRSkippabble.swift in Sources */ = {isa = PBXBuildFile; fileRef = A74245FF2BFF94FA00F7EC64 /* ITRSkippabble.swift */; };
 		A76174BD2CB3E3780098CE99 /* DDXCTestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = A76174BC2CB3E3780098CE99 /* DDXCTestCase.swift */; };
-		A76174BF2CB45F9B0098CE99 /* XCTestCase+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A76174BE2CB45F9B0098CE99 /* XCTestCase+Extensions.swift */; };
+		A76174BF2CB45F9B0098CE99 /* XCTestExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A76174BE2CB45F9B0098CE99 /* XCTestExtensions.swift */; };
 		A76174C22CB685390098CE99 /* SettingsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A76174C02CB685250098CE99 /* SettingsService.swift */; };
 		A7A98C202C8F44BC00C93E59 /* CoveragePriority.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7A98C1F2C8F44BC00C93E59 /* CoveragePriority.swift */; };
 		A7B39C6C2BCFC799007F98B2 /* CDatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7E232DC2BC6E68B0087D8F8 /* CDatadogSDKTesting.framework */; };
@@ -327,7 +327,7 @@
 		A71E647F2BAB442300F2ACA5 /* ConfigTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigTests.swift; sourceTree = "<group>"; };
 		A74245FF2BFF94FA00F7EC64 /* ITRSkippabble.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ITRSkippabble.swift; sourceTree = "<group>"; };
 		A76174BC2CB3E3780098CE99 /* DDXCTestCase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDXCTestCase.swift; sourceTree = "<group>"; };
-		A76174BE2CB45F9B0098CE99 /* XCTestCase+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "XCTestCase+Extensions.swift"; sourceTree = "<group>"; };
+		A76174BE2CB45F9B0098CE99 /* XCTestExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XCTestExtensions.swift; sourceTree = "<group>"; };
 		A76174C02CB685250098CE99 /* SettingsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsService.swift; sourceTree = "<group>"; };
 		A7A98C1F2C8F44BC00C93E59 /* CoveragePriority.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoveragePriority.swift; sourceTree = "<group>"; };
 		A7B39C6F2BCFCD77007F98B2 /* SubprocessWait.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = SubprocessWait.c; sourceTree = "<group>"; };
@@ -696,7 +696,7 @@
 		E116D7D925248C280022779D /* Utils */ = {
 			isa = PBXGroup;
 			children = (
-				A76174BE2CB45F9B0098CE99 /* XCTestCase+Extensions.swift */,
+				A76174BE2CB45F9B0098CE99 /* XCTestExtensions.swift */,
 				A7E233322BC93D100087D8F8 /* Synced.swift */,
 				E1293F8828DB515F00D31DD6 /* SanitizerHelper.swift */,
 				E1AD07A8252F5CB8003705C1 /* InternalError.swift */,
@@ -1520,7 +1520,7 @@
 				A7FC25D32BA1EB3400067E26 /* DDSymbolicator.swift in Sources */,
 				A7FC25C12BA1EAF500067E26 /* GitUploader.swift in Sources */,
 				A71E646B2BAA0AA100F2ACA5 /* Span+Environment.swift in Sources */,
-				A76174BF2CB45F9B0098CE99 /* XCTestCase+Extensions.swift in Sources */,
+				A76174BF2CB45F9B0098CE99 /* XCTestExtensions.swift in Sources */,
 				A71E647D2BAA0AA100F2ACA5 /* CIEnvironmentReader.swift in Sources */,
 				A71E64772BAA0AA100F2ACA5 /* BuddyCI.swift in Sources */,
 				A71E647C2BAA0AA100F2ACA5 /* EnvironmentKeys.swift in Sources */,

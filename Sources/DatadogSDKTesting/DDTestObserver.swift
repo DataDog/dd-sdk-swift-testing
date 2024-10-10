@@ -337,13 +337,4 @@ extension DDTestObserver {
     }
 }
 
-extension XCTestRun {
-    var status: DDTestStatus {
-        if hasBeenSkipped { return .skip }
-        if let ddRun = self as? DDXCTestSuppressedFailureRun {
-            return ddRun.ddHasFailed ? .fail : .pass
-        } else {
-            return hasSucceeded ? .pass : .fail
-        }
-    }
-}
+

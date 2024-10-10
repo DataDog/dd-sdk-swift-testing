@@ -18,6 +18,17 @@ extension XCTestCase {
     private static let _trimmedCharacters: CharacterSet = CharacterSet(charactersIn: "-[]")
 }
 
+extension XCTestRun {
+    var status: DDTestStatus {
+        if hasBeenSkipped { return .skip }
+        if let ddRun = self as? DDXCTestSuppressedFailureRun {
+            return ddRun.ddHasFailed ? .fail : .pass
+        } else {
+            return hasSucceeded ? .pass : .fail
+        }
+    }
+}
+
 extension DDTest {
     func addBenchmarkTagsIfNeeded(from testCase: XCTestCase) {
         guard let metrics = testCase.value(forKey: "_perfMetricsForID") as? [XCTPerformanceMetric: AnyObject] else {

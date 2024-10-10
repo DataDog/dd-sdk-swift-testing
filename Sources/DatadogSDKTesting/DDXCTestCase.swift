@@ -12,24 +12,28 @@ protocol DDXCTestSuppressedFailureRun: AnyObject {
 }
 
 final class DDXCTestCaseRetryRun: XCTestCaseRun, DDXCTestSuppressedFailureRun {
-    var suppressFailure: Bool = false
+    private var _suppressFailure: Bool = false
     
     var ddHasFailed: Bool {
         guard startDate != nil && stopDate != nil else {
             return false
         }
-        return totalSuppressedFailureCount > 0
+        return ddTotalFailureCount > 0
     }
     
-    var totalSuppressedFailureCount: Int { totalFailureCount + suppressedFailures }
+    var ddTotalFailureCount: Int { totalFailureCount + suppressedFailureCount }
     
-    private(set) var suppressedFailures: Int = 0
+    private(set) var suppressedFailureCount: Int = 0
+    
+    func suppressFailure() {
+        _suppressFailure = true
+    }
     
     override func record(_ issue: XCTIssue) {
         NotificationCenter.test.postTestCaseRetry(test as! XCTestCase, willRecord: issue)
-        if suppressFailure {
-            suppressedFailures += 1
-            suppressFailure = false
+        if _suppressFailure {
+            suppressedFailureCount += 1
+            _suppressFailure = false
         } else {
             super.record(issue)
         }
@@ -39,7 +43,8 @@ final class DDXCTestCaseRetryRun: XCTestCaseRun, DDXCTestSuppressedFailureRun {
 final class DDXCTestRetryGroupRun: XCTestRun, DDXCTestSuppressedFailureRun {
     private(set) var testRuns: [DDXCTestCaseRetryRun] = []
     var group: DDXCTestRetryGroup { test as! DDXCTestRetryGroup }
-    var successStrategy: SuccessStragegy = .allSucceeded
+    var successStrategy: SuccessStrategy = .allSucceeded
+    var skipStrategy: SkipStrategy = .allSkipped
     
     override var totalDuration: TimeInterval {
         testRuns.reduce(TimeInterval(0.0)) { $0 + $1.totalDuration }
@@ -65,14 +70,14 @@ final class DDXCTestRetryGroupRun: XCTestRun, DDXCTestSuppressedFailureRun {
         guard startDate != nil && stopDate != nil else {
             return false
         }
-        return successStrategy.isSucceded(run: self)
+        return successStrategy.execute(for: self)
     }
     
     override var hasBeenSkipped: Bool {
         guard startDate != nil && stopDate != nil else {
             return false
         }
-        return skippedExecutions != 0
+        return skipStrategy.execute(for: self)
     }
     
     var ddHasFailed: Bool {
@@ -82,16 +87,16 @@ final class DDXCTestRetryGroupRun: XCTestRun, DDXCTestSuppressedFailureRun {
         return !hasSucceeded
     }
     
-    var totalSuppressedFailureCount: Int {
-        testRuns.reduce(0) { $0 + $1.totalSuppressedFailureCount }
+    var ddTotalFailureCount: Int {
+        testRuns.reduce(0) { $0 + $1.ddTotalFailureCount }
     }
     
-    var failedExecutions: Int {
-        testRuns.reduce(0) { $0 + ($1.ddHasFailed ? 1 : 0) }
+    var failedExecutionCount: Int {
+        testRuns.reduce(0) { $0 + ($1.ddHasFailed ? $1.executionCount : 0) }
     }
     
-    var skippedExecutions: Int {
-        testRuns.reduce(0) { $0 + ($1.hasBeenSkipped ? 0 : 1) }
+    var skippedExecutionCount: Int {
+        testRuns.reduce(0) { $0 + ($1.hasBeenSkipped ? $1.executionCount : 0) }
     }
     
     override func start() {
@@ -187,20 +192,31 @@ final class DDXCSkippedTestCase: XCTestCase {
 }
 
 extension DDXCTestRetryGroupRun {
-    struct SuccessStragegy {
+    class GroupStrategy {
         private let checker: (DDXCTestRetryGroupRun) -> Bool
         
-        func isSucceded(run: DDXCTestRetryGroupRun) -> Bool {
-            checker(run)
+        required init(checker: @escaping (DDXCTestRetryGroupRun) -> Bool) {
+            self.checker = checker
+        }
+        
+        func execute(for group: DDXCTestRetryGroupRun) -> Bool {
+            checker(group)
         }
         
         static func custom(_ checker: @escaping (DDXCTestRetryGroupRun) -> Bool) -> Self {
             Self(checker: checker)
         }
-        
-        static var allSucceeded: Self { .custom { $0.failedExecutions == 0 } }
-        static var atLeastOneSucceeded: Self { .custom { $0.failedExecutions < $0.executionCount } }
-        static var atMostOneFailed: Self { .custom { $0.failedExecutions <= 1 } }
+    }
+    
+    final class SuccessStrategy: GroupStrategy {
+        static var allSucceeded: Self { .custom { $0.ddTotalFailureCount == 0 } }
+        static var atLeastOneSucceeded: Self { .custom { $0.failedExecutionCount < $0.executionCount } }
+        static var atMostOneFailed: Self { .custom { $0.failedExecutionCount <= 1 } }
+    }
+    
+    final class SkipStrategy: GroupStrategy {
+        static var allSkipped: Self { .custom { $0.skippedExecutionCount == $0.executionCount } }
+        static var atLeastOneSkipped: Self { .custom { $0.skippedExecutionCount > 0  } }
     }
 }
 

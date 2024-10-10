@@ -165,7 +165,7 @@ class DDTestObserver: NSObject, XCTestObservation {
         state = context.back()
         Log.debug("testRetryGroupDidFinish: \(group.name), " +
                   "executions: \(group.groupRun?.executionCount ?? 0), " +
-                  "failed: \(group.groupRun?.failedExecutions ?? 0)")
+                  "failed: \(group.groupRun?.failedExecutionCount ?? 0)")
     }
 
     func testCaseWillStart(_ testCase: XCTestCase) {
@@ -213,10 +213,10 @@ class DDTestObserver: NSObject, XCTestObservation {
         }
         
         // Test can fail more than once. Handling this
-        guard testRun.totalSuppressedFailureCount == 0 else {
+        guard testRun.ddTotalFailureCount == 0 else {
             // We already registered failure for this test before.
-            if testRun.suppressedFailures > 0 { // Check if it was suppressed
-                testRun.suppressFailure = true // then suppress current error too
+            if testRun.suppressedFailureCount > 0 { // Check if it was suppressed
+                testRun.suppressFailure() // then suppress current error too
                 Log.print("Suppressed issue: \(issue) for test: \(testCase)")
             }
             return
@@ -228,7 +228,7 @@ class DDTestObserver: NSObject, XCTestObservation {
            test.module.atrRetried.checkedAdd(1, max: retries.total) != nil // increased global retry counter
         {
             group.retry() // tell group to retry this test
-            testRun.suppressFailure = true // suppress current error
+            testRun.suppressFailure() // suppress current error
             Log.print("Suppressed issue: \(issue) for test: \(testCase)")
         }
     }

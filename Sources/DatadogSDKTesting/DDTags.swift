@@ -203,6 +203,10 @@ internal enum DDItrTags {
     static let itrSkippedTests = "_dd.ci.itr.tests_skipped"
 }
 
+internal enum DDEfdTags {
+    static let isRetry = "test.is_retry"
+}
+
 internal enum DDCFMessageID {
     static let setCustomTags: Int32 = 0x1111
     static let enableRUM: Int32 = 0x2222

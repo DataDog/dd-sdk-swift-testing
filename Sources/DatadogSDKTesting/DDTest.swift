@@ -10,7 +10,7 @@ import Foundation
 @_implementationOnly import SigmaSwiftStatistics
 
 public class DDTest: NSObject {
-    var currentTestExecutionOrder: Int
+    var currentTestExecutionOrder: UInt
     var initialProcessId = Int(ProcessInfo.processInfo.processIdentifier)
 
     var name: String
@@ -32,7 +32,7 @@ public class DDTest: NSObject {
         self.itr = itr
         self.isUITest = false
 
-        currentTestExecutionOrder = module.currentExecutionOrder
+        currentTestExecutionOrder = module.currentExecutionOrder.checkedAdd(1)!
 
         let attributes: [String: String] = [
             DDGenericTags.type: DDTagValues.typeTest,
@@ -42,8 +42,6 @@ public class DDTest: NSObject {
             DDTestTags.testModule: module.bundleName,
             DDTestTags.testFramework: module.testFramework,
             DDTestTags.testType: DDTagValues.typeTest,
-            DDTestTags.testExecutionOrder: "\(currentTestExecutionOrder)",
-            DDTestTags.testExecutionProcessId: "\(initialProcessId)",
             DDTestTags.testIsUITest: "false",
             DDTestSuiteVisibilityTags.testSessionId: module.sessionId.hexString,
             DDTestSuiteVisibilityTags.testModuleId: module.id.hexString,
@@ -53,6 +51,8 @@ public class DDTest: NSObject {
         ]
 
         span = DDTestMonitor.tracer.startSpan(name: "\(module.testFramework).test", attributes: attributes, startTime: testStartTime)
+        span.setAttribute(key: DDTestTags.testExecutionOrder, value: Int(currentTestExecutionOrder))
+        span.setAttribute(key: DDTestTags.testExecutionProcessId, value: initialProcessId)
 
         super.init()
         DDTestMonitor.instance?.currentTest = self

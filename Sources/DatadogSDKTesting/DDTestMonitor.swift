@@ -51,7 +51,7 @@ internal class DDTestMonitor {
     var networkInstrumentation: DDNetworkInstrumentation?
     var injectHeaders: Bool = false
     var recordPayload: Bool = false
-    var maxPayloadSize: Int
+    var maxPayloadSize: UInt
     var launchNotificationObserver: NSObjectProtocol?
     var didBecomeActiveNotificationObserver: NSObjectProtocol?
     var isRumActive: Bool = false
@@ -60,7 +60,7 @@ internal class DDTestMonitor {
     var crashedModuleInfo: CrashedModuleInformation?
 
     let instrumentationWorkQueue = OperationQueue()
-    private let itrWorkQueue = OperationQueue()
+    private let testOptimizationSetupQueue = OperationQueue()
     let gitUploadQueue = OperationQueue()
 
     static let developerMachineHostName: String = try! Spawn.output("hostname")
@@ -68,6 +68,10 @@ internal class DDTestMonitor {
     var coverageHelper: DDCoverageHelper?
     var gitUploader: GitUploader?
     var itr: IntelligentTestRunner?
+    
+    var failedTestRetriesCount: UInt = 0
+    var failedTestRetriesTotalCount: UInt = 0
+    var earlyFlakeDetection: TracerSettings.EFD = .init()
 
     var rLock = NSRecursiveLock()
     private var privateCurrentTest: DDTest?
@@ -105,8 +109,8 @@ internal class DDTestMonitor {
             DDTestMonitor.instance?.startGitUpload()
         }
 
-        Log.measure(name: "startITR") {
-            DDTestMonitor.instance?.startITR()
+        Log.measure(name: "startTestOptimization") {
+            DDTestMonitor.instance?.startTestOptimization()
         }
         return true
     }
@@ -219,52 +223,64 @@ internal class DDTestMonitor {
         }
     }
 
-    func startITR() {
-        var itrBackendConfig: ITRSettings? = nil
+    func startTestOptimization() {
+        var tracerBackendConfig: TracerSettings? = nil
         itr = nil
         coverageHelper = nil
         
         guard let branch = DDTestMonitor.env.git.branch,
               let commit = DDTestMonitor.env.git.commitSHA else {
-            Log.print("Unknown branch and commit. ITR can't be started")
+            Log.print("Unknown branch and commit. ITR and EFD can't be started")
             return
         }
         
-        let getItrConfig = { (log: String) in
+        let getTracerConfig = { (log: String) in
             if let service = DDTestMonitor.config.service ?? DDTestMonitor.env.git.repositoryName,
                let eventsExporter = DDTestMonitor.tracer.eventsExporter
             {
                 return Log.measure(name: log) {
-                    eventsExporter.itrSetting(service: service,
-                                              env: DDTestMonitor.env.environment,
-                                              repositoryURL: DDTestMonitor.env.git.repositoryURL?.spanAttribute ?? "",
-                                              branch: branch,
-                                              sha: commit,
-                                              testLevel: .test,
-                                              configurations: DDTestMonitor.env.baseConfigurations,
-                                              customConfigurations: DDTestMonitor.config.customConfigurations)
+                    eventsExporter.tracerSettings(
+                        service: service,
+                        env: DDTestMonitor.env.environment,
+                        repositoryURL: DDTestMonitor.env.git.repositoryURL?.spanAttribute ?? "",
+                        branch: branch,
+                        sha: commit,
+                        testLevel: .test,
+                        configurations: DDTestMonitor.env.baseConfigurations,
+                        customConfigurations: DDTestMonitor.config.customConfigurations
+                    )
                 }
             } else {
                 return nil
             }
         }
         
-        let updateItrSettings = BlockOperation { [self] in
-            itrBackendConfig = getItrConfig("Get ITR Config")
-            Log.debug("ITR config: \(String(describing: itrBackendConfig))")
-            if itrBackendConfig?.requireGit ?? false {
+        let updateTracerConfig = BlockOperation { [self] in
+            tracerBackendConfig = getTracerConfig("Get Tracer Config")
+            guard var config = tracerBackendConfig else {
+                Log.debug("Tracer Config request failed")
+                return
+            }
+            Log.debug("Tracer Config: \(config)")
+            if config.itr.requireGit {
                 Log.debug("ITR requires Git upload")
                 gitUploadQueue.waitUntilAllOperationsAreFinished()
-                guard isGitUploadSucceded else {
+                if isGitUploadSucceded {
+                    config = getTracerConfig("Get Tracer Config after git upload") ?? config
+                    Log.debug("Tracer config: \(config)")
+                } else {
                     Log.print("ITR requires Git but Git Upload failed. Disabling ITR")
-                    itrBackendConfig = nil
-                    return
+                    config.itr.itrEnabled = false
                 }
-                itrBackendConfig = getItrConfig("Get ITR Config after git upload")
-                Log.debug("ITR config: \(String(describing: itrBackendConfig))")
+                tracerBackendConfig = config
+            }
+            earlyFlakeDetection = config.efd
+            if config.flakyTestRetriesEnabled && DDTestMonitor.config.testRetriesEnabled {
+                failedTestRetriesCount = DDTestMonitor.config.testRetriesTestRetryCount
+                failedTestRetriesTotalCount = DDTestMonitor.config.testRetriesTotalRetryCount
             }
         }
-        itrWorkQueue.addOperation(updateItrSettings)
+        testOptimizationSetupQueue.addOperation(updateTracerConfig)
         
         if DDTestMonitor.config.itrEnabled {
             let isExcluded = { (branch: String) in
@@ -286,41 +302,41 @@ internal class DDTestMonitor {
             
             if !isExcluded(branch) {
                 let itrSetup = BlockOperation { [self] in
-                    // Activate Intelligent Test Runner
-                    if itrBackendConfig?.testsSkipping ?? false {
-                        Log.debug("ITR Enabled")
-                        
-                        itr = IntelligentTestRunner(configurations: DDTestMonitor.env.baseConfigurations)
-                        itr?.start()
-                    } else {
+                    guard let settings = tracerBackendConfig?.itr,
+                          settings.itrEnabled && settings.testsSkipping
+                    else {
                         Log.debug("ITR Disabled")
+                        return
                     }
+                    // Activate Intelligent Test Runner
+                    itr = IntelligentTestRunner(configurations: DDTestMonitor.env.baseConfigurations)
+                    itr?.start()
                 }
-                itrSetup.addDependency(updateItrSettings)
-                itrWorkQueue.addOperation(itrSetup)
+                itrSetup.addDependency(updateTracerConfig)
+                testOptimizationSetupQueue.addOperation(itrSetup)
             }
         }
         
         if DDTestMonitor.config.coverageEnabled {
             let coverageSetup = BlockOperation { [self] in
-                // Activate Coverage
-                if itrBackendConfig?.codeCoverage ?? false {
-                    Log.debug("Coverage Enabled")
-                    guard let temp = DDTestMonitor.tempDir else {
-                        Log.print("Coverage init failed. Can't create temp directiry.")
-                        coverageHelper = nil
-                        return
-                    }
-                    coverageHelper = DDCoverageHelper(storagePath: temp,
-                                                      priority: DDTestMonitor.config.codeCoveragePriority)
-                } else {
+                guard let settings = tracerBackendConfig?.itr,
+                      settings.itrEnabled && settings.codeCoverage
+                else {
                     Log.debug("Coverage Disabled")
-                    coverageHelper = nil
+                    return
                 }
-                
+                // Activate Coverage
+                Log.debug("Coverage Enabled")
+                guard let temp = DDTestMonitor.tempDir else {
+                    Log.print("Coverage init failed. Can't create temp directiry.")
+                    coverageHelper = nil
+                    return
+                }
+                coverageHelper = DDCoverageHelper(storagePath: temp,
+                                                  priority: DDTestMonitor.config.codeCoveragePriority)
             }
-            coverageSetup.addDependency(updateItrSettings)
-            itrWorkQueue.addOperation(coverageSetup)
+            coverageSetup.addDependency(updateTracerConfig)
+            testOptimizationSetupQueue.addOperation(coverageSetup)
         }
     }
 
@@ -437,7 +453,7 @@ internal class DDTestMonitor {
         CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, CFRunLoopMode.commonModes)
     }
     
-    func ensureITRStarted() {
-        itrWorkQueue.waitUntilAllOperationsAreFinished()
+    func ensureTestOptimizationStarted() {
+        testOptimizationSetupQueue.waitUntilAllOperationsAreFinished()
     }
 }

@@ -27,19 +27,10 @@ public class DDTestModule: NSObject, Encodable {
     var status: DDTestStatus
     var localization: String
     var configError = false
+    var currentExecutionOrder: Synced<UInt> = Synced(0)
     var itrSkipped: Synced<UInt> = Synced(0)
+    var atrRetried: Synced<UInt> = Synced(0)
     var linesCovered: Double? = nil
-
-    private let executionLock = NSLock()
-    private var privateCurrentExecutionOrder = 0
-    var currentExecutionOrder: Int {
-        executionLock.lock()
-        defer {
-            privateCurrentExecutionOrder += 1
-            executionLock.unlock()
-        }
-        return privateCurrentExecutionOrder
-    }
 
     init(bundleName: String, startTime: Date?) {
         self.duration = 0

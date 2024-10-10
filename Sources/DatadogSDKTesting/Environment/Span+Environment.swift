@@ -16,6 +16,10 @@ extension Int: SpanAttributeConvertible {
     var spanAttribute: String { String(self, radix: 10) }
 }
 
+extension UInt: SpanAttributeConvertible {
+    var spanAttribute: String { String(self, radix: 10) }
+}
+
 extension String: SpanAttributeConvertible {
     var spanAttribute: String { self }
 }

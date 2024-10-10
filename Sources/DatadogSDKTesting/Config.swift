@@ -29,7 +29,7 @@ final class Config {
     var enableRecordPayload: Bool = false
     var disableNetworkCallStack: Bool = false
     var enableNetworkCallStackSymbolicated: Bool = false
-    var maxPayloadSize: Int = 1024
+    var maxPayloadSize: UInt = 1024
     var enableStdoutInstrumentation: Bool = false
     var enableStderrInstrumentation: Bool = false
     var extraHTTPHeaders: Set<String>? = nil
@@ -48,6 +48,11 @@ final class Config {
     var itrEnabled: Bool = true
     var excludedBranches: Set<String> = []
     var codeCoveragePriority: CodeCoveragePriority = .utility
+    
+    /// Auto Test Retries
+    var testRetriesEnabled: Bool = true
+    var testRetriesTestRetryCount: UInt = 5
+    var testRetriesTotalRetryCount: UInt = 1000
     
     /// Avoids configuring the traces exporter
     var disableTracesExporting: Bool = false
@@ -117,12 +122,15 @@ final class Config {
         disableNTPClock = env[.disableNTPClock] ?? false
         
         /// Intelligent test runner related configuration
-        gitUploadEnabled = env[.enableCiVisibilityGitUpload] ?? true
-        
-        // ITR
-        itrEnabled = env[.enableCiVisibilityITR] ?? true
+        gitUploadEnabled = env[.enableCiVisibilityGitUpload] ?? gitUploadEnabled
+        itrEnabled = env[.enableCiVisibilityITR] ?? itrEnabled
         coverageEnabled = env[.enableCiVisibilityCodeCoverage] ?? itrEnabled
-        excludedBranches = env[.ciVisibilityExcludedBranches] ?? []
+        excludedBranches = env[.ciVisibilityExcludedBranches] ?? excludedBranches
+        
+        /// Automatic Test Retries
+        testRetriesEnabled = env[.enableCiVisibilityFlakyRetries] ?? testRetriesEnabled
+        testRetriesTestRetryCount = env[.ciVisibilityFlakyRetryCount] ?? testRetriesTestRetryCount
+        testRetriesTotalRetryCount = env[.ciVisibilityTotalFlakyRetryCount] ?? testRetriesTotalRetryCount
         
         /// UI testing properties
         tracerTraceId = env[.tracerTraceId]
@@ -210,6 +218,9 @@ extension Config: CustomDebugStringConvertible {
         Coverage Enabled: \(coverageEnabled)
         ITR Enabled: \(itrEnabled)
         Excluded Branches: \(excludedBranches)
+        Test Retries Enabled: \(testRetriesEnabled)
+        Test Retries Count: \(testRetriesTestRetryCount)
+        Test Retries Total Count: \(testRetriesTotalRetryCount)
         Code Coverage Priority: \(codeCoveragePriority)
         Disable Traces Exporting: \(disableTracesExporting)
         Report Hostname: \(reportHostname)

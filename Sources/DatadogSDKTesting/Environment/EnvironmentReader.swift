@@ -143,6 +143,15 @@ extension Int: EnvironmentValue {
     }
 }
 
+extension UInt: EnvironmentValue {
+    init?(configValue: String) {
+        guard let val = UInt(configValue, radix: 10) else {
+            return nil
+        }
+        self = val
+    }
+}
+
 extension Bool: EnvironmentValue {
     init?(configValue: String) {
         switch configValue.lowercased() {

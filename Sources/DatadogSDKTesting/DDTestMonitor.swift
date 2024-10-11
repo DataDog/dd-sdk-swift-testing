@@ -333,7 +333,7 @@ internal class DDTestMonitor {
                     return
                 }
                 coverageHelper = DDCoverageHelper(storagePath: temp,
-                                                  full: DDTestMonitor.config.coverageMode.isFull,
+                                                  total: DDTestMonitor.config.coverageMode.isTotal,
                                                   priority: DDTestMonitor.config.codeCoveragePriority)
             }
             coverageSetup.addDependency(updateTracerConfig)

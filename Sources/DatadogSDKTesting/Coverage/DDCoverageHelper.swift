@@ -14,10 +14,10 @@ class DDCoverageHelper {
     var llvmProfileURL: URL
     var storagePath: Directory
     var initialCoverageSaved: Bool
-    let isFull: Bool
+    let isTotal: Bool
     let coverageWorkQueue: OperationQueue
 
-    init?(storagePath: Directory, full: Bool, priority: CodeCoveragePriority) {
+    init?(storagePath: Directory, total: Bool, priority: CodeCoveragePriority) {
         guard let profilePath = Self.profileGetFileName(), BinaryImages.profileImages.count > 0 else {
             Log.print("Coverage not properly enabled in project, check documentation")
             Log.debug("LLVM_PROFILE_FILE: \(Self.profileGetFileName() ?? "NIL")")
@@ -31,7 +31,7 @@ class DDCoverageHelper {
         }
 
         llvmProfileURL = URL(fileURLWithPath: profilePath)
-        isFull = full
+        isTotal = total
         self.storagePath = path
         Log.debug("LLVM Coverage location: \(llvmProfileURL.path)")
         Log.debug("DDCoverageHelper location: \(path.url.path)")
@@ -95,7 +95,7 @@ class DDCoverageHelper {
     func writeTestProfile() {
         // Write first to our test file
         Self.internalWriteProfile()
-        if isFull {
+        if isTotal {
             // Switch profile to llvm original destination
             profileSetFilename(url: llvmProfileURL)
             // Write to llvm original destination

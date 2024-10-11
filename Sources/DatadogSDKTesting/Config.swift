@@ -45,7 +45,7 @@ final class Config {
     /// Intelligent test runner related environment
     var gitUploadEnabled: Bool = true
     var itrEnabled: Bool = true
-    var coverageMode: CodeCoverageMode = .full
+    var coverageMode: CodeCoverageMode = .total
     var excludedBranches: Set<String> = []
     var codeCoveragePriority: CodeCoveragePriority = .utility
     
@@ -128,7 +128,7 @@ final class Config {
 
         let coverageEnabled = env[.enableCiVisibilityCodeCoverage] ?? itrEnabled
         let coveragePerTestOnly = env[.ciVisibilityCodeCoverageOnlyPerTest] ?? false
-        coverageMode = coverageEnabled ? (coveragePerTestOnly ? .perTest : .full) : .disabled
+        coverageMode = coverageEnabled ? (coveragePerTestOnly ? .perTest : .total) : .disabled
         
         /// Automatic Test Retries
         testRetriesEnabled = env[.enableCiVisibilityFlakyRetries] ?? testRetriesEnabled

@@ -30,7 +30,7 @@ enum FrameworkLoadHandler {
         if config.isInTestMode {
             // When code coverage is enabled modify profile name so it disables countinuous profiling
             // or we cannot recover coverage manually
-            if config.coverageEnabled || config.itrEnabled {
+            if config.coverageMode.isEnabled || config.itrEnabled {
                 if DDCoverageHelper.load() {
                     DDTestMonitor.envReader = ProcessEnvironmentReader()
                 }

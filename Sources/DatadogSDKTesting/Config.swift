@@ -44,8 +44,8 @@ final class Config {
     
     /// Intelligent test runner related environment
     var gitUploadEnabled: Bool = true
-    var coverageEnabled: Bool = true
     var itrEnabled: Bool = true
+    var coverageMode: CodeCoverageMode = .total
     var excludedBranches: Set<String> = []
     var codeCoveragePriority: CodeCoveragePriority = .utility
     
@@ -124,8 +124,11 @@ final class Config {
         /// Intelligent test runner related configuration
         gitUploadEnabled = env[.enableCiVisibilityGitUpload] ?? gitUploadEnabled
         itrEnabled = env[.enableCiVisibilityITR] ?? itrEnabled
-        coverageEnabled = env[.enableCiVisibilityCodeCoverage] ?? itrEnabled
         excludedBranches = env[.ciVisibilityExcludedBranches] ?? excludedBranches
+
+        let coverageEnabled = env[.enableCiVisibilityCodeCoverage] ?? itrEnabled
+        let coveragePerTestOnly = env[.ciVisibilityCodeCoverageOnlyPerTest] ?? false
+        coverageMode = coverageEnabled ? (coveragePerTestOnly ? .perTest : .total) : .disabled
         
         /// Automatic Test Retries
         testRetriesEnabled = env[.enableCiVisibilityFlakyRetries] ?? testRetriesEnabled
@@ -215,7 +218,7 @@ extension Config: CustomDebugStringConvertible {
         Disable NTP Clock: \(disableNTPClock)
         Disable Git Information: \(disableGitInformation)
         Git Upload Enabled: \(gitUploadEnabled)
-        Coverage Enabled: \(coverageEnabled)
+        Coverage: \(coverageMode)
         ITR Enabled: \(itrEnabled)
         Excluded Branches: \(excludedBranches)
         Test Retries Enabled: \(testRetriesEnabled)

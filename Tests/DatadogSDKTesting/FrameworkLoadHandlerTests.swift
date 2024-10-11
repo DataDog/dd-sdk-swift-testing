@@ -10,13 +10,13 @@ import XCTest
 class FrameworkLoadHandlerTests: XCTestCase {
     override func setUp() {
         XCTAssertNil(DDTracer.activeSpan)
-        FrameworkLoadHandler.testObserver?.stopObserving()
+        FrameworkLoadHandler.testObserver?.stop()
         FrameworkLoadHandler.testObserver = nil
         DDTestMonitor.instance = nil
     }
 
     override func tearDownWithError() throws {
-        FrameworkLoadHandler.testObserver?.stopObserving()
+        FrameworkLoadHandler.testObserver?.stop()
         FrameworkLoadHandler.testObserver = nil
         DDTestMonitor._env_recreate()
         DDTestMonitor.instance = DDTestMonitor()

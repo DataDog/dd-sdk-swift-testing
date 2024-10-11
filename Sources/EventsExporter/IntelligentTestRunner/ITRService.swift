@@ -14,7 +14,6 @@ internal class ITRService {
     let packFileUploader: DataUploader
     var packFileRequestBuilder: MultipartRequestBuilder
     let skippableTestsUploader: DataUploader
-    let itrConfigUploader: DataUploader
 
     init(config: ExporterConfiguration) throws {
         self.exporterConfiguration = config
@@ -69,23 +68,6 @@ internal class ITRService {
             ]
         )
 
-        let itrConfigRequestBuilder = SingleRequestBuilder(
-            url: exporterConfiguration.endpoint.itrSettingsURL,
-            queryItems: [],
-            headers: [
-                .userAgentHeader(
-                    appName: exporterConfiguration.applicationName,
-                    appVersion: exporterConfiguration.version,
-                    device: Device.current
-                ),
-                .contentTypeHeader(contentType: .applicationJSON),
-                .apiKeyHeader(apiKey: config.apiKey),
-                .traceIDHeader(traceID: config.exporterId),
-                .parentSpanIDHeader(parentSpanID: config.exporterId),
-                .samplingPriorityHeader()
-            ]
-        )
-
         searchCommitUploader = DataUploader(
             httpClient: HTTPClient(debug: config.debug.logNetworkRequests),
             requestBuilder: searchCommitRequestBuilder
@@ -99,11 +81,6 @@ internal class ITRService {
         skippableTestsUploader = DataUploader(
             httpClient: HTTPClient(debug: config.debug.logNetworkRequests),
             requestBuilder: skippableTestsRequestBuilder
-        )
-
-        itrConfigUploader = DataUploader(
-            httpClient: HTTPClient(debug: config.debug.logNetworkRequests),
-            requestBuilder: itrConfigRequestBuilder
         )
     }
 
@@ -183,34 +160,6 @@ internal class ITRService {
                                         customConfiguration: customConfigurations)
         }
         return SkipTests(correlationId: skipTests.meta.correlationId, tests: tests)
-    }
-
-    func itrSetting(
-        service: String, env: String, repositoryURL: String, branch: String, sha: String,
-        testLevel: ITRTestLevel, configurations: [String: String], customConfigurations: [String: String]
-    ) -> ITRSettings? {
-        var configurations: [String: JSONGeneric] = configurations.mapValues { .string($0) }
-        configurations["custom"] = .stringDict(customConfigurations)
-
-        let itrConfigPayload = ITRConfigRequesFormat(service: service, env: env, repositoryURL: repositoryURL,
-                                                     branch: branch, sha: sha, configurations: configurations,
-                                                     testLevel: testLevel)
-
-        guard let jsonData = itrConfigPayload.jsonData,
-              let response = itrConfigUploader.uploadWithResponse(data: jsonData)
-        else {
-            Log.debug("SkipTestsRequestFormat payload: \(itrConfigPayload.jsonString)")
-            Log.debug("skippableTests no response")
-            return nil
-        }
-
-        guard let itrConfig = try? JSONDecoder().decode(ITRConfigResponseFormat.self, from: response) else {
-            Log.debug("itrSetting invalid response: \(String(decoding: response, as: UTF8.self))")
-            return nil
-        }
-        Log.debug("itrSetting response: \(String(decoding: response, as: UTF8.self))")
-
-        return ITRSettings(attrs: itrConfig.data.attributes)
     }
 }
 

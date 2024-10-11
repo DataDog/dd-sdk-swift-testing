@@ -14,9 +14,10 @@ class DDCoverageHelper {
     var llvmProfileURL: URL
     var storagePath: Directory
     var initialCoverageSaved: Bool
+    let isFull: Bool
     let coverageWorkQueue: OperationQueue
 
-    init?(storagePath: Directory, priority: CodeCoveragePriority) {
+    init?(storagePath: Directory, full: Bool, priority: CodeCoveragePriority) {
         guard let profilePath = Self.profileGetFileName(), BinaryImages.profileImages.count > 0 else {
             Log.print("Coverage not properly enabled in project, check documentation")
             Log.debug("LLVM_PROFILE_FILE: \(Self.profileGetFileName() ?? "NIL")")
@@ -30,6 +31,7 @@ class DDCoverageHelper {
         }
 
         llvmProfileURL = URL(fileURLWithPath: profilePath)
+        isFull = full
         self.storagePath = path
         Log.debug("LLVM Coverage location: \(llvmProfileURL.path)")
         Log.debug("DDCoverageHelper location: \(path.url.path)")
@@ -93,10 +95,12 @@ class DDCoverageHelper {
     func writeTestProfile() {
         // Write first to our test file
         Self.internalWriteProfile()
-
-        // Write to llvm original destination
-        profileSetFilename(url: llvmProfileURL)
-        Self.internalWriteProfile()
+        if isFull {
+            // Switch profile to llvm original destination
+            profileSetFilename(url: llvmProfileURL)
+            // Write to llvm original destination
+            Self.internalWriteProfile()
+        }
     }
     
     func removeStoragePath() {
@@ -140,7 +144,6 @@ class DDCoverageHelper {
         guard let profDataURL = DDCoverageHelper.generateProfData(profrawFile: profrawFile) else {
             return nil
         }
-        Thread.sleep(forTimeInterval: 0.1)
         let covJsonURL = profDataURL.deletingLastPathComponent().appendingPathComponent("coverageFile").appendingPathExtension("json")
         let binariesPath = binaryImagePaths.map { #""\#($0)""# }.joined(separator: " -object ")
         let commandToRun = #"xcrun llvm-cov export -instr-profile "\#(profDataURL.path)" \#(binariesPath) > "\#(covJsonURL.path)""#

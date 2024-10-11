@@ -317,7 +317,7 @@ internal class DDTestMonitor {
             }
         }
         
-        if DDTestMonitor.config.coverageEnabled {
+        if DDTestMonitor.config.coverageMode.isEnabled {
             let coverageSetup = BlockOperation { [self] in
                 guard let settings = tracerBackendConfig?.itr,
                       settings.itrEnabled && settings.codeCoverage
@@ -333,6 +333,7 @@ internal class DDTestMonitor {
                     return
                 }
                 coverageHelper = DDCoverageHelper(storagePath: temp,
+                                                  full: DDTestMonitor.config.coverageMode.isFull,
                                                   priority: DDTestMonitor.config.codeCoveragePriority)
             }
             coverageSetup.addDependency(updateTracerConfig)

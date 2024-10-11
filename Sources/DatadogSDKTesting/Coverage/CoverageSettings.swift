@@ -40,3 +40,38 @@ enum CodeCoveragePriority: Int, EnvironmentValue, CustomDebugStringConvertible {
         }
     }
 }
+
+enum CodeCoverageMode {
+    case disabled
+    case perTest
+    case full
+    
+    var isFull: Bool {
+        switch self {
+        case .full: return true
+        default: return false
+        }
+    }
+    
+    var isPerTest: Bool {
+        switch self {
+        case .perTest: return true
+        default: return false
+        }
+    }
+    
+    var isEnabled: Bool {
+        switch self {
+        case .disabled: return false
+        default: return true
+        }
+    }
+    
+    var debugDescription: String {
+        switch self {
+        case .full: return "Full"
+        case .perTest: return "Per-Test Only"
+        case .disabled: return "Disabled"
+        }
+    }
+}

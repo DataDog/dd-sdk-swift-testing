@@ -41,6 +41,7 @@ internal enum EnvironmentKey: String, CaseIterable {
     case enableCiVisibilityGitUpload = "DD_CIVISIBILITY_GIT_UPLOAD_ENABLED"
     case enableCiVisibilityCodeCoverage = "DD_CIVISIBILITY_CODE_COVERAGE_ENABLED"
     case ciVisibilityCodeCoveragePriority = "DD_CIVISIBILITY_CODE_COVERAGE_PRIORITY"
+    case ciVisibilityCodeCoverageOnlyPerTest = "DD_CIVISIBILITY_CODE_COVERAGE_ONLY_PER_TEST"
     case enableCiVisibilityITR = "DD_CIVISIBILITY_ITR_ENABLED"
     case ciVisibilityExcludedBranches = "DD_CIVISIBILITY_EXCLUDED_BRANCHES"
     case ciVisibilityReportHostname = "DD_CIVISIBILITY_REPORT_HOSTNAME"

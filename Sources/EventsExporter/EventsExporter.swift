@@ -14,6 +14,7 @@ public class EventsExporter: SpanExporter {
     var coverageExporter: CoverageExporter
     var itrService: ITRService
     var settingsService: SettingsService
+    var efdService: EarlyFlakeDetectionService
 
     public init(config: ExporterConfiguration) throws {
         self.configuration = config
@@ -23,6 +24,7 @@ public class EventsExporter: SpanExporter {
         coverageExporter = try CoverageExporter(config: configuration)
         itrService = try ITRService(config: configuration)
         settingsService = try SettingsService(config: configuration)
+        efdService = try EarlyFlakeDetectionService(config: configuration)
         Log.debug("EventsExporter created: \(spansExporter.runtimeId), endpoint: \(config.endpoint)")
     }
 
@@ -92,6 +94,14 @@ public class EventsExporter: SpanExporter {
             customConfigurations: customConfigurations
         )
     }
+    
+    public func knownTests(
+        service: String, env: String, repositoryURL: String,
+        configurations: [String: String], customConfigurations: [String: String]
+    ) -> KnownTests? {
+        efdService.tests(service: service, env: env, repositoryURL: repositoryURL,
+                         configurations: configurations, customConfigurations: customConfigurations)
+    }
 
     public func shutdown(explicitTimeout: TimeInterval?) {
         _ = self.flush(explicitTimeout: explicitTimeout)
@@ -104,6 +114,7 @@ public class EventsExporter: SpanExporter {
                 configuration.endpoint.searchCommitsURL.absoluteString,
                 configuration.endpoint.skippableTestsURL.absoluteString,
                 configuration.endpoint.packfileURL.absoluteString,
-                configuration.endpoint.settingsURL.absoluteString]
+                configuration.endpoint.settingsURL.absoluteString,
+                configuration.endpoint.knownTestsURL.absoluteString]
     }
 }

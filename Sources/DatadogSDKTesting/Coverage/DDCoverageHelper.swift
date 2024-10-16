@@ -10,31 +10,28 @@ import Foundation
 
 typealias cFunc = @convention(c) () -> Void
 
-class DDCoverageHelper {
+final class DDCoverageHelper {
     var llvmProfileURL: URL
     var storagePath: Directory
     var initialCoverageSaved: Bool
     let isTotal: Bool
+    let debug: Bool
     let coverageWorkQueue: OperationQueue
 
-    init?(storagePath: Directory, total: Bool, priority: CodeCoveragePriority) {
+    init?(storagePath: Directory, total: Bool, priority: CodeCoveragePriority, debug: Bool) {
         guard let profilePath = Self.profileGetFileName(), BinaryImages.profileImages.count > 0 else {
             Log.print("Coverage not properly enabled in project, check documentation")
             Log.debug("LLVM_PROFILE_FILE: \(Self.profileGetFileName() ?? "NIL")")
             Log.debug("Profile Images count: \(BinaryImages.profileImages.count)")
             return nil
         }
-        
-        guard let path = try? storagePath.createSubdirectory(path: "coverage") else {
-            Log.debug("Can't create subdirectory in: \(storagePath)")
-            return nil
-        }
 
         llvmProfileURL = URL(fileURLWithPath: profilePath)
         isTotal = total
-        self.storagePath = path
+        self.debug = debug
+        self.storagePath = storagePath
         Log.debug("LLVM Coverage location: \(llvmProfileURL.path)")
-        Log.debug("DDCoverageHelper location: \(path.url.path)")
+        Log.debug("DDCoverageHelper location: \(storagePath.url.path)")
         initialCoverageSaved = false
         coverageWorkQueue = OperationQueue()
         coverageWorkQueue.qualityOfService = priority.qos
@@ -100,6 +97,14 @@ class DDCoverageHelper {
             profileSetFilename(url: llvmProfileURL)
             // Write to llvm original destination
             Self.internalWriteProfile()
+        }
+    }
+    
+    deinit {
+        if !debug {
+            try? storagePath.delete()
+        } else {
+            Log.debug("DDCoverageHelper storage path: \(storagePath.url.path)")
         }
     }
     

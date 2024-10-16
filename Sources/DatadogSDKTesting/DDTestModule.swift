@@ -27,9 +27,17 @@ public class DDTestModule: NSObject, Encodable {
     var status: DDTestStatus
     var localization: String
     var configError = false
-    var currentExecutionOrder: Synced<UInt> = Synced(0)
-    var itrSkipped: Synced<UInt> = Synced(0)
-    var atrRetried: Synced<UInt> = Synced(0)
+    
+    private var _counters: Synced<Counters> = Synced(.init())
+    
+    var testRunsCount: UInt { _counters.value.allTestRuns }
+    var skippedByITRTestsCount: UInt { _counters.value.skippedTests }
+    var retriedByATRRunsCount: UInt { _counters.value.retryTestRuns }
+    
+    var efdTestsCounts: (newTests: UInt, knownTests: UInt) {
+        _counters.use { ($0.newTests, $0.knownTests) }
+    }
+    
     var linesCovered: Double? = nil
 
     init(bundleName: String, startTime: Date?) {
@@ -78,7 +86,9 @@ public class DDTestModule: NSObject, Encodable {
 
         if !DDTestMonitor.config.disableCrashHandler {
             Log.measure(name: "DDCrashesInstall") {
-                DDCrashes.install(disableMach: DDTestMonitor.config.disableMachCrashHandler)
+                DDCrashes.install(
+                    folder: try! DDTestMonitor.cacheManager!.session(feature: "crash"),
+                    disableMach: DDTestMonitor.config.disableMachCrashHandler)
             }
         }
         let moduleStartTime = startTime ?? beforeLoadingTime
@@ -97,6 +107,44 @@ public class DDTestModule: NSObject, Encodable {
         Log.debug("Module loading time interval: \(DDTestMonitor.clock.now.timeIntervalSince(beforeLoadingTime))")
     }
 
+    @discardableResult
+    func incrementSkipped() -> UInt {
+        _counters.update { cnt in
+            defer { cnt.skippedTests += 1 }
+            return cnt.skippedTests
+        }
+    }
+    
+    func incrementTestRuns() -> UInt {
+        _counters.update { cnt in
+            defer { cnt.allTestRuns += 1 }
+            return cnt.allTestRuns
+        }
+    }
+    
+    func incrementRetries(max: UInt) -> UInt? {
+        _counters.update { cnt in
+            cnt.retryTestRuns.checkedAdd(1, max: max).map {
+                cnt.retryTestRuns = $0
+                return $0
+            }
+        }
+    }
+    
+    @discardableResult
+    func incrementNewTests() -> UInt {
+        _counters.update { cnt in
+            defer { cnt.newTests += 1 }
+            return cnt.allTestRuns
+        }
+    }
+    
+    func addExpectedTests(count: UInt) {
+        _counters.update { cnt in
+            cnt.knownTests += count
+        }
+    }
+    
     private func internalEnd(endTime: Date? = nil) {
         duration = (endTime ?? DDTestMonitor.clock.now).timeIntervalSince(startTime).toNanoseconds
 
@@ -135,7 +183,7 @@ public class DDTestModule: NSObject, Encodable {
         meta[DDUISettingsTags.uiSettingsModuleLocalization] = localization
         meta[DDTestSessionTags.testCodeCoverageEnabled] = (DDTestMonitor.instance?.coverageHelper != nil) ? "true" : "false"
         
-        let itrSkipped = self.itrSkipped.value
+        let itrSkipped = self.skippedByITRTestsCount
         
         if DDTestMonitor.instance?.itr != nil {
             meta[DDTestSessionTags.testItrSkippingType] = DDTagValues.typeTest
@@ -265,5 +313,15 @@ extension DDTestModule {
         init(_ content: DDTestModule) {
             self.content = content
         }
+    }
+}
+
+private extension DDTestModule {
+    struct Counters {
+        var skippedTests: UInt = 0
+        var retryTestRuns: UInt = 0
+        var allTestRuns: UInt = 0
+        var newTests: UInt = 0
+        var knownTests: UInt = 0
     }
 }

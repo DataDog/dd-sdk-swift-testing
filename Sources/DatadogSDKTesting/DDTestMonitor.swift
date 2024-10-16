@@ -37,17 +37,20 @@ internal class DDTestMonitor {
     
     static var envReader: EnvironmentReader = ProcessEnvironmentReader()
     
-    static let tracerVersion = (Bundle(for: DDTestMonitor.self).infoDictionary?["CFBundleShortVersionString"] as? String) ?? "unknown"
+    static var sessionId: String = { envReader["XCTestSessionIdentifier"] ?? UUID().uuidString }()
+    
+    static let tracerVersion = Bundle.sdk.version ?? "unknown"
 
-    static var dataPath: Directory? = try? Directory(withSubdirectoryPath: "com.datadog.civisibility")
-    static var cacheDir: Directory? = try? dataPath?.createSubdirectory(path: "caches")
-    static var commitFolder: Directory? = {
-        guard let commit = DDTestMonitor.env.git.commitSHA else { return nil }
-        return try? DDTestMonitor.cacheDir?.createSubdirectory(path: commit)
+    static var cacheManager: CacheManager? = {
+        do {
+            return try CacheManager(environment: env.environment, session: sessionId,
+                                    commit: env.git.commitSHA, debug: config.extraDebug)
+        } catch {
+            Log.print("Cache Manager initialization failed: \(error)")
+            return nil
+        }
     }()
     
-    static var tempDir: Directory? = try? Directory.temporary().createSubdirectory(path: "com.datadog.civisibility-\(UUID().uuidString)")
-
     var networkInstrumentation: DDNetworkInstrumentation?
     var injectHeaders: Bool = false
     var recordPayload: Bool = false
@@ -71,7 +74,7 @@ internal class DDTestMonitor {
     
     var failedTestRetriesCount: UInt = 0
     var failedTestRetriesTotalCount: UInt = 0
-    var earlyFlakeDetection: TracerSettings.EFD = .init()
+    var efd: EarlyFlakeDetection? = nil
 
     var rLock = NSRecursiveLock()
     private var privateCurrentTest: DDTest?
@@ -120,12 +123,7 @@ internal class DDTestMonitor {
         DDTestMonitor.instance = nil
         Log.debug("Clearing monitor")
         try? DDSymbolicator.dsymFilesDir.delete()
-        if !config.extraDebugCodeCoverage {
-            monitor.coverageHelper?.removeStoragePath()
-            try? tempDir?.delete()
-        } else {
-            Log.debug("Temp files stored at: \(tempDir?.url.absoluteString ?? "nil")")
-        }
+        DDTestMonitor.cacheManager = nil
     }
 
     init() {
@@ -142,7 +140,8 @@ internal class DDTestMonitor {
                 /// As crash reporter is initialized in testBundleWillStart() method, we initialize it here
                 /// because dont have test observer
                 if !DDTestMonitor.config.disableCrashHandler {
-                    DDCrashes.install(disableMach: DDTestMonitor.config.disableMachCrashHandler)
+                    DDCrashes.install(folder: try! DDTestMonitor.cacheManager!.common(feature: "crashes"),
+                                      disableMach: DDTestMonitor.config.disableMachCrashHandler)
                     let launchedSpan = DDTestMonitor.tracer.createSpanFromLaunchContext()
                     let simpleSpan = SimpleSpanData(spanData: launchedSpan.toSpanData())
                     DDCrashes.setCustomData(customData: SimpleSpanSerializer.serializeSpan(simpleSpan: simpleSpan))
@@ -203,7 +202,7 @@ internal class DDTestMonitor {
                 }
                 DDTestMonitor.instance?.gitUploader = GitUploader(
                     log: Log.instance, exporter: exporter, workspace: workspace,
-                    commitFolder: DDTestMonitor.commitFolder
+                    commitFolder: try? DDTestMonitor.cacheManager?.commit(feature: "git")
                 )
             } else {
                 Log.debug("Git Upload Disabled")
@@ -227,6 +226,7 @@ internal class DDTestMonitor {
         var tracerBackendConfig: TracerSettings? = nil
         itr = nil
         coverageHelper = nil
+        efd = nil
         
         guard let branch = DDTestMonitor.env.git.branch,
               let commit = DDTestMonitor.env.git.commitSHA else {
@@ -234,15 +234,23 @@ internal class DDTestMonitor {
             return
         }
         
+        guard let service = DDTestMonitor.config.service ?? DDTestMonitor.env.git.repositoryName else {
+            Log.print("Unknown service or repository name. ITR and EFD can't be started")
+            return
+        }
+        
+        guard let repository = DDTestMonitor.env.git.repositoryURL?.spanAttribute else {
+            Log.print("Unknown repository URL. ITR and EFD can't be started")
+            return
+        }
+        
         let getTracerConfig = { (log: String) in
-            if let service = DDTestMonitor.config.service ?? DDTestMonitor.env.git.repositoryName,
-               let eventsExporter = DDTestMonitor.tracer.eventsExporter
-            {
+            if let eventsExporter = DDTestMonitor.tracer.eventsExporter {
                 return Log.measure(name: log) {
                     eventsExporter.tracerSettings(
                         service: service,
                         env: DDTestMonitor.env.environment,
-                        repositoryURL: DDTestMonitor.env.git.repositoryURL?.spanAttribute ?? "",
+                        repositoryURL: repository,
                         branch: branch,
                         sha: commit,
                         testLevel: .test,
@@ -274,7 +282,6 @@ internal class DDTestMonitor {
                 }
                 tracerBackendConfig = config
             }
-            earlyFlakeDetection = config.efd
             if config.flakyTestRetriesEnabled && DDTestMonitor.config.testRetriesEnabled {
                 failedTestRetriesCount = DDTestMonitor.config.testRetriesTestRetryCount
                 failedTestRetriesTotalCount = DDTestMonitor.config.testRetriesTotalRetryCount
@@ -308,8 +315,14 @@ internal class DDTestMonitor {
                         Log.debug("ITR Disabled")
                         return
                     }
+                    guard let folder = try? DDTestMonitor.cacheManager?.session(feature: "itr") else {
+                        Log.print("ITR init failed. Can't create cache folder")
+                        return
+                    }
                     // Activate Intelligent Test Runner
-                    itr = IntelligentTestRunner(configurations: DDTestMonitor.env.baseConfigurations)
+                    itr = IntelligentTestRunner(configurations: DDTestMonitor.env.baseConfigurations,
+                                                custom: DDTestMonitor.config.customConfigurations,
+                                                folder: folder)
                     itr?.start()
                 }
                 itrSetup.addDependency(updateTracerConfig)
@@ -327,17 +340,48 @@ internal class DDTestMonitor {
                 }
                 // Activate Coverage
                 Log.debug("Coverage Enabled")
-                guard let temp = DDTestMonitor.tempDir else {
+                guard let temp = try? DDTestMonitor.cacheManager?.temp(feature: "coverage") else {
                     Log.print("Coverage init failed. Can't create temp directiry.")
                     coverageHelper = nil
                     return
                 }
                 coverageHelper = DDCoverageHelper(storagePath: temp,
                                                   total: DDTestMonitor.config.coverageMode.isTotal,
-                                                  priority: DDTestMonitor.config.codeCoveragePriority)
+                                                  priority: DDTestMonitor.config.codeCoveragePriority,
+                                                  debug: DDTestMonitor.config.extraDebugCodeCoverage)
             }
             coverageSetup.addDependency(updateTracerConfig)
             testOptimizationSetupQueue.addOperation(coverageSetup)
+        }
+        
+        if DDTestMonitor.config.efdEnabled {
+            let efdSetup = BlockOperation { [self] in
+                guard let config = tracerBackendConfig?.efd, config.enabled else {
+                    Log.debug("Early Flake Detection Disabled")
+                    return
+                }
+                // Activate EFD
+                Log.debug("Early Flake Detection Enabled")
+                guard let eventsExporter = DDTestMonitor.tracer.eventsExporter else {
+                    Log.print("EFD init failed. Exporter is nil")
+                    efd = nil
+                    return
+                }
+                guard let cache = try? DDTestMonitor.cacheManager?.session(feature: "efd") else {
+                    Log.print("EFD init failed. Can't create cache directiry.")
+                    efd = nil
+                    return
+                }
+                efd = EarlyFlakeDetection(repository: repository, service: service, environment: DDTestMonitor.env.environment,
+                                          configurations: DDTestMonitor.env.baseConfigurations,
+                                          custom: DDTestMonitor.config.customConfigurations,
+                                          exporter: eventsExporter, cache: cache,
+                                          slowTestRetries: config.slowTestRetries,
+                                          faultySessionThreshold: config.faultySessionThreshold)
+                efd?.start()
+            }
+            efdSetup.addDependency(updateTracerConfig)
+            testOptimizationSetupQueue.addOperation(efdSetup)
         }
     }
 

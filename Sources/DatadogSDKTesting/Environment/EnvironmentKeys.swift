@@ -45,6 +45,7 @@ internal enum EnvironmentKey: String, CaseIterable {
     case enableCiVisibilityITR = "DD_CIVISIBILITY_ITR_ENABLED"
     case ciVisibilityExcludedBranches = "DD_CIVISIBILITY_EXCLUDED_BRANCHES"
     case ciVisibilityReportHostname = "DD_CIVISIBILITY_REPORT_HOSTNAME"
+    case enableCiVisibilityEFD = "DD_CIVISIBILITY_EARLY_FLAKE_DETECTION_ENABLED"
     case enableCiVisibilityFlakyRetries = "DD_CIVISIBILITY_FLAKY_RETRY_ENABLED"
     case ciVisibilityFlakyRetryCount = "DD_CIVISIBILITY_FLAKY_RETRY_COUNT"
     case ciVisibilityTotalFlakyRetryCount = "DD_CIVISIBILITY_TOTAL_FLAKY_RETRY_COUNT"

@@ -7,7 +7,7 @@
 @_implementationOnly import EventsExporter
 import Foundation
 
-struct GitUploader {
+final class GitUploader {
     private static let packFilesLocation = "packfiles/v1/"
     private static let uploadedCommitFile = "uploaded_commits.json"
     
@@ -37,6 +37,10 @@ struct GitUploader {
         self.packFilesDirectory = packFilesDir
         self.commitFolder = commitFolder
         self.log = log
+    }
+    
+    deinit {
+        try? packFilesDirectory.delete()
     }
     
     func sendGitInfo(repositoryURL: URL?, commit: String) -> Bool {
@@ -221,7 +225,7 @@ struct GitUploader {
             let cmd = """
             git -C "\(ws)" pack-objects --quiet --compression=9 --max-pack-size=3m "\(dir)" <<< "\(list)"
             """
-            guard let (_, err) = Spawn.command(try: cmd, log: log), !err.contains("fatal:") else {
+            guard let (_, err) = Spawn.command(try: cmd, log: self.log), !err.contains("fatal:") else {
                 try? FileManager.default.removeItem(atPath: dir)
                 return false
             }

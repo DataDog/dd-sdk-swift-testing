@@ -194,6 +194,8 @@ internal enum DDTagValues {
     static let statusPass = "pass"
     static let statusFail = "fail"
     static let statusSkip = "skip"
+    
+    static let efdAbortSlow = "slow"
 }
 
 internal enum DDItrTags {
@@ -204,7 +206,9 @@ internal enum DDItrTags {
 }
 
 internal enum DDEfdTags {
-    static let isRetry = "test.is_retry"
+    static let testIsNew = "test.is_new"
+    static let testIsRetry = "test.is_retry"
+    static let testEfdAbortReason = "test.early_flake.abort_reason"
 }
 
 internal enum DDCFMessageID {

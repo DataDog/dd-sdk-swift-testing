@@ -8,7 +8,6 @@
 import Foundation
 
 class IntelligentTestRunner {
-    private let itrCachePath = "itr"
     private let skippableFileName = "skippableTests"
     private var _skippableTests: SkipTests? = nil {
         didSet {
@@ -17,25 +16,21 @@ class IntelligentTestRunner {
     }
 
     var configurations: [String: String]
-    var itrFolder: Directory?
+    var customConfigurations: [String: String]
+    var itrFolder: Directory
 
     private(set) var skippableTests: SkippableTests? = nil
     var correlationId: String? { _skippableTests?.correlationId }
 
-    init(configurations: [String: String]) {
+    init(configurations: [String: String], custom: [String: String], folder: Directory) {
         self.configurations = configurations
-        itrFolder = try? DDTestMonitor.commitFolder?
-            .subdirectory(path: itrCachePath)
-            .subdirectory(path: DDTestMonitor.env.environment +
-                String(configurations.stableHash) +
-                String(DDTestMonitor.config.customConfigurations.stableHash))
+        self.customConfigurations = custom
+        self.itrFolder = folder
     }
 
     func start() {
-        if itrFolder == nil {
-            createITRFolder()
-        } else {
-            // Previous commit folder exists, load from file
+        if itrFolder.hasFile(named: skippableFileName) {
+            // We have cached skippable tests. Try to load
             loadSkippableTestsFromDisk()
         }
         if _skippableTests == nil {
@@ -50,21 +45,13 @@ class IntelligentTestRunner {
         guard let commit = DDTestMonitor.env.git.commitSHA, let url = repository else { return }
         _skippableTests = DDTestMonitor.tracer.eventsExporter?.skippableTests(
             repositoryURL: url.spanAttribute, sha: commit, testLevel: .test,
-            configurations: configurations, customConfigurations: DDTestMonitor.config.customConfigurations
+            configurations: configurations, customConfigurations: customConfigurations
         )
         Log.debug("Skippable Tests: \(_skippableTests.map {"\($0)"} ?? "nil")")
     }
 
-    private func createITRFolder() {
-        itrFolder = try? DDTestMonitor.commitFolder?
-            .createSubdirectory(path: itrCachePath)
-            .createSubdirectory(path: DDTestMonitor.env.environment +
-                String(configurations.stableHash) +
-                String(DDTestMonitor.config.customConfigurations.stableHash))
-    }
-
     private func loadSkippableTestsFromDisk() {
-        if let skippableData = try? itrFolder?.file(named: skippableFileName).read(),
+        if let skippableData = try? itrFolder.file(named: skippableFileName).read(),
            let skippableTests = try? JSONDecoder().decode(SkipTests.self, from: skippableData)
         {
             _skippableTests = skippableTests
@@ -73,12 +60,9 @@ class IntelligentTestRunner {
     }
 
     private func saveSkippableTestsToDisk() {
-        guard let itrFolder = itrFolder else {
-            return
-        }
-        let skippableTestsFile = try? itrFolder.createFile(named: skippableFileName)
-        
         if let tests = _skippableTests, let data = try? JSONEncoder().encode(tests) {
+            let skippableTestsFile = try? itrFolder.createFile(named: skippableFileName)
+            
             try? skippableTestsFile?.append(data: data)
         }
     }

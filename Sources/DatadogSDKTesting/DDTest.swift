@@ -32,7 +32,7 @@ public class DDTest: NSObject {
         self.itr = itr
         self.isUITest = false
 
-        currentTestExecutionOrder = module.currentExecutionOrder.checkedAdd(1)!
+        currentTestExecutionOrder = module.incrementTestRuns()
 
         let attributes: [String: String] = [
             DDGenericTags.type: DDTagValues.typeTest,
@@ -251,7 +251,7 @@ extension DDTest {
             span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusSkip)
             if itr.skipped {
                 span.setAttribute(key: DDTestTags.testSkippedByITR, value: "true")
-                module.itrSkipped.update { $0 += 1 }
+                module.incrementSkipped()
             }
             span.status = .ok
         }

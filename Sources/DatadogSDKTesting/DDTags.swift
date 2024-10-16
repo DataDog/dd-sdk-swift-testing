@@ -208,6 +208,7 @@ internal enum DDItrTags {
 internal enum DDEfdTags {
     static let testIsNew = "test.is_new"
     static let testIsRetry = "test.is_retry"
+    static let testEfdEnabled = "test.early_flake.enabled"
     static let testEfdAbortReason = "test.early_flake.abort_reason"
 }
 

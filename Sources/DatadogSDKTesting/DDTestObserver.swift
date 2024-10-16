@@ -226,7 +226,7 @@ class DDTestObserver: NSObject, XCTestObservation {
             return
         }
         
-        if context.efd(for: test) {
+        if test.module.checkEfdStatus(for: test, efd: context.efd) {
             let duration = Date().timeIntervalSince(testRun.startDate ?? Date(timeIntervalSince1970: 0))
             let repeats = context.efd!.slowTestRetries.repeats(for: duration)
             if groupRun.executionCount < Int(repeats) - 1 {
@@ -288,7 +288,7 @@ class DDTestObserver: NSObject, XCTestObservation {
             return
         }
         
-        if context.efd(for: test) {
+        if test.module.checkEfdStatus(for: test, efd: context.efd) {
             // EFD enabled for this test. Suppress error for now. We will handle it after
             testRun.suppressFailure()
             Log.print("Suppressed issue \(issue) for test \(testCase)")
@@ -403,15 +403,6 @@ extension DDTestObserver {
         
         func back(group: DDXCTestRetryGroup) -> State {
             .group(group: group, context: self)
-        }
-        
-        func efd(for test: DDTest) -> Bool {
-            guard let known = efd?.knownTests, let threshold = efd?.faultySessionThreshold else { return false }
-            let counts = test.module.efdTestsCounts
-            let testsCount = max(Double(known.testCount), Double(counts.knownTests))
-            let newTests = Double(counts.newTests)
-            guard newTests <= threshold || ((newTests / testsCount) * 100.0) < threshold else { return false }
-            return known.isNew(test: test.name, in: test.suite.name, and: test.module.bundleName)
         }
     }
 }

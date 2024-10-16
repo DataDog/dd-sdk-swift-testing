@@ -38,6 +38,8 @@ public class DDTestModule: NSObject, Encodable {
         _counters.use { ($0.newTests, $0.knownTests) }
     }
     
+    var efdSessionFailed: Bool = false
+    
     var linesCovered: Double? = nil
 
     init(bundleName: String, startTime: Date?) {
@@ -204,6 +206,13 @@ public class DDTestModule: NSObject, Encodable {
             meta[DDTestSessionTags.testItrSkipped] = "true"
         }
         
+        if DDTestMonitor.instance?.efd != nil {
+            meta[DDEfdTags.testEfdEnabled] = "true"
+        }
+        if efdSessionFailed {
+            meta[DDEfdTags.testEfdAbortReason] = "faulty"
+        }
+        
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: DDTestModuleEnvelope(self))
         Log.debug("Exported module_end event moduleId: \(self.id)")
 
@@ -220,6 +229,21 @@ public class DDTestModule: NSObject, Encodable {
 
         DDTestMonitor.tracer.flush()
         DDTestMonitor.instance?.gitUploadQueue.waitUntilAllOperationsAreFinished()
+    }
+    
+    func checkEfdStatus(for test: DDTest, efd: EarlyFlakeDetection?) -> Bool {
+        guard !efdSessionFailed, test.module.bundleName == bundleName else { return false }
+        guard let known = efd?.knownTests, let threshold = efd?.faultySessionThreshold else { return false }
+        // Calculate threshold
+        let counts = efdTestsCounts
+        let testsCount = max(Double(known.testCount), Double(counts.knownTests))
+        let newTests = Double(counts.newTests)
+        guard newTests <= threshold || ((newTests / testsCount) * 100.0) < threshold else {
+            Log.print("Early Flake Detection Faulty Session detected!")
+            efdSessionFailed = true
+            return false
+        }
+        return known.isNew(test: test.name, in: test.suite.name, and: bundleName)
     }
 }
 

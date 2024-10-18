@@ -180,7 +180,7 @@ class DDTestObserver: NSObject, XCTestObservation {
         }
         let test = context.suite.testStart(name: testCase.testId.test, itr: context.itr)
         let isRerun = group.groupRun?.executionCount ?? 0 > 0
-        if context.efd(for: test) {
+        if test.module.checkEfdStatus(for: test, efd: context.efd) {
             test.setTag(key: DDEfdTags.testIsNew, value: "true")
             if !isRerun { test.module.incrementNewTests() }
         }

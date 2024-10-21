@@ -196,6 +196,7 @@ internal enum DDTagValues {
     static let statusSkip = "skip"
     
     static let efdAbortSlow = "slow"
+    static let efdAbortFaulty = "faulty"
 }
 
 internal enum DDItrTags {

@@ -210,7 +210,7 @@ public class DDTestModule: NSObject, Encodable {
             meta[DDEfdTags.testEfdEnabled] = "true"
         }
         if efdSessionFailed {
-            meta[DDEfdTags.testEfdAbortReason] = "faulty"
+            meta[DDEfdTags.testEfdAbortReason] = DDTagValues.efdAbortFaulty
         }
         
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: DDTestModuleEnvelope(self))

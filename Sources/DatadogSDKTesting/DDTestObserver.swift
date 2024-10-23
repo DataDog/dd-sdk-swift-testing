@@ -27,6 +27,9 @@ class DDTestObserver: NSObject, XCTestObservation {
         observers.append(NotificationCenter.test.onTestRetryGroupDidFinish { [weak self] group in
             self?.testRetryGroupDidFinish(group)
         })
+        observers.append(NotificationCenter.test.onTestCaseRetryWillFinish { [weak self] tc in
+            self?.testCaseRetryWillFinish(tc)
+        })
         observers.append(NotificationCenter.test.onTestCaseRetryWillRecordIssue { [weak self] tc, issue in
             self?.testCaseRetry(tc, willRecord: issue)
         })
@@ -102,6 +105,8 @@ class DDTestObserver: NSObject, XCTestObservation {
         let wrappedTests = tests.map { DDXCTestRetryGroup(for: $0) }
         testSuite.setValue(wrappedTests, forKey: "_mutableTests")
         
+        module.addExpectedTests(count: UInt(wrappedTests.count))
+        
         let retries = DDTestMonitor.instance.flatMap { monitor in
             monitor.failedTestRetriesCount > 0
                 ? (test: monitor.failedTestRetriesCount,
@@ -112,7 +117,7 @@ class DDTestObserver: NSObject, XCTestObservation {
         state = SuiteContext(
             parent: parent,
             skippableTests: DDTestMonitor.instance?.itr?.skippableTests,
-            efd: DDTestMonitor.instance?.earlyFlakeDetection ?? .init(),
+            efd: DDTestMonitor.instance?.efd,
             retries: retries
         ).new(suite: testSuite, in: module)
         Log.debug("testSuiteWillStart: \(testSuite.name)")
@@ -174,8 +179,13 @@ class DDTestObserver: NSObject, XCTestObservation {
             return
         }
         let test = context.suite.testStart(name: testCase.testId.test, itr: context.itr)
-        if group.groupRun?.executionCount ?? 0 > 0 { // Test is ReRun
-            test.setTag(key: DDEfdTags.isRetry, value: "true")
+        let isRerun = group.groupRun?.executionCount ?? 0 > 0
+        if test.module.checkEfdStatus(for: test, efd: context.efd) {
+            test.setTag(key: DDEfdTags.testIsNew, value: "true")
+            if !isRerun { test.module.incrementNewTests() }
+        }
+        if isRerun {
+            test.setTag(key: DDEfdTags.testIsRetry, value: "true")
         }
         state = context.new(test: test, in: group)
         Log.debug("testCaseWillStart: \(testCase.name)")
@@ -193,7 +203,60 @@ class DDTestObserver: NSObject, XCTestObservation {
         test.addBenchmarkTagsIfNeeded(from: testCase)
         test.end(status: testCase.testRun?.status ?? .fail)
         state = context.back(group: group)
-        Log.debug("testCaseDidFinish: \(test.name)")
+        Log.debug("testCaseDidFinish: \(testCase.name)")
+    }
+    
+    func testCaseRetryWillFinish(_ testCase: XCTestCase) {
+        guard case .test(test: let test, group: let group, context: let context) = state else {
+            Log.print("testCaseRetryWillFinish: Bad observer state: \(state), expected: .test")
+            return
+        }
+        guard testCase.name.contains(test.name) else {
+            Log.print("testCaseRetryWillFinish: Bad test: \(testCase), expected: \(test.name)")
+            return
+        }
+        Log.debug("testCaseRetryWillFinish: \(testCase)")
+        guard let testRun = testCase.testRun as? DDXCTestCaseRetryRun else {
+            Log.print("Unknown test run type: \(type(of: testCase.testRun)) for \(testCase)")
+            return
+        }
+        guard let groupRun = group.groupRun else {
+            Log.print("Bad observer state. Group run in nil")
+            testRun.recordSuppressedFailures()
+            return
+        }
+        
+        if test.module.checkEfdStatus(for: test, efd: context.efd) {
+            let duration = Date().timeIntervalSince(testRun.startDate ?? Date(timeIntervalSince1970: 0))
+            let repeats = context.efd!.slowTestRetries.repeats(for: duration)
+            if groupRun.executionCount < Int(repeats) - 1 {
+                // We can retry test
+                group.retry()
+                Log.debug("EFD will retry test \(test.name)")
+            } else {
+                if repeats == 0 {
+                    // Test is too long. EFD failed
+                    test.setTag(key: DDEfdTags.testEfdAbortReason, value: DDTagValues.efdAbortSlow)
+                }
+                if groupRun.canFail {
+                    // We don't have previous passed runs.
+                    // Record suppressed failures if we have them
+                    testRun.recordSuppressedFailures()
+                }
+            }
+        } else if testRun.canFail {
+            if let retries = context.retries, // ATR is enabled
+               groupRun.executionCount < retries.test, // and we can retry more
+               test.module.incrementRetries(max: retries.total) != nil // and increased global retry counter
+            {
+                // tell group to retry this test
+                group.retry()
+                Log.debug("ATR will retry test \(test.name)")
+            } else {
+                // Record suppresses failures if we have them
+                testRun.recordSuppressedFailures()
+            }
+        }
     }
     
     func testCaseRetry(_ testCase: XCTestCase, willRecord issue: XCTIssue) {
@@ -206,28 +269,33 @@ class DDTestObserver: NSObject, XCTestObservation {
             return
         }
         Log.debug("testCaseRetry:willRecord: \(testCase), issue: \(issue)")
+        
         test.setErrorInfo(type: issue.compactDescription, message: issue.description, callstack: nil)
+        
         guard let testRun = testCase.testRun as? DDXCTestCaseRetryRun else {
             Log.print("Unknown test run type: \(type(of: testCase.testRun)) for \(testCase)")
             return
         }
         
-        // Test can fail more than once. Handling this
+        // Test can fail more than once.
+        // We suppress all errors or none.
         guard testRun.ddTotalFailureCount == 0 else {
             // We already registered failure for this test before.
-            if testRun.suppressedFailureCount > 0 { // Check if it was suppressed
+            if testRun.suppressedFailures.count > 0 { // Check if it was suppressed
                 testRun.suppressFailure() // then suppress current error too
                 Log.print("Suppressed issue: \(issue) for test: \(testCase)")
             }
             return
         }
         
-        // Auto Test Retries Logic
-        if let retries = context.retries, // ATR is enabled
-           let run = group.groupRun, run.executionCount < retries.test, // and we can retry more
-           test.module.atrRetried.checkedAdd(1, max: retries.total) != nil // increased global retry counter
+        if test.module.checkEfdStatus(for: test, efd: context.efd) {
+            // EFD enabled for this test. Suppress error for now. We will handle it after
+            testRun.suppressFailure()
+            Log.print("Suppressed issue \(issue) for test \(testCase)")
+        } else if let retries = context.retries, // ATR is enabled
+                  let run = group.groupRun, run.executionCount < retries.test, // and we can retry test more
+                  test.module.retriedByATRRunsCount < retries.total // and global counter allow us to retry
         {
-            group.retry() // tell group to retry this test
             testRun.suppressFailure() // suppress current error
             Log.print("Suppressed issue: \(issue) for test: \(testCase)")
         }
@@ -274,11 +342,13 @@ extension DDTestObserver {
     final class SuiteContext {
         let parent: ContainerSuite?
         let skippableTests: SkippableTests?
-        let efd: TracerSettings.EFD
+        let efd: EarlyFlakeDetectionService?
         let retries: (test: UInt, total: UInt)?
         private(set) var unskippableCache: [ObjectIdentifier: UnskippableMethodChecker]
         
-        init(parent: ContainerSuite?, skippableTests: SkippableTests?, efd: TracerSettings.EFD, retries: (test: UInt, total: UInt)?) {
+        init(parent: ContainerSuite?, skippableTests: SkippableTests?,
+             efd: EarlyFlakeDetectionService?, retries: (test: UInt, total: UInt)?)
+        {
             self.parent = parent
             self.skippableTests = skippableTests
             self.efd = efd
@@ -300,10 +370,10 @@ extension DDTestObserver {
         }
         
         func itr(for group: DDXCTestRetryGroup) -> DDTest.ITRStatus {
+            guard let skippableTests = skippableTests else { return .none }
             let checker = unskippableCache.get(key: ObjectIdentifier(group.testClass),
                                                or: group.testClass.unskippableMethods)
             let testId = group.testId
-            guard let skippableTests = skippableTests else { return .none }
             return DDTest.ITRStatus(canBeSkipped: skippableTests[testId.suite, testId.test] != nil,
                                     markedUnskippable: !checker.canSkip(method: testId.test))
         }
@@ -314,7 +384,7 @@ extension DDTestObserver {
         let suite: DDTestSuite
         let suiteContext: SuiteContext
         
-        var efd: TracerSettings.EFD { suiteContext.efd }
+        var efd: EarlyFlakeDetectionService? { suiteContext.efd }
         var retries: (test: UInt, total: UInt)? { suiteContext.retries }
         
         init(itr: DDTest.ITRStatus, suite: DDTestSuite, suiteContext: SuiteContext) {
@@ -336,5 +406,3 @@ extension DDTestObserver {
         }
     }
 }
-
-

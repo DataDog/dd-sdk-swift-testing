@@ -7,13 +7,33 @@
 import Foundation
 import OpenTelemetrySdk
 
-public class EventsExporter: SpanExporter {
+public protocol EventsExporterProtocol: SpanExporter {
+    var endpointURLs: Set<String> { get }
+    
+    func exportEvent<T: Encodable>(event: T)
+    func searchCommits(repositoryURL: String, commits: [String]) -> [String]
+    func export(coverage: URL, testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64, workspacePath: String?, binaryImagePaths: [String])
+    func uploadPackFiles(packFilesDirectory: Directory, commit: String, repository: String) throws
+    func skippableTests(repositoryURL: String, sha: String, testLevel: ITRTestLevel,
+                        configurations: [String: String], customConfigurations: [String: String]) -> SkipTests?
+    func tracerSettings(
+        service: String, env: String, repositoryURL: String, branch: String, sha: String,
+        testLevel: ITRTestLevel, configurations: [String: String], customConfigurations: [String: String]
+    ) -> TracerSettings?
+    func knownTests(
+        service: String, env: String, repositoryURL: String,
+        configurations: [String: String], customConfigurations: [String: String]
+    ) -> KnownTests?
+}
+
+public class EventsExporter: EventsExporterProtocol {
     let configuration: ExporterConfiguration
     var spansExporter: SpansExporter
     var logsExporter: LogsExporter
     var coverageExporter: CoverageExporter
     var itrService: ITRService
     var settingsService: SettingsService
+    var efdService: EarlyFlakeDetectionService
 
     public init(config: ExporterConfiguration) throws {
         self.configuration = config
@@ -23,6 +43,7 @@ public class EventsExporter: SpanExporter {
         coverageExporter = try CoverageExporter(config: configuration)
         itrService = try ITRService(config: configuration)
         settingsService = try SettingsService(config: configuration)
+        efdService = try EarlyFlakeDetectionService(config: configuration)
         Log.debug("EventsExporter created: \(spansExporter.runtimeId), endpoint: \(config.endpoint)")
     }
 
@@ -92,18 +113,27 @@ public class EventsExporter: SpanExporter {
             customConfigurations: customConfigurations
         )
     }
+    
+    public func knownTests(
+        service: String, env: String, repositoryURL: String,
+        configurations: [String: String], customConfigurations: [String: String]
+    ) -> KnownTests? {
+        efdService.tests(service: service, env: env, repositoryURL: repositoryURL,
+                         configurations: configurations, customConfigurations: customConfigurations)
+    }
 
     public func shutdown(explicitTimeout: TimeInterval?) {
         _ = self.flush(explicitTimeout: explicitTimeout)
     }
 
-    public func endpointURLs() -> Set<String> {
-        return [configuration.endpoint.logsURL.absoluteString,
-                configuration.endpoint.spansURL.absoluteString,
-                configuration.endpoint.coverageURL.absoluteString,
-                configuration.endpoint.searchCommitsURL.absoluteString,
-                configuration.endpoint.skippableTestsURL.absoluteString,
-                configuration.endpoint.packfileURL.absoluteString,
-                configuration.endpoint.settingsURL.absoluteString]
+    public var endpointURLs: Set<String> {
+        [configuration.endpoint.logsURL.absoluteString,
+         configuration.endpoint.spansURL.absoluteString,
+         configuration.endpoint.coverageURL.absoluteString,
+         configuration.endpoint.searchCommitsURL.absoluteString,
+         configuration.endpoint.skippableTestsURL.absoluteString,
+         configuration.endpoint.packfileURL.absoluteString,
+         configuration.endpoint.settingsURL.absoluteString,
+         configuration.endpoint.knownTestsURL.absoluteString]
     }
 }

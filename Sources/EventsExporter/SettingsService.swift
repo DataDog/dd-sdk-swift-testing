@@ -43,7 +43,7 @@ public struct TracerSettings {
             public func repeats(for time: TimeInterval) -> UInt {
                 let rounded = time.rounded()
                 guard let index = times.firstIndex(where: { $0.time > rounded }) else {
-                    return times.last?.count ?? 0
+                    return 0
                 }
                 guard index > 0 else { return times[index].count }
                 return times[index-1].count

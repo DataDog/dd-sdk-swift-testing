@@ -49,6 +49,9 @@ final class Config {
     var excludedBranches: Set<String> = []
     var codeCoveragePriority: CodeCoveragePriority = .utility
     
+    /// EFD
+    var efdEnabled: Bool = true
+    
     /// Auto Test Retries
     var testRetriesEnabled: Bool = true
     var testRetriesTestRetryCount: UInt = 5
@@ -129,6 +132,9 @@ final class Config {
         let coverageEnabled = env[.enableCiVisibilityCodeCoverage] ?? itrEnabled
         let coveragePerTestOnly = env[.ciVisibilityCodeCoverageOnlyPerTest] ?? false
         coverageMode = coverageEnabled ? (coveragePerTestOnly ? .perTest : .total) : .disabled
+        
+        /// EFD
+        efdEnabled = env[.enableCiVisibilityEFD] ?? efdEnabled
         
         /// Automatic Test Retries
         testRetriesEnabled = env[.enableCiVisibilityFlakyRetries] ?? testRetriesEnabled

@@ -14,7 +14,9 @@ enum DDSymbolicator {
     private static let callStackRegex = try! NSRegularExpression(pattern: "^([0-9]+)(\\s+)((?:[\\w.] *[\\w.]*)+)(\\s+)(0x[0-9a-fA-F]+)", options: .anchorsMatchLines)
     
     internal static var dsymFilesPath: URL { dsymFilesDir.url }
-    internal static let dsymFilesDir: Directory = try! DDTestMonitor.tempDir!.createSubdirectory(path: "dsyms")
+    internal static let dsymFilesDir: Directory = {
+        try! DDTestMonitor.cacheManager!.temp(feature: "dsyms")
+    }()
 
     internal static var dSYMFiles: [URL] = {
         var dSYMFiles = [URL]()

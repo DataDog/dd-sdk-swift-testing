@@ -247,9 +247,16 @@ extension Bundle {
     }
     
     @inlinable
+    var version: String? {
+        infoDictionary?["CFBundleShortVersionString"] as? String
+    }
+    
+    @inlinable
     static var testBundle: Bundle? {
         Bundle.allBundles.first { $0.bundlePath.hasSuffix(".xctest") }
     }
+    
+    static var sdk: Bundle { Bundle(for: DDTestMonitor.self) }
 }
 
 extension Sequence where Iterator.Element: Hashable {
@@ -281,5 +288,13 @@ extension Dictionary {
         let result = try cb(&value)
         self[key] = value
         return result
+    }
+}
+
+extension FixedWidthInteger {
+    func checkedAdd(_ right: Self, max: Self = .max, min: Self = .min) -> Self? {
+        let (sum, overflow) = self.addingReportingOverflow(right)
+        guard !overflow, sum <= max, sum >= min else { return nil }
+        return sum
     }
 }

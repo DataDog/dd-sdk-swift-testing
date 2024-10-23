@@ -100,14 +100,3 @@ struct LazySynced<V> {
         }
     }
 }
-
-extension Synced where V: FixedWidthInteger {
-    mutating func checkedAdd(_ right: V, max: V = .max, min: V = .min) -> V? {
-        update { lft in
-            let (sum, overflow) = lft.addingReportingOverflow(right)
-            guard !overflow, sum <= max, sum >= min else { return nil }
-            lft = sum
-            return sum
-        }
-    }
-}

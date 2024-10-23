@@ -13,10 +13,16 @@ import XCTest
 final class EarlyFlakeDetectionTests: XCTestCase {
     var testObserver: DDTestObserver!
     var observers: NSMutableArray!
+    private var validate: ((MockEventExporter) -> Void)!
 
     override func setUp() {
         XCTAssertNil(DDTracer.activeSpan)
-        DDTestMonitor._env_recreate(env: ["DD_API_KEY": "fakeToken", "DD_DISABLE_TEST_INSTRUMENTING": "1"])
+        DDTestMonitor._env_recreate(env: [
+            "DD_API_KEY": "fakeToken",
+            "DD_DISABLE_TEST_INSTRUMENTING": "1",
+            "DD_TRACE_DEBUG_CODE_COVERAGE": "0",
+            "DD_DISABLE_CRASH_HANDLER": "1"
+        ])
         EFDTest.reset()
         observers = XCTestObservationCenter.shared.value(forKey: "observers") as? NSMutableArray
         XCTestObservationCenter.shared.setValue(NSMutableArray(), forKey: "observers")
@@ -25,108 +31,120 @@ final class EarlyFlakeDetectionTests: XCTestCase {
     }
 
     override func tearDown() {
+        try? DDTestMonitor.cacheManager?.sessionDir?.delete()
         testObserver.stop()
         testObserver = nil
         XCTestObservationCenter.shared.setValue(observers, forKey: "observers")
         observers = nil
+        let exporter = DDTestMonitor.tracer.eventsExporter as! MockEventExporter
+        validate(exporter)
+        validate = nil
         EFDTest.reset()
         DDTestMonitor._env_recreate()
         DDTestMonitor.cacheManager = try? CacheManager(environment: DDTestMonitor.env.environment,
                                                        session: DDTestMonitor.sessionId,
                                                        commit: DDTestMonitor.env.git.commitSHA,
                                                        debug: DDTestMonitor.config.extraDebugCodeCoverage)
+        DDTestMonitor.tracer = DDTracer()
         XCTAssertNil(DDTracer.activeSpan)
     }
     
     func testEfdRetriesNewTest() {
         DDTestMonitor.tracer = tracer(atr: false, efd: true, knownTests: known(tests: [:]))
-        let exporter = DDTestMonitor.tracer.eventsExporter as! MockEventExporter
+        
         testObserver.testBundleWillStart(Bundle.main)
         EFDTest.suite(failCount: 3).run()
         testObserver.testBundleDidFinish(Bundle.main)
-        DDTestMonitor.tracer = DDTracer()
         
-        XCTAssertEqual(exporter.spans.count, 10)
-        XCTAssertEqual(exporter.spans.filter { $0.status.isError }.count, 3)
+        validate = { exporter in
+            XCTAssertEqual(exporter.spans.count, 10)
+            XCTAssertEqual(exporter.spans.filter { $0.status.isError }.count, 3)
+        }
     }
     
     func testEfdRetriesNewSuccessTest() {
         DDTestMonitor.tracer = tracer(atr: false, efd: true, knownTests: known(tests: [:]))
-        let exporter = DDTestMonitor.tracer.eventsExporter as! MockEventExporter
+        
         testObserver.testBundleWillStart(Bundle.main)
         EFDTest.suite(failCount: 0).run()
         testObserver.testBundleDidFinish(Bundle.main)
-        DDTestMonitor.tracer = DDTracer()
         
-        XCTAssertEqual(exporter.spans.count, 10)
-        XCTAssertEqual(exporter.spans.filter { $0.status.isError }.count, 0)
+        validate = { exporter in
+            XCTAssertEqual(exporter.spans.count, 10)
+            XCTAssertEqual(exporter.spans.filter { $0.status.isError }.count, 0)
+        }
     }
     
     func testEfdDoesntRetryOldTest() {
         DDTestMonitor.tracer = tracer(atr: false, efd: true,
-                                      knownTests: known(tests: [String(describing: EFDTest.self): "testMethod"]))
-        let exporter = DDTestMonitor.tracer.eventsExporter as! MockEventExporter
+                                      knownTests: known(tests: ["\(EFDTest.self)": "testMethod"]))
+        
         testObserver.testBundleWillStart(Bundle.main)
         EFDTest.suite(failCount: 3).run()
         testObserver.testBundleDidFinish(Bundle.main)
-        DDTestMonitor.tracer = DDTracer()
         
-        XCTAssertEqual(exporter.spans.count, 1)
-        XCTAssertEqual(exporter.spans.filter { $0.status.isError }.count, 1)
+        validate = { exporter in
+            XCTAssertEqual(exporter.spans.count, 1)
+            XCTAssertEqual(exporter.spans.filter { $0.status.isError }.count, 1)
+        }
     }
     
     func testAtrRetriesFailedTest() {
         DDTestMonitor.tracer = tracer(atr: true, efd: false,
                                       knownTests: known(tests: [:]))
-        let exporter = DDTestMonitor.tracer.eventsExporter as! MockEventExporter
+        
         testObserver.testBundleWillStart(Bundle.main)
         EFDTest.suite(failCount: 4).run()
         testObserver.testBundleDidFinish(Bundle.main)
-        DDTestMonitor.tracer = DDTracer()
         
-        XCTAssertEqual(exporter.spans.count, 5)
-        XCTAssertEqual(exporter.spans.filter { $0.status.isError }.count, 4)
+        validate = { exporter in
+            XCTAssertEqual(exporter.spans.count, 5)
+            XCTAssertEqual(exporter.spans.filter { $0.status.isError }.count, 4)
+        }
     }
     
     func testAtrDoesntRetryPassedTest() {
         DDTestMonitor.tracer = tracer(atr: true, efd: false,
                                       knownTests: known(tests: [:]))
-        let exporter = DDTestMonitor.tracer.eventsExporter as! MockEventExporter
+        
         testObserver.testBundleWillStart(Bundle.main)
         EFDTest.suite(failCount: 0).run()
         testObserver.testBundleDidFinish(Bundle.main)
-        DDTestMonitor.tracer = DDTracer()
         
-        XCTAssertEqual(exporter.spans.count, 1)
-        XCTAssertEqual(exporter.spans.filter { $0.status.isError }.count, 0)
+        validate = { exporter in
+            XCTAssertEqual(exporter.spans.count, 1)
+            XCTAssertEqual(exporter.spans.filter { $0.status.isError }.count, 0)
+        }
     }
     
     func testAtrWorksWithEFDForOldTest() {
         DDTestMonitor.tracer = tracer(atr: true, efd: true,
-                                      knownTests: known(tests: [String(describing: EFDTest.self): "testMethod"]))
-        let exporter = DDTestMonitor.tracer.eventsExporter as! MockEventExporter
+                                      knownTests: known(tests: ["\(EFDTest.self)": "testMethod"]))
+        
         testObserver.testBundleWillStart(Bundle.main)
         EFDTest.suite(failCount: 3).run()
         EFDTest2.suite().run()
         testObserver.testBundleDidFinish(Bundle.main)
-        DDTestMonitor.tracer = DDTracer()
         
-        XCTAssertEqual(exporter.spans.count, 14)
-        XCTAssertEqual(exporter.spans.filter { $0.status.isError }.count, 3)
+        validate = { exporter in
+            XCTAssertEqual(exporter.spans.count, 14)
+            XCTAssertEqual(exporter.spans.filter { $0.status.isError }.count, 3)
+        }
     }
     
     func testEFDDisablesATRForNewTest() {
         DDTestMonitor.tracer = tracer(atr: true, efd: true,
-                                      knownTests: known(tests: [String(describing: EFDTest2.self): "testMethod"]))
-        let exporter = DDTestMonitor.tracer.eventsExporter as! MockEventExporter
+                                      knownTests: known(tests: ["\(EFDTest2.self)": "testMethod"]))
+        
         testObserver.testBundleWillStart(Bundle.main)
         EFDTest.suite(failCount: 5).run()
         EFDTest2.suite().run()
         testObserver.testBundleDidFinish(Bundle.main)
-        DDTestMonitor.tracer = DDTracer()
         
-        XCTAssertEqual(exporter.spans.count, 11)
-        XCTAssertEqual(exporter.spans.filter { $0.status.isError }.count, 5)
+        validate = { exporter in
+            XCTAssertEqual(exporter.spans.count, 11)
+            XCTAssertEqual(exporter.spans.filter { $0.status.isError }.count, 5)
+        }
     }
     
     private func known(tests: KeyValuePairs<String, String>) -> KnownTests {
@@ -153,6 +171,8 @@ private extension EarlyFlakeDetectionTests {
         static var runCount: Int = 0
         static var failCount: Int = 0
         
+        override var name: String { "-[\(Self.self) testMethod]" }
+        
         func testMethod() {
             Self.runCount += 1
             XCTAssert(Self.runCount > Self.failCount, "Fail \(Self.runCount)")
@@ -164,21 +184,23 @@ private extension EarlyFlakeDetectionTests {
         }
         
         static func suite(failCount: Int) -> XCTestSuite {
-            let test = EFDTest(selector: #selector(testMethod))
+            let test = Self(selector: #selector(testMethod))
             Self.failCount = failCount
             Self.runCount = 0
-            let suite = XCTestSuite(name: String(describing: EFDTest.self))
+            let suite = XCTestSuite(name: "\(Self.self)")
             suite.addTest(test)
             return suite
         }
     }
     
     final class EFDTest2: XCTestCase {
+        override var name: String { "-[\(Self.self) testMethod]" }
+        
         func testMethod() {}
         
         static func suite() -> XCTestSuite {
-            let test = EFDTest2(selector: #selector(testMethod))
-            let suite = XCTestSuite(name: String(describing: EFDTest2.self))
+            let test = Self(selector: #selector(testMethod))
+            let suite = XCTestSuite(name: "\(Self.self)")
             suite.addTest(test)
             return suite
         }

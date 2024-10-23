@@ -231,7 +231,7 @@ public class DDTestModule: NSObject, Encodable {
         DDTestMonitor.instance?.gitUploadQueue.waitUntilAllOperationsAreFinished()
     }
     
-    func checkEfdStatus(for test: DDTest, efd: EarlyFlakeDetection?) -> Bool {
+    func checkEfdStatus(for test: DDTest, efd: EarlyFlakeDetectionService?) -> Bool {
         guard !efdSessionFailed, test.module.bundleName == bundleName else { return false }
         guard let known = efd?.knownTests, let threshold = efd?.faultySessionThreshold else { return false }
         // Calculate threshold

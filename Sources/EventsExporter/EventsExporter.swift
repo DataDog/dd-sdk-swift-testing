@@ -7,7 +7,26 @@
 import Foundation
 import OpenTelemetrySdk
 
-public class EventsExporter: SpanExporter {
+public protocol EventsExporterProtocol: SpanExporter {
+    var endpointURLs: Set<String> { get }
+    
+    func exportEvent<T: Encodable>(event: T)
+    func searchCommits(repositoryURL: String, commits: [String]) -> [String]
+    func export(coverage: URL, testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64, workspacePath: String?, binaryImagePaths: [String])
+    func uploadPackFiles(packFilesDirectory: Directory, commit: String, repository: String) throws
+    func skippableTests(repositoryURL: String, sha: String, testLevel: ITRTestLevel,
+                        configurations: [String: String], customConfigurations: [String: String]) -> SkipTests?
+    func tracerSettings(
+        service: String, env: String, repositoryURL: String, branch: String, sha: String,
+        testLevel: ITRTestLevel, configurations: [String: String], customConfigurations: [String: String]
+    ) -> TracerSettings?
+    func knownTests(
+        service: String, env: String, repositoryURL: String,
+        configurations: [String: String], customConfigurations: [String: String]
+    ) -> KnownTests?
+}
+
+public class EventsExporter: EventsExporterProtocol {
     let configuration: ExporterConfiguration
     var spansExporter: SpansExporter
     var logsExporter: LogsExporter
@@ -107,14 +126,14 @@ public class EventsExporter: SpanExporter {
         _ = self.flush(explicitTimeout: explicitTimeout)
     }
 
-    public func endpointURLs() -> Set<String> {
-        return [configuration.endpoint.logsURL.absoluteString,
-                configuration.endpoint.spansURL.absoluteString,
-                configuration.endpoint.coverageURL.absoluteString,
-                configuration.endpoint.searchCommitsURL.absoluteString,
-                configuration.endpoint.skippableTestsURL.absoluteString,
-                configuration.endpoint.packfileURL.absoluteString,
-                configuration.endpoint.settingsURL.absoluteString,
-                configuration.endpoint.knownTestsURL.absoluteString]
+    public var endpointURLs: Set<String> {
+        [configuration.endpoint.logsURL.absoluteString,
+         configuration.endpoint.spansURL.absoluteString,
+         configuration.endpoint.coverageURL.absoluteString,
+         configuration.endpoint.searchCommitsURL.absoluteString,
+         configuration.endpoint.skippableTestsURL.absoluteString,
+         configuration.endpoint.packfileURL.absoluteString,
+         configuration.endpoint.settingsURL.absoluteString,
+         configuration.endpoint.knownTestsURL.absoluteString]
     }
 }

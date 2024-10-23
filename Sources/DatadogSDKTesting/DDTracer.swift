@@ -21,7 +21,7 @@ enum DDHeaders: String, CaseIterable {
 internal class DDTracer {
     let tracerSdk: TracerSdk
     let tracerProviderSdk: TracerProviderSdk
-    var eventsExporter: EventsExporter?
+    var eventsExporter: EventsExporterProtocol?
     private var launchSpanContext: SpanContext?
 
     private let attributeCountLimit: UInt = 1024
@@ -38,10 +38,45 @@ internal class DDTracer {
     var isBinaryUnderUITesting: Bool {
         return launchSpanContext != nil
     }
+    
+    init(id: String, version: String, exporter: EventsExporterProtocol?, enabled: Bool, launchContext: SpanContext?) {
+        self.launchSpanContext = launchContext
+        self.eventsExporter = exporter
+        
+        let exporterToUse: SpanExporter
+        if !enabled {
+            exporterToUse = InMemoryExporter()
+        } else if let exporter = eventsExporter {
+            exporterToUse = exporter as SpanExporter
+        } else {
+            Log.print("Failed creating Datadog exporter.")
+            exporterToUse = InMemoryExporter()
+        }
+        
+        let spanProcessor: SpanProcessor
+        if launchSpanContext != nil {
+            spanProcessor = SimpleSpanProcessor(spanExporter: exporterToUse).reportingOnlySampled(sampled: false)
+        } else {
+            spanProcessor = SimpleSpanProcessor(spanExporter: exporterToUse)
+        }
 
-    init() {
+        // sync clock
+        try! DDTestMonitor.clock.sync()
+        
+        tracerProviderSdk = TracerProviderBuilder().with(sampler: Samplers.alwaysOn)
+            .with(spanLimits: SpanLimits().settingAttributeCountLimit(attributeCountLimit))
+            .with(clock: DDTestMonitor.clock)
+            .add(spanProcessor: spanProcessor)
+            .build()
+
+        OpenTelemetry.registerTracerProvider(tracerProvider: tracerProviderSdk)
+        tracerSdk = tracerProviderSdk.get(instrumentationName: id, instrumentationVersion: version) as! TracerSdk
+    }
+
+    convenience init() {
         let conf = DDTestMonitor.config
         let env = DDTestMonitor.env
+        var launchSpanContext: SpanContext? = nil
         if let envTraceId = conf.tracerTraceId,
            let envSpanId = conf.tracerSpanId
         {
@@ -87,37 +122,10 @@ internal class DDTracer {
             debug: .init(logNetworkRequests: conf.extraDebugNetwork,
                          saveCodeCoverageFiles: conf.extraDebugCodeCoverage)
         )
-        eventsExporter = try? EventsExporter(config: exporterConfiguration)
-
-        let exporterToUse: SpanExporter
-
-        if conf.disableTracesExporting {
-            exporterToUse = InMemoryExporter()
-        } else if let exporter = eventsExporter {
-            exporterToUse = exporter as SpanExporter
-        } else {
-            Log.print("Failed creating Datadog exporter.")
-            exporterToUse = InMemoryExporter()
-        }
-
-        var spanProcessor: SpanProcessor
-        if launchSpanContext != nil {
-            spanProcessor = SimpleSpanProcessor(spanExporter: exporterToUse).reportingOnlySampled(sampled: false)
-        } else {
-            spanProcessor = SimpleSpanProcessor(spanExporter: exporterToUse)
-        }
-
-        // sync clock
-        try! DDTestMonitor.clock.sync()
+        let eventsExporter = try? EventsExporter(config: exporterConfiguration)
         
-        tracerProviderSdk = TracerProviderBuilder().with(sampler: Samplers.alwaysOn)
-            .with(spanLimits: SpanLimits().settingAttributeCountLimit(attributeCountLimit))
-            .with(clock: DDTestMonitor.clock)
-            .add(spanProcessor: spanProcessor)
-            .build()
-
-        OpenTelemetry.registerTracerProvider(tracerProvider: tracerProviderSdk)
-        tracerSdk = tracerProviderSdk.get(instrumentationName: identifier, instrumentationVersion: version) as! TracerSdk
+        self.init(id: identifier, version: version, exporter: eventsExporter,
+                  enabled: !conf.disableTracesExporting, launchContext: launchSpanContext)
     }
 
     func startSpan(name: String, attributes: [String: String], startTime: Date? = nil) -> Span {
@@ -373,7 +381,7 @@ internal class DDTracer {
     }
 
     func endpointURLs() -> Set<String> {
-        return eventsExporter?.endpointURLs() ?? Set<String>()
+        return eventsExporter?.endpointURLs ?? Set<String>()
     }
 }
 

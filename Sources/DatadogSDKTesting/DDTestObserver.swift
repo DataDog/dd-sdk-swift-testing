@@ -238,13 +238,13 @@ class DDTestObserver: NSObject, XCTestObservation {
                     // Test is too long. EFD failed
                     test.setTag(key: DDEfdTags.testEfdAbortReason, value: DDTagValues.efdAbortSlow)
                 }
-                if groupRun.couldFail {
+                if groupRun.canFail {
                     // We don't have previous passed runs.
                     // Record suppressed failures if we have them
                     testRun.recordSuppressedFailures()
                 }
             }
-        } else if testRun.ddHasFailed {
+        } else if testRun.canFail {
             if let retries = context.retries, // ATR is enabled
                groupRun.executionCount < retries.test, // and we can retry more
                test.module.incrementRetries(max: retries.total) != nil // and increased global retry counter
@@ -342,12 +342,12 @@ extension DDTestObserver {
     final class SuiteContext {
         let parent: ContainerSuite?
         let skippableTests: SkippableTests?
-        let efd: EarlyFlakeDetection?
+        let efd: EarlyFlakeDetectionService?
         let retries: (test: UInt, total: UInt)?
         private(set) var unskippableCache: [ObjectIdentifier: UnskippableMethodChecker]
         
         init(parent: ContainerSuite?, skippableTests: SkippableTests?,
-             efd: EarlyFlakeDetection?, retries: (test: UInt, total: UInt)?)
+             efd: EarlyFlakeDetectionService?, retries: (test: UInt, total: UInt)?)
         {
             self.parent = parent
             self.skippableTests = skippableTests
@@ -384,7 +384,7 @@ extension DDTestObserver {
         let suite: DDTestSuite
         let suiteContext: SuiteContext
         
-        var efd: EarlyFlakeDetection? { suiteContext.efd }
+        var efd: EarlyFlakeDetectionService? { suiteContext.efd }
         var retries: (test: UInt, total: UInt)? { suiteContext.retries }
         
         init(itr: DDTest.ITRStatus, suite: DDTestSuite, suiteContext: SuiteContext) {

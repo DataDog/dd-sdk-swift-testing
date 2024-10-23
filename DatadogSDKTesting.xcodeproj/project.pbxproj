@@ -11,6 +11,7 @@
 		A718EC2D2CBD5DCE00C5F0D9 /* EarlyFlakeDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A718EC2C2CBD5DCE00C5F0D9 /* EarlyFlakeDetection.swift */; };
 		A718EC2F2CBD73F300C5F0D9 /* CacheManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A718EC2E2CBD73F300C5F0D9 /* CacheManager.swift */; };
 		A718EC312CBE754300C5F0D9 /* EarlyFlakeDetectionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A718EC302CBE754300C5F0D9 /* EarlyFlakeDetectionService.swift */; };
+		A718EC352CC7F32A00C5F0D9 /* EarlyFlakeDetectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A718EC342CC7F32A00C5F0D9 /* EarlyFlakeDetectionTests.swift */; };
 		A71D89262BD6CACD00531A90 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71D89252BD6CACD00531A90 /* Logger.swift */; };
 		A71E64692BAA0AA100F2ACA5 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64512BAA0AA100F2ACA5 /* Config.swift */; };
 		A71E646A2BAA0AA100F2ACA5 /* Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64532BAA0AA100F2ACA5 /* Environment.swift */; };
@@ -307,6 +308,7 @@
 		A718EC2C2CBD5DCE00C5F0D9 /* EarlyFlakeDetection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EarlyFlakeDetection.swift; sourceTree = "<group>"; };
 		A718EC2E2CBD73F300C5F0D9 /* CacheManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheManager.swift; sourceTree = "<group>"; };
 		A718EC302CBE754300C5F0D9 /* EarlyFlakeDetectionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EarlyFlakeDetectionService.swift; sourceTree = "<group>"; };
+		A718EC342CC7F32A00C5F0D9 /* EarlyFlakeDetectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EarlyFlakeDetectionTests.swift; sourceTree = "<group>"; };
 		A71D89252BD6CACD00531A90 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		A71E64512BAA0AA100F2ACA5 /* Config.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
 		A71E64532BAA0AA100F2ACA5 /* Environment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Environment.swift; sourceTree = "<group>"; };
@@ -1070,6 +1072,7 @@
 				E1BB54AB25401E47007C2D93 /* OutputCapture */,
 				E1AD0741252E1EBB003705C1 /* Utils */,
 				A7FC26902BA204B900067E26 /* DatadogSDKTesting.xctestplan */,
+				A718EC342CC7F32A00C5F0D9 /* EarlyFlakeDetectionTests.swift */,
 				E1AD0761252F2F7E003705C1 /* DDTestObserverTests.swift */,
 				E1AD0756252F01F0003705C1 /* EnvironmentTests.swift */,
 				A71E647F2BAB442300F2ACA5 /* ConfigTests.swift */,
@@ -1567,6 +1570,7 @@
 				A7FC266B2BA1F70200067E26 /* EnvironmentTests.swift in Sources */,
 				A7FC266E2BA1F70200067E26 /* DDTestObserverTests.swift in Sources */,
 				A7FC266C2BA1F70200067E26 /* FrameworkLoadHandlerTests.swift in Sources */,
+				A718EC352CC7F32A00C5F0D9 /* EarlyFlakeDetectionTests.swift in Sources */,
 				A7FC265F2BA1F66E00067E26 /* DDTestSessionApiTests.m in Sources */,
 				A7FC26602BA1F67800067E26 /* SimpleSpanSerializerTests.swift in Sources */,
 				A7FC26672BA1F6FC00067E26 /* CodeOwnersTests.swift in Sources */,

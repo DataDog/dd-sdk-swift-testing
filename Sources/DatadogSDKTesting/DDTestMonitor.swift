@@ -44,7 +44,7 @@ internal class DDTestMonitor {
     static var cacheManager: CacheManager? = {
         do {
             return try CacheManager(environment: env.environment, session: sessionId,
-                                    commit: env.git.commitSHA, debug: config.extraDebug)
+                                    commit: env.git.commitSHA, debug: config.extraDebugCodeCoverage)
         } catch {
             Log.print("Cache Manager initialization failed: \(error)")
             return nil
@@ -74,7 +74,7 @@ internal class DDTestMonitor {
     
     var failedTestRetriesCount: UInt = 0
     var failedTestRetriesTotalCount: UInt = 0
-    var efd: EarlyFlakeDetection? = nil
+    var efd: EarlyFlakeDetectionService? = nil
 
     var rLock = NSRecursiveLock()
     private var privateCurrentTest: DDTest?
@@ -119,7 +119,6 @@ internal class DDTestMonitor {
     }
     
     static func removeTestMonitor() {
-        guard let monitor = DDTestMonitor.instance else { return }
         DDTestMonitor.instance = nil
         Log.debug("Clearing monitor")
         try? DDSymbolicator.dsymFilesDir.delete()

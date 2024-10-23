@@ -7,7 +7,14 @@
 import Foundation
 @_implementationOnly import EventsExporter
 
-final class EarlyFlakeDetection {
+protocol EarlyFlakeDetectionService {
+    var knownTests: EFDKnownTests? { get }
+    var slowTestRetries: TracerSettings.EFD.TimeTable { get }
+    var faultySessionThreshold: Double { get }
+    func start()
+}
+
+final class EarlyFlakeDetection: EarlyFlakeDetectionService {
     let cacheFileName = "tests.json"
     
     private var _knownTests: KnownTests? = nil {
@@ -24,13 +31,13 @@ final class EarlyFlakeDetection {
     var configurations: [String: String]
     var customConfigurations: [String: String]
     var cacheFolder: Directory
-    var exporter: EventsExporter
+    var exporter: EventsExporterProtocol
     var slowTestRetries: TracerSettings.EFD.TimeTable
     var faultySessionThreshold: Double
     
     init(repository: String, service: String, environment: String,
          configurations: [String: String], custom: [String: String],
-         exporter: EventsExporter, cache: Directory,
+         exporter: EventsExporterProtocol, cache: Directory,
          slowTestRetries: TracerSettings.EFD.TimeTable,
          faultySessionThreshold: Double
     ) {

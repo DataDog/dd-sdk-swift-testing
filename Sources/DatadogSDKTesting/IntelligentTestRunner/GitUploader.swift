@@ -13,12 +13,12 @@ final class GitUploader {
     
     private let workspacePath: String
     private let log: Logger
-    private let exporter: EventsExporter
+    private let exporter: EventsExporterProtocol
     
     private let commitFolder: Directory
     private let packFilesDirectory: Directory
     
-    init?(log: Logger, exporter: EventsExporter, workspace: String, commitFolder: Directory?) {
+    init?(log: Logger, exporter: EventsExporterProtocol, workspace: String, commitFolder: Directory?) {
         guard !workspace.isEmpty,
               let commitFolder = commitFolder,
               let packFilesDir = try? commitFolder.createSubdirectory(path: Self.packFilesLocation)

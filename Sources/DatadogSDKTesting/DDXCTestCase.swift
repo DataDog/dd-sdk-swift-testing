@@ -25,6 +25,8 @@ final class DDXCTestCaseRetryRun: XCTestCaseRun, DDXCTestSuppressedFailureRun {
     
     var ddTotalFailureCount: Int { totalFailureCount + suppressedFailures.count }
     
+    var canFail: Bool { ddTotalFailureCount > 0 }
+    
     func suppressFailure() {
         _suppressFailure = true
     }
@@ -104,7 +106,7 @@ final class DDXCTestRetryGroupRun: XCTestRun, DDXCTestSuppressedFailureRun {
         testRuns.reduce(0) { $0 + $1.ddTotalFailureCount }
     }
     
-    var couldFail: Bool { !successStrategy.execute(for: self) }
+    var canFail: Bool { !successStrategy.execute(for: self) }
     
     var failedExecutionCount: Int {
         testRuns.reduce(0) { $0 + ($1.ddHasFailed ? $1.executionCount : 0) }

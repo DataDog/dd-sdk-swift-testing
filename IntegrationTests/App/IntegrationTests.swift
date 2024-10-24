@@ -109,6 +109,13 @@ class Benchmark: UnskippableTestCase {
     }
 }
 
+class Flaky: UnskippableTestCase {
+    func testFlaky() {
+        print("Flaky")
+        XCTAssertEqual((0...2).randomElement(), 0)
+    }
+}
+
 class NetworkIntegration: UnskippableTestCase {
     func testNetworkIntegration() throws {
         print("NetworkIntegration")

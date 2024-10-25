@@ -331,9 +331,7 @@ internal class DDTestMonitor {
         
         if DDTestMonitor.config.coverageMode.isEnabled {
             let coverageSetup = BlockOperation { [self] in
-                guard let settings = tracerBackendConfig?.itr,
-                      settings.itrEnabled && settings.codeCoverage
-                else {
+                guard let settings = tracerBackendConfig?.itr, settings.codeCoverage else {
                     Log.debug("Coverage Disabled")
                     return
                 }

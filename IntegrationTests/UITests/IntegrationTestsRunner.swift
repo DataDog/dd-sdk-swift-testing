@@ -31,7 +31,8 @@ class IntegrationTestsRunner: XCTestCase {
 
         testOutputFile = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent(testName).appendingPathExtension("json")
-        FileManager.default.createFile(atPath: testOutputFile.path, contents: nil, attributes: nil)
+        XCTAssertTrue(FileManager.default.createFile(atPath: testOutputFile.path,
+                                                     contents: nil, attributes: nil))
 
         app = XCUIApplication()
         app.launchEnvironment["TEST_CLASS"] = "IntegrationTestsApp.\(testDesiredClass)"
@@ -48,6 +49,10 @@ class IntegrationTestsRunner: XCTestCase {
     }
 
     override func tearDownWithError() throws {
+        if let file = testOutputFile {
+            testOutputFile = nil
+            try FileManager.default.removeItem(at: file)
+        }
         validateGenericAttributes()
     }
 
@@ -57,7 +62,7 @@ class IntegrationTestsRunner: XCTestCase {
             return nil
         }
         outputFile.waitForDataInBackgroundAndNotify()
-        sleep(1)
+        Thread.sleep(forTimeInterval: 2.0)
         let resultSpans = try? JSONDecoder().decode([SimpleSpanData].self, from: outputFile.availableData)
         return resultSpans
     }
@@ -159,6 +164,15 @@ class IntegrationTestsRunner: XCTestCase {
         XCTAssertNotNil(attrib[durationBenchmark + DDBenchmarkTags.statisticsP99])
         XCTAssertNotNil(attrib[durationBenchmark + DDBenchmarkTags.statisticsP95])
         XCTAssertNotNil(attrib[durationBenchmark + DDBenchmarkTags.statisticsP90])
+    }
+    
+    func testFlaky() {
+        XCTAssertEqual(recoveredSpans.count, 1)
+        XCTAssertEqual(attrib[DDGenericTags.resource], "Flaky.testFlaky")
+        XCTAssertEqual(attrib[DDTestTags.testName], "testFlaky")
+        XCTAssertEqual(attrib[DDTestTags.testSuite], "Flaky")
+        XCTAssertEqual(attrib[DDTestTags.testType], "test")
+        XCTAssertEqual(attrib[DDTestTags.testStatus], DDTagValues.statusPass)
     }
 
     func validateGenericAttributes() {

@@ -23,7 +23,7 @@ void *FindSymbolInImage(const char *symbol, const struct mach_header *image, int
 
 		struct segment_command_64 *cur_seg_cmd;
 		uintptr_t cur = (uintptr_t)image + sizeof(struct mach_header_64);
-		for (uint i = 0; i < image->ncmds; i++, cur += cur_seg_cmd->cmdsize) {
+		for (unsigned int i = 0; i < image->ncmds; i++, cur += cur_seg_cmd->cmdsize) {
 			cur_seg_cmd = (struct segment_command_64 *)cur;
 			if (cur_seg_cmd->cmd == LC_SEGMENT_64) {
 				if (!strcmp(cur_seg_cmd->segname, SEG_TEXT)) {
@@ -62,7 +62,7 @@ void *FindSymbolInImage(const char *symbol, const struct mach_header *image, int
 
 		struct segment_command *cur_seg_cmd;
 		uintptr_t cur = (uintptr_t)image + sizeof(struct mach_header);
-		for (uint i = 0; i < image->ncmds; i++, cur += cur_seg_cmd->cmdsize) {
+		for (unsigned int i = 0; i < image->ncmds; i++, cur += cur_seg_cmd->cmdsize) {
 			cur_seg_cmd = (struct segment_command *)cur;
 			if (cur_seg_cmd->cmd == LC_SEGMENT) {
 				if (!strcmp(cur_seg_cmd->segname, SEG_TEXT)) {
@@ -84,7 +84,7 @@ void *FindSymbolInImage(const char *symbol, const struct mach_header *image, int
 		char *strtab = (char *)(linkedit_base + symtab_cmd->stroff);
 
 		struct nlist *sym;
-		int index;
+		unsigned int index;
 		for (index = 0, sym = symtab; index < symtab_cmd->nsyms; index += 1, sym += 1) {
 			if (sym->n_un.n_strx != 0 && !strcmp(symbol, strtab + sym->n_un.n_strx)) {
 				uint64_t address = slide + sym->n_value;

@@ -22,7 +22,8 @@ struct ProfileInfoImage {
     let endCountersFuncPtr: UnsafeMutableRawPointer
     let beginDataFuncPtr: UnsafeMutableRawPointer
     let endDataFuncPtr: UnsafeMutableRawPointer
-    let profileInitializeFileFuncPtr: UnsafeMutableRawPointer?
+    let profileInitializeFileFuncPtr: UnsafeMutableRawPointer
+    let setPageSizeFuncPtr: UnsafeMutableRawPointer
 }
 
 struct BinaryImages {
@@ -61,7 +62,8 @@ struct BinaryImages {
                let end_counters_symbol = FindSymbolInImage("___llvm_profile_end_counters", header, slide),
                let begin_data_symbol = FindSymbolInImage("___llvm_profile_begin_data", header, slide),
                let end_data_symbol = FindSymbolInImage("___llvm_profile_end_data", header, slide),
-               let profile_initialize_symbol = FindSymbolInImage("___llvm_profile_initialize", header, slide)
+               let profile_initialize_symbol = FindSymbolInImage("___llvm_profile_initialize", header, slide),
+               let set_pagesize_symbol =  FindSymbolInImage("___llvm_profile_set_page_size", header, slide)
             {
                 let profileImage = ProfileInfoImage(name: name,
                                                     path: path,
@@ -70,7 +72,8 @@ struct BinaryImages {
                                                     endCountersFuncPtr: end_counters_symbol,
                                                     beginDataFuncPtr: begin_data_symbol,
                                                     endDataFuncPtr: end_data_symbol,
-                                                    profileInitializeFileFuncPtr: profile_initialize_symbol)
+                                                    profileInitializeFileFuncPtr: profile_initialize_symbol,
+                                                    setPageSizeFuncPtr: set_pagesize_symbol)
                 profileImages.append(profileImage)
             }
         }

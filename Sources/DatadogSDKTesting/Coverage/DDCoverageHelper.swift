@@ -122,10 +122,8 @@ final class DDCoverageHelper {
     private func profileSetFilename(url: URL) {
         setenv("LLVM_PROFILE_FILE", url.path, 1)
         BinaryImages.profileImages.forEach {
-            if $0.profileInitializeFileFuncPtr != nil {
-                let llvm_profile_initialize_file = unsafeBitCast($0.profileInitializeFileFuncPtr, to: cFunc.self)
-                llvm_profile_initialize_file()
-            }
+            let llvm_profile_initialize_file = unsafeBitCast($0.profileInitializeFileFuncPtr, to: cFunc.self)
+            llvm_profile_initialize_file()
         }
     }
     
@@ -181,11 +179,26 @@ final class DDCoverageHelper {
     static func load() -> Bool {
         guard let llvmProfilePath = profileGetFileName() else { return false }
         Log.debug("DDCoverageHelper patching environment: \(llvmProfilePath)")
-        let newEnv = llvmProfilePath.replacingOccurrences(of: "%c", with: "")
+        var newEnv = llvmProfilePath.replacingOccurrences(of: "%c", with: "")
+        if newEnv.range(of: "%m") == nil {
+            newEnv = newEnv.replacingOccurrences(of: ".profraw", with: "%m.profraw")
+        }
         setenv("LLVM_PROFILE_FILE", newEnv, 1)
+        if newEnv != llvmProfilePath {
+            BinaryImages.profileImages.forEach {
+                let set_page_size = unsafeBitCast($0.setPageSizeFuncPtr,
+                                                  to: (@convention(c) (UInt) -> Void).self)
+                set_page_size(0)
+            }
+            BinaryImages.profileImages.forEach {
+                let llvm_profile_initialize_file = unsafeBitCast($0.profileInitializeFileFuncPtr, to: cFunc.self)
+                llvm_profile_initialize_file()
+            }
+        }
         Log.debug("DDCoverageHelper patched environment")
         return true
     }
     
     private static let nameNotAllowed: CharacterSet = .alphanumerics.union(.init(charactersIn: "-._")).inverted
+    private static var continuousModeEnabled: Bool = false
 }

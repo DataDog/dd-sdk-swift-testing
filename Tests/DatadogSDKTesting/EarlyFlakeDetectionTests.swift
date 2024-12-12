@@ -8,6 +8,7 @@
 @testable import EventsExporter
 import OpenTelemetryApi
 import OpenTelemetrySdk
+import CodeCoverage
 import XCTest
 
 final class EarlyFlakeDetectionTests: XCTestCase {
@@ -269,8 +270,9 @@ private extension EarlyFlakeDetectionTests {
             events.append(event)
         }
         
-        func export(coverage: URL, testSessionId: UInt64, testSuiteId: UInt64,
-                    spanId: UInt64, workspacePath: String?, binaryImagePaths: [String]) {}
+        func export(coverage: URL, processor: CodeCoverage.CoverageProcessor,
+                    workspacePath: String?, testSessionId: UInt64,
+                    testSuiteId: UInt64, spanId: UInt64) {}
         
         func shutdown(explicitTimeout: TimeInterval?) { }
         

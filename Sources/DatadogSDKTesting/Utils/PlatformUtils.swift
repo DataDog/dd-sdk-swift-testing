@@ -11,6 +11,8 @@ import Foundation
     import Cocoa
     import SystemConfiguration
 #endif
+@_implementationOnly import CodeCoverage
+
 struct PlatformUtils {
     static func getRunningPlatform() -> String {
         var platform: String
@@ -85,7 +87,8 @@ struct PlatformUtils {
         if NSClassFromString("XCTest") != nil {
             return ("Xcode", getXcodeVersion())
         } else {
-            return (ProcessInfo.processInfo.processName, (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "")
+            return (ProcessInfo.processInfo.processName,
+                    (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "")
         }
     }
     
@@ -166,5 +169,18 @@ struct PlatformUtils {
         #else
             return NSLocale.current.languageCode ?? "none"
         #endif
+    }
+    
+    static var xcodeVersion: XcodeVersion {
+        let version = getXcodeVersion()
+        guard version.count >= 2 else {
+            return .xcode16
+        }
+        switch version[version.startIndex...version.index(version.startIndex, offsetBy: 2)] {
+        case "14": return .xcode14
+        case "15": return .xcode15
+        case "16": return .xcode16
+        default: return .xcode16
+        }
     }
 }

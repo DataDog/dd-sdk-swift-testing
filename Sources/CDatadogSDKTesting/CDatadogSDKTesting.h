@@ -7,7 +7,5 @@
 #pragma once
 
 #include <CDatadogSDKTesting/AutoLoad.h>
-#include <CDatadogSDKTesting/CodeCoverage.h>
 #include <CDatadogSDKTesting/SubprocessSpawn.h>
 #include <CDatadogSDKTesting/SubprocessWait.h>
-#include <CDatadogSDKTesting/SymbolAddress.h>

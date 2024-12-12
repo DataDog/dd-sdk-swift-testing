@@ -6,6 +6,7 @@
 
 import Foundation
 import OpenTelemetrySdk
+import CodeCoverage
 
 internal class CoverageExporter {
     let coverageDirectory = "com.datadog.civisibility/coverage/v1"
@@ -21,8 +22,16 @@ internal class CoverageExporter {
             performance: PerformancePreset.instantDataDelivery,
             dateProvider: SystemDateProvider()
         )
+        
+        let prefix = """
+        {
+        "version": 2,
+        "coverages": [
+        """
 
-        let dataFormat = DataFormat(prefix: "", suffix: "", separator: "\n")
+        let suffix = "]\n}"
+
+        let dataFormat = DataFormat(prefix: prefix, suffix: suffix, separator: ",")
 
         let coverageFileWriter = FileWriter(
             dataFormat: dataFormat,
@@ -57,41 +66,43 @@ internal class CoverageExporter {
         requestBuilder.addFieldsCallback = addCoverage
     }
 
-    func exportCoverage(coverage: URL, testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64, workspacePath: String?, binaryImagePaths: [String]) {
+    func exportCoverage(coverage: URL, processor: CoverageProcessor, workspacePath: String?,
+                        testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64)
+    {
         Log.debug("Start processing coverage: \(coverage.path)")
-        let profData: URL
-        do {
-            profData = try DDCoverageConversor.generateProfData(profrawFile: coverage)
-        } catch {
-            Log.print("Profiler Data generation failed: \(error)")
-            return
+        var coverageData: TestCodeCoverage? = nil
+        
+        defer {
+            if configuration.debug.saveCodeCoverageFiles {
+                if let coverageData = coverageData, let data = try? JSONEncoder.default().encode(coverageData) {
+                    let testName = coverage.deletingPathExtension().lastPathComponent.components(separatedBy: "__").last!
+                    let jsonURL = coverage.deletingLastPathComponent().appendingPathComponent(testName).appendingPathExtension("json")
+                    try? data.write(to: jsonURL)
+                }
+            } else {
+                try? FileManager.default.removeItem(at: coverage)
+            }
         }
         
-        let ddCoverage = DDCoverageConversor.getDatadogCoverage(profdataFile: profData, testSessionId: testSessionId,
-                                                                testSuiteId: testSuiteId, spanId: spanId, workspacePath: workspacePath,
-                                                                binaryImagePaths: binaryImagePaths)
-
-        if configuration.debug.saveCodeCoverageFiles {
-            let data = try? JSONEncoder.default().encode(ddCoverage)
-            let testName = coverage.deletingPathExtension().lastPathComponent.components(separatedBy: "__").last!
-            let jsonURL = coverage.deletingLastPathComponent().appendingPathComponent(testName).appendingPathExtension("json")
-            try? data?.write(to: jsonURL)
-        } else {
-            try? FileManager.default.removeItem(at: coverage)
-            try? FileManager.default.removeItem(at: profData)
+        switch processor.filesCovered(in: coverage) {
+        case .failure(let error):
+            Log.print("Code coverage generation failed: \(error)")
+            return
+        case .success(let info):
+            coverageData = TestCodeCoverage(sessionId: testSessionId,
+                                            suiteId: testSuiteId,
+                                            spanId: spanId,
+                                            workspace: workspacePath,
+                                            files: info.files.values)
+            coverageStorage.writer.write(value: coverageData!)
         }
-        coverageStorage.writer.write(value: ddCoverage)
         Log.debug("End processing coverage: \(coverage.path)")
     }
 
     private func addCoverage(request: MultipartFormDataRequest, data: Data?) {
-        guard let data = data,
-              let newline = Character("\n").asciiValue else { return }
-
-        let separatedData = data.split(separator: newline)
-        separatedData.enumerated().forEach {
-            request.addDataField(named: "coverage\($0)", data: $1, mimeType: .applicationJSON)
-        }
+        guard let data = data else { return }
+        request.addDataField(named: "coverage", data: data, mimeType: .applicationJSON)
         request.addDataField(named: "event", data: #"{"dummy": true}"#.data(using: .utf8)!, mimeType: .applicationJSON)
     }
 }
+

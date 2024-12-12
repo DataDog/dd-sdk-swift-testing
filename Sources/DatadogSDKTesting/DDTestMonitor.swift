@@ -329,7 +329,7 @@ internal class DDTestMonitor {
             }
         }
         
-        if DDTestMonitor.config.coverageMode.isEnabled {
+        if DDTestMonitor.config.codeCoverageEnabled {
             let coverageSetup = BlockOperation { [self] in
                 guard let settings = tracerBackendConfig?.itr, settings.codeCoverage else {
                     Log.debug("Coverage Disabled")
@@ -338,12 +338,17 @@ internal class DDTestMonitor {
                 // Activate Coverage
                 Log.debug("Coverage Enabled")
                 guard let temp = try? DDTestMonitor.cacheManager?.temp(feature: "coverage") else {
-                    Log.print("Coverage init failed. Can't create temp directiry.")
+                    Log.print("Coverage init failed. Can't create temp directory.")
                     coverageHelper = nil
                     return
                 }
-                coverageHelper = DDCoverageHelper(storagePath: temp,
-                                                  total: DDTestMonitor.config.coverageMode.isTotal,
+                guard let exporter = DDTestMonitor.tracer.eventsExporter else {
+                    Log.print("Coverage init failed. Exporter is nil.")
+                    coverageHelper = nil
+                    return
+                }
+                coverageHelper = DDCoverageHelper(storagePath: temp, exporter: exporter,
+                                                  workspacePath: DDTestMonitor.env.workspacePath,
                                                   priority: DDTestMonitor.config.codeCoveragePriority,
                                                   debug: DDTestMonitor.config.extraDebugCodeCoverage)
             }

@@ -7,44 +7,58 @@
 import Foundation
 @_implementationOnly import EventsExporter
 @_implementationOnly import CDatadogSDKTesting
+@_implementationOnly import CodeCoverage
 
 typealias cFunc = @convention(c) () -> Void
 
 final class DDCoverageHelper {
-    var llvmProfileURL: URL
-    var storagePath: Directory
-    var initialCoverageSaved: Bool
-    let isTotal: Bool
+    let collector: CoverageCollector
+    let exporter: EventsExporterProtocol
+    let workspacePath: String?
+
+    let storagePath: Directory
     let debug: Bool
     let coverageWorkQueue: OperationQueue
 
-    init?(storagePath: Directory, total: Bool, priority: CodeCoveragePriority, debug: Bool) {
-        guard let profilePath = Self.profileGetFileName(), BinaryImages.profileImages.count > 0 else {
-            Log.print("Coverage not properly enabled in project, check documentation")
-            Log.debug("LLVM_PROFILE_FILE: \(Self.profileGetFileName() ?? "NIL")")
-            Log.debug("Profile Images count: \(BinaryImages.profileImages.count)")
+    init?(storagePath: Directory, exporter: EventsExporterProtocol, workspacePath: String?, priority: CodeCoveragePriority, debug: Bool) {
+        do {
+            self.collector = try CoverageCollector(for: PlatformUtils.xcodeVersion, temp: storagePath.url)
+            self.debug = debug
+            self.storagePath = storagePath
+            self.exporter = exporter
+            self.workspacePath = workspacePath
+            coverageWorkQueue = OperationQueue()
+            coverageWorkQueue.qualityOfService = priority.qos
+            coverageWorkQueue.maxConcurrentOperationCount = max(ProcessInfo.processInfo.activeProcessorCount - 1, 1)
+            setFileLimit()
+        } catch {
+            Log.print("Coverage initialisation error: \(error)")
             return nil
         }
-
-        llvmProfileURL = URL(fileURLWithPath: profilePath)
-        isTotal = total
-        self.debug = debug
-        self.storagePath = storagePath
-        Log.debug("LLVM Coverage location: \(llvmProfileURL.path)")
-        Log.debug("DDCoverageHelper location: \(storagePath.url.path)")
-        initialCoverageSaved = false
-        coverageWorkQueue = OperationQueue()
-        coverageWorkQueue.qualityOfService = priority.qos
-        coverageWorkQueue.maxConcurrentOperationCount = max(ProcessInfo.processInfo.activeProcessorCount - 1, 1)
-        setFileLimit()
     }
-
-    func clearCounters() {
-        BinaryImages.profileImages.forEach {
-            ProfileResetCounters($0.beginCountersFuncPtr,
-                                 $0.endCountersFuncPtr,
-                                 $0.beginDataFuncPtr,
-                                 $0.endCountersFuncPtr)
+    
+    func startTest() {
+        do {
+            try collector.startCoverageGathering()
+        } catch {
+            Log.debug("Can't start coverage gathering, error: \(error)")
+        }
+    }
+    
+    func endTest(testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64) {
+        let file: URL
+        do {
+            file = try collector.stopCoverageGathering()
+        } catch {
+            Log.debug("Coverage gathering error: \(error)")
+            return
+        }
+        coverageWorkQueue.addOperation {
+            guard FileManager.default.fileExists(atPath: file.path) else {
+                return
+            }
+            self.exporter.export(coverage: file, processor: self.collector.processor, workspacePath: self.workspacePath,
+                                 testSessionId: testSessionId, testSuiteId: testSuiteId, spanId: spanId)
         }
     }
     
@@ -67,38 +81,6 @@ final class DDCoverageHelper {
             Log.debug("Can't increase open file limit")
         }
     }
-
-    func setTest(name: String, testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64) {
-        if !self.initialCoverageSaved {
-            profileSetFilename(url: llvmProfileURL)
-            Self.internalWriteProfile()
-            initialCoverageSaved = true
-        }
-        let saveURL = getURLForTest(name: name, testSessionId: testSessionId, testSuiteId: testSuiteId, spanId: spanId)
-        profileSetFilename(url: saveURL)
-    }
-
-    func getURLForTest(name: String, testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64) -> URL {
-        var cleanedName = name.components(separatedBy: Self.nameNotAllowed)
-            .filter { $0.count > 0 }
-            .joined(separator: "+")
-        if cleanedName.count > 20 {
-            cleanedName = "\(cleanedName.prefix(10))-\(cleanedName.suffix(10))"
-        }
-        let finalName = "\(testSessionId)__\(testSuiteId)__\(spanId)__\(cleanedName)"
-        return storagePath.url.appendingPathComponent(finalName).appendingPathExtension("profraw")
-    }
-
-    func writeTestProfile() {
-        // Write first to our test file
-        Self.internalWriteProfile()
-        if isTotal {
-            // Switch profile to llvm original destination
-            profileSetFilename(url: llvmProfileURL)
-            // Write to llvm original destination
-            Self.internalWriteProfile()
-        }
-    }
     
     deinit {
         if !debug {
@@ -110,25 +92,6 @@ final class DDCoverageHelper {
     
     func removeStoragePath() {
         try? storagePath.delete()
-    }
-
-    private static func internalWriteProfile() {
-        BinaryImages.profileImages.forEach {
-            let llvm_profile_write_file = unsafeBitCast($0.writeFileFuncPtr, to: cFunc.self)
-            llvm_profile_write_file()
-        }
-    }
-
-    private func profileSetFilename(url: URL) {
-        setenv("LLVM_PROFILE_FILE", url.path, 1)
-        BinaryImages.profileImages.forEach {
-            let llvm_profile_initialize_file = unsafeBitCast($0.profileInitializeFileFuncPtr, to: cFunc.self)
-            llvm_profile_initialize_file()
-        }
-    }
-    
-    private static func profileGetFileName() -> String? {
-        getenv("LLVM_PROFILE_FILE").map { String(cString: $0) }
     }
 
     fileprivate static func generateProfData(profrawFile: URL) -> URL? {
@@ -147,7 +110,7 @@ final class DDCoverageHelper {
         guard let profDataURL = DDCoverageHelper.generateProfData(profrawFile: profrawFile) else {
             return nil
         }
-        let covJsonURL = profDataURL.deletingLastPathComponent().appendingPathComponent("coverageFile").appendingPathExtension("json")
+        let covJsonURL = profDataURL.deletingLastPathComponent().appendingPathComponent("TotalCoverage").appendingPathExtension("json")
         let binariesPath = binaryImagePaths.map { #""\#($0)""# }.joined(separator: " -object ")
         let commandToRun = #"xcrun llvm-cov export -instr-profile "\#(profDataURL.path)" \#(binariesPath) > "\#(covJsonURL.path)""#
         guard let llvmCovOutput = Spawn.combined(try: commandToRun, log: Log.instance) else {
@@ -160,45 +123,18 @@ final class DDCoverageHelper {
     
     static func getLineCodeCoverage() -> Double? {
         // Check do we have profiling enabled
-        guard let llvmProfilePath = profileGetFileName() else { return nil }
-        // Save all profiling data
-        internalWriteProfile()
+        guard let llvmProfilePath = try? CoverageCollector.currentCoverageFile else { return nil }
+        let binaries = CoveredBinary.currentProcessBinaries
+        // if not continuous mode then save all data
+        if !llvmProfilePath.contains(exactWord: "%c") {
+            // Save all profiling data
+            binaries.forEach { $0.write() }
+        }
         // Locate profraw file
-        let profileFolder = URL(fileURLWithPath: llvmProfilePath).deletingLastPathComponent()
-        guard let file = FileManager.default
-            .enumerator(at: profileFolder, includingPropertiesForKeys: nil, options: .skipsSubdirectoryDescendants)
-            .flatMap({ $0.first { ($0 as? URL)?.pathExtension == "profraw" } })
-            .map({ $0 as! URL })
-        else { return nil }
-        // get coverage
-        let images = BinaryImages.binaryImagesPath
-        let coverage = DDCoverageHelper.getModuleCoverage(profrawFile: file, binaryImagePaths: images)
+        guard let llvmProfileUrl = CoverageCollector.currentCoverageFileURL else { return nil }
+        // Get total coverage
+        let coverage = DDCoverageHelper.getModuleCoverage(profrawFile: llvmProfileUrl,
+                                                          binaryImagePaths: binaries.map { $0.path })
         return coverage?.data.first?.totals.lines.percent
     }
-    
-    static func load() -> Bool {
-        guard let llvmProfilePath = profileGetFileName() else { return false }
-        Log.debug("DDCoverageHelper patching environment: \(llvmProfilePath)")
-        var newEnv = llvmProfilePath.replacingOccurrences(of: "%c", with: "")
-        if newEnv.range(of: "%m") == nil {
-            newEnv = newEnv.replacingOccurrences(of: ".profraw", with: "%m.profraw")
-        }
-        setenv("LLVM_PROFILE_FILE", newEnv, 1)
-        if newEnv != llvmProfilePath {
-            BinaryImages.profileImages.forEach {
-                let set_page_size = unsafeBitCast($0.setPageSizeFuncPtr,
-                                                  to: (@convention(c) (UInt) -> Void).self)
-                set_page_size(0)
-            }
-            BinaryImages.profileImages.forEach {
-                let llvm_profile_initialize_file = unsafeBitCast($0.profileInitializeFileFuncPtr, to: cFunc.self)
-                llvm_profile_initialize_file()
-            }
-        }
-        Log.debug("DDCoverageHelper patched environment")
-        return true
-    }
-    
-    private static let nameNotAllowed: CharacterSet = .alphanumerics.union(.init(charactersIn: "-._")).inverted
-    private static var continuousModeEnabled: Bool = false
 }

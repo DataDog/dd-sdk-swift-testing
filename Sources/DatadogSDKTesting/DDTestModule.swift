@@ -198,8 +198,8 @@ public class DDTestModule: NSObject, Encodable {
         if itrSkipped == 0 {
             meta[DDItrTags.itrSkippedTests] = "false"
             meta[DDTestSessionTags.testItrSkipped] = "false"
-            if !DDTestMonitor.config.coverageMode.isPerTest {
-                metrics[DDTestSessionTags.testCoverageLines] = DDCoverageHelper.getLineCodeCoverage()
+            if let linesCovered = DDCoverageHelper.getLineCodeCoverage() {
+                metrics[DDTestSessionTags.testCoverageLines] = linesCovered
             }
         } else {
             meta[DDItrTags.itrSkippedTests] = "true"

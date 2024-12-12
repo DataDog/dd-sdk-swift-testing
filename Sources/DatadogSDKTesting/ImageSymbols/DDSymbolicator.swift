@@ -6,7 +6,7 @@
 
 import Foundation
 import MachO
-@_implementationOnly import CDatadogSDKTesting
+@_implementationOnly import CodeCoverage
 @_implementationOnly import EventsExporter
 
 enum DDSymbolicator {
@@ -246,11 +246,11 @@ enum DDSymbolicator {
     }
 
     /// It locates the address in the image og the library where the symbol is located, it must receive a mangled name
-    static func address(forSymbolName name: String, library: String) -> UnsafeMutableRawPointer? {
+    static func address(forSymbolName name: String, library: String) -> UnsafeRawPointer? {
         guard let imageAddressHeader = BinaryImages.imageAddresses[library]?.header,
               let imageSlide = BinaryImages.imageAddresses[library]?.slide else { return nil }
 
-        let symbol = FindSymbolInImage(name, imageAddressHeader, imageSlide)
+        let symbol = CoveredBinary.findSymbol(named: name, image: imageAddressHeader, slide: imageSlide)
 
         return symbol
     }

@@ -6,13 +6,15 @@
 
 import Foundation
 import OpenTelemetrySdk
+import CodeCoverage
 
 public protocol EventsExporterProtocol: SpanExporter {
     var endpointURLs: Set<String> { get }
     
     func exportEvent<T: Encodable>(event: T)
     func searchCommits(repositoryURL: String, commits: [String]) -> [String]
-    func export(coverage: URL, testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64, workspacePath: String?, binaryImagePaths: [String])
+    func export(coverage: URL, processor: CoverageProcessor, workspacePath: String?,
+                testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64)
     func uploadPackFiles(packFilesDirectory: Directory, commit: String, repository: String) throws
     func skippableTests(repositoryURL: String, sha: String, testLevel: ITRTestLevel,
                         configurations: [String: String], customConfigurations: [String: String]) -> SkipTests?
@@ -81,8 +83,11 @@ public class EventsExporter: EventsExporterProtocol {
         return .success
     }
 
-    public func export(coverage: URL, testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64, workspacePath: String?, binaryImagePaths: [String]) {
-        coverageExporter.exportCoverage(coverage: coverage, testSessionId: testSessionId, testSuiteId: testSuiteId, spanId: spanId, workspacePath: workspacePath, binaryImagePaths: binaryImagePaths)
+    public func export(coverage: URL, processor: CoverageProcessor, workspacePath: String?,
+                       testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64)
+    {
+        coverageExporter.exportCoverage(coverage: coverage, processor: processor, workspacePath: workspacePath,
+                                        testSessionId: testSessionId, testSuiteId: testSuiteId, spanId: spanId)
     }
 
     public func searchCommits(repositoryURL: String, commits: [String]) -> [String] {

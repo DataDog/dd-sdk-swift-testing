@@ -140,9 +140,9 @@ extension Spawn {
             return try combined(command)
         } catch {
             if debug {
-                Log.debug("Command \(command) failed with error \(error)")
+                log.debug("Command \(command) failed with error \(error)")
             } else {
-                Log.print("Command \(command) failed with error \(error)")
+                log.print("Command \(command) failed with error \(error)")
             }
             return nil
         }
@@ -161,9 +161,9 @@ extension Spawn {
             return try output(command)
         } catch {
             if debug {
-                Log.debug("Command \(command) failed with error \(error)")
+                log.debug("Command \(command) failed with error \(error)")
             } else {
-                Log.print("Command \(command) failed with error \(error)")
+                log.print("Command \(command) failed with error \(error)")
             }
             return nil
         }
@@ -178,9 +178,9 @@ extension Spawn {
                     err!.trimmingCharacters(in: .whitespacesAndNewlines))
         } catch {
             if debug {
-                Log.debug("Command \(command) failed with error \(error)")
+                log.debug("Command \(command) failed with error \(error)")
             } else {
-                Log.print("Command \(command) failed with error \(error)")
+                log.print("Command \(command) failed with error \(error)")
             }
             return nil
         }

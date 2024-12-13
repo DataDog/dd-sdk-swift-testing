@@ -13,7 +13,7 @@ guard let outputPath = ProcessInfo.processInfo.environment["TEST_OUTPUT_FILE"] e
 }
 
 // Create a exporter to export the spans to the desired file
-let exporter = FileTraceExporter(outputURL: URL(fileURLWithPath: outputPath))
+let exporter = FileTraceExporter(outputURL: URL(fileURLWithPath: outputPath, isDirectory: false))
 
 if let testClass = ProcessInfo.processInfo.environment["TEST_CLASS"],
    let theClass: AnyClass = Bundle.main.classNamed(testClass)

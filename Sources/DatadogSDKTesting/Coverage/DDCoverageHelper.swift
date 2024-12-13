@@ -110,7 +110,9 @@ final class DDCoverageHelper {
         guard let profDataURL = DDCoverageHelper.generateProfData(profrawFile: profrawFile) else {
             return nil
         }
-        let covJsonURL = profDataURL.deletingLastPathComponent().appendingPathComponent("TotalCoverage").appendingPathExtension("json")
+        let covJsonURL = profDataURL
+            .deletingLastPathComponent()
+            .appendingPathComponent("TotalCoverage.json", isDirectory: false)
         let binariesPath = binaryImagePaths.map { #""\#($0)""# }.joined(separator: " -object ")
         let commandToRun = #"xcrun llvm-cov export -instr-profile "\#(profDataURL.path)" \#(binariesPath) > "\#(covJsonURL.path)""#
         guard let llvmCovOutput = Spawn.combined(try: commandToRun, log: Log.instance) else {

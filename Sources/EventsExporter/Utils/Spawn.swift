@@ -59,11 +59,14 @@ public enum Spawn {
             errFile.map { try? FileManager.default.removeItem(at: $0) }
         }
         
+        var uuid: URL? = nil
+        
         if let output = output {
             outFile = nil
             dd_posix_spawn_file_actions_addopen(&childActions, 1, output.path, O_WRONLY | O_CREAT | O_TRUNC, 0444)
         } else {
-            outFile = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString + ".out")
+            uuid = Self.tempDir.appendingPathComponent(UUID().uuidString, isDirectory: false)
+            outFile = uuid!.appendingPathExtension(".out")
             dd_posix_spawn_file_actions_addopen(&childActions, 1, outFile!.path, O_WRONLY | O_CREAT | O_TRUNC, 0444)
         }
         
@@ -75,7 +78,10 @@ public enum Spawn {
                 dd_posix_spawn_file_actions_addopen(&childActions, 2, error.path, O_WRONLY | O_CREAT | O_TRUNC, 0444)
             }
         } else {
-            errFile = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString + ".err")
+            if uuid == nil {
+                uuid = Self.tempDir.appendingPathComponent(UUID().uuidString, isDirectory: false)
+            }
+            errFile = uuid!.appendingPathExtension(".err")
             dd_posix_spawn_file_actions_addopen(&childActions, 2, errFile!.path, O_WRONLY | O_CREAT | O_TRUNC, 0444)
         }
         
@@ -111,12 +117,14 @@ public enum Spawn {
                 : RunErrorCode.signal(status.status.si_status)
         }
     }
+    
+    private static let tempDir: URL = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
 }
 
 
 extension Spawn {
     public static func combined(_ command: String) throws -> String {
-        let file = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
+        let file = Self.tempDir.appendingPathComponent(UUID().uuidString, isDirectory: false)
         defer { try? FileManager.default.removeItem(at: file) }
         do {
             try combined(command, file: file)

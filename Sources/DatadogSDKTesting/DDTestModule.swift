@@ -75,7 +75,9 @@ public class DDTestModule: NSObject, Encodable {
             DDTestMonitor.instance?.instrumentationWorkQueue.addOperation {
                 if let workspacePath = DDTestMonitor.env.workspacePath {
                     Log.measure(name: "createCodeOwners") {
-                        DDTestModule.codeOwners = CodeOwners(workspacePath: URL(fileURLWithPath: workspacePath))
+                        DDTestModule.codeOwners = CodeOwners(
+                            workspacePath: URL(fileURLWithPath: workspacePath, isDirectory: true)
+                        )
                     }
                 }
             }

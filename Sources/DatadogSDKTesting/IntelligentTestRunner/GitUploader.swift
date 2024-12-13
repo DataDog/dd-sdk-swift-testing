@@ -237,14 +237,14 @@ final class GitUploader {
             let commitList = commits.joined(separator: "\n")
             
             if generate(workspacePath, uploadPackfileDirectory, commitList) {
-                return Directory(url: URL(fileURLWithPath: uploadPackfileDirectory))
+                return Directory(url: URL(fileURLWithPath: uploadPackfileDirectory, isDirectory: true))
             }
             
             log.debug("Can't write packfile to cache path. Trying to workspace...")
             
             uploadPackfileDirectory = workspacePath + "/" + UUID().uuidString
             if generate(workspacePath, uploadPackfileDirectory, commitList) {
-                return Directory(url: URL(fileURLWithPath: uploadPackfileDirectory))
+                return Directory(url: URL(fileURLWithPath: uploadPackfileDirectory, isDirectory: true))
             }
             
             log.debug("packfile generation failed")

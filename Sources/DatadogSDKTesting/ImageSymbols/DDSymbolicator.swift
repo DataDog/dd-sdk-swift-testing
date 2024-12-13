@@ -29,7 +29,7 @@ enum DDSymbolicator {
         let libraryPaths = configurationBuildPath.components(separatedBy: ":")
         libraryPaths.forEach { path in
             Log.debug("DSYMFILE enumerating: \(path)")
-            let buildFolder = URL(fileURLWithPath: path)
+            let buildFolder = URL(fileURLWithPath: path, isDirectory: true)
             if let dSYMFilesEnumerator = fileManager.enumerator(at: buildFolder,
                                                                 includingPropertiesForKeys: nil,
                                                                 options: [.skipsHiddenFiles], errorHandler: { url, error -> Bool in
@@ -71,7 +71,10 @@ enum DDSymbolicator {
         i = 0
         while i < dSYMFiles.count {
             let dsym = dSYMFiles[i]
-            let dwarfFolder = dsym.appendingPathComponent("Contents").appendingPathComponent("Resources").appendingPathComponent("DWARF")
+            let dwarfFolder = dsym
+                .appendingPathComponent("Contents", isDirectory: true)
+                .appendingPathComponent("Resources", isDirectory: true)
+                .appendingPathComponent("DWARF", isDirectory: true)
             guard let binaries = try? FileManager.default.contentsOfDirectory(at: dwarfFolder, includingPropertiesForKeys: nil, options: []), binaries.count == 1 else {
                 dSYMFiles.remove(at: i)
                 continue
@@ -110,8 +113,10 @@ enum DDSymbolicator {
                 let library = String(line[libraryRange])
                 let libraryAddress = String(line[libraryAddressRange])
                 let callAddress = String(line[callAddressRange])
+                
+                let objectURL = dSYMFiles.first(where: { $0.lastPathComponent == library }) ?? BinaryImages.imageAddresses[library]?.path
 
-                if let objectPath = dSYMFiles.first(where: { $0.lastPathComponent == library })?.path ?? BinaryImages.imageAddresses[library]?.path {
+                if let objectPath = objectURL?.path {
                     let symbol = symbolWithAtos(objectPath: objectPath, libraryAdress: libraryAddress, callAddress: callAddress)
                     if !symbol.isEmpty {
                         linesLock.lock()
@@ -149,16 +154,16 @@ enum DDSymbolicator {
     /// Generates a dSYM symbol file from a binary if possible
     /// and adds it to the dSYMFiles for the future
     static func generateDSYMFile(forImageName imageName: String) -> String? {
-        guard let binaryPath = BinaryImages.imageAddresses[imageName]?.path else {
+        guard let binaryURL = BinaryImages.imageAddresses[imageName]?.path else {
             return nil
         }
-        let binaryURL = URL(fileURLWithPath: binaryPath)
-        let dSYMFileURL = dsymFilesPath.appendingPathComponent(binaryURL.lastPathComponent)
+        let dSYMFileURL = dsymFilesPath
+            .appendingPathComponent(binaryURL.lastPathComponent, isDirectory: false)
         
         do {
-            try Spawn.command("/usr/bin/dsymutil --flat \"\(binaryPath)\" --out \"\(dSYMFileURL.path)\"")
+            try Spawn.command("/usr/bin/dsymutil --flat \"\(binaryURL.path)\" --out \"\(dSYMFileURL.path)\"")
         } catch {
-            Log.debug("DSYM \(binaryPath) generation failed \(error)")
+            Log.debug("DSYM \(binaryURL.path) generation failed \(error)")
             return nil
         }
         
@@ -274,7 +279,7 @@ enum DDSymbolicator {
     static func atosSymbol(forAddress callAddress: String, library: String) -> String? {
         guard let imageAddress = BinaryImages.imageAddresses[library] else { return nil }
 
-        let imagePath = dSYMFiles.first(where: { $0.lastPathComponent == library })?.path ?? imageAddress.path
+        let imagePath = dSYMFiles.first(where: { $0.lastPathComponent == library })?.path ?? imageAddress.path.path
 
         let librarySlide = String(format: "%016llx", imageAddress.slide)
         
@@ -298,7 +303,7 @@ enum DDSymbolicator {
         guard let imagePath = dSYMFiles.first(where: { $0.lastPathComponent == library })?.path else {
             return nil
         }
-        let symbolsOutputURL = dsymFilesPath.appendingPathComponent("\(library).symbols")
+        let symbolsOutputURL = dsymFilesPath.appendingPathComponent("\(library).symbols", isDirectory: false)
         do {
             try Spawn.command("/usr/bin/symbols -fullSourcePath -lazy \"\(imagePath)\"", output: symbolsOutputURL)
         } catch {

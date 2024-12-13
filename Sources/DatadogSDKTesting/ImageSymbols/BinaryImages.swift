@@ -10,9 +10,9 @@ import MachO
 
 /// It stores information about loaded mach images
 struct MachOImage {
-    var header: UnsafePointer<mach_header>?
+    var header: UnsafePointer<mach_header>
     var slide: Int
-    var path: String
+    var path: URL
 }
 
 struct BinaryImages {
@@ -29,11 +29,9 @@ struct BinaryImages {
             guard let header = _dyld_get_image_header(i) else {
                 continue
             }
-            let path = String(cString: _dyld_get_image_name(i))
-            let name = URL(fileURLWithPath: path).lastPathComponent
+            let path = URL(fileURLWithPath: String(cString: _dyld_get_image_name(i)), isDirectory: false)
+            let name = path.lastPathComponent
             let slide = _dyld_get_image_vmaddr_slide(i)
-            guard slide != 0 else { continue }
-            
             
             if slide != 0 {
                 imageAddresses[name] = MachOImage(header: header, slide: slide, path: path)

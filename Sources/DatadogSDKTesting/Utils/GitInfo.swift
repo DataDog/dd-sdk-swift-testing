@@ -21,17 +21,17 @@ struct GitInfo {
 
     init(gitFolder: URL) throws {
         workspacePath = gitFolder.deletingLastPathComponent().path
-        let headPath = gitFolder.appendingPathComponent("HEAD")
+        let headPath = gitFolder.appendingPathComponent("HEAD", isDirectory: false)
         let head = try String(contentsOf: headPath).trimmingCharacters(in: .whitespacesAndNewlines)
         if head.hasPrefix("ref:") {
             var mergePath = head
             mergePath.removeFirst(4)
             mergePath = mergePath.trimmingCharacters(in: .whitespacesAndNewlines)
             self.branch = mergePath
-            let refData = try String(contentsOf: gitFolder.appendingPathComponent(mergePath))
+            let refData = try String(contentsOf: gitFolder.appendingPathComponent(mergePath, isDirectory: false))
             commit = refData.trimmingCharacters(in: .whitespacesAndNewlines)
         } else {
-            let fetchHeadPath = gitFolder.appendingPathComponent("FETCH_HEAD")
+            let fetchHeadPath = gitFolder.appendingPathComponent("FETCH_HEAD", isDirectory: false)
             if let records = FetchHeadRecord.from(file: fetchHeadPath)?.filter({$0.commit == head}),
                records.count > 0
             {
@@ -44,7 +44,7 @@ struct GitInfo {
             commit = head
         }
 
-        let configPath = gitFolder.appendingPathComponent("config")
+        let configPath = gitFolder.appendingPathComponent("config", isDirectory: false)
         let configs = getConfigItems(configPath: configPath)
         if configs.count > 0 {
             var remote = "origin"
@@ -76,9 +76,10 @@ struct GitInfo {
         let index = commit.index(commit.startIndex, offsetBy: 2)
         let folder = commit[..<index]
         let filename = commit[index...]
-        let commitObject = gitFolder.appendingPathComponent("objects")
-            .appendingPathComponent(String(folder))
-            .appendingPathComponent(String(filename))
+        let commitObject = gitFolder
+            .appendingPathComponent("objects", isDirectory: true)
+            .appendingPathComponent(String(folder), isDirectory: true)
+            .appendingPathComponent(String(filename), isDirectory: false)
         let objectContent: String
         if FileManager.default.fileExists(atPath: commitObject.path) {
             objectContent = try String(decoding: Data(contentsOf: commitObject).zlibDecompress(),
@@ -117,7 +118,9 @@ struct GitInfo {
     /// http://shafiul.github.io/gitbook/7_the_packfile.html
     /// http://driusan.github.io/git-pack.html
     private func getObjectFromPackFile(gitFolder: URL, commit: String) throws -> CommitInfo {
-        let packFolder = gitFolder.appendingPathComponent("objects").appendingPathComponent("pack")
+        let packFolder = gitFolder
+            .appendingPathComponent("objects", isDirectory: true)
+            .appendingPathComponent("pack", isDirectory: true)
 
         var packOffset: UInt64
         var indexFile: URL

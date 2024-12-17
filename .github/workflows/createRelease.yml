@@ -1,8 +1,12 @@
 name: Create new release
 
 on:
-  release:
-    types: [created]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release Version'
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -39,7 +43,7 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
-      run: make XC_LOG=archive version=${{ github.event.release.tag_name }} github
+      run: make XC_LOG=archive version=${{ github.event.inputs.version }} github_release
     - name: Attach Xcode logs
       if: '!cancelled()'
       uses: actions/upload-artifact@v4

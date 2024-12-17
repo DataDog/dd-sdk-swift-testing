@@ -82,23 +82,23 @@ release:
 	@$(MAKE) build
 	@$(MAKE) set_hash
 
-github: release
+github_release: release
 	@:$(call check_defined, GH_TOKEN, GitHub token)
 	@:$(call check_defined, COCOAPODS_TRUNK_TOKEN, CocoaPods trunk token)
 	# Upload binary file to GitHub release
 	brew list gh &>/dev/null || brew install gh
-	# upload xcframework
-	gh release upload $(version) ./build/xcframework/DatadogSDKTesting.zip --clobber
-	# upload symbols
+	# Commit updated xcodeproj and Package.swift
+	@git add Package.swift DatadogSDKTesting.podspec DatadogSDKTesting.xcodeproj/project.pbxproj
+	@git checkout -b release-$(version)
+	@git commit -m "Updated binary package version to $(version)"
+	@git tag -f $(version)
+	@git push -f --tags origin release-$(version)
+	# rename symbols file
 	@rm -f build/symbols/DatadogSDKTesting.symbols.zip
 	@mv build/symbols/DatadogSDKTesting.zip build/symbols/DatadogSDKTesting.symbols.zip
-	gh release upload $(version) ./build/symbols/DatadogSDKTesting.symbols.zip --clobber
-	# Commit updated xcodeproj, Package.swift and DatadogSDKTesting.podspec
-	git add Package.swift DatadogSDKTesting.podspec DatadogSDKTesting.xcodeproj/project.pbxproj
-	git checkout -b update-binary
-	git commit -m "Updated binary package version to $(version)"
-	git tag -f $(version)
-	git push -f --tags origin update-binary
+	# make github release
+	@gh release create $(version) --draft --verify-tag --generate-notes \
+		build/xcframework/DatadogSDKTesting.zip build/symbols/DatadogSDKTesting.symbols.zip
 	# Push Podfile
 	pod trunk push --allow-warnings DatadogSDKTesting.podspec
 

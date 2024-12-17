@@ -176,7 +176,7 @@ struct PlatformUtils {
         guard version.count >= 2 else {
             return .xcode16
         }
-        switch version[version.startIndex...version.index(version.startIndex, offsetBy: 2)] {
+        switch version[version.startIndex..<version.index(version.startIndex, offsetBy: 2)] {
         case "14": return .xcode14
         case "15": return .xcode15
         case "16": return .xcode16

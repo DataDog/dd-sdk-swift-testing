@@ -43,8 +43,10 @@ internal enum DDCrashes {
             return
         }
 
-        let reportURL = URL(fileURLWithPath: plCrashReporter.crashReportPath())
-        sanitizerURL = reportURL.deletingLastPathComponent().appendingPathComponent("SanitizerLog")
+        let reportURL = URL(fileURLWithPath: plCrashReporter.crashReportPath(), isDirectory: true)
+        sanitizerURL = reportURL
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sanitizer.log", isDirectory: false)
 
         var callback = PLCrashReporterCallbacks(version: 0, context: nil, handleSignal: signalCallback)
         plCrashReporter.setCrash(&callback)

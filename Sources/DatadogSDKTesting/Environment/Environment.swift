@@ -201,7 +201,7 @@ internal final class Environment {
     }
     
     static func gitInfoAt(startingPath: String) -> GitInfo? {
-        var rootFolder = NSString(string: URL(fileURLWithPath: startingPath).path)
+        var rootFolder = NSString(string: URL(fileURLWithPath: startingPath, isDirectory: true).path)
         while !FileManager.default.fileExists(atPath: rootFolder.appendingPathComponent(".git")) {
             if rootFolder.isEqual(to: rootFolder.deletingLastPathComponent) {
                 // We reached to the top

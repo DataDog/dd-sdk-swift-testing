@@ -75,7 +75,9 @@ public class DDTestModule: NSObject, Encodable {
             DDTestMonitor.instance?.instrumentationWorkQueue.addOperation {
                 if let workspacePath = DDTestMonitor.env.workspacePath {
                     Log.measure(name: "createCodeOwners") {
-                        DDTestModule.codeOwners = CodeOwners(workspacePath: URL(fileURLWithPath: workspacePath))
+                        DDTestModule.codeOwners = CodeOwners(
+                            workspacePath: URL(fileURLWithPath: workspacePath, isDirectory: true)
+                        )
                     }
                 }
             }
@@ -198,8 +200,8 @@ public class DDTestModule: NSObject, Encodable {
         if itrSkipped == 0 {
             meta[DDItrTags.itrSkippedTests] = "false"
             meta[DDTestSessionTags.testItrSkipped] = "false"
-            if !DDTestMonitor.config.coverageMode.isPerTest {
-                metrics[DDTestSessionTags.testCoverageLines] = DDCoverageHelper.getLineCodeCoverage()
+            if let linesCovered = DDCoverageHelper.getLineCodeCoverage() {
+                metrics[DDTestSessionTags.testCoverageLines] = linesCovered
             }
         } else {
             meta[DDItrTags.itrSkippedTests] = "true"

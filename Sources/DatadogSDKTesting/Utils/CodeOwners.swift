@@ -17,10 +17,16 @@ struct CodeOwners {
     init?(workspacePath: URL) {
         // Search on the possible locations CODEOWNER can exist
         let locations = [
-            workspacePath.appendingPathComponent("CODEOWNERS"),
-            workspacePath.appendingPathComponent(".github").appendingPathComponent("CODEOWNERS"),
-            workspacePath.appendingPathComponent(".gitlab").appendingPathComponent("CODEOWNERS"),
-            workspacePath.appendingPathComponent(".docs").appendingPathComponent("CODEOWNERS")
+            workspacePath.appendingPathComponent("CODEOWNERS", isDirectory: false),
+            workspacePath
+                .appendingPathComponent(".github", isDirectory: true)
+                .appendingPathComponent("CODEOWNERS", isDirectory: false),
+            workspacePath
+                .appendingPathComponent(".gitlab", isDirectory: true)
+                .appendingPathComponent("CODEOWNERS", isDirectory: false),
+            workspacePath
+                .appendingPathComponent(".docs", isDirectory: true)
+                .appendingPathComponent("CODEOWNERS", isDirectory: false)
         ]
         let fm = FileManager.default
         guard let location = locations.first(where: { fm.fileExists(atPath: $0.path) }) else {

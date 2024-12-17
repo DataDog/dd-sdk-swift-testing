@@ -90,11 +90,7 @@ public class DDTest: NSObject {
         }
         
         if !itr.skipped, let coverageHelper = DDTestMonitor.instance?.coverageHelper {
-            coverageHelper.setTest(name: name,
-                                   testSessionId: module.sessionId.rawValue,
-                                   testSuiteId: suite.id.rawValue,
-                                   spanId: span.context.spanId.rawValue)
-            coverageHelper.clearCounters()
+            coverageHelper.startTest()
         }
     }
 
@@ -257,17 +253,9 @@ extension DDTest {
         }
 
         if !itr.skipped, let coverageHelper = DDTestMonitor.instance?.coverageHelper {
-            coverageHelper.writeTestProfile()
-            let testSessionId = module.sessionId.rawValue
-            let testSuiteId = suite.id.rawValue
-            let spanId = span.context.spanId.rawValue
-            let coverageFileURL = coverageHelper.getURLForTest(name: name, testSessionId: testSessionId, testSuiteId: testSuiteId, spanId: spanId)
-            coverageHelper.coverageWorkQueue.addOperation {
-                guard FileManager.default.fileExists(atPath: coverageFileURL.path) else {
-                    return
-                }
-                DDTestMonitor.tracer.eventsExporter?.export(coverage: coverageFileURL, testSessionId: testSessionId, testSuiteId: testSuiteId, spanId: spanId, workspacePath: DDTestMonitor.env.workspacePath, binaryImagePaths: BinaryImages.binaryImagesPath)
-            }
+            coverageHelper.endTest(testSessionId: module.sessionId.rawValue,
+                                   testSuiteId: suite.id.rawValue,
+                                   spanId: span.context.spanId.rawValue)
         }
 
         StderrCapture.syncData()

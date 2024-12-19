@@ -1,7 +1,7 @@
-# Datadog SDK for Swift testing
+# Datadog SDK for Swift Test Optimization
 
-This SDK is part of Datadog's [CI Visibility](https://docs.datadoghq.com/continuous_integration/) product.
-A more comprehensive and updated documentation can be found at [CI Visibility - Swift Tests](https://docs.datadoghq.com/continuous_integration/setup_tests/swift) 
+This SDK is part of Datadog's [Test Optimization](https://docs.datadoghq.com/tests/) product.
+A more comprehensive and updated documentation can be found at [Test Optimization - Swift](https://docs.datadoghq.com/tests/setup/swift/).
 
 ## Getting Started
 
@@ -23,18 +23,20 @@ DD_SERVICE=<The name of the service you want to report>
 DD_SITE=<The Datadog site to upload results to>
 ```
 
-Depending on your CI service, you must also set the environment variables to be read from the test executions. See [CI Providers Environment Variables](https://docs.datadoghq.com/continuous_integration/setup_tests/swift/?tab=swiftpackagemanager#ci-provider-environment-variables) `EnvironmentKeys.swift` for details of your specific CI.
+Depending on your CI service, you must also set the environment variables to be read from the test executions. See [CI Providers Environment Variables](https://docs.datadoghq.com/tests/setup/swift/#ci-provider-environment-variables) for details of your specific CI.
 
-## UITests
+## UI Tests
 
-For UITests, both the test target and the application running from the UITests must link with the framework, environment variables only need to be set in the test target, since the framework automatically injects these values to the application.
+For UI Tests, this SDK will automatically integrate with the RUM SDK in your application. Environment variables only need to be set in the test target, since the framework automatically injects these values to the application.
+
+If your don't use RUM SDK, this SDK can be linked with the Application too. Don't ship your app with this SDK, it should be linked only to the test builds.
 
 ## Auto Instrumentation
 
 >Boolean variables can use any of: "1","0","true","false", "YES", "NO"
 >String List variables accepts a list of elements separated by "," or ";"
 
-### Enabling Auto Instrumentation
+### Enabling Logs Auto Instrumentation
 
 ```shell
 DD_ENABLE_STDOUT_INSTRUMENTATION # Captures messages written to `stdout` (e.g `print()` ) and reports them as Logs. (Implies charges for Logs product) (Boolean)
@@ -86,9 +88,18 @@ FOO = BAR
 DD_TAGS="key1:$FOO-v1" # expected: key1:BAR-v1
 ```
 
-### Using OpenTelemetry (only for Swift)
+### Inside test code
 
-Datadog swift testing framework uses [OpenTelemetry](https://github.com/open-telemetry/opentelemetry-swift) as the tracing technology under the hood. You can access the OpenTelemetry tracer using `DDInstrumentationControl.openTelemetryTracer` and can use any OpenTelemetry api. For example, for adding a tag/attribute
+You can add custom tags inside your test methods. The static property `DDTest.current` will return the current test instance if called inside the test method scope.
+
+```swift
+// Somewhere inside the test method
+DDTest.current!.setTag(key: "key1", value: "value1")
+```
+
+## Using OpenTelemetry (only for Swift)
+
+The Datadog Swift testing framework uses [OpenTelemetry](https://github.com/open-telemetry/opentelemetry-swift) as the tracing technology under the hood. You can access the OpenTelemetry tracer using `DDInstrumentationControl.openTelemetryTracer` and can use any OpenTelemetry api. For example, for adding a tag/attribute:
 
 ```swift
 import DatadogSDKTesting

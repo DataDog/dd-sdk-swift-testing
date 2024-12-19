@@ -42,7 +42,6 @@ jobs:
     - name: Build and upload XCFrameworks, recreate tag
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
       run: make XC_LOG=archive version=${{ github.event.inputs.version }} github_release
     - name: Attach Xcode logs
       if: '!cancelled()'

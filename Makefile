@@ -84,8 +84,7 @@ release:
 
 github_release: release
 	@:$(call check_defined, GH_TOKEN, GitHub token)
-	@:$(call check_defined, COCOAPODS_TRUNK_TOKEN, CocoaPods trunk token)
-	# Upload binary file to GitHub release
+	# Update gh utility if needed
 	brew list gh &>/dev/null || brew install gh
 	# Commit updated xcodeproj and Package.swift
 	@git add Package.swift DatadogSDKTesting.podspec DatadogSDKTesting.xcodeproj/project.pbxproj
@@ -99,8 +98,10 @@ github_release: release
 	# make github release
 	@gh release create $(version) --draft --verify-tag --generate-notes \
 		build/xcframework/DatadogSDKTesting.zip build/symbols/DatadogSDKTesting.symbols.zip
-	# Push Podfile
-	pod trunk push --allow-warnings DatadogSDKTesting.podspec
+
+publish_pod:
+	@:$(call check_defined, COCOAPODS_TRUNK_TOKEN, CocoaPods trunk token)
+	@pod trunk push --allow-warnings DatadogSDKTesting.podspec
 
 clean:
 	rm -rf ./build

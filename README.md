@@ -99,7 +99,7 @@ DDTest.current!.setTag(key: "key1", value: "value1")
 
 ## Using OpenTelemetry (only for Swift)
 
-Datadog swift testing framework uses [OpenTelemetry](https://github.com/open-telemetry/opentelemetry-swift) as the tracing technology under the hood. You can access the OpenTelemetry tracer using `DDInstrumentationControl.openTelemetryTracer` and can use any OpenTelemetry api. For example, for adding a tag/attribute
+The Datadog Swift testing framework uses [OpenTelemetry](https://github.com/open-telemetry/opentelemetry-swift) as the tracing technology under the hood. You can access the OpenTelemetry tracer using `DDInstrumentationControl.openTelemetryTracer` and can use any OpenTelemetry api. For example, for adding a tag/attribute:
 
 ```swift
 import DatadogSDKTesting

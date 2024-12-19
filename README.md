@@ -90,7 +90,7 @@ DD_TAGS="key1:$FOO-v1" # expected: key1:BAR-v1
 
 ### Inside test code
 
-You can add custom tags inside your test methods. Static property `DDTest.current` will return current test instance if called inside the test method scope.
+You can add custom tags inside your test methods. The static property `DDTest.current` will return the current test instance if called inside the test method scope.
 
 ```swift
 // Somewhere inside the test method

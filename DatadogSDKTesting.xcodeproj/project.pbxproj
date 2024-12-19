@@ -1448,7 +1448,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
-			shellScript = "FRAMEWORKS_DIR=\"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\nmkdir -p \"${FRAMEWORKS_DIR}\"\ncp -rf \"${BUILT_PRODUCTS_DIR}/CodeCoverage.framework\" \"${FRAMEWORKS_DIR}/\"\n";
+			shellScript = "FRAMEWORKS_DIR=\"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\nmkdir -p \"${FRAMEWORKS_DIR}\"\ncp -af \"${BUILT_PRODUCTS_DIR}/CodeCoverage.framework\" \"${FRAMEWORKS_DIR}/\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

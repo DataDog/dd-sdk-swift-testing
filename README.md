@@ -29,7 +29,7 @@ Depending on your CI service, you must also set the environment variables to be 
 
 For UI Tests, this SDK will automatically integrate with the RUM SDK in your application. Environment variables only need to be set in the test target, since the framework automatically injects these values to the application.
 
-If your don't use RUM SDK this SDK can be linked with Application too. Don't ship your app with this SDK, it should be linked only to the test builds.
+If your don't use RUM SDK, this SDK can be linked with the Application too. Don't ship your app with this SDK, it should be linked only to the test builds.
 
 ## Auto Instrumentation
 

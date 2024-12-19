@@ -1,7 +1,7 @@
 # Datadog SDK for Swift Test Optimization
 
 This SDK is part of Datadog's [Test Optimization](https://docs.datadoghq.com/tests/) product.
-A more comprehensive and updated documentation can be found at [Test Optimization - Swift](https://docs.datadoghq.com/tests/setup/swift/) 
+A more comprehensive and updated documentation can be found at [Test Optimization - Swift](https://docs.datadoghq.com/tests/setup/swift/).
 
 ## Getting Started
 

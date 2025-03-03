@@ -50,7 +50,8 @@ extension SpanMetadata {
                   tags: env.baseConfigurations,
                   git: env.gitAttributes,
                   ci: env.ciAttributes,
-                  sessionName: env.sessionName)
+                  sessionName: env.sessionName,
+                  isUserProvidedService: env.isUserProvidedService)
         for tag in env.tags {
             self[string: .test, tag.key] = tag.value
         }

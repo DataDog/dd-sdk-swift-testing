@@ -67,7 +67,7 @@ extension DDTestSession {
         try container.encode(status == .fail ? 1 : 0, forKey: .error)
         try container.encode(name, forKey: .name)
         try container.encode(resource, forKey: .resource)
-        try container.encode(DDTestMonitor.config.service ?? DDTestMonitor.env.git.repositoryName ?? "unknown-swift-repo", forKey: .service)
+        try container.encode(DDTestMonitor.env.service, forKey: .service)
     }
 
     struct DDTestSessionEnvelope: Encodable {

@@ -17,6 +17,8 @@ internal final class Environment {
     
     let sessionName: String
     let testCommand: String
+    let service: String
+    let isUserProvidedService: Bool
     
     var environment: String {
         config.environment ?? (ci != nil ? "ci" : "none")
@@ -86,6 +88,14 @@ internal final class Environment {
             sessionName = "\(job)-\(testCommand)"
         } else {
             sessionName = testCommand
+        }
+        
+        if let service = config.service {
+            self.service = service
+            self.isUserProvidedService = true
+        } else {
+            self.service = git.repositoryName ?? "unknown-swift-repo"
+            self.isUserProvidedService = false
         }
         
         validate(log: log)

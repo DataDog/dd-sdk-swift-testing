@@ -107,7 +107,7 @@ internal class DDTracer {
                                     env: DDTestMonitor.env)
         
         let exporterConfiguration = ExporterConfiguration(
-            serviceName: conf.service ?? env.git.repositoryName ?? "unknown-swift-repo",
+            serviceName: env.service,
             applicationName: identifier,
             applicationVersion: version,
             environment: env.environment,
@@ -390,7 +390,8 @@ extension SpanMetadata {
          tags: [String: String],
          git: [String: String],
          ci: [String: String],
-         sessionName: String)
+         sessionName: String,
+         isUserProvidedService: Bool)
     {
         self.init()
         self[string: DDGenericTags.language] = "swift"
@@ -406,6 +407,7 @@ extension SpanMetadata {
                 self[string: type, tag.key] = tag.value
             }
             self[string: type, DDTestSessionTags.testSessionName] = sessionName
+            self[bool: type, DDTags.isUserProvidedService] = isUserProvidedService
         }
     }
 }

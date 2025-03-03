@@ -226,15 +226,11 @@ internal class DDTestMonitor {
         itr = nil
         coverageHelper = nil
         efd = nil
+        let service = DDTestMonitor.env.service
         
         guard let branch = DDTestMonitor.env.git.branch,
               let commit = DDTestMonitor.env.git.commitSHA else {
             Log.print("Unknown branch and commit. ITR and EFD can't be started")
-            return
-        }
-        
-        guard let service = DDTestMonitor.config.service ?? DDTestMonitor.env.git.repositoryName else {
-            Log.print("Unknown service or repository name. ITR and EFD can't be started")
             return
         }
         

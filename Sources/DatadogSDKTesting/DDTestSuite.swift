@@ -133,7 +133,7 @@ extension DDTestSuite {
         try container.encode(status == .fail ? 1 : 0, forKey: .error)
         try container.encode("\(module.testFramework).suite", forKey: .name)
         try container.encode("\(name)", forKey: .resource)
-        try container.encode(DDTestMonitor.config.service ?? DDTestMonitor.env.git.repositoryName ?? "unknown-swift-repo", forKey: .service)
+        try container.encode(DDTestMonitor.env.service, forKey: .service)
     }
 
     struct DDTestSuiteEnvelope: Encodable {

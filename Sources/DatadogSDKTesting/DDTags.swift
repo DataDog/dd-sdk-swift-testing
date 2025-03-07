@@ -33,6 +33,8 @@ internal enum DDTags {
     static let contextThreadNumber = "context.thread_number"
     static let contextQueueName = "context.queue_name"
     static let contextTaskHashValue = "context.task_hashValue"
+    
+    static let isUserProvidedService = "_dd.test.is_user_provided_service"
 }
 
 internal enum DDGenericTags {

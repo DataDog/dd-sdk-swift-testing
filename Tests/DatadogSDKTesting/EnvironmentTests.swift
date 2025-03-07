@@ -82,6 +82,18 @@ class EnvironmentTests: XCTestCase {
         }
         
     }
+    
+    func testService() {
+        let emptyEnv = createEnv([:])
+        let metadata1 = SpanMetadata(libraryVersion: "1.0",
+                                     env: createEnv([EnvironmentKey.service.rawValue: "MyCoolService"]))
+        let metadata2 = SpanMetadata(libraryVersion: "1.0", env: emptyEnv)
+        
+        for type in SpanMetadata.SpanType.allTest {
+            XCTAssertEqual(metadata1[string: type, DDTags.isUserProvidedService], "true")
+            XCTAssertEqual(metadata2[string: type, DDTags.isUserProvidedService], "false")
+        }
+    }
 
     func testAddCustomTagsWithDDTags() {
         var testEnvironment = [String: SpanAttributeConvertible]()

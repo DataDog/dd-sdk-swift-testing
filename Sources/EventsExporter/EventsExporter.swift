@@ -25,7 +25,7 @@ public protocol EventsExporterProtocol: SpanExporter {
     func knownTests(
         service: String, env: String, repositoryURL: String,
         configurations: [String: String], customConfigurations: [String: String]
-    ) -> KnownTests?
+    ) -> KnownTestsMap?
 }
 
 public class EventsExporter: EventsExporterProtocol {
@@ -35,7 +35,7 @@ public class EventsExporter: EventsExporterProtocol {
     var coverageExporter: CoverageExporter
     var itrService: ITRService
     var settingsService: SettingsService
-    var efdService: EarlyFlakeDetectionService
+    var knownTestsService: KnownTestsService
 
     public init(config: ExporterConfiguration) throws {
         self.configuration = config
@@ -45,7 +45,7 @@ public class EventsExporter: EventsExporterProtocol {
         coverageExporter = try CoverageExporter(config: configuration)
         itrService = try ITRService(config: configuration)
         settingsService = try SettingsService(config: configuration)
-        efdService = try EarlyFlakeDetectionService(config: configuration)
+        knownTestsService = try KnownTestsService(config: configuration)
         Log.debug("EventsExporter created: \(spansExporter.runtimeId), endpoint: \(config.endpoint)")
     }
 
@@ -122,9 +122,9 @@ public class EventsExporter: EventsExporterProtocol {
     public func knownTests(
         service: String, env: String, repositoryURL: String,
         configurations: [String: String], customConfigurations: [String: String]
-    ) -> KnownTests? {
-        efdService.tests(service: service, env: env, repositoryURL: repositoryURL,
-                         configurations: configurations, customConfigurations: customConfigurations)
+    ) -> KnownTestsMap? {
+        knownTestsService.tests(service: service, env: env, repositoryURL: repositoryURL,
+                                configurations: configurations, customConfigurations: customConfigurations)
     }
 
     public func shutdown(explicitTimeout: TimeInterval?) {

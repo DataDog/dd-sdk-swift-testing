@@ -10,7 +10,7 @@
 		A71119A22BA8A4F400118323 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */; };
 		A718EC2D2CBD5DCE00C5F0D9 /* EarlyFlakeDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A718EC2C2CBD5DCE00C5F0D9 /* EarlyFlakeDetection.swift */; };
 		A718EC2F2CBD73F300C5F0D9 /* CacheManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A718EC2E2CBD73F300C5F0D9 /* CacheManager.swift */; };
-		A718EC312CBE754300C5F0D9 /* EarlyFlakeDetectionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A718EC302CBE754300C5F0D9 /* EarlyFlakeDetectionService.swift */; };
+		A718EC312CBE754300C5F0D9 /* KnownTestsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A718EC302CBE754300C5F0D9 /* KnownTestsService.swift */; };
 		A718EC352CC7F32A00C5F0D9 /* EarlyFlakeDetectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A718EC342CC7F32A00C5F0D9 /* EarlyFlakeDetectionTests.swift */; };
 		A71D89262BD6CACD00531A90 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71D89252BD6CACD00531A90 /* Logger.swift */; };
 		A71E64692BAA0AA100F2ACA5 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64512BAA0AA100F2ACA5 /* Config.swift */; };
@@ -44,6 +44,7 @@
 		A76174BF2CB45F9B0098CE99 /* XCTestExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A76174BE2CB45F9B0098CE99 /* XCTestExtensions.swift */; };
 		A76174C22CB685390098CE99 /* SettingsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A76174C02CB685250098CE99 /* SettingsService.swift */; };
 		A7A98C202C8F44BC00C93E59 /* CoverageSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7A98C1F2C8F44BC00C93E59 /* CoverageSettings.swift */; };
+		A7AD6D052D7B57300068BB8C /* KnownTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AD6D042D7B57300068BB8C /* KnownTests.swift */; };
 		A7B39C6C2BCFC799007F98B2 /* CDatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7E232DC2BC6E68B0087D8F8 /* CDatadogSDKTesting.framework */; };
 		A7B39C702BCFCD77007F98B2 /* SubprocessWait.c in Sources */ = {isa = PBXBuildFile; fileRef = A7B39C6F2BCFCD77007F98B2 /* SubprocessWait.c */; };
 		A7B39C722BCFD234007F98B2 /* SubprocessWait.h in Headers */ = {isa = PBXBuildFile; fileRef = A7B39C712BCFD234007F98B2 /* SubprocessWait.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -296,7 +297,7 @@
 		81EDADB2292698A200279027 /* LLVMTotalsCoverageFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLVMTotalsCoverageFormat.swift; sourceTree = "<group>"; };
 		A718EC2C2CBD5DCE00C5F0D9 /* EarlyFlakeDetection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EarlyFlakeDetection.swift; sourceTree = "<group>"; };
 		A718EC2E2CBD73F300C5F0D9 /* CacheManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheManager.swift; sourceTree = "<group>"; };
-		A718EC302CBE754300C5F0D9 /* EarlyFlakeDetectionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EarlyFlakeDetectionService.swift; sourceTree = "<group>"; };
+		A718EC302CBE754300C5F0D9 /* KnownTestsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnownTestsService.swift; sourceTree = "<group>"; };
 		A718EC342CC7F32A00C5F0D9 /* EarlyFlakeDetectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EarlyFlakeDetectionTests.swift; sourceTree = "<group>"; };
 		A71D89252BD6CACD00531A90 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		A71E64512BAA0AA100F2ACA5 /* Config.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
@@ -329,6 +330,7 @@
 		A76174BE2CB45F9B0098CE99 /* XCTestExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XCTestExtensions.swift; sourceTree = "<group>"; };
 		A76174C02CB685250098CE99 /* SettingsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsService.swift; sourceTree = "<group>"; };
 		A7A98C1F2C8F44BC00C93E59 /* CoverageSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoverageSettings.swift; sourceTree = "<group>"; };
+		A7AD6D042D7B57300068BB8C /* KnownTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnownTests.swift; sourceTree = "<group>"; };
 		A7B39C6F2BCFCD77007F98B2 /* SubprocessWait.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = SubprocessWait.c; sourceTree = "<group>"; };
 		A7B39C712BCFD234007F98B2 /* SubprocessWait.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SubprocessWait.h; sourceTree = "<group>"; };
 		A7B4D4C02C21DC510059F39B /* TagsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagsTests.swift; sourceTree = "<group>"; };
@@ -818,7 +820,7 @@
 				E143CF1127D7790300F4018A /* Persistence */,
 				E143CF1627D7790300F4018A /* Files */,
 				A76174C02CB685250098CE99 /* SettingsService.swift */,
-				A718EC302CBE754300C5F0D9 /* EarlyFlakeDetectionService.swift */,
+				A718EC302CBE754300C5F0D9 /* KnownTestsService.swift */,
 				E143CF0C27D7790300F4018A /* ExporterConfiguration.swift */,
 				E143CF1927D7790300F4018A /* EventsExporter.swift */,
 			);
@@ -963,6 +965,7 @@
 				A71E64512BAA0AA100F2ACA5 /* Config.swift */,
 				A7B70E3B2C5CDE8B00E4AE09 /* Endpoint.swift */,
 				A718EC2C2CBD5DCE00C5F0D9 /* EarlyFlakeDetection.swift */,
+				A7AD6D042D7B57300068BB8C /* KnownTests.swift */,
 				E158E2DB25471DA000DBCD6C /* DDInstrumentationControl.swift */,
 				8194A2242940B33100B4B592 /* DDTestSession.swift */,
 				E10034D92703599D00439C9C /* DDTestModule.swift */,
@@ -1502,6 +1505,7 @@
 				A71E647B2BAA0AA100F2ACA5 /* BitbucketCI.swift in Sources */,
 				A7FC25B42BA1EADF00067E26 /* DDTestObserver.swift in Sources */,
 				A7FC260D2BA1EC0500067E26 /* SignalUtils.swift in Sources */,
+				A7AD6D052D7B57300068BB8C /* KnownTests.swift in Sources */,
 				A7E233332BC93D100087D8F8 /* Synced.swift in Sources */,
 				A7FC25D42BA1EB3400067E26 /* BinaryImages.swift in Sources */,
 				A7FC25B62BA1EADF00067E26 /* DDTestModule.swift in Sources */,
@@ -1599,7 +1603,7 @@
 				A7FC26332BA1ECC500067E26 /* SpanEncoder.swift in Sources */,
 				A7FC26492BA1ECF800067E26 /* Directory.swift in Sources */,
 				A7FC26202BA1EC6200067E26 /* SearchCommitFormat.swift in Sources */,
-				A718EC312CBE754300C5F0D9 /* EarlyFlakeDetectionService.swift in Sources */,
+				A718EC312CBE754300C5F0D9 /* KnownTestsService.swift in Sources */,
 				A7FC261F2BA1EC6200067E26 /* SkipTestsFormat.swift in Sources */,
 				A76174C22CB685390098CE99 /* SettingsService.swift in Sources */,
 				A74EB8E62D0B449300FAD9B8 /* TestCodeCoverage.swift in Sources */,
@@ -1787,7 +1791,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = "2.5.3";
+				MARKETING_VERSION = 2.5.3;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++20";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.CDatadogSDKTesting;
@@ -1827,7 +1831,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = "2.5.3";
+				MARKETING_VERSION = 2.5.3;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++20";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.CDatadogSDKTesting;
@@ -2184,7 +2188,7 @@
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
-				MARKETING_VERSION = "2.5.3";
+				MARKETING_VERSION = 2.5.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.IntegrationTestsUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -2208,7 +2212,7 @@
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
-				MARKETING_VERSION = "2.5.3";
+				MARKETING_VERSION = 2.5.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.IntegrationTestsUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -2282,7 +2286,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = "2.5.3";
+				MARKETING_VERSION = 2.5.3;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -2354,7 +2358,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LLVM_LTO = YES_THIN;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = "2.5.3";
+				MARKETING_VERSION = 2.5.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;

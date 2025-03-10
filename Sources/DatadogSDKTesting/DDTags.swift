@@ -59,6 +59,7 @@ internal enum DDTestTags {
     static let testCodeowners = "test.codeowners"
     static let testIsUITest = "test.is_ui_test"
     static let testIsRUMActive = "test.is_rum_active"
+    static let testIsNew = "test.is_new"
     static let testCommand = "test.command"
     static let testSkippedByITR = "test.skipped_by_itr"
 }
@@ -199,6 +200,9 @@ internal enum DDTagValues {
     
     static let efdAbortSlow = "slow"
     static let efdAbortFaulty = "faulty"
+    
+    static let retryReasonEfd = "efd"
+    static let retryReasonAtr = "atr"
 }
 
 internal enum DDItrTags {
@@ -209,8 +213,8 @@ internal enum DDItrTags {
 }
 
 internal enum DDEfdTags {
-    static let testIsNew = "test.is_new"
     static let testIsRetry = "test.is_retry"
+    static let testRetryReason = "test.retry_reason"
     static let testEfdEnabled = "test.early_flake.enabled"
     static let testEfdAbortReason = "test.early_flake.abort_reason"
 }

@@ -10,6 +10,11 @@ public struct TracerSettings {
     public var itr: ITR
     public var efd: EFD
     public var flakyTestRetriesEnabled: Bool
+    public var knownTestsEnabled: Bool
+    
+    public var efdIsEnabled: Bool {
+        knownTestsEnabled && efd.enabled
+    }
 
     public struct ITR {
         public var itrEnabled: Bool
@@ -77,6 +82,7 @@ public struct TracerSettings {
     
     init(attrs: SettingsService.SettingsResponse.Data.Attributes) {
         flakyTestRetriesEnabled = attrs.flakyTestRetriesEnabled
+        knownTestsEnabled = attrs.knownTestsEnabled
         itr = ITR(attrs: attrs)
         efd = EFD(attrs: attrs.earlyFlakeDetection)
     }
@@ -196,6 +202,7 @@ extension SettingsService {
                 let itrEnabled: Bool
                 let codeCoverage: Bool
                 let testsSkipping: Bool
+                let knownTestsEnabled: Bool
                 let requireGit: Bool
                 let flakyTestRetriesEnabled: Bool
                 let earlyFlakeDetection: EFD
@@ -204,6 +211,7 @@ extension SettingsService {
                     case itrEnabled = "itr_enabled"
                     case codeCoverage = "code_coverage"
                     case testsSkipping = "tests_skipping"
+                    case knownTestsEnabled = "known_tests_enabled"
                     case requireGit = "require_git"
                     case flakyTestRetriesEnabled = "flaky_test_retries_enabled"
                     case earlyFlakeDetection = "early_flake_detection"

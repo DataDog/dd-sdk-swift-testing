@@ -117,6 +117,7 @@ class DDTestObserver: NSObject, XCTestObservation {
         state = SuiteContext(
             parent: parent,
             skippableTests: DDTestMonitor.instance?.itr?.skippableTests,
+            knownTests: DDTestMonitor.instance?.knownTests?.knownTests,
             efd: DDTestMonitor.instance?.efd,
             retries: retries
         ).new(suite: testSuite, in: module)
@@ -179,13 +180,15 @@ class DDTestObserver: NSObject, XCTestObservation {
             return
         }
         let test = context.suite.testStart(name: testCase.testId.test, itr: context.itr)
-        let isRerun = group.groupRun?.executionCount ?? 0 > 0
-        if test.module.checkEfdStatus(for: test, efd: context.efd) {
-            test.setTag(key: DDEfdTags.testIsNew, value: "true")
-            if !isRerun { test.module.incrementNewTests() }
+        if context.isNewTest(group: group) {
+            test.setTag(key: DDTestTags.testIsNew, value: "true")
+            if group.retryReason == nil {
+                test.module.incrementNewTests()
+            }
         }
-        if isRerun {
+        if let retryReason = group.retryReason {
             test.setTag(key: DDEfdTags.testIsRetry, value: "true")
+            test.setTag(key: DDEfdTags.testRetryReason, value: retryReason)
         }
         state = context.new(test: test, in: group)
         Log.debug("testCaseWillStart: \(testCase.name)")
@@ -231,7 +234,7 @@ class DDTestObserver: NSObject, XCTestObservation {
             let repeats = context.efd!.slowTestRetries.repeats(for: duration)
             if groupRun.executionCount < Int(repeats) - 1 {
                 // We can retry test
-                group.retry()
+                group.retry(reason: DDTagValues.retryReasonEfd)
                 Log.debug("EFD will retry test \(test.name)")
             } else {
                 if repeats == 0 {
@@ -250,7 +253,7 @@ class DDTestObserver: NSObject, XCTestObservation {
                test.module.incrementRetries(max: retries.total) != nil // and increased global retry counter
             {
                 // tell group to retry this test
-                group.retry()
+                group.retry(reason: DDTagValues.retryReasonAtr)
                 Log.debug("ATR will retry test \(test.name)")
             } else {
                 // Record suppresses failures if we have them
@@ -342,15 +345,18 @@ extension DDTestObserver {
     final class SuiteContext {
         let parent: ContainerSuite?
         let skippableTests: SkippableTests?
+        let knownTests: KnownTests?
         let efd: EarlyFlakeDetectionService?
         let retries: (test: UInt, total: UInt)?
         private(set) var unskippableCache: [ObjectIdentifier: UnskippableMethodChecker]
         
-        init(parent: ContainerSuite?, skippableTests: SkippableTests?,
+        init(parent: ContainerSuite?,
+             skippableTests: SkippableTests?, knownTests: KnownTests?,
              efd: EarlyFlakeDetectionService?, retries: (test: UInt, total: UInt)?)
         {
             self.parent = parent
             self.skippableTests = skippableTests
+            self.knownTests = knownTests
             self.efd = efd
             self.retries = retries
             self.unskippableCache = [:]
@@ -384,6 +390,7 @@ extension DDTestObserver {
         let suite: DDTestSuite
         let suiteContext: SuiteContext
         
+        var knownTests: KnownTests? { suiteContext.knownTests }
         var efd: EarlyFlakeDetectionService? { suiteContext.efd }
         var retries: (test: UInt, total: UInt)? { suiteContext.retries }
         
@@ -395,6 +402,11 @@ extension DDTestObserver {
         
         func back() -> State {
             .suite(suite: suite, context: suiteContext)
+        }
+        
+        func isNewTest(group: DDXCTestRetryGroup) -> Bool {
+            let id = group.testId
+            return knownTests?.isNew(test: id.test, in: id.suite, and: suite.module.bundleName) ?? false
         }
         
         func new(test: DDTest, in group: DDXCTestRetryGroup) -> State {

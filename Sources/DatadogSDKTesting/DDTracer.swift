@@ -104,7 +104,8 @@ internal class DDTracer {
         let hostnameToReport: String? = (conf.reportHostname && !DDTestMonitor.developerMachineHostName.isEmpty) ? DDTestMonitor.developerMachineHostName : nil
         
         let metadata = SpanMetadata(libraryVersion: DDTestMonitor.tracerVersion,
-                                    env: DDTestMonitor.env)
+                                    env: DDTestMonitor.env,
+                                    capabilities: .libraryCapabilities)
         
         let exporterConfiguration = ExporterConfiguration(
             serviceName: env.service,
@@ -391,7 +392,8 @@ extension SpanMetadata {
          git: [String: String],
          ci: [String: String],
          sessionName: String,
-         isUserProvidedService: Bool)
+         isUserProvidedService: Bool,
+         capabilities: SDKCapabilities)
     {
         self.init()
         self[string: DDGenericTags.language] = "swift"
@@ -408,6 +410,10 @@ extension SpanMetadata {
             }
             self[string: type, DDTestSessionTags.testSessionName] = sessionName
             self[bool: type, DDTags.isUserProvidedService] = isUserProvidedService
+        }
+        for capability in capabilities {
+            let (key, val) = capability.metadata
+            self[string: .test, key] = val
         }
     }
 }

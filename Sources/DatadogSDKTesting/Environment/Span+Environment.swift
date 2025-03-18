@@ -45,13 +45,14 @@ extension URL: SpanAttributeConvertible {
 }
 
 extension SpanMetadata {
-    init(libraryVersion: String, env: Environment) {
+    init(libraryVersion: String, env: Environment, capabilities: SDKCapabilities) {
         self.init(libraryVersion: libraryVersion,
                   tags: env.baseConfigurations,
                   git: env.gitAttributes,
                   ci: env.ciAttributes,
                   sessionName: env.sessionName,
-                  isUserProvidedService: env.isUserProvidedService)
+                  isUserProvidedService: env.isUserProvidedService,
+                  capabilities: capabilities)
         for tag in env.tags {
             self[string: .test, tag.key] = tag.value
         }

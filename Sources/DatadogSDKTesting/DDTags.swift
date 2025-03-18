@@ -215,6 +215,17 @@ internal enum DDEfdTags {
     static let testEfdAbortReason = "test.early_flake.abort_reason"
 }
 
+internal enum DDLibraryCapabilitiesTags {
+    static let testImpactAnalysis = "_dd.library_capabilities.test_impact_analysis"
+    static let earlyFlakeDetection = "_dd.library_capabilities.early_flake_detection"
+    static let autoTestRetries = "_dd.library_capabilities.auto_test_retries"
+    static let impactedTests = "_dd.library_capabilities.impacted_tests"
+    static let failFastTestOrder = "_dd.library_capabilities.fail_fast_test_order"
+    static let testManagementQuarantine = "_dd.library_capabilities.test_management.quarantine"
+    static let testManagementDisable = "_dd.library_capabilities.test_management.disable"
+    static let testManagementAttemptToFix = "_dd.library_capabilities.test_management.attempt_to_fix"
+}
+
 internal enum DDCFMessageID {
     static let setCustomTags: Int32 = 0x1111
     static let enableRUM: Int32 = 0x2222

@@ -149,12 +149,15 @@ final class DDXCTestRetryGroup: XCTest {
     private let _testMethod: Selector
     private var _skipReason: String?
     private var _nextTest: XCTestCase?
+    private var _nextRetryReason: String?
     
     init(for test: XCTestCase) {
         self.currentTest = test
         self.testId = test.testId
         self._skipReason = nil
         self._nextTest = nil
+        self.retryReason = nil
+        self._nextRetryReason = nil
         self._name = test.name
         self.testClass = type(of: test)
         self._testMethod = test.invocation!.selector
@@ -163,13 +166,15 @@ final class DDXCTestRetryGroup: XCTest {
     
     func skip(reason: String) {
         _skipReason = reason
+        _nextTest = nil
+        _nextRetryReason = nil
         retryReason = nil
     }
     
     func retry(reason: String) {
         _nextTest = testClass.init(selector: _testMethod)
+        _nextRetryReason = reason
         _skipReason = nil
-        retryReason = reason
     }
     
     override func perform(_ run: XCTestRun) {
@@ -188,8 +193,9 @@ final class DDXCTestRetryGroup: XCTest {
                 test.perform(testCaseRun)
             }
             currentTest = _nextTest
+            retryReason = _nextRetryReason
             _nextTest = nil
-            retryReason = nil
+            _nextRetryReason = nil
         }
         testRun.stop()
     }

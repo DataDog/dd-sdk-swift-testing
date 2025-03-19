@@ -6,9 +6,9 @@
 
 import Foundation
 
-public typealias KnownTests = [String: [String: [String]]]
+public typealias KnownTestsMap = [String: [String: [String]]]
 
-internal final class EarlyFlakeDetectionService {
+internal final class KnownTestsService {
     let exporterConfiguration: ExporterConfiguration
     let testsUploader: DataUploader
     
@@ -41,7 +41,7 @@ internal final class EarlyFlakeDetectionService {
     func tests(
         service: String, env: String, repositoryURL: String,
         configurations: [String: String], customConfigurations: [String: String]
-    ) -> KnownTests? {
+    ) -> KnownTestsMap? {
         var configurations: [String: JSONGeneric] = configurations.mapValues { .string($0) }
         configurations["custom"] = .stringDict(customConfigurations)
         
@@ -66,7 +66,7 @@ internal final class EarlyFlakeDetectionService {
     }
 }
 
-extension EarlyFlakeDetectionService {
+extension KnownTestsService {
     struct TestsRequest: Codable, JSONable {
         let data: Data
         
@@ -112,7 +112,7 @@ extension EarlyFlakeDetectionService {
             let attributes: Attributes
             
             struct Attributes: Codable {
-                let tests: KnownTests
+                let tests: KnownTestsMap
             }
         }
     }

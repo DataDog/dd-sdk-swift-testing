@@ -72,6 +72,8 @@ internal class DDTestMonitor {
     var gitUploader: GitUploader?
     var itr: IntelligentTestRunner?
     
+    var knownTests: KnownTestsService? = nil
+    
     var failedTestRetriesCount: UInt = 0
     var failedTestRetriesTotalCount: UInt = 0
     var efd: EarlyFlakeDetectionService? = nil
@@ -284,6 +286,32 @@ internal class DDTestMonitor {
         }
         testOptimizationSetupQueue.addOperation(updateTracerConfig)
         
+        let knownTestsSetup = BlockOperation {
+            guard let config = tracerBackendConfig, config.knownTestsEnabled else {
+                Log.print("Known tests call is disabled")
+                return
+            }
+            Log.debug("Known Tests Enabled")
+            guard let eventsExporter = DDTestMonitor.tracer.eventsExporter else {
+                Log.print("Known tests init failed. Exporter is nil")
+                self.knownTests = nil
+                return
+            }
+            guard let cache = try? DDTestMonitor.cacheManager?.session(feature: "known_tests") else {
+                Log.print("Known tests init failed. Can't create cache directiry.")
+                self.knownTests = nil
+                return
+            }
+            self.knownTests = KnownTestsServiceImpl(repository: repository, service: service,
+                                                    environment: DDTestMonitor.env.environment,
+                                                    configurations: DDTestMonitor.env.baseConfigurations,
+                                                    custom: DDTestMonitor.config.customConfigurations,
+                                                    exporter: eventsExporter, cache: cache)
+            self.knownTests!.start()
+        }
+        knownTestsSetup.addDependency(updateTracerConfig)
+        testOptimizationSetupQueue.addOperation(knownTestsSetup)
+        
         if DDTestMonitor.config.itrEnabled {
             let isExcluded = { (branch: String) in
                 let excludedBranches = DDTestMonitor.config.excludedBranches
@@ -353,32 +381,23 @@ internal class DDTestMonitor {
         }
         
         if DDTestMonitor.config.efdEnabled {
-            let efdSetup = BlockOperation { [self] in
-                guard let config = tracerBackendConfig?.efd, config.enabled else {
+            let efdSetup = BlockOperation {
+                guard let config = tracerBackendConfig, config.efdIsEnabled else {
                     Log.debug("Early Flake Detection Disabled")
                     return
                 }
                 // Activate EFD
                 Log.debug("Early Flake Detection Enabled")
-                guard let eventsExporter = DDTestMonitor.tracer.eventsExporter else {
-                    Log.print("EFD init failed. Exporter is nil")
-                    efd = nil
+                guard let knownTests = self.knownTests else {
+                    Log.debug("Early Flake Detection init failed. Known Tests service is nil")
                     return
                 }
-                guard let cache = try? DDTestMonitor.cacheManager?.session(feature: "efd") else {
-                    Log.print("EFD init failed. Can't create cache directiry.")
-                    efd = nil
-                    return
-                }
-                efd = EarlyFlakeDetection(repository: repository, service: service, environment: DDTestMonitor.env.environment,
-                                          configurations: DDTestMonitor.env.baseConfigurations,
-                                          custom: DDTestMonitor.config.customConfigurations,
-                                          exporter: eventsExporter, cache: cache,
-                                          slowTestRetries: config.slowTestRetries,
-                                          faultySessionThreshold: config.faultySessionThreshold)
-                efd?.start()
+                self.efd = EarlyFlakeDetection(knownTests: knownTests,
+                                               slowTestRetries: config.efd.slowTestRetries,
+                                               faultySessionThreshold: config.efd.faultySessionThreshold)
+                self.efd!.start()
             }
-            efdSetup.addDependency(updateTracerConfig)
+            efdSetup.addDependency(knownTestsSetup)
             testOptimizationSetupQueue.addOperation(efdSetup)
         }
     }

@@ -148,7 +148,7 @@ final class EarlyFlakeDetectionTests: XCTestCase {
         }
     }
     
-    private func known(tests: KeyValuePairs<String, String>) -> KnownTests {
+    private func known(tests: KeyValuePairs<String, String>) -> KnownTestsMap {
         var combined = tests.reduce(into: [:]) { dict, pair in
             dict.get(key: pair.key, or: []) { arr in
                 arr.append(pair.value)
@@ -159,7 +159,7 @@ final class EarlyFlakeDetectionTests: XCTestCase {
         return [Bundle.main.name: combined]
     }
     
-    private func tracer(atr: Bool, efd: Bool, knownTests: KnownTests) -> DDTracer {
+    private func tracer(atr: Bool, efd: Bool, knownTests: KnownTestsMap) -> DDTracer {
         DDTracer(id: "some-id", version: "1.0.0",
                  exporter: MockEventExporter(atr: atr, efd: efd, knownTests: knownTests),
                  enabled: true, launchContext: nil)
@@ -211,12 +211,12 @@ private extension EarlyFlakeDetectionTests {
     final class MockEventExporter: EventsExporterProtocol {
         var atr: Bool
         var efd: Bool
-        var knownTests: KnownTests
+        var knownTests: KnownTestsMap
         
         var events: [any Encodable] = []
         var spans: [SpanData] = []
         
-        init(atr: Bool, efd: Bool, knownTests: KnownTests) {
+        init(atr: Bool, efd: Bool, knownTests: KnownTestsMap) {
             self.atr = atr
             self.efd = efd
             self.knownTests = knownTests
@@ -249,7 +249,8 @@ private extension EarlyFlakeDetectionTests {
         func tracerSettings(service: String, env: String, repositoryURL: String, branch: String, sha: String,
                             testLevel: ITRTestLevel, configurations: [String: String], customConfigurations: [String: String]) -> TracerSettings?
         {
-            TracerSettings(attrs: .init(itrEnabled: false, codeCoverage: false, testsSkipping: false, requireGit: false,
+            TracerSettings(attrs: .init(itrEnabled: false, codeCoverage: false, testsSkipping: false,
+                                        knownTestsEnabled: knownTests.count > 0, requireGit: false,
                                         flakyTestRetriesEnabled: self.atr,
                                         earlyFlakeDetection: .init(enabled: self.efd,
                                                                    slowTestRetries: ["5s": 10, "30s": 5, "1m": 2, "5m": 1],
@@ -257,7 +258,7 @@ private extension EarlyFlakeDetectionTests {
         }
         
         func knownTests(service: String, env: String, repositoryURL: String,
-                        configurations: [String : String], customConfigurations: [String : String]) -> KnownTests? {
+                        configurations: [String : String], customConfigurations: [String : String]) -> KnownTestsMap? {
             knownTests
         }
         

@@ -30,7 +30,7 @@ class EnvironmentTests: XCTestCase {
         testEnvironment["GIT_BRANCH"] = "/origin/develop"
         testEnvironment["JOB_NAME"] = "job1"
 
-        let metadata = SpanMetadata(libraryVersion: "1.0", env: createEnv(testEnvironment))
+        let metadata = SpanMetadata(libraryVersion: "1.0", env: createEnv(testEnvironment), capabilities: .allCapabilities)
         
         for type in SpanMetadata.SpanType.allTest {
             XCTAssertEqual(metadata[string: type, DDCITags.ciProvider], "jenkins")
@@ -52,13 +52,22 @@ class EnvironmentTests: XCTestCase {
             XCTAssertEqual(metadata[string: type, DDRuntimeTags.runtimeVersion], PlatformUtils.getXcodeVersion())
             XCTAssertEqual(metadata[string: type, DDUISettingsTags.uiSettingsLocalization], PlatformUtils.getLocalization())
         }
+        
+        XCTAssertEqual(metadata[string: .test, DDLibraryCapabilitiesTags.testImpactAnalysis], "1")
+        XCTAssertEqual(metadata[string: .test, DDLibraryCapabilitiesTags.earlyFlakeDetection], "1")
+        XCTAssertEqual(metadata[string: .test, DDLibraryCapabilitiesTags.autoTestRetries], "1")
+        XCTAssertEqual(metadata[string: .test, DDLibraryCapabilitiesTags.impactedTests], "1")
+        XCTAssertEqual(metadata[string: .test, DDLibraryCapabilitiesTags.failFastTestOrder], "1")
+        XCTAssertEqual(metadata[string: .test, DDLibraryCapabilitiesTags.testManagementQuarantine], "1")
+        XCTAssertEqual(metadata[string: .test, DDLibraryCapabilitiesTags.testManagementDisable], "1")
+        XCTAssertEqual(metadata[string: .test, DDLibraryCapabilitiesTags.testManagementAttemptToFix], "2")
     }
 
     func testWhenNotRunningInCI_CITagsAreNotAdded() {
         var testEnvironment = [String: SpanAttributeConvertible]()
         testEnvironment["SRCROOT"] = ProcessInfo.processInfo.environment["SRCROOT"]
 
-        let metadata = SpanMetadata(libraryVersion: "1.0", env: createEnv(testEnvironment))
+        let metadata = SpanMetadata(libraryVersion: "1.0", env: createEnv(testEnvironment), capabilities: .libraryCapabilities)
         
         for type in SpanMetadata.SpanType.allTest {
             XCTAssertNotNil(metadata[type, DDCITags.ciWorkspacePath])
@@ -69,11 +78,13 @@ class EnvironmentTests: XCTestCase {
     func testSessionName() {
         let emptyEnv = createEnv([:])
         let metadata1 = SpanMetadata(libraryVersion: "1.0",
-                                     env: createEnv([EnvironmentKey.sessionName.rawValue: "MyCoolSession"]))
+                                     env: createEnv([EnvironmentKey.sessionName.rawValue: "MyCoolSession"]),
+                                     capabilities: .libraryCapabilities)
         let metadata2 = SpanMetadata(libraryVersion: "1.0",
                                      env: createEnv(["GITLAB_CI": "1",
-                                                     "CI_JOB_NAME": "job1"]))
-        let metadata3 = SpanMetadata(libraryVersion: "1.0", env: emptyEnv)
+                                                     "CI_JOB_NAME": "job1"]),
+                                     capabilities: .libraryCapabilities)
+        let metadata3 = SpanMetadata(libraryVersion: "1.0", env: emptyEnv, capabilities: .libraryCapabilities)
         
         for type in SpanMetadata.SpanType.allTest {
             XCTAssertEqual(metadata1[string: type, DDTestSessionTags.testSessionName], "MyCoolSession")
@@ -86,8 +97,9 @@ class EnvironmentTests: XCTestCase {
     func testService() {
         let emptyEnv = createEnv([:])
         let metadata1 = SpanMetadata(libraryVersion: "1.0",
-                                     env: createEnv([EnvironmentKey.service.rawValue: "MyCoolService"]))
-        let metadata2 = SpanMetadata(libraryVersion: "1.0", env: emptyEnv)
+                                     env: createEnv([EnvironmentKey.service.rawValue: "MyCoolService"]),
+                                     capabilities: .libraryCapabilities)
+        let metadata2 = SpanMetadata(libraryVersion: "1.0", env: emptyEnv, capabilities: .libraryCapabilities)
         
         for type in SpanMetadata.SpanType.allTest {
             XCTAssertEqual(metadata1[string: type, DDTags.isUserProvidedService], "true")
@@ -101,7 +113,7 @@ class EnvironmentTests: XCTestCase {
         testEnvironment["FOO"] = "BAR"
         testEnvironment["SRCROOT"] = ProcessInfo.processInfo.environment["SRCROOT"]
         
-        let metadata = SpanMetadata(libraryVersion: "1.0", env: createEnv(testEnvironment))
+        let metadata = SpanMetadata(libraryVersion: "1.0", env: createEnv(testEnvironment), capabilities: .libraryCapabilities)
         XCTAssertEqual(metadata[string: .test, "key1"], "value1")
         XCTAssertEqual(metadata[string: .test, "key2"], "value2")
         XCTAssertEqual(metadata[string: .test, "key3"], "value3")
@@ -213,7 +225,7 @@ class EnvironmentTests: XCTestCase {
                 throw FixtureError(description: "[FixtureError] spec invalid: \(specVal)")
             }
             
-            let metadata = SpanMetadata(libraryVersion: "1.0", env: createEnv(spec[0]))
+            let metadata = SpanMetadata(libraryVersion: "1.0", env: createEnv(spec[0]), capabilities: .libraryCapabilities)
 
             spec[1].forEach {
                 let data = metadata[string: .test, $0.key]

@@ -13,7 +13,7 @@ let signalCallback: PLCrashReporterPostCrashSignalCallback = { _, _, _ in
     if let sanitizerInfo = SanitizerHelper.getSaniziterInfo() {
         try? sanitizerInfo.write(to: DDCrashes.sanitizerURL, atomically: true, encoding: .utf8)
     }
-    DDTestMonitor.instance?.coverageHelper?.coverageWorkQueue.waitUntilAllOperationsAreFinished()
+    DDTestMonitor.instance?.tia?.stop()
 }
 
 /// This class is our interface with the crash reporter, now it is based on PLCrashReporter,
@@ -110,6 +110,7 @@ internal enum DDCrashes {
                             crashedModuleId: SpanId(fromHexString: moduleID),
                             crashedSuiteId: SpanId(fromHexString: suiteID),
                             crashedSuiteName: suiteName,
+                            sessionStartTime: spanData.sessionStartTime,
                             moduleStartTime: spanData.moduleStartTime,
                             suiteStartTime: spanData.suiteStartTime)
                         Log.debug("Loaded Crashed Session Info: \(sessionID)")
@@ -127,8 +128,9 @@ internal enum DDCrashes {
             }
         }
     }
-
-    static func setCustomData(customData: Data) {
-        DDCrashes.sharedPLCrashReporter?.customData = customData
+    
+    static func setCurrent(spanData: SimpleSpanData?) {
+        let data = spanData.map { SimpleSpanSerializer.serializeSpan(simpleSpan: $0) } ?? .init()
+        DDCrashes.sharedPLCrashReporter?.customData = data
     }
 }

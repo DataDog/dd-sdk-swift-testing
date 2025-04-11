@@ -9,48 +9,52 @@ import Foundation
 @_implementationOnly import OpenTelemetrySdk
 @_implementationOnly import SigmaSwiftStatistics
 
-public class DDTest: NSObject {
+@objc(DDTest)
+public final class Test: NSObject {
     var currentTestExecutionOrder: UInt
     var initialProcessId = Int(ProcessInfo.processInfo.processIdentifier)
 
-    var name: String
-    var span: Span
+    let name: String
+    let startTime: Date
+    let span: Span
+    var duration: UInt64
 
-    var module: DDTestModule
-    var suite: DDTestSuite
-    var itr: ITRStatus
+    let suite: TestSuite
 
-    private var isUITest: Bool
+//    private var isUITest: Bool
 
     private var errorInfo: ErrorInfo?
 
-    init(name: String, suite: DDTestSuite, module: DDTestModule, itr: ITRStatus, startTime: Date? = nil) {
+    init(name: String, suite: TestSuite, startTime: Date? = nil) {
         let testStartTime = startTime ?? DDTestMonitor.clock.now
         self.name = name
         self.suite = suite
-        self.module = module
-        self.itr = itr
-        self.isUITest = false
+        self.duration = 0
+        //self.isUITest = false
 
-        currentTestExecutionOrder = module.incrementTestRuns()
+        currentTestExecutionOrder = suite.session.nextTestIndex()
 
         let attributes: [String: String] = [
             DDGenericTags.type: DDTagValues.typeTest,
             DDGenericTags.resource: "\(suite.name).\(name)",
             DDTestTags.testName: name,
             DDTestTags.testSuite: suite.name,
-            DDTestTags.testModule: module.bundleName,
-            DDTestTags.testFramework: module.testFramework,
+            DDTestTags.testModule: suite.module.name,
+            DDTestTags.testFramework: suite.session.testFramework,
             DDTestTags.testType: DDTagValues.typeTest,
             DDTestTags.testIsUITest: "false",
-            DDTestSuiteVisibilityTags.testSessionId: module.sessionId.hexString,
-            DDTestSuiteVisibilityTags.testModuleId: module.id.hexString,
+            DDTestSuiteVisibilityTags.testSessionId: suite.session.id.hexString,
+            DDTestSuiteVisibilityTags.testModuleId: suite.module.id.hexString,
             DDTestSuiteVisibilityTags.testSuiteId: suite.id.hexString,
             DDUISettingsTags.uiSettingsSuiteLocalization: suite.localization,
-            DDUISettingsTags.uiSettingsModuleLocalization: module.localization,
+            DDUISettingsTags.uiSettingsModuleLocalization: suite.module.localization,
         ]
+        
+        self.startTime = testStartTime
 
-        span = DDTestMonitor.tracer.startSpan(name: "\(module.testFramework).test", attributes: attributes, startTime: testStartTime)
+        span = DDTestMonitor.tracer.startSpan(name: "\(suite.session.testFramework).test",
+                                              attributes: attributes,
+                                              startTime: testStartTime)
         span.setAttribute(key: DDTestTags.testExecutionOrder, value: Int(currentTestExecutionOrder))
         span.setAttribute(key: DDTestTags.testExecutionProcessId, value: initialProcessId)
 
@@ -65,7 +69,7 @@ public class DDTest: NSObject {
         }
 
         let functionName = suite.name + "." + name
-        if let functionInfo = DDTestModule.bundleFunctionInfo[functionName] {
+        if let functionInfo = DDTestMonitor.instance?.bundleFunctionInfo[functionName] {
             var filePath = functionInfo.file
             if let workspacePath = DDTestMonitor.env.workspacePath,
                let workspaceRange = filePath.range(of: workspacePath + "/")
@@ -75,27 +79,19 @@ public class DDTest: NSObject {
             span.setAttribute(key: DDTestTags.testSourceFile, value: filePath)
             span.setAttribute(key: DDTestTags.testSourceStartLine, value: functionInfo.startLine)
             span.setAttribute(key: DDTestTags.testSourceEndLine, value: functionInfo.endLine)
-            if let owners = DDTestModule.codeOwners?.ownersForPath(filePath) {
+            if let owners = DDTestMonitor.instance?.codeOwners?.ownersForPath(filePath) {
                 span.setAttribute(key: DDTestTags.testCodeowners, value: owners)
             }
         }
         
-        if let correlationId = DDTestMonitor.instance?.itr?.correlationId {
-            span.setAttribute(key: DDItrTags.itrCorrelationId, value: correlationId)
-        }
-        
         if let testSpan = span as? RecordEventsReadableSpan {
             let simpleSpan = SimpleSpanData(spanData: testSpan.toSpanData(), moduleStartTime: module.startTime, suiteStartTime: suite.startTime)
-            DDCrashes.setCustomData(customData: SimpleSpanSerializer.serializeSpan(simpleSpan: simpleSpan))
-        }
-        
-        if !itr.skipped, let coverageHelper = DDTestMonitor.instance?.coverageHelper {
-            coverageHelper.startTest()
+            DDCrashes.setCurrent(spanData: simpleSpan)
         }
     }
 
     func setIsUITest(_ value: Bool) {
-        self.isUITest = value
+//        self.isUITest = value
         self.span.setAttribute(key: DDTestTags.testIsUITest, value: value ? "true" : "false")
 
         // Set default UI values if nor previously set and update crash customData
@@ -109,8 +105,8 @@ public class DDTest: NSObject {
                 setTag(key: DDUISettingsTags.uiSettingsOrientation, value: PlatformUtils.getOrientation())
             }
 #endif
-            let simpleSpan = SimpleSpanData(spanData: testSpan.toSpanData(), moduleStartTime: module.startTime, suiteStartTime: suite.startTime)
-            DDCrashes.setCustomData(customData: SimpleSpanSerializer.serializeSpan(simpleSpan: simpleSpan))
+            let simpleSpan = SimpleSpanData(spanData: testSpan.toSpanData(), sessionStertTine: session.startTime, moduleStartTime: module.startTime, suiteStartTime: suite.startTime)
+            DDCrashes.setCurrent(spanData: simpleSpan)
         }
     }
 
@@ -151,14 +147,14 @@ public class DDTest: NSObject {
     /// - Parameters:
     ///   - status: the status reported for this test
     ///   - endTime: Optional, the time where the test ended
-    @objc public func end(status: DDTestStatus, endTime: Date?) {
+    @objc public func end(status: TestStatus, endTime: Date?) {
         internalEnd(status: status, endTime: endTime)
     }
 
     /// Ends the test
     /// - Parameters:
     ///   - status: the status reported for this test
-    @objc public func end(status: DDTestStatus) {
+    @objc public func end(status: TestStatus) {
         end(status: status, endTime: nil)
     }
 
@@ -217,63 +213,64 @@ public class DDTest: NSObject {
     }
     
     /// Current active test
-    @objc public static var current: DDTest? { DDTestMonitor.instance?.currentTest }
+    @objc public static var current: Test? { DDTestMonitor.instance?.currentTest }
 }
 
-extension DDTest {
-    func internalEnd(status: DDTestStatus, endTime: Date? = nil) {
-        let testEndTime = endTime ?? DDTestMonitor.clock.now
-        
-        if itr.markedUnskippable {
-            span.setAttribute(key: DDItrTags.itrUnskippable, value: "true")
+extension Test: TestRun {
+    var id: SpanId { span.context.spanId }
+    
+    var status: TestStatus {
+        switch span.status {
+        case .unset, .ok: return .pass
+        case .error: return .fail
         }
+    }
+    
+    func set(tag name: String, value: SpanAttributeConvertible) {
+        setTag(key: name, value: value)
+    }
+    
+    func set(metric name: String, value: Double) {
+        setTag(key: name, value: value)
+    }
+    
+    func add(error: TestError) {
+        setErrorInfo(type: error.type, message: error.message ?? "", callstack: error.stack)
+    }
+    
+    func add(benchmark name: String, samples: [Double], info: String?) {
+        addBenchmarkData(name: name, samples: samples, info: info)
+    }
+    
+    func end(status: TestStatus, time: Date?) {
+        end(status: status, endTime: time)
+    }
+}
+
+extension Test {
+    func internalEnd(status: TestStatus, endTime: Date? = nil) {
+        let testEndTime = endTime ?? DDTestMonitor.clock.now
+        duration = testEndTime.timeIntervalSince(startTime).toNanoseconds
+        
         switch status {
         case .pass:
             span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusPass)
-            if itr.forcedRun {
-                span.setAttribute(key: DDItrTags.itrForcedRun, value: "true")
-            }
             span.status = .ok
         case .fail:
             span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusFail)
-            if itr.forcedRun {
-                span.setAttribute(key: DDItrTags.itrForcedRun, value: "true")
-            }
-            suite.status = .fail
-            module.status = .fail
+            suite.set(failed: nil)
             setErrorInformation()
             span.status = .error(description: "Test failed")
         case .skip:
             span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusSkip)
-            if itr.skipped {
-                span.setAttribute(key: DDTestTags.testSkippedByITR, value: "true")
-                module.incrementSkipped()
-            }
             span.status = .ok
-        }
-
-        if !itr.skipped, let coverageHelper = DDTestMonitor.instance?.coverageHelper {
-            coverageHelper.endTest(testSessionId: module.sessionId.rawValue,
-                                   testSuiteId: suite.id.rawValue,
-                                   spanId: span.context.spanId.rawValue)
         }
 
         StderrCapture.syncData()
         span.end(time: testEndTime)
         DDTestMonitor.instance?.networkInstrumentation?.endAndCleanAliveSpans()
-        DDCrashes.setCustomData(customData: Data())
+        DDCrashes.setCurrent(spanData: nil)
         DDTestMonitor.instance?.currentTest = nil
-    }
-    
-    struct ITRStatus {
-        let canBeSkipped: Bool
-        let markedUnskippable: Bool
-        
-        var forcedRun: Bool { canBeSkipped && markedUnskippable }
-        var skipped: Bool { canBeSkipped && !markedUnskippable }
-        
-        @inlinable
-        static var none: ITRStatus { ITRStatus(canBeSkipped: false, markedUnskippable: false) }
     }
 }
 

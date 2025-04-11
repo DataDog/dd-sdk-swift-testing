@@ -57,6 +57,10 @@ final class Config {
     var testRetriesTestRetryCount: UInt = 5
     var testRetriesTotalRetryCount: UInt = 1000
     
+    /// Test Management
+    var testManagementEnabled: Bool = true
+    var testManagementAttemptToFixRetries: UInt? = nil
+    
     /// Avoids configuring the traces exporter
     var disableTracesExporting: Bool = false
 
@@ -137,6 +141,10 @@ final class Config {
         testRetriesEnabled = env[.enableCiVisibilityFlakyRetries] ?? testRetriesEnabled
         testRetriesTestRetryCount = env[.ciVisibilityFlakyRetryCount] ?? testRetriesTestRetryCount
         testRetriesTotalRetryCount = env[.ciVisibilityTotalFlakyRetryCount] ?? testRetriesTotalRetryCount
+        
+        /// Test Managemennt
+        testManagementEnabled = env[.testManagementEnabled] ?? testManagementEnabled
+        testManagementAttemptToFixRetries = env[.testManagementAttemptToFixRetries]
         
         /// UI testing properties
         tracerTraceId = env[.tracerTraceId]
@@ -224,6 +232,8 @@ extension Config: CustomDebugStringConvertible {
         Coverage Enabled: \(codeCoverageEnabled)
         ITR Enabled: \(itrEnabled)
         Excluded Branches: \(excludedBranches)
+        Test Management Enabled: \(testManagementEnabled)
+        Test Management Attempt To Fix Retries: \(testManagementAttemptToFixRetries.map(String.init) ?? "nil")
         Test Retries Enabled: \(testRetriesEnabled)
         Test Retries Count: \(testRetriesTestRetryCount)
         Test Retries Total Count: \(testRetriesTotalRetryCount)

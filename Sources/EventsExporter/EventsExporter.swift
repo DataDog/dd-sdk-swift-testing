@@ -26,6 +26,9 @@ public protocol EventsExporterProtocol: SpanExporter {
         service: String, env: String, repositoryURL: String,
         configurations: [String: String], customConfigurations: [String: String]
     ) -> KnownTestsMap?
+    func testManagementTests(
+        repositoryURL: String, commitMessage: String, module: String?
+    ) -> TestManagementTestsInfo?
 }
 
 public class EventsExporter: EventsExporterProtocol {
@@ -36,6 +39,7 @@ public class EventsExporter: EventsExporterProtocol {
     var itrService: ITRService
     var settingsService: SettingsService
     var knownTestsService: KnownTestsService
+    var testManagementService: TestManagementService
 
     public init(config: ExporterConfiguration) throws {
         self.configuration = config
@@ -46,6 +50,7 @@ public class EventsExporter: EventsExporterProtocol {
         itrService = try ITRService(config: configuration)
         settingsService = try SettingsService(config: configuration)
         knownTestsService = try KnownTestsService(config: configuration)
+        testManagementService = try TestManagementService(config: configuration)
         Log.debug("EventsExporter created: \(spansExporter.runtimeId), endpoint: \(config.endpoint)")
     }
 
@@ -126,6 +131,12 @@ public class EventsExporter: EventsExporterProtocol {
         knownTestsService.tests(service: service, env: env, repositoryURL: repositoryURL,
                                 configurations: configurations, customConfigurations: customConfigurations)
     }
+    
+    public func testManagementTests(
+        repositoryURL: String, commitMessage: String, module: String? = nil
+    ) -> TestManagementTestsInfo? {
+        testManagementService.tests(repositoryURL: repositoryURL, commitMessage: commitMessage, module: module)
+    }
 
     public func shutdown(explicitTimeout: TimeInterval?) {
         _ = self.flush(explicitTimeout: explicitTimeout)
@@ -139,6 +150,7 @@ public class EventsExporter: EventsExporterProtocol {
          configuration.endpoint.skippableTestsURL.absoluteString,
          configuration.endpoint.packfileURL.absoluteString,
          configuration.endpoint.settingsURL.absoluteString,
-         configuration.endpoint.knownTestsURL.absoluteString]
+         configuration.endpoint.knownTestsURL.absoluteString,
+         configuration.endpoint.testManagementTestsURL.absoluteString]
     }
 }

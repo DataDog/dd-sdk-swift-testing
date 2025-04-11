@@ -11,6 +11,7 @@ public struct TracerSettings {
     public var efd: EFD
     public var flakyTestRetriesEnabled: Bool
     public var knownTestsEnabled: Bool
+    public var testManagement: TestManagement
     
     public var efdIsEnabled: Bool {
         knownTestsEnabled && efd.enabled
@@ -29,7 +30,17 @@ public struct TracerSettings {
             requireGit = attrs.requireGit
         }
     }
-    
+
+    public struct TestManagement {
+        public var enabled: Bool
+        public var attemptToFixRetries: UInt
+
+        init(attrs: SettingsService.SettingsResponse.Data.Attributes.TestManagement) {
+            enabled = attrs.enabled
+            attemptToFixRetries = attrs.attemptToFixRetries
+        }
+    }
+
     public struct EFD {
         public var enabled: Bool
         public var slowTestRetries: TimeTable
@@ -85,6 +96,7 @@ public struct TracerSettings {
         knownTestsEnabled = attrs.knownTestsEnabled
         itr = ITR(attrs: attrs)
         efd = EFD(attrs: attrs.earlyFlakeDetection)
+        testManagement = TestManagement(attrs: attrs.testManagement)
     }
 }
 
@@ -206,7 +218,8 @@ extension SettingsService {
                 let requireGit: Bool
                 let flakyTestRetriesEnabled: Bool
                 let earlyFlakeDetection: EFD
-                
+                let testManagement: TestManagement
+
                 enum CodingKeys: String, CodingKey {
                     case itrEnabled = "itr_enabled"
                     case codeCoverage = "code_coverage"
@@ -215,6 +228,7 @@ extension SettingsService {
                     case requireGit = "require_git"
                     case flakyTestRetriesEnabled = "flaky_test_retries_enabled"
                     case earlyFlakeDetection = "early_flake_detection"
+                    case testManagement = "test_management"
                 }
                 
                 struct EFD: Codable {
@@ -226,6 +240,21 @@ extension SettingsService {
                         case enabled
                         case slowTestRetries = "slow_test_retries"
                         case faultySessionThreshold = "faulty_session_threshold"
+                    }
+                }
+
+                struct TestManagement: Codable {
+                    let enabled: Bool
+                    let attemptToFixRetries: UInt
+                    
+                    init(enabled: Bool = false, attemptToFixRetries: UInt = 0) {
+                        self.enabled = enabled
+                        self.attemptToFixRetries = attemptToFixRetries
+                    }
+
+                    enum CodingKeys: String, CodingKey {
+                        case enabled
+                        case attemptToFixRetries = "attempt_to_fix_retries"
                     }
                 }
             }

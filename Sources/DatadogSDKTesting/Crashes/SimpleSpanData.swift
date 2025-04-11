@@ -16,10 +16,11 @@ internal struct SimpleSpanData: Codable, Equatable {
     var name: String
     var startTime: Date
     var stringAttributes = [String: String]()
+    var sessionStartTime: Date?
     var moduleStartTime: Date?
     var suiteStartTime: Date?
 
-    init(spanData: SpanData, moduleStartTime: Date? = nil, suiteStartTime: Date? = nil) {
+    init(spanData: SpanData, sessionStertTine: Date? = nil, moduleStartTime: Date? = nil, suiteStartTime: Date? = nil) {
         self.traceIdHi = spanData.traceId.rawHigherLong
         self.traceIdLo = spanData.traceId.rawLowerLong
         self.spanId = spanData.spanId.rawValue
@@ -30,13 +31,14 @@ internal struct SimpleSpanData: Codable, Equatable {
         self.suiteStartTime = suiteStartTime
     }
 
-    internal init(traceIdHi: UInt64, traceIdLo: UInt64, spanId: UInt64, name: String, startTime: Date, stringAttributes: [String: String] = [String: String](), moduleStartTime: Date? = nil, suiteStartTime: Date? = nil) {
+    internal init(traceIdHi: UInt64, traceIdLo: UInt64, spanId: UInt64, name: String, startTime: Date, stringAttributes: [String: String] = [String: String](), sessionStertTine: Date? = nil, moduleStartTime: Date? = nil, suiteStartTime: Date? = nil) {
         self.traceIdHi = traceIdHi
         self.traceIdLo = traceIdLo
         self.spanId = spanId
         self.name = name
         self.startTime = startTime
         self.stringAttributes = stringAttributes
+        self.sessionStartTime = sessionStertTine
         self.moduleStartTime = moduleStartTime
         self.suiteStartTime = suiteStartTime
     }

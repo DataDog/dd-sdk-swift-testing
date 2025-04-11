@@ -25,6 +25,11 @@ public extension DynamicTag where V == Bool {
     @objc static var itrSkippableInstanceMethod: DDTag { DDTag(tag: .itrSkippableInstanceMethod) }
 }
 
+protocol UnskippableMethodOwner: AnyObject {
+    static var classId: ObjectIdentifier { get }
+    static var unskippableMethods: UnskippableMethodChecker { get }
+}
+
 final class UnskippableMethodChecker {
     let isSuiteUnskippable: Bool
     let skippableMethods: [String: Bool]
@@ -50,7 +55,11 @@ final class UnskippableMethodChecker {
     }
 }
 
-extension XCTestCase {
+extension XCTestCase: UnskippableMethodOwner {
+    class var classId: ObjectIdentifier {
+        ObjectIdentifier(self)
+    }
+    
     class var unskippableMethods: UnskippableMethodChecker {
         UnskippableMethodChecker(for: self)
     }

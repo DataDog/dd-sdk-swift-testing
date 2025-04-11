@@ -254,12 +254,16 @@ private extension EarlyFlakeDetectionTests {
                                         flakyTestRetriesEnabled: self.atr,
                                         earlyFlakeDetection: .init(enabled: self.efd,
                                                                    slowTestRetries: ["5s": 10, "30s": 5, "1m": 2, "5m": 1],
-                                                                   faultySessionThreshold: 30)))
+                                                                   faultySessionThreshold: 30), testManagement: .init()))
         }
         
         func knownTests(service: String, env: String, repositoryURL: String,
                         configurations: [String : String], customConfigurations: [String : String]) -> KnownTestsMap? {
             knownTests
+        }
+        
+        func testManagementTests(repositoryURL: String, commitMessage: String, module: String?) -> TestManagementTestsInfo? {
+            nil
         }
         
         func export(spans: [SpanData], explicitTimeout: TimeInterval?) -> SpanExporterResultCode {

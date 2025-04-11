@@ -48,6 +48,8 @@ internal enum EnvironmentKey: String, CaseIterable {
     case enableCiVisibilityFlakyRetries = "DD_CIVISIBILITY_FLAKY_RETRY_ENABLED"
     case ciVisibilityFlakyRetryCount = "DD_CIVISIBILITY_FLAKY_RETRY_COUNT"
     case ciVisibilityTotalFlakyRetryCount = "DD_CIVISIBILITY_TOTAL_FLAKY_RETRY_COUNT"
+    case testManagementEnabled = "DD_TEST_MANAGEMENT_ENABLED"
+    case testManagementAttemptToFixRetries = "DD_TEST_MANAGEMENT_ATTEMPT_TO_FIX_RETRIES"
     case disableSourceLocation = "DD_DISABLE_SOURCE_LOCATION"
     case localTestEnvironmentPort = "DD_LOCAL_TEST_ENVIRONMENT_PORT"
     case disableGitInformation = "DD_DISABLE_GIT_INFORMATION"

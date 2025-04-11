@@ -298,3 +298,22 @@ extension NotificationCenter {
         post(name: .testCaseFromRetryGroupWillFinish, object: testCase)
     }
 }
+
+extension RetryGroupSuccessStrategy {
+    var xcTest: DDXCTestRetryGroupRun.SuccessStrategy {
+        switch self {
+        case .allSucceeded: return .allSucceeded
+        case .atLeastOneSucceeded: return .atLeastOneSucceeded
+        case .atMostOneFailed: return .atMostOneFailed
+        }
+    }
+}
+
+extension RetryGroupSkipStrategy {
+    var xcTest: DDXCTestRetryGroupRun.SkipStrategy {
+        switch self {
+        case .allSkipped: return .allSkipped
+        case .atLeastOneSkipped: return .atLeastOneSkipped
+        }
+    }
+}

@@ -7,19 +7,19 @@
 import Foundation
 @_implementationOnly import OpenTelemetryApi
 
-public class DDTestSuite: NSObject, Encodable {
-    var name: String
-    var module: DDTestModule
-    var id: SpanId
+@objc(DDTestSuite)
+public final class Suite: NSObject, Encodable {
+    let name: String
+    let module: TestModule
+    let id: SpanId
     let startTime: Date
     var duration: UInt64
     var meta: [String: String] = [:]
     var metrics: [String: Double] = [:]
-    var status: DDTestStatus
-    var unskippable: Bool = false
+    var status: TestStatus
     var localization: String
 
-    init(name: String, module: DDTestModule, startTime: Date? = nil) {
+    init(name: String, module: TestModule, startTime: Date? = nil) {
         self.name = name
         self.module = module
         self.startTime = DDTestMonitor.instance?.crashedModuleInfo?.suiteStartTime ?? startTime ?? DDTestMonitor.clock.now
@@ -29,6 +29,7 @@ public class DDTestSuite: NSObject, Encodable {
         if DDTestMonitor.instance?.crashedModuleInfo?.crashedSuiteName == name {
             self.id = DDTestMonitor.instance?.crashedModuleInfo?.crashedSuiteId ?? SpanId.random()
             DDTestMonitor.instance?.crashedModuleInfo = nil
+            self.status = .fail
         } else {
             self.id = SpanId.random()
         }
@@ -44,22 +45,13 @@ public class DDTestSuite: NSObject, Encodable {
         duration = (endTime ?? DDTestMonitor.clock.now).timeIntervalSince(startTime).toNanoseconds
         /// Export module event
 
-        let suiteStatus: String
-        switch status {
-            case .pass:
-                suiteStatus = DDTagValues.statusPass
-            case .fail:
-                suiteStatus = DDTagValues.statusFail
-            case .skip:
-                suiteStatus = DDTagValues.statusSkip
-        }
-
         let suiteAttributes: [String: String] = [
             DDGenericTags.type: DDTagValues.typeSuiteEnd,
             DDTestTags.testSuite: name,
-            DDTestTags.testModule: module.bundleName,
-            DDTestTags.testFramework: module.testFramework,
-            DDTestTags.testStatus: suiteStatus,
+            DDTestTags.testModule: module.name,
+            DDTestTags.testFramework: module.session.testFramework,
+            DDTestTags.testStatus: status.spanAttribute,
+            DDTestSuiteVisibilityTags.testSessionId: String(session.id.rawValue),
             DDTestSuiteVisibilityTags.testModuleId: String(module.id.rawValue),
             DDTestSuiteVisibilityTags.testSuiteId: String(id.rawValue)
         ]
@@ -70,14 +62,9 @@ public class DDTestSuite: NSObject, Encodable {
         
         meta[DDUISettingsTags.uiSettingsSuiteLocalization] = localization
         meta[DDUISettingsTags.uiSettingsModuleLocalization] = module.localization
-        if unskippable { meta[DDItrTags.itrUnskippable] = "true" }
         
-        DDTestMonitor.tracer.eventsExporter?.exportEvent(event: DDTestSuiteEnvelope(self))
+        DDTestMonitor.tracer.eventsExporter?.exportEvent(event: SuiteEnvelope(self))
         Log.debug("Exported suite_end event suiteId: \(self.id)")
-    }
-    
-    func testStart(name: String, itr: DDTest.ITRStatus, startTime: Date? = nil) -> DDTest {
-        DDTest(name: name, suite: self, module: module, itr: itr, startTime: startTime)
     }
 
     /// Ends the test suite 
@@ -91,22 +78,48 @@ public class DDTestSuite: NSObject, Encodable {
     ///   - key: The name of the tag, if a tag exists with the name it will be
     ///     replaced with the new value
     ///   - value: The value of the tag, can be a number or a string.
-    @objc public func setTag(key: String, value: Any) {}
+    @objc public func setTag(key: String, value: Any) {
+        trySet(tag: key, value: value)
+    }
 
     /// Starts a test in this suite
     /// - Parameters:
     ///   - name: name of the suite
     ///   - startTime: Optional, the time where the test started
-    @objc public func testStart(name: String, startTime: Date? = nil) -> DDTest {
-        testStart(name: name, itr: .none, startTime: startTime)
+    @objc public func testStart(name: String, startTime: Date? = nil) -> Test {
+        Test(name: name, suite: self, startTime: startTime)
     }
 
-    @objc public func testStart(name: String) -> DDTest {
+    @objc public func testStart(name: String) -> Test {
         testStart(name: name, startTime: nil)
     }
 }
 
-extension DDTestSuite {
+extension Suite: TestSuite {
+    func set(tag name: String, value: SpanAttributeConvertible) {
+        meta[name] = value.spanAttribute
+    }
+    
+    func set(metric name: String, value: Double) {
+        metrics[name] = value
+    }
+    
+    func setSkipped() {
+        status = .skip
+    }
+    
+    func set(failed reason: TestError?) {
+        status = .fail
+        if let error = reason {
+            set(errorTags: error)
+        }
+        module.set(failed: nil)
+    }
+    
+    func end(time: Date?) { end(endTime: time) }
+}
+
+extension Suite {
     enum StaticCodingKeys: String, CodingKey {
         case test_session_id
         case test_module_id
@@ -123,7 +136,7 @@ extension DDTestSuite {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: StaticCodingKeys.self)
-        try container.encode(module.sessionId.rawValue, forKey: .test_session_id)
+        try container.encode(session.id.rawValue, forKey: .test_session_id)
         try container.encode(module.id.rawValue, forKey: .test_module_id)
         try container.encode(id.rawValue, forKey: .test_suite_id)
         try container.encode(startTime.timeIntervalSince1970.toNanoseconds, forKey: .start)
@@ -131,12 +144,12 @@ extension DDTestSuite {
         try container.encode(meta, forKey: .meta)
         try container.encode(metrics, forKey: .metrics)
         try container.encode(status == .fail ? 1 : 0, forKey: .error)
-        try container.encode("\(module.testFramework).suite", forKey: .name)
+        try container.encode("\(session.testFramework).suite", forKey: .name)
         try container.encode("\(name)", forKey: .resource)
         try container.encode(DDTestMonitor.env.service, forKey: .service)
     }
 
-    struct DDTestSuiteEnvelope: Encodable {
+    struct SuiteEnvelope: Encodable {
         enum CodingKeys: String, CodingKey {
             case type
             case version
@@ -146,9 +159,9 @@ extension DDTestSuite {
         let version: Int = 1
 
         let type: String = DDTagValues.typeSuiteEnd
-        let content: DDTestSuite
+        let content: Suite
 
-        init(_ content: DDTestSuite) {
+        init(_ content: Suite) {
             self.content = content
         }
     }

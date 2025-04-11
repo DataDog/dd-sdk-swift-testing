@@ -119,6 +119,15 @@ public enum Endpoint: CustomDebugStringConvertible {
         default: return mainApi(endpoint: endpoint)!
         }
     }
+
+    internal var testManagementTestsURL: URL {
+        let endpoint = "/api/v2/test/libraries/test-management/tests"
+        switch self {
+        case let .other(testsBaseURL: url, logsBaseURL: _): return url.appendingPathComponent(endpoint)
+        case let .custom(testsURL: testsURL, _): return testsURL
+        default: return mainApi(endpoint: endpoint)!
+        }
+    }
     
     public var debugDescription: String {
         switch self {

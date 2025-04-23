@@ -154,7 +154,7 @@ class DDNetworkInstrumentation {
         if let name = String(cString: __dispatch_queue_get_label(nil), encoding: .utf8) {
             span.setAttribute(key: DDTags.contextQueueName, value: name)
         }
-#if swift(>=5.5.2)
+
         if #available(macOS 10.15, iOS 13.0, tvOS 13.0, *) {
             withUnsafeCurrentTask { task in
                 if let hash = task?.hashValue {
@@ -162,7 +162,7 @@ class DDNetworkInstrumentation {
                 }
             }
         }
-#endif
+        
     }
 
     func endAndCleanAliveSpans() {

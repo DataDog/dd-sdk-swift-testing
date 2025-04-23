@@ -52,6 +52,10 @@
 		A77C123C2D9425C7009C2BA1 /* KnownTestsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77C123B2D9425C7009C2BA1 /* KnownTestsTests.swift */; };
 		A77C123E2D9474E6009C2BA1 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77C123D2D9474E6009C2BA1 /* Models.swift */; };
 		A7A98C202C8F44BC00C93E59 /* CoverageSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7A98C1F2C8F44BC00C93E59 /* CoverageSettings.swift */; };
+		A7B2671C2DB694B000505E7B /* OpenTelemetryApi in Frameworks */ = {isa = PBXBuildFile; productRef = A7B2671B2DB694B000505E7B /* OpenTelemetryApi */; };
+		A7B2671E2DB694B000505E7B /* OpenTelemetrySdk in Frameworks */ = {isa = PBXBuildFile; productRef = A7B2671D2DB694B000505E7B /* OpenTelemetrySdk */; };
+		A7B267222DB694EC00505E7B /* InMemoryExporter in Frameworks */ = {isa = PBXBuildFile; productRef = A7B267212DB694EC00505E7B /* InMemoryExporter */; };
+		A7B267242DB694EC00505E7B /* URLSessionInstrumentation in Frameworks */ = {isa = PBXBuildFile; productRef = A7B267232DB694EC00505E7B /* URLSessionInstrumentation */; };
 		A7B39C6C2BCFC799007F98B2 /* CDatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7E232DC2BC6E68B0087D8F8 /* CDatadogSDKTesting.framework */; };
 		A7B39C702BCFCD77007F98B2 /* SubprocessWait.c in Sources */ = {isa = PBXBuildFile; fileRef = A7B39C6F2BCFCD77007F98B2 /* SubprocessWait.c */; };
 		A7B39C722BCFD234007F98B2 /* SubprocessWait.h in Headers */ = {isa = PBXBuildFile; fileRef = A7B39C712BCFD234007F98B2 /* SubprocessWait.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -152,11 +156,8 @@
 		A7FC264A2BA1ECF800067E26 /* File.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1827D7790300F4018A /* File.swift */; };
 		A7FC264C2BA1ED0C00067E26 /* ExporterConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0C27D7790300F4018A /* ExporterConfiguration.swift */; };
 		A7FC264D2BA1ED1200067E26 /* EventsExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1927D7790300F4018A /* EventsExporter.swift */; };
-		A7FC264E2BA1EFEC00067E26 /* OpenTelemetrySdk in Frameworks */ = {isa = PBXBuildFile; productRef = E1DCAF6A284A1FE000F44BE3 /* OpenTelemetrySdk */; };
 		A7FC26502BA1F1E600067E26 /* CrashReporter in Frameworks */ = {isa = PBXBuildFile; productRef = E157A718256E9D1D00CBCA52 /* CrashReporter */; };
 		A7FC26512BA1F1E600067E26 /* SigmaSwiftStatistics in Frameworks */ = {isa = PBXBuildFile; productRef = E157A71A256E9D1D00CBCA52 /* SigmaSwiftStatistics */; };
-		A7FC26522BA1F1E600067E26 /* InMemoryExporter in Frameworks */ = {isa = PBXBuildFile; productRef = E1BE9B5B2732B2A300B92AD4 /* InMemoryExporter */; };
-		A7FC26532BA1F1E600067E26 /* URLSessionInstrumentation in Frameworks */ = {isa = PBXBuildFile; productRef = E1BE9B5D2732B2A300B92AD4 /* URLSessionInstrumentation */; };
 		A7FC26552BA1F1F900067E26 /* EventsExporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25802BA1E87400067E26 /* EventsExporter.framework */; };
 		A7FC265E2BA1F65200067E26 /* fixtures in Resources */ = {isa = PBXBuildFile; fileRef = A7C292122B9B2B39009C2979 /* fixtures */; };
 		A7FC265F2BA1F66E00067E26 /* DDTestSessionApiTests.m in Sources */ = {isa = PBXBuildFile; fileRef = E171DC91270DBCAB00A12B79 /* DDTestSessionApiTests.m */; };
@@ -218,7 +219,6 @@
 		A7FC26DF2BA21B7D00067E26 /* DatadogSDKTesting.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A7FC26EB2BA866BB00067E26 /* NIO in Frameworks */ = {isa = PBXBuildFile; productRef = A7FC26EA2BA866BB00067E26 /* NIO */; };
 		A7FC26ED2BA866D000067E26 /* NIOHTTP1 in Frameworks */ = {isa = PBXBuildFile; productRef = A7FC26EC2BA866D000067E26 /* NIOHTTP1 */; };
-		A7FC26F52BA867BA00067E26 /* OpenTelemetryApi in Frameworks */ = {isa = PBXBuildFile; productRef = A7FC26F42BA867BA00067E26 /* OpenTelemetryApi */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -523,12 +523,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				A7E0056D2C766EF7004D4B78 /* CoreTelephony.framework in Frameworks */,
-				A7FC26532BA1F1E600067E26 /* URLSessionInstrumentation in Frameworks */,
+				A7B267222DB694EC00505E7B /* InMemoryExporter in Frameworks */,
 				A7E233312BC82CD10087D8F8 /* Kronos in Frameworks */,
 				A7FC26502BA1F1E600067E26 /* CrashReporter in Frameworks */,
 				A74EB8E02D0AE8A600FAD9B8 /* CodeCoverage in Frameworks */,
+				A7B267242DB694EC00505E7B /* URLSessionInstrumentation in Frameworks */,
 				A7FC26512BA1F1E600067E26 /* SigmaSwiftStatistics in Frameworks */,
-				A7FC26522BA1F1E600067E26 /* InMemoryExporter in Frameworks */,
 				A7FC26552BA1F1F900067E26 /* EventsExporter.framework in Frameworks */,
 				A7E233072BC6F46F0087D8F8 /* CDatadogSDKTesting.framework in Frameworks */,
 			);
@@ -546,10 +546,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A7FC264E2BA1EFEC00067E26 /* OpenTelemetrySdk in Frameworks */,
-				A7FC26F52BA867BA00067E26 /* OpenTelemetryApi in Frameworks */,
 				A7E2330F2BC6F4E70087D8F8 /* CDatadogSDKTesting.framework in Frameworks */,
 				A7D7E6502D074D9200B49C35 /* CodeCoverage in Frameworks */,
+				A7B2671C2DB694B000505E7B /* OpenTelemetryApi in Frameworks */,
+				A7B2671E2DB694B000505E7B /* OpenTelemetrySdk in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1228,10 +1228,10 @@
 			packageProductDependencies = (
 				E157A718256E9D1D00CBCA52 /* CrashReporter */,
 				E157A71A256E9D1D00CBCA52 /* SigmaSwiftStatistics */,
-				E1BE9B5B2732B2A300B92AD4 /* InMemoryExporter */,
-				E1BE9B5D2732B2A300B92AD4 /* URLSessionInstrumentation */,
 				A7E233302BC82CD10087D8F8 /* Kronos */,
 				A74EB8DF2D0AE8A600FAD9B8 /* CodeCoverage */,
+				A7B267212DB694EC00505E7B /* InMemoryExporter */,
+				A7B267232DB694EC00505E7B /* URLSessionInstrumentation */,
 			);
 			productName = DatadogSDKTesting;
 			productReference = A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */;
@@ -1274,9 +1274,9 @@
 			);
 			name = EventsExporter;
 			packageProductDependencies = (
-				E1DCAF6A284A1FE000F44BE3 /* OpenTelemetrySdk */,
-				A7FC26F42BA867BA00067E26 /* OpenTelemetryApi */,
 				A7D7E64F2D074D9200B49C35 /* CodeCoverage */,
+				A7B2671B2DB694B000505E7B /* OpenTelemetryApi */,
+				A7B2671D2DB694B000505E7B /* OpenTelemetrySdk */,
 			);
 			productName = EventsExporter;
 			productReference = A7FC25802BA1E87400067E26 /* EventsExporter.framework */;
@@ -1389,10 +1389,10 @@
 			packageReferences = (
 				E1FB4839253891650083B263 /* XCRemoteSwiftPackageReference "plcrashreporter" */,
 				E17B7AA6253F02580081D7F3 /* XCRemoteSwiftPackageReference "SigmaSwiftStatistics" */,
-				E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */,
 				E141EB5727EB44400057D747 /* XCRemoteSwiftPackageReference "swift-nio" */,
 				A7E2332F2BC82CD10087D8F8 /* XCRemoteSwiftPackageReference "Kronos" */,
 				A7D7E64E2D074D9200B49C35 /* XCRemoteSwiftPackageReference "swift-code-coverage" */,
+				A7B2671A2DB694B000505E7B /* XCRemoteSwiftPackageReference "opentelemetry-swift" */,
 			);
 			productRefGroup = E1ABA04B25231E2500ED8AEF /* Products */;
 			projectDirPath = "";
@@ -2320,7 +2320,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 2.5.3;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
@@ -2330,7 +2330,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,6";
-				TVOS_DEPLOYMENT_TARGET = 11.0;
+				TVOS_DEPLOYMENT_TARGET = 12.0;
 				USE_HEADERMAP = NO;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
@@ -2391,7 +2391,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LLVM_LTO = YES_THIN;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 2.5.3;
@@ -2401,7 +2401,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,6";
-				TVOS_DEPLOYMENT_TARGET = 11.0;
+				TVOS_DEPLOYMENT_TARGET = 12.0;
 				USE_HEADERMAP = NO;
 				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -2487,6 +2487,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		A7B2671A2DB694B000505E7B /* XCRemoteSwiftPackageReference "opentelemetry-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ypopovych/opentelemetry-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.15.0;
+			};
+		};
 		A7D7E64E2D074D9200B49C35 /* XCRemoteSwiftPackageReference "swift-code-coverage" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/DataDog/swift-code-coverage.git";
@@ -2569,6 +2577,26 @@
 			package = A7D7E64E2D074D9200B49C35 /* XCRemoteSwiftPackageReference "swift-code-coverage" */;
 			productName = CodeCoverage;
 		};
+		A7B2671B2DB694B000505E7B /* OpenTelemetryApi */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A7B2671A2DB694B000505E7B /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			productName = OpenTelemetryApi;
+		};
+		A7B2671D2DB694B000505E7B /* OpenTelemetrySdk */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A7B2671A2DB694B000505E7B /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			productName = OpenTelemetrySdk;
+		};
+		A7B267212DB694EC00505E7B /* InMemoryExporter */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A7B2671A2DB694B000505E7B /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			productName = InMemoryExporter;
+		};
+		A7B267232DB694EC00505E7B /* URLSessionInstrumentation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A7B2671A2DB694B000505E7B /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
+			productName = URLSessionInstrumentation;
+		};
 		A7D7E64F2D074D9200B49C35 /* CodeCoverage */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = A7D7E64E2D074D9200B49C35 /* XCRemoteSwiftPackageReference "swift-code-coverage" */;
@@ -2609,11 +2637,6 @@
 			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
 			productName = OpenTelemetryApi;
 		};
-		A7FC26F42BA867BA00067E26 /* OpenTelemetryApi */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
-			productName = OpenTelemetryApi;
-		};
 		A7FC26F62BA87E2900067E26 /* URLSessionInstrumentation */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
@@ -2643,21 +2666,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E157A71B256E9D1D00CBCA52 /* XCRemoteSwiftPackageReference "SigmaSwiftStatistics" */;
 			productName = SigmaSwiftStatistics;
-		};
-		E1BE9B5B2732B2A300B92AD4 /* InMemoryExporter */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
-			productName = InMemoryExporter;
-		};
-		E1BE9B5D2732B2A300B92AD4 /* URLSessionInstrumentation */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
-			productName = URLSessionInstrumentation;
-		};
-		E1DCAF6A284A1FE000F44BE3 /* OpenTelemetrySdk */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
-			productName = OpenTelemetrySdk;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

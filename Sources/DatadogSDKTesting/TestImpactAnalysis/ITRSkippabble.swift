@@ -34,7 +34,10 @@ final class UnskippableMethodChecker {
     let isSuiteUnskippable: Bool
     let skippableMethods: [String: Bool]
     
-    init(for type: XCTestCase.Type) {
+    convenience init(for type: XCTestCase.Type) {
+        let isSuiteUnskippable: Bool
+        let skippableMethods: [String: Bool]
+        
         if let tags = type.maybeTypeTags {
             let pairs = tags.tagged(dynamic: .itrSkippableInstanceMethod,
                                     prefixed: "test")
@@ -48,6 +51,12 @@ final class UnskippableMethodChecker {
             isSuiteUnskippable = false
             skippableMethods = [:]
         }
+        self.init(isSuiteUnskippable: isSuiteUnskippable, skippableMethods: skippableMethods)
+    }
+    
+    init(isSuiteUnskippable: Bool, skippableMethods: [String: Bool]) {
+        self.isSuiteUnskippable = isSuiteUnskippable
+        self.skippableMethods = skippableMethods
     }
     
     @inlinable func canSkip(method name: String) -> Bool {

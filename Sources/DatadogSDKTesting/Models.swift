@@ -48,6 +48,14 @@ protocol TestSuite: TestContainer {
 
 extension TestSuite {
     var session: any TestSession { module.session }
+    
+    func set(status: TestStatus) {
+        switch status {
+        case .fail: set(failed: nil)
+        case .skip: setSkipped()
+        case .pass: break
+        }
+    }
 }
 
 protocol TestRun: TestModel {

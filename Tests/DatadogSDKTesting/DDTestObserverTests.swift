@@ -35,7 +35,7 @@ internal class DDTestObserverTests: XCTestCase {
             XCTFail("Bad observer state: \(testObserver.state)")
             return
         }
-        XCTAssertFalse(module.bundleName.isEmpty)
+        XCTAssertFalse(module.name.isEmpty)
         testObserver.testBundleDidFinish(Bundle.main)
     }
 

@@ -16,7 +16,7 @@ public final class Test: NSObject {
 
     let name: String
     let startTime: Date
-    let span: Span
+    var span: Span
     var duration: UInt64
 
     let suite: TestSuite
@@ -258,7 +258,7 @@ extension Test {
             span.status = .ok
         case .fail:
             span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusFail)
-            suite.set(failed: nil)
+            // suite.set(failed: nil)
             setErrorInformation()
             span.status = .error(description: "Test failed")
         case .skip:

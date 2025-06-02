@@ -69,6 +69,11 @@ class DDTestObserver: NSObject, XCTestObservation {
         module.end()
         state = .none
         Log.debug("testBundleDidFinish: \(module.name)")
+        
+        // Fail session if module failed
+        if case .fail = module.status {
+            module.session.set(failed: nil)
+        }
         module.session.end()
     }
 
@@ -138,6 +143,9 @@ class DDTestObserver: NSObject, XCTestObservation {
                 Log.print("testSuiteDidFinish: Bad suite: \(testSuite.name), expected: \(suite.name)")
                 return
             }
+            // Set suite status based on it's test groups.
+            // Features will setup proper skip and fail strategies for the groups.
+            suite.set(status: testSuite.testRun?.status ?? .pass)
             suite.end()
             state = context.back(from: suite)
             Log.debug("testSuiteDidFinish: \(testSuite.name)")

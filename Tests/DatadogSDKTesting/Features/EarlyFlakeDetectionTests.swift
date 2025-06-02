@@ -222,16 +222,16 @@ private extension EarlyFlakeDetectionTests {
             self.knownTests = knownTests
         }
         
-        var eventsSuiteEnd: [DDTestSuite.DDTestSuiteEnvelope] {
-            events.compactMap { $0 as? DDTestSuite.DDTestSuiteEnvelope }
+        var eventsSuiteEnd: [Suite.SuiteEnvelope] {
+            events.compactMap { $0 as? Suite.SuiteEnvelope }
         }
         
-        var eventsModuleEnd: [DDTestModule.DDTestModuleEnvelope] {
-            events.compactMap { $0 as? DDTestModule.DDTestModuleEnvelope }
+        var eventsModuleEnd: [Module.ModuleEnvelope] {
+            events.compactMap { $0 as? Module.ModuleEnvelope }
         }
         
-        var eventsSessionEnd: [DDTestSession.DDTestSessionEnvelope] {
-            events.compactMap { $0 as? DDTestSession.DDTestSessionEnvelope }
+        var eventsSessionEnd: [Session.SessionEnvelope] {
+            events.compactMap { $0 as? Session.SessionEnvelope }
         }
         
         var endpointURLs: Set<String> { Set() }

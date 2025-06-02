@@ -9,7 +9,7 @@ import XCTest
 @testable import DatadogSDKTesting
 
 final class KnownTestsTests: XCTestCase {
-    func testKnownTestIsMarked() {
+    func testUnknownTestIsMarkedProperly() {
         let module = "SomeModule"
         let knownSuite = "KnownSuite"
         let knownSuiteKnownTest = "testKnownSuiteKnownTest"
@@ -22,31 +22,24 @@ final class KnownTestsTests: XCTestCase {
         
         let feature: TestHooksFeature = KnownTests(tests: knownTestsMap)
         
-        DDTestModule(bundleName: <#T##String#>, startTime: <#T##Date?#>)
+        let testsToRun: Mocks.Runner.Tests = [module: [
+            knownSuite: [
+                knownSuiteKnownTest: [.pass()],
+                knownSuiteUnknownTest: [.pass()]
+            ],
+            unknownSuite: [unknownSuiteUnknownTest: [.fail(.init(type: "SomeERROR"))]]
+        ]]
         
-        feature.testSuiteWillStart(suite: <#T##DDTestSuite#>, testsCount: <#T##UInt#>)
+        let results = Mocks.Runner(features: [feature], tests: testsToRun).run()
         
-    }
-}
-
-extension KnownTestsTests {
-    final class NamedTest: XCTestCase {
-        private var _method: String!
-        private var _suite: String!
+        let knownSuiteResult = results[module]![knownSuite]!
+        let unknownSuiteResult = results[module]![unknownSuite]!
         
-        override var name: String { "-[\(_suite!) \(_method!)]" }
+        XCTAssertNotNil(knownSuiteResult[knownSuiteKnownTest]?[0])
+        XCTAssertNil(knownSuiteResult[knownSuiteKnownTest]?[0]?.tags[DDTestTags.testIsNew])
         
-        func _emptyMethod() {}
+        XCTAssertEqual(knownSuiteResult[knownSuiteUnknownTest]?[0]?.tags[DDTestTags.testIsNew], "true")
         
-        static func suite(named name: String, methods: [String]) -> XCTestSuite {
-            let suite = XCTestSuite(name: name)
-            for method in methods {
-                let test = Self(selector: #selector(_emptyMethod))
-                test._method = method
-                test._suite = name
-                suite.addTest(test)
-            }
-            return suite
-        }
+        XCTAssertEqual(unknownSuiteResult[unknownSuiteUnknownTest]?[0]?.tags[DDTestTags.testIsNew], "true")
     }
 }

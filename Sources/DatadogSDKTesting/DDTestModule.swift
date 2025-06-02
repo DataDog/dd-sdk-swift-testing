@@ -118,10 +118,12 @@ extension Module: TestModule {
     
     func set(failed reason: TestError?) {
         status = .fail
+        var errorMessage = "Module \(name) failed"
         if let error = reason {
             set(errorTags: error)
+            errorMessage += ": \(error)"
         }
-        session.set(failed: nil)
+        session.set(failed: .init(type: "ModuleFailed", message: errorMessage))
     }
     
     func end(time: Date?) { end(endTime: time) }

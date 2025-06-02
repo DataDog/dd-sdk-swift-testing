@@ -110,10 +110,12 @@ extension Suite: TestSuite {
     
     func set(failed reason: TestError?) {
         status = .fail
+        var errorMessage = "Suite \(name) failed"
         if let error = reason {
             set(errorTags: error)
+            errorMessage += ": \(error)"
         }
-        module.set(failed: nil)
+        module.set(failed: .init(type: "SuiteFailed", message: errorMessage))
     }
     
     func end(time: Date?) { end(endTime: time) }

@@ -6,6 +6,7 @@
 
 import Foundation
 @testable import DatadogSDKTesting
+import protocol EventsExporter.Logger
 import OpenTelemetryApi
 
 enum Mocks {
@@ -214,10 +215,22 @@ enum Mocks {
         }
     }
     
-    final class Test: TestBase, TestRun, Hashable, Equatable {
+    enum ErrorSuppressionStatus {
+        case normal
+        case suppressed
+        case unsuppressed
+    }
+    
+    final class Test: TestBase, TestRun, Hashable, Equatable, CustomDebugStringConvertible {
         weak var _suite: (any TestSuite)?
         var suite: any TestSuite { _suite! }
         var error: TestError? = nil
+        var errorStatus: ErrorSuppressionStatus = .normal
+        
+        var xcStatus: TestStatus {
+            guard status == .fail else { return status }
+            return errorStatus == .suppressed ? .pass : .fail
+        }
         
         init(name: String, suite: any TestSuite) {
             self._suite = suite
@@ -241,7 +254,7 @@ enum Mocks {
         }
         
         var debugDescription: String {
-            return "\(status)"
+            return "\(name)>\(status)"
         }
         
         static func == (lhs: Mocks.Test, rhs: Mocks.Test) -> Bool {
@@ -263,6 +276,47 @@ enum Mocks {
             hasher.combine(module.name)
             hasher.combine(suite.id)
             hasher.combine(suite.name)
+        }
+    }
+    
+    final class CatchLogger: EventsExporter.Logger {
+        var logs: [String]
+        var isDebug: Bool
+        
+        init(isDebug: Bool = true) {
+            self.logs = []
+            self.isDebug = isDebug
+        }
+        
+        func clear() {
+            self.logs.removeAll()
+        }
+        
+        func print(_ message: String) {
+            print(prefix: "[DatadogSDKTesting] ", message: message)
+        }
+        
+        func debug(_ wrapped: @autoclosure () -> String) {
+            if isDebug {
+                print(prefix: "[Debug][DatadogSDKTesting] ", message: wrapped())
+            }
+        }
+        
+        func measure<T>(name: String, _ operation: () throws -> T) rethrows -> T {
+            if isDebug {
+                let startTime = CFAbsoluteTimeGetCurrent()
+                defer {
+                    let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
+                    print(prefix: "[Debug][DatadogSDKTesting] ", message: "Time elapsed for \(name): \(timeElapsed) s.")
+                }
+                return try operation()
+            } else {
+                return try operation()
+            }
+        }
+        
+        private func print(prefix: String, message: String) {
+            logs.append("\(prefix)\(message)")
         }
     }
 }

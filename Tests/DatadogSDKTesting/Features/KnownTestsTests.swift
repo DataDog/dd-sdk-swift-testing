@@ -8,7 +8,7 @@
 import XCTest
 @testable import DatadogSDKTesting
 
-final class KnownTestsTests: XCTestCase {
+final class KnownTestsLogicTests: XCTestCase {
     func testUnknownTestIsMarkedProperly() {
         let module = "SomeModule"
         let knownSuite = "KnownSuite"
@@ -24,10 +24,10 @@ final class KnownTestsTests: XCTestCase {
         
         let testsToRun: Mocks.Runner.Tests = [module: [
             knownSuite: [
-                knownSuiteKnownTest: [.pass()],
-                knownSuiteUnknownTest: [.pass()]
+                knownSuiteKnownTest: .pass(),
+                knownSuiteUnknownTest: .pass()
             ],
-            unknownSuite: [unknownSuiteUnknownTest: [.fail(.init(type: "SomeERROR"))]]
+            unknownSuite: [unknownSuiteUnknownTest: .fail("SomeERROR")]
         ]]
         
         let results = Mocks.Runner(features: [feature], tests: testsToRun).run()

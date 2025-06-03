@@ -9,39 +9,68 @@ import Foundation
 
 extension Mocks {
     class Runner {
-        struct TestResult {
-            enum Result {
-                case pass
-                case fail(TestError)
-                case skip(String)
-            }
-            
-            var result: Result
-            var duration: Double
+        enum TestResult {
+            case pass
+            case fail(TestError)
+            case skip(String)
             
             var status: TestStatus {
-                switch self.result {
+                switch self {
                 case .fail(_): return .fail
                 case .pass: return .pass
                 case .skip(_): return .skip
                 }
             }
+        }
+        
+        struct TestMethod {
+            let duration: TimeInterval?
+            let method: () -> TestResult
             
-            static func pass(_ duration: Double = .random(in: 0...30.535)) -> Self {
-                .init(result: .pass, duration: duration)
+            init(duration: TimeInterval? = nil, method: @escaping () -> TestResult) {
+                self.method = method
+                self.duration = duration
             }
             
-            static func fail(_ error: TestError, _ duration: Double = .random(in: 0...30.535)) -> Self {
-                .init(result: .fail(error), duration: duration)
+            static func withState<State>(_ initial: State, duration: TimeInterval? = nil, method: @escaping (inout State) -> TestResult) -> Self {
+                var state = initial
+                return TestMethod(duration: duration) { method(&state) }
             }
             
-            static func skip(_ reason: String, _ duration: Double = 0) -> Self {
-                .init(result: .skip(reason), duration: duration)
+            static func runCounter<State>(_ initial: State, duration: TimeInterval? = nil, method: @escaping (UInt, inout State) -> TestResult) -> Self {
+                withState((UInt(0), initial), duration: duration) { state in
+                    defer { state.0 += 1 }
+                    return method(state.0, &state.1)
+                }
+            }
+            
+            static func failOddRuns(_ duration: TimeInterval? = nil) -> Self {
+                runCounter((), duration: duration) { (count, _) in
+                    (count+1).isMultiple(of: 2) ? .pass : .fail(.init(type: "Odd Runs Should Fail"))
+                }
+            }
+            
+            static func failEvenRuns(_ duration: TimeInterval? = nil) -> Self {
+                runCounter((), duration: duration) { (count, _) in
+                    (count+1).isMultiple(of: 2) ? .fail(.init(type: "Even Runs Should Fail")) : .pass
+                }
+            }
+            
+            static func skip(_ reason: String) -> Self {
+                TestMethod(duration: 0.0001) { .skip(reason) }
+            }
+            
+            static func pass(duration: TimeInterval? = nil) -> Self {
+                TestMethod(duration: duration) { .pass }
+            }
+            
+            static func fail(_ reason: String, duration: TimeInterval? = nil) -> Self {
+                TestMethod(duration: duration) { .fail(.init(type: reason)) }
             }
         }
         
         // Module, Suite, Test, [Runs]
-        typealias Tests = [String: [String: [String: [TestResult]]]]
+        typealias Tests = [String: [String: [String: TestMethod]]]
         
         var tests: Tests
         var features: [any TestHooksFeature]
@@ -51,18 +80,8 @@ extension Mocks {
             self.features = features
         }
         
-        func add(_ result: TestResult, module: String, suite: String, test: String) {
-            tests.get(key: module, or: [:]) { module in
-                module.get(key: suite, or: [:]) { suite in
-                    suite.get(key: test, or: []) { test in
-                        test.append(result)
-                    }
-                }
-            }
-        }
-        
         func run() -> Session {
-            let session = Session(name: "UnitTestSession")
+            let session = Session(name: "MockTestSession")
             for (module, suites) in tests {
                 let mod = _run(module: module, suites: suites, session: session)
                 session.add(module: mod)
@@ -70,7 +89,7 @@ extension Mocks {
             return session
         }
         
-        func _run(module name: String, suites: [String: [String: [TestResult]]], session: Session) -> Module {
+        func _run(module name: String, suites: [String: [String: TestMethod]], session: Session) -> Module {
             let module = Module(name: name, session: session)
             for (suite, tests) in suites {
                 let st = _run(suite: suite, tests: tests, module: module)
@@ -80,18 +99,18 @@ extension Mocks {
             return module
         }
         
-        func _run(suite name: String, tests: [String: [TestResult]], module: Module) -> Suite {
+        func _run(suite name: String, tests: [String: TestMethod], module: Module) -> Suite {
             let suite = Suite(name: name, module: module)
             features.forEach { $0.testSuiteWillStart(suite: suite, testsCount: UInt(tests.count)) }
-            for (test, runs) in tests {
-                let group = _run(group: test, runs: runs, suite: suite)
+            for (test, method) in tests {
+                let group = _run(group: test, method: method, suite: suite)
                 suite.add(group: group)
             }
             suite.end()
             return suite
         }
         
-        func _run(group name: String, runs: [TestResult], suite: Suite) -> Group {
+        func _run(group name: String, method: TestMethod, suite: Suite) -> Group {
             let group = Group(name: name, suite: suite)
             
             let configAndFeature: (TestRetryGroupConfiguration, String)? = features.reduce(nil) { prev, feature in
@@ -111,28 +130,25 @@ extension Mocks {
                 group.successStrategy = config.successStrategy
                 
                 if config.skipStatus.isSkipped {
-                    retryReason = _run(test: name, result: .skip(featureId), skipStatus: skipStatus,
+                    retryReason = _run(test: name, method: .skip(featureId), skipStatus: skipStatus,
                                        retryReason: retryReason, group: group)
                 }
             }
             
-            var runsIterator = runs.makeIterator()
             if !skipStatus.isSkipped, retryReason == nil {
-                let run = runsIterator.next() ?? .fail(.init(type: "MOCK RUNNER: NO TEST RUN AVAILABLE"))
-                retryReason = _run(test: name, result: run, skipStatus: skipStatus,
+                retryReason = _run(test: name, method: method, skipStatus: skipStatus,
                                    retryReason: retryReason, group: group)
             }
             
             while retryReason != nil {
-                let run = runsIterator.next() ?? .fail(.init(type: "MOCK RUNNER: NO TEST RUN AVAILABLE"))
-                retryReason = _run(test: name, result: run, skipStatus: skipStatus,
+                retryReason = _run(test: name, method: method, skipStatus: skipStatus,
                                    retryReason: retryReason, group: group)
             }
             
             return group
         }
         
-        func _run(test name: String, result: TestResult, skipStatus: SkipStatus, retryReason: String?, group: Group) -> String? {
+        func _run(test name: String, method: TestMethod, skipStatus: SkipStatus, retryReason: String?, group: Group) -> String? {
             let test = Test(name: name, suite: group.suite)
             
             for feature in features {
@@ -142,9 +158,10 @@ extension Mocks {
                                       failedExecutionCount: group.failedExecutionCount)
             }
             
-            var newTestResult = result
+            let result = method.method()
+            let duration = method.duration ?? (Date().timeIntervalSince(test.startTime))
             
-            if case .fail(let testError) = result.result {
+            if case .fail(let testError) = result {
                 test.add(error: testError)
                 
                 let suppress = features.reduce((false, "")) { prev, feature in
@@ -156,15 +173,12 @@ extension Mocks {
                 }
                 
                 if suppress.0 {
-                    newTestResult = .pass()
-//                    print("Suppressed issue \(test) for test \(testCase) reason \(suppress.1)")
+                    test.errorStatus = .suppressed
                 }
             }
             
-            // We are using original status. Error could be suppressed by feature
-            let status: TestStatus = result.status
             for feature in features {
-                feature.testWillFinish(test: test, duration: result.duration, withStatus: status,
+                feature.testWillFinish(test: test, duration: duration, withStatus: result.status,
                                        skipStatus: skipStatus,
                                        executionCount: group.executionCount,
                                        failedExecutionCount: group.failedExecutionCount)
@@ -172,7 +186,7 @@ extension Mocks {
             
             let actionAndFeature: (RetryStatus, String)? = features.reduce(nil) { prev, feature in
                 guard prev == nil else { return prev }
-                return feature.testGroupRetry(test: test, duration: result.duration, withStatus: status,
+                return feature.testGroupRetry(test: test, duration: duration, withStatus: result.status,
                                               skipStatus: skipStatus,
                                               executionCount: group.executionCount,
                                               failedExecutionCount: group.failedExecutionCount).map {
@@ -187,12 +201,12 @@ extension Mocks {
                 case (.retry, let id):
                     newRetryReason = id
                 case (.recordErrors, _):
-                    newTestResult = result
+                    test.errorStatus = .unsuppressed
                 case (.pass, _): break
                 }
             }
             
-            test.end(status: newTestResult.status)
+            test.end(status: result.status, time: test.startTime.addingTimeInterval(duration))
             group.add(run: test)
             
             return newRetryReason

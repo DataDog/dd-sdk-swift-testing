@@ -11,6 +11,35 @@ import OpenTelemetrySdk
 import CodeCoverage
 import XCTest
 
+final class EarlyFlakeDetectionLogicTests: XCTestCase {
+    func testEfdRetriesNewTest() throws {
+        let runner = efdRunner(known: [:],
+                               tests: ["newTest": .failOddRuns(1.0)])
+        let tests = try extractTests(runner.run())
+        XCTAssertNotNil(tests["newTest"])
+        XCTAssertEqual(tests["newTest"]?.count, 10)
+        XCTAssertEqual(tests["newTest"]?.filter { $0.status == .fail }.count, 5)
+        XCTAssertEqual(tests["newTest"]?.filter { $0.xcStatus == .pass }.count, 10)
+    }
+    
+    func extractTests(_ session: Mocks.Session) throws -> [String: [Mocks.Test]] {
+        guard let suite = session["EFDModule"]?["EFDSuite"] else {
+            throw InternalError(description: "Can't get EFDModule and EFDSuite")
+        }
+        return suite.tests.mapValues { $0.runs }
+    }
+    
+    func efdRunner(known: KnownTestsMap, tests: [String: Mocks.Runner.TestMethod]) -> Mocks.Runner {
+        let feature = EarlyFlakeDetection(
+            knownTests: KnownTests(tests: known),
+            slowTestRetries: .init(attrs: ["5s": 10, "30s": 5, "1m": 2, "5m": 1]),
+            faultySessionThreshold: 30,
+            log: Mocks.CatchLogger(isDebug: false)
+        )
+        return Mocks.Runner(features: [feature], tests: ["EFDModule": ["EFDSuite": tests]])
+    }
+}
+
 final class EarlyFlakeDetectionTests: XCTestCase {
     var testObserver: DDTestObserver!
     var observers: NSMutableArray!

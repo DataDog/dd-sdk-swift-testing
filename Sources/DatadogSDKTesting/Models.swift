@@ -94,6 +94,10 @@ extension TestStatus: SpanAttributeConvertible {
     }
 }
 
+extension TestStatus: CustomDebugStringConvertible {
+    public var debugDescription: String { spanAttribute }
+}
+
 struct TestError {
     let type: String
     let message: String?

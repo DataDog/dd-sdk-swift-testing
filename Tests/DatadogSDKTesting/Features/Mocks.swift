@@ -78,13 +78,13 @@ enum Mocks {
     }
     
     final class Module: TestBase, TestModule, Hashable, Equatable, CustomDebugStringConvertible {
-        weak var _session: (any TestSession)?
+        weak var _session: Session?
         var session: any TestSession { _session! }
         var localization: String = ""
         
         var suites: [String: Suite] = [:]
         
-        init(name: String, session: any TestSession) {
+        init(name: String, session: Session) {
             self._session = session
             super.init(name: name)
         }
@@ -104,33 +104,32 @@ enum Mocks {
         }
         
         static func == (lhs: Mocks.Module, rhs: Mocks.Module) -> Bool {
-            lhs.id == rhs.id && lhs.name == rhs.name
-                && lhs.session.id == rhs.session.id
-                && lhs.session.name == rhs.session.name
+            lhs.id == rhs.id && lhs.name == rhs.name && lhs._session == rhs._session
         }
         
         func hash(into hasher: inout Hasher) {
             hasher.combine(id)
             hasher.combine(name)
-            hasher.combine(session.id)
-            hasher.combine(session.name)
+            hasher.combine(_session)
         }
     }
     
     final class Suite: TestBase, TestSuite, Hashable, Equatable, CustomDebugStringConvertible {
-        weak var _module: (any TestModule)?
+        weak var _module: Module?
         var module: any TestModule { _module! }
         var localization: String = ""
         
+        var unskippable: Bool = false
         var tests: [String: Group] = [:]
         
-        init(name: String, module: any TestModule) {
+        init(name: String, module: Module) {
             self._module = module
             super.init(name: name)
         }
         
         func add(group: Group) {
-            guard group.suite?.id == self.id else { return }
+            guard group.suite == nil || group.suite?.id == self.id else { return }
+            group.suite = self
             tests[group.name] = group
         }
         
@@ -144,35 +143,26 @@ enum Mocks {
         }
         
         static func == (lhs: Mocks.Suite, rhs: Mocks.Suite) -> Bool {
-            lhs.id == rhs.id && lhs.name == rhs.name
-                && lhs.session.id == rhs.session.id
-                && lhs.session.name == rhs.session.name
-                && lhs.module.id == rhs.module.id
-                && lhs.module.name == rhs.module.name
+            lhs.id == rhs.id && lhs.name == rhs.name && lhs._module == rhs._module
         }
         
         func hash(into hasher: inout Hasher) {
             hasher.combine(id)
             hasher.combine(name)
-            hasher.combine(session.id)
-            hasher.combine(session.name)
-            hasher.combine(module.id)
-            hasher.combine(module.name)
+            hasher.combine(_module)
         }
     }
     
-    final class Group: UnskippableMethodOwner, CustomDebugStringConvertible {
-        static var classId: ObjectIdentifier { ObjectIdentifier(self) }
-        static var unskippableMethods: UnskippableMethodChecker { .init(isSuiteUnskippable: false, skippableMethods: [:]) }
-        
+    final class Group: UnskippableMethodCheckerFactory, Equatable, Hashable, CustomDebugStringConvertible {
         var name: String
-        weak var suite: (any TestSuite)!
+        weak var suite: Suite!
+        var unskippable: Bool = false
         var runs: [Test] = []
         
         var skipStrategy: RetryGroupSkipStrategy = .allSkipped
         var successStrategy: RetryGroupSuccessStrategy = .allSucceeded
         
-        init(name: String, suite: any TestSuite) {
+        init(name: String, suite: Suite, unskippable: Bool) {
             self.name = name
             self.suite = suite
         }
@@ -184,6 +174,13 @@ enum Mocks {
         subscript(_ run: Int) -> Test? {
             guard run >= 0 && run < runs.count else { return nil }
             return runs[run]
+        }
+        
+        var classId: ObjectIdentifier { ObjectIdentifier(self) }
+        
+        var unskippableMethods: UnskippableMethodChecker {
+            .init(isSuiteUnskippable: suite.unskippable,
+                  skippableMethods: [name: !unskippable])
         }
         
         var executionCount: Int { runs.count }
@@ -213,6 +210,15 @@ enum Mocks {
             let tests = runs.map{ $0.debugDescription }
             return "\(name): [\(tests.joined(separator: ", "))]"
         }
+        
+        static func == (lhs: Mocks.Group, rhs: Mocks.Group) -> Bool {
+            lhs.name == rhs.name && lhs.suite === rhs.suite
+        }
+        
+        func hash(into hasher: inout Hasher) {
+            hasher.combine(name)
+            hasher.combine(suite)
+        }
     }
     
     enum ErrorSuppressionStatus {
@@ -222,7 +228,7 @@ enum Mocks {
     }
     
     final class Test: TestBase, TestRun, Hashable, Equatable, CustomDebugStringConvertible {
-        weak var _suite: (any TestSuite)?
+        weak var _suite: Suite?
         var suite: any TestSuite { _suite! }
         var error: TestError? = nil
         var errorStatus: ErrorSuppressionStatus = .normal
@@ -232,7 +238,7 @@ enum Mocks {
             return errorStatus == .suppressed ? .pass : .fail
         }
         
-        init(name: String, suite: any TestSuite) {
+        init(name: String, suite: Suite) {
             self._suite = suite
             super.init(name: name)
         }
@@ -258,24 +264,13 @@ enum Mocks {
         }
         
         static func == (lhs: Mocks.Test, rhs: Mocks.Test) -> Bool {
-            lhs.id == rhs.id && lhs.name == rhs.name
-                && lhs.session.id == rhs.session.id
-                && lhs.session.name == rhs.session.name
-                && lhs.module.id == rhs.module.id
-                && lhs.module.name == rhs.module.name
-                && lhs.suite.id == rhs.suite.id
-                && lhs.suite.name == rhs.suite.name
+            lhs.id == rhs.id && lhs.name == rhs.name && lhs._suite == rhs._suite
         }
         
         func hash(into hasher: inout Hasher) {
             hasher.combine(id)
             hasher.combine(name)
-            hasher.combine(session.id)
-            hasher.combine(session.name)
-            hasher.combine(module.id)
-            hasher.combine(module.name)
-            hasher.combine(suite.id)
-            hasher.combine(suite.name)
+            hasher.combine(_suite)
         }
     }
     

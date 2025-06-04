@@ -9,7 +9,7 @@ import XCTest
 
 class UnskippableTypeTaggedTests: XCTestCase, ExtendableTaggedType {
     func testItrSkippable() {
-        let skip = type(of: self).unskippableMethods
+        let skip = self.unskippableMethods
         XCTAssertFalse(skip.canSkip(method: "testItrSkippable"))
         XCTAssertFalse(skip.canSkip(method: "testItrSkippable123"))
     }
@@ -23,7 +23,7 @@ class UnskippableTypeTaggedTests: XCTestCase, ExtendableTaggedType {
 
 class UnskippableNoTagsTests: XCTestCase {
     func testItrSkippable() {
-        let skip = type(of: self).unskippableMethods
+        let skip = self.unskippableMethods
         XCTAssertTrue(skip.canSkip(method: "testItrSkippable"))
         XCTAssertTrue(skip.canSkip(method: "testItrSkippable123"))
     }
@@ -31,7 +31,7 @@ class UnskippableNoTagsTests: XCTestCase {
 
 final class UnskippableTypeTaggedOverrideTests: XCTestCase, FinalTaggedType {
     func testItrSkippable() {
-        let skip = type(of: self).unskippableMethods
+        let skip = self.unskippableMethods
         XCTAssertTrue(skip.canSkip(method: "testItrSkippable"))
         XCTAssertFalse(skip.canSkip(method: "testItrSkippable123"))
         XCTAssertFalse(skip.canSkip(method: "testItrSkippable456"))
@@ -48,7 +48,7 @@ final class UnskippableTypeTaggedOverrideTests: XCTestCase, FinalTaggedType {
 
 class UnskippableMethodTaggedTests: XCTestCase, DDTaggedType {
     func testItrSkippable() {
-        let skip = type(of: self).unskippableMethods
+        let skip = self.unskippableMethods
         XCTAssertFalse(skip.canSkip(method: "testItrSkippable"))
         XCTAssertTrue(skip.canSkip(method: "testItrSkippable123"))
         XCTAssertTrue(skip.canSkip(method: "testItrSkippable456"))

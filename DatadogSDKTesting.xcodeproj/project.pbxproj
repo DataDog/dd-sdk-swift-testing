@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A70B91132DF0AE19003F284F /* AutoTestRetries.swift in Sources */ = {isa = PBXBuildFile; fileRef = A70B91122DF0AE11003F284F /* AutoTestRetries.swift */; };
 		A71119A22BA8A4F400118323 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */; };
 		A718EC2D2CBD5DCE00C5F0D9 /* EarlyFlakeDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A718EC2C2CBD5DCE00C5F0D9 /* EarlyFlakeDetection.swift */; };
 		A718EC2F2CBD73F300C5F0D9 /* CacheManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A718EC2E2CBD73F300C5F0D9 /* CacheManager.swift */; };
@@ -304,6 +305,7 @@
 		8194A2242940B33100B4B592 /* DDTestSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTestSession.swift; sourceTree = "<group>"; };
 		81AA244A2978589600DE8F8A /* DDFileReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDFileReader.swift; sourceTree = "<group>"; };
 		81EDADB2292698A200279027 /* LLVMTotalsCoverageFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLVMTotalsCoverageFormat.swift; sourceTree = "<group>"; };
+		A70B91122DF0AE11003F284F /* AutoTestRetries.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoTestRetries.swift; sourceTree = "<group>"; };
 		A718EC2C2CBD5DCE00C5F0D9 /* EarlyFlakeDetection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EarlyFlakeDetection.swift; sourceTree = "<group>"; };
 		A718EC2E2CBD73F300C5F0D9 /* CacheManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheManager.swift; sourceTree = "<group>"; };
 		A718EC302CBE754300C5F0D9 /* KnownTestsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnownTestsService.swift; sourceTree = "<group>"; };
@@ -636,6 +638,7 @@
 		A77C123A2D941F27009C2BA1 /* Features */ = {
 			isa = PBXGroup;
 			children = (
+				A70B91122DF0AE11003F284F /* AutoTestRetries.swift */,
 				A75DAB9B2DEE18D600F1B8A7 /* MockTestRunner.swift */,
 				A75D33822DC28E8100553EDA /* Mocks.swift */,
 				A7B6602E2C2E08A900AEBA6C /* UnskippableTests.swift */,
@@ -1606,6 +1609,7 @@
 				A7FC266D2BA1F70200067E26 /* DDTracerTests.swift in Sources */,
 				A7FC268F2BA1F90500067E26 /* SwiftExtensions.swift in Sources */,
 				A7FC26682BA1F6FC00067E26 /* FileLocatorTests.swift in Sources */,
+				A70B91132DF0AE19003F284F /* AutoTestRetries.swift in Sources */,
 				A7B4D4C12C21DC510059F39B /* TagsTests.swift in Sources */,
 				A7B6602F2C2E08A900AEBA6C /* UnskippableTests.swift in Sources */,
 				A7FC26632BA1F6BF00067E26 /* StderrCaptureTests.swift in Sources */,

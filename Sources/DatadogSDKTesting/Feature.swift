@@ -22,8 +22,8 @@ protocol TestHooksFeature: Feature {
     // Start of the test case
     func testGroupWillStart(for test: String, in suite: any TestSuite) -> Void
     // Configuration for retry group. Will use first not nil
-    func testGroupConfiguration(for test: String, meta: UnskippableMethodOwner.Type,
-                                in suite: any TestSuite) -> TestRetryGroupConfiguration?
+    func testGroupConfiguration(for test: String, meta: UnskippableMethodCheckerFactory,
+                                in suite: any TestSuite) -> TestRetryGroupConfiguration
     // Called for the each test run in the group. First test run will have nil retry reason
     // executionCount and failedExecutionCount doesn't have the current run yet
     func testWillStart(test: any TestRun, retryReason: String?, skipStatus: SkipStatus,
@@ -47,48 +47,28 @@ protocol FeatureFactory {
 }
 
 enum TestRetryGroupConfiguration {
+    case `default`
     case skip(status: SkipStatus, strategy: RetryGroupSkipStrategy)
     case retry(success: RetryGroupSuccessStrategy)
     
     var skipStatus: SkipStatus {
         switch self {
         case .skip(status: let status, strategy: _): return status
-        default: return Optional<Self>.none.skipStatus
+        default: return .normalRun
         }
     }
     
     var successStrategy: RetryGroupSuccessStrategy {
         switch self {
         case .retry(success: let strategy): return strategy
-        default: return Optional<Self>.none.successStrategy
+        default: return .allSucceeded
         }
     }
     
     var skipStrategy: RetryGroupSkipStrategy {
         switch self {
         case .skip(status: _, strategy: let strategy): return strategy
-        default: return Optional<Self>.none.skipStrategy
-        }
-    }
-}
-
-extension Optional where Wrapped == TestRetryGroupConfiguration {
-    var successStrategy: RetryGroupSuccessStrategy {
-        switch self {
-        case .none: return .allSucceeded
-        case .some(let s): return s.successStrategy
-        }
-    }
-    var skipStrategy: RetryGroupSkipStrategy {
-        switch self {
-        case .none: return .allSkipped
-        case .some(let s): return s.skipStrategy
-        }
-    }
-    var skipStatus: SkipStatus {
-        switch self {
-        case .none: return .normalRun
-        case .some(let s): return s.skipStatus
+        default: return .allSkipped
         }
     }
 }
@@ -129,10 +109,10 @@ enum RetryStatus: Equatable, Hashable {
 extension TestHooksFeature {
     func testSuiteWillStart(suite: any TestSuite, testsCount: UInt) {}
     func testGroupWillStart(for test: String, in suite: any TestSuite) {}
-    func testGroupConfiguration(for test: String, meta: UnskippableMethodOwner.Type,
-                                in suite: any TestSuite) -> TestRetryGroupConfiguration?
+    func testGroupConfiguration(for test: String, meta: UnskippableMethodCheckerFactory,
+                                in suite: any TestSuite) -> TestRetryGroupConfiguration
     {
-        return nil
+        return .default
     }
     func testWillStart(test: any TestRun, retryReason: String?, skipStatus: SkipStatus,
                        executionCount: Int, failedExecutionCount: Int) {}

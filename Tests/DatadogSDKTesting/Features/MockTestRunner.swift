@@ -25,47 +25,61 @@ extension Mocks {
         
         struct TestMethod {
             let duration: TimeInterval?
+            let unskippable: Bool
             let method: () -> TestResult
             
-            init(duration: TimeInterval? = nil, method: @escaping () -> TestResult) {
+            init(duration: TimeInterval? = nil, unskippable: Bool = false, method: @escaping () -> TestResult) {
                 self.method = method
                 self.duration = duration
+                self.unskippable = unskippable
             }
             
-            static func withState<State>(_ initial: State, duration: TimeInterval? = nil, method: @escaping (inout State) -> TestResult) -> Self {
+            static func withState<State>(_ initial: State, duration: TimeInterval? = nil, unskippable: Bool = false, method: @escaping (inout State) -> TestResult) -> Self {
                 var state = initial
-                return TestMethod(duration: duration) { method(&state) }
+                return TestMethod(duration: duration, unskippable: unskippable) { method(&state) }
             }
             
-            static func runCounter<State>(_ initial: State, duration: TimeInterval? = nil, method: @escaping (UInt, inout State) -> TestResult) -> Self {
-                withState((UInt(0), initial), duration: duration) { state in
+            static func runCounter<State>(_ initial: State, duration: TimeInterval? = nil, unskippable: Bool = false, method: @escaping (UInt, inout State) -> TestResult) -> Self {
+                withState((UInt(0), initial), duration: duration, unskippable: unskippable) { state in
                     defer { state.0 += 1 }
                     return method(state.0, &state.1)
                 }
             }
             
-            static func failOddRuns(_ duration: TimeInterval? = nil) -> Self {
-                runCounter((), duration: duration) { (count, _) in
+            static func failOddRuns(_ duration: TimeInterval? = nil, unskippable: Bool = false) -> Self {
+                runCounter((), duration: duration, unskippable: unskippable) { (count, _) in
                     (count+1).isMultiple(of: 2) ? .pass : .fail(.init(type: "Odd Runs Should Fail"))
                 }
             }
             
-            static func failEvenRuns(_ duration: TimeInterval? = nil) -> Self {
-                runCounter((), duration: duration) { (count, _) in
+            static func failEvenRuns(_ duration: TimeInterval? = nil, unskippable: Bool = false) -> Self {
+                runCounter((), duration: duration, unskippable: unskippable) { (count, _) in
                     (count+1).isMultiple(of: 2) ? .fail(.init(type: "Even Runs Should Fail")) : .pass
                 }
             }
             
-            static func skip(_ reason: String) -> Self {
-                TestMethod(duration: 0.0001) { .skip(reason) }
+            static func fail(first: Int, _ duration: TimeInterval? = nil, unskippable: Bool = false) -> Self {
+                runCounter((), duration: duration, unskippable: unskippable) { (count, _) in
+                    count < first ? .fail(.init(type: "Fail \(count+1) from \(first)")) : .pass
+                }
             }
             
-            static func pass(duration: TimeInterval? = nil) -> Self {
-                TestMethod(duration: duration) { .pass }
+            static func fail(after: Int, _ duration: TimeInterval? = nil, unskippable: Bool = false) -> Self {
+                runCounter((), duration: duration, unskippable: unskippable) { (count, _) in
+                    count+1 >= after ? .fail(.init(type: "Fail \(Int(count)+2-after) after \(after)")) : .pass
+                }
             }
             
-            static func fail(_ reason: String, duration: TimeInterval? = nil) -> Self {
-                TestMethod(duration: duration) { .fail(.init(type: reason)) }
+            static func skip(_ reason: String, unskippable: Bool = false) -> Self {
+                TestMethod(duration: 0.0001, unskippable: unskippable) { .skip(reason) }
+            }
+            
+            static func pass(_ duration: TimeInterval? = nil, unskippable: Bool = false) -> Self {
+                TestMethod(duration: duration, unskippable: unskippable) { .pass }
+            }
+            
+            static func fail(_ reason: String, duration: TimeInterval? = nil, unskippable: Bool = false) -> Self {
+                TestMethod(duration: duration, unskippable: unskippable) { .fail(.init(type: reason)) }
             }
         }
         
@@ -111,31 +125,25 @@ extension Mocks {
         }
         
         func _run(group name: String, method: TestMethod, suite: Suite) -> Group {
-            let group = Group(name: name, suite: suite)
+            let group = Group(name: name, suite: suite, unskippable: method.unskippable)
             
-            let configAndFeature: (TestRetryGroupConfiguration, String)? = features.reduce(nil) { prev, feature in
-                guard prev == nil else { return prev }
-                return feature.testGroupConfiguration(for: group.name, meta: Group.self, in: suite).map {
-                    ($0, feature.id)
-                }
+            let (config, featureId) = features.reduce((TestRetryGroupConfiguration.default, "")) { prev, feature in
+                guard case .default = prev.0 else { return prev }
+                return (feature.testGroupConfiguration(for: group.name, meta: group, in: suite), feature.id)
             }
+            
+            group.skipStrategy = config.skipStrategy
+            group.successStrategy = config.successStrategy
             
             features.forEach { $0.testGroupWillStart(for: group.name, in: suite) }
             
-            let skipStatus = configAndFeature.map(\.0).skipStatus
+            let skipStatus = config.skipStatus
             var retryReason: String? = nil
             
-            if let config = configAndFeature?.0, let featureId = configAndFeature?.1 {
-                group.skipStrategy = config.skipStrategy
-                group.successStrategy = config.successStrategy
-                
-                if config.skipStatus.isSkipped {
-                    retryReason = _run(test: name, method: .skip(featureId), skipStatus: skipStatus,
-                                       retryReason: retryReason, group: group)
-                }
-            }
-            
-            if !skipStatus.isSkipped, retryReason == nil {
+            if skipStatus.isSkipped {
+                retryReason = _run(test: name, method: .skip(featureId), skipStatus: skipStatus,
+                                   retryReason: retryReason, group: group)
+            } else {
                 retryReason = _run(test: name, method: method, skipStatus: skipStatus,
                                    retryReason: retryReason, group: group)
             }

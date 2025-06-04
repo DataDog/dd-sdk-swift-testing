@@ -36,7 +36,7 @@ final class TestImpactAnalysis: TestHooksFeature {
         self.coverage = coverage
     }
     
-    func status(for clazz: UnskippableMethodOwner.Type, named test: String, in suite: String) -> Status {
+    func status(for clazz: UnskippableMethodCheckerFactory, named test: String, in suite: String) -> Status {
         let checker = unskippableCache.update { cache in
             cache.get(key: clazz.classId, or: clazz.unskippableMethods)
         }
@@ -44,8 +44,8 @@ final class TestImpactAnalysis: TestHooksFeature {
                      markedUnskippable: !checker.canSkip(method: test))
     }
     
-    func testGroupConfiguration(for test: String, meta: UnskippableMethodOwner.Type,
-                                in suite: any TestSuite) -> TestRetryGroupConfiguration?
+    func testGroupConfiguration(for test: String, meta: UnskippableMethodCheckerFactory,
+                                in suite: any TestSuite) -> TestRetryGroupConfiguration
     {
         let checker = unskippableCache.update { cache in
             cache.get(key: meta.classId, or: meta.unskippableMethods)
@@ -57,7 +57,7 @@ final class TestImpactAnalysis: TestHooksFeature {
         }
         return canBeSkipped ? .skip(status: SkipStatus(canBeSkipped: canBeSkipped,
                                                        markedUnskippable: unskippable),
-                                    strategy: .allSkipped) : nil
+                                    strategy: .allSkipped) : .default
     }
     
     func testWillStart(test: any TestRun, retryReason: String?, skipStatus: SkipStatus, executionCount: Int, failedExecutionCount: Int) {

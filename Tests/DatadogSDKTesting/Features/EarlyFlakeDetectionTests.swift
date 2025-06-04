@@ -13,9 +13,63 @@ import XCTest
 
 final class EarlyFlakeDetectionLogicTests: XCTestCase {
     func testEfdRetriesNewTest() throws {
-        let runner = efdRunner(known: [:],
+        let runner = efdRunner(known: [],
                                tests: ["newTest": .failOddRuns(1.0)])
         let tests = try extractTests(runner.run())
+        XCTAssertNotNil(tests["newTest"])
+        XCTAssertEqual(tests["newTest"]?.count, 10)
+        XCTAssertEqual(tests["newTest"]?.filter { $0.status == .fail }.count, 5)
+        XCTAssertEqual(tests["newTest"]?.filter { $0.xcStatus == .pass }.count, 10)
+    }
+    
+    func testEfdRetriesNewSuccessTest() throws {
+        let runner = efdRunner(known: [],
+                               tests: ["newTest": .pass(1.0)])
+        
+        let tests = try extractTests(runner.run())
+        XCTAssertNotNil(tests["newTest"])
+        XCTAssertEqual(tests["newTest"]?.count, 10)
+        XCTAssertEqual(tests["newTest"]?.filter { $0.status == .pass }.count, 10)
+        XCTAssertEqual(tests["newTest"]?.filter { $0.xcStatus == .pass }.count, 10)
+    }
+    
+    func testEfdDoesntRetryOldTest() throws {
+        let runner = efdRunner(known: ["oldTest"],
+                               tests: ["oldTest": .fail("Should fail")])
+        
+        let tests = try extractTests(runner.run())
+        
+        XCTAssertNotNil(tests["oldTest"])
+        XCTAssertEqual(tests["oldTest"]?.count, 1)
+        XCTAssertEqual(tests["oldTest"]?.filter { $0.status == .fail }.count, 1)
+        XCTAssertEqual(tests["oldTest"]?.filter { $0.xcStatus == .fail }.count, 1)
+    }
+    
+    // EFD + ATR
+    func testAtrWorksWithEFDForOldTest() throws {
+        let runner = efdAndAtrRunner(known: ["oldTest"],
+                                     tests: ["oldTest": .fail(first: 3)])
+        
+        let tests = try extractTests(runner.run())
+        
+        XCTAssertNotNil(tests["oldTest"])
+        XCTAssertEqual(tests["oldTest"]?.count, 4)
+        XCTAssertEqual(tests["oldTest"]?.filter { $0.status == .fail }.count, 3)
+        XCTAssertEqual(tests["oldTest"]?.filter { $0.xcStatus == .pass }.count, 4)
+    }
+    
+    func testEFDDisablesATRForNewTest() throws {
+        let runner = efdAndAtrRunner(known: ["oldTest"],
+                                     tests: ["newTest": .fail(first: 5),
+                                             "oldTest": .fail(first: 3)])
+        
+        let tests = try extractTests(runner.run())
+        
+        XCTAssertNotNil(tests["oldTest"])
+        XCTAssertEqual(tests["oldTest"]?.count, 4)
+        XCTAssertEqual(tests["oldTest"]?.filter { $0.status == .fail }.count, 3)
+        XCTAssertEqual(tests["oldTest"]?.filter { $0.xcStatus == .pass }.count, 4)
+        
         XCTAssertNotNil(tests["newTest"])
         XCTAssertEqual(tests["newTest"]?.count, 10)
         XCTAssertEqual(tests["newTest"]?.filter { $0.status == .fail }.count, 5)
@@ -29,14 +83,21 @@ final class EarlyFlakeDetectionLogicTests: XCTestCase {
         return suite.tests.mapValues { $0.runs }
     }
     
-    func efdRunner(known: KnownTestsMap, tests: [String: Mocks.Runner.TestMethod]) -> Mocks.Runner {
-        let feature = EarlyFlakeDetection(
-            knownTests: KnownTests(tests: known),
+    func efdRunner(known: [String], tests: [String: Mocks.Runner.TestMethod]) -> Mocks.Runner {
+        let efd = EarlyFlakeDetection(
+            knownTests: KnownTests(tests: ["EFDModule": ["EFDSuite": known]]),
             slowTestRetries: .init(attrs: ["5s": 10, "30s": 5, "1m": 2, "5m": 1]),
             faultySessionThreshold: 30,
             log: Mocks.CatchLogger(isDebug: false)
         )
-        return Mocks.Runner(features: [feature], tests: ["EFDModule": ["EFDSuite": tests]])
+        return Mocks.Runner(features: [efd], tests: ["EFDModule": ["EFDSuite": tests]])
+    }
+    
+    func efdAndAtrRunner(known: [String], tests: [String: Mocks.Runner.TestMethod]) -> Mocks.Runner {
+        let runner = efdRunner(known: known, tests: tests)
+        let atr = AutomaticTestRetries(failedTestRetriesCount: 5, failedTestRetriesTotalCount: 1000)
+        runner.features.append(atr)
+        return runner
     }
 }
 

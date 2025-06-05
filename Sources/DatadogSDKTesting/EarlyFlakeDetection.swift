@@ -19,6 +19,8 @@ final class EarlyFlakeDetection: TestHooksFeature {
     let log: Logger
     private var _counters: Synced<Counters>
     
+    var testCounters: Counters { _counters.value }
+    
     init(knownTests: KnownTests,
          slowTestRetries: TracerSettings.EFD.TimeTable,
          faultySessionThreshold: Double,
@@ -56,7 +58,7 @@ final class EarlyFlakeDetection: TestHooksFeature {
         return isNotFailed && knownTests.isNew(test: test, in: suite.name, and: suite.module.name)
     }
     
-    func testSuiteWillStart(suite: any TestSuite, testsCount: UInt) -> Void {
+    func testSuiteWillStart(suite: any TestSuite, testsCount: UInt) {
         _counters.update { $0.knownTests += testsCount }
     }
     
@@ -72,7 +74,9 @@ final class EarlyFlakeDetection: TestHooksFeature {
         return checkStatus(for: test, in: suite) ? .retry(success: .atLeastOneSucceeded) : .default
     }
     
-    func testWillStart(test: any TestRun, retryReason: String?, skipStatus: SkipStatus, executionCount: Int, failedExecutionCount: Int) {
+    func testWillStart(test: any TestRun, retryReason: String?, skipStatus: SkipStatus,
+                       executionCount: Int, failedExecutionCount: Int)
+    {
         guard retryReason == id else { return }
         test.set(tag: DDEfdTags.testIsRetry, value: "true")
         test.set(tag: DDEfdTags.testRetryReason, value: DDTagValues.retryReasonEfd)

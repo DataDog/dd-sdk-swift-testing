@@ -8,7 +8,7 @@ import XCTest
 @testable import DatadogSDKTesting
 
 final class KnownTestsLogicTests: XCTestCase {
-    func testUnknownTestIsMarkedProperly() {
+    func testUnknownTestIsMarkedAsNew() {
         let module = "SomeModule"
         let knownSuite = "KnownSuite"
         let knownSuiteKnownTest = "testKnownSuiteKnownTest"
@@ -36,9 +36,7 @@ final class KnownTestsLogicTests: XCTestCase {
         
         XCTAssertNotNil(knownSuiteResult[knownSuiteKnownTest]?[0])
         XCTAssertNil(knownSuiteResult[knownSuiteKnownTest]?[0]?.tags[DDTestTags.testIsNew])
-        
         XCTAssertEqual(knownSuiteResult[knownSuiteUnknownTest]?[0]?.tags[DDTestTags.testIsNew], "true")
-        
         XCTAssertEqual(unknownSuiteResult[unknownSuiteUnknownTest]?[0]?.tags[DDTestTags.testIsNew], "true")
     }
 }

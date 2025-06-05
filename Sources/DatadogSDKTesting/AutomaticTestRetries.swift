@@ -11,19 +11,22 @@ final class AutomaticTestRetries: TestHooksFeature {
     static var id: String = "Automatic Test Retries"
     
     let failedTestRetriesCount: UInt
-    let failedTestRetriesTotalCount: UInt
+    let failedTestTotalRetriesMax: UInt
     
-    private var _failedTestRetries: Synced<UInt>
+    private var _failedTestTotalRetries: Synced<UInt>
+    var failedTestTotalRetries: UInt { _failedTestTotalRetries.value }
     
     init(failedTestRetriesCount: UInt,
-         failedTestRetriesTotalCount: UInt)
+         failedTestTotalRetriesMax: UInt)
     {
         self.failedTestRetriesCount = failedTestRetriesCount
-        self.failedTestRetriesTotalCount = failedTestRetriesTotalCount
-        self._failedTestRetries = Synced(0)
+        self.failedTestTotalRetriesMax = failedTestTotalRetriesMax
+        self._failedTestTotalRetries = Synced(0)
     }
     
-    func testWillStart(test: any TestRun, retryReason: String?, executionCount: Int, failedExecutionCount: Int) {
+    func testWillStart(test: any TestRun, retryReason: String?, skipStatus: SkipStatus,
+                       executionCount: Int, failedExecutionCount: Int)
+    {
         guard retryReason == id else { return }
         test.set(tag: DDEfdTags.testIsRetry, value: "true")
         test.set(tag: DDEfdTags.testRetryReason, value: DDTagValues.retryReasonAtr)
@@ -53,12 +56,12 @@ final class AutomaticTestRetries: TestHooksFeature {
     
     func shouldSuppressError(test: any TestRun, skipStatus: SkipStatus, executionCount: Int, failedExecutionCount: Int) -> Bool {
         return executionCount < failedTestRetriesCount // we can retry test more
-            && _failedTestRetries.value < failedTestRetriesTotalCount // and global counter allow us to retry
+            && _failedTestTotalRetries.value < failedTestTotalRetriesMax // and global counter allow us to retry
     }
     
     private func incrementRetries() -> UInt? {
-        _failedTestRetries.update { cnt in
-            cnt.checkedAdd(1, max: failedTestRetriesTotalCount).map {
+        _failedTestTotalRetries.update { cnt in
+            cnt.checkedAdd(1, max: failedTestTotalRetriesMax).map {
                 cnt = $0
                 return $0
             }
@@ -84,6 +87,6 @@ struct AutomaticTestRetriesFactory: FeatureFactory {
     func create(log: Logger) -> AutomaticTestRetries? {
         log.debug("Automatic Test Retries Enabled")
         return AutomaticTestRetries(failedTestRetriesCount: config.testRetriesTestRetryCount,
-                                    failedTestRetriesTotalCount: config.testRetriesTotalRetryCount)
+                                    failedTestTotalRetriesMax: config.testRetriesTotalRetryCount)
     }
 }

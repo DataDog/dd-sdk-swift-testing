@@ -8,21 +8,21 @@ import Foundation
 @_implementationOnly import XCTest
 
 public extension InstanceMethodTag where T: NSObject, V == Bool {
-    static var itrSkippable: Self { "ITRSkippable" }
+    static var tiaSkippable: Self { "tia.skippable" }
 }
 
 public extension TypeTag where T: NSObject, V == Bool {
-    static var itrSkippable: Self { "ITRSkippable" }
+    static var tiaSkippable: Self { "tia.skippable" }
 }
 
 public extension DynamicTag where V == Bool {
-    static var itrSkippableType: Self { Self(name: "ITRSkippable", tagType: .forType) }
-    static var itrSkippableInstanceMethod: Self { Self(name: "ITRSkippable", tagType: .instanceMethod) }
+    static var tiaSkippableType: Self { Self(name: "tia.skippable", tagType: .forType) }
+    static var tiaSkippableInstanceMethod: Self { Self(name: "tia.skippable", tagType: .instanceMethod) }
 }
 
 @objc public extension DDTag {
-    @objc static var itrSkippableType: DDTag { DDTag(tag: .itrSkippableType) }
-    @objc static var itrSkippableInstanceMethod: DDTag { DDTag(tag: .itrSkippableInstanceMethod) }
+    @objc static var tiaSkippableType: DDTag { DDTag(tag: .tiaSkippableType) }
+    @objc static var tiaSkippableInstanceMethod: DDTag { DDTag(tag: .tiaSkippableInstanceMethod) }
 }
 
 protocol UnskippableMethodCheckerFactory: AnyObject {
@@ -39,13 +39,13 @@ final class UnskippableMethodChecker {
         let skippableMethods: [String: Bool]
         
         if let tags = type.maybeTypeTags {
-            let pairs = tags.tagged(dynamic: .itrSkippableInstanceMethod,
+            let pairs = tags.tagged(dynamic: .tiaSkippableInstanceMethod,
                                     prefixed: "test")
                 .compactMap { tag in
                     tags[tag].map { (tag.to, $0) }
                 }
             skippableMethods = Dictionary(uniqueKeysWithValues: pairs)
-            isSuiteUnskippable = tags.tagged(dynamic: .itrSkippableType).first
+            isSuiteUnskippable = tags.tagged(dynamic: .tiaSkippableType).first
                 .flatMap { tags[$0] }.map { !$0 } ?? false
         } else {
             isSuiteUnskippable = false

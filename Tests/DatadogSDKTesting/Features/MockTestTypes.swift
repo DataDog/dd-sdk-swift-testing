@@ -314,4 +314,27 @@ enum Mocks {
             logs.append("\(prefix)\(message)")
         }
     }
+    
+    final class CoverageCollector: TestCoverageCollector {
+        var testStarted: Bool = false
+        var tests: Set<String> = []
+        
+        func startTest() {
+            assert(!testStarted, "Test should not be started more than once")
+            testStarted = true
+        }
+        
+        func endTest(testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64) {
+            assert(testStarted, "Test should not be stopped more than once")
+            testStarted = false
+            tests.insert(String(describing: (testSessionId, testSuiteId, spanId)))
+        }
+        
+        func has(testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64) -> Bool {
+            return tests.contains(String(describing: (testSessionId, testSuiteId, spanId)))
+        }
+        
+        static var id: String { "CoverageCollector" }
+        func stop() {}
+    }
 }

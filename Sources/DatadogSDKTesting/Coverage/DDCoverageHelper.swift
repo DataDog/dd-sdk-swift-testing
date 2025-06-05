@@ -11,7 +11,12 @@ import Foundation
 
 typealias cFunc = @convention(c) () -> Void
 
-final class DDCoverageHelper: Feature {
+protocol TestCoverageCollector: Feature {
+    func startTest()
+    func endTest(testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64)
+}
+
+final class DDCoverageHelper: TestCoverageCollector {
     static var id: String = "Coverage Helper"
     
     let collector: CoverageCollector

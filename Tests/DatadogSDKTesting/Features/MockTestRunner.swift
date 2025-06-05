@@ -84,7 +84,7 @@ extension Mocks {
         }
         
         // Module, Suite, Test, [Runs]
-        typealias Tests = [String: [String: [String: TestMethod]]]
+        typealias Tests = KeyValuePairs<String, KeyValuePairs<String, KeyValuePairs<String, TestMethod>>>
         
         var tests: Tests
         var features: [any TestHooksFeature]
@@ -103,7 +103,7 @@ extension Mocks {
             return session
         }
         
-        func _run(module name: String, suites: [String: [String: TestMethod]], session: Session) -> Module {
+        func _run(module name: String, suites: KeyValuePairs<String, KeyValuePairs<String, TestMethod>>, session: Session) -> Module {
             let module = Module(name: name, session: session)
             for (suite, tests) in suites {
                 let st = _run(suite: suite, tests: tests, module: module)
@@ -113,7 +113,7 @@ extension Mocks {
             return module
         }
         
-        func _run(suite name: String, tests: [String: TestMethod], module: Module) -> Suite {
+        func _run(suite name: String, tests: KeyValuePairs<String, TestMethod>, module: Module) -> Suite {
             let suite = Suite(name: name, module: module)
             features.forEach { $0.testSuiteWillStart(suite: suite, testsCount: UInt(tests.count)) }
             for (test, method) in tests {

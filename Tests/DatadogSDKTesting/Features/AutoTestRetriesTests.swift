@@ -136,7 +136,7 @@ final class AutoTestRetriesLogicTests: XCTestCase {
         return suite.tests
     }
     
-    func runner(tests: [String: Mocks.Runner.TestMethod],
+    func runner(tests: KeyValuePairs<String, Mocks.Runner.TestMethod>,
                 failedTestRetriesCount: UInt = 5, failedTestTotalRetriesMax: UInt = 1000) -> (Mocks.Runner, AutomaticTestRetries)
     {
         let atr = AutomaticTestRetries(failedTestRetriesCount: failedTestRetriesCount,

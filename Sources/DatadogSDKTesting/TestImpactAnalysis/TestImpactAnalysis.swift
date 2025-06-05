@@ -12,7 +12,7 @@ final class TestImpactAnalysis: TestHooksFeature {
     
     let suites: [String: Suite]
     let correlationId: String
-    let coverage: DDCoverageHelper?
+    let coverage: TestCoverageCollector?
     
     var skippedCount: UInt { _skippedCount.value }
     
@@ -20,7 +20,7 @@ final class TestImpactAnalysis: TestHooksFeature {
     
     private(set) var unskippableCache: Synced<[ObjectIdentifier: UnskippableMethodChecker]>
     
-    init(tests: SkipTests, coverage: DDCoverageHelper?) {
+    init(tests: SkipTests, coverage: TestCoverageCollector?) {
         var suites = [String: Suite]()
         for test in tests.tests {
             suites.get(key: test.suite, or: Suite(name: test.suite, methods: [:])) { suite in

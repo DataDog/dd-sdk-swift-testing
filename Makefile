@@ -9,7 +9,7 @@ __check_defined = $(if $(value $1),, $(error Undefined $1$(if $2, ($2))$(if $(va
 # params: scheme, platform, logfile
 define xctest
 	$(if $(filter $2,macOS),$(eval SDK=macosx)$(eval DEST='platform=macOS,arch=x86_64'),)
-	$(if $(filter $2,iOSsim),$(eval SDK=iphonesimulator)$(eval DEST='platform=iOS Simulator,name=iPhone 14'),)
+	$(if $(filter $2,iOSsim),$(eval SDK=iphonesimulator)$(eval DEST='platform=iOS Simulator,name=iPhone 16'),)
 	$(if $(filter $2,tvOSsim),$(eval SDK=appletvsimulator)$(eval DEST='platform=tvOS Simulator,name=Apple TV'),)
 	$(if $3,\
 		set -o pipefail; xcodebuild -scheme $1 -sdk $(SDK) -destination $(DEST) test | tee $1-$2-$3.log | xcbeautify,\

@@ -6,13 +6,13 @@ on:
   workflow_dispatch:
 
 jobs:
-  test-13-Unit:
-    name: Run Unit Tests macOS 13.0
-    runs-on: macos-13
+  test-15-Unit:
+    name: Run Unit Tests macOS 15.0
+    runs-on: macos-15
     strategy:
       fail-fast: false
       matrix:
-        xcode: ["Xcode_14.1", "Xcode_14.2", "Xcode_14.3"]
+        xcode: ["Xcode_16.0", "Xcode_16.3", "Xcode_16.4"]
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -27,26 +27,27 @@ jobs:
         name: ${{ matrix.xcode }}-unit-logs
         path: "*-unit.log"
 
-  test-13-Integration:
-    name: Run Integration Tests macOS 13.0 Xcode 14.3.1
-    runs-on: macos-13
+  test-15-Integration:
+    name: Run Integration Tests macOS 15.0 Xcode 16.0
+    runs-on: macos-15
     strategy:
       fail-fast: false
       matrix:
+        xcode: ["Xcode_16.0", "Xcode_16.4"]
         platform: ["macOS", "iOSsim", "tvOSsim"]
     env:
       DD_API_KEY: '${{ secrets.DD_API_KEY }}'
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-    - name: Select Xcode
-      run: sudo xcode-select --switch /Applications/Xcode_14.3.1.app
+    - name: Select ${{ matrix.xcode }}
+      run: sudo xcode-select --switch /Applications/${{ matrix.xcode }}.app
     - name: Run tests for ${{ matrix.platform }}
       run: make XC_LOG=integration tests/integration/${{ matrix.platform }}
     - name: Attach Xcode logs
       if: '!cancelled()'
       uses: actions/upload-artifact@v4
       with:
-        name: Xcode_14.3.1-${{ matrix.platform }}-integration-log
+        name: ${{ matrix.xcode }}-${{ matrix.platform }}-integration-log
         path: "*-integration.log"
 

@@ -50,6 +50,8 @@ public final class Session: NSObject, Encodable {
         }
         Log.debug("Install Test monitor time interval: \(DDTestMonitor.clock.now.timeIntervalSince(beforeLoadingTime))")
         
+        DDTestMonitor.instance?.setupCrashHandler()
+        
         let sessionStartTime = startTime ?? beforeLoadingTime
         if let crashedModuleInfo = DDTestMonitor.instance?.crashedModuleInfo {
             self.status = .fail

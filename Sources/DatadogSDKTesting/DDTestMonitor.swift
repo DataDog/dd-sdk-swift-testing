@@ -237,7 +237,6 @@ internal class DDTestMonitor {
     func startTestOptimization() {
         var tracerBackendConfig: TracerSettings? = nil
         tia = nil
-        //coverageHelper = nil
         efd = nil
         let service = DDTestMonitor.env.service
         
@@ -476,7 +475,10 @@ internal class DDTestMonitor {
             return
         }
         
-        if let bundleName = Bundle.testBundle?.name {
+        let testBundle = DDTestMonitor.config.isBinaryUnderUITesting ?
+            Bundle.main : Bundle.testBundle
+        
+        if let bundleName = testBundle?.name {
             instrumentationWorkQueue.addOperation {
                 Log.debug("Create test bundle DSYM file for test source location")
                 Log.measure(name: "createDSYMFileIfNeeded") {
@@ -499,10 +501,11 @@ internal class DDTestMonitor {
     }
     
     func setupCrashHandler() {
+        DDTestMonitor.instance?.instrumentationWorkQueue.waitUntilAllOperationsAreFinished()
+        // check if handler needed
         guard !DDTestMonitor.config.disableCrashHandler else {
             return
         }
-        DDTestMonitor.instance?.instrumentationWorkQueue.waitUntilAllOperationsAreFinished()
         Log.measure(name: "Crash handler install") {
             DDCrashes.install(
                 folder: try! DDTestMonitor.cacheManager!.session(feature: "crash"),

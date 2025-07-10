@@ -150,6 +150,7 @@ internal class SettingsService {
         }
 
         guard let settings = try? JSONDecoder().decode(SettingsResponse.self, from: response) else {
+            Log.debug("SettingsRequest payload: \(settingsPayload.jsonString)")
             Log.debug("SettingsRequest invalid response: \(String(decoding: response, as: UTF8.self))")
             return nil
         }

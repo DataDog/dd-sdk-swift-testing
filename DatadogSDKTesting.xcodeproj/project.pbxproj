@@ -37,6 +37,7 @@
 		A71E647D2BAA0AA100F2ACA5 /* CIEnvironmentReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64672BAA0AA100F2ACA5 /* CIEnvironmentReader.swift */; };
 		A71E647E2BAA0AA100F2ACA5 /* EnvironmentReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64682BAA0AA100F2ACA5 /* EnvironmentReader.swift */; };
 		A71E64802BAB442300F2ACA5 /* ConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E647F2BAB442300F2ACA5 /* ConfigTests.swift */; };
+		A7349B702E1820E300581793 /* DatadogSDKTesting.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A74246002BFF94FA00F7EC64 /* TestImpactAnalysisSkippabble.swift in Sources */ = {isa = PBXBuildFile; fileRef = A74245FF2BFF94FA00F7EC64 /* TestImpactAnalysisSkippabble.swift */; };
 		A74EB8E02D0AE8A600FAD9B8 /* CodeCoverage in Frameworks */ = {isa = PBXBuildFile; productRef = A74EB8DF2D0AE8A600FAD9B8 /* CodeCoverage */; };
 		A74EB8E42D0AFD3C00FAD9B8 /* CodeCoverageModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A74EB8E32D0AFD3C00FAD9B8 /* CodeCoverageModelTests.swift */; };
@@ -277,6 +278,16 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		A7349B6F2E1820D100581793 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				A7349B702E1820E300581793 /* DatadogSDKTesting.framework in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A7E2332C2BC81A880087D8F8 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1341,6 +1352,7 @@
 				A7FC26BC2BA20D1200067E26 /* Sources */,
 				A7FC26BD2BA20D1200067E26 /* Frameworks */,
 				A7FC26BE2BA20D1200067E26 /* Resources */,
+				A7349B6F2E1820D100581793 /* CopyFiles */,
 			);
 			buildRules = (
 			);
@@ -2144,6 +2156,7 @@
 				CODE_SIGN_ENTITLEMENTS = IntegrationTests/App/IntegrationTests.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
+				ENABLE_DEBUG_DYLIB = NO;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_TESTING_SEARCH_PATHS = YES;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -2164,11 +2177,13 @@
 					"@executable_path/Frameworks",
 					"$(PLATFORM_DIR)/Developer/usr/lib/",
 					"$(PLATFORM_DIR)/Developer/Library/Frameworks/",
+					"$(PLATFORM_DIR)/Developer/Library/PrivateFrameworks/",
 				);
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
 					"@executable_path/../Frameworks",
 					"$(PLATFORM_DIR)/Developer/usr/lib/",
 					"$(PLATFORM_DIR)/Developer/Library/Frameworks/",
+					"$(PLATFORM_DIR)/Developer/Library/PrivateFrameworks/",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.IntegrationTestsRunner;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2189,6 +2204,7 @@
 				CODE_SIGN_ENTITLEMENTS = IntegrationTests/App/IntegrationTests.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
+				ENABLE_DEBUG_DYLIB = NO;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_TESTING_SEARCH_PATHS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -2208,11 +2224,13 @@
 					"@executable_path/Frameworks",
 					"$(PLATFORM_DIR)/Developer/usr/lib/",
 					"$(PLATFORM_DIR)/Developer/Library/Frameworks/",
+					"$(PLATFORM_DIR)/Developer/Library/PrivateFrameworks/",
 				);
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
 					"@executable_path/../Frameworks",
 					"$(PLATFORM_DIR)/Developer/usr/lib/",
 					"$(PLATFORM_DIR)/Developer/Library/Frameworks/",
+					"$(PLATFORM_DIR)/Developer/Library/PrivateFrameworks/",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.IntegrationTestsRunner;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2512,7 +2530,7 @@
 			repositoryURL = "https://github.com/DataDog/swift-code-coverage.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 1.1.1;
+				minimumVersion = 1.2.0;
 			};
 		};
 		A7E2332F2BC82CD10087D8F8 /* XCRemoteSwiftPackageReference "Kronos" */ = {

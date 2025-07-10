@@ -35,6 +35,10 @@ extension Date: SpanAttributeConvertible {
 extension URL: SpanAttributeConvertible {
     var spanAttribute: String {
         if var components = URLComponents(url: self, resolvingAgainstBaseURL: false) {
+            if components.scheme == nil && components.password == nil {
+                // fix for ssh urls
+                return self.absoluteString
+            }
             components.user = nil
             components.password = nil
             return components.string ?? self.absoluteString

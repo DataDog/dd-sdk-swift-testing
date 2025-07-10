@@ -21,7 +21,7 @@ class SpansExporterTests: XCTestCase {
     func testWhenExportSpanIsCalled_thenTraceIsUploaded() throws {
         var tracesSent = false
         let expec = expectation(description: "traces received")
-        let server = HttpTestServer(url: URL(string: "http://localhost:33333"),
+        let server = HttpTestServer(url: URL(string: "http://127.0.0.1:33333"),
                                     config: HttpTestServerConfig(tracesReceivedCallback: {
                                                                      tracesSent = true
                                                                      expec.fulfill()
@@ -44,8 +44,8 @@ class SpansExporterTests: XCTestCase {
                                                   hostname: nil,
                                                   apiKey: "apikey",
                                                   endpoint: Endpoint.custom(
-                                                      testsURL: URL(string: "http://localhost:33333/traces")!,
-                                                      logsURL: URL(string: "http://localhost:33333/logs")!
+                                                      testsURL: URL(string: "http://127.0.0.1:33333/traces")!,
+                                                      logsURL: URL(string: "http://127.0.0.1:33333/logs")!
                                                   ),
                                                   metadata: .init(),
                                                   performancePreset: .instantDataDelivery,

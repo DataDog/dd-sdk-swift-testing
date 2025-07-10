@@ -157,7 +157,7 @@ final class Config {
         } else if let custom = env[.customURL, URL.self] {
             endpoint = .other(testsBaseURL: custom, logsBaseURL: custom)
         } else if let port = env[.localTestEnvironmentPort, Int.self], port < 65535 {
-            let url = URL(string: "http://localhost:\(port)")!
+            let url = URL(string: "http://127.0.0.1:\(port)")!
             endpoint = .other(testsBaseURL: url, logsBaseURL: url)
         }
         

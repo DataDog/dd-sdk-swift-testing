@@ -5,9 +5,9 @@
  */
 
 import Foundation
-@_implementationOnly import OpenTelemetryApi
-@_implementationOnly import OpenTelemetrySdk
-@_implementationOnly import SigmaSwiftStatistics
+internal import OpenTelemetryApi
+internal import OpenTelemetrySdk
+internal import SigmaSwiftStatistics
 
 @objc(DDTest)
 public final class Test: NSObject {

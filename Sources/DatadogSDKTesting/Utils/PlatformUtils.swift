@@ -11,7 +11,7 @@ import Foundation
     import Cocoa
     import SystemConfiguration
 #endif
-@_implementationOnly import CodeCoverage
+internal import CodeCoverage
 
 struct PlatformUtils {
     static func getRunningPlatform() -> String {

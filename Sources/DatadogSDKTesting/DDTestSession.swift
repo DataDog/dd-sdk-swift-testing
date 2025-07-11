@@ -5,7 +5,7 @@
  */
 
 import Foundation
-@_implementationOnly import OpenTelemetryApi
+internal import OpenTelemetryApi
 
 @objc(DDTestSession)
 public final class Session: NSObject, Encodable {

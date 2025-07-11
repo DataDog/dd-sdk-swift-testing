@@ -5,7 +5,7 @@
  */
 
 import Foundation
-@_implementationOnly import EventsExporter
+internal import EventsExporter
 
 final class EarlyFlakeDetection: TestHooksFeature {
     static var id: String = "Early Flake Detection"

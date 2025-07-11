@@ -5,8 +5,8 @@
  */
 
 import Foundation
-@_implementationOnly import Kronos
-@_implementationOnly import OpenTelemetrySdk
+internal import Kronos
+internal import OpenTelemetrySdk
 
 protocol Clock: OpenTelemetrySdk.Clock {
     func sync() throws

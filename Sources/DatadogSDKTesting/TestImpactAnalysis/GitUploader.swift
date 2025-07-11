@@ -4,7 +4,7 @@
  * Copyright 2020-Present Datadog, Inc.
  */
 
-@_implementationOnly import EventsExporter
+internal import EventsExporter
 import Foundation
 
 final class GitUploader {

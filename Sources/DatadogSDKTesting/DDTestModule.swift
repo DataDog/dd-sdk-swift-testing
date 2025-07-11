@@ -5,7 +5,7 @@
  */
 
 import Foundation
-@_implementationOnly import OpenTelemetryApi
+internal import OpenTelemetryApi
 
 @objc(DDTestModule)
 public final class Module: NSObject, Encodable {

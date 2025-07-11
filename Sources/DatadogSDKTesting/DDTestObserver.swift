@@ -5,8 +5,8 @@
  */
 
 import Foundation
-@_implementationOnly import EventsExporter
-@_implementationOnly import XCTest
+internal import EventsExporter
+internal import XCTest
 
 class DDTestObserver: NSObject, XCTestObservation {
     private(set) var state: State

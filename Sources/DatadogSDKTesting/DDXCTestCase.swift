@@ -5,7 +5,7 @@
  */
 
 import Foundation
-@_implementationOnly import XCTest
+internal import XCTest
 
 protocol DDXCTestSuppressedFailureRun: AnyObject {
     var ddHasFailed: Bool { get }

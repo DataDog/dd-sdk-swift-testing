@@ -5,9 +5,9 @@
  */
 
 import Foundation
-@_implementationOnly import EventsExporter
-@_implementationOnly import CDatadogSDKTesting
-@_implementationOnly import CodeCoverage
+internal import EventsExporter
+internal import CDatadogSDKTesting
+internal import CodeCoverage
 
 typealias cFunc = @convention(c) () -> Void
 

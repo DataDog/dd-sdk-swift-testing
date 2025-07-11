@@ -5,7 +5,7 @@
  */
 
 import Foundation
-@_implementationOnly import OpenTelemetryApi
+internal import OpenTelemetryApi
 
 protocol TestModel: AnyObject {
     var id: SpanId { get }

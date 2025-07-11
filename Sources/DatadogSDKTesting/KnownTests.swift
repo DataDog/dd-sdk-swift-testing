@@ -5,7 +5,7 @@
  */
 
 import Foundation
-@_implementationOnly import EventsExporter
+internal import EventsExporter
 
 final class KnownTests: TestHooksFeature {
     static var id: String = "Known Tests"

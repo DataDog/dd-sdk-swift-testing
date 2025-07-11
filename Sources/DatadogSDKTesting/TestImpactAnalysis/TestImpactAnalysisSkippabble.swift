@@ -5,7 +5,7 @@
  */
 
 import Foundation
-@_implementationOnly import XCTest
+internal import XCTest
 
 public extension InstanceMethodTag where T: NSObject, V == Bool {
     static var tiaSkippable: Self { "tia.skippable" }

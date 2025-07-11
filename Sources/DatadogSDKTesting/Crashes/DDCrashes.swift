@@ -4,10 +4,10 @@
  * Copyright 2020-Present Datadog, Inc.
  */
 
-@_implementationOnly import CrashReporter
-@_implementationOnly import EventsExporter
+internal import CrashReporter
+internal import EventsExporter
 import Foundation
-@_implementationOnly import OpenTelemetryApi
+internal import OpenTelemetryApi
 
 let signalCallback: PLCrashReporterPostCrashSignalCallback = { _, _, _ in
     if let sanitizerInfo = SanitizerHelper.getSaniziterInfo() {

@@ -5,8 +5,8 @@
  */
 
 import Foundation
-@_implementationOnly import EventsExporter
-@_implementationOnly import OpenTelemetryApi
+internal import EventsExporter
+internal import OpenTelemetryApi
 
 protocol SpanAttributeConvertible {
     var spanAttribute: String { get }

@@ -5,7 +5,7 @@
  */
 
 import Foundation
-@_implementationOnly import EventsExporter
+internal import EventsExporter
 
 protocol Feature: AnyObject {
     static var id: String { get }

@@ -5,7 +5,7 @@
  */
 
 import Foundation
-@_implementationOnly import EventsExporter
+internal import EventsExporter
 
 final class TestImpactAnalysis: TestHooksFeature {
     static var id: String = "Test Impact Analysis"

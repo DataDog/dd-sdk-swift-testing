@@ -5,7 +5,7 @@
  */
 
 import Foundation
-@_implementationOnly import EventsExporter
+internal import EventsExporter
 
 final class AutomaticTestRetries: TestHooksFeature {
     static var id: String = "Automatic Test Retries"

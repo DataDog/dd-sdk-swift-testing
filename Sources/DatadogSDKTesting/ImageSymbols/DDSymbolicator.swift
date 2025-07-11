@@ -6,8 +6,8 @@
 
 import Foundation
 import MachO
-@_implementationOnly import CodeCoverage
-@_implementationOnly import EventsExporter
+internal import CodeCoverage
+internal import EventsExporter
 
 enum DDSymbolicator {
     private static let crashLineRegex = try! NSRegularExpression(pattern: "^([0-9]+)(\\s+)((?:[\\w.] *[\\w.]*)+)(\\s+)(0x[0-9a-fA-F]+)([ \t]+)(0x[0-9a-fA-F]+)([ \t]+\\+[ \t]+[0-9]+)$?", options: .anchorsMatchLines)

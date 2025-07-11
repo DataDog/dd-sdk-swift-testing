@@ -5,7 +5,7 @@
  */
 
 import Foundation
-@_implementationOnly import OpenTelemetrySdk
+internal import OpenTelemetrySdk
 
 /// This structs the minimum data we need from a Span to be serialized together with the crash if it happens,
 /// so it can be reconstructed when processing the crash report

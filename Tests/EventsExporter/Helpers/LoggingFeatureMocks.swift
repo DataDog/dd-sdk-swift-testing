@@ -45,7 +45,7 @@ extension DDLog.Status {
     }
 }
 
-extension LogAttributes: Equatable {
+extension LogAttributes: @retroactive Equatable {
     static func mockAny() -> LogAttributes {
         return mockWith()
     }

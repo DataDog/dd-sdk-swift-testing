@@ -5,8 +5,8 @@
  */
 
 import Foundation
-@_implementationOnly import OpenTelemetryApi
-@_implementationOnly import URLSessionInstrumentation
+internal import OpenTelemetryApi
+internal import URLSessionInstrumentation
 
 class DDNetworkInstrumentation {
     var urlSessionInstrumentation: URLSessionInstrumentation!

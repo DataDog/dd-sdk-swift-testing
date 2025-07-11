@@ -5,7 +5,7 @@
  */
 
 import Foundation
-@_implementationOnly import XCTest
+internal import XCTest
 
 extension XCTestCase {
     var testId: (suite: String, test: String) {

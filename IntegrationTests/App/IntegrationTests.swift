@@ -4,7 +4,7 @@
  * Copyright 2020-Present Datadog, Inc.
  */
 
-@_implementationOnly import OpenTelemetryApi
+internal import OpenTelemetryApi
 import DatadogSDKTesting
 import XCTest
 

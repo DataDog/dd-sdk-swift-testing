@@ -5,7 +5,7 @@
  */
 
 import Foundation
-@_implementationOnly import EventsExporter
+internal import EventsExporter
 
 final class TestManagement: TestHooksFeature {
     static var id: String = "Flaky Test Management"

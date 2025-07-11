@@ -4,9 +4,9 @@
  * Copyright 2020-Present Datadog, Inc.
  */
 
-@_implementationOnly import EventsExporter
-@_implementationOnly import OpenTelemetryApi
-@_implementationOnly import OpenTelemetrySdk
+internal import EventsExporter
+internal import OpenTelemetryApi
+internal import OpenTelemetrySdk
 
 #if canImport(UIKit)
     import UIKit

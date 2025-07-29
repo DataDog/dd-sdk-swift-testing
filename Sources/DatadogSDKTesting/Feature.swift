@@ -47,30 +47,48 @@ protocol FeatureFactory {
 }
 
 enum TestRetryGroupConfiguration {
-    case `default`
+    struct Configuration {
+        private let _skipStatus: SkipStatus?
+        private let _skipStrategy: RetryGroupSkipStrategy?
+        private let _successStrategy: RetryGroupSuccessStrategy?
+        
+        init(skipStatus: SkipStatus? = nil,
+             skipStrategy: RetryGroupSkipStrategy? = nil,
+             successStrategy: RetryGroupSuccessStrategy? = nil)
+        {
+            self._skipStatus = skipStatus
+            self._skipStrategy = skipStrategy
+            self._successStrategy = successStrategy
+        }
+        
+        func updated(with configuration: Configuration) -> Self {
+            let skipStatus = configuration._skipStatus ?? self._skipStatus
+            let skipStrategy = configuration._skipStrategy ?? self._skipStrategy
+            let successStrategy = configuration._successStrategy ?? self._successStrategy
+            return .init(skipStatus: skipStatus,
+                         skipStrategy: skipStrategy,
+                         successStrategy: successStrategy)
+        }
+        
+        func next(with configuration: TestRetryGroupConfiguration) -> (next: Self, stop: Bool) {
+            switch configuration {
+            case .next(update: let config):
+                return (config.map { updated(with: $0) } ?? self, false)
+            case .skip(status: let status, strategy: let strategy):
+                return (updated(with: .init(skipStatus: status, skipStrategy: strategy)), true)
+            case .retry(success: let strategy):
+                return (updated(with: .init(successStrategy: strategy)), true)
+            }
+        }
+        
+        var skipStatus: SkipStatus { _skipStatus ?? .normalRun }
+        var successStrategy: RetryGroupSuccessStrategy { _successStrategy ?? .allSucceeded }
+        var skipStrategy: RetryGroupSkipStrategy { _skipStrategy ?? .allSkipped }
+    }
+    
+    case next(update: Configuration?)
     case skip(status: SkipStatus, strategy: RetryGroupSkipStrategy)
     case retry(success: RetryGroupSuccessStrategy)
-    
-    var skipStatus: SkipStatus {
-        switch self {
-        case .skip(status: let status, strategy: _): return status
-        default: return .normalRun
-        }
-    }
-    
-    var successStrategy: RetryGroupSuccessStrategy {
-        switch self {
-        case .retry(success: let strategy): return strategy
-        default: return .allSucceeded
-        }
-    }
-    
-    var skipStrategy: RetryGroupSkipStrategy {
-        switch self {
-        case .skip(status: _, strategy: let strategy): return strategy
-        default: return .allSkipped
-        }
-    }
 }
 
 enum RetryGroupSuccessStrategy {
@@ -112,7 +130,7 @@ extension TestHooksFeature {
     func testGroupConfiguration(for test: String, meta: UnskippableMethodCheckerFactory,
                                 in suite: any TestSuite) -> TestRetryGroupConfiguration
     {
-        return .default
+        return .next(update: nil)
     }
     func testWillStart(test: any TestRun, retryReason: String?, skipStatus: SkipStatus,
                        executionCount: Int, failedExecutionCount: Int) {}

@@ -25,7 +25,7 @@ final class TestManagement: TestHooksFeature {
     func testGroupWillStart(for test: String, in suite: any TestSuite) {}
     
     func testGroupConfiguration(for test: String, meta: UnskippableMethodCheckerFactory, in suite: any TestSuite) -> TestRetryGroupConfiguration {
-        .default
+        .next(update: nil)
     }
     
     func testWillStart(test: any TestRun, retryReason: String?, skipStatus: SkipStatus,

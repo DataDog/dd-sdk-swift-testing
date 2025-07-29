@@ -160,9 +160,10 @@ class DDTestObserver: NSObject, XCTestObservation {
             return
         }
         
-        let (config, featureId) = context.features.reduce((TestRetryGroupConfiguration.default, "")) { prev, feature in
-            guard case .default = prev.0 else { return prev }
-            return (feature.testGroupConfiguration(for: group.name, meta: group.currentTest!, in: suite), feature.id)
+        let (config, featureId, _) = context.features.reduce((TestRetryGroupConfiguration.Configuration(), "", false)) { prev, feature in
+            guard !prev.2 else { return prev }
+            let (config, stop) = prev.0.next(with: feature.testGroupConfiguration(for: group.name, meta: group.currentTest!, in: suite))
+            return (config, feature.id, stop)
         }
         
         group.groupRun?.skipStrategy = config.skipStrategy.xcTest

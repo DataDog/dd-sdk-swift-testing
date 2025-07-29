@@ -165,6 +165,7 @@ enum Mocks {
         init(name: String, suite: Suite, unskippable: Bool) {
             self.name = name
             self.suite = suite
+            self.unskippable = unskippable
         }
         
         func add(run: Test) {

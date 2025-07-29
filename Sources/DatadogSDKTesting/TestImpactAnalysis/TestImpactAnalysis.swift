@@ -36,7 +36,7 @@ final class TestImpactAnalysis: TestHooksFeature {
         self.coverage = coverage
     }
     
-    func status(for clazz: UnskippableMethodCheckerFactory, named test: String, in suite: String) -> Status {
+    func status(for clazz: UnskippableMethodCheckerFactory, named test: String, in suite: String) -> SkipStatus {
         let checker = unskippableCache.update { cache in
             cache.get(key: clazz.classId, or: clazz.unskippableMethods)
         }
@@ -47,17 +47,16 @@ final class TestImpactAnalysis: TestHooksFeature {
     func testGroupConfiguration(for test: String, meta: UnskippableMethodCheckerFactory,
                                 in suite: any TestSuite) -> TestRetryGroupConfiguration
     {
-        let checker = unskippableCache.update { cache in
-            cache.get(key: meta.classId, or: meta.unskippableMethods)
-        }
-        let unskippable = !checker.canSkip(method: test)
-        let canBeSkipped = suites[suite.name]?[test] != nil
-        if unskippable {
+        let status = status(for: meta, named: test, in: suite.name)
+        if status.markedUnskippable {
             suite.set(tag: DDItrTags.itrUnskippable, value: true)
         }
-        return canBeSkipped ? .skip(status: SkipStatus(canBeSkipped: canBeSkipped,
-                                                       markedUnskippable: unskippable),
-                                    strategy: .allSkipped) : .default
+        // we can't skip it so do nothing
+        guard status.canBeSkipped else { return .next(update: nil) }
+        // if it's skipped we skip it, else simply add info to the configuration
+        return status.isSkipped
+            ? .skip(status: status, strategy: .allSkipped)
+            : .next(update: .init(skipStatus: status, skipStrategy: .atLeastOneSkipped))
     }
     
     func testWillStart(test: any TestRun, retryReason: String?, skipStatus: SkipStatus, executionCount: Int, failedExecutionCount: Int) {
@@ -92,6 +91,15 @@ final class TestImpactAnalysis: TestHooksFeature {
         }
     }
     
+    func testGroupRetry(test: any TestRun, duration: TimeInterval,
+                        withStatus: TestStatus, skipStatus: SkipStatus,
+                        executionCount: Int, failedExecutionCount: Int) -> RetryStatus?
+    {
+        // we have to return value so test will not be passed for retry to other features
+        // it will record errors if needed (which should not happen)
+        skipStatus.isSkipped ? .recordErrors : nil
+    }
+    
     func stop() {
         coverage?.stop()
     }
@@ -113,17 +121,6 @@ extension TestImpactAnalysis {
         var methods: [String: Test]
         
         subscript(_ method: String) -> Test? { methods[method] }
-    }
-    
-    struct Status {
-        let canBeSkipped: Bool
-        let markedUnskippable: Bool
-        
-        var forcedRun: Bool { canBeSkipped && markedUnskippable }
-        var skipped: Bool { canBeSkipped && !markedUnskippable }
-        
-        @inlinable
-        static var none: Self { .init(canBeSkipped: false, markedUnskippable: false) }
     }
 }
 

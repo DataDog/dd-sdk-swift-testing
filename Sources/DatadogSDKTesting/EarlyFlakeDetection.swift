@@ -71,7 +71,7 @@ final class EarlyFlakeDetection: TestHooksFeature {
     
     func testGroupConfiguration(for test: String, meta: UnskippableMethodCheckerFactory, in suite: any TestSuite) -> TestRetryGroupConfiguration {
         // If we can retry this test - setup test group for retries
-        return checkStatus(for: test, in: suite) ? .retry(success: .atLeastOneSucceeded) : .default
+        return checkStatus(for: test, in: suite) ? .retry(success: .atLeastOneSucceeded) : .next(update: nil)
     }
     
     func testWillStart(test: any TestRun, retryReason: String?, skipStatus: SkipStatus,

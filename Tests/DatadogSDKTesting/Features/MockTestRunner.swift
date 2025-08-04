@@ -127,10 +127,11 @@ extension Mocks {
         func _run(group name: String, method: TestMethod, suite: Suite) -> Group {
             let group = Group(name: name, suite: suite, unskippable: method.unskippable)
             
-            let (config, featureId, _) = features.reduce((TestRetryGroupConfiguration.Configuration(), "", false)) { prev, feature in
-                guard !prev.2 else { return prev }
-                let (config, stop) = prev.0.next(with: feature.testGroupConfiguration(for: group.name, meta: group, in: suite))
-                return (config, feature.id, stop)
+            let (config, featureId) = features.reduce((TestRetryGroupConfiguration.next(.init()), "")) { prev, feature in
+                guard prev.0.hasNext else { return prev }
+                let next = feature.testGroupConfiguration(for: group.name, meta: group,
+                                                          in: suite, configuration: prev.0.configuration)
+                return (next, feature.id)
             }
             
             group.skipStrategy = config.skipStrategy

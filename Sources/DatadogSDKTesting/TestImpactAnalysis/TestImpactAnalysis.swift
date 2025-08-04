@@ -45,18 +45,19 @@ final class TestImpactAnalysis: TestHooksFeature {
     }
     
     func testGroupConfiguration(for test: String, meta: UnskippableMethodCheckerFactory,
-                                in suite: any TestSuite) -> TestRetryGroupConfiguration
+                                in suite: any TestSuite,
+                                configuration: TestRetryGroupConfiguration.Configuration) -> TestRetryGroupConfiguration
     {
         let status = status(for: meta, named: test, in: suite.name)
         if status.markedUnskippable {
             suite.set(tag: DDItrTags.itrUnskippable, value: true)
         }
         // we can't skip it so do nothing
-        guard status.canBeSkipped else { return .next(update: nil) }
+        guard status.canBeSkipped else { return configuration.next() }
         // if it's skipped we skip it, else simply add info to the configuration
         return status.isSkipped
-            ? .skip(status: status, strategy: .allSkipped)
-            : .next(update: .init(skipStatus: status, skipStrategy: .atLeastOneSkipped))
+            ? configuration.skip(status: status, strategy: .allSkipped)
+            : configuration.next(skipStatus: status, skipStrategy: .atLeastOneSkipped)
     }
     
     func testWillStart(test: any TestRun, retryReason: String?, skipStatus: SkipStatus, executionCount: Int, failedExecutionCount: Int) {

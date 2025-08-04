@@ -32,8 +32,11 @@ final class AutomaticTestRetries: TestHooksFeature {
         test.set(tag: DDEfdTags.testRetryReason, value: DDTagValues.retryReasonAtr)
     }
     
-    func testGroupConfiguration(for test: String, meta: UnskippableMethodCheckerFactory, in suite: any TestSuite) -> TestRetryGroupConfiguration {
-        return .retry(success: .atLeastOneSucceeded)
+    func testGroupConfiguration(for test: String, meta: UnskippableMethodCheckerFactory,
+                                in suite: any TestSuite,
+                                configuration: TestRetryGroupConfiguration.Configuration) -> TestRetryGroupConfiguration
+    {
+        configuration.retry(strategy: .atLeastOneSucceeded)
     }
     
     func testGroupRetry(test: any TestRun, duration: TimeInterval, withStatus status: TestStatus,

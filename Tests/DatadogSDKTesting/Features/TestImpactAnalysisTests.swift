@@ -134,29 +134,30 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertEqual(tia.skippedCount, 1)
         
         XCTAssertNotNil(tests["someTest"])
-        XCTAssertEqual(tests["someTest"]?.runs.count, 10)
-        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 5)
+        XCTAssertEqual(tests["someTest"]?.runs.count, 4)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 3)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .pass }.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.xcStatus == .fail }.count, 0)
         XCTAssertEqual(tests["someTest"]?.isSucceeded, true)
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
     }
     
     func testTestImpactAnalysisAndATRWorksTogetherUnskippable() throws {
-        let (runner, tia, _) = tiaAndEfdRunner(skip: ["skipTest"], known: [],
-                                               tests: ["someTest": .failOddRuns(),
-                                                       "skipTest": .failEvenRuns(unskippable: true)])
+        let (runner, tia, _) = tiaAndAtrRunner(skip: ["skipTest"],
+                                               tests: ["someTest": .fail(first: 3),
+                                                       "skipTest": .fail(first: 4, unskippable: true)])
         let tests = try extractTests(runner.run())
         XCTAssertNotNil(tests["skipTest"])
-        XCTAssertEqual(tests["skipTest"]?.runs.count, 1)
-        XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.status == .skip }.count, 1)
-        XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.xcStatus == .skip }.count, 1)
-        XCTAssertEqual(tests["skipTest"]?.isSucceeded, false)
-        XCTAssertEqual(tests["skipTest"]?.isSkipped, true)
-        XCTAssertEqual(tia.skippedCount, 1)
+        XCTAssertEqual(tests["skipTest"]?.runs.count, 5)
+        XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.status == .fail }.count, 4)
+        XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.xcStatus == .fail }.count, 0)
+        XCTAssertEqual(tests["skipTest"]?.isSucceeded, true)
+        XCTAssertEqual(tests["skipTest"]?.isSkipped, false)
+        XCTAssertEqual(tia.skippedCount, 0)
         
         XCTAssertNotNil(tests["someTest"])
-        XCTAssertEqual(tests["someTest"]?.runs.count, 10)
-        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 5)
+        XCTAssertEqual(tests["someTest"]?.runs.count, 4)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 3)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.xcStatus == .fail }.count, 0)
         XCTAssertEqual(tests["someTest"]?.isSucceeded, true)
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)

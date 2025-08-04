@@ -22,14 +22,12 @@ public final class Session: NSObject, Encodable {
     private var _testRunsCount: Synced<UInt> = Synced(0)
     var testRunsCount: UInt { _testRunsCount.value }
     
-    //var codeOwners: CodeOwners? = nil
     var configError: Bool = false
     
     init(name: String, command: String? = nil, startTime: Date? = nil) {
         self.duration = 0
         self.status = .pass
         self.name = name
-        //self.codeOwners = nil
         self.testFramework = "Swift API"
         self.resource = name
         

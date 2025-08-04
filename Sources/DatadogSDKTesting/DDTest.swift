@@ -21,8 +21,6 @@ public final class Test: NSObject {
 
     let suite: TestSuite
 
-//    private var isUITest: Bool
-
     private var errorInfo: ErrorInfo?
 
     init(name: String, suite: TestSuite, startTime: Date? = nil) {
@@ -30,7 +28,6 @@ public final class Test: NSObject {
         self.name = name
         self.suite = suite
         self.duration = 0
-        //self.isUITest = false
 
         currentTestExecutionOrder = suite.session.nextTestIndex()
 
@@ -91,7 +88,6 @@ public final class Test: NSObject {
     }
 
     func setIsUITest(_ value: Bool) {
-//        self.isUITest = value
         self.span.setAttribute(key: DDTestTags.testIsUITest, value: value ? "true" : "false")
 
         // Set default UI values if nor previously set and update crash customData

@@ -38,14 +38,23 @@ internal class DDTestMonitor {
     
     static var envReader: EnvironmentReader = ProcessEnvironmentReader()
     
-    static var sessionId: String = { envReader["XCTestSessionIdentifier"] ?? UUID().uuidString }()
+    // We can't calculate proper session and we need something to persist between executions
+    // so we will use simulator id and boot time
+    // for macOS machines we will try to use boot time too (no simulator info)
+    static var sessionId: String = {
+        let runtimeId: String = envReader["RUN_DESTINATION_DEVICE_UDID"] ?? DDTestMonitor.developerMachineHostName
+        let bootTime: String = envReader["SIMULATOR_BOOT_TIME"] ??
+            String(Int64(Date().timeIntervalSince1970 - ProcessInfo.processInfo.systemUptime))
+        return "\(runtimeId)-\(bootTime)"
+    }()
     
     static let tracerVersion = Bundle.sdk.version ?? "unknown"
 
     static var cacheManager: CacheManager? = {
         do {
-            return try CacheManager(environment: env.environment, session: sessionId,
-                                    commit: env.git.commitSHA, debug: config.extraDebugCodeCoverage)
+            return try CacheManager(session: sessionId,
+                                    commit: env.git.commitSHA ?? "unknown-commit",
+                                    debug: config.extraDebugCodeCoverage)
         } catch {
             Log.print("Cache Manager initialization failed: \(error)")
             return nil
@@ -135,6 +144,7 @@ internal class DDTestMonitor {
     init() {
         Log.debug("Config:\n\(DDTestMonitor.config)")
         Log.debug("Environment:\n\(DDTestMonitor.env)")
+        Log.debug("Session ID:\n\(DDTestMonitor.sessionId)")
         maxPayloadSize = DDTestMonitor.config.maxPayloadSize
         messageChannelUUID = DDTestMonitor.config.messageChannelUUID ?? UUID().uuidString
         
@@ -201,6 +211,11 @@ internal class DDTestMonitor {
         let workspace = DDTestMonitor.env.workspacePath ?? ""
         guard DDTestMonitor.env.isCI || GitUploader.statusUpToDate(workspace: workspace, log: Log.instance) else {
             Log.print("Git status is not up to date")
+            return
+        }
+        
+        guard let commitSha = DDTestMonitor.env.git.commitSHA, commitSha != "" else {
+            Log.print("Git upload initialisation failed. Unknown commit SHA")
             return
         }
 

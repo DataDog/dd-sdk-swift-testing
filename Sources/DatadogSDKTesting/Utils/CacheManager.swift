@@ -9,21 +9,25 @@ internal import EventsExporter
 
 final class CacheManager {
     let cacheDir: Directory
-    let commitDir: Directory?
-    let sessionDir: Directory?
+    let commitDir: Directory
+    let sessionDir: Directory
     let tempDir: Directory
     let debug: Bool
     
-    init(environment: String, session: String, commit: String?, debug: Bool) throws {
+    init(session: String, commit: String, debug: Bool) throws {
         let name = Bundle.sdk.bundleIdentifier ?? "datadog"
         let cacheDir = try Directory.cache().createSubdirectory(path: name)
-        let commitDir = try commit.map { try cacheDir.createSubdirectory(path: $0) }
+        let commitDir = try cacheDir.createSubdirectory(path: commit)
         self.cacheDir = cacheDir
         self.commitDir = commitDir
-        self.sessionDir = try commitDir.flatMap { try $0.createSubdirectory(path: session) }
+        self.sessionDir = try commitDir.createSubdirectory(path: session)
         self.tempDir = try Directory.temporary()
             .createSubdirectory(path: "\(name)-\(UUID().uuidString)")
         self.debug = debug
+        if debug {
+            Log.debug("Session Directory: \(sessionDir.url.absoluteString)")
+            Log.debug("Temp Directory: \(tempDir.url.absoluteString)")
+        }
     }
     
     func common(feature: String) throws -> Directory {
@@ -31,13 +35,11 @@ final class CacheManager {
     }
     
     func commit(feature: String) throws -> Directory {
-        guard let commit = commitDir else { throw InternalError(description: "commit dir is empty") }
-        return try commit.createSubdirectory(path: feature)
+        try commitDir.createSubdirectory(path: feature)
     }
     
     func session(feature: String) throws -> Directory {
-        guard let session = sessionDir else { throw InternalError(description: "session dir is empty") }
-        return try session.createSubdirectory(path: feature)
+        try sessionDir.createSubdirectory(path: feature)
     }
     
     func temp(feature: String) throws -> Directory {

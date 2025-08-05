@@ -14,6 +14,7 @@ let signalCallback: PLCrashReporterPostCrashSignalCallback = { _, _, _ in
         try? sanitizerInfo.write(to: DDCrashes.sanitizerURL, atomically: true, encoding: .utf8)
     }
     DDTestMonitor.instance?.tia?.stop()
+    Log.print("Crash detected! Exiting...")
 }
 
 /// This class is our interface with the crash reporter, now it is based on PLCrashReporter,

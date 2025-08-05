@@ -42,10 +42,11 @@ internal class DDTestMonitor {
     // so we will use simulator id and boot time
     // for macOS machines we will try to use boot time too (no simulator info)
     static var sessionId: String = {
-        let runtimeId: String = envReader["RUN_DESTINATION_DEVICE_UDID"] ?? DDTestMonitor.developerMachineHostName
+        let scheme = envReader["XCODE_SCHEME_NAME"] ?? Bundle.main.name
+        let testPlan = envReader["XCODE_TEST_PLAN_NAME"] ?? Bundle.testBundle?.name ?? Bundle.main.name
         let bootTime: String = envReader["SIMULATOR_BOOT_TIME"] ??
             String(Int64(Date().timeIntervalSince1970 - ProcessInfo.processInfo.systemUptime))
-        return "\(runtimeId)-\(bootTime)"
+        return "\(scheme)-\(testPlan)-\(bootTime)"
     }()
     
     static let tracerVersion = Bundle.sdk.version ?? "unknown"

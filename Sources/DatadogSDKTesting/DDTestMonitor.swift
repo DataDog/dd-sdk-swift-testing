@@ -214,11 +214,12 @@ internal class DDTestMonitor {
             return
         }
         
-        guard let commitSha = DDTestMonitor.env.git.commitSHA, commitSha != "" else {
-            Log.print("Git upload initialisation failed. Unknown commit SHA")
+        guard let commit = DDTestMonitor.env.git.commitSHA, commit != "" else {
+            Log.print("Commit SHA is empty. Git upload failed")
+            self.isGitUploadSucceded = false
             return
         }
-
+        
         DDTestMonitor.instance?.gitUploadQueue.addOperation {
             if DDTestMonitor.config.gitUploadEnabled {
                 Log.debug("Git Upload Enabled")
@@ -233,12 +234,6 @@ internal class DDTestMonitor {
                 )
             } else {
                 Log.debug("Git Upload Disabled")
-                self.isGitUploadSucceded = false
-                return
-            }
-            
-            guard let commit = DDTestMonitor.env.git.commitSHA else {
-                Log.print("Commit SHA is empty. GitUpload failed")
                 self.isGitUploadSucceded = false
                 return
             }

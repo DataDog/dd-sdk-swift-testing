@@ -5,179 +5,55 @@
  */
 
 import Foundation
-@_implementationOnly import OpenTelemetryApi
+internal import OpenTelemetryApi
 
-@objc public enum DDTestStatus: Int {
-    case pass
-    case fail
-    case skip
-}
-
-public class DDTestModule: NSObject, Encodable {
-    var bundleName = ""
-    static var bundleFunctionInfo = FunctionMap()
-    static var codeOwners: CodeOwners?
-    var testFramework = "Swift API"
-    var id: SpanId
-    var sessionId: SpanId
+@objc(DDTestModule)
+public final class Module: NSObject, Encodable {
+    let name: String
+    let session: TestSession
+    let id: SpanId
     let startTime: Date
     var duration: UInt64
     var meta: [String: String] = [:]
     var metrics: [String: Double] = [:]
-    var status: DDTestStatus
+    var status: TestStatus
     var localization: String
-    var configError = false
-    
-    private var _counters: Synced<Counters> = Synced(.init())
-    
-    var testRunsCount: UInt { _counters.value.allTestRuns }
-    var skippedByITRTestsCount: UInt { _counters.value.skippedTests }
-    var retriedByATRRunsCount: UInt { _counters.value.retryTestRuns }
-    
-    var efdTestsCounts: (newTests: UInt, knownTests: UInt) {
-        _counters.use { ($0.newTests, $0.knownTests) }
-    }
-    
-    var efdSessionFailed: Bool = false
-    
-    var linesCovered: Double? = nil
 
-    init(bundleName: String, startTime: Date?) {
+    init(name: String, session: TestSession, startTime: Date?) {
         self.duration = 0
         self.status = .pass
-        self.bundleName = bundleName
-        
-        try! DDTestMonitor.clock.sync()
+        self.name = name
+        self.session = session
 
-        let beforeLoadingTime = DDTestMonitor.clock.now
-        if DDTestMonitor.instance == nil {
-            var success = false
-            Log.measure(name: "installTestMonitor") {
-                success = DDTestMonitor.installTestMonitor()
-            }
-            if !success {
-                configError = true
-            }
-        }
-        Log.debug("Install Test monitor time interval: \(DDTestMonitor.clock.now.timeIntervalSince(beforeLoadingTime))")
-
-#if targetEnvironment(simulator) || os(macOS)
-        if !DDTestMonitor.config.disableSourceLocation {
-            DDTestMonitor.instance?.instrumentationWorkQueue.addOperation {
-                Log.debug("Create test bundle DSYM file for test source location")
-                Log.measure(name: "createDSYMFileIfNeeded") {
-                    DDSymbolicator.createDSYMFileIfNeeded(forImageName: bundleName)
-                }
-                Log.measure(name: "testFunctionsInModule") {
-                    DDTestModule.bundleFunctionInfo = FileLocator.testFunctionsInModule(bundleName)
-                }
-            }
-            DDTestMonitor.instance?.instrumentationWorkQueue.addOperation {
-                if let workspacePath = DDTestMonitor.env.workspacePath {
-                    Log.measure(name: "createCodeOwners") {
-                        DDTestModule.codeOwners = CodeOwners(
-                            workspacePath: URL(fileURLWithPath: workspacePath, isDirectory: true)
-                        )
-                    }
-                }
-            }
-        }
-#endif
-
-        Log.measure(name: "waiting InstrumentationQueue") {
-            DDTestMonitor.instance?.instrumentationWorkQueue.waitUntilAllOperationsAreFinished()
-        }
-
-        if !DDTestMonitor.config.disableCrashHandler {
-            Log.measure(name: "DDCrashesInstall") {
-                DDCrashes.install(
-                    folder: try! DDTestMonitor.cacheManager!.session(feature: "crash"),
-                    disableMach: DDTestMonitor.config.disableMachCrashHandler)
-            }
-        }
-        let moduleStartTime = startTime ?? beforeLoadingTime
+        let moduleStartTime = startTime ?? DDTestMonitor.clock.now
         if let crashedModuleInfo = DDTestMonitor.instance?.crashedModuleInfo {
             self.status = .fail
             self.id = crashedModuleInfo.crashedModuleId
-            self.sessionId = crashedModuleInfo.crashedSessionId
             self.startTime = crashedModuleInfo.moduleStartTime ?? moduleStartTime
         } else {
             self.id = SpanId.random()
-            self.sessionId = SpanId.random()
             self.startTime = moduleStartTime
         }
         self.localization = PlatformUtils.getLocalization()
-
-        Log.debug("Module loading time interval: \(DDTestMonitor.clock.now.timeIntervalSince(beforeLoadingTime))")
-    }
-
-    @discardableResult
-    func incrementSkipped() -> UInt {
-        _counters.update { cnt in
-            defer { cnt.skippedTests += 1 }
-            return cnt.skippedTests
-        }
-    }
-    
-    func incrementTestRuns() -> UInt {
-        _counters.update { cnt in
-            defer { cnt.allTestRuns += 1 }
-            return cnt.allTestRuns
-        }
-    }
-    
-    func incrementRetries(max: UInt) -> UInt? {
-        _counters.update { cnt in
-            cnt.retryTestRuns.checkedAdd(1, max: max).map {
-                cnt.retryTestRuns = $0
-                return $0
-            }
-        }
-    }
-    
-    @discardableResult
-    func incrementNewTests() -> UInt {
-        _counters.update { cnt in
-            defer { cnt.newTests += 1 }
-            return cnt.allTestRuns
-        }
-    }
-    
-    func addExpectedTests(count: UInt) {
-        _counters.update { cnt in
-            cnt.knownTests += count
-        }
     }
     
     private func internalEnd(endTime: Date? = nil) {
         duration = (endTime ?? DDTestMonitor.clock.now).timeIntervalSince(startTime).toNanoseconds
 
-        let moduleStatus: String
-
         // If there is a Sanitizer message, we fail the module so error can be shown
         if let sanitizerInfo = SanitizerHelper.getSaniziterInfo() {
-            moduleStatus = DDTagValues.statusFail
-            meta[DDTags.errorType] = "Sanitizer Error"
-            meta[DDTags.errorStack] = sanitizerInfo
-
-        } else {
-            switch status {
-            case .pass:
-                moduleStatus = DDTagValues.statusPass
-            case .fail:
-                moduleStatus = DDTagValues.statusFail
-            case .skip:
-                moduleStatus = DDTagValues.statusSkip
-            }
+            self.set(failed: .init(type: "Sanitizer Error", stack: sanitizerInfo))
         }
-
+        
+        let moduleStatus = status.spanAttribute
         /// Export module event
         let moduleAttributes: [String: String] = [
             DDGenericTags.type: DDTagValues.typeModuleEnd,
-            DDTestTags.testModule: bundleName,
-            DDTestTags.testFramework: testFramework,
+            DDTestTags.testModule: name,
+            DDTestTags.testFramework: session.testFramework,
             DDTestTags.testStatus: moduleStatus,
             DDTestSuiteVisibilityTags.testModuleId: String(id.rawValue),
+            DDTestSuiteVisibilityTags.testSessionId: String(session.id.rawValue),
         ]
         meta.merge(moduleAttributes) { _, new in new }
         
@@ -185,85 +61,14 @@ public class DDTestModule: NSObject, Encodable {
         metrics.merge(DDTestMonitor.env.baseMetrics) { _, new in new }
         
         meta[DDUISettingsTags.uiSettingsModuleLocalization] = localization
-        meta[DDTestSessionTags.testCodeCoverageEnabled] = (DDTestMonitor.instance?.coverageHelper != nil) ? "true" : "false"
         
-        let itrSkipped = self.skippedByITRTestsCount
-        
-        if DDTestMonitor.instance?.itr != nil {
-            meta[DDTestSessionTags.testItrSkippingType] = DDTagValues.typeTest
-            meta[DDTestSessionTags.testSkippingEnabled] = "true"
-            metrics[DDTestSessionTags.testItrSkippingCount] = Double(itrSkipped)
-        } else {
-            meta[DDTestSessionTags.testSkippingEnabled] = "false"
-        }
-        
-        if itrSkipped == 0 {
-            meta[DDItrTags.itrSkippedTests] = "false"
-            meta[DDTestSessionTags.testItrSkipped] = "false"
-            if let linesCovered = DDCoverageHelper.getLineCodeCoverage() {
-                metrics[DDTestSessionTags.testCoverageLines] = linesCovered
-            }
-        } else {
-            meta[DDItrTags.itrSkippedTests] = "true"
-            meta[DDTestSessionTags.testItrSkipped] = "true"
-        }
-        
-        if DDTestMonitor.instance?.efd != nil {
-            meta[DDEfdTags.testEfdEnabled] = "true"
-        }
-        if efdSessionFailed {
-            meta[DDEfdTags.testEfdAbortReason] = DDTagValues.efdAbortFaulty
-        }
-        
-        DDTestMonitor.tracer.eventsExporter?.exportEvent(event: DDTestModuleEnvelope(self))
+        DDTestMonitor.tracer.eventsExporter?.exportEvent(event: ModuleEnvelope(self))
         Log.debug("Exported module_end event moduleId: \(self.id)")
-
-        let testSession = DDTestSession(testModule: self)
-        DDTestMonitor.tracer.eventsExporter?.exportEvent(event: DDTestSession.DDTestSessionEnvelope(testSession))
-        Log.debug("Exported session_end event sessionId: \(self.sessionId)")
-
-        if let coverageHelper = DDTestMonitor.instance?.coverageHelper {
-            /// We need to wait for all the traces to be written to the backend before exiting
-            coverageHelper.coverageWorkQueue.maxConcurrentOperationCount = ProcessInfo.processInfo.activeProcessorCount
-            coverageHelper.coverageWorkQueue.qualityOfService = .userInteractive
-            coverageHelper.coverageWorkQueue.waitUntilAllOperationsAreFinished()
-        }
-
-        DDTestMonitor.tracer.flush()
-        DDTestMonitor.instance?.gitUploadQueue.waitUntilAllOperationsAreFinished()
-    }
-    
-    func checkEfdStatus(for test: DDTest, efd: EarlyFlakeDetectionService?) -> Bool {
-        guard !efdSessionFailed, test.module.bundleName == bundleName else { return false }
-        guard let known = efd?.knownTests, let threshold = efd?.faultySessionThreshold else { return false }
-        // Calculate threshold
-        let counts = efdTestsCounts
-        let testsCount = max(Double(known.testCount), Double(counts.knownTests))
-        let newTests = Double(counts.newTests)
-        guard newTests <= threshold || ((newTests / testsCount) * 100.0) < threshold else {
-            Log.print("Early Flake Detection Faulty Session detected!")
-            efdSessionFailed = true
-            return false
-        }
-        return known.isNew(test: test.name, in: test.suite.name, and: bundleName)
     }
 }
 
 /// Public interface for DDTestModule
-public extension DDTestModule {
-    /// Starts the module
-    /// - Parameters:
-    ///   - bundleName: name of the module or bundle to test.
-    ///   - startTime: Optional, the time where the module started
-    @objc static func start(bundleName: String, startTime: Date? = nil) -> DDTestModule {
-        let module = DDTestModule(bundleName: bundleName, startTime: startTime)
-        return module
-    }
-
-    @objc static func start(bundleName: String) -> DDTestModule {
-        return start(bundleName: bundleName, startTime: nil)
-    }
-
+public extension Module {
     /// Ends the module
     /// - Parameters:
     ///   - endTime: Optional, the time where the module ended
@@ -280,23 +85,51 @@ public extension DDTestModule {
     ///   - key: The name of the tag, if a tag exists with the name it will be
     ///     replaced with the new value
     ///   - value: The value of the tag, can be a number or a string.
-    @objc func setTag(key: String, value: Any) {}
+    @objc func setTag(key: String, value: Any) {
+        trySet(tag: key, value: value)
+    }
 
     /// Starts a suite in this module
     /// - Parameters:
     ///   - name: name of the suite
     ///   - startTime: Optional, the time where the suite started
-    @objc func suiteStart(name: String, startTime: Date? = nil) -> DDTestSuite {
-        let suite = DDTestSuite(name: name, module: self, startTime: startTime)
+    @objc func suiteStart(name: String, startTime: Date? = nil) -> Suite {
+        let suite = Suite(name: name, module: self, startTime: startTime)
         return suite
     }
 
-    @objc func suiteStart(name: String) -> DDTestSuite {
+    @objc func suiteStart(name: String) -> Suite {
         return suiteStart(name: name, startTime: nil)
     }
 }
 
-extension DDTestModule {
+extension Module: TestModule {
+    func set(tag name: String, value: SpanAttributeConvertible) {
+        meta[name] = value.spanAttribute
+    }
+    
+    func set(metric name: String, value: Double) {
+        metrics[name] = value
+    }
+    
+    func setSkipped() {
+        status = .skip
+    }
+    
+    func set(failed reason: TestError?) {
+        status = .fail
+        var errorMessage = "Module \(name) failed"
+        if let error = reason {
+            set(errorTags: error)
+            errorMessage += ": \(error)"
+        }
+        session.set(failed: .init(type: "ModuleFailed", message: errorMessage))
+    }
+    
+    func end(time: Date?) { end(endTime: time) }
+}
+
+extension Module {
     enum StaticCodingKeys: String, CodingKey {
         case test_session_id
         case test_module_id
@@ -312,19 +145,19 @@ extension DDTestModule {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: StaticCodingKeys.self)
-        try container.encode(sessionId.rawValue, forKey: .test_session_id)
+        try container.encode(session.id.rawValue, forKey: .test_session_id)
         try container.encode(id.rawValue, forKey: .test_module_id)
         try container.encode(startTime.timeIntervalSince1970.toNanoseconds, forKey: .start)
         try container.encode(duration, forKey: .duration)
         try container.encode(meta, forKey: .meta)
         try container.encode(metrics, forKey: .metrics)
         try container.encode(status == .fail ? 1 : 0, forKey: .error)
-        try container.encode("\(testFramework).module", forKey: .name)
-        try container.encode("\(bundleName)", forKey: .resource)
+        try container.encode("\(session.testFramework).module", forKey: .name)
+        try container.encode(name, forKey: .resource)
         try container.encode(DDTestMonitor.env.service, forKey: .service)
     }
 
-    struct DDTestModuleEnvelope: Encodable {
+    struct ModuleEnvelope: Encodable {
         enum CodingKeys: String, CodingKey {
             case type
             case version
@@ -334,20 +167,10 @@ extension DDTestModule {
         let version: Int = 1
 
         let type: String = DDTagValues.typeModuleEnd
-        let content: DDTestModule
+        let content: Module
 
-        init(_ content: DDTestModule) {
+        init(_ content: Module) {
             self.content = content
         }
-    }
-}
-
-private extension DDTestModule {
-    struct Counters {
-        var skippedTests: UInt = 0
-        var retryTestRuns: UInt = 0
-        var allTestRuns: UInt = 0
-        var newTests: UInt = 0
-        var knownTests: UInt = 0
     }
 }

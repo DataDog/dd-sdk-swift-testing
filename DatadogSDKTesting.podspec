@@ -7,7 +7,7 @@ Pod::Spec.new do |s|
   s.homepage      = 'https://www.datadoghq.com'
   s.social_media_url = 'https://twitter.com/datadoghq'
   
-  s.swift_version = '5.7.1'
+  s.swift_version = '5.9'
 
   s.authors = {
     'Yehor Popovych'  => 'yehor.popovych@datadoghq.com',
@@ -19,9 +19,9 @@ Pod::Spec.new do |s|
     :sha256 => '2b857757e955347c14d24b9f26324bcad1374c8050d6665a7783a4ca7240ca88'
   }
   
-  s.ios.deployment_target  = '13.0'
-  s.osx.deployment_target  = '10.15'
-  s.tvos.deployment_target = '13.0'
+  s.ios.deployment_target  = '12.0'
+  s.osx.deployment_target  = '10.13'
+  s.tvos.deployment_target = '12.0'
   
   s.vendored_frameworks    = 'DatadogSDKTesting.xcframework'
 end

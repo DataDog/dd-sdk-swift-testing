@@ -7,6 +7,7 @@
 @testable import EventsExporter
 import XCTest
 
+extension DataUploadStatus: @retroactive Equatable {}
 extension DataUploadStatus: EquatableInTests {}
 
 class DataUploaderTests: XCTestCase {

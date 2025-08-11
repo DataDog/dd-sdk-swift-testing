@@ -15,7 +15,8 @@
 @implementation DDTestModuleApiTests
 
 - (void)testApiIsAccessible{
-    DDTestModule *module = [DDTestModule startWithBundleName:@"ManualObjcTestingModule" startTime:nil];
+    DDTestSession* session = [DDTestSession startWithName: @"ManualObjcTestingSession"];
+    DDTestModule *module = [session moduleStartWithName:@"ManualObjcTestingModule" startTime:nil];
     DDTestSuite *suite = [module suiteStartWithName:@"ManualObjcTestingSuite" startTime:nil];
     DDTest *test = [suite testStartWithName:@"ManualObjcTestingTest" startTime:nil];
     [test setTagWithKey:@"key" value:@"value"];
@@ -23,6 +24,7 @@
     [test endWithStatus:DDTestStatusPass endTime:nil];
     [suite endWithTime:nil];
     [module endWithTime:nil];
+    [session endWithTime:nil];
 }
 
 @end

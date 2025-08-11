@@ -5,7 +5,7 @@
  */
 
 import Foundation
-@_implementationOnly import OpenTelemetrySdk
+internal import OpenTelemetrySdk
 
 class FileTraceExporter: SpanExporter {
     private var outputURL: URL

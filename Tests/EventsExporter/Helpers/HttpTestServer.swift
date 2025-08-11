@@ -23,7 +23,7 @@ internal class HttpTestServer {
     var config: HttpTestServerConfig?
 
     public init(url: URL?, config: HttpTestServerConfig?) {
-        host = url?.host ?? "localhost"
+        host = url?.host ?? "127.0.0.1"
         port = url?.port ?? 33333
         self.config = config
     }
@@ -91,12 +91,13 @@ internal class HttpTestServer {
                         let part = HTTPServerResponsePart.head(head)
                         _ = channel.write(part)
 
-                        config?.logsReceivedCallback?()
+//                        config?.logsReceivedCallback?()
 
                         let endpart = HTTPServerResponsePart.end(nil)
                         _ = channel.writeAndFlush(endpart).flatMap {
                             channel.close()
                         }
+                        config?.logsReceivedCallback?()
                     } else if request.uri.unicodeScalars.starts(with: "/traces".unicodeScalars) {
                         let channel = context.channel
 
@@ -105,12 +106,14 @@ internal class HttpTestServer {
                         let part = HTTPServerResponsePart.head(head)
                         _ = channel.write(part)
 
-                        config?.tracesReceivedCallback?()
+//                        config?.tracesReceivedCallback?()
 
                         let endpart = HTTPServerResponsePart.end(nil)
                         _ = channel.writeAndFlush(endpart).flatMap {
                             channel.close()
                         }
+                        
+                        config?.tracesReceivedCallback?()
                     }
                 case .body:
                     break

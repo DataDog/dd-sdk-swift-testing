@@ -6,7 +6,7 @@
 
 import Foundation
 import MachO
-@_implementationOnly import CDatadogSDKTesting
+internal import CDatadogSDKTesting
 
 /// It stores information about loaded mach images
 struct MachOImage {

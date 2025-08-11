@@ -4,8 +4,8 @@
  * Copyright 2020-Present Datadog, Inc.
  */
 
-@_implementationOnly import OpenTelemetryApi
-@_implementationOnly import OpenTelemetrySdk
+internal import OpenTelemetryApi
+internal import OpenTelemetrySdk
 import XCTest
 
 guard let outputPath = ProcessInfo.processInfo.environment["TEST_OUTPUT_FILE"] else {

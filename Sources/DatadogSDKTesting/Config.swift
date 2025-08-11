@@ -57,6 +57,10 @@ final class Config {
     var testRetriesTestRetryCount: UInt = 5
     var testRetriesTotalRetryCount: UInt = 1000
     
+    /// Test Management
+    var testManagementEnabled: Bool = true
+    var testManagementAttemptToFixRetries: UInt? = nil
+    
     /// Avoids configuring the traces exporter
     var disableTracesExporting: Bool = false
 
@@ -138,6 +142,10 @@ final class Config {
         testRetriesTestRetryCount = env[.ciVisibilityFlakyRetryCount] ?? testRetriesTestRetryCount
         testRetriesTotalRetryCount = env[.ciVisibilityTotalFlakyRetryCount] ?? testRetriesTotalRetryCount
         
+        /// Test Managemennt
+        testManagementEnabled = env[.testManagementEnabled] ?? testManagementEnabled
+        testManagementAttemptToFixRetries = env[.testManagementAttemptToFixRetries]
+        
         /// UI testing properties
         tracerTraceId = env[.tracerTraceId]
         tracerSpanId = env[.tracerSpanId]
@@ -149,7 +157,7 @@ final class Config {
         } else if let custom = env[.customURL, URL.self] {
             endpoint = .other(testsBaseURL: custom, logsBaseURL: custom)
         } else if let port = env[.localTestEnvironmentPort, Int.self], port < 65535 {
-            let url = URL(string: "http://localhost:\(port)")!
+            let url = URL(string: "http://127.0.0.1:\(port)")!
             endpoint = .other(testsBaseURL: url, logsBaseURL: url)
         }
         
@@ -224,6 +232,8 @@ extension Config: CustomDebugStringConvertible {
         Coverage Enabled: \(codeCoverageEnabled)
         ITR Enabled: \(itrEnabled)
         Excluded Branches: \(excludedBranches)
+        Test Management Enabled: \(testManagementEnabled)
+        Test Management Attempt To Fix Retries: \(testManagementAttemptToFixRetries.map(String.init) ?? "nil")
         Test Retries Enabled: \(testRetriesEnabled)
         Test Retries Count: \(testRetriesTestRetryCount)
         Test Retries Total Count: \(testRetriesTotalRetryCount)

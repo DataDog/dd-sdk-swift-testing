@@ -5,7 +5,7 @@
  */
 
 import Foundation
-@_implementationOnly import CDatadogSDKTesting
+internal import CDatadogSDKTesting
 
 enum FrameworkLoadHandler {
     static var testObserver: DDTestObserver?

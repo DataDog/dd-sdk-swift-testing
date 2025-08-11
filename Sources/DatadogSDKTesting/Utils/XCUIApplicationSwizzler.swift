@@ -5,7 +5,7 @@
  */
 
 import Foundation
-@_implementationOnly import XCTest
+internal import XCTest
 
 extension XCUIApplication {
     fileprivate func addProcessEnvironmentToLaunch(_ environment: String) {

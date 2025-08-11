@@ -26,7 +26,7 @@ class EventsExporterTests: XCTestCase {
         let expecLog = expectation(description: "logs received")
         expecLog.assertForOverFulfill = false
 
-        let server = HttpTestServer(url: URL(string: "http://localhost:33333"),
+        let server = HttpTestServer(url: URL(string: "http://127.0.0.1:33333"),
                                     config: HttpTestServerConfig(tracesReceivedCallback: {
                                                                      tracesSent = true
                                                                      expecTrace.fulfill()
@@ -53,8 +53,8 @@ class EventsExporterTests: XCTestCase {
                                                           hostname: "hostname",
                                                           apiKey: "apikey",
                                                           endpoint: Endpoint.custom(
-                                                              testsURL: URL(string: "http://localhost:33333/traces")!,
-                                                              logsURL: URL(string: "http://localhost:33333/logs")!
+                                                              testsURL: URL(string: "http://127.0.0.1:33333/traces")!,
+                                                              logsURL: URL(string: "http://127.0.0.1:33333/logs")!
                                                           ),
                                                           metadata: .init(),
                                                           exporterId: "exporterId",

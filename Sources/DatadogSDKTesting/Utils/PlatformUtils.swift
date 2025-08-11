@@ -11,7 +11,7 @@ import Foundation
     import Cocoa
     import SystemConfiguration
 #endif
-@_implementationOnly import CodeCoverage
+internal import CodeCoverage
 
 struct PlatformUtils {
     static func getRunningPlatform() -> String {
@@ -172,15 +172,15 @@ struct PlatformUtils {
     }
     
     static var xcodeVersion: XcodeVersion {
-        let version = getXcodeVersion()
-        guard version.count >= 2 else {
-            return .xcode16
+        guard let version = Int(getXcodeVersion(), radix: 10) else {
+            return .xcode16_3
         }
-        switch version[version.startIndex..<version.index(version.startIndex, offsetBy: 2)] {
-        case "14": return .xcode14
-        case "15": return .xcode15
-        case "16": return .xcode16
-        default: return .xcode16
+        switch version {
+        case 1400..<1500: return .xcode14
+        case 1500..<1600: return .xcode15
+        case 1600..<1630: return .xcode16_0
+        case 1630..<1700: return .xcode16_3
+        default: return .xcode16_3
         }
     }
 }

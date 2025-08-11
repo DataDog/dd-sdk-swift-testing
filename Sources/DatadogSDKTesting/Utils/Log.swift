@@ -5,7 +5,7 @@
  */
 
 import Foundation
-@_implementationOnly import EventsExporter
+internal import EventsExporter
 
 final class Log: Logger {
     var isDebug: Bool = false
@@ -13,7 +13,8 @@ final class Log: Logger {
     let isSwiftPrint: Bool
     
     init(env: EnvironmentReader) {
-        isSwiftPrint = (env["OS_ACTIVITY_MODE"] ?? "") == "disable"
+        //isSwiftPrint = (env["OS_ACTIVITY_MODE"] ?? "") == "disable"
+        isSwiftPrint = true
         isDebug = false
         isDebugTracerCallStack = false
     }
@@ -46,7 +47,7 @@ final class Log: Logger {
     }
 
     private func print(prefix: String, message: String) {
-        let msg = "\(prefix)\(message)\n"
+        let msg = "note: \(prefix)\(message.replacingOccurrences(of: "\n", with: "\nnote: "))"
         if isSwiftPrint { Swift.print(msg) } else { NSLog(msg) }
     }
 }

@@ -83,9 +83,24 @@ public struct SkipTestPublicFormat: CustomStringConvertible, Codable {
     public var description: String {
         return "{name:\(name), suite:\(suite), configuration: \(configuration ?? [:]), customConfiguration: \(customConfiguration ?? [:])}"
     }
+    
+    public init(name: String, suite: String,
+                configuration: [String : String]? = nil,
+                customConfiguration: [String : String]? = nil)
+    {
+        self.name = name
+        self.suite = suite
+        self.configuration = configuration
+        self.customConfiguration = customConfiguration
+    }
 }
 
 public struct SkipTests: Codable {
     public let correlationId: String
     public let tests: [SkipTestPublicFormat]
+    
+    public init(correlationId: String, tests: [SkipTestPublicFormat]) {
+        self.correlationId = correlationId
+        self.tests = tests
+    }
 }

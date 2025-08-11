@@ -4,9 +4,9 @@
  * Copyright 2020-Present Datadog, Inc.
  */
 
-@_implementationOnly import EventsExporter
-@_implementationOnly import OpenTelemetryApi
-@_implementationOnly import OpenTelemetrySdk
+internal import EventsExporter
+internal import OpenTelemetryApi
+internal import OpenTelemetrySdk
 
 #if canImport(UIKit)
     import UIKit
@@ -23,6 +23,7 @@ struct CrashedModuleInformation {
     var crashedModuleId: SpanId
     var crashedSuiteId: SpanId
     var crashedSuiteName: String
+    var sessionStartTime: Date?
     var moduleStartTime: Date?
     var suiteStartTime: Date?
 }
@@ -37,14 +38,24 @@ internal class DDTestMonitor {
     
     static var envReader: EnvironmentReader = ProcessEnvironmentReader()
     
-    static var sessionId: String = { envReader["XCTestSessionIdentifier"] ?? UUID().uuidString }()
+    // We can't calculate proper session and we need something to persist between executions
+    // so we will use simulator id and boot time
+    // for macOS machines we will try to use boot time too (no simulator info)
+    static var sessionId: String = {
+        let scheme = envReader["XCODE_SCHEME_NAME"] ?? Bundle.main.name
+        let testPlan = envReader["XCODE_TEST_PLAN_NAME"] ?? Bundle.testBundle?.name ?? Bundle.main.name
+        let bootTime: String = envReader["SIMULATOR_BOOT_TIME"] ??
+            String(Int64(Date().timeIntervalSince1970 - ProcessInfo.processInfo.systemUptime))
+        return "\(scheme)-\(testPlan)-\(bootTime)"
+    }()
     
     static let tracerVersion = Bundle.sdk.version ?? "unknown"
 
     static var cacheManager: CacheManager? = {
         do {
-            return try CacheManager(environment: env.environment, session: sessionId,
-                                    commit: env.git.commitSHA, debug: config.extraDebugCodeCoverage)
+            return try CacheManager(session: sessionId,
+                                    commit: env.git.commitSHA ?? "unknown-commit",
+                                    debug: config.extraDebugCodeCoverage)
         } catch {
             Log.print("Cache Manager initialization failed: \(error)")
             return nil
@@ -61,6 +72,9 @@ internal class DDTestMonitor {
     let messageChannelUUID: String
 
     var crashedModuleInfo: CrashedModuleInformation?
+    
+    var codeOwners: CodeOwners? = nil
+    var bundleFunctionInfo: FunctionMap = .init()
 
     let instrumentationWorkQueue = OperationQueue()
     private let testOptimizationSetupQueue = OperationQueue()
@@ -68,19 +82,17 @@ internal class DDTestMonitor {
 
     static let developerMachineHostName: String = try! Spawn.output("hostname")
 
-    var coverageHelper: DDCoverageHelper?
-    var gitUploader: GitUploader?
-    var itr: IntelligentTestRunner?
-    
-    var knownTests: KnownTestsService? = nil
-    
-    var failedTestRetriesCount: UInt = 0
-    var failedTestRetriesTotalCount: UInt = 0
-    var efd: EarlyFlakeDetectionService? = nil
+    // Advanced features
+    var gitUploader: GitUploader? = nil
+    var tia: TestImpactAnalysis? = nil
+    var knownTests: KnownTests? = nil
+    var efd: EarlyFlakeDetection? = nil
+    var atr: AutomaticTestRetries? = nil
+    var testManagement: TestManagement? = nil
 
     var rLock = NSRecursiveLock()
-    private var privateCurrentTest: DDTest?
-    var currentTest: DDTest? {
+    private var privateCurrentTest: Test?
+    var currentTest: Test? {
         get {
             rLock.lock()
             defer { rLock.unlock() }
@@ -109,7 +121,9 @@ internal class DDTestMonitor {
         Log.measure(name: "startInstrumenting") {
             DDTestMonitor.instance?.startInstrumenting()
         }
-
+        
+        DDTestMonitor.instance?.loadSourceCodeInfo()
+        
         Log.measure(name: "startGitUpload") {
             DDTestMonitor.instance?.startGitUpload()
         }
@@ -117,6 +131,7 @@ internal class DDTestMonitor {
         Log.measure(name: "startTestOptimization") {
             DDTestMonitor.instance?.startTestOptimization()
         }
+        
         return true
     }
     
@@ -130,6 +145,7 @@ internal class DDTestMonitor {
     init() {
         Log.debug("Config:\n\(DDTestMonitor.config)")
         Log.debug("Environment:\n\(DDTestMonitor.env)")
+        Log.debug("Session ID:\n\(DDTestMonitor.sessionId)")
         maxPayloadSize = DDTestMonitor.config.maxPayloadSize
         messageChannelUUID = DDTestMonitor.config.messageChannelUUID ?? UUID().uuidString
         
@@ -140,13 +156,10 @@ internal class DDTestMonitor {
             { _ in
                 /// As crash reporter is initialized in testBundleWillStart() method, we initialize it here
                 /// because dont have test observer
-                if !DDTestMonitor.config.disableCrashHandler {
-                    DDCrashes.install(folder: try! DDTestMonitor.cacheManager!.common(feature: "crashes"),
-                                      disableMach: DDTestMonitor.config.disableMachCrashHandler)
-                    let launchedSpan = DDTestMonitor.tracer.createSpanFromLaunchContext()
-                    let simpleSpan = SimpleSpanData(spanData: launchedSpan.toSpanData())
-                    DDCrashes.setCustomData(customData: SimpleSpanSerializer.serializeSpan(simpleSpan: simpleSpan))
-                }
+                self.setupCrashHandler()
+                let launchedSpan = DDTestMonitor.tracer.createSpanFromLaunchContext()
+                let simpleSpan = SimpleSpanData(spanData: launchedSpan.toSpanData())
+                DDCrashes.setCurrent(spanData: simpleSpan)
             }
 
             #if targetEnvironment(simulator) || os(macOS)
@@ -184,6 +197,15 @@ internal class DDTestMonitor {
             #endif
         }
     }
+    
+    deinit {
+        efd?.stop()
+        atr?.stop()
+        tia?.stop()
+        knownTests?.stop()
+        testManagement?.stop()
+        gitUploadQueue.waitUntilAllOperationsAreFinished()
+    }
 
     func startGitUpload() {
         /// Check Git is up to date and no local changes
@@ -192,7 +214,13 @@ internal class DDTestMonitor {
             Log.print("Git status is not up to date")
             return
         }
-
+        
+        guard let commit = DDTestMonitor.env.git.commitSHA, commit != "" else {
+            Log.print("Commit SHA is empty. Git upload failed")
+            self.isGitUploadSucceded = false
+            return
+        }
+        
         DDTestMonitor.instance?.gitUploadQueue.addOperation {
             if DDTestMonitor.config.gitUploadEnabled {
                 Log.debug("Git Upload Enabled")
@@ -211,12 +239,6 @@ internal class DDTestMonitor {
                 return
             }
             
-            guard let commit = DDTestMonitor.env.git.commitSHA else {
-                Log.print("Commit SHA is empty. GitUpload failed")
-                self.isGitUploadSucceded = false
-                return
-            }
-            
             self.isGitUploadSucceded = DDTestMonitor.instance?.gitUploader?.sendGitInfo(
                 repositoryURL: DDTestMonitor.env.git.repositoryURL, commit: commit
             ) ?? false
@@ -225,8 +247,7 @@ internal class DDTestMonitor {
 
     func startTestOptimization() {
         var tracerBackendConfig: TracerSettings? = nil
-        itr = nil
-        coverageHelper = nil
+        tia = nil
         efd = nil
         let service = DDTestMonitor.env.service
         
@@ -279,127 +300,148 @@ internal class DDTestMonitor {
                 }
                 tracerBackendConfig = config
             }
-            if config.flakyTestRetriesEnabled && DDTestMonitor.config.testRetriesEnabled {
-                failedTestRetriesCount = DDTestMonitor.config.testRetriesTestRetryCount
-                failedTestRetriesTotalCount = DDTestMonitor.config.testRetriesTotalRetryCount
-            }
         }
         testOptimizationSetupQueue.addOperation(updateTracerConfig)
         
-        let knownTestsSetup = BlockOperation {
-            guard let config = tracerBackendConfig, config.knownTestsEnabled else {
-                Log.print("Known tests call is disabled")
+        let automaticTestRetries = BlockOperation {
+            guard let remote = tracerBackendConfig else {
+                Log.print("ATR: error: backend config can't be loaded")
                 return
             }
-            Log.debug("Known Tests Enabled")
+            guard AutomaticTestRetriesFactory.isEnabled(config: DDTestMonitor.config,
+                                                        env: DDTestMonitor.env,
+                                                        remote: remote)
+            else {
+                Log.print("ATR: disabled")
+                return
+            }
+            self.atr = AutomaticTestRetriesFactory(config: DDTestMonitor.config).create(log: Log.instance)
+        }
+        automaticTestRetries.addDependency(updateTracerConfig)
+        testOptimizationSetupQueue.addOperation(automaticTestRetries)
+        
+        let knownTestsSetup = BlockOperation {
+            guard let remote = tracerBackendConfig else {
+                Log.print("Known Tests: error: backend config can't be loaded")
+                return
+            }
+            guard KnownTestsFactory.isEnabled(config: DDTestMonitor.config,
+                                              env: DDTestMonitor.env,
+                                              remote: remote)
+            else {
+                Log.print("Known Tests: disabled")
+                return
+            }
             guard let eventsExporter = DDTestMonitor.tracer.eventsExporter else {
-                Log.print("Known tests init failed. Exporter is nil")
-                self.knownTests = nil
+                Log.print("Known Tests: init failed. Exporter is nil")
                 return
             }
             guard let cache = try? DDTestMonitor.cacheManager?.session(feature: "known_tests") else {
-                Log.print("Known tests init failed. Can't create cache directiry.")
-                self.knownTests = nil
+                Log.print("Known Tests: init failed. Can't create cache directiry.")
                 return
             }
-            self.knownTests = KnownTestsServiceImpl(repository: repository, service: service,
-                                                    environment: DDTestMonitor.env.environment,
-                                                    configurations: DDTestMonitor.env.baseConfigurations,
-                                                    custom: DDTestMonitor.config.customConfigurations,
-                                                    exporter: eventsExporter, cache: cache)
-            self.knownTests!.start()
+            let factory = KnownTestsFactory(repository: repository, service: service,
+                                            environment: DDTestMonitor.env.environment,
+                                            configurations: DDTestMonitor.env.baseConfigurations,
+                                            custom: DDTestMonitor.config.customConfigurations,
+                                            exporter: eventsExporter, cache: cache)
+            self.knownTests = factory.create(log: Log.instance)
         }
         knownTestsSetup.addDependency(updateTracerConfig)
         testOptimizationSetupQueue.addOperation(knownTestsSetup)
         
-        if DDTestMonitor.config.itrEnabled {
-            let isExcluded = { (branch: String) in
-                let excludedBranches = DDTestMonitor.config.excludedBranches
-                if excludedBranches.contains(branch) {
-                    Log.debug("Excluded branch: \(branch)")
-                    return true
-                }
-                let match = excludedBranches
-                    .filter { $0.hasSuffix("*") }
-                    .map { $0.dropLast() }
-                    .first { branch.hasPrefix($0) }
-                if let wildcard = match {
-                    Log.debug("Excluded branch: \(branch) with wildcard: \(wildcard)*")
-                    return true
-                }
-                return false
+        let efdSetup = BlockOperation {
+            guard let remote = tracerBackendConfig else {
+                Log.print("EFD: error: backend config can't be loaded")
+                return
             }
-            
-            if !isExcluded(branch) {
-                let itrSetup = BlockOperation { [self] in
-                    guard let settings = tracerBackendConfig?.itr,
-                          settings.itrEnabled && settings.testsSkipping
-                    else {
-                        Log.debug("ITR Disabled")
-                        return
-                    }
-                    guard let folder = try? DDTestMonitor.cacheManager?.session(feature: "itr") else {
-                        Log.print("ITR init failed. Can't create cache folder")
-                        return
-                    }
-                    // Activate Intelligent Test Runner
-                    itr = IntelligentTestRunner(configurations: DDTestMonitor.env.baseConfigurations,
-                                                custom: DDTestMonitor.config.customConfigurations,
-                                                folder: folder)
-                    itr?.start()
-                }
-                itrSetup.addDependency(updateTracerConfig)
-                testOptimizationSetupQueue.addOperation(itrSetup)
+            guard EarlyFlakeDetectionFactory.isEnabled(config: DDTestMonitor.config, env: DDTestMonitor.env, remote: remote)
+            else {
+                Log.print("EFD: disabled")
+                return
             }
+            guard let knownTests = self.knownTests else {
+                Log.print("EFD: init failed. Known Tests is nil")
+                return
+            }
+            self.efd = EarlyFlakeDetectionFactory(knownTests: knownTests, settings: remote.efd).create(log: Log.instance)
         }
+        efdSetup.addDependency(knownTestsSetup)
+        testOptimizationSetupQueue.addOperation(efdSetup)
         
-        if DDTestMonitor.config.codeCoverageEnabled {
-            let coverageSetup = BlockOperation { [self] in
-                guard let settings = tracerBackendConfig?.itr, settings.codeCoverage else {
-                    Log.debug("Coverage Disabled")
-                    return
-                }
-                // Activate Coverage
-                Log.debug("Coverage Enabled")
+        let testManagementSetup = BlockOperation {
+            guard let remote = tracerBackendConfig else {
+                Log.print("Test Management: error: backend config can't be loaded")
+                return
+            }
+            guard TestManagementFactory.isEnabled(config: DDTestMonitor.config,
+                                                  env: DDTestMonitor.env,
+                                                  remote: remote)
+            else {
+                Log.print("Test Management is disabled")
+                return
+            }
+            guard let eventsExporter = DDTestMonitor.tracer.eventsExporter else {
+                Log.print("Test Management: init failed. Exporter is nil")
+                return
+            }
+            guard let cache = try? DDTestMonitor.cacheManager?.session(feature: "test_management") else {
+                Log.print("Test Management: init failed. Can't create cache directiry.")
+                return
+            }
+            let attemptToFixRetryCount = DDTestMonitor.config.testManagementAttemptToFixRetries ?? remote.testManagement.attemptToFixRetries
+            let commitMessage = DDTestMonitor.env.git.commitMessage ?? ""
+            let factory = TestManagementFactory(repository: repository,
+                                                commitMessage: commitMessage,
+                                                attemptToFixRetries: attemptToFixRetryCount,
+                                                exporter: eventsExporter,
+                                                cache: cache)
+            self.testManagement = factory.create(log: Log.instance)
+        }
+        testManagementSetup.addDependency(updateTracerConfig)
+        testOptimizationSetupQueue.addOperation(testManagementSetup)
+        
+        let tiaSetup = BlockOperation { [self] in
+            guard let remote = tracerBackendConfig else {
+                Log.print("TIA: error: backend config can't be loaded")
+                return
+            }
+            guard TestImpactAnalysisFactory.isEnabled(config: DDTestMonitor.config,
+                                                      env: DDTestMonitor.env,
+                                                      remote: remote)
+            else {
+                Log.print("TIA: disabled")
+                return
+            }
+            guard let eventsExporter = DDTestMonitor.tracer.eventsExporter else {
+                Log.print("TIA: init failed. Exporter is nil")
+                return
+            }
+            guard let cache = try? DDTestMonitor.cacheManager?.session(feature: "tia") else {
+                Log.print("TIA: init failed. Can't create cache directiry.")
+                return
+            }
+            var coverage: TestImpactAnalysisFactory.Coverage? = nil
+            if DDTestMonitor.config.codeCoverageEnabled && remote.itr.codeCoverage {
                 guard let temp = try? DDTestMonitor.cacheManager?.temp(feature: "coverage") else {
-                    Log.print("Coverage init failed. Can't create temp directory.")
-                    coverageHelper = nil
+                    Log.print("Code Coverage init failed. Can't create temp directory.")
                     return
                 }
-                guard let exporter = DDTestMonitor.tracer.eventsExporter else {
-                    Log.print("Coverage init failed. Exporter is nil.")
-                    coverageHelper = nil
-                    return
-                }
-                coverageHelper = DDCoverageHelper(storagePath: temp, exporter: exporter,
-                                                  workspacePath: DDTestMonitor.env.workspacePath,
-                                                  priority: DDTestMonitor.config.codeCoveragePriority,
-                                                  debug: DDTestMonitor.config.extraDebugCodeCoverage)
+                coverage = .init(workspacePath: DDTestMonitor.env.workspacePath,
+                                 priority: DDTestMonitor.config.codeCoveragePriority,
+                                 tempFolder: temp,
+                                 debug: DDTestMonitor.config.extraDebugCodeCoverage)
             }
-            coverageSetup.addDependency(updateTracerConfig)
-            testOptimizationSetupQueue.addOperation(coverageSetup)
+            let factory = TestImpactAnalysisFactory(configurations: DDTestMonitor.env.baseConfigurations,
+                                                    custom: DDTestMonitor.config.customConfigurations,
+                                                    exporter: eventsExporter,
+                                                    commit: commit,
+                                                    repository: repository,
+                                                    cache: cache, coverage: coverage)
+            self.tia = factory.create(log: Log.instance)
         }
-        
-        if DDTestMonitor.config.efdEnabled {
-            let efdSetup = BlockOperation {
-                guard let config = tracerBackendConfig, config.efdIsEnabled else {
-                    Log.debug("Early Flake Detection Disabled")
-                    return
-                }
-                // Activate EFD
-                Log.debug("Early Flake Detection Enabled")
-                guard let knownTests = self.knownTests else {
-                    Log.debug("Early Flake Detection init failed. Known Tests service is nil")
-                    return
-                }
-                self.efd = EarlyFlakeDetection(knownTests: knownTests,
-                                               slowTestRetries: config.efd.slowTestRetries,
-                                               faultySessionThreshold: config.efd.faultySessionThreshold)
-                self.efd!.start()
-            }
-            efdSetup.addDependency(knownTestsSetup)
-            testOptimizationSetupQueue.addOperation(efdSetup)
-        }
+        tiaSetup.addDependency(updateTracerConfig)
+        testOptimizationSetupQueue.addOperation(tiaSetup)
     }
 
     func startInstrumenting() {
@@ -435,6 +477,51 @@ internal class DDTestMonitor {
                     startStderrCapture()
                 }
             }
+        }
+    }
+    
+    func loadSourceCodeInfo() {
+#if targetEnvironment(simulator) || os(macOS)
+        guard !DDTestMonitor.config.disableSourceLocation else {
+            return
+        }
+        
+        let testBundle = DDTestMonitor.config.isBinaryUnderUITesting ?
+            Bundle.main : Bundle.testBundle
+        
+        if let bundleName = testBundle?.name {
+            instrumentationWorkQueue.addOperation {
+                Log.debug("Create test bundle DSYM file for test source location")
+                Log.measure(name: "createDSYMFileIfNeeded") {
+                    DDSymbolicator.createDSYMFileIfNeeded(forImageName: bundleName)
+                }
+                self.bundleFunctionInfo = Log.measure(name: "testFunctionsInModule") {
+                    FileLocator.testFunctionsInModule(bundleName)
+                }
+            }
+        }
+            
+        if let workspacePath = DDTestMonitor.env.workspacePath {
+            instrumentationWorkQueue.addOperation {
+                self.codeOwners = Log.measure(name: "createCodeOwners") {
+                    CodeOwners(workspacePath: URL(fileURLWithPath: workspacePath, isDirectory: true))
+                }
+            }
+        }
+#endif
+    }
+    
+    func setupCrashHandler() {
+        DDTestMonitor.instance?.instrumentationWorkQueue.waitUntilAllOperationsAreFinished()
+        // check if handler needed
+        guard !DDTestMonitor.config.disableCrashHandler else {
+            return
+        }
+        Log.measure(name: "Crash handler install") {
+            DDCrashes.install(
+                folder: try! DDTestMonitor.cacheManager!.session(feature: "crash"),
+                disableMach: DDTestMonitor.config.disableMachCrashHandler
+            )
         }
     }
 
@@ -515,7 +602,11 @@ internal class DDTestMonitor {
         CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, CFRunLoopMode.commonModes)
     }
     
-    func ensureTestOptimizationStarted() {
+    var activeFeatures: [any TestHooksFeature] {
         testOptimizationSetupQueue.waitUntilAllOperationsAreFinished()
+        let features: [(any TestHooksFeature)?] = [
+            testManagement, tia, efd, atr, knownTests
+        ]
+        return features.compactMap { $0 }
     }
 }

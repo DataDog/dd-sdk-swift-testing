@@ -5,7 +5,7 @@
  */
 
 import Foundation
-@_implementationOnly import enum EventsExporter.Endpoint
+internal import enum EventsExporter.Endpoint
 
 public enum Endpoint {
     /// US based servers.

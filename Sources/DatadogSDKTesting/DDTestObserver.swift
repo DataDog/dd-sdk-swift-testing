@@ -5,8 +5,8 @@
  */
 
 import Foundation
-@_implementationOnly import EventsExporter
-@_implementationOnly import XCTest
+internal import EventsExporter
+internal import XCTest
 
 class DDTestObserver: NSObject, XCTestObservation {
     private(set) var state: State
@@ -47,11 +47,13 @@ class DDTestObserver: NSObject, XCTestObservation {
             Log.print("testBundleWillStart: Bad observer state: \(state), expected: .none")
             return
         }
+        
         let bundleName = testBundle.name
+        let session = Session.start(name: "XCTest.session",
+                                    command: DDTestMonitor.env.testCommand)
+        session.testFramework = "XCTest"
         Log.debug("testBundleWillStart: \(bundleName)")
-        let module = DDTestModule.start(bundleName: bundleName)
-        module.testFramework = "XCTest"
-        state = .module(module)
+        state = session.configError ? .configError : .module(session.moduleStart(name: bundleName))
     }
 
     func testBundleDidFinish(_ testBundle: Bundle) {
@@ -59,19 +61,24 @@ class DDTestObserver: NSObject, XCTestObservation {
             Log.print("testBundleDidFinish: Bad observer state: \(state), expected: .module")
             return
         }
-        guard module.bundleName == testBundle.name else {
-            Log.print("testBundleDidFinish: Bad module: \(testBundle.name), expected: \(module.bundleName)")
+        guard module.name == testBundle.name else {
+            Log.print("testBundleDidFinish: Bad module: \(testBundle.name), expected: \(module.name)")
             state = .none
             return
         }
-        /// We need to wait for all the traces to be written to the backend before exiting
         module.end()
         state = .none
-        Log.debug("testBundleDidFinish: \(module.bundleName)")
+        Log.debug("testBundleDidFinish: \(module.name)")
+        
+        // Fail session if module failed
+        if case .fail = module.status {
+            module.session.set(failed: nil)
+        }
+        module.session.end()
     }
 
     func testSuiteWillStart(_ testSuite: XCTestSuite) {
-        let module: DDTestModule
+        let module: Module
         let parent: ContainerSuite?
         
         switch state {
@@ -81,15 +88,13 @@ class DDTestObserver: NSObject, XCTestObservation {
         case .container(suite: let cont, inside: let mod):
             module = mod
             parent = cont
-        default:
-            Log.print("testSuiteWillStart: Bad observer state: \(state), expected: .module or .container")
-            return
-        }
-        
-        if module.configError {
+        case .configError:
             Log.print("testSuiteWillStart: Failed, module config error")
             testSuite.testRun?.stop()
             exit(1)
+        default:
+            Log.print("testSuiteWillStart: Bad observer state: \(state), expected: .module or .container")
+            return
         }
 
         guard let tests = testSuite.tests as? [XCTestCase] else {
@@ -98,29 +103,21 @@ class DDTestObserver: NSObject, XCTestObservation {
             return
         }
 
-        Log.measure(name: "waiting for test optimization to be started") {
-            DDTestMonitor.instance?.ensureTestOptimizationStarted()
+        let features = Log.measure(name: "waiting for test optimization to be started") {
+            DDTestMonitor.instance?.activeFeatures ?? []
         }
         
         let wrappedTests = tests.map { DDXCTestRetryGroup(for: $0) }
         testSuite.setValue(wrappedTests, forKey: "_mutableTests")
         
-        module.addExpectedTests(count: UInt(wrappedTests.count))
+        let suite = module.suiteStart(name: testSuite.name)
         
-        let retries = DDTestMonitor.instance.flatMap { monitor in
-            monitor.failedTestRetriesCount > 0
-                ? (test: monitor.failedTestRetriesCount,
-                   total: monitor.failedTestRetriesTotalCount)
-                : nil
+        for feature in features {
+            feature.testSuiteWillStart(suite: suite, testsCount: UInt(wrappedTests.count))
         }
         
-        state = SuiteContext(
-            parent: parent,
-            skippableTests: DDTestMonitor.instance?.itr?.skippableTests,
-            knownTests: DDTestMonitor.instance?.knownTests?.knownTests,
-            efd: DDTestMonitor.instance?.efd,
-            retries: retries
-        ).new(suite: testSuite, in: module)
+        state = .suite(suite: suite, context: SuiteContext(parent: parent, features: features))
+        
         Log.debug("testSuiteWillStart: \(testSuite.name)")
     }
 
@@ -138,6 +135,9 @@ class DDTestObserver: NSObject, XCTestObservation {
                 Log.print("testSuiteDidFinish: Bad suite: \(testSuite.name), expected: \(suite.name)")
                 return
             }
+            // Set suite status based on it's test groups.
+            // Features will setup proper skip and fail strategies for the groups.
+            suite.set(status: testSuite.testRun?.status ?? .pass)
             suite.end()
             state = context.back(from: suite)
             Log.debug("testSuiteDidFinish: \(testSuite.name)")
@@ -151,11 +151,27 @@ class DDTestObserver: NSObject, XCTestObservation {
             Log.print("testRetryGroupWillStart: Bad observer state: \(state), expected: .suite")
             return
         }
-        group.groupRun?.successStrategy = .atLeastOneSucceeded
-        let itr = context.itr(for: group)
-        if itr.markedUnskippable { suite.unskippable = true }
-        if itr.skipped { group.skip(reason: "ITR") }
-        state = context.new(group: group, in: suite, itr: itr)
+        
+        let (config, featureId) = context.features.reduce((TestRetryGroupConfiguration.next(.init()), "")) { prev, feature in
+            guard prev.0.hasNext else { return prev }
+            let next = feature.testGroupConfiguration(for: group.name, meta: group.currentTest!,
+                                                      in: suite, configuration: prev.0.configuration)
+            return (next, feature.id)
+        }
+        
+        group.groupRun?.skipStrategy = config.skipStrategy.xcTest
+        group.groupRun?.successStrategy = config.successStrategy.xcTest
+        
+        let skipStatus = config.skipStatus
+        if skipStatus.isSkipped {
+            group.skip(reason: featureId)
+        }
+        
+        for feature in context.features {
+            feature.testGroupWillStart(for: group.name, in: suite)
+        }
+        
+        state = context.new(group: group, in: suite, skipStatus: skipStatus)
         Log.debug("testRetryGroupWillStart: \(group.name)")
     }
     
@@ -179,16 +195,13 @@ class DDTestObserver: NSObject, XCTestObservation {
             Log.print("testCaseWillStart: Bad observer state: \(state), expected: .group")
             return
         }
-        let test = context.suite.testStart(name: testCase.testId.test, itr: context.itr)
-        if context.isNewTest(group: group) {
-            test.setTag(key: DDTestTags.testIsNew, value: "true")
-            if group.retryReason == nil {
-                test.module.incrementNewTests()
-            }
-        }
-        if let retryReason = group.retryReason {
-            test.setTag(key: DDEfdTags.testIsRetry, value: "true")
-            test.setTag(key: DDEfdTags.testRetryReason, value: retryReason)
+        let test = context.suite.testStart(name: testCase.testId.test)
+        
+        for feature in context.features {
+            feature.testWillStart(test: test, retryReason: group.retryReason,
+                                  skipStatus: context.skipStatus,
+                                  executionCount: group.groupRun?.executionCount ?? 0,
+                                  failedExecutionCount: group.groupRun?.failedExecutionCount ?? 0)
         }
         state = context.new(test: test, in: group)
         Log.debug("testCaseWillStart: \(testCase.name)")
@@ -229,36 +242,37 @@ class DDTestObserver: NSObject, XCTestObservation {
             return
         }
         
-        if test.module.checkEfdStatus(for: test, efd: context.efd) {
-            let duration = Date().timeIntervalSince(testRun.startDate ?? Date(timeIntervalSince1970: 0))
-            let repeats = context.efd!.slowTestRetries.repeats(for: duration)
-            if groupRun.executionCount < Int(repeats) - 1 {
-                // We can retry test
-                group.retry(reason: DDTagValues.retryReasonEfd)
-                Log.debug("EFD will retry test \(test.name)")
-            } else {
-                if repeats == 0 {
-                    // Test is too long. EFD failed
-                    test.setTag(key: DDEfdTags.testEfdAbortReason, value: DDTagValues.efdAbortSlow)
-                }
-                if groupRun.canFail {
-                    // We don't have previous passed runs.
-                    // Record suppressed failures if we have them
-                    testRun.recordSuppressedFailures()
-                }
+        let duration = Date().timeIntervalSince(testRun.startDate ?? Date(timeIntervalSince1970: 0))
+        let status: TestStatus = testRun.hasBeenSkipped ? .skip : testRun.canFail ? .fail : .pass
+        for feature in context.features {
+            feature.testWillFinish(test: test, duration: duration, withStatus: status,
+                                   skipStatus: context.skipStatus,
+                                   executionCount: groupRun.executionCount,
+                                   failedExecutionCount: groupRun.failedExecutionCount)
+        }
+        
+        let actionAndFeature: (RetryStatus, String)? = context.features.reduce(nil) { prev, feature in
+            guard prev == nil else { return prev }
+            return feature.testGroupRetry(test: test, duration: duration, withStatus: status,
+                                          skipStatus: context.skipStatus,
+                                          executionCount: groupRun.executionCount,
+                                          failedExecutionCount: groupRun.failedExecutionCount).map {
+                ($0, feature.id)
             }
-        } else if testRun.canFail {
-            if let retries = context.retries, // ATR is enabled
-               groupRun.executionCount < retries.test, // and we can retry more
-               test.module.incrementRetries(max: retries.total) != nil // and increased global retry counter
-            {
-                // tell group to retry this test
-                group.retry(reason: DDTagValues.retryReasonAtr)
-                Log.debug("ATR will retry test \(test.name)")
-            } else {
-                // Record suppresses failures if we have them
+        }
+        
+        guard let actionAndFeature = actionAndFeature else { return }
+        
+        switch actionAndFeature {
+        case (.retry, let id):
+            Log.debug("\(id) will retry test \(test.name)")
+            group.retry(reason: id)
+        case (.recordErrors, let id):
+            if testRun.canFail {
+                Log.debug("\(id) restores suppressed failures for \(test.name)")
                 testRun.recordSuppressedFailures()
             }
+        case (.pass, _): break
         }
     }
     
@@ -286,21 +300,22 @@ class DDTestObserver: NSObject, XCTestObservation {
             // We already registered failure for this test before.
             if testRun.suppressedFailures.count > 0 { // Check if it was suppressed
                 testRun.suppressFailure() // then suppress current error too
-                Log.print("Suppressed issue: \(issue) for test: \(testCase)")
+                Log.print("Suppressed one more issue: \(issue) for test: \(testCase)")
             }
             return
         }
         
-        if test.module.checkEfdStatus(for: test, efd: context.efd) {
-            // EFD enabled for this test. Suppress error for now. We will handle it after
+        let suppress = context.features.reduce((false, "")) { prev, feature in
+            guard !prev.0 else { return prev }
+            let suppress =  feature.shouldSuppressError(test: test, skipStatus: context.skipStatus,
+                                                        executionCount: group.groupRun?.executionCount ?? 0,
+                                                        failedExecutionCount: group.groupRun?.failedExecutionCount ?? 0)
+            return (suppress, feature.id)
+        }
+        
+        if suppress.0 {
             testRun.suppressFailure()
-            Log.print("Suppressed issue \(issue) for test \(testCase)")
-        } else if let retries = context.retries, // ATR is enabled
-                  let run = group.groupRun, run.executionCount < retries.test, // and we can retry test more
-                  test.module.retriedByATRRunsCount < retries.total // and global counter allow us to retry
-        {
-            testRun.suppressFailure() // suppress current error
-            Log.print("Suppressed issue: \(issue) for test: \(testCase)")
+            Log.print("Suppressed issue \(issue) for test \(testCase) reason \(suppress.1)")
         }
     }
 }
@@ -308,11 +323,12 @@ class DDTestObserver: NSObject, XCTestObservation {
 extension DDTestObserver {
     enum State {
         case none
-        case module(DDTestModule)
-        case container(suite: ContainerSuite, inside: DDTestModule)
-        case suite(suite: DDTestSuite, context: SuiteContext)
+        case configError
+        case module(Module)
+        case container(suite: ContainerSuite, inside: Module)
+        case suite(suite: Suite, context: SuiteContext)
         case group(group: DDXCTestRetryGroup, context: GroupContext)
-        case test(test: DDTest, group: DDXCTestRetryGroup, context: GroupContext)
+        case test(test: Test, group: DDXCTestRetryGroup, context: GroupContext)
     }
     
     indirect enum ContainerSuite {
@@ -344,58 +360,34 @@ extension DDTestObserver {
     
     final class SuiteContext {
         let parent: ContainerSuite?
-        let skippableTests: SkippableTests?
-        let knownTests: KnownTests?
-        let efd: EarlyFlakeDetectionService?
-        let retries: (test: UInt, total: UInt)?
-        private(set) var unskippableCache: [ObjectIdentifier: UnskippableMethodChecker]
+        let features: [any TestHooksFeature]
         
-        init(parent: ContainerSuite?,
-             skippableTests: SkippableTests?, knownTests: KnownTests?,
-             efd: EarlyFlakeDetectionService?, retries: (test: UInt, total: UInt)?)
+        init(parent: ContainerSuite?, features: [any TestHooksFeature])
         {
             self.parent = parent
-            self.skippableTests = skippableTests
-            self.knownTests = knownTests
-            self.efd = efd
-            self.retries = retries
-            self.unskippableCache = [:]
+            self.features = features
         }
         
-        func back(from suite: DDTestSuite) -> State {
-            parent == nil ? .module(suite.module) : .container(suite: parent!, inside: suite.module)
+        func back(from suite: Suite) -> State {
+            parent == nil ?
+                .module(suite.module as! Module) :
+                .container(suite: parent!, inside: suite.module as! Module)
         }
         
-        func new(suite: XCTestSuite, in module: DDTestModule) -> State {
-            let suite = module.suiteStart(name: suite.name)
-            return .suite(suite: suite, context: self)
-        }
-        
-        func new(group: DDXCTestRetryGroup, in suite: DDTestSuite, itr: DDTest.ITRStatus) -> State {
-            .group(group: group, context: GroupContext(itr: itr, suite: suite, suiteContext: self))
-        }
-        
-        func itr(for group: DDXCTestRetryGroup) -> DDTest.ITRStatus {
-            guard let skippableTests = skippableTests else { return .none }
-            let checker = unskippableCache.get(key: ObjectIdentifier(group.testClass),
-                                               or: group.testClass.unskippableMethods)
-            let testId = group.testId
-            return DDTest.ITRStatus(canBeSkipped: skippableTests[testId.suite, testId.test] != nil,
-                                    markedUnskippable: !checker.canSkip(method: testId.test))
+        func new(group: DDXCTestRetryGroup, in suite: Suite, skipStatus: SkipStatus) -> State {
+            .group(group: group, context: GroupContext(skipStatus: skipStatus, suite: suite, suiteContext: self))
         }
     }
     
     final class GroupContext {
-        let itr: DDTest.ITRStatus
-        let suite: DDTestSuite
+        let suite: Suite
         let suiteContext: SuiteContext
+        let skipStatus: SkipStatus
         
-        var knownTests: KnownTests? { suiteContext.knownTests }
-        var efd: EarlyFlakeDetectionService? { suiteContext.efd }
-        var retries: (test: UInt, total: UInt)? { suiteContext.retries }
+        var features: [any TestHooksFeature] { suiteContext.features }
         
-        init(itr: DDTest.ITRStatus, suite: DDTestSuite, suiteContext: SuiteContext) {
-            self.itr = itr
+        init(skipStatus: SkipStatus, suite: Suite, suiteContext: SuiteContext) {
+            self.skipStatus = skipStatus
             self.suite = suite
             self.suiteContext = suiteContext
         }
@@ -404,12 +396,7 @@ extension DDTestObserver {
             .suite(suite: suite, context: suiteContext)
         }
         
-        func isNewTest(group: DDXCTestRetryGroup) -> Bool {
-            let id = group.testId
-            return knownTests?.isNew(test: id.test, in: id.suite, and: suite.module.bundleName) ?? false
-        }
-        
-        func new(test: DDTest, in group: DDXCTestRetryGroup) -> State {
+        func new(test: Test, in group: DDXCTestRetryGroup) -> State {
             .test(test: test, group: group, context: self)
         }
         

@@ -4,8 +4,8 @@
  * Copyright 2020-Present Datadog, Inc.
  */
 
-@_implementationOnly import OpenTelemetryApi
-@_implementationOnly import OpenTelemetrySdk
+internal import OpenTelemetryApi
+internal import OpenTelemetrySdk
 @testable import DatadogSDKTesting
 import XCTest
 

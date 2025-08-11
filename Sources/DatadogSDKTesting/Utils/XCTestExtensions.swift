@@ -5,7 +5,7 @@
  */
 
 import Foundation
-@_implementationOnly import XCTest
+internal import XCTest
 
 extension XCTestCase {
     var testId: (suite: String, test: String) {
@@ -19,7 +19,7 @@ extension XCTestCase {
 }
 
 extension XCTestRun {
-    var status: DDTestStatus {
+    var status: TestStatus {
         if hasBeenSkipped { return .skip }
         if let ddRun = self as? DDXCTestSuppressedFailureRun {
             return ddRun.ddHasFailed ? .fail : .pass
@@ -29,7 +29,7 @@ extension XCTestRun {
     }
 }
 
-extension DDTest {
+extension Test {
     func addBenchmarkTagsIfNeeded(from testCase: XCTestCase) {
         guard let metrics = testCase.value(forKey: "_perfMetricsForID") as? [XCTPerformanceMetric: AnyObject] else {
             return

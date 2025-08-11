@@ -5,7 +5,7 @@
  */
 @testable import EventsExporter
 
-extension EncodableValue: Equatable {
+extension EncodableValue: @retroactive Equatable {
     public static func == (lhs: EncodableValue, rhs: EncodableValue) -> Bool {
         return String(describing: lhs) == String(describing: rhs)
     }

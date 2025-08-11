@@ -5,13 +5,20 @@
  */
 
 import Foundation
-@_implementationOnly import EventsExporter
-@_implementationOnly import CDatadogSDKTesting
-@_implementationOnly import CodeCoverage
+internal import EventsExporter
+internal import CDatadogSDKTesting
+internal import CodeCoverage
 
 typealias cFunc = @convention(c) () -> Void
 
-final class DDCoverageHelper {
+protocol TestCoverageCollector: Feature {
+    func startTest()
+    func endTest(testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64)
+}
+
+final class DDCoverageHelper: TestCoverageCollector {
+    static var id: String = "Coverage Helper"
+    
     let collector: CoverageCollector
     let exporter: EventsExporterProtocol
     let workspacePath: String?
@@ -92,6 +99,17 @@ final class DDCoverageHelper {
     
     func removeStoragePath() {
         try? storagePath.delete()
+    }
+    
+    func stop() {
+        let oldQos = coverageWorkQueue.qualityOfService
+        let oldConcurrency = coverageWorkQueue.maxConcurrentOperationCount
+        /// We need to wait for all the traces to be written to the backend before exiting
+        coverageWorkQueue.maxConcurrentOperationCount = ProcessInfo.processInfo.activeProcessorCount
+        coverageWorkQueue.qualityOfService = .userInteractive
+        coverageWorkQueue.waitUntilAllOperationsAreFinished()
+        coverageWorkQueue.qualityOfService = oldQos
+        coverageWorkQueue.maxConcurrentOperationCount = oldConcurrency
     }
 
     fileprivate static func generateProfData(profrawFile: URL) -> URL? {

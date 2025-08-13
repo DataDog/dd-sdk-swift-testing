@@ -62,6 +62,14 @@ public final class Module: NSObject, Encodable {
         
         meta[DDUISettingsTags.uiSettingsModuleLocalization] = localization
         
+        addFeatureTags()
+        
+        // To cache result of command call and not to process it twice
+        // Hack for XCTest. Should be handled better
+        if let linesCovered = metrics[DDTestSessionTags.testCoverageLines] {
+            session.set(metric: DDTestSessionTags.testCoverageLines, value: linesCovered)
+        }
+        
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: ModuleEnvelope(self))
         Log.debug("Exported module_end event moduleId: \(self.id)")
     }
@@ -174,3 +182,5 @@ extension Module {
         }
     }
 }
+
+extension Module: ModuleFeatureTagsHelper {}

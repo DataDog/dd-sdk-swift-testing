@@ -11,26 +11,34 @@ final class TestImpactAnalysis: TestHooksFeature {
     static var id: String = "Test Impact Analysis"
     
     let suites: [String: Suite]
-    let correlationId: String
+    let correlationId: String?
     let coverage: TestCoverageCollector?
     
     var skippedCount: UInt { _skippedCount.value }
+    
+    var isSkippingEnabled: Bool { correlationId != nil }
+    var isCoverageEnabled: Bool { coverage != nil }
     
     private var _skippedCount: Synced<UInt>
     
     private(set) var unskippableCache: Synced<[ObjectIdentifier: UnskippableMethodChecker]>
     
-    init(tests: SkipTests, coverage: TestCoverageCollector?) {
-        var suites = [String: Suite]()
-        for test in tests.tests {
-            suites.get(key: test.suite, or: Suite(name: test.suite, methods: [:])) { suite in
-                suite.methods.get(key: test.name, or: Test(name: test.name, configurations: [])) {
-                    $0.configurations.append(Configuration(standard: test.configuration, custom: test.customConfiguration))
+    init(tests: SkipTests?, coverage: TestCoverageCollector?) {
+        if let tests = tests { // we have skipping enabled
+            var suites = [String: Suite]()
+            for test in tests.tests {
+                suites.get(key: test.suite, or: Suite(name: test.suite, methods: [:])) { suite in
+                    suite.methods.get(key: test.name, or: Test(name: test.name, configurations: [])) {
+                        $0.configurations.append(Configuration(standard: test.configuration, custom: test.customConfiguration))
+                    }
                 }
             }
+            self.suites = suites
+            self.correlationId = tests.correlationId
+        } else { // we will only try to gather code coverage
+            self.suites = [:]
+            self.correlationId = nil
         }
-        self.suites = suites
-        self.correlationId = tests.correlationId
         self.unskippableCache = .init([:])
         self._skippedCount = .init(0)
         self.coverage = coverage
@@ -61,7 +69,9 @@ final class TestImpactAnalysis: TestHooksFeature {
     }
     
     func testWillStart(test: any TestRun, retryReason: String?, skipStatus: SkipStatus, executionCount: Int, failedExecutionCount: Int) {
-        test.set(tag: DDItrTags.itrCorrelationId, value: correlationId)
+        if let correlationId = correlationId {
+            test.set(tag: DDItrTags.itrCorrelationId, value: correlationId)
+        }
         if skipStatus.markedUnskippable {
             test.set(tag: DDItrTags.itrUnskippable, value: "true")
         }
@@ -135,13 +145,15 @@ struct TestImpactAnalysisFactory: FeatureFactory {
     let commitSha: String
     let repository: String
     let exporter: EventsExporterProtocol
+    let skippingEnabled: Bool
     let coverageConfig: Coverage?
     
     init(configurations: [String: String],
          custom: [String: String],
          exporter: EventsExporterProtocol,
          commit: String, repository: String,
-         cache: Directory, coverage: Coverage?)
+         cache: Directory, skippingEnabled: Bool,
+         coverage: Coverage?)
     {
         self.configurations = configurations
         self.customConfigurations = custom
@@ -150,10 +162,11 @@ struct TestImpactAnalysisFactory: FeatureFactory {
         self.repository = repository
         self.commitSha = commit
         self.coverageConfig = coverage
+        self.skippingEnabled = skippingEnabled
     }
     
     static func isEnabled(config: Config, env: Environment, remote: TracerSettings) -> Bool {
-        guard config.itrEnabled else { return false }
+        guard config.itrEnabled && remote.itr.itrEnabled else { return false }
         
         let isExcluded = { (branch: String) in
             let excludedBranches = config.excludedBranches
@@ -180,6 +193,9 @@ struct TestImpactAnalysisFactory: FeatureFactory {
     }
     
     func create(log: Logger) -> TestImpactAnalysis? {
+        guard skippingEnabled else {
+            return create(log: log, tests: nil)
+        }
         if let tests = loadTestsFromDisk(log: log) {
             return create(log: log, tests: tests)
         }
@@ -190,7 +206,7 @@ struct TestImpactAnalysisFactory: FeatureFactory {
         return create(log: log, tests: tests)
     }
     
-    private func create(log: Logger, tests: SkipTests) -> TestImpactAnalysis {
+    private func create(log: Logger, tests: SkipTests?) -> TestImpactAnalysis {
         let coverage = coverageConfig.flatMap { config in
             DDCoverageHelper(storagePath: config.tempFolder,
                              exporter: exporter,

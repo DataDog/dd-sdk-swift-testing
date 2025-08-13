@@ -437,7 +437,9 @@ internal class DDTestMonitor {
                                                     exporter: eventsExporter,
                                                     commit: commit,
                                                     repository: repository,
-                                                    cache: cache, coverage: coverage)
+                                                    cache: cache,
+                                                    skippingEnabled: remote.itr.testsSkipping,
+                                                    coverage: coverage)
             self.tia = factory.create(log: Log.instance)
         }
         tiaSetup.addDependency(updateTracerConfig)

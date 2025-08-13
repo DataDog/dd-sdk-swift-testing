@@ -80,36 +80,7 @@ public final class Session: NSObject, Encodable {
         
         meta[DDTestSessionTags.testToolchain] = DDTestMonitor.env.platform.runtimeName.lowercased() + "-" + DDTestMonitor.env.platform.runtimeVersion
         
-        meta[DDTestSessionTags.testCodeCoverageEnabled] = (DDTestMonitor.instance?.tia?.coverage != nil).spanAttribute
-        
-        let itrSkipped: UInt
-        if let tia = DDTestMonitor.instance?.tia {
-            itrSkipped = tia.skippedCount
-            meta[DDTestSessionTags.testItrSkippingType] = DDTagValues.typeTest
-            meta[DDTestSessionTags.testSkippingEnabled] = "true"
-            metrics[DDTestSessionTags.testItrSkippingCount] = Double(itrSkipped)
-        } else {
-            itrSkipped = 0
-            meta[DDTestSessionTags.testSkippingEnabled] = "false"
-        }
-        
-        if itrSkipped == 0 {
-            meta[DDItrTags.itrSkippedTests] = "false"
-            meta[DDTestSessionTags.testItrSkipped] = "false"
-            if let linesCovered = DDCoverageHelper.getLineCodeCoverage() {
-                metrics[DDTestSessionTags.testCoverageLines] = linesCovered
-            }
-        } else {
-            meta[DDItrTags.itrSkippedTests] = "true"
-            meta[DDTestSessionTags.testItrSkipped] = "true"
-        }
-        
-        if let efd = DDTestMonitor.instance?.efd {
-            meta[DDEfdTags.testEfdEnabled] = "true"
-            if efd.sessionFailed {
-                meta[DDEfdTags.testEfdAbortReason] = DDTagValues.efdAbortFaulty
-            }
-        }
+        addFeatureTags()
         
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: SessionEnvelope(self))
         Log.debug("Exported session_end event sessionId: \(self.id)")
@@ -236,6 +207,47 @@ extension Session {
 
         init(_ content: Session) {
             self.content = content
+        }
+    }
+}
+
+protocol ModuleFeatureTagsHelper: AnyObject {
+    var meta: [String: String] { get set }
+    var metrics: [String: Double] { get set }
+    func addFeatureTags()
+}
+
+extension Session: ModuleFeatureTagsHelper {}
+
+extension ModuleFeatureTagsHelper {
+    func addFeatureTags() {
+        var itrSkipped: UInt = 0
+        
+        if let tia = DDTestMonitor.instance?.tia {
+            meta[DDTestSessionTags.testCodeCoverageEnabled] = tia.isCoverageEnabled.spanAttribute
+            meta[DDTestSessionTags.testSkippingEnabled] = tia.isSkippingEnabled.spanAttribute
+            
+            if tia.isSkippingEnabled {
+                itrSkipped = tia.skippedCount
+                meta[DDTestSessionTags.testItrSkippingType] = DDTagValues.typeTest
+                meta[DDItrTags.itrSkippedTests] = (itrSkipped > 0).spanAttribute
+                meta[DDTestSessionTags.testItrSkipped] = (itrSkipped > 0).spanAttribute
+                metrics[DDTestSessionTags.testItrSkippingCount] = Double(itrSkipped)
+            }
+        }
+        
+        if metrics[DDTestSessionTags.testCoverageLines] == nil,
+           itrSkipped == 0,
+           let linesCovered = DDCoverageHelper.getLineCodeCoverage()
+        {
+            metrics[DDTestSessionTags.testCoverageLines] = linesCovered
+        }
+        
+        if let efd = DDTestMonitor.instance?.efd {
+            meta[DDEfdTags.testEfdEnabled] = "true"
+            if efd.sessionFailed {
+                meta[DDEfdTags.testEfdAbortReason] = DDTagValues.efdAbortFaulty
+            }
         }
     }
 }

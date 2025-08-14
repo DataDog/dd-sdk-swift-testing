@@ -39,6 +39,8 @@ enum FrameworkLoadHandler {
                 DDTestMonitor.instance = DDTestMonitor()
                 DDTestMonitor.instance?.startInstrumenting()
                 DDTestMonitor.instance?.instrumentationWorkQueue.waitUntilAllOperationsAreFinished()
+            } else {
+                NSLog("[DatadogSDKTesting] Framework loaded but test instrumenting is disabled")
             }
         } else {
             NSLog("[DatadogSDKTesting] Framework loaded but not in test mode")

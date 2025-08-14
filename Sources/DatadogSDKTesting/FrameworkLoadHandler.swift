@@ -18,12 +18,12 @@ enum FrameworkLoadHandler {
         let config = DDTestMonitor.config
         /// Only initialize test observer if user configured so and is running tests
         guard let enabled = config.isEnabled else {
-            NSLog("[DatadogSDKTesting] Library loaded but not active, DD_TEST_RUNNER is missing")
+            print("note: [DatadogSDKTesting] Library loaded but not active, DD_TEST_RUNNER is missing")
             return
         }
 
         guard enabled else {
-            NSLog("[DatadogSDKTesting] Library loaded but not active, DD_TEST_RUNNER is off")
+            print("note: [DatadogSDKTesting] Library loaded but not active, DD_TEST_RUNNER is off")
             return
         }
 
@@ -35,15 +35,15 @@ enum FrameworkLoadHandler {
                     try! DDTestMonitor.clock.sync()
                 }
             } else if config.isBinaryUnderUITesting {
-                NSLog("[DatadogSDKTesting] Application launched from UITest while being instrumented")
+                print("note: [DatadogSDKTesting] Application launched from UITest while being instrumented")
                 DDTestMonitor.instance = DDTestMonitor()
                 DDTestMonitor.instance?.startInstrumenting()
                 DDTestMonitor.instance?.instrumentationWorkQueue.waitUntilAllOperationsAreFinished()
             } else {
-                NSLog("[DatadogSDKTesting] Framework loaded but test instrumenting is disabled")
+                print("note: [DatadogSDKTesting] Framework loaded but test instrumenting is disabled")
             }
         } else {
-            NSLog("[DatadogSDKTesting] Framework loaded but not in test mode")
+            print("note: [DatadogSDKTesting] Framework loaded but not in test mode")
         }
     }
     

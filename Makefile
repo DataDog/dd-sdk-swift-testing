@@ -85,12 +85,12 @@ release:
 github_release: release
 	@:$(call check_defined, GH_TOKEN, GitHub token)
 	# Update gh utility if needed
-	brew list gh &>/dev/null || brew install gh
+	@brew install gh || brew upgrade gh
 	# Stash changes
 	@git stash
 	# Create and push branch for release
 	@git checkout -b release-$(version)
-	@git push -u origin release-$(version)
+	@git push -f -u origin release-$(version)
 	# Get changes back
 	@git stash pop
 	# Commit updated xcodeproj, podspec and Package.swift

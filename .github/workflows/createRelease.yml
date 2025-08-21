@@ -39,7 +39,7 @@ jobs:
       uses: actions/checkout@v4
     - name: Select Xcode 16.2
       run: sudo xcode-select --switch /Applications/Xcode_16.2.app
-    - name: Build and upload XCFrameworks, recreate tag
+    - name: Build and upload XCFrameworks, create draft release
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: make XC_LOG=archive version=${{ github.event.inputs.version }} github_release

@@ -86,10 +86,30 @@ github_release: release
 	@:$(call check_defined, GH_TOKEN, GitHub token)
 	# Update gh utility if needed
 	brew list gh &>/dev/null || brew install gh
-	# Commit updated xcodeproj and Package.swift
-	@git add Package.swift DatadogSDKTesting.podspec DatadogSDKTesting.xcodeproj/project.pbxproj
+	# Stash changes
+	@git stash
+	# Create and push branch for release
 	@git checkout -b release-$(version)
-	@git commit -m "Updated binary package version to $(version)"
+	@git push -u origin release-$(version)
+	# Get changes back
+	@git stash pop
+	# Commit updated xcodeproj, podspec and Package.swift
+	# We will use GH API to do that, because we need a signed commit
+	@gh api graphql \
+  		-F $$githubRepository="$$GITHUB_REPOSITORY" \
+  		-F branchName="release-$(version)" \
+  		-F expectedHeadOid=$$(git rev-parse HEAD) \
+  		-F commitMessage="Updated binary package version to $(version)" \
+  		-F files[][path]="Package.swift" -F files[][contents]=$$(base64 -w0 Package.swift) \
+  		-F files[][path]="DatadogSDKTesting.podspec" -F files[][contents]=$$(base64 -w0 DatadogSDKTesting.podspec) \
+		-F files[][path]="DatadogSDKTesting.xcodeproj/project.pbxproj" -F files[][contents]=$$(base64 -w0 DatadogSDKTesting.xcodeproj/project.pbxproj) \
+  		-F 'query=@.github/api/createCommitOnBranch.gql'
+	# Pull new commit
+	# Reset changes to files (we already pushed them)
+	@git reset --hard
+	# Pull latest commit
+	@git pull
+	# Create tag and push it
 	@git tag -f $(version)
 	@git push -f --tags origin release-$(version)
 	# rename symbols file

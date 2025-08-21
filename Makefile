@@ -8,7 +8,7 @@ __check_defined = $(if $(value $1),, $(error Undefined $1$(if $2, ($2))$(if $(va
 
 # params: scheme, platform, logfile
 define xctest
-	$(if $(filter $2,macOS),$(eval SDK=macosx)$(eval DEST='platform=macOS,arch=x86_64'),)
+	$(if $(filter $2,macOS),$(eval SDK=macosx)$(eval DEST='platform=macOS,arch=arm64'),)
 	$(if $(filter $2,iOSsim),$(eval SDK=iphonesimulator)$(eval DEST='platform=iOS Simulator,name=iPhone 16'),)
 	$(if $(filter $2,tvOSsim),$(eval SDK=appletvsimulator)$(eval DEST='platform=tvOS Simulator,name=Apple TV'),)
 	$(if $3,\
@@ -87,7 +87,7 @@ github_release: release
 	# Update gh utility if needed
 	@brew install gh || brew upgrade gh
 	# Stash changes
-	@git stash
+	@git stash --include-untracked
 	# Create and push branch for release
 	@git checkout -b release-$(version)
 	@git push -f -u origin release-$(version)
@@ -100,18 +100,22 @@ github_release: release
   		-F branchName="release-$(version)" \
   		-F expectedHeadOid=$$(git rev-parse HEAD) \
   		-F commitMessage="Updated binary package version to $(version)" \
-  		-F files[][path]="Package.swift" -F files[][contents]=$$(base64 -w0 Package.swift) \
-  		-F files[][path]="DatadogSDKTesting.podspec" -F files[][contents]=$$(base64 -w0 DatadogSDKTesting.podspec) \
-		-F files[][path]="DatadogSDKTesting.xcodeproj/project.pbxproj" -F files[][contents]=$$(base64 -w0 DatadogSDKTesting.xcodeproj/project.pbxproj) \
+  		-F files[][path]="Package.swift" -F files[][contents]=$$(base64 Package.swift) \
+  		-F files[][path]="DatadogSDKTesting.podspec" -F files[][contents]=$$(base64 DatadogSDKTesting.podspec) \
+		-F files[][path]="DatadogSDKTesting.xcodeproj/project.pbxproj" -F files[][contents]=$$(base64 DatadogSDKTesting.xcodeproj/project.pbxproj) \
   		-F 'query=@.github/api/createCommitOnBranch.gql'
 	# Pull new commit
 	# Reset changes to files (we already pushed them)
 	@git reset --hard
+	# Save untracked
+	@git stash --include-untracked
 	# Pull latest commit
 	@git pull
 	# Create tag and push it
 	@git tag -f $(version)
 	@git push -f --tags origin release-$(version)
+	# Restore untracked
+	@git stash pop
 	# rename symbols file
 	@rm -f build/symbols/DatadogSDKTesting.symbols.zip
 	@mv build/symbols/DatadogSDKTesting.zip build/symbols/DatadogSDKTesting.symbols.zip

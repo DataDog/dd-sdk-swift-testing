@@ -300,7 +300,7 @@ class DDTestObserver: NSObject, XCTestObservation {
             // We already registered failure for this test before.
             if testRun.suppressedFailures.count > 0 { // Check if it was suppressed
                 testRun.suppressFailure() // then suppress current error too
-                Log.print("Suppressed one more issue: \(issue) for test: \(testCase)")
+                Log.debug("Suppressed one more issue: \(issue) for test: \(testCase)")
             }
             return
         }
@@ -315,7 +315,7 @@ class DDTestObserver: NSObject, XCTestObservation {
         
         if suppress.0 {
             testRun.suppressFailure()
-            Log.print("Suppressed issue \(issue) for test \(testCase) reason \(suppress.1)")
+            Log.debug("Suppressed issue \(issue) for test \(testCase) reason \(suppress.1)")
         }
     }
 }

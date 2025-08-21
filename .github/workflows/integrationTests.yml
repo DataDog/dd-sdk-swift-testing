@@ -7,47 +7,59 @@ on:
 
 jobs:
   test-15-Unit:
-    name: Run Unit Tests macOS 15.0
-    runs-on: macos-15
+    name: Run Unit Tests
     strategy:
       fail-fast: false
       matrix:
-        xcode: ["Xcode_16.3", "Xcode_16.4"]
+        env:
+          - xcode: "Xcode_16.2"
+            os: "macos-14"
+          - xcode: "Xcode_16.3"
+            os: "macos-15"
+          - xcode: "Xcode_16.4"
+            os: "macos-15"
+    runs-on: ${{ matrix.env.os }}
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-    - name: Select ${{ matrix.xcode }}
-      run: sudo xcode-select --switch /Applications/${{ matrix.xcode }}.app
+    - name: Select ${{ matrix.env.xcode }}
+      run: sudo xcode-select --switch /Applications/${{ matrix.env.xcode }}.app
     - name: Unit tests
       run: make XC_LOG=unit tests/unit
     - name: Attach Xcode logs
       if: '!cancelled()'
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.xcode }}-unit-logs
+        name: ${{ matrix.env.xcode }}-unit-logs
         path: "*-unit.log"
 
   test-15-Integration:
-    name: Run Integration Tests macOS 15.0 Xcode 16.0
-    runs-on: macos-15
+    name: Run Integration Tests
     strategy:
       fail-fast: false
       matrix:
-        xcode: ["Xcode_16.3", "Xcode_16.4"]
+        env:
+          - xcode: "Xcode_16.2"
+            os: "macos-14"
+          - xcode: "Xcode_16.3"
+            os: "macos-15"
+          - xcode: "Xcode_16.4"
+            os: "macos-15"
         platform: ["macOS", "iOSsim", "tvOSsim"]
+    runs-on: ${{ matrix.env.os }}
     env:
       DD_API_KEY: '${{ secrets.DD_API_KEY }}'
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-    - name: Select ${{ matrix.xcode }}
-      run: sudo xcode-select --switch /Applications/${{ matrix.xcode }}.app
+    - name: Select ${{ matrix.env.xcode }}
+      run: sudo xcode-select --switch /Applications/${{ matrix.env.xcode }}.app
     - name: Run tests for ${{ matrix.platform }}
       run: make XC_LOG=integration tests/integration/${{ matrix.platform }}
     - name: Attach Xcode logs
       if: '!cancelled()'
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.xcode }}-${{ matrix.platform }}-integration-log
+        name: ${{ matrix.env.xcode }}-${{ matrix.platform }}-integration-log
         path: "*-integration.log"
 

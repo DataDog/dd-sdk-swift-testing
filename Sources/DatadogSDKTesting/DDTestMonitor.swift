@@ -253,12 +253,12 @@ internal class DDTestMonitor {
         
         guard let branch = DDTestMonitor.env.git.branch,
               let commit = DDTestMonitor.env.git.commitSHA else {
-            Log.print("Unknown branch and commit. ITR and EFD can't be started")
+            Log.print("Unknown branch and commit. Test Optimization can't be started")
             return
         }
         
         guard let repository = DDTestMonitor.env.git.repositoryURL?.spanAttribute else {
-            Log.print("Unknown repository URL. ITR and EFD can't be started")
+            Log.print("Unknown repository URL. Test Optimization can't be started")
             return
         }
         

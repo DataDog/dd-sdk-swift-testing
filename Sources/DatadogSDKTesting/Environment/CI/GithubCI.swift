@@ -34,7 +34,7 @@ internal struct GithubCIEnvironmentReader: CIEnvironmentReader {
         let branch: String? = env["GITHUB_HEAD_REF"] ?? env["GITHUB_REF"]
         
         // Check if we're in a pull request event and extract PR metadata
-        let baseBranch = env["GITHUB_BASE_REF"]
+        let baseBranch: String? = env["GITHUB_BASE_REF"]
         let (prHeadSha, prBaseSha) = parsePullRequestEvent(env: env, base: baseBranch)
         
         var environment = [String: SpanAttributeConvertible]()
@@ -75,7 +75,7 @@ internal struct GithubCIEnvironmentReader: CIEnvironmentReader {
         }
         
         // Get the path to the GitHub event file
-        guard let eventPath = env["GITHUB_EVENT_PATH"] else {
+        guard let eventPath: String = env["GITHUB_EVENT_PATH"] else {
             return (nil, nil)
         }
         

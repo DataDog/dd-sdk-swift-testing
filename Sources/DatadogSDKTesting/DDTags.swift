@@ -121,6 +121,9 @@ internal enum DDGitTags {
     static let gitCommitterName = "git.commit.committer.name"
     static let gitCommitterEmail = "git.commit.committer.email"
     static let gitCommitterDate = "git.commit.committer.date"
+    static let gitCommitHeadSha = "git.commit.head_sha"
+    static let gitPullRequestBaseBranch = "git.pull_request.base_branch"
+    static let gitPullRequestBaseBranchSha = "git.pull_request.base_branch_sha"
 }
 
 internal enum DDCITags {

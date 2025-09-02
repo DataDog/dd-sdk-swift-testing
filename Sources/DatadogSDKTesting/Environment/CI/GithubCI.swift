@@ -6,6 +6,20 @@
 
 import Foundation
 
+// GitHub Event JSON structures for pull request data
+private struct GitHubEvent: Decodable {
+    let pull_request: PullRequest?
+    
+    struct PullRequest: Decodable {
+        let head: Ref
+        let base: Ref
+        
+        struct Ref: Decodable {
+            let sha: String
+        }
+    }
+}
+
 internal struct GithubCIEnvironmentReader: CIEnvironmentReader {
     func isActive(env: any EnvironmentReader) -> Bool {
         env["GITHUB_ACTIONS"] ?? env["GITHUB_ACTION"] ?? "" != ""
@@ -18,6 +32,10 @@ internal struct GithubCIEnvironmentReader: CIEnvironmentReader {
         let commit = env["GITHUB_SHA", String.self]
         let attempts = env["GITHUB_RUN_ATTEMPT", String.self].map { "/attempts/" + $0 } ?? ""
         let branch: String? = env["GITHUB_HEAD_REF"] ?? env["GITHUB_REF"]
+        
+        // Check if we're in a pull request event and extract PR metadata
+        let baseBranch = env["GITHUB_BASE_REF"]
+        let (prHeadSha, prBaseSha) = parsePullRequestEvent(env: env, base: baseBranch)
         
         var environment = [String: SpanAttributeConvertible]()
         environment["GITHUB_REPOSITORY"] = env["GITHUB_REPOSITORY", String.self]
@@ -41,8 +59,33 @@ internal struct GithubCIEnvironmentReader: CIEnvironmentReader {
                 repositoryURL: URL(string: "\(githubServerEnv)/\(repositoryEnv).git"),
                 branch: normalize(branch: branch),
                 tag: normalize(tag: branch),
-                commitSHA: commit
+                commitSHA: commit,
+                pullRequestHeadSha: prHeadSha,
+                pullRequestBaseBranch: baseBranch,
+                pullRequestBaseBranchSha: prBaseSha
             )
         )
+    }
+    
+    /// Parse GitHub event file to extract pull request metadata
+    private func parsePullRequestEvent(env: any EnvironmentReader, base: String?) -> (headSha: String?, baseSha: String?) {
+        // Only parse if GITHUB_BASE_REF is present (indicates pull request)
+        guard base != nil else {
+            return (nil, nil)
+        }
+        
+        // Get the path to the GitHub event file
+        guard let eventPath = env["GITHUB_EVENT_PATH"] else {
+            return (nil, nil)
+        }
+        
+        // Read and parse the event file
+        guard let eventData = try? Data(contentsOf: URL(fileURLWithPath: eventPath)),
+              let githubEvent = try? JSONDecoder().decode(GitHubEvent.self, from: eventData),
+              let pullRequest = githubEvent.pull_request else {
+            return (nil, nil)
+        }
+        
+        return (pullRequest.head.sha, pullRequest.base.sha)
     }
 }

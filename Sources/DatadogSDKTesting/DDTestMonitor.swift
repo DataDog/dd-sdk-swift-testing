@@ -251,9 +251,9 @@ internal class DDTestMonitor {
         efd = nil
         let service = DDTestMonitor.env.service
         
-        guard let branch = DDTestMonitor.env.git.branch,
+        guard let branchOrTag = (DDTestMonitor.env.git.branch ?? DDTestMonitor.env.git.tag),
               let commit = DDTestMonitor.env.git.commitSHA else {
-            Log.print("Unknown branch and commit. Test Optimization can't be started")
+            Log.print("Unknown branch/tag and commit. Test Optimization can't be started")
             return
         }
         
@@ -269,7 +269,7 @@ internal class DDTestMonitor {
                         service: service,
                         env: DDTestMonitor.env.environment,
                         repositoryURL: repository,
-                        branch: branch,
+                        branch: branchOrTag,
                         sha: commit,
                         testLevel: .test,
                         configurations: DDTestMonitor.env.baseConfigurations,
@@ -390,6 +390,7 @@ internal class DDTestMonitor {
                 return
             }
             let attemptToFixRetryCount = DDTestMonitor.config.testManagementAttemptToFixRetries ?? remote.testManagement.attemptToFixRetries
+            // TODO: use message from the git commit, not a merge one
             let commitMessage = DDTestMonitor.env.git.commitMessage ?? ""
             let factory = TestManagementFactory(repository: repository,
                                                 commitMessage: commitMessage,

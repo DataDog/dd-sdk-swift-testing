@@ -45,7 +45,7 @@ internal struct AppveyorCIEnvironmentReader: CIEnvironmentReader {
                 authorName: env["APPVEYOR_REPO_COMMIT_AUTHOR"],
                 authorEmail: env["APPVEYOR_REPO_COMMIT_AUTHOR_EMAIL"],
                 pullRequestHeadSha: env["APPVEYOR_PULL_REQUEST_HEAD_COMMIT"],
-                pullRequestBaseBranch: prBranch,
+                pullRequestBaseBranch: prBranch
             )
         )
     }

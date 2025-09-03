@@ -21,7 +21,8 @@ internal struct BitriseCIEnvironmentReader: CIEnvironmentReader {
                 pipelineName: env["BITRISE_TRIGGERED_WORKFLOW_ID"] ?? env["BITRISE_APP_TITLE"],
                 pipelineNumber: env["BITRISE_BUILD_NUMBER"],
                 pipelineURL: env["BITRISE_BUILD_URL"],
-                workspacePath: expand(path: env["BITRISE_SOURCE_DIR"], env: env)
+                workspacePath: expand(path: env["BITRISE_SOURCE_DIR"], env: env),
+                prNumber: env["BITRISE_PULL_REQUEST"]
             ),
             git: .init(
                 repositoryURL: env["GIT_REPOSITORY_URL"],
@@ -32,7 +33,8 @@ internal struct BitriseCIEnvironmentReader: CIEnvironmentReader {
                 authorName: env["GIT_CLONE_COMMIT_AUTHOR_NAME"],
                 authorEmail: env["GIT_CLONE_COMMIT_AUTHOR_EMAIL"],
                 committerName: env["GIT_CLONE_COMMIT_COMMITER_NAME"],
-                committerEmail: env["GIT_CLONE_COMMIT_COMMITER_EMAIL"]
+                committerEmail: env["GIT_CLONE_COMMIT_COMMITER_EMAIL"],
+                pullRequestBaseBranch: env["BITRISEIO_GIT_BRANCH_DEST"]
             )
         )
     }

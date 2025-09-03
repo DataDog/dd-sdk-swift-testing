@@ -23,13 +23,15 @@ internal struct BitbucketCIEnvironmentReader: CIEnvironmentReader {
                 pipelineNumber: pipelineNumber,
                 pipelineURL: URL(string: pipelineURL),
                 jobURL: URL(string: pipelineURL),
-                workspacePath: expand(path: env["BITBUCKET_CLONE_DIR"], env: env)
+                workspacePath: expand(path: env["BITBUCKET_CLONE_DIR"], env: env),
+                prNumber: env["BITBUCKET_PR_ID"]
             ),
             git: .init(
                 repositoryURL: env["BITBUCKET_GIT_SSH_ORIGIN"] ?? env["BITBUCKET_GIT_HTTP_ORIGIN"],
                 branch: normalize(branch: env["BITBUCKET_BRANCH"]),
                 tag: normalize(tag: env["BITBUCKET_TAG"]),
-                commitSHA: env["BITBUCKET_COMMIT"]
+                commitSHA: env["BITBUCKET_COMMIT"],
+                pullRequestBaseBranch: env["BITBUCKET_PR_DESTINATION_BRANCH"]
             )
         )
     }

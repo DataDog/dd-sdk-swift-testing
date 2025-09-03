@@ -11,6 +11,18 @@ internal struct TravisCIEnvironmentReader: CIEnvironmentReader {
     
     func read(env: any EnvironmentReader) -> (ci: Environment.CI, git: Environment.Git) {
         let repositoryEnv: String? = env["TRAVIS_PULL_REQUEST_SLUG"] ?? env["TRAVIS_REPO_SLUG"]
+        
+        let branch: String?
+        let prBranch: String?
+
+        if let prBranchEnv: String = env["TRAVIS_PULL_REQUEST_BRANCH"] {
+            branch = normalize(branch: prBranchEnv)
+            prBranch = normalize(branch: env["TRAVIS_BRANCH"])
+        } else {
+            branch = normalize(branch: env["TRAVIS_BRANCH"])
+            prBranch = nil
+        }
+        
         return (
             ci: .init(
                 provider: "travisci",
@@ -19,14 +31,17 @@ internal struct TravisCIEnvironmentReader: CIEnvironmentReader {
                 pipelineNumber: env["TRAVIS_BUILD_NUMBER"],
                 pipelineURL: env["TRAVIS_BUILD_WEB_URL"],
                 jobURL: env["TRAVIS_JOB_WEB_URL"],
-                workspacePath: expand(path: env["TRAVIS_BUILD_DIR"], env: env)
+                workspacePath: expand(path: env["TRAVIS_BUILD_DIR"], env: env),
+                prNumber: env["TRAVIS_PULL_REQUEST"]
             ),
             git: .init(
                 repositoryURL: repositoryEnv.flatMap { URL(string: "https://github.com/\($0).git") },
-                branch: normalize(branch: env["TRAVIS_PULL_REQUEST_BRANCH"] ?? env["TRAVIS_BRANCH"]),
+                branch: branch,
                 tag: normalize(tag: env["TRAVIS_TAG"]),
                 commitSHA: env["TRAVIS_COMMIT"],
-                commitMessage: env["TRAVIS_COMMIT_MESSAGE"]
+                commitMessage: env["TRAVIS_COMMIT_MESSAGE"],
+                pullRequestHeadSha: env["TRAVIS_PULL_REQUEST_SHA"],
+                pullRequestBaseBranch: prBranch
             )
         )
     }

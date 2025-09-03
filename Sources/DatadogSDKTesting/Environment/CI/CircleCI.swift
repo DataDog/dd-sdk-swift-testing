@@ -22,9 +22,11 @@ internal struct CircleCIEnvironmentReader: CIEnvironmentReader {
                 pipelineId: pipelineId,
                 pipelineName: env["CIRCLE_PROJECT_REPONAME"],
                 pipelineURL: pipelineId.flatMap { URL(string: "https://app.circleci.com/pipelines/workflows/\($0)") },
+                jobId: env["CIRCLE_BUILD_NUM"],
                 jobName: env["CIRCLE_JOB"],
                 jobURL: env["CIRCLE_BUILD_URL"],
                 workspacePath: expand(path: env["CIRCLE_WORKING_DIRECTORY"], env: env),
+                prNumber: env["CIRCLE_PR_NUMBER"],
                 environment: environment
             ),
             git: .init(

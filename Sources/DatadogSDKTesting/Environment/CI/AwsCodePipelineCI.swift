@@ -21,6 +21,7 @@ internal struct AwsCodePipelineCIEnvironmentReader: CIEnvironmentReader {
             ci: .init(
                 provider: "awscodepipeline",
                 pipelineId: env["DD_PIPELINE_EXECUTION_ID"],
+                jobId: env["DD_ACTION_EXECUTION_ID"],
                 environment: environment
             ),
             git: .init()

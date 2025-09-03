@@ -40,11 +40,13 @@ internal struct GitlabCIEnvironmentReader: CIEnvironmentReader {
                 pipelineNumber: env["CI_PIPELINE_IID"],
                 pipelineURL: env["CI_PIPELINE_URL"],
                 stageName: env["CI_JOB_STAGE"],
+                jobId: env["CI_JOB_ID"],
                 jobName: env["CI_JOB_NAME"],
                 jobURL: env["CI_JOB_URL"],
                 workspacePath: expand(path: env["CI_PROJECT_DIR"], env: env),
                 nodeName: env["CI_RUNNER_ID"],
                 nodeLabels: nodeLabels,
+                prNumber: env["CI_MERGE_REQUEST_IID"],
                 environment: environment
             ),
             git: .init(
@@ -55,7 +57,10 @@ internal struct GitlabCIEnvironmentReader: CIEnvironmentReader {
                 commitMessage: env["CI_COMMIT_MESSAGE"],
                 authorName: authorName,
                 authorEmail: authorEmail,
-                authorDate: env["CI_COMMIT_TIMESTAMP"]
+                authorDate: env["CI_COMMIT_TIMESTAMP"],
+                pullRequestBaseBranch: env["CI_MERGE_REQUEST_TARGET_BRANCH_NAME"],
+                pullRequestBaseBranchSha: env["CI_MERGE_REQUEST_DIFF_BASE_SHA"],
+                pullRequestBaseBranchHeadSha: env["CI_MERGE_REQUEST_TARGET_BRANCH_SHA"]
             )
         )
     }

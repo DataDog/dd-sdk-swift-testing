@@ -14,9 +14,12 @@ internal struct TeamcityCIEnvironmentReader: CIEnvironmentReader {
             ci: .init(
                 provider: "teamcity",
                 jobName: env["TEAMCITY_BUILDCONF_NAME"],
-                jobURL: env["BUILD_URL"]
+                jobURL: env["BUILD_URL"],
+                prNumber: env["TEAMCITY_PULLREQUEST_NUMBER"]
             ),
-            git: .init()
+            git: .init(
+                pullRequestBaseBranch: env["TEAMCITY_PULLREQUEST_TARGET_BRANCH"]
+            )
         )
     }
 }

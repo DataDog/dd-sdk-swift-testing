@@ -180,7 +180,6 @@ class EnvironmentTests: XCTestCase {
         // Use the actual github-event.json fixture file
         let jsonURL = Bundle(for: type(of: self)).resourceURL!
             .appendingPathComponent("fixtures")
-            .appendingPathComponent("ci")
             .appendingPathComponent("github-event.json")
         
         var testEnvironment = [String: SpanAttributeConvertible]()

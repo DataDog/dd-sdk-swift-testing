@@ -25,13 +25,15 @@ internal struct JenkinsCIEnvironmentReader: CIEnvironmentReader {
                 workspacePath: expand(path: env["WORKSPACE"], env: env),
                 nodeName: env["NODE_NAME"],
                 nodeLabels: env["NODE_LABELS"],
+                prNumber: env["CHANGE_ID"],
                 environment: environment
             ),
             git: .init(
                 repositoryURL: env["GIT_URL"] ?? env["GIT_URL_1"],
                 branch: isTag ? nil : branch,
                 tag: isTag ? branch : nil,
-                commitSHA: env["GIT_COMMIT"]
+                commitSHA: env["GIT_COMMIT"],
+                pullRequestBaseBranch: env["CHANGE_TARGET"]
             )
         )
     }

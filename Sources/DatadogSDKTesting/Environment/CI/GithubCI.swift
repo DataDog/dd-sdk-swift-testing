@@ -50,6 +50,7 @@ internal struct GithubCIEnvironmentReader: CIEnvironmentReader {
                 pipelineName: env["GITHUB_WORKFLOW"],
                 pipelineNumber: env["GITHUB_RUN_NUMBER"],
                 pipelineURL: URL(string: "\(githubServerEnv)/\(repositoryEnv)/actions/runs/\(envRunId ?? "")" + attempts),
+                jobId: env["GITHUB_JOB"],
                 jobName: env["GITHUB_JOB"],
                 jobURL: URL(string: "\(githubServerEnv)/\(repositoryEnv)/commit/\(commit ?? "")/checks"),
                 workspacePath: expand(path: env["GITHUB_WORKSPACE"], env: env),

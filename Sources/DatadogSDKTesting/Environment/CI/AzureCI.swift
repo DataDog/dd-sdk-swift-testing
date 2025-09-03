@@ -32,9 +32,11 @@ internal struct AzureCIEnvironmentReader: CIEnvironmentReader {
                 pipelineNumber: env["BUILD_BUILDID"],
                 pipelineURL: URL(string: pipelineURL),
                 stageName: env["SYSTEM_STAGEDISPLAYNAME"],
+                jobId: jobId,
                 jobName: env["SYSTEM_JOBDISPLAYNAME"],
                 jobURL: URL(string: pipelineURL + "&view=logs&j=\(jobId)&t=\(taskId)"),
                 workspacePath: expand(path: env["BUILD_SOURCESDIRECTORY"], env: env),
+                prNumber: env["SYSTEM_PULLREQUEST_PULLREQUESTNUMBER"],
                 environment: environment
             ),
             git: .init(
@@ -44,7 +46,8 @@ internal struct AzureCIEnvironmentReader: CIEnvironmentReader {
                 commitSHA: env["SYSTEM_PULLREQUEST_SOURCECOMMITID"] ?? env["BUILD_SOURCEVERSION"],
                 commitMessage: env["BUILD_SOURCEVERSIONMESSAGE"],
                 authorName: env["BUILD_REQUESTEDFORID"],
-                authorEmail: env["BUILD_REQUESTEDFOREMAIL"]
+                authorEmail: env["BUILD_REQUESTEDFOREMAIL"],
+                pullRequestBaseBranch: normalize(branch: env["SYSTEM_PULLREQUEST_TARGETBRANCH"])
             )
         )
     }

@@ -20,11 +20,13 @@ internal struct CodefreshCIEnvironmentReader: CIEnvironmentReader {
                 pipelineName: env["CF_PIPELINE_NAME"],
                 pipelineURL: env["CF_BUILD_URL"],
                 jobName: env["CF_STEP_NAME"],
+                prNumber: env["CF_PULL_REQUEST_NUMBER"],
                 environment: environment
             ),
             git: .init(
                 branch: normalize(branch: env["CF_BRANCH"]),
-                tag: normalize(tag: env["CF_BRANCH"])
+                tag: normalize(tag: env["CF_BRANCH"]),
+                pullRequestBaseBranch: env["CF_PULL_REQUEST_TARGET"]
             )
         )
     }

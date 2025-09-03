@@ -114,9 +114,11 @@ internal final class Environment {
         ciAttributes[DDCITags.ciNodeLabels] = ci.nodeLabels?.description
         ciAttributes[DDCITags.ciStageName] = ci.stageName
         ciAttributes[DDCITags.ciStageName] = ci.stageName
+        ciAttributes[DDCITags.ciJobId] = ci.jobId
         ciAttributes[DDCITags.ciJobName] = ci.jobName
         ciAttributes[DDCITags.ciJobURL] = ci.jobURL?.spanAttribute
         ciAttributes[DDCITags.ciEnvVars] = ##"{\##(ci.environment.map { #""\#($0.0)":"\#($0.1.spanAttribute)""# }.joined(separator: ","))}"##
+        ciAttributes[DDCITags.prNumber] = ci.prNumber
         return ciAttributes
     }
     
@@ -137,6 +139,7 @@ internal final class Environment {
         gitAttributes[DDGitTags.gitCommitHeadSha] = git.pullRequestHeadSha
         gitAttributes[DDGitTags.gitPullRequestBaseBranch] = git.pullRequestBaseBranch
         gitAttributes[DDGitTags.gitPullRequestBaseBranchSha] = git.pullRequestBaseBranchSha
+        gitAttributes[DDGitTags.gitPullRequestBaseBranchHeadSha] = git.pullRequestBaseBranchHeadSha
         return gitAttributes
     }
     
@@ -239,7 +242,7 @@ internal final class Environment {
             BitbucketCIEnvironmentReader(), GithubCIEnvironmentReader(), BuildkiteCIEnvironmentReader(),
             BitriseCIEnvironmentReader(), XcodeCIEnvironmentReader(), TeamcityCIEnvironmentReader(),
             CodefreshCIEnvironmentReader(), AwsCodePipelineCIEnvironmentReader(),
-            AwsCodeBuildCIEnvironmentReader(), BuddyCIEnvironmentReader()
+            AwsCodeBuildCIEnvironmentReader(), BuddyCIEnvironmentReader(), DroneCIEnvironmentReader()
         ]
     }
     
@@ -300,6 +303,7 @@ internal extension Environment {
         let stageName: String?
         
         // ci.job.*
+        let jobId: String?
         let jobName: String?
         let jobURL: URL?
         
@@ -310,14 +314,17 @@ internal extension Environment {
         let nodeName: String?
         let nodeLabels: [String]?
         
+        // pr.number. it's here because it's a PR info
+        let prNumber: String?
+        
         // additional CI environment properties
         let environment: [String: SpanAttributeConvertible]
         
         init(provider: String, pipelineId: String? = nil, pipelineName: String? = nil,
              pipelineNumber: String? = nil, pipelineURL: URL? = nil, stageName: String? = nil,
-             jobName: String? = nil, jobURL: URL? = nil, workspacePath: String? = nil,
-             nodeName: String? = nil, nodeLabels: [String]? = nil,
-             environment: [String: SpanAttributeConvertible] = [:]
+             jobId: String? = nil, jobName: String? = nil, jobURL: URL? = nil,
+             workspacePath: String? = nil, nodeName: String? = nil, nodeLabels: [String]? = nil,
+             prNumber: String? = nil, environment: [String: SpanAttributeConvertible] = [:]
         ) {
             self.provider = provider
             self.pipelineId = pipelineId
@@ -325,11 +332,13 @@ internal extension Environment {
             self.pipelineNumber = pipelineNumber
             self.pipelineURL = pipelineURL
             self.stageName = stageName
+            self.jobId = jobId
             self.jobName = jobName
             self.jobURL = jobURL
             self.workspacePath = workspacePath
             self.nodeName = nodeName
             self.nodeLabels = nodeLabels
+            self.prNumber = prNumber
             self.environment = environment
         }
         
@@ -388,6 +397,7 @@ internal extension Environment {
         let pullRequestHeadSha: String?
         let pullRequestBaseBranch: String?
         let pullRequestBaseBranchSha: String?
+        let pullRequestBaseBranchHeadSha: String?
         
         var repositoryName: String? {
             repositoryURL?.deletingPathExtension().lastPathComponent
@@ -397,7 +407,8 @@ internal extension Environment {
              commitSHA: String? = nil, commitMessage: String? = nil,
              authorName: String? = nil, authorEmail: String? = nil, authorDate: String? = nil,
              committerName: String? = nil, committerEmail: String? = nil, committerDate: String? = nil,
-             pullRequestHeadSha: String? = nil, pullRequestBaseBranch: String? = nil, pullRequestBaseBranchSha: String? = nil)
+             pullRequestHeadSha: String? = nil, pullRequestBaseBranch: String? = nil,
+             pullRequestBaseBranchSha: String? = nil, pullRequestBaseBranchHeadSha: String? = nil)
         {
             self.repositoryURL = repositoryURL
             self.branch = branch
@@ -413,6 +424,7 @@ internal extension Environment {
             self.pullRequestHeadSha = pullRequestHeadSha
             self.pullRequestBaseBranch = pullRequestBaseBranch
             self.pullRequestBaseBranchSha = pullRequestBaseBranchSha
+            self.pullRequestBaseBranchHeadSha = pullRequestBaseBranchHeadSha
         }
         
         func extended(from info: GitInfo) -> Git {
@@ -431,7 +443,8 @@ internal extension Environment {
                 committerDate: committerDate ?? info.committerDate,
                 pullRequestHeadSha: pullRequestHeadSha,
                 pullRequestBaseBranch: pullRequestBaseBranch,
-                pullRequestBaseBranchSha: pullRequestBaseBranchSha
+                pullRequestBaseBranchSha: pullRequestBaseBranchSha,
+                pullRequestBaseBranchHeadSha: pullRequestBaseBranchHeadSha
             )
         }
         
@@ -450,13 +463,14 @@ internal extension Environment {
                 committerDate: info.committerDate ?? committerDate,
                 pullRequestHeadSha: info.pullRequestHeadSha ?? pullRequestHeadSha,
                 pullRequestBaseBranch: info.pullRequestBaseBranch ?? pullRequestBaseBranch,
-                pullRequestBaseBranchSha: info.pullRequestBaseBranchSha ?? pullRequestBaseBranchSha
+                pullRequestBaseBranchSha: info.pullRequestBaseBranchSha ?? pullRequestBaseBranchSha,
+                pullRequestBaseBranchHeadSha: info.pullRequestBaseBranchHeadSha ?? pullRequestBaseBranchHeadSha
             )
         }
         
         static func normalize(branchOrTag value: String?) -> (String?, Bool) {
             guard var result = value else { return (nil, false) }
-            let isTag = result.contains("tags/")
+            let isTag = result.contains("/tags/") || result.hasPrefix("tags/") || result.contains("/tag/") || result.hasPrefix("tag/")
             if result.hasPrefix("/") {
                 result = String(result.dropFirst("/".count))
             }

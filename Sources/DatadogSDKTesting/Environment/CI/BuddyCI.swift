@@ -20,7 +20,8 @@ internal struct BuddyCIEnvironmentReader: CIEnvironmentReader {
                 pipelineName: env["BUDDY_PIPELINE_NAME"],
                 pipelineNumber: env["BUDDY_EXECUTION_ID"],
                 pipelineURL: env["BUDDY_EXECUTION_URL"],
-                workspacePath: expand(path: env["CI_WORKSPACE_PATH"], env: env)
+                workspacePath: expand(path: env["CI_WORKSPACE_PATH"], env: env),
+                prNumber: env["BUDDY_RUN_PR_NO"]
             ),
             git: .init(
                 repositoryURL: env["BUDDY_SCM_URL"],
@@ -29,7 +30,8 @@ internal struct BuddyCIEnvironmentReader: CIEnvironmentReader {
                 commitSHA: env["BUDDY_EXECUTION_REVISION"],
                 commitMessage: env["BUDDY_EXECUTION_REVISION_MESSAGE"],
                 committerName: env["BUDDY_EXECUTION_REVISION_COMMITTER_NAME"],
-                committerEmail: env["BUDDY_EXECUTION_REVISION_COMMITTER_EMAIL"]
+                committerEmail: env["BUDDY_EXECUTION_REVISION_COMMITTER_EMAIL"],
+                pullRequestBaseBranch: env["BUDDY_RUN_PR_BASE_BRANCH"]
             )
         )
     }

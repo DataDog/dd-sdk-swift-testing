@@ -121,9 +121,10 @@ internal enum DDGitTags {
     static let gitCommitterName = "git.commit.committer.name"
     static let gitCommitterEmail = "git.commit.committer.email"
     static let gitCommitterDate = "git.commit.committer.date"
-    static let gitCommitHeadSha = "git.commit.head_sha"
+    static let gitCommitHeadSha = "git.commit.head.sha"
     static let gitPullRequestBaseBranch = "git.pull_request.base_branch"
     static let gitPullRequestBaseBranchSha = "git.pull_request.base_branch_sha"
+    static let gitPullRequestBaseBranchHeadSha = "git.pull_request.base_branch_head_sha"
 }
 
 internal enum DDCITags {
@@ -135,10 +136,12 @@ internal enum DDCITags {
     static let ciNodeName = "ci.node.name"
     static let ciNodeLabels = "ci.node.labels"
     static let ciStageName = "ci.stage.name"
+    static let ciJobId = "ci.job.id"
     static let ciJobName = "ci.job.name"
     static let ciJobURL = "ci.job.url"
     static let ciWorkspacePath = "ci.workspace_path"
     static let ciEnvVars = "_dd.ci.env_vars"
+    static let prNumber = "pr.number"
 }
 
 internal enum DDBenchmarkTags {

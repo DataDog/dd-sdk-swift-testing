@@ -30,10 +30,12 @@ internal struct BuildkiteCIEnvironmentReader: CIEnvironmentReader {
                 pipelineName: env["BUILDKITE_PIPELINE_SLUG"],
                 pipelineNumber: env["BUILDKITE_BUILD_NUMBER"],
                 pipelineURL: pipelineURL.flatMap { URL(string: $0) },
+                jobId: env["BUILDKITE_JOB_ID"],
                 jobURL: URL(string: jobURL),
                 workspacePath: expand(path: env["BUILDKITE_BUILD_CHECKOUT_PATH"], env: env),
                 nodeName: env["BUILDKITE_AGENT_ID"],
                 nodeLabels: labels.count > 0 ? labels : nil,
+                prNumber: env["BUILDKITE_PULL_REQUEST"],
                 environment: environment
             ),
             git: .init(
@@ -43,7 +45,8 @@ internal struct BuildkiteCIEnvironmentReader: CIEnvironmentReader {
                 commitSHA: env["BUILDKITE_COMMIT"],
                 commitMessage: env["BUILDKITE_MESSAGE"],
                 authorName: env["BUILDKITE_BUILD_AUTHOR"],
-                authorEmail: env["BUILDKITE_BUILD_AUTHOR_EMAIL"]
+                authorEmail: env["BUILDKITE_BUILD_AUTHOR_EMAIL"],
+                pullRequestBaseBranch: env["BUILDKITE_PULL_REQUEST_BASE_BRANCH"]
             )
         )
     }

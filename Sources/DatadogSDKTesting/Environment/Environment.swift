@@ -134,6 +134,9 @@ internal final class Environment {
         gitAttributes[DDGitTags.gitCommitterName] = git.committerName
         gitAttributes[DDGitTags.gitCommitterEmail] = git.committerEmail
         gitAttributes[DDGitTags.gitCommitterDate] = git.committerDate?.spanAttribute
+        gitAttributes[DDGitTags.gitCommitHeadSha] = git.pullRequestHeadSha
+        gitAttributes[DDGitTags.gitPullRequestBaseBranch] = git.pullRequestBaseBranch
+        gitAttributes[DDGitTags.gitPullRequestBaseBranchSha] = git.pullRequestBaseBranchSha
         return gitAttributes
     }
     
@@ -206,7 +209,10 @@ internal final class Environment {
             authorDate: env["DD_GIT_COMMIT_AUTHOR_DATE"],
             committerName: env["DD_GIT_COMMIT_COMMITTER_NAME"],
             committerEmail: env["DD_GIT_COMMIT_COMMITTER_EMAIL"],
-            committerDate: env["DD_GIT_COMMIT_COMMITTER_DATE"]
+            committerDate: env["DD_GIT_COMMIT_COMMITTER_DATE"],
+            pullRequestHeadSha: env["DD_GIT_COMMIT_HEAD_SHA"],
+            pullRequestBaseBranch: env["DD_GIT_PULL_REQUEST_BASE_BRANCH"],
+            pullRequestBaseBranchSha: env["DD_GIT_PULL_REQUEST_BASE_BRANCH_SHA"]
         )
     }
     
@@ -378,6 +384,11 @@ internal extension Environment {
         let committerEmail: String?
         let committerDate: String?
         
+        // git.pull_request.*
+        let pullRequestHeadSha: String?
+        let pullRequestBaseBranch: String?
+        let pullRequestBaseBranchSha: String?
+        
         var repositoryName: String? {
             repositoryURL?.deletingPathExtension().lastPathComponent
         }
@@ -385,7 +396,8 @@ internal extension Environment {
         init(repositoryURL: URL? = nil, branch: String? = nil, tag: String? = nil,
              commitSHA: String? = nil, commitMessage: String? = nil,
              authorName: String? = nil, authorEmail: String? = nil, authorDate: String? = nil,
-             committerName: String? = nil, committerEmail: String? = nil, committerDate: String? = nil)
+             committerName: String? = nil, committerEmail: String? = nil, committerDate: String? = nil,
+             pullRequestHeadSha: String? = nil, pullRequestBaseBranch: String? = nil, pullRequestBaseBranchSha: String? = nil)
         {
             self.repositoryURL = repositoryURL
             self.branch = branch
@@ -398,6 +410,9 @@ internal extension Environment {
             self.committerName = committerName
             self.committerEmail = committerEmail
             self.committerDate = committerDate
+            self.pullRequestHeadSha = pullRequestHeadSha
+            self.pullRequestBaseBranch = pullRequestBaseBranch
+            self.pullRequestBaseBranchSha = pullRequestBaseBranchSha
         }
         
         func extended(from info: GitInfo) -> Git {
@@ -413,7 +428,10 @@ internal extension Environment {
                 authorDate: authorDate ?? info.authorDate,
                 committerName: committerName ?? info.committerName,
                 committerEmail: committerEmail ?? info.committerEmail,
-                committerDate: committerDate ?? info.committerDate
+                committerDate: committerDate ?? info.committerDate,
+                pullRequestHeadSha: pullRequestHeadSha,
+                pullRequestBaseBranch: pullRequestBaseBranch,
+                pullRequestBaseBranchSha: pullRequestBaseBranchSha
             )
         }
         
@@ -429,7 +447,10 @@ internal extension Environment {
                 authorDate: info.authorDate ?? authorDate,
                 committerName: info.committerName ?? committerName,
                 committerEmail: info.committerEmail ?? committerEmail,
-                committerDate: info.committerDate ?? committerDate
+                committerDate: info.committerDate ?? committerDate,
+                pullRequestHeadSha: info.pullRequestHeadSha ?? pullRequestHeadSha,
+                pullRequestBaseBranch: info.pullRequestBaseBranch ?? pullRequestBaseBranch,
+                pullRequestBaseBranchSha: info.pullRequestBaseBranchSha ?? pullRequestBaseBranchSha
             )
         }
         
@@ -472,6 +493,9 @@ internal extension Environment {
               Committer Name: \(committerName ?? "")
               Committer Email: \(committerEmail ?? "")
               Committer Date: \(committerDate ?? "")
+              Pull Request Head SHA: \(pullRequestHeadSha ?? "")
+              Pull Request Base Branch: \(pullRequestBaseBranch ?? "")
+              Pull Request Base Branch SHA: \(pullRequestBaseBranchSha ?? "")
             """
         }
     }

@@ -174,6 +174,115 @@ class EnvironmentTests: XCTestCase {
         let gitInfo = Environment.gitInfoAt(startingPath: "/Users/")
         XCTAssertNil(gitInfo)
     }
+    
+    // MARK: - GitHub CI Pull Request Tests
+    func testGitHubCIPullRequestDetectionWithValidEventFile() throws {
+        // Use the actual github-event.json fixture file
+        let jsonURL = Bundle(for: type(of: self)).resourceURL!
+            .appendingPathComponent("fixtures")
+            .appendingPathComponent("ci")
+            .appendingPathComponent("github-event.json")
+        
+        var testEnvironment = [String: SpanAttributeConvertible]()
+        testEnvironment["GITHUB_ACTIONS"] = "true"
+        testEnvironment["GITHUB_REPOSITORY"] = "test-owner/test-repo"
+        testEnvironment["GITHUB_SHA"] = "df289512a51123083a8e6931dd6f57bb3883d4c4"
+        testEnvironment["GITHUB_BASE_REF"] = "main"  // Indicates pull request
+        testEnvironment["GITHUB_EVENT_PATH"] = jsonURL.path
+        testEnvironment["GITHUB_HEAD_REF"] = "test-branch"
+        testEnvironment["GITHUB_RUN_ID"] = "123456789"
+        
+        let env = createEnv(testEnvironment)
+        
+        // Verify basic GitHub CI detection
+        XCTAssertNotNil(env.ci)
+        XCTAssertEqual(env.ci?.provider, "github")
+        
+        // Verify pull request metadata is extracted
+        XCTAssertEqual(env.git.pullRequestHeadSha, "df289512a51123083a8e6931dd6f57bb3883d4c4")
+        XCTAssertEqual(env.git.pullRequestBaseBranch, "main")
+        XCTAssertEqual(env.git.pullRequestBaseBranchSha, "52e0974c74d41160a03d59ddc73bb9f5adab054b")
+        
+        // Verify span attributes include pull request data
+        let metadata = SpanMetadata(libraryVersion: "1.0", env: env, capabilities: .libraryCapabilities)
+        XCTAssertEqual(metadata[string: .test, DDGitTags.gitCommitHeadSha], "df289512a51123083a8e6931dd6f57bb3883d4c4")
+        XCTAssertEqual(metadata[string: .test, DDGitTags.gitPullRequestBaseBranch], "main")
+        XCTAssertEqual(metadata[string: .test, DDGitTags.gitPullRequestBaseBranchSha], "52e0974c74d41160a03d59ddc73bb9f5adab054b")
+    }
+    
+    func testGitHubCIMissingEventPathFile() {
+        var testEnvironment = [String: SpanAttributeConvertible]()
+        testEnvironment["GITHUB_ACTIONS"] = "true"
+        testEnvironment["GITHUB_REPOSITORY"] = "test-owner/test-repo"
+        testEnvironment["GITHUB_SHA"] = "df289512a51123083a8e6931dd6f57bb3883d4c4"
+        testEnvironment["GITHUB_BASE_REF"] = "main"  // Indicates pull request
+        // GITHUB_EVENT_PATH is missing
+        testEnvironment["GITHUB_HEAD_REF"] = "test-branch"
+        testEnvironment["GITHUB_RUN_ID"] = "123456789"
+        
+        let env = createEnv(testEnvironment)
+        
+        // Verify basic GitHub CI detection still works
+        XCTAssertNotNil(env.ci)
+        XCTAssertEqual(env.ci?.provider, "github")
+        
+        // Verify pull request metadata gracefully fails
+        XCTAssertNil(env.git.pullRequestHeadSha)
+        XCTAssertEqual(env.git.pullRequestBaseBranch, "main")  // Still set from GITHUB_BASE_REF
+        XCTAssertNil(env.git.pullRequestBaseBranchSha)
+    }
+    
+    func testGitHubCIInvalidEventFile() throws {
+        // Create a temporary file with invalid JSON
+        let tempFile = FileManager.default.temporaryDirectory
+            .appendingPathComponent("invalid-github-event.json")
+        try "{ invalid json }".write(to: tempFile, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(at: tempFile) }
+        
+        var testEnvironment = [String: SpanAttributeConvertible]()
+        testEnvironment["GITHUB_ACTIONS"] = "true"
+        testEnvironment["GITHUB_REPOSITORY"] = "test-owner/test-repo"
+        testEnvironment["GITHUB_SHA"] = "df289512a51123083a8e6931dd6f57bb3883d4c4"
+        testEnvironment["GITHUB_BASE_REF"] = "main"  // Indicates pull request
+        testEnvironment["GITHUB_EVENT_PATH"] = tempFile.path
+        testEnvironment["GITHUB_HEAD_REF"] = "test-branch"
+        testEnvironment["GITHUB_RUN_ID"] = "123456789"
+        
+        let env = createEnv(testEnvironment)
+        
+        // Verify basic GitHub CI detection still works
+        XCTAssertNotNil(env.ci)
+        XCTAssertEqual(env.ci?.provider, "github")
+        
+        // Verify pull request metadata gracefully fails
+        XCTAssertNil(env.git.pullRequestHeadSha)
+        XCTAssertEqual(env.git.pullRequestBaseBranch, "main")  // Still set from GITHUB_BASE_REF
+        XCTAssertNil(env.git.pullRequestBaseBranchSha)
+    }
+    
+    func testGitHubCIEnvironmentOverrides() {
+        var testEnvironment = [String: SpanAttributeConvertible]()
+        testEnvironment["GITHUB_ACTIONS"] = "true"
+        testEnvironment["GITHUB_REPOSITORY"] = "test-owner/test-repo"
+        testEnvironment["GITHUB_SHA"] = "df289512a51123083a8e6931dd6f57bb3883d4c4"
+        // Test environment override capabilities
+        testEnvironment["DD_GIT_COMMIT_HEAD_SHA"] = "override-head-sha"
+        testEnvironment["DD_GIT_PULL_REQUEST_BASE_BRANCH"] = "override-base-branch"
+        testEnvironment["DD_GIT_PULL_REQUEST_BASE_BRANCH_SHA"] = "override-base-sha"
+        
+        let env = createEnv(testEnvironment)
+        
+        // Verify environment overrides work
+        XCTAssertEqual(env.git.pullRequestHeadSha, "override-head-sha")
+        XCTAssertEqual(env.git.pullRequestBaseBranch, "override-base-branch")
+        XCTAssertEqual(env.git.pullRequestBaseBranchSha, "override-base-sha")
+        
+        // Verify span attributes reflect overrides
+        let metadata = SpanMetadata(libraryVersion: "1.0", env: env, capabilities: .libraryCapabilities)
+        XCTAssertEqual(metadata[string: .test, DDGitTags.gitCommitHeadSha], "override-head-sha")
+        XCTAssertEqual(metadata[string: .test, DDGitTags.gitPullRequestBaseBranch], "override-base-branch")
+        XCTAssertEqual(metadata[string: .test, DDGitTags.gitPullRequestBaseBranchSha], "override-base-sha")
+    }
 
     func testSpecs() throws {
         let fixturesURL = Bundle(for: type(of: self)).resourceURL!

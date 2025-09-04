@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
   s.name          = 'DatadogSDKTesting'
   s.module_name   = 'DatadogSDKTesting'
-  s.version       = '2.6.0-beta2'
+  s.version       = '2.6.0'
   s.summary       = "Swift testing framework for Datadog's CI Visibility product"
   s.license       = 'Apache 2.0'
   s.homepage      = 'https://www.datadoghq.com'
@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
   
   s.source = {
     :http => "https://github.com/DataDog/dd-sdk-swift-testing/releases/download/#{s.version}/DatadogSDKTesting.zip",
-    :sha256 => '9157f33c8efed2ca61b5dcb57599bf22eff5fe0e56b6fb35e06ed0bf742c8cd4'
+    :sha256 => 'c95b0487b7702822b72d18b8d790af36b4bdb366f8d0198524eb91163b1593f4'
   }
   
   s.ios.deployment_target  = '12.0'

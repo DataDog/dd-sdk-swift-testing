@@ -57,12 +57,12 @@ final class TestManagement: TestHooksFeature {
     func testWillFinish(test: any TestRun, duration: TimeInterval, withStatus status: TestStatus, andInfo info: TestRunInfo) {
         guard info.retry?.reason == id else { return } // Check that was retied by us
         guard info.retry?.status != .retry else { return } // last execution.
-        if info.executions.failed >= info.executions.total { // all executions failed
+        if info.executions.failed >= info.executions.total && status == .fail { // all executions failed
             test.set(tag: DDTestTags.testHasFailedAllRetries, value: "true")
         }
         // Check that all executions passed
         test.set(tag: DDTestManagementTags.testAttemptToFixPassed,
-                 value: info.executions.failed == 0)
+                 value: info.executions.failed == 0 && status != .fail)
     }
     
     func testGroupRetry(test: any TestRun, duration: TimeInterval, withStatus status: TestStatus,

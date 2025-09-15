@@ -184,7 +184,7 @@ enum Mocks {
                   skippableMethods: [name: !unskippable])
         }
         
-        var executionCount: Int { runs.count }
+        var executionCount: Int { runs.filter { $0.duration > 0 }.count }
         var failedExecutionCount: Int { runs.filter { $0.status == .fail }.count }
         
         var isSucceeded: Bool {

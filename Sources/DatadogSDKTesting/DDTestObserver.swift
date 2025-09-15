@@ -223,15 +223,18 @@ class DDTestObserver: NSObject, XCTestObservation {
             return
         }
         test.addBenchmarkTagsIfNeeded(from: testCase)
+        test.end(status: testRun.status)
+        
+        // Run hook
         let info = TestRunInfo(skip: context.skipStatus,
                                retry: group.retryReason.map { ($0, context.retryStatus) },
                                executions: (total: group.groupRun?.executionCount ?? 0,
                                             failed: group.groupRun?.failedExecutionCount ?? 0))
         for feature in context.features {
-            feature.testWillFinish(test: test, duration: testRun.testDuration,
-                                   withStatus: testRun.status, andInfo: info)
+            feature.testDidFinish(test: test, info: info)
         }
-        test.end(status: testRun.status)
+        
+        // Switch state back
         state = context.back(group: group)
         Log.debug("testCaseDidFinish: \(testCase.name)")
     }
@@ -258,7 +261,7 @@ class DDTestObserver: NSObject, XCTestObservation {
         
         let duration = Date().timeIntervalSince(testRun.startDate ?? Date(timeIntervalSince1970: 0))
         let status: TestStatus = testRun.hasBeenSkipped ? .skip : testRun.canFail ? .fail : .pass
-        let info = TestRunInfo(skip: context.skipStatus,
+        var info = TestRunInfo(skip: context.skipStatus,
                                retry: group.retryReason.map { ($0, context.retryStatus) },
                                executions: (total: groupRun.executionCount,
                                             failed: groupRun.failedExecutionCount))
@@ -269,22 +272,30 @@ class DDTestObserver: NSObject, XCTestObservation {
                 .map { ($0, feature.id) }
         }
         
-        guard let actionAndFeature = actionAndFeature else {
-            context.retryStatus = .recordErrors
-            return
+        // save retry status
+        context.retryStatus = actionAndFeature?.0 ?? .recordErrors
+        
+        // update info with the new retry status
+        info = TestRunInfo(skip: info.skip,
+                           retry: actionAndFeature.map { ($1, $0) },
+                           executions: info.executions)
+        // Run hook
+        for feature in context.features {
+            feature.testWillFinish(test: test, duration: duration, withStatus: status, andInfo: info)
         }
         
-        context.retryStatus = actionAndFeature.0
+        // Apply action
         switch actionAndFeature {
-        case (.retry, let id):
+        case .none: break
+        case .some((.pass, _)): break
+        case .some((.retry, let id)):
             Log.debug("\(id) will retry test \(test.name)")
             group.retry(reason: id)
-        case (.recordErrors, let id):
+        case .some((.recordErrors, let id)):
             if testRun.canFail {
                 Log.debug("\(id) restores suppressed failures for \(test.name)")
                 testRun.recordSuppressedFailures()
             }
-        case (.pass, _): break
         }
     }
     

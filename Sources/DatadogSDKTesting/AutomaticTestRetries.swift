@@ -57,7 +57,7 @@ final class AutomaticTestRetries: TestHooksFeature {
     func testWillFinish(test: any TestRun, duration: TimeInterval, withStatus status: TestStatus, andInfo info: TestRunInfo) {
         guard info.retry?.reason == id else { return } // check that we handled that test
         guard info.retry?.status != .retry else { return } // last run.
-        if  info.executions.failed >= info.executions.total {
+        if  info.executions.failed >= info.executions.total && status == .fail {
             // last execution and all executions failed
             test.set(tag: DDTestTags.testHasFailedAllRetries, value: "true")
         }

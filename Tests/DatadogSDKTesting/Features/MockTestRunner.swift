@@ -158,6 +158,9 @@ extension Mocks {
         func _run(test name: String, method: TestMethod, info: TestRunInfo, group: Group) -> TestRunInfo {
             var info = info
             let test = Test(name: name, suite: group.suite)
+            // To emulate how XCTest work. It's added before execution
+            // Group simply ignores it's results till it finished
+            group.add(run: test)
             
             for feature in features {
                 feature.testWillStart(test: test, info: info)
@@ -188,23 +191,29 @@ extension Mocks {
                 }
             }
             
-            // At this moment test will be ended in XCTest. So we need to add it to the group run
-            group.add(run: test)
-            
-            // update info. Test runs count will be different and retry too
-            info = TestRunInfo(skip: info.skip,
-                               retry: actionAndFeature.map { ($1, $0) },
-                               executions: (group.executionCount, group.failedExecutionCount))
-            
             if let actionAndFeature = actionAndFeature, actionAndFeature.0 == .recordErrors {
                 test.errorStatus = .unsuppressed
             }
             
+            // update info with the new retry
+            info = TestRunInfo(skip: info.skip,
+                               retry: actionAndFeature.map { ($1, $0) },
+                               executions: info.executions)
+            
             for feature in features {
                 feature.testWillFinish(test: test, duration: duration, withStatus: result.status, andInfo: info)
             }
-            
             test.end(status: result.status, time: test.startTime.addingTimeInterval(duration))
+            
+            
+            // update info with the new run counts
+            info = TestRunInfo(skip: info.skip,
+                               retry: info.retry,
+                               executions: (group.executionCount, group.failedExecutionCount))
+            for feature in features {
+                feature.testDidFinish(test: test, info: info)
+            }
+            
             return info
         }
     }

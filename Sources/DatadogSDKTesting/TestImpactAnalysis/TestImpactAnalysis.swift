@@ -92,7 +92,9 @@ final class TestImpactAnalysis: TestHooksFeature {
                 _skippedCount.update { $0 += 1 }
             }
         }
-
+    }
+    
+    func testDidFinish(test: any TestRun, info: TestRunInfo) {
         if !info.skip.isSkipped {
             coverage?.endTest(testSessionId: test.session.id.rawValue,
                               testSuiteId: test.suite.id.rawValue,

@@ -38,10 +38,14 @@ protocol TestHooksFeature: Feature {
     func testGroupRetry(test: any TestRun, duration: TimeInterval, withStatus: TestStatus,
                         andInfo: TestRunInfo) -> RetryStatus?
     /// Called right before the `end()` of the TestRun to add more tags if needed.
-    /// info.executions.total and info.executions.failed already have the current run.
+    /// info.executions.total and info.executions.failed don't have the current run yet.
     /// info.retry has the new status returned by `testGroupRetry` call.
     func testWillFinish(test: any TestRun, duration: TimeInterval, withStatus: TestStatus,
                         andInfo: TestRunInfo) -> Void
+    /// Called right at the `end()` of the TestRun. Tags could not be added at this moment anymore.
+    /// info.executions.total and info.executions.failed already have the current run.
+    /// info.retry has the new status returned by `testGroupRetry` call.
+    func testDidFinish(test: any TestRun, info: TestRunInfo) -> Void
 }
 
 protocol FeatureFactory {
@@ -176,4 +180,5 @@ extension TestHooksFeature {
     }
     func testWillFinish(test: any TestRun, duration: TimeInterval, withStatus: TestStatus,
                         andInfo: TestRunInfo) {}
+    func testDidFinish(test: any TestRun, info: TestRunInfo) {}
 }

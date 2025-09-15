@@ -28,7 +28,7 @@ final class EarlyFlakeDetectionLogicTests: XCTestCase {
         XCTAssertNil(tests["newTest"]?.runs.first?.tags[DDEfdTags.testIsRetry])
         XCTAssertNil(tests["newTest"]?.runs.first?.tags[DDEfdTags.testRetryReason])
         XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 9)
-        XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonEfd }.count, 9)
+        XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonEarlyFlakeDetection }.count, 9)
     }
     
     func testEfdRetriesNewSuccessTest() throws {
@@ -48,7 +48,7 @@ final class EarlyFlakeDetectionLogicTests: XCTestCase {
         XCTAssertNil(tests["newTest"]?.runs.first?.tags[DDEfdTags.testIsRetry])
         XCTAssertNil(tests["newTest"]?.runs.first?.tags[DDEfdTags.testRetryReason])
         XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 9)
-        XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonEfd }.count, 9)
+        XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonEarlyFlakeDetection }.count, 9)
     }
     
     func testEfdDoesntRetryOldTest() throws {
@@ -89,7 +89,7 @@ final class EarlyFlakeDetectionLogicTests: XCTestCase {
         XCTAssertNil(tests["oldTest"]?.runs.first?.tags[DDEfdTags.testIsRetry])
         XCTAssertNil(tests["oldTest"]?.runs.first?.tags[DDEfdTags.testRetryReason])
         XCTAssertEqual(tests["oldTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 3)
-        XCTAssertEqual(tests["oldTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonAtr }.count, 3)
+        XCTAssertEqual(tests["oldTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonAutoTestRetry }.count, 3)
     }
     
     func testEFDDisablesATRForNewTest() throws {
@@ -109,7 +109,7 @@ final class EarlyFlakeDetectionLogicTests: XCTestCase {
         XCTAssertNil(tests["oldTest"]?.runs.first?.tags[DDEfdTags.testIsRetry])
         XCTAssertNil(tests["oldTest"]?.runs.first?.tags[DDEfdTags.testRetryReason])
         XCTAssertEqual(tests["oldTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 3)
-        XCTAssertEqual(tests["oldTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonAtr }.count, 3)
+        XCTAssertEqual(tests["oldTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonAutoTestRetry }.count, 3)
         
         XCTAssertNotNil(tests["newTest"])
         XCTAssertEqual(tests["newTest"]?.runs.count, 10)
@@ -124,7 +124,7 @@ final class EarlyFlakeDetectionLogicTests: XCTestCase {
         XCTAssertNil(tests["newTest"]?.runs.first?.tags[DDEfdTags.testIsRetry])
         XCTAssertNil(tests["newTest"]?.runs.first?.tags[DDEfdTags.testRetryReason])
         XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 9)
-        XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonEfd }.count, 9)
+        XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonEarlyFlakeDetection }.count, 9)
     }
     
     func testEfdChangesRetryCountForLongTest() throws {
@@ -143,7 +143,7 @@ final class EarlyFlakeDetectionLogicTests: XCTestCase {
         XCTAssertNil(tests["newTest"]?.runs.first?.tags[DDEfdTags.testIsRetry])
         XCTAssertNil(tests["newTest"]?.runs.first?.tags[DDEfdTags.testRetryReason])
         XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 1)
-        XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonEfd }.count, 1)
+        XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonEarlyFlakeDetection }.count, 1)
     }
     
     func testEfdChangesRetryCountForLongLongTest() throws {

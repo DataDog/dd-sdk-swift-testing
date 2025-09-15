@@ -240,6 +240,7 @@ extension DDXCTestRetryGroupRun {
         static var allSucceeded: Self { .custom { $0.ddTotalFailureCount == 0 } }
         static var atLeastOneSucceeded: Self { .custom { $0.failedExecutionCount < $0.executionCount } }
         static var atMostOneFailed: Self { .custom { $0.failedExecutionCount <= 1 } }
+        static var alwaysSucceeded: Self { .custom { _ in true } }
     }
     
     final class SkipStrategy: GroupStrategy {
@@ -305,6 +306,7 @@ extension RetryGroupSuccessStrategy {
         case .allSucceeded: return .allSucceeded
         case .atLeastOneSucceeded: return .atLeastOneSucceeded
         case .atMostOneFailed: return .atMostOneFailed
+        case .alwaysSucceeded: return .alwaysSucceeded
         }
     }
 }

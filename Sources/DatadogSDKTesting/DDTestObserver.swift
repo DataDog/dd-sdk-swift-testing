@@ -197,11 +197,13 @@ class DDTestObserver: NSObject, XCTestObservation {
         }
         let test = context.suite.testStart(name: testCase.testId.test)
         
+        let info = TestRunInfo(skip: context.skipStatus,
+                               retry: group.retryReason.map { ($0, context.retryStatus) },
+                               executions: (total: group.groupRun?.executionCount ?? 0,
+                                            failed: group.groupRun?.failedExecutionCount ?? 0))
+        
         for feature in context.features {
-            feature.testWillStart(test: test, retryReason: group.retryReason,
-                                  skipStatus: context.skipStatus,
-                                  executionCount: group.groupRun?.executionCount ?? 0,
-                                  failedExecutionCount: group.groupRun?.failedExecutionCount ?? 0)
+            feature.testWillStart(test: test, info: info)
         }
         state = context.new(test: test, in: group)
         Log.debug("testCaseWillStart: \(testCase.name)")
@@ -216,8 +218,20 @@ class DDTestObserver: NSObject, XCTestObservation {
             Log.print("Bad test: \(testCase), expected: \(test.name)")
             return
         }
+        guard let testRun = testCase.testRun as? DDXCTestCaseRetryRun else {
+            Log.print("Unknown test run type: \(type(of: testCase.testRun)) for \(testCase)")
+            return
+        }
         test.addBenchmarkTagsIfNeeded(from: testCase)
-        test.end(status: testCase.testRun?.status ?? .fail)
+        let info = TestRunInfo(skip: context.skipStatus,
+                               retry: group.retryReason.map { ($0, context.retryStatus) },
+                               executions: (total: group.groupRun?.executionCount ?? 0,
+                                            failed: group.groupRun?.failedExecutionCount ?? 0))
+        for feature in context.features {
+            feature.testWillFinish(test: test, duration: testRun.testDuration,
+                                   withStatus: testRun.status, andInfo: info)
+        }
+        test.end(status: testRun.status)
         state = context.back(group: group)
         Log.debug("testCaseDidFinish: \(testCase.name)")
     }
@@ -244,25 +258,23 @@ class DDTestObserver: NSObject, XCTestObservation {
         
         let duration = Date().timeIntervalSince(testRun.startDate ?? Date(timeIntervalSince1970: 0))
         let status: TestStatus = testRun.hasBeenSkipped ? .skip : testRun.canFail ? .fail : .pass
-        for feature in context.features {
-            feature.testWillFinish(test: test, duration: duration, withStatus: status,
-                                   skipStatus: context.skipStatus,
-                                   executionCount: groupRun.executionCount,
-                                   failedExecutionCount: groupRun.failedExecutionCount)
-        }
-        
+        let info = TestRunInfo(skip: context.skipStatus,
+                               retry: group.retryReason.map { ($0, context.retryStatus) },
+                               executions: (total: groupRun.executionCount,
+                                            failed: groupRun.failedExecutionCount))
         let actionAndFeature: (RetryStatus, String)? = context.features.reduce(nil) { prev, feature in
             guard prev == nil else { return prev }
-            return feature.testGroupRetry(test: test, duration: duration, withStatus: status,
-                                          skipStatus: context.skipStatus,
-                                          executionCount: groupRun.executionCount,
-                                          failedExecutionCount: groupRun.failedExecutionCount).map {
-                ($0, feature.id)
-            }
+            return feature.testGroupRetry(test: test, duration: duration,
+                                          withStatus: status, andInfo: info)
+                .map { ($0, feature.id) }
         }
         
-        guard let actionAndFeature = actionAndFeature else { return }
+        guard let actionAndFeature = actionAndFeature else {
+            context.retryStatus = .recordErrors
+            return
+        }
         
+        context.retryStatus = actionAndFeature.0
         switch actionAndFeature {
         case (.retry, let id):
             Log.debug("\(id) will retry test \(test.name)")
@@ -305,11 +317,14 @@ class DDTestObserver: NSObject, XCTestObservation {
             return
         }
         
+        let info = TestRunInfo(skip: context.skipStatus,
+                               retry: group.retryReason.map { ($0, context.retryStatus) },
+                               executions: (total: group.groupRun?.executionCount ?? 0,
+                                            failed: group.groupRun?.failedExecutionCount ?? 0))
+        
         let suppress = context.features.reduce((false, "")) { prev, feature in
             guard !prev.0 else { return prev }
-            let suppress =  feature.shouldSuppressError(test: test, skipStatus: context.skipStatus,
-                                                        executionCount: group.groupRun?.executionCount ?? 0,
-                                                        failedExecutionCount: group.groupRun?.failedExecutionCount ?? 0)
+            let suppress =  feature.shouldSuppressError(test: test, info: info)
             return (suppress, feature.id)
         }
         
@@ -384,12 +399,16 @@ extension DDTestObserver {
         let suiteContext: SuiteContext
         let skipStatus: SkipStatus
         
+        // This one will be updated
+        var retryStatus: RetryStatus
+        
         var features: [any TestHooksFeature] { suiteContext.features }
         
         init(skipStatus: SkipStatus, suite: Suite, suiteContext: SuiteContext) {
             self.skipStatus = skipStatus
             self.suite = suite
             self.suiteContext = suiteContext
+            self.retryStatus = .recordErrors
         }
         
         func back() -> State {

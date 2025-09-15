@@ -37,9 +37,9 @@ internal final class TestManagementService {
     }
     
     func tests(
-        repositoryURL: String, commitMessage: String, module: String? = nil
+        repositoryURL: String, sha: String? = nil, commitMessage: String? = nil, module: String? = nil
     ) -> TestManagementTestsInfo? {
-        let testsPayload = TestsRequest(repositoryURL: repositoryURL, commitMessage: commitMessage, module: module)
+        let testsPayload = TestsRequest(repositoryURL: repositoryURL, sha: sha, commitMessage: commitMessage, module: module)
 
         guard let jsonData = testsPayload.jsonData,
               let response = testsUploader.uploadWithResponse(data: jsonData)
@@ -70,21 +70,23 @@ extension TestManagementService {
             
             struct Attributes: Codable {
                 let repositoryURL: String
-                let commitMessage: String
+                let commitMessage: String?
                 let module: String?
+                let sha: String?
                 
                 enum CodingKeys: String, CodingKey {
                     case repositoryURL = "repository_url"
                     case commitMessage = "commit_message"
                     case module
+                    case sha
                 }
             }
         }
         
-        init(repositoryURL: String, commitMessage: String, module: String? = nil) {
+        init(repositoryURL: String, sha: String? = nil, commitMessage: String? = nil, module: String? = nil) {
             self.data = Data(
                 attributes: Data.Attributes(
-                    repositoryURL: repositoryURL, commitMessage: commitMessage, module: module
+                    repositoryURL: repositoryURL, commitMessage: commitMessage, module: module, sha: sha
                 )
             )
         }

@@ -195,6 +195,7 @@ enum Mocks {
                 return runs.contains { $0.status == .pass }
             case .atMostOneFailed:
                 return failedExecutionCount <= 1
+            case .alwaysSucceeded: return true
             }
         }
         

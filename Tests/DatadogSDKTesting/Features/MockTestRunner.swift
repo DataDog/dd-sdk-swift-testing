@@ -140,32 +140,27 @@ extension Mocks {
             features.forEach { $0.testGroupWillStart(for: group.name, in: suite) }
             
             let skipStatus = config.skipStatus
-            var retryReason: String? = nil
+            var info = TestRunInfo(skip: skipStatus, retry: nil, executions: (0, 0))
             
             if skipStatus.isSkipped {
-                retryReason = _run(test: name, method: .skip(featureId), skipStatus: skipStatus,
-                                   retryReason: retryReason, group: group)
+                info = _run(test: name, method: .skip(featureId), info: info, group: group)
             } else {
-                retryReason = _run(test: name, method: method, skipStatus: skipStatus,
-                                   retryReason: retryReason, group: group)
+                info = _run(test: name, method: method, info: info, group: group)
             }
             
-            while retryReason != nil {
-                retryReason = _run(test: name, method: method, skipStatus: skipStatus,
-                                   retryReason: retryReason, group: group)
+            while (info.retry?.status ?? .recordErrors) == .retry {
+                info = _run(test: name, method: method, info: info, group: group)
             }
             
             return group
         }
         
-        func _run(test name: String, method: TestMethod, skipStatus: SkipStatus, retryReason: String?, group: Group) -> String? {
+        func _run(test name: String, method: TestMethod, info: TestRunInfo, group: Group) -> TestRunInfo {
+            var info = info
             let test = Test(name: name, suite: group.suite)
             
             for feature in features {
-                feature.testWillStart(test: test, retryReason: retryReason,
-                                      skipStatus: skipStatus,
-                                      executionCount: group.executionCount,
-                                      failedExecutionCount: group.failedExecutionCount)
+                feature.testWillStart(test: test, info: info)
             }
             
             let result = method.method()
@@ -176,9 +171,7 @@ extension Mocks {
                 
                 let suppress = features.reduce((false, "")) { prev, feature in
                     guard !prev.0 else { return prev }
-                    let suppress =  feature.shouldSuppressError(test: test, skipStatus: skipStatus,
-                                                                executionCount: group.executionCount,
-                                                                failedExecutionCount: group.failedExecutionCount)
+                    let suppress =  feature.shouldSuppressError(test: test, info: info)
                     return (suppress, feature.id)
                 }
                 
@@ -187,39 +180,32 @@ extension Mocks {
                 }
             }
             
-            for feature in features {
-                feature.testWillFinish(test: test, duration: duration, withStatus: result.status,
-                                       skipStatus: skipStatus,
-                                       executionCount: group.executionCount,
-                                       failedExecutionCount: group.failedExecutionCount)
-            }
             
             let actionAndFeature: (RetryStatus, String)? = features.reduce(nil) { prev, feature in
                 guard prev == nil else { return prev }
-                return feature.testGroupRetry(test: test, duration: duration, withStatus: result.status,
-                                              skipStatus: skipStatus,
-                                              executionCount: group.executionCount,
-                                              failedExecutionCount: group.failedExecutionCount).map {
+                return feature.testGroupRetry(test: test, duration: duration, withStatus: result.status, andInfo: info).map {
                     ($0, feature.id)
                 }
             }
             
-            var newRetryReason: String? = nil
+            // At this moment test will be ended in XCTest. So we need to add it to the group run
+            group.add(run: test)
             
-            if let actionAndFeature = actionAndFeature {
-                switch actionAndFeature {
-                case (.retry, let id):
-                    newRetryReason = id
-                case (.recordErrors, _):
-                    test.errorStatus = .unsuppressed
-                case (.pass, _): break
-                }
+            // update info. Test runs count will be different and retry too
+            info = TestRunInfo(skip: info.skip,
+                               retry: actionAndFeature.map { ($1, $0) },
+                               executions: (group.executionCount, group.failedExecutionCount))
+            
+            if let actionAndFeature = actionAndFeature, actionAndFeature.0 == .recordErrors {
+                test.errorStatus = .unsuppressed
+            }
+            
+            for feature in features {
+                feature.testWillFinish(test: test, duration: duration, withStatus: result.status, andInfo: info)
             }
             
             test.end(status: result.status, time: test.startTime.addingTimeInterval(duration))
-            group.add(run: test)
-            
-            return newRetryReason
+            return info
         }
     }
 }

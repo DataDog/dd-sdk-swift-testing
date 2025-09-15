@@ -68,34 +68,32 @@ final class TestImpactAnalysis: TestHooksFeature {
             : configuration.next(skipStatus: status, skipStrategy: .atLeastOneSkipped)
     }
     
-    func testWillStart(test: any TestRun, retryReason: String?, skipStatus: SkipStatus, executionCount: Int, failedExecutionCount: Int) {
+    func testWillStart(test: any TestRun, info: TestRunInfo) {
         if let correlationId = correlationId {
             test.set(tag: DDItrTags.itrCorrelationId, value: correlationId)
         }
-        if skipStatus.markedUnskippable {
+        if info.skip.markedUnskippable {
             test.set(tag: DDItrTags.itrUnskippable, value: "true")
         }
-        if !skipStatus.isSkipped {
+        if !info.skip.isSkipped {
             coverage?.startTest()
         }
     }
     
-    func testWillFinish(test: any TestRun, duration: TimeInterval, withStatus status: TestStatus,
-                        skipStatus: SkipStatus, executionCount: Int, failedExecutionCount: Int)
-    {
+    func testWillFinish(test: any TestRun, duration: TimeInterval, withStatus status: TestStatus, andInfo info: TestRunInfo) {
         switch status {
         case .pass, .fail:
-            if skipStatus.isForcedRun {
+            if info.skip.isForcedRun {
                 test.set(tag: DDItrTags.itrForcedRun, value: "true")
             }
         case .skip:
-            if skipStatus.isSkipped {
+            if info.skip.isSkipped {
                 test.set(tag: DDTestTags.testSkippedByITR, value: "true")
                 _skippedCount.update { $0 += 1 }
             }
         }
 
-        if !skipStatus.isSkipped {
+        if !info.skip.isSkipped {
             coverage?.endTest(testSessionId: test.session.id.rawValue,
                               testSuiteId: test.suite.id.rawValue,
                               spanId: test.id.rawValue)
@@ -103,12 +101,11 @@ final class TestImpactAnalysis: TestHooksFeature {
     }
     
     func testGroupRetry(test: any TestRun, duration: TimeInterval,
-                        withStatus: TestStatus, skipStatus: SkipStatus,
-                        executionCount: Int, failedExecutionCount: Int) -> RetryStatus?
+                        withStatus: TestStatus, andInfo info: TestRunInfo) -> RetryStatus?
     {
         // we have to return value so test will not be passed for retry to other features
         // it will record errors if needed (which should not happen)
-        skipStatus.isSkipped ? .recordErrors : nil
+        info.skip.isSkipped ? .recordErrors : nil
     }
     
     func stop() {

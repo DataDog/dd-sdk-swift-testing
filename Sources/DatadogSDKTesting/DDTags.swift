@@ -62,6 +62,7 @@ internal enum DDTestTags {
     static let testIsNew = "test.is_new"
     static let testCommand = "test.command"
     static let testSkippedByITR = "test.skipped_by_itr"
+    static let testHasFailedAllRetries = "test.has_failed_all_retries"
 }
 
 internal enum DDHostTags {
@@ -207,8 +208,9 @@ internal enum DDTagValues {
     static let efdAbortSlow = "slow"
     static let efdAbortFaulty = "faulty"
     
-    static let retryReasonEfd = "efd"
-    static let retryReasonAtr = "atr"
+    static let retryReasonEarlyFlakeDetection = "early_flake_detection"
+    static let retryReasonAutoTestRetry = "auto_test_retry"
+    static let retryReasonAttemptToFix = "attempt_to_fix"
 }
 
 internal enum DDItrTags {
@@ -223,6 +225,10 @@ internal enum DDEfdTags {
     static let testRetryReason = "test.retry_reason"
     static let testEfdEnabled = "test.early_flake.enabled"
     static let testEfdAbortReason = "test.early_flake.abort_reason"
+}
+
+internal enum DDTestManagementTags {
+    static let testAttemptToFixPassed = "test.test_management.attempt_to_fix_passed"
 }
 
 internal enum DDLibraryCapabilitiesTags {

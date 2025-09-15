@@ -392,8 +392,10 @@ internal class DDTestMonitor {
             let attemptToFixRetryCount = DDTestMonitor.config.testManagementAttemptToFixRetries ?? remote.testManagement.attemptToFixRetries
             // TODO: use message from the git commit, not a merge one
             let commitMessage = DDTestMonitor.env.git.commitMessage ?? ""
+            let module = Bundle.testBundle?.name ?? "unknown_module"
             let factory = TestManagementFactory(repository: repository,
                                                 commitMessage: commitMessage,
+                                                module: module,
                                                 attemptToFixRetries: attemptToFixRetryCount,
                                                 exporter: eventsExporter,
                                                 cache: cache)

@@ -110,16 +110,38 @@ extension TestManagementService {
 public struct TestManagementTestsInfo: Codable {
     public let modules: [String: Module]
     
+    public init(modules: [String : Module]) {
+        self.modules = modules
+    }
+    
     public struct Module: Codable {
         public let suites: [String: Suite]
+        
+        public init(suites: [String : Suite]) {
+            self.suites = suites
+        }
     }
 
     public struct Suite: Codable {
         public let tests: [String: Test]
+        
+        public init(tests: [String : Test]) {
+            self.tests = tests
+        }
     }
 
     public struct Test: Codable {
         public let properties: Properties
+        
+        public init(properties: Properties) {
+            self.properties = properties
+        }
+        
+        public init(disabled: Bool = false, quarantined: Bool = false, attemptToFix: Bool = false) {
+            self.init(properties: .init(disabled: disabled,
+                                        quarantined: quarantined,
+                                        attemptToFix: attemptToFix))
+        }
         
         public struct Properties: Codable {
             public let disabled: Bool
@@ -130,6 +152,12 @@ public struct TestManagementTestsInfo: Codable {
                 case disabled
                 case quarantined
                 case attemptToFix = "attempt_to_fix"
+            }
+            
+            public init(disabled: Bool = false, quarantined: Bool = false, attemptToFix: Bool = false) {
+                self.disabled = disabled
+                self.quarantined = quarantined
+                self.attemptToFix = attemptToFix
             }
         }
     }

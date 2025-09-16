@@ -31,7 +31,7 @@ final class KnownTests: TestHooksFeature {
         isNew(test: test.name, in: test.suite.name, and: test.module.name)
     }
     
-    func testWillStart(test: any TestRun, info: TestRunInfo) {
+    func testWillStart(test: any TestRun, info: TestRunInfoStart) {
         // Mark new tests
         if isNew(test: test) {
             test.set(tag: DDTestTags.testIsNew, value: "true")

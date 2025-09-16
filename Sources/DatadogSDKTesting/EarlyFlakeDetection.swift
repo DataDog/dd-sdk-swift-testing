@@ -73,29 +73,31 @@ final class EarlyFlakeDetection: TestHooksFeature {
                                 in suite: any TestSuite,
                                 configuration: TestRetryGroupConfiguration.Configuration) -> TestRetryGroupConfiguration
     {
-        // If we can retry this test - setup test group for retries
+        // If we can retry this test - setup test group for retries.
+        // Allow softer retry strategy
         return checkStatus(for: test, in: suite)
-            ? configuration.retry(strategy: .atLeastOneSucceeded)
+            ? configuration.retry(softer: .atLeastOneSucceeded)
             : configuration.next()
     }
     
-    func testWillStart(test: any TestRun, info: TestRunInfo) {
+    func testWillStart(test: any TestRun, info: TestRunInfoStart) {
         guard info.retry?.reason == id else { return }
         test.set(tag: DDEfdTags.testIsRetry, value: "true")
         test.set(tag: DDEfdTags.testRetryReason, value: DDTagValues.retryReasonEarlyFlakeDetection)
     }
     
-    func testGroupRetry(test: any TestRun, duration: TimeInterval, withStatus: TestStatus,
-                        andInfo info: TestRunInfo) -> RetryStatus?
+    func testGroupRetry(test: any TestRun, duration: TimeInterval,
+                        withStatus: TestStatus, iterator: RetryStatusIterator,
+                        andInfo info: TestRunInfoStart) -> RetryStatusIterator
     {
         // EFD should be enabled for this test
-        guard checkStatus(for: test) else { return nil }
+        guard checkStatus(for: test) else { return iterator.next() }
         
         // Check how much repeats do we have
         let repeats = slowTestRetries.repeats(for: duration)
         if info.executions.total < Int(repeats) - 1 {
             // We can retry test
-            return .retry
+            return iterator.retry(ignoreErrors: true)
         } else {
             if repeats == 0 {
                 // Test is too long. EFD failed
@@ -104,24 +106,24 @@ final class EarlyFlakeDetection: TestHooksFeature {
             if info.executions.failed >= info.executions.total {
                 // All previous executions failed
                 // Record errors for the current which is the last
-                return .recordErrors
+                return iterator.end()
             } else {
                 // We have at least one succeded. Pass
-                return .pass
+                return iterator.end(ignoreErrors: true)
             }
         }
     }
     
-    func testWillFinish(test: any TestRun, duration: TimeInterval, withStatus status: TestStatus, andInfo info: TestRunInfo) {
-        guard info.retry?.reason == id else { return } // check that we handled that test
-        guard info.retry?.status != .retry else { return } // last run.
+    func testWillFinish(test: any TestRun, duration: TimeInterval, withStatus status: TestStatus, andInfo info: TestRunInfoEnd) {
+        guard info.retry.reason == id else { return } // check that we handled that test
+        guard !info.retry.status.isRetry else { return } // last run.
         if  info.executions.failed >= info.executions.total  && status == .fail {
             // last execution and all executions failed
             test.set(tag: DDTestTags.testHasFailedAllRetries, value: "true")
         }
     }
     
-    func shouldSuppressError(test: any TestRun, info: TestRunInfo) -> Bool {
+    func shouldSuppressError(test: any TestRun, info: TestRunInfoStart) -> Bool {
         // if EFD enabled for this test suppress the error for now. We will handle it after in testGroupRetry
         return checkStatus(for: test)
     }

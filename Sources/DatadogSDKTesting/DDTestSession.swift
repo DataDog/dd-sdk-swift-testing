@@ -236,6 +236,10 @@ extension ModuleFeatureTagsHelper {
             }
         }
         
+        if DDTestMonitor.instance?.testManagement != nil {
+            meta[DDTestSessionTags.testTestManagementEnabled] = "true"
+        }
+        
         if metrics[DDTestSessionTags.testCoverageLines] == nil,
            itrSkipped == 0,
            let linesCovered = DDCoverageHelper.getLineCodeCoverage()

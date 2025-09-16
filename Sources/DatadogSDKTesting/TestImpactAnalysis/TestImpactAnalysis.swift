@@ -68,7 +68,7 @@ final class TestImpactAnalysis: TestHooksFeature {
             : configuration.next(skipStatus: status, skipStrategy: .atLeastOneSkipped)
     }
     
-    func testWillStart(test: any TestRun, info: TestRunInfo) {
+    func testWillStart(test: any TestRun, info: TestRunInfoStart) {
         if let correlationId = correlationId {
             test.set(tag: DDItrTags.itrCorrelationId, value: correlationId)
         }
@@ -80,7 +80,7 @@ final class TestImpactAnalysis: TestHooksFeature {
         }
     }
     
-    func testWillFinish(test: any TestRun, duration: TimeInterval, withStatus status: TestStatus, andInfo info: TestRunInfo) {
+    func testWillFinish(test: any TestRun, duration: TimeInterval, withStatus status: TestStatus, andInfo info: TestRunInfoEnd) {
         switch status {
         case .pass, .fail:
             if info.skip.isForcedRun {
@@ -94,7 +94,7 @@ final class TestImpactAnalysis: TestHooksFeature {
         }
     }
     
-    func testDidFinish(test: any TestRun, info: TestRunInfo) {
+    func testDidFinish(test: any TestRun, info: TestRunInfoEnd) {
         if !info.skip.isSkipped {
             coverage?.endTest(testSessionId: test.session.id.rawValue,
                               testSuiteId: test.suite.id.rawValue,
@@ -103,11 +103,11 @@ final class TestImpactAnalysis: TestHooksFeature {
     }
     
     func testGroupRetry(test: any TestRun, duration: TimeInterval,
-                        withStatus: TestStatus, andInfo info: TestRunInfo) -> RetryStatus?
+                        withStatus: TestStatus, iterator: RetryStatusIterator,
+                        andInfo info: TestRunInfoStart) -> RetryStatusIterator
     {
-        // we have to return value so test will not be passed for retry to other features
-        // it will record errors if needed (which should not happen)
-        info.skip.isSkipped ? .recordErrors : nil
+        // we have to return end value so test will not be passed for retry to other features
+        info.skip.isSkipped ? iterator.end() : iterator.next()
     }
     
     func stop() {

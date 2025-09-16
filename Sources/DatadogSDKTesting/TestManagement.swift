@@ -21,10 +21,6 @@ final class TestManagement: TestHooksFeature {
         self.attemptToFixRetries = attemptToFixRetries
     }
     
-    func testSuiteWillStart(suite: any TestSuite, testsCount: UInt) {}
-    
-    func testGroupWillStart(for test: String, in suite: any TestSuite) {}
-    
     func testGroupConfiguration(for test: String, meta: UnskippableMethodCheckerFactory,
                                 in suite: any TestSuite,
                                 configuration: TestRetryGroupConfiguration.Configuration) -> TestRetryGroupConfiguration
@@ -38,25 +34,38 @@ final class TestManagement: TestHooksFeature {
             return configuration.retry(strategy: strategy)
         }
         if testInfo.disabled {
-            return configuration.skip(status: .init(canBeSkipped: true, markedUnskippable: false), strategy: .allSkipped)
+            return configuration.skip(status: .init(canBeSkipped: true, markedUnskippable: false),
+                                      strategy: .allSkipped)
         }
         if testInfo.quarantined {
-            // Do nothing by add success strategy
+            // Do nothing but add success strategy
             return configuration.next(successStrategy: .alwaysSucceeded)
         }
         // Do nothing.
         return configuration.next()
     }
     
-    func testWillStart(test: any TestRun, info: TestRunInfo) {
-        guard info.retry?.reason == id else { return }
-        test.set(tag: DDEfdTags.testIsRetry, value: "true")
-        test.set(tag: DDEfdTags.testRetryReason, value: DDTagValues.retryReasonAttemptToFix)
+    func testWillStart(test: any TestRun, info: TestRunInfoStart) {
+        if let testInfo = module.suites[test.suite.name]?.tests[test.name] {
+            if testInfo.quarantined {
+                test.set(tag: DDTestManagementTags.testIsQuarantined, value: "true")
+            }
+            if testInfo.disabled {
+                test.set(tag: DDTestManagementTags.testIsTestDisabled, value: "true")
+            }
+            if testInfo.attemptToFix {
+                test.set(tag: DDTestManagementTags.testIsAttemptToFix, value: "true")
+            }
+        }
+        if info.retry?.reason == id {
+            test.set(tag: DDEfdTags.testIsRetry, value: "true")
+            test.set(tag: DDEfdTags.testRetryReason, value: DDTagValues.retryReasonAttemptToFix)
+        }
     }
     
-    func testWillFinish(test: any TestRun, duration: TimeInterval, withStatus status: TestStatus, andInfo info: TestRunInfo) {
-        guard info.retry?.reason == id else { return } // Check that was retied by us
-        guard info.retry?.status != .retry else { return } // last execution.
+    func testWillFinish(test: any TestRun, duration: TimeInterval, withStatus status: TestStatus, andInfo info: TestRunInfoEnd) {
+        guard info.retry.reason == id else { return } // Check that was retied by us
+        guard !info.retry.status.isRetry else { return } // last execution.
         if info.executions.failed >= info.executions.total && status == .fail { // all executions failed
             test.set(tag: DDTestTags.testHasFailedAllRetries, value: "true")
         }
@@ -65,22 +74,25 @@ final class TestManagement: TestHooksFeature {
                  value: info.executions.failed == 0 && status != .fail)
     }
     
-    func testGroupRetry(test: any TestRun, duration: TimeInterval, withStatus status: TestStatus,
-                        andInfo info: TestRunInfo) -> RetryStatus?
+    func testGroupRetry(test: any TestRun, duration: TimeInterval,
+                        withStatus status: TestStatus, iterator: RetryStatusIterator,
+                        andInfo info: TestRunInfoStart) -> RetryStatusIterator
     {
         guard let testInfo = module.suites[test.suite.name]?.tests[test.name] else {
-            return nil
+            return iterator.next()
         }
         if testInfo.attemptToFix {
             if info.executions.total < attemptToFixRetries - 1 {
-                return .retry
+                return iterator.retry(ignoreErrors: testInfo.disabled || testInfo.quarantined ? true : nil)
             }
-            return testInfo.disabled || testInfo.quarantined ? .pass : .recordErrors
+            return iterator.end(ignoreErrors: testInfo.disabled || testInfo.quarantined ? true : nil)
         }
-        return testInfo.disabled || testInfo.quarantined  ? .pass : nil
+        return testInfo.disabled
+            ? iterator.end(ignoreErrors: true)
+            : iterator.next(ignoreErrors: testInfo.quarantined ? true : nil)
     }
     
-    func shouldSuppressError(test: any TestRun, info: TestRunInfo) -> Bool {
+    func shouldSuppressError(test: any TestRun, info: TestRunInfoStart) -> Bool {
         guard let testInfo = module.suites[test.suite.name]?.tests[test.name] else {
             return false
         }

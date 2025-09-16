@@ -107,6 +107,7 @@ internal enum DDTestSessionTags {
     static let testItrSkippingCount = "test.itr.tests_skipping.count"
     static let testItrSkipped = "test.itr.tests_skipping.tests_skipped"
     static let testToolchain = "test.toolchain"
+    static let testTestManagementEnabled = "test.test_management.enabled"
     static let testSessionName = "test_session.name"
 }
 
@@ -229,6 +230,9 @@ internal enum DDEfdTags {
 
 internal enum DDTestManagementTags {
     static let testAttemptToFixPassed = "test.test_management.attempt_to_fix_passed"
+    static let testIsQuarantined = "test.test_management.is_quarantined"
+    static let testIsTestDisabled = "test.test_management.is_test_disabled"
+    static let testIsAttemptToFix = "test.test_management.is_attempt_to_fix"
 }
 
 internal enum DDLibraryCapabilitiesTags {

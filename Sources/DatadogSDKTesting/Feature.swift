@@ -21,10 +21,10 @@ protocol TestHooksFeature: Feature {
     func testSuiteWillStart(suite: any TestSuite, testsCount: UInt) -> Void
     /// Start of the test case
     func testGroupWillStart(for test: String, in suite: any TestSuite) -> Void
-    /// Configuration for retry group. Will use the first which is not .next
+    /// Configuration for retry group. Feature can interrupt iteration or send it to the next feature with updated config.
     func testGroupConfiguration(for test: String, meta: UnskippableMethodCheckerFactory,
                                 in suite: any TestSuite,
-                                configuration: TestRetryGroupConfiguration.Configuration) -> TestRetryGroupConfiguration
+                                configuration: RetryGroupConfiguration.Iterator) -> RetryGroupConfiguration.Iterator
     /// Called for the each test run in the group.
     /// First test run will have nil info.retry. Retries will have feature id and errors status.
     /// info.executions.total and info.executions.failed don't have the current run yet
@@ -33,11 +33,11 @@ protocol TestHooksFeature: Feature {
     /// to suppress errors for the current run. Errors can be restored by `testGroupRetry` call.
     /// info.executions.total and info.executions.failed don't have the current run yet
     func shouldSuppressError(test: any TestRun, info: TestRunInfoStart) -> Bool
-    /// Feature could return retry status. First non nil one will be used
+    /// Feature should return retry status or pass the decision to the next feature.
     /// info.executions.total and info.executions.failed don't have the current run yet
     func testGroupRetry(test: any TestRun, duration: TimeInterval,
-                        withStatus: TestStatus, iterator: RetryStatusIterator,
-                        andInfo: TestRunInfoStart) -> RetryStatusIterator
+                        withStatus: TestStatus, retryStatus: RetryStatus.Iterator,
+                        andInfo: TestRunInfoStart) -> RetryStatus.Iterator
     /// Called right before the `end()` of the TestRun to add more tags if needed.
     /// info.executions.total and info.executions.failed don't have the current run yet.
     /// info.retry has the new status returned by `testGroupRetry` call.
@@ -56,8 +56,8 @@ protocol FeatureFactory {
     func create(log: Logger) -> FT?
 }
 
-enum TestRetryGroupConfiguration {
-    struct Configuration {
+enum RetryGroupConfiguration: Equatable, Hashable {
+    struct Configuration: Equatable, Hashable {
         let skipStatus: SkipStatus
         let skipStrategy: RetryGroupSkipStrategy
         let successStrategy: RetryGroupSuccessStrategy
@@ -79,49 +79,121 @@ enum TestRetryGroupConfiguration {
                   skipStrategy: skipStrategy ?? self.skipStrategy,
                   successStrategy: successStrategy ?? self.successStrategy)
         }
-        
-        func next(skipStatus: SkipStatus? = nil,
-                  skipStrategy: RetryGroupSkipStrategy? = nil,
-                  successStrategy: RetryGroupSuccessStrategy? = nil) -> TestRetryGroupConfiguration
-        {
-            .next(updated(skipStatus: skipStatus, skipStrategy: skipStrategy, successStrategy: successStrategy))
-        }
-        
-        func skip(status: SkipStatus, strategy skip: RetryGroupSkipStrategy) -> TestRetryGroupConfiguration {
-            .skip(updated(skipStatus: status, skipStrategy: skip))
-        }
-        
-        func retry(strategy success: RetryGroupSuccessStrategy) -> TestRetryGroupConfiguration {
-            .retry(updated(successStrategy: success))
-        }
-        
-        func retry(softer success: RetryGroupSuccessStrategy) -> TestRetryGroupConfiguration {
-            success < successStrategy ? .retry(updated(successStrategy: success)) : .retry(self)
-        }
     }
     
-    case next(Configuration)
     case skip(Configuration)
     case retry(Configuration)
     
-    var hasNext: Bool {
+    var configuration: Configuration {
         switch self {
-        case .next: return true
+        case .skip(let config): return config
+        case .retry(let config): return config
+        }
+    }
+    
+    var isSkip: Bool {
+        switch self {
+        case .skip: return true
         default: return false
         }
     }
     
-    var configuration: Configuration {
+    var isRetry: Bool {
         switch self {
-        case .next(let config): return config
-        case .skip(let config): return config
-        case .retry(let config): return config
+        case .retry: return true
+        default: return false
         }
     }
     
     var skipStatus: SkipStatus { configuration.skipStatus }
     var skipStrategy: RetryGroupSkipStrategy { configuration.skipStrategy }
     var successStrategy: RetryGroupSuccessStrategy { configuration.successStrategy }
+}
+
+extension RetryGroupConfiguration {
+    enum Iterator {
+        /// Pass configuration decision to the next feature and update configuration if needed
+        case next(configuration: Configuration)
+        /// Stop iteration and handle configuration
+        case stop(configuration: RetryGroupConfiguration)
+        
+        init() {
+            self = .next(configuration: .init())
+        }
+        
+        var hasNext: Bool {
+            switch self {
+            case .next: return true
+            default: return false
+            }
+        }
+        
+        var configuration: RetryGroupConfiguration {
+            switch self {
+            case .next(configuration: let config): return .retry(config)
+            case .stop(configuration: let config): return config
+            }
+        }
+        
+        var isSkip: Bool {
+            switch self {
+            case .stop(configuration: let conf): return conf.isSkip
+            default: return false
+            }
+        }
+        
+        var isRetry: Bool {
+            switch self {
+            case .stop(configuration: let conf): return conf.isRetry
+            default: return false
+            }
+        }
+        
+        var skipStatus: SkipStatus { configuration.skipStatus }
+        var skipStrategy: RetryGroupSkipStrategy { configuration.skipStrategy }
+        var successStrategy: RetryGroupSuccessStrategy { configuration.successStrategy }
+        
+        func next(skipStatus: SkipStatus? = nil,
+                  skipStrategy: RetryGroupSkipStrategy? = nil,
+                  successStrategy: RetryGroupSuccessStrategy? = nil) -> Self
+        {
+            switch self {
+            case .next(configuration: let conf):
+                return .next(configuration: conf.updated(skipStatus: skipStatus,
+                                                         skipStrategy: skipStrategy,
+                                                         successStrategy: successStrategy))
+            default: return self
+            }
+        }
+        
+        func skip(status: SkipStatus, strategy skip: RetryGroupSkipStrategy) -> Self {
+            switch self {
+            case .next(configuration: let conf):
+                return .stop(configuration: .skip(conf.updated(skipStatus: status,
+                                                               skipStrategy: skip)))
+            default: return self
+            }
+            
+        }
+        
+        func retry(strategy success: RetryGroupSuccessStrategy) -> Self {
+            switch self {
+            case .next(configuration: let conf):
+                return .stop(configuration: .retry(conf.updated(successStrategy: success)))
+            default: return self
+            }
+        }
+        
+        func retry(softer success: RetryGroupSuccessStrategy) -> Self {
+            switch self {
+            case .next(configuration: let conf):
+                return success < conf.successStrategy
+                ? .stop(configuration: .retry(conf.updated(successStrategy: success)))
+                : .stop(configuration: .retry(conf))
+            default: return self
+            }
+        }
+    }
 }
 
 enum RetryGroupSuccessStrategy: Equatable, Hashable, Comparable {
@@ -152,11 +224,24 @@ struct SkipStatus: Equatable, Hashable {
 }
 
 enum RetryStatus: Equatable, Hashable {
-    /// Stop retries. Ignore errors or record them.
-    case end(ignoreErrors: Bool)
+    struct Configuration: Equatable, Hashable {
+        // Ingore errors or record them
+        let ignoreErrors: Bool
+        
+        init(ignoreErrors: Bool = false) {
+            self.ignoreErrors = ignoreErrors
+        }
+        
+        func updated(ignoreErrors: Bool? = nil) -> Self {
+            .init(ignoreErrors: ignoreErrors ?? self.ignoreErrors)
+        }
+    }
     
-    /// Retry current test more. Ignore errors or record them.
-    case retry(ignoreErrors: Bool)
+    /// Stop retries.
+    case end(Configuration)
+    
+    /// Retry current test more.
+    case retry(Configuration)
     
     var isRetry: Bool {
         switch self {
@@ -167,63 +252,63 @@ enum RetryStatus: Equatable, Hashable {
         }
     }
     
-    var ignoreErrors: Bool {
+    var configuration: Configuration {
         switch self {
-        case .retry(ignoreErrors: let ignoreErrors):
-            return ignoreErrors
-        case .end(ignoreErrors: let ignoreErrors):
-            return ignoreErrors
+        case .end(let conf): return conf
+        case .retry(let conf): return conf
         }
     }
+    
+    var ignoreErrors: Bool { configuration.ignoreErrors }
 }
 
-enum RetryStatusIterator: Equatable, Hashable {
-    /// Pass retry decision to the next feature
-    case next(ignoreErrors: Bool)
-    /// Stop iteration.
-    case stop(status: RetryStatus)
-    
-    init() {
-        self = .next(ignoreErrors: false)
-    }
-    
-    var hasNext: Bool {
-        switch self {
-        case .next: return true
-        default: return false
+extension RetryStatus {
+    enum Iterator: Equatable, Hashable {
+        /// Pass retry decision to the next feature
+        case next(configuration: RetryStatus.Configuration)
+        /// Stop iteration.
+        case stop(status: RetryStatus)
+        
+        init() {
+            self = .next(configuration: .init())
         }
-    }
-    
-    var status: RetryStatus {
-        switch self {
-        case .next(ignoreErrors: let errs):
-            return .end(ignoreErrors: errs)
-        case .stop(status: let status):
-            return status
+        
+        var hasNext: Bool {
+            switch self {
+            case .next: return true
+            default: return false
+            }
         }
-    }
-    
-    func next(ignoreErrors: Bool? = nil) -> Self {
-        switch self {
-        case .next(ignoreErrors: let errs):
-            return .next(ignoreErrors: ignoreErrors ?? errs)
-        default: return self
+        
+        var status: RetryStatus {
+            switch self {
+            case .next(configuration: let config): return .end(config)
+            case .stop(status: let status): return status
+            }
         }
-    }
-    
-    func retry(ignoreErrors: Bool? = nil) -> Self {
-        switch self {
-        case .next(ignoreErrors: let errs):
-            return .stop(status: .retry(ignoreErrors: ignoreErrors ?? errs))
-        default: return self
+        
+        func next(ignoreErrors: Bool? = nil) -> Self {
+            switch self {
+            case .next(configuration: let config):
+                return .next(configuration: config.updated(ignoreErrors: ignoreErrors))
+            default: return self
+            }
         }
-    }
-    
-    func end(ignoreErrors: Bool? = nil) -> Self {
-        switch self {
-        case .next(ignoreErrors: let errs):
-            return .stop(status: .end(ignoreErrors: ignoreErrors ?? errs))
-        default: return self
+        
+        func retry(ignoreErrors: Bool? = nil) -> Self {
+            switch self {
+            case .next(configuration: let config):
+                return .stop(status: .retry(config.updated(ignoreErrors: ignoreErrors)))
+            default: return self
+            }
+        }
+        
+        func end(ignoreErrors: Bool? = nil) -> Self {
+            switch self {
+            case .next(configuration: let config):
+                return .stop(status: .end(config.updated(ignoreErrors: ignoreErrors)))
+            default: return self
+            }
         }
     }
 }
@@ -243,16 +328,16 @@ extension TestHooksFeature {
     func testGroupWillStart(for test: String, in suite: any TestSuite) {}
     func testGroupConfiguration(for test: String, meta: UnskippableMethodCheckerFactory,
                                 in suite: any TestSuite,
-                                configuration: TestRetryGroupConfiguration.Configuration) -> TestRetryGroupConfiguration
+                                configuration: RetryGroupConfiguration.Iterator) -> RetryGroupConfiguration.Iterator
     {
         return configuration.next()
     }
     func testWillStart(test: any TestRun, info: TestRunInfoStart) {}
     func testGroupRetry(test: any TestRun, duration: TimeInterval,
-                        withStatus: TestStatus, iterator: RetryStatusIterator,
-                        andInfo: TestRunInfoStart) -> RetryStatusIterator
+                        withStatus: TestStatus, retryStatus: RetryStatus.Iterator,
+                        andInfo: TestRunInfoStart) -> RetryStatus.Iterator
     {
-        return iterator.next()
+        return retryStatus.next()
     }
     func shouldSuppressError(test: any TestRun, info: TestRunInfoStart) -> Bool
     {

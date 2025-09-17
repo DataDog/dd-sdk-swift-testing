@@ -71,7 +71,7 @@ final class EarlyFlakeDetection: TestHooksFeature {
     
     func testGroupConfiguration(for test: String, meta: UnskippableMethodCheckerFactory,
                                 in suite: any TestSuite,
-                                configuration: TestRetryGroupConfiguration.Configuration) -> TestRetryGroupConfiguration
+                                configuration: RetryGroupConfiguration.Iterator) -> RetryGroupConfiguration.Iterator
     {
         // If we can retry this test - setup test group for retries.
         // Allow softer retry strategy
@@ -87,17 +87,17 @@ final class EarlyFlakeDetection: TestHooksFeature {
     }
     
     func testGroupRetry(test: any TestRun, duration: TimeInterval,
-                        withStatus: TestStatus, iterator: RetryStatusIterator,
-                        andInfo info: TestRunInfoStart) -> RetryStatusIterator
+                        withStatus: TestStatus, retryStatus: RetryStatus.Iterator,
+                        andInfo info: TestRunInfoStart) -> RetryStatus.Iterator
     {
         // EFD should be enabled for this test
-        guard checkStatus(for: test) else { return iterator.next() }
+        guard checkStatus(for: test) else { return retryStatus.next() }
         
         // Check how much repeats do we have
         let repeats = slowTestRetries.repeats(for: duration)
         if info.executions.total < Int(repeats) - 1 {
             // We can retry test
-            return iterator.retry(ignoreErrors: true)
+            return retryStatus.retry(ignoreErrors: true)
         } else {
             if repeats == 0 {
                 // Test is too long. EFD failed
@@ -106,10 +106,10 @@ final class EarlyFlakeDetection: TestHooksFeature {
             if info.executions.failed >= info.executions.total {
                 // All previous executions failed
                 // Record errors for the current which is the last
-                return iterator.end()
+                return retryStatus.end()
             } else {
                 // We have at least one succeded. Pass
-                return iterator.end(ignoreErrors: true)
+                return retryStatus.end(ignoreErrors: true)
             }
         }
     }

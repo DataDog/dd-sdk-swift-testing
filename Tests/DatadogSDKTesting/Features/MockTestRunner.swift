@@ -127,10 +127,10 @@ extension Mocks {
         func _run(group name: String, method: TestMethod, suite: Suite) -> Group {
             let group = Group(name: name, suite: suite, unskippable: method.unskippable)
             
-            let (config, featureId) = features.reduce((TestRetryGroupConfiguration.next(.init()), "")) { prev, feature in
+            let (config, featureId) = features.reduce((RetryGroupConfiguration.Iterator(), "")) { prev, feature in
                 guard prev.0.hasNext else { return prev }
                 let next = feature.testGroupConfiguration(for: group.name, meta: group,
-                                                          in: suite, configuration: prev.0.configuration)
+                                                          in: suite, configuration: prev.0)
                 return (next, feature.id)
             }
             
@@ -141,7 +141,7 @@ extension Mocks {
             
             let skipStatus = config.skipStatus
             var info = TestRunInfoEnd(skip: skipStatus,
-                                      retry: (nil, .end(ignoreErrors: false)),
+                                      retry: (nil, .end(.init())),
                                       executions: (0, 0))
             
             if skipStatus.isSkipped {
@@ -185,10 +185,10 @@ extension Mocks {
             }
             
             
-            let actionAndFeature: (RetryStatusIterator, String) = features.reduce((.init(), "")) { prev, feature in
+            let actionAndFeature = features.reduce((RetryStatus.Iterator(), "")) { prev, feature in
                 guard prev.0.hasNext else { return prev }
                 let next = feature.testGroupRetry(test: test, duration: duration, withStatus: result.status,
-                                                  iterator: prev.0, andInfo: info)
+                                                  retryStatus: prev.0, andInfo: info)
                 return (next, feature.id)
             }
             

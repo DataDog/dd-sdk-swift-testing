@@ -23,7 +23,7 @@ final class TestManagement: TestHooksFeature {
     
     func testGroupConfiguration(for test: String, meta: UnskippableMethodCheckerFactory,
                                 in suite: any TestSuite,
-                                configuration: TestRetryGroupConfiguration.Configuration) -> TestRetryGroupConfiguration
+                                configuration: RetryGroupConfiguration.Iterator) -> RetryGroupConfiguration.Iterator
     {
         guard let testInfo = module.suites[suite.name]?.tests[test] else {
             return configuration.next()
@@ -75,21 +75,21 @@ final class TestManagement: TestHooksFeature {
     }
     
     func testGroupRetry(test: any TestRun, duration: TimeInterval,
-                        withStatus status: TestStatus, iterator: RetryStatusIterator,
-                        andInfo info: TestRunInfoStart) -> RetryStatusIterator
+                        withStatus status: TestStatus, retryStatus: RetryStatus.Iterator,
+                        andInfo info: TestRunInfoStart) -> RetryStatus.Iterator
     {
         guard let testInfo = module.suites[test.suite.name]?.tests[test.name] else {
-            return iterator.next()
+            return retryStatus.next()
         }
         if testInfo.attemptToFix {
             if info.executions.total < attemptToFixRetries - 1 {
-                return iterator.retry(ignoreErrors: testInfo.disabled || testInfo.quarantined ? true : nil)
+                return retryStatus.retry(ignoreErrors: testInfo.disabled || testInfo.quarantined ? true : nil)
             }
-            return iterator.end(ignoreErrors: testInfo.disabled || testInfo.quarantined ? true : nil)
+            return retryStatus.end(ignoreErrors: testInfo.disabled || testInfo.quarantined ? true : nil)
         }
         return testInfo.disabled
-            ? iterator.end(ignoreErrors: true)
-            : iterator.next(ignoreErrors: testInfo.quarantined ? true : nil)
+            ? retryStatus.end(ignoreErrors: true)
+            : retryStatus.next(ignoreErrors: testInfo.quarantined ? true : nil)
     }
     
     func shouldSuppressError(test: any TestRun, info: TestRunInfoStart) -> Bool {

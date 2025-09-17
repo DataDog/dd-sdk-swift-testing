@@ -32,28 +32,28 @@ final class AutomaticTestRetries: TestHooksFeature {
     
     func testGroupConfiguration(for test: String, meta: UnskippableMethodCheckerFactory,
                                 in suite: any TestSuite,
-                                configuration: TestRetryGroupConfiguration.Configuration) -> TestRetryGroupConfiguration
+                                configuration: RetryGroupConfiguration.Iterator) -> RetryGroupConfiguration.Iterator
     {
         // Retry but allow softer successStrategy
         configuration.retry(softer: .atLeastOneSucceeded)
     }
     
     func testGroupRetry(test: any TestRun, duration: TimeInterval,
-                        withStatus status: TestStatus, iterator: RetryStatusIterator,
-                        andInfo info: TestRunInfoStart) -> RetryStatusIterator
+                        withStatus status: TestStatus, retryStatus: RetryStatus.Iterator,
+                        andInfo info: TestRunInfoStart) -> RetryStatus.Iterator
     {
         if case .fail = status {
             if info.executions.total < failedTestRetriesCount // we can retry more
                && incrementRetries() != nil // and increased global retry counter successfully
             {
                 // we can retry this test more
-                return iterator.retry(ignoreErrors: true)
+                return retryStatus.retry(ignoreErrors: true)
             } else {
                 // we can't retry anymore, end it
-                return iterator.end()
+                return retryStatus.end()
             }
         }
-        return iterator.next()
+        return retryStatus.next()
     }
     
     func testWillFinish(test: any TestRun, duration: TimeInterval, withStatus status: TestStatus, andInfo info: TestRunInfoEnd) {

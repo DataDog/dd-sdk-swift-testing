@@ -54,7 +54,7 @@ final class TestImpactAnalysis: TestHooksFeature {
     
     func testGroupConfiguration(for test: String, meta: UnskippableMethodCheckerFactory,
                                 in suite: any TestSuite,
-                                configuration: TestRetryGroupConfiguration.Configuration) -> TestRetryGroupConfiguration
+                                configuration: RetryGroupConfiguration.Iterator) -> RetryGroupConfiguration.Iterator
     {
         let status = status(for: meta, named: test, in: suite.name)
         if status.markedUnskippable {
@@ -103,11 +103,11 @@ final class TestImpactAnalysis: TestHooksFeature {
     }
     
     func testGroupRetry(test: any TestRun, duration: TimeInterval,
-                        withStatus: TestStatus, iterator: RetryStatusIterator,
-                        andInfo info: TestRunInfoStart) -> RetryStatusIterator
+                        withStatus: TestStatus, retryStatus: RetryStatus.Iterator,
+                        andInfo info: TestRunInfoStart) -> RetryStatus.Iterator
     {
         // we have to return end value so test will not be passed for retry to other features
-        info.skip.isSkipped ? iterator.end() : iterator.next()
+        info.skip.isSkipped ? retryStatus.end() : retryStatus.next()
     }
     
     func stop() {

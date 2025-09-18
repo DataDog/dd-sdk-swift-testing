@@ -104,8 +104,11 @@ extension Session: TestSession {
         }
     }
     
-    func setSkipped() {
+    func set(skipped reason: String? = nil) {
         status = .skip
+        if let reason = reason {
+            meta[DDTestTags.testSkipReason] = reason
+        }
     }
     
     func nextTestIndex() -> UInt {

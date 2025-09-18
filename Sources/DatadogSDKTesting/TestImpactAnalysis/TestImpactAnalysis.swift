@@ -64,18 +64,21 @@ final class TestImpactAnalysis: TestHooksFeature {
         guard status.canBeSkipped else { return configuration.next() }
         // if it's skipped we skip it, else simply add info to the configuration
         return status.isSkipped
-            ? configuration.skip(status: status, strategy: .allSkipped)
-            : configuration.next(skipStatus: status, skipStrategy: .atLeastOneSkipped)
+            ? configuration.skip(reason: "Skipped by Test Impact Analysis",
+                                 status: status,
+                                 strategy: .allSkipped)
+            : configuration.next(skipStatus: status,
+                                 skipStrategy: .atLeastOneSkipped)
     }
     
     func testWillStart(test: any TestRun, info: TestRunInfoStart) {
         if let correlationId = correlationId {
             test.set(tag: DDItrTags.itrCorrelationId, value: correlationId)
         }
-        if info.skip.markedUnskippable {
+        if info.skip.status.markedUnskippable {
             test.set(tag: DDItrTags.itrUnskippable, value: "true")
         }
-        if !info.skip.isSkipped {
+        if !info.skip.status.isSkipped {
             coverage?.startTest()
         }
     }
@@ -83,11 +86,11 @@ final class TestImpactAnalysis: TestHooksFeature {
     func testWillFinish(test: any TestRun, duration: TimeInterval, withStatus status: TestStatus, andInfo info: TestRunInfoEnd) {
         switch status {
         case .pass, .fail:
-            if info.skip.isForcedRun {
+            if info.skip.status.isForcedRun {
                 test.set(tag: DDItrTags.itrForcedRun, value: "true")
             }
         case .skip:
-            if info.skip.isSkipped {
+            if info.skip.status.isSkipped {
                 test.set(tag: DDTestTags.testSkippedByITR, value: "true")
                 _skippedCount.update { $0 += 1 }
             }
@@ -95,7 +98,7 @@ final class TestImpactAnalysis: TestHooksFeature {
     }
     
     func testDidFinish(test: any TestRun, info: TestRunInfoEnd) {
-        if !info.skip.isSkipped {
+        if !info.skip.status.isSkipped {
             coverage?.endTest(testSessionId: test.session.id.rawValue,
                               testSuiteId: test.suite.id.rawValue,
                               spanId: test.id.rawValue)
@@ -107,7 +110,7 @@ final class TestImpactAnalysis: TestHooksFeature {
                         andInfo info: TestRunInfoStart) -> RetryStatus.Iterator
     {
         // we have to return end value so test will not be passed for retry to other features
-        info.skip.isSkipped ? retryStatus.end() : retryStatus.next()
+        info.skip.status.isSkipped ? retryStatus.end() : retryStatus.next()
     }
     
     func stop() {

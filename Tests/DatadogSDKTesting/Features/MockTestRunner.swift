@@ -134,12 +134,17 @@ extension Mocks {
             
             features.testGroupWillStart(for: group.name, in: suite)
             
-            var info = TestRunInfoEnd(skip: config.skipStatus,
+            var skip: (by: (feature: String, reason: String)?, status: SkipStatus) = (nil, config.skipStatus)
+            if let feature = feature, config.skipStatus.isSkipped {
+                skip.by = (feature.id, config.skipReason)
+            }
+            
+            var info = TestRunInfoEnd(skip: skip,
                                       retry: (nil, .end(.init())),
                                       executions: (0, 0))
             
-            if let feature = feature, config.skipStatus.isSkipped {
-                info = _run(test: name, method: .skip(feature.id), info: info.startInfo, group: group)
+            if let by = skip.by {
+                info = _run(test: name, method: .skip(by.reason), info: info.startInfo, group: group)
             } else {
                 info = _run(test: name, method: method, info: info.startInfo, group: group)
             }
@@ -181,9 +186,14 @@ extension Mocks {
             
             // update info with the new retry
             var endInfo = TestRunInfoEnd(skip: info.skip,
-                                         retry: (reason: feature?.id, status: retryStatus),
+                                         retry: (by: feature.map { ($0.id, retryStatus.retryReason) },
+                                                 status: retryStatus),
                                          executions: info.executions)
             features.testWillFinish(test: test, duration: duration, withStatus: result.status, andInfo: endInfo)
+            
+            if result.status == .skip, let by = info.skip.by {
+                test.set(skipped: by.reason)
+            }
             
             test.end(status: result.status, time: test.startTime.addingTimeInterval(duration))
             
@@ -201,7 +211,9 @@ extension Mocks {
 extension TestRunInfoEnd {
     var startInfo: TestRunInfoStart {
         .init(skip: skip,
-              retry: retry.reason.map { ($0, retry.status.ignoreErrors) },
+              retry: retry.by.map { (feature: $0.feature,
+                                     reason: $0.reason,
+                                     errorsWasSuppressed: retry.status.ignoreErrors) },
               executions: executions)
     }
 }

@@ -34,7 +34,8 @@ final class TestManagement: TestHooksFeature {
             return configuration.retry(strategy: strategy)
         }
         if testInfo.disabled {
-            return configuration.skip(status: .init(canBeSkipped: true, markedUnskippable: false),
+            return configuration.skip(reason: "Flaky test is disabled by Datadog",
+                                      status: .init(canBeSkipped: true, markedUnskippable: false),
                                       strategy: .allSkipped)
         }
         if testInfo.quarantined {
@@ -57,14 +58,14 @@ final class TestManagement: TestHooksFeature {
                 test.set(tag: DDTestManagementTags.testIsAttemptToFix, value: "true")
             }
         }
-        if info.retry?.reason == id {
+        if info.retry?.feature == id {
             test.set(tag: DDEfdTags.testIsRetry, value: "true")
             test.set(tag: DDEfdTags.testRetryReason, value: DDTagValues.retryReasonAttemptToFix)
         }
     }
     
     func testWillFinish(test: any TestRun, duration: TimeInterval, withStatus status: TestStatus, andInfo info: TestRunInfoEnd) {
-        guard info.retry.reason == id else { return } // Check that was retied by us
+        guard info.retry.by?.feature == id else { return } // Check that was retied by us
         guard !info.retry.status.isRetry else { return } // last execution.
         if info.executions.failed >= info.executions.total && status == .fail { // all executions failed
             test.set(tag: DDTestTags.testHasFailedAllRetries, value: "true")
@@ -83,7 +84,8 @@ final class TestManagement: TestHooksFeature {
         }
         if testInfo.attemptToFix {
             if info.executions.total < attemptToFixRetries - 1 {
-                return retryStatus.retry(ignoreErrors: testInfo.disabled || testInfo.quarantined ? true : nil)
+                return retryStatus.retry(reason: "Attempt To Fix",
+                                         ignoreErrors: testInfo.disabled || testInfo.quarantined ? true : nil)
             }
             return retryStatus.end(ignoreErrors: testInfo.disabled || testInfo.quarantined ? true : nil)
         }

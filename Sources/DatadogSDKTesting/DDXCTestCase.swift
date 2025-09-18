@@ -27,6 +27,8 @@ final class DDXCTestCaseRetryRun: XCTestCaseRun, DDXCTestSuppressedFailureRun {
     
     var canFail: Bool { ddTotalFailureCount > 0 }
     
+    var skipReason: String? = nil
+    
     func suppressFailure() {
         _suppressFailure = true
     }
@@ -35,6 +37,15 @@ final class DDXCTestCaseRetryRun: XCTestCaseRun, DDXCTestSuppressedFailureRun {
         let failures = suppressedFailures
         suppressedFailures = []
         for failure in failures {
+            super.record(failure)
+        }
+    }
+    
+    func recordSuppressedFailuresAsWarnings() {
+        let failures = suppressedFailures
+        suppressedFailures = []
+        for var failure in failures {
+            failure.severity = .warning
             super.record(failure)
         }
     }
@@ -139,8 +150,6 @@ final class DDXCTestRetryGroup: XCTest {
     override var testRunClass: AnyClass? { DDXCTestRetryGroupRun.self }
     let testClass: XCTestCase.Type
     
-    private(set) var retryReason: String?
-    
     var groupRun: DDXCTestRetryGroupRun? { testRun.map { $0 as! DDXCTestRetryGroupRun } }
     
     let testId: (suite: String, test: String)
@@ -149,15 +158,12 @@ final class DDXCTestRetryGroup: XCTest {
     private let _testMethod: Selector
     private var _skipReason: String?
     private var _nextTest: XCTestCase?
-    private var _nextRetryReason: String?
     
     init(for test: XCTestCase) {
         self.currentTest = test
         self.testId = test.testId
         self._skipReason = nil
         self._nextTest = nil
-        self.retryReason = nil
-        self._nextRetryReason = nil
         self._name = test.name
         self.testClass = type(of: test)
         self._testMethod = test.invocation!.selector
@@ -167,13 +173,10 @@ final class DDXCTestRetryGroup: XCTest {
     func skip(reason: String) {
         _skipReason = reason
         _nextTest = nil
-        _nextRetryReason = nil
-        retryReason = nil
     }
     
-    func retry(reason: String) {
+    func retry() {
         _nextTest = testClass.init(selector: _testMethod)
-        _nextRetryReason = reason
         _skipReason = nil
     }
     
@@ -189,13 +192,12 @@ final class DDXCTestRetryGroup: XCTest {
             if let reason = _skipReason {
                 _skipReason = nil
                 DDXCSkippedTestCase().set(reason: reason).perform(testCaseRun)
+                testCaseRun.skipReason = reason
             } else {
                 test.perform(testCaseRun)
             }
             currentTest = _nextTest
-            retryReason = _nextRetryReason
             _nextTest = nil
-            _nextRetryReason = nil
         }
         testRun.stop()
     }

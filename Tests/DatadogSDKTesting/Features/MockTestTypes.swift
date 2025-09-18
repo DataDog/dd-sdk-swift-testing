@@ -27,7 +27,12 @@ enum Mocks {
             status = .fail
         }
         
-        func setSkipped() { status = .skip }
+        func set(skipped reason: String? = nil) {
+            status = .skip
+            if let reason = reason {
+                tags[DDTestTags.testSkipReason] = reason
+            }
+        }
         
         func set(tag name: String, value: any SpanAttributeConvertible) {
             tags[name] = value.spanAttribute

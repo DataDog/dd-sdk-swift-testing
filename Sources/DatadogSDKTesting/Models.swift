@@ -20,7 +20,7 @@ protocol TestModel: AnyObject {
 
 protocol TestContainer: TestModel {
     func set(failed reason: TestError?)
-    func setSkipped()
+    func set(skipped reason: String?)
     
     func end()
     func end(time: Date?)
@@ -52,7 +52,7 @@ extension TestSuite {
     func set(status: TestStatus) {
         switch status {
         case .fail: set(failed: nil)
-        case .skip: setSkipped()
+        case .skip: set(skipped: nil)
         case .pass: break
         }
     }

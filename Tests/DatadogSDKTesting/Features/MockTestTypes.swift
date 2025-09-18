@@ -223,10 +223,17 @@ enum Mocks {
         }
     }
     
-    enum ErrorSuppressionStatus {
+    enum ErrorSuppressionStatus: Equatable, Hashable {
         case normal
-        case suppressed
-        case unsuppressed
+        case suppressed(by: String)
+        case unsuppressed(by: String)
+        
+        var isSuppressed: Bool {
+            switch self {
+            case .suppressed(_): return true
+            default: return false
+            }
+        }
     }
     
     final class Test: TestBase, TestRun, Hashable, Equatable, CustomDebugStringConvertible {
@@ -237,7 +244,7 @@ enum Mocks {
         
         var xcStatus: TestStatus {
             guard status == .fail else { return status }
-            return errorStatus == .suppressed ? .pass : .fail
+            return errorStatus.isSuppressed ? .pass : .fail
         }
         
         init(name: String, suite: Suite) {

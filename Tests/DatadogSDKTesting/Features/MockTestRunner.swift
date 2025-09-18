@@ -115,7 +115,7 @@ extension Mocks {
         
         func _run(suite name: String, tests: KeyValuePairs<String, TestMethod>, module: Module) -> Suite {
             let suite = Suite(name: name, module: module)
-            features.forEach { $0.testSuiteWillStart(suite: suite, testsCount: UInt(tests.count)) }
+            features.testSuiteWillStart(suite: suite, testsCount: UInt(tests.count))
             for (test, method) in tests {
                 let group = _run(group: test, method: method, suite: suite)
                 suite.add(group: group)
@@ -127,25 +127,19 @@ extension Mocks {
         func _run(group name: String, method: TestMethod, suite: Suite) -> Group {
             let group = Group(name: name, suite: suite, unskippable: method.unskippable)
             
-            let (config, featureId) = features.reduce((RetryGroupConfiguration.Iterator(), "")) { prev, feature in
-                guard prev.0.hasNext else { return prev }
-                let next = feature.testGroupConfiguration(for: group.name, meta: group,
-                                                          in: suite, configuration: prev.0)
-                return (next, feature.id)
-            }
+            let (feature, config) = features.testGroupConfiguration(for: group.name, meta: group, in: suite)
             
             group.skipStrategy = config.skipStrategy
             group.successStrategy = config.successStrategy
             
-            features.forEach { $0.testGroupWillStart(for: group.name, in: suite) }
+            features.testGroupWillStart(for: group.name, in: suite)
             
-            let skipStatus = config.skipStatus
-            var info = TestRunInfoEnd(skip: skipStatus,
+            var info = TestRunInfoEnd(skip: config.skipStatus,
                                       retry: (nil, .end(.init())),
                                       executions: (0, 0))
             
-            if skipStatus.isSkipped {
-                info = _run(test: name, method: .skip(featureId), info: info.startInfo, group: group)
+            if let feature = feature, config.skipStatus.isSkipped {
+                info = _run(test: name, method: .skip(feature.id), info: info.startInfo, group: group)
             } else {
                 info = _run(test: name, method: method, info: info.startInfo, group: group)
             }
@@ -163,9 +157,7 @@ extension Mocks {
             // Group simply ignores it's results till it finished
             group.add(run: test)
             
-            for feature in features {
-                feature.testWillStart(test: test, info: info)
-            }
+            features.testWillStart(test: test, info: info)
             
             let result = method.method()
             let duration = method.duration ?? (Date().timeIntervalSince(test.startTime))
@@ -173,51 +165,33 @@ extension Mocks {
             if case .fail(let testError) = result {
                 test.add(error: testError)
                 
-                let suppress = features.reduce((false, "")) { prev, feature in
-                    guard !prev.0 else { return prev }
-                    let suppress =  feature.shouldSuppressError(test: test, info: info)
-                    return (suppress, feature.id)
-                }
-                
-                if suppress.0 {
-                    test.errorStatus = .suppressed
+                if !test.errorStatus.isSuppressed,
+                   let feature = features.shouldSuppressError(test: test, info: info)
+                {
+                    test.errorStatus = .suppressed(by: feature.id)
                 }
             }
             
+            let (feature, retryStatus) = features.testGroupRetry(test: test, duration: duration,
+                                                                 withStatus: result.status, andInfo: info)
             
-            let actionAndFeature = features.reduce((RetryStatus.Iterator(), "")) { prev, feature in
-                guard prev.0.hasNext else { return prev }
-                let next = feature.testGroupRetry(test: test, duration: duration, withStatus: result.status,
-                                                  retryStatus: prev.0, andInfo: info)
-                return (next, feature.id)
+            if !retryStatus.ignoreErrors {
+                test.errorStatus = .unsuppressed(by: feature?.id ?? "default")
             }
-            
-            if !actionAndFeature.0.status.ignoreErrors {
-                test.errorStatus = .unsuppressed
-            }
-            
-            let retryInfo = actionAndFeature.0.hasNext
-                ? (reason: nil, status: actionAndFeature.0.status)
-                : (reason: actionAndFeature.1, status: actionAndFeature.0.status)
             
             // update info with the new retry
             var endInfo = TestRunInfoEnd(skip: info.skip,
-                                         retry: retryInfo,
+                                         retry: (reason: feature?.id, status: retryStatus),
                                          executions: info.executions)
+            features.testWillFinish(test: test, duration: duration, withStatus: result.status, andInfo: endInfo)
             
-            for feature in features {
-                feature.testWillFinish(test: test, duration: duration, withStatus: result.status, andInfo: endInfo)
-            }
             test.end(status: result.status, time: test.startTime.addingTimeInterval(duration))
-            
             
             // update info with the new run counts
             endInfo = TestRunInfoEnd(skip: endInfo.skip,
                                      retry: endInfo.retry,
                                      executions: (group.executionCount, group.failedExecutionCount))
-            for feature in features {
-                feature.testDidFinish(test: test, info: endInfo)
-            }
+            features.testDidFinish(test: test, info: endInfo)
             
             return endInfo
         }

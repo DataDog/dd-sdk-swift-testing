@@ -109,6 +109,128 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
     }
     
+    func testTMAttemptToFixWorks() throws {
+        let runner = tmAndAtrRunner(fix: ["atfTest"],
+                                    tests: ["someTest": .fail("Always fails"),
+                                            "atfTest": .pass()])
+        let tests = try extractTests(runner.run())
+        XCTAssertNotNil(tests["atfTest"])
+        XCTAssertEqual(tests["atfTest"]?.runs.count, 20)
+        XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.status == .pass }.count, 20)
+        XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.xcStatus == .pass }.count, 20)
+        XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 19)
+        XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonAttemptToFix }.count, 19)
+        XCTAssertNil(tests["atfTest"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries])
+        XCTAssertEqual(tests["atfTest"]?.runs.last?.tags[DDTestManagementTags.testAttemptToFixPassed], "true")
+        XCTAssertEqual(tests["atfTest"]?.isSucceeded, true)
+        XCTAssertEqual(tests["atfTest"]?.isSkipped, false)
+        
+        XCTAssertNotNil(tests["someTest"])
+        XCTAssertEqual(tests["someTest"]?.runs.count, 6)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 6)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.xcStatus == .fail }.count, 1)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.xcStatus == .pass }.count, 5)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testSkippedByITR] == nil }.count, 6)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 5)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonAutoTestRetry }.count, 5)
+        XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries], "true")
+        XCTAssertEqual(tests["someTest"]?.isSucceeded, false)
+        XCTAssertEqual(tests["someTest"]?.isSkipped, false)
+    }
+    
+    func testTMAttemptToFixFailsForFailedTest() throws {
+        let runner = tmAndAtrRunner(fix: ["atfTest"],
+                                    tests: ["someTest": .fail("Always fails"),
+                                            "atfTest": .fail(first: 3)])
+        let tests = try extractTests(runner.run())
+        XCTAssertNotNil(tests["atfTest"])
+        XCTAssertEqual(tests["atfTest"]?.runs.count, 20)
+        XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.status == .pass }.count, 17)
+        XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.status == .fail }.count, 3)
+        XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.xcStatus == .pass }.count, 17)
+        XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.xcStatus == .fail }.count, 3)
+        XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 19)
+        XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonAttemptToFix }.count, 19)
+        XCTAssertNil(tests["atfTest"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries])
+        XCTAssertEqual(tests["atfTest"]?.runs.last?.tags[DDTestManagementTags.testAttemptToFixPassed], "false")
+        XCTAssertEqual(tests["atfTest"]?.isSucceeded, false)
+        XCTAssertEqual(tests["atfTest"]?.isSkipped, false)
+        
+        XCTAssertNotNil(tests["someTest"])
+        XCTAssertEqual(tests["someTest"]?.runs.count, 6)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 6)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.xcStatus == .fail }.count, 1)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.xcStatus == .pass }.count, 5)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testSkippedByITR] == nil }.count, 6)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 5)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonAutoTestRetry }.count, 5)
+        XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries], "true")
+        XCTAssertEqual(tests["someTest"]?.isSucceeded, false)
+        XCTAssertEqual(tests["someTest"]?.isSkipped, false)
+    }
+    
+    func testTMAttemptToFixDoesntFailForDisabledTest() throws {
+        let runner = tmAndAtrRunner(fix: ["atfTest"], disabled: ["atfTest"],
+                                    tests: ["someTest": .fail("Always fails"),
+                                            "atfTest": .fail(first: 3)])
+        let tests = try extractTests(runner.run())
+        XCTAssertNotNil(tests["atfTest"])
+        XCTAssertEqual(tests["atfTest"]?.runs.count, 20)
+        XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.status == .pass }.count, 17)
+        XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.status == .fail }.count, 3)
+        XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.xcStatus == .pass }.count, 20)
+        XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.xcStatus == .fail }.count, 0)
+        XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 19)
+        XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonAttemptToFix }.count, 19)
+        XCTAssertNil(tests["atfTest"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries])
+        XCTAssertEqual(tests["atfTest"]?.runs.last?.tags[DDTestManagementTags.testAttemptToFixPassed], "false")
+        XCTAssertEqual(tests["atfTest"]?.isSucceeded, true)
+        XCTAssertEqual(tests["atfTest"]?.isSkipped, false)
+        
+        XCTAssertNotNil(tests["someTest"])
+        XCTAssertEqual(tests["someTest"]?.runs.count, 6)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 6)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.xcStatus == .fail }.count, 1)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.xcStatus == .pass }.count, 5)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testSkippedByITR] == nil }.count, 6)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 5)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonAutoTestRetry }.count, 5)
+        XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries], "true")
+        XCTAssertEqual(tests["someTest"]?.isSucceeded, false)
+        XCTAssertEqual(tests["someTest"]?.isSkipped, false)
+    }
+    
+    func testTMAttemptToFixDoesntFailForQuarantinedTest() throws {
+        let runner = tmAndAtrRunner(fix: ["atfTest"], quarantined: ["atfTest"],
+                                    tests: ["someTest": .fail("Always fails"),
+                                            "atfTest": .fail(first: 3)])
+        let tests = try extractTests(runner.run())
+        XCTAssertNotNil(tests["atfTest"])
+        XCTAssertEqual(tests["atfTest"]?.runs.count, 20)
+        XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.status == .pass }.count, 17)
+        XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.status == .fail }.count, 3)
+        XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.xcStatus == .pass }.count, 20)
+        XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.xcStatus == .fail }.count, 0)
+        XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 19)
+        XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonAttemptToFix }.count, 19)
+        XCTAssertNil(tests["atfTest"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries])
+        XCTAssertEqual(tests["atfTest"]?.runs.last?.tags[DDTestManagementTags.testAttemptToFixPassed], "false")
+        XCTAssertEqual(tests["atfTest"]?.isSucceeded, true)
+        XCTAssertEqual(tests["atfTest"]?.isSkipped, false)
+        
+        XCTAssertNotNil(tests["someTest"])
+        XCTAssertEqual(tests["someTest"]?.runs.count, 6)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 6)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.xcStatus == .fail }.count, 1)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.xcStatus == .pass }.count, 5)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testSkippedByITR] == nil }.count, 6)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 5)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonAutoTestRetry }.count, 5)
+        XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries], "true")
+        XCTAssertEqual(tests["someTest"]?.isSucceeded, false)
+        XCTAssertEqual(tests["someTest"]?.isSkipped, false)
+    }
+    
     func tmRunner(fix: [String] = [], disabled: [String] = [],
                   quarantined: [String] = [], tests: KeyValuePairs<String, Mocks.Runner.TestMethod>) -> Mocks.Runner
     {

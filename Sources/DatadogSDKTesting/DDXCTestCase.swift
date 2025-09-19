@@ -15,6 +15,7 @@ final class DDXCTestCaseRetryRun: XCTestCaseRun, DDXCTestSuppressedFailureRun {
     private var _suppressFailure: Bool = false
     
     private(set) var suppressedFailures: [XCTIssue] = []
+    private(set) var expectedFailuresCount: Int = 0
     
     var ddHasFailed: Bool {
         guard startDate != nil && stopDate != nil else {
@@ -23,7 +24,9 @@ final class DDXCTestCaseRetryRun: XCTestCaseRun, DDXCTestSuppressedFailureRun {
         return ddTotalFailureCount > 0
     }
     
-    var ddTotalFailureCount: Int { totalFailureCount + suppressedFailures.count }
+    var ddTotalFailureCount: Int {
+        totalFailureCount + expectedFailuresCount + suppressedFailures.count
+    }
     
     var canFail: Bool { ddTotalFailureCount > 0 }
     
@@ -35,20 +38,31 @@ final class DDXCTestCaseRetryRun: XCTestCaseRun, DDXCTestSuppressedFailureRun {
     
     func recordSuppressedFailures() {
         let failures = suppressedFailures
+        // we don't have to preserve count because they will be added to totalFailureCount
         suppressedFailures = []
         for failure in failures {
             super.record(failure)
         }
     }
     
-    func recordSuppressedFailuresAsWarnings() {
+#if canImport(ObjectiveC)
+    func recordSuppressedFailuresAsExpected(reason: String) {
         let failures = suppressedFailures
+        // we have to preserve their count, because they will not be attached to the test run
+        expectedFailuresCount += failures.count
         suppressedFailures = []
-        for var failure in failures {
-            failure.severity = .warning
-            super.record(failure)
+        let selector = "alloc"
+        for failure in failures {
+            if let expected = XCTExpectedFailure.self.perform(Selector(selector)).takeUnretainedValue() as? XCTExpectedFailure {
+                if let expected = expected.perform(Selector(("initWithFailureReason:issue:")), with: reason, with: failure)
+                                          .takeRetainedValue() as? XCTExpectedFailure
+                {
+                    self.perform(Selector(("recordExpectedFailure:")), with: expected)
+                }
+            }
         }
     }
+#endif
     
     override func stop() {
         NotificationCenter.test.postTestCaseRetryWillFinish(test as! XCTestCase)

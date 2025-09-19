@@ -272,7 +272,7 @@ class DDTestObserver: NSObject, XCTestObservation {
         // Restore errors if needed
         if testRun.suppressedFailures.count > 0 {
             if retryStatus.ignoreErrors {
-                testRun.recordSuppressedFailuresAsWarnings()
+                testRun.recordSuppressedFailuresAsExpected(reason: retryStatus.retryReason)
             } else {
                 if let reason = feature?.id {
                     Log.debug("\(reason) restores suppressed failures for \(test.name)")
@@ -308,8 +308,6 @@ class DDTestObserver: NSObject, XCTestObservation {
         }
         Log.debug("testCaseRetry:willRecord: \(testCase), issue: \(issue)")
         
-        test.setErrorInfo(type: issue.compactDescription, message: issue.description, callstack: nil)
-        
         guard let testRun = testCase.testRun as? DDXCTestCaseRetryRun else {
             Log.print("Unknown test run type: \(type(of: testCase.testRun)) for \(testCase)")
             return
@@ -335,6 +333,41 @@ class DDTestObserver: NSObject, XCTestObservation {
             testRun.suppressFailure()
             Log.debug("Suppressed issue \(issue) for test \(testCase) by feature \(feature.id)")
         }
+    }
+    
+    func testCase(_ testCase: XCTestCase, didRecord issue: XCTIssue) {
+        guard case .test(test: let test, group: _, context: _) = state else {
+            Log.print("testCase:didRecord: Bad observer state: \(state), expected: .test")
+            return
+        }
+        guard testCase.name.contains(test.name) else {
+            Log.print("testCase:didRecord: Bad test: \(testCase), expected: \(test.name)")
+            return
+        }
+        Log.debug("testCase:didRecord: \(testCase), issue: \(issue)")
+        
+        test.setErrorInfo(type: issue.compactDescription.components(separatedBy: " ").first ?? "unknown",
+                          message: issue.description,
+                          callstack: nil)
+    }
+    
+    func testCase(_ testCase: XCTestCase, didRecord expectedFailure: XCTExpectedFailure) {
+        guard case .test(test: let test, group: _, context: _) = state else {
+            Log.print("testCase:didRecord: Bad observer state: \(state), expected: .test")
+            return
+        }
+        guard testCase.name.contains(test.name) else {
+            Log.print("testCase:didRecord: Bad test: \(testCase), expected: \(test.name)")
+            return
+        }
+        Log.debug("testCase:didRecord:: \(testCase), expectedFailure: \(expectedFailure.issue.compactDescription)")
+        
+        let reason = expectedFailure.failureReason ?? ""
+        let type = expectedFailure.issue.compactDescription.components(separatedBy: " ").first ?? "unknown"
+        
+        test.setErrorInfo(type: "ExpectedFailure[\(reason)]: " + type,
+                          message: expectedFailure.issue.description,
+                          callstack: nil)
     }
 }
 

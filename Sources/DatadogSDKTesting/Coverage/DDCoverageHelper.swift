@@ -17,7 +17,7 @@ protocol TestCoverageCollector: Feature {
 }
 
 final class DDCoverageHelper: TestCoverageCollector {
-    static var id: String = "Coverage Helper"
+    static var id: FeatureId = "Coverage Helper"
     
     let collector: CoverageCollector
     let exporter: EventsExporterProtocol

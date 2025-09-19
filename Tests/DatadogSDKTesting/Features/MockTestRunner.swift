@@ -134,7 +134,7 @@ extension Mocks {
             
             features.testGroupWillStart(for: group.name, in: suite)
             
-            var skip: (by: (feature: String, reason: String)?, status: SkipStatus) = (nil, config.skipStatus)
+            var skip: (by: (feature: FeatureId, reason: String)?, status: SkipStatus) = (nil, config.skipStatus)
             if let feature = feature, config.skipStatus.isSkipped {
                 skip.by = (feature.id, config.skipReason)
             }
@@ -158,6 +158,7 @@ extension Mocks {
         
         func _run(test name: String, method: TestMethod, info: TestRunInfoStart, group: Group) -> TestRunInfoEnd {
             let test = Test(name: name, suite: group.suite)
+            var info = info
             // To emulate how XCTest work. It's added before execution
             // Group simply ignores it's results till it finished
             group.add(run: test)
@@ -167,7 +168,8 @@ extension Mocks {
             let result = method.method()
             let duration = method.duration ?? (Date().timeIntervalSince(test.startTime))
             
-            if case .fail(let testError) = result {
+            switch result {
+            case .fail(let testError):
                 test.add(error: testError)
                 
                 if !test.errorStatus.isSuppressed,
@@ -175,6 +177,16 @@ extension Mocks {
                 {
                     test.errorStatus = .suppressed(by: feature.id)
                 }
+            case .skip(let reason):
+                // we have skipped from code
+                if info.skip.by == nil {
+                    info = TestRunInfoStart(skip: (by: (feature: .notFeature,
+                                                        reason: reason),
+                                                   status: info.skip.status),
+                                            retry: info.retry,
+                                            executions: info.executions)
+                }
+            default: break
             }
             
             let (feature, retryStatus) = features.testGroupRetry(test: test, duration: duration,
@@ -186,14 +198,10 @@ extension Mocks {
             
             // update info with the new retry
             var endInfo = TestRunInfoEnd(skip: info.skip,
-                                         retry: (by: feature.map { ($0.id, retryStatus.retryReason) },
+                                         retry: (feature: feature?.id,
                                                  status: retryStatus),
                                          executions: info.executions)
             features.testWillFinish(test: test, duration: duration, withStatus: result.status, andInfo: endInfo)
-            
-            if result.status == .skip, let by = info.skip.by {
-                test.set(skipped: by.reason)
-            }
             
             test.end(status: result.status, time: test.startTime.addingTimeInterval(duration))
             
@@ -211,9 +219,9 @@ extension Mocks {
 extension TestRunInfoEnd {
     var startInfo: TestRunInfoStart {
         .init(skip: skip,
-              retry: retry.by.map { (feature: $0.feature,
-                                     reason: $0.reason,
-                                     errorsWasSuppressed: retry.status.ignoreErrors) },
+              retry: retry.feature.map { (feature: $0,
+                                          reason: retry.status.retryReason,
+                                          errorsWasSuppressed: retry.status.ignoreErrors) },
               executions: executions)
     }
 }

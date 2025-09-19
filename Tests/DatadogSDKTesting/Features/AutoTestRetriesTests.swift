@@ -148,6 +148,6 @@ final class AutoTestRetriesLogicTests: XCTestCase {
     {
         let atr = AutomaticTestRetries(failedTestRetriesCount: failedTestRetriesCount,
                                        failedTestTotalRetriesMax: failedTestTotalRetriesMax)
-        return (Mocks.Runner(features: [atr], tests: ["ATRModule": ["ATRSuite": tests]]), atr)
+        return (Mocks.Runner(features: [atr, RetryAndSkipTags()], tests: ["ATRModule": ["ATRSuite": tests]]), atr)
     }
 }

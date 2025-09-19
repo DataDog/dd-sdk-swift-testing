@@ -8,7 +8,7 @@ import Foundation
 internal import EventsExporter
 
 final class TestImpactAnalysis: TestHooksFeature {
-    static var id: String = "Test Impact Analysis"
+    static var id: FeatureId = "Test Impact Analysis"
     
     let suites: [String: Suite]
     let correlationId: String?
@@ -90,7 +90,7 @@ final class TestImpactAnalysis: TestHooksFeature {
                 test.set(tag: DDItrTags.itrForcedRun, value: "true")
             }
         case .skip:
-            if info.skip.status.isSkipped {
+            if info.skip.by?.feature == id && info.skip.status.isSkipped {
                 test.set(tag: DDTestTags.testSkippedByITR, value: "true")
                 _skippedCount.update { $0 += 1 }
             }

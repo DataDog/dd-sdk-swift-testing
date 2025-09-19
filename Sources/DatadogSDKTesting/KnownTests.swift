@@ -8,7 +8,7 @@ import Foundation
 internal import EventsExporter
 
 final class KnownTests: TestHooksFeature {
-    static var id: String = "Known Tests"
+    static var id: FeatureId = "Known Tests"
     
     let modules: [String: Module]
     

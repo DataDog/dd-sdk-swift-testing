@@ -18,7 +18,6 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["disabledTest"]?.runs.count, 1)
         XCTAssertEqual(tests["disabledTest"]?.runs.filter { $0.status == .skip }.count, 1)
         XCTAssertEqual(tests["disabledTest"]?.runs.filter { $0.xcStatus == .skip }.count, 1)
-//        XCTAssertEqual(tests["disabledTest"]?.runs.filter { $0.tags[DDTestTags.testSkippedByITR] == nil }.count, 1)
         XCTAssertEqual(tests["disabledTest"]?.isSucceeded, false)
         XCTAssertEqual(tests["disabledTest"]?.isSkipped, true)
         
@@ -26,7 +25,6 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.xcStatus == .fail }.count, 1)
-//        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testSkippedByITR] == nil }.count, 1)
         XCTAssertEqual(tests["someTest"]?.isSucceeded, false)
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
     }
@@ -47,7 +45,6 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.xcStatus == .fail }.count, 1)
-//        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testSkippedByITR] == nil }.count, 1)
         XCTAssertEqual(tests["someTest"]?.isSucceeded, false)
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
     }
@@ -256,7 +253,7 @@ class TestManagementTests: XCTestCase {
         let tmModule = TestManagementTestsInfo.Module(suites: ["TMSuite": tmSuite])
         let tmInfo = TestManagementTestsInfo(modules: ["TMModule": tmModule])
         let tm = TestManagement(tests: tmInfo, attemptToFixRetries: 20, module: "TMModule")
-        return Mocks.Runner(features: [tm], tests: ["TMModule": ["TMSuite": tests]])
+        return Mocks.Runner(features: [tm, RetryAndSkipTags()], tests: ["TMModule": ["TMSuite": tests]])
     }
     
     func tmAndAtrRunner(fix: [String] = [], disabled: [String] = [],
@@ -265,7 +262,7 @@ class TestManagementTests: XCTestCase {
     {
         let runner = tmRunner(fix: fix, disabled: disabled, quarantined: quarantined, tests: tests)
         let atr = AutomaticTestRetries(failedTestRetriesCount: 5, failedTestTotalRetriesMax: 1000)
-        runner.features.append(atr)
+        runner.features.insert(atr, at: runner.features.count - 1)
         return runner
     }
     

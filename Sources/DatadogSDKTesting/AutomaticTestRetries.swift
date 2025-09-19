@@ -8,7 +8,7 @@ import Foundation
 internal import EventsExporter
 
 final class AutomaticTestRetries: TestHooksFeature {
-    static var id: String = "Automatic Test Retries"
+    static var id: FeatureId = "Automatic Test Retries"
     
     let failedTestRetriesCount: UInt
     let failedTestTotalRetriesMax: UInt
@@ -22,12 +22,6 @@ final class AutomaticTestRetries: TestHooksFeature {
         self.failedTestRetriesCount = failedTestRetriesCount
         self.failedTestTotalRetriesMax = failedTestTotalRetriesMax
         self._failedTestTotalRetries = Synced(0)
-    }
-    
-    func testWillStart(test: any TestRun, info: TestRunInfoStart) {
-        guard info.retry?.feature == id else { return }
-        test.set(tag: DDEfdTags.testIsRetry, value: "true")
-        test.set(tag: DDEfdTags.testRetryReason, value: DDTagValues.retryReasonAutoTestRetry)
     }
     
     func testGroupConfiguration(for test: String, meta: UnskippableMethodCheckerFactory,
@@ -47,22 +41,14 @@ final class AutomaticTestRetries: TestHooksFeature {
                && incrementRetries() != nil // and increased global retry counter successfully
             {
                 // we can retry this test more
-                return retryStatus.retry(reason: "Test Failed", ignoreErrors: true)
+                return retryStatus.retry(reason: DDTagValues.retryReasonAutoTestRetry,
+                                         ignoreErrors: true)
             } else {
                 // we can't retry anymore, end it
                 return retryStatus.end()
             }
         }
         return retryStatus.next()
-    }
-    
-    func testWillFinish(test: any TestRun, duration: TimeInterval, withStatus status: TestStatus, andInfo info: TestRunInfoEnd) {
-        guard info.retry.by?.feature == id else { return } // check that we handled that test
-        guard !info.retry.status.isRetry else { return } // last run.
-        if  info.executions.failed >= info.executions.total && status == .fail {
-            // last execution and all executions failed
-            test.set(tag: DDTestTags.testHasFailedAllRetries, value: "true")
-        }
     }
     
     func shouldSuppressError(test: any TestRun, info: TestRunInfoStart) -> Bool {

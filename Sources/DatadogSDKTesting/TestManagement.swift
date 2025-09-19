@@ -8,7 +8,7 @@ import Foundation
 internal import EventsExporter
 
 final class TestManagement: TestHooksFeature {
-    static var id: String = "Flaky Test Management"
+    static var id: FeatureId = "Flaky Test Management"
     
     let module: Module
     let attemptToFixRetries: UInt
@@ -58,18 +58,11 @@ final class TestManagement: TestHooksFeature {
                 test.set(tag: DDTestManagementTags.testIsAttemptToFix, value: "true")
             }
         }
-        if info.retry?.feature == id {
-            test.set(tag: DDEfdTags.testIsRetry, value: "true")
-            test.set(tag: DDEfdTags.testRetryReason, value: DDTagValues.retryReasonAttemptToFix)
-        }
     }
     
     func testWillFinish(test: any TestRun, duration: TimeInterval, withStatus status: TestStatus, andInfo info: TestRunInfoEnd) {
-        guard info.retry.by?.feature == id else { return } // Check that was retied by us
+        guard info.retry.feature == id else { return } // Check that was retied by us
         guard !info.retry.status.isRetry else { return } // last execution.
-        if info.executions.failed >= info.executions.total && status == .fail { // all executions failed
-            test.set(tag: DDTestTags.testHasFailedAllRetries, value: "true")
-        }
         // Check that all executions passed
         test.set(tag: DDTestManagementTags.testAttemptToFixPassed,
                  value: info.executions.failed == 0 && status != .fail)
@@ -84,7 +77,7 @@ final class TestManagement: TestHooksFeature {
         }
         if testInfo.attemptToFix {
             if info.executions.total < attemptToFixRetries - 1 {
-                return retryStatus.retry(reason: "Attempt To Fix",
+                return retryStatus.retry(reason: DDTagValues.retryReasonAttemptToFix,
                                          ignoreErrors: testInfo.disabled || testInfo.quarantined ? true : nil)
             }
             return retryStatus.end(ignoreErrors: testInfo.disabled || testInfo.quarantined ? true : nil)

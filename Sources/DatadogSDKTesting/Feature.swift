@@ -7,13 +7,29 @@
 import Foundation
 internal import EventsExporter
 
+struct FeatureId: ExpressibleByStringLiteral, CustomStringConvertible, RawRepresentable, Equatable, Hashable {
+    typealias StringLiteralType = String
+    let rawValue: String
+    var description: String { rawValue }
+    
+    init(rawValue: String) {
+        self.rawValue = rawValue
+    }
+    
+    init(stringLiteral value: String) {
+        self.rawValue = value
+    }
+    
+    static let notFeature: FeatureId = "not-a-feature"
+}
+
 protocol Feature: AnyObject {
-    static var id: String { get }
+    static var id: FeatureId { get }
     func stop()
 }
 
 extension Feature {
-    var id: String { Self.id }
+    var id: FeatureId { Self.id }
 }
 
 protocol TestHooksFeature: Feature {
@@ -332,13 +348,13 @@ extension RetryStatus {
 
 
 struct TestRunInfo<RetryInfo> {
-    let skip: (by: (feature: String, reason: String)?, status: SkipStatus)
+    let skip: (by: (feature: FeatureId, reason: String)?, status: SkipStatus)
     let retry: RetryInfo
     let executions: (total: Int, failed: Int)
 }
 
-typealias TestRunInfoStart = TestRunInfo<(feature: String, reason: String, errorsWasSuppressed: Bool)?>
-typealias TestRunInfoEnd = TestRunInfo<(by: (feature: String, reason: String)?, status: RetryStatus)>
+typealias TestRunInfoStart = TestRunInfo<(feature: FeatureId, reason: String, errorsWasSuppressed: Bool)?>
+typealias TestRunInfoEnd = TestRunInfo<(feature: FeatureId?, status: RetryStatus)>
 
 // Default hooks implementation
 extension TestHooksFeature {

@@ -27,7 +27,7 @@ final class DDXCTestCaseRetryRun: XCTestCaseRun, DDXCTestSuppressedFailureRun {
     
     var canFail: Bool { ddTotalFailureCount > 0 }
     
-    var skipReason: String? = nil
+    private(set) var skipReason: String? = nil
     
     func suppressFailure() {
         _suppressFailure = true
@@ -64,6 +64,23 @@ final class DDXCTestCaseRetryRun: XCTestCaseRun, DDXCTestSuppressedFailureRun {
             super.record(issue)
         }
     }
+    
+#if canImport(ObjectiveC)
+    private typealias RecordSkip = @convention(c) (AnyObject, Selector, String, XCTSourceCodeContext?) -> Void
+    
+    // it's a hack to get skip messages
+    @objc(recordSkipWithDescription:sourceCodeContext:)
+    func recordSkip(description: String, sourceCodeContext context: XCTSourceCodeContext?) {
+        skipReason = description
+        // we cant call super here because we don't have an override
+        // so we will call super method with ObjC runtime API
+        let selector = #selector(self.recordSkip(description:sourceCodeContext:))
+        if let parent = class_getMethodImplementation(self.superclass, selector) {
+            let recordSkip = unsafeBitCast(parent, to: RecordSkip.self)
+            recordSkip(self, selector, description, context)
+        }
+    }
+#endif // canImport(ObjectiveC)
 }
 
 final class DDXCTestRetryGroupRun: XCTestRun, DDXCTestSuppressedFailureRun {
@@ -192,7 +209,6 @@ final class DDXCTestRetryGroup: XCTest {
             if let reason = _skipReason {
                 _skipReason = nil
                 DDXCSkippedTestCase().set(reason: reason).perform(testCaseRun)
-                testCaseRun.skipReason = reason
             } else {
                 test.perform(testCaseRun)
             }
@@ -202,9 +218,11 @@ final class DDXCTestRetryGroup: XCTest {
         testRun.stop()
     }
     
-    @objc var _requiredTestRunBaseClass: AnyClass? { XCTestRun.self }
-    
     override var description: String { "\(name)[\(testRun?.executionCount ?? 0)]" }
+    
+#if canImport(ObjectiveC)
+    @objc var _requiredTestRunBaseClass: AnyClass? { XCTestRun.self }
+#endif // canImport(ObjectiveC)
 }
 
 final class DDXCSkippedTestCase: XCTestCase {

@@ -298,7 +298,7 @@ class TestImpactAnalysisTests: XCTestCase {
         let skipped = SkipTests(correlationId: "abacaba", tests: skip.map { .init(name: $0, suite: "TIASuite") })
         let collector = Mocks.CoverageCollector()
         let tia = TestImpactAnalysis(tests: skipped, coverage: Mocks.CoverageCollector())
-        return (Mocks.Runner(features: [tia], tests: ["TIAModule": ["TIASuite": tests]]), tia, collector)
+        return (Mocks.Runner(features: [tia, RetryAndSkipTags()], tests: ["TIAModule": ["TIASuite": tests]]), tia, collector)
     }
     
     func tiaAndEfdRunner(skip: [String], known: [String], tests: KeyValuePairs<String, Mocks.Runner.TestMethod>) -> (Mocks.Runner, TestImpactAnalysis, Mocks.CoverageCollector) {
@@ -310,22 +310,22 @@ class TestImpactAnalysisTests: XCTestCase {
             log: Mocks.CatchLogger(isDebug: false)
         )
         let knownFeature = KnownTests(tests: ["TIAModule": ["TIASuite": known]])
-        runner.0.features.append(efd)
-        runner.0.features.append(knownFeature)
+        runner.0.features.insert(efd, at: runner.0.features.count - 1)
+        runner.0.features.insert(knownFeature, at: runner.0.features.count - 1)
         return runner
     }
     
     func tiaAndAtrRunner(skip: [String], tests: KeyValuePairs<String, Mocks.Runner.TestMethod>) -> (Mocks.Runner, TestImpactAnalysis, Mocks.CoverageCollector) {
         let runner = tiaRunner(skip: skip, tests: tests)
         let atr = AutomaticTestRetries(failedTestRetriesCount: 5, failedTestTotalRetriesMax: 1000)
-        runner.0.features.append(atr)
+        runner.0.features.insert(atr, at: runner.0.features.count - 1)
         return runner
     }
     
     func tiaEfdAndAtrRunner(skip: [String], known: [String], tests: KeyValuePairs<String, Mocks.Runner.TestMethod>) -> (Mocks.Runner, TestImpactAnalysis, Mocks.CoverageCollector) {
         let runner = tiaAndEfdRunner(skip: skip, known: known, tests: tests)
         let atr = AutomaticTestRetries(failedTestRetriesCount: 5, failedTestTotalRetriesMax: 1000)
-        runner.0.features.insert(atr, at: runner.0.features.count - 1)
+        runner.0.features.insert(atr, at: runner.0.features.count - 2)
         return runner
     }
     

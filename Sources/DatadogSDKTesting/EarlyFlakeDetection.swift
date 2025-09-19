@@ -8,7 +8,7 @@ import Foundation
 internal import EventsExporter
 
 final class EarlyFlakeDetection: TestHooksFeature {
-    static var id: String = "Early Flake Detection"
+    static var id: FeatureId = "Early Flake Detection"
     
     let knownTests: KnownTests
     let knownTestsCount: Double
@@ -80,12 +80,6 @@ final class EarlyFlakeDetection: TestHooksFeature {
             : configuration.next()
     }
     
-    func testWillStart(test: any TestRun, info: TestRunInfoStart) {
-        guard info.retry?.feature == id else { return }
-        test.set(tag: DDEfdTags.testIsRetry, value: "true")
-        test.set(tag: DDEfdTags.testRetryReason, value: DDTagValues.retryReasonEarlyFlakeDetection)
-    }
-    
     func testGroupRetry(test: any TestRun, duration: TimeInterval,
                         withStatus: TestStatus, retryStatus: RetryStatus.Iterator,
                         andInfo info: TestRunInfoStart) -> RetryStatus.Iterator
@@ -97,7 +91,8 @@ final class EarlyFlakeDetection: TestHooksFeature {
         let repeats = slowTestRetries.repeats(for: duration)
         if info.executions.total < Int(repeats) - 1 {
             // We can retry test
-            return retryStatus.retry(reason: "New Test", ignoreErrors: true)
+            return retryStatus.retry(reason: DDTagValues.retryReasonEarlyFlakeDetection,
+                                     ignoreErrors: true)
         } else {
             if repeats == 0 {
                 // Test is too long. EFD failed
@@ -111,15 +106,6 @@ final class EarlyFlakeDetection: TestHooksFeature {
                 // We have at least one succeded. Pass
                 return retryStatus.end(ignoreErrors: true)
             }
-        }
-    }
-    
-    func testWillFinish(test: any TestRun, duration: TimeInterval, withStatus status: TestStatus, andInfo info: TestRunInfoEnd) {
-        guard info.retry.by?.feature == id else { return } // check that we handled that test
-        guard !info.retry.status.isRetry else { return } // last run.
-        if  info.executions.failed >= info.executions.total  && status == .fail {
-            // last execution and all executions failed
-            test.set(tag: DDTestTags.testHasFailedAllRetries, value: "true")
         }
     }
     

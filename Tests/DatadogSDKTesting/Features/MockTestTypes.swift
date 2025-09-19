@@ -230,8 +230,8 @@ enum Mocks {
     
     enum ErrorSuppressionStatus: Equatable, Hashable {
         case normal
-        case suppressed(by: String)
-        case unsuppressed(by: String)
+        case suppressed(by: FeatureId)
+        case unsuppressed(by: FeatureId)
         
         var isSuppressed: Bool {
             switch self {
@@ -348,7 +348,7 @@ enum Mocks {
             return tests.contains(String(describing: (testSessionId, testSuiteId, spanId)))
         }
         
-        static var id: String { "CoverageCollector" }
+        static var id: FeatureId { "CoverageCollector" }
         func stop() {}
     }
 }

@@ -157,7 +157,7 @@ class DDTestObserver: NSObject, XCTestObservation {
         group.groupRun?.skipStrategy = config.skipStrategy.xcTest
         group.groupRun?.successStrategy = config.successStrategy.xcTest
         
-        var skip: (by: (feature: String, reason: String)?, status: SkipStatus) = (nil, config.skipStatus)
+        var skip: (by: (feature: FeatureId, reason: String)?, status: SkipStatus) = (nil, config.skipStatus)
         if let feature = feature, config.skipStatus.isSkipped {
             group.skip(reason: config.skipReason)
             skip.by = (feature.id, config.skipReason)
@@ -215,11 +215,6 @@ class DDTestObserver: NSObject, XCTestObservation {
             return
         }
         test.addBenchmarkTagsIfNeeded(from: testCase)
-        // Add skip reason if we know it.
-        if testRun.hasBeenSkipped {
-            test.set(tag: DDTestTags.testSkipReason,
-                     value: testRun.skipReason ?? "Was skipped from the test code")
-        }
         test.end(status: testRun.status)
         
         // Run hook
@@ -256,6 +251,13 @@ class DDTestObserver: NSObject, XCTestObservation {
         
         let duration = Date().timeIntervalSince(testRun.startDate ?? Date(timeIntervalSince1970: 0))
         let status: TestStatus = testRun.hasBeenSkipped ? .skip : testRun.canFail ? .fail : .pass
+        
+        // Test was skipped by developer / xcode / etc.
+        if testRun.hasBeenSkipped && context.skip.by == nil {
+            context.skip.by = (feature: .notFeature,
+                               reason: testRun.skipReason ?? "Skipped in the code")
+        }
+        
         let startInfo = TestRunInfoStart(skip: context.skip,
                                          retry: context.retryStart,
                                          executions: (total: groupRun.executionCount,
@@ -265,8 +267,7 @@ class DDTestObserver: NSObject, XCTestObservation {
                                                                      withStatus: status, andInfo: startInfo)
         
         // save retry status
-        context.retry = (by: feature.map{ (feature: $0.id, reason: retryStatus.retryReason) },
-                         status: retryStatus)
+        context.retry = (feature: feature?.id, status: retryStatus)
         
         // Restore errors if needed
         if testRun.suppressedFailures.count > 0 {
@@ -391,7 +392,7 @@ extension DDTestObserver {
                 .container(suite: parent!, inside: suite.module as! Module)
         }
         
-        func new(group: DDXCTestRetryGroup, in suite: Suite, skip: (by: (feature: String, reason: String)?, status: SkipStatus)) -> State {
+        func new(group: DDXCTestRetryGroup, in suite: Suite, skip: (by: (feature: FeatureId, reason: String)?, status: SkipStatus)) -> State {
             .group(group: group, context: GroupContext(skip: skip, suite: suite, suiteContext: self))
         }
     }
@@ -399,20 +400,19 @@ extension DDTestObserver {
     final class GroupContext {
         let suite: Suite
         let suiteContext: SuiteContext
-        let skip: (by: (feature: String, reason: String)?, status: SkipStatus)
         
-        // This one will be updated
-        var retry: (by: (feature: String, reason: String)?, status: RetryStatus)
+        var skip: (by: (feature: FeatureId, reason: String)?, status: SkipStatus)
+        var retry: (feature: FeatureId?, status: RetryStatus)
         
         var features: [any TestHooksFeature] { suiteContext.features }
         
-        var retryStart: (feature: String, reason: String, errorsWasSuppressed: Bool)? {
-            retry.by.map { (feature: $0.feature,
-                            reason: $0.reason,
-                            errorsWasSuppressed: retry.status.ignoreErrors) }
+        var retryStart: (feature: FeatureId, reason: String, errorsWasSuppressed: Bool)? {
+            retry.feature.map { (feature: $0,
+                                 reason: retry.status.retryReason,
+                                 errorsWasSuppressed: retry.status.ignoreErrors) }
         }
         
-        init(skip: (by: (feature: String, reason: String)?, status: SkipStatus), suite: Suite, suiteContext: SuiteContext) {
+        init(skip: (by: (feature: FeatureId, reason: String)?, status: SkipStatus), suite: Suite, suiteContext: SuiteContext) {
             self.skip = skip
             self.suite = suite
             self.suiteContext = suiteContext

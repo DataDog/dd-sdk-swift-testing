@@ -210,12 +210,8 @@ class DDTestObserver: NSObject, XCTestObservation {
             Log.print("Bad test: \(testCase), expected: \(test.name)")
             return
         }
-        guard let testRun = testCase.testRun as? DDXCTestCaseRetryRun else {
-            Log.print("Unknown test run type: \(type(of: testCase.testRun)) for \(testCase)")
-            return
-        }
         test.addBenchmarkTagsIfNeeded(from: testCase)
-        test.end(status: testRun.status)
+        test.end(status: testCase.testRun?.status ?? .fail)
         
         // Run hook
         let info = TestRunInfoEnd(skip: context.skip,

@@ -18,12 +18,12 @@ internal class DDTestObserverTests: XCTestCase {
         XCTAssertNil(DDTracer.activeSpan)
         DDTestMonitor._env_recreate(env: ["DD_API_KEY": "fakeToken", "DD_DISABLE_TEST_INSTRUMENTING": "1"])
         testObserver = DDTestObserver()
-        testObserver.start()
         theSuite.setValue([self], forKey: "_mutableTests")
     }
 
     override func tearDown() {
         XCTAssertNil(testObserver)
+        DDTestMonitor.removeTestMonitor()
         DDTestMonitor._env_recreate()
         XCTAssertNil(DDTracer.activeSpan)
     }
@@ -182,7 +182,6 @@ internal class DDTestObserverTests: XCTestCase {
     }
     
     private func destroyObserver() {
-        testObserver.stop()
         testObserver = nil
     }
 }

@@ -394,13 +394,11 @@ internal class DDTestMonitor {
                 Log.print("Test Management: init failed. Can't determine test module")
                 return
             }
-            guard let sha = DDTestMonitor.env.git.commitHead?.sha ?? DDTestMonitor.env.git.commit?.sha else {
-                Log.print("Test Management: init failed. Commit SHA is nil")
-                return
-            }
-            let message = DDTestMonitor.env.git.commitHead?.message ?? DDTestMonitor.env.git.commit?.message ?? ""
+            let sha = DDTestMonitor.env.git.commitHead?.sha ?? commit
+            let message = DDTestMonitor.env.git.commitHead?.message ?? DDTestMonitor.env.git.commit?.message
             
             let factory = TestManagementFactory(repository: repository,
+                                                commitSha: sha,
                                                 commitMessage: message,
                                                 module: module,
                                                 attemptToFixRetries: attemptToFixRetryCount,

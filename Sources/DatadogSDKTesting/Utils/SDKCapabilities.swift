@@ -25,12 +25,13 @@ enum SDKCapability: Equatable, Hashable {
         case .failFastTestOrder: return (DDLibraryCapabilitiesTags.failFastTestOrder, "1")
         case .testManagementQuarantine: return (DDLibraryCapabilitiesTags.testManagementQuarantine, "1")
         case .testManagementDisable: return (DDLibraryCapabilitiesTags.testManagementDisable, "1")
-        case .testManagementAttemptToFix: return (DDLibraryCapabilitiesTags.testManagementAttemptToFix, "2")
+        case .testManagementAttemptToFix: return (DDLibraryCapabilitiesTags.testManagementAttemptToFix, "5")
         }
     }
     
     static var library: Set<Self> {
-        [.testImpactAnalysis, .earlyFlakeDetection, .autoTestRetries]
+        [.testImpactAnalysis, .earlyFlakeDetection, .autoTestRetries,
+         .testManagementQuarantine, .testManagementDisable, .testManagementAttemptToFix]
     }
     
     static var all: Set<Self> {

@@ -35,12 +35,13 @@ extension Feature {
 protocol TestHooksFeature: Feature {
     /// Start of the suite
     func testSuiteWillStart(suite: any TestSuite, testsCount: UInt) -> Void
-    /// Start of the test case
-    func testGroupWillStart(for test: String, in suite: any TestSuite) -> Void
     /// Configuration for retry group. Feature can interrupt iteration or send it to the next feature with updated config.
-    func testGroupConfiguration(for test: String, meta: UnskippableMethodCheckerFactory,
+    func testGroupConfiguration(for test: String,
+                                meta: UnskippableMethodCheckerFactory,
                                 in suite: any TestSuite,
                                 configuration: RetryGroupConfiguration.Iterator) -> RetryGroupConfiguration.Iterator
+    /// Start of the test case
+    func testGroupWillStart(for test: String, in suite: any TestSuite) -> Void
     /// Called for the each test run in the group.
     /// First test run will have nil info.retry. Retries will have feature id and errors status.
     /// info.executions.total and info.executions.failed don't have the current run yet
@@ -359,13 +360,14 @@ typealias TestRunInfoEnd = TestRunInfo<(feature: FeatureId?, status: RetryStatus
 // Default hooks implementation
 extension TestHooksFeature {
     func testSuiteWillStart(suite: any TestSuite, testsCount: UInt) {}
-    func testGroupWillStart(for test: String, in suite: any TestSuite) {}
     func testGroupConfiguration(for test: String, meta: UnskippableMethodCheckerFactory,
                                 in suite: any TestSuite,
                                 configuration: RetryGroupConfiguration.Iterator) -> RetryGroupConfiguration.Iterator
     {
         return configuration.next()
     }
+    func testGroupWillStart(for test: String, in suite: any TestSuite) {}
+   
     func testWillStart(test: any TestRun, info: TestRunInfoStart) {}
     func testGroupRetry(test: any TestRun, duration: TimeInterval,
                         withStatus: TestStatus, retryStatus: RetryStatus.Iterator,

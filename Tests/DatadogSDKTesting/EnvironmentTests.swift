@@ -60,7 +60,7 @@ class EnvironmentTests: XCTestCase {
         XCTAssertEqual(metadata[string: .test, DDLibraryCapabilitiesTags.failFastTestOrder], "1")
         XCTAssertEqual(metadata[string: .test, DDLibraryCapabilitiesTags.testManagementQuarantine], "1")
         XCTAssertEqual(metadata[string: .test, DDLibraryCapabilitiesTags.testManagementDisable], "1")
-        XCTAssertEqual(metadata[string: .test, DDLibraryCapabilitiesTags.testManagementAttemptToFix], "2")
+        XCTAssertEqual(metadata[string: .test, DDLibraryCapabilitiesTags.testManagementAttemptToFix], "5")
     }
 
     func testWhenNotRunningInCI_CITagsAreNotAdded() {

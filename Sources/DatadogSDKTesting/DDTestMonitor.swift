@@ -54,7 +54,7 @@ internal class DDTestMonitor {
     static var cacheManager: CacheManager? = {
         do {
             return try CacheManager(session: sessionId,
-                                    commit: env.git.commitSHA ?? "unknown-commit",
+                                    commit: env.git.commit?.sha ?? "unknown-commit",
                                     debug: config.extraDebugCodeCoverage)
         } catch {
             Log.print("Cache Manager initialization failed: \(error)")
@@ -215,7 +215,7 @@ internal class DDTestMonitor {
             return
         }
         
-        guard let commit = DDTestMonitor.env.git.commitSHA, commit != "" else {
+        guard let commit = DDTestMonitor.env.git.commit?.sha, commit != "" else {
             Log.print("Commit SHA is empty. Git upload failed")
             self.isGitUploadSucceded = false
             return
@@ -252,7 +252,7 @@ internal class DDTestMonitor {
         let service = DDTestMonitor.env.service
         
         guard let branchOrTag = (DDTestMonitor.env.git.branch ?? DDTestMonitor.env.git.tag),
-              let commit = DDTestMonitor.env.git.commitSHA else {
+              let commit = DDTestMonitor.env.git.commit?.sha else {
             Log.print("Unknown branch/tag and commit. Test Optimization can't be started")
             return
         }
@@ -390,11 +390,18 @@ internal class DDTestMonitor {
                 return
             }
             let attemptToFixRetryCount = DDTestMonitor.config.testManagementAttemptToFixRetries ?? remote.testManagement.attemptToFixRetries
-            // TODO: use message from the git commit, not a merge one
-            let commitMessage = DDTestMonitor.env.git.commitMessage ?? ""
-            let module = Bundle.testBundle?.name ?? "unknown_module"
+            guard let module = Bundle.testBundle?.name else {
+                Log.print("Test Management: init failed. Can't determine test module")
+                return
+            }
+            guard let sha = DDTestMonitor.env.git.commitHead?.sha ?? DDTestMonitor.env.git.commit?.sha else {
+                Log.print("Test Management: init failed. Commit SHA is nil")
+                return
+            }
+            let message = DDTestMonitor.env.git.commitHead?.message ?? DDTestMonitor.env.git.commit?.message ?? ""
+            
             let factory = TestManagementFactory(repository: repository,
-                                                commitMessage: commitMessage,
+                                                commitMessage: message,
                                                 module: module,
                                                 attemptToFixRetries: attemptToFixRetryCount,
                                                 exporter: eventsExporter,

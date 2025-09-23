@@ -24,7 +24,7 @@ internal struct AwsCodeBuildCIEnvironmentReader: CIEnvironmentReader {
             ),
             git: .init(
                 repositoryURL: env["CODEBUILD_SOURCE_REPO_URL"],
-                commitSHA: env["CODEBUILD_RESOLVED_SOURCE_VERSION"]
+                commit: .maybe(sha: env["CODEBUILD_RESOLVED_SOURCE_VERSION"])
             )
         )
     }

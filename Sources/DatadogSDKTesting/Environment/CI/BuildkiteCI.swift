@@ -42,11 +42,11 @@ internal struct BuildkiteCIEnvironmentReader: CIEnvironmentReader {
                 repositoryURL: env["BUILDKITE_REPO"],
                 branch: normalize(branch: env["BUILDKITE_BRANCH"]),
                 tag: normalize(branchOrTag: env["BUILDKITE_TAG"]).0,
-                commitSHA: env["BUILDKITE_COMMIT"],
-                commitMessage: env["BUILDKITE_MESSAGE"],
-                authorName: env["BUILDKITE_BUILD_AUTHOR"],
-                authorEmail: env["BUILDKITE_BUILD_AUTHOR_EMAIL"],
-                pullRequestBaseBranch: env["BUILDKITE_PULL_REQUEST_BASE_BRANCH"]
+                commit: .maybe(sha: env["BUILDKITE_COMMIT"],
+                               message: env["BUILDKITE_MESSAGE"],
+                               author: .maybe(name: env["BUILDKITE_BUILD_AUTHOR"],
+                                              email: env["BUILDKITE_BUILD_AUTHOR_EMAIL"])),
+                pullRequestBaseBranch: .maybe(name: env["BUILDKITE_PULL_REQUEST_BASE_BRANCH"])
             )
         )
     }

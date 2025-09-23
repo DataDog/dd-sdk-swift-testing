@@ -30,8 +30,8 @@ internal struct BitbucketCIEnvironmentReader: CIEnvironmentReader {
                 repositoryURL: env["BITBUCKET_GIT_SSH_ORIGIN"] ?? env["BITBUCKET_GIT_HTTP_ORIGIN"],
                 branch: normalize(branch: env["BITBUCKET_BRANCH"]),
                 tag: normalize(tag: env["BITBUCKET_TAG"]),
-                commitSHA: env["BITBUCKET_COMMIT"],
-                pullRequestBaseBranch: env["BITBUCKET_PR_DESTINATION_BRANCH"]
+                commit: .maybe(sha: env["BITBUCKET_COMMIT"]),
+                pullRequestBaseBranch: .maybe(name: env["BITBUCKET_PR_DESTINATION_BRANCH"])
             )
         )
     }

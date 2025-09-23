@@ -32,8 +32,8 @@ internal struct JenkinsCIEnvironmentReader: CIEnvironmentReader {
                 repositoryURL: env["GIT_URL"] ?? env["GIT_URL_1"],
                 branch: isTag ? nil : branch,
                 tag: isTag ? branch : nil,
-                commitSHA: env["GIT_COMMIT"],
-                pullRequestBaseBranch: env["CHANGE_TARGET"]
+                commit: .maybe(sha: env["GIT_COMMIT"]),
+                pullRequestBaseBranch: .maybe(name: env["CHANGE_TARGET"])
             )
         )
     }

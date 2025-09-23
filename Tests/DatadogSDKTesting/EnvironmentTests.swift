@@ -40,7 +40,7 @@ class EnvironmentTests: XCTestCase {
             XCTAssertEqual(metadata[string: type, DDCITags.ciPipelineName], "job1")
             XCTAssertEqual(metadata[string: type, DDCITags.ciWorkspacePath], "/build")
             XCTAssertEqual(metadata[string: type, DDGitTags.gitRepository], "/test/repo")
-            XCTAssertEqual(metadata[string: type, DDGitTags.gitCommit], "37e376448b0ac9b7f54404")
+            XCTAssertEqual(metadata[string: type, DDGitTags.gitCommitSha], "37e376448b0ac9b7f54404")
             XCTAssertEqual(metadata[string: type, DDGitTags.gitBranch], "develop")
             
             XCTAssertEqual(metadata[string: type, DDOSTags.osArchitecture], PlatformUtils.getPlatformArchitecture())
@@ -142,7 +142,7 @@ class EnvironmentTests: XCTestCase {
 
         let env = createEnv(testEnvironment)
 
-        XCTAssertNotNil(env.git.commitMessage)
+        XCTAssertNotNil(env.git.commit?.message)
     }
 
     func testIfCommitHashFromEnvironmentIsSetAndDifferentFromGitFolderThenGitFolderIsNotEvaluated() {
@@ -152,8 +152,8 @@ class EnvironmentTests: XCTestCase {
 
         let env = createEnv(testEnvironment)
 
-        XCTAssertNil(env.git.commitMessage)
-        XCTAssertEqual(env.git.commitSHA, "environmentSHA")
+        XCTAssertNil(env.git.commit?.message)
+        XCTAssertEqual(env.git.commit?.sha, "environmentSHA")
     }
 
     func testIfCommitHashFromEnvironmentIsSetAndEqualsFromGitFolderThenGitFolderIsEvaluated() {
@@ -166,8 +166,8 @@ class EnvironmentTests: XCTestCase {
 
         let env = createEnv(testEnvironment)
 
-        XCTAssertNotNil(env.git.commitMessage)
-        XCTAssertEqual(env.git.commitSHA, gitInfo?.commit)
+        XCTAssertNotNil(env.git.commit?.message)
+        XCTAssertEqual(env.git.commit?.sha, gitInfo?.commit)
     }
 
     func testGitInfoIsNilWhenNotGitFolderExists() {
@@ -198,9 +198,9 @@ class EnvironmentTests: XCTestCase {
         XCTAssertEqual(env.ci?.provider, "github")
         
         // Verify pull request metadata is extracted
-        XCTAssertEqual(env.git.pullRequestHeadSha, "df289512a51123083a8e6931dd6f57bb3883d4c4")
-        XCTAssertEqual(env.git.pullRequestBaseBranch, "main")
-        XCTAssertEqual(env.git.pullRequestBaseBranchSha, "52e0974c74d41160a03d59ddc73bb9f5adab054b")
+        XCTAssertEqual(env.git.commitHead?.sha, "df289512a51123083a8e6931dd6f57bb3883d4c4")
+        XCTAssertEqual(env.git.pullRequestBaseBranch?.name, "main")
+        XCTAssertEqual(env.git.pullRequestBaseBranch?.sha, "52e0974c74d41160a03d59ddc73bb9f5adab054b")
         
         // Verify span attributes include pull request data
         let metadata = SpanMetadata(libraryVersion: "1.0", env: env, capabilities: .libraryCapabilities)
@@ -226,9 +226,9 @@ class EnvironmentTests: XCTestCase {
         XCTAssertEqual(env.ci?.provider, "github")
         
         // Verify pull request metadata gracefully fails
-        XCTAssertNil(env.git.pullRequestHeadSha)
-        XCTAssertEqual(env.git.pullRequestBaseBranch, "main")  // Still set from GITHUB_BASE_REF
-        XCTAssertNil(env.git.pullRequestBaseBranchSha)
+        XCTAssertNil(env.git.commitHead?.sha)
+        XCTAssertEqual(env.git.pullRequestBaseBranch?.name, "main")  // Still set from GITHUB_BASE_REF
+        XCTAssertNil(env.git.pullRequestBaseBranch?.sha)
     }
     
     func testGitHubCIInvalidEventFile() throws {
@@ -254,9 +254,9 @@ class EnvironmentTests: XCTestCase {
         XCTAssertEqual(env.ci?.provider, "github")
         
         // Verify pull request metadata gracefully fails
-        XCTAssertNil(env.git.pullRequestHeadSha)
-        XCTAssertEqual(env.git.pullRequestBaseBranch, "main")  // Still set from GITHUB_BASE_REF
-        XCTAssertNil(env.git.pullRequestBaseBranchSha)
+        XCTAssertNil(env.git.commitHead?.sha)
+        XCTAssertEqual(env.git.pullRequestBaseBranch?.name, "main")  // Still set from GITHUB_BASE_REF
+        XCTAssertNil(env.git.pullRequestBaseBranch?.sha)
     }
     
     func testGitHubCIEnvironmentOverrides() {
@@ -272,9 +272,9 @@ class EnvironmentTests: XCTestCase {
         let env = createEnv(testEnvironment)
         
         // Verify environment overrides work
-        XCTAssertEqual(env.git.pullRequestHeadSha, "override-head-sha")
-        XCTAssertEqual(env.git.pullRequestBaseBranch, "override-base-branch")
-        XCTAssertEqual(env.git.pullRequestBaseBranchSha, "override-base-sha")
+        XCTAssertEqual(env.git.commitHead?.sha, "override-head-sha")
+        XCTAssertEqual(env.git.pullRequestBaseBranch?.name, "override-base-branch")
+        XCTAssertEqual(env.git.pullRequestBaseBranch?.sha, "override-base-sha")
         
         // Verify span attributes reflect overrides
         let metadata = SpanMetadata(libraryVersion: "1.0", env: env, capabilities: .libraryCapabilities)

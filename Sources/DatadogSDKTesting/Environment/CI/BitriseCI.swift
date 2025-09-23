@@ -28,13 +28,13 @@ internal struct BitriseCIEnvironmentReader: CIEnvironmentReader {
                 repositoryURL: env["GIT_REPOSITORY_URL"],
                 branch: normalize(branch: env["BITRISE_GIT_BRANCH"]),
                 tag: normalize(tag: env["BITRISE_GIT_TAG"]),
-                commitSHA: env["BITRISE_GIT_COMMIT"] ?? env["GIT_CLONE_COMMIT_HASH"],
-                commitMessage: commitMessage,
-                authorName: env["GIT_CLONE_COMMIT_AUTHOR_NAME"],
-                authorEmail: env["GIT_CLONE_COMMIT_AUTHOR_EMAIL"],
-                committerName: env["GIT_CLONE_COMMIT_COMMITER_NAME"],
-                committerEmail: env["GIT_CLONE_COMMIT_COMMITER_EMAIL"],
-                pullRequestBaseBranch: env["BITRISEIO_GIT_BRANCH_DEST"]
+                commit: .maybe(sha: env["BITRISE_GIT_COMMIT"] ?? env["GIT_CLONE_COMMIT_HASH"],
+                               message: commitMessage,
+                               author: .maybe(name: env["GIT_CLONE_COMMIT_AUTHOR_NAME"],
+                                              email: env["GIT_CLONE_COMMIT_AUTHOR_EMAIL"]),
+                               committer: .maybe(name: env["GIT_CLONE_COMMIT_COMMITER_NAME"],
+                                                 email: env["GIT_CLONE_COMMIT_COMMITER_EMAIL"])),
+                pullRequestBaseBranch: .maybe(name: env["BITRISEIO_GIT_BRANCH_DEST"])
             )
         )
     }

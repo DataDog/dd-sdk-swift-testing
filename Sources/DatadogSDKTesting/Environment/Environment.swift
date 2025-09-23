@@ -71,12 +71,21 @@ internal final class Environment {
         #endif
         
         if let info = gitInfo,
-           git.commitSHA == nil || (git.commitSHA != nil && git.commitSHA == info.commit)
+           git.commit?.sha == nil || (git.commit?.sha != nil && git.commit?.sha == info.commit)
         {
             git = git.extended(from: info)
             workspace = workspace ?? CI.expand(path: info.workspacePath, home: env.get(env: "HOME"))
         }
         workspacePath = workspace ?? sourceRoot
+        
+        #if targetEnvironment(simulator) || os(macOS)
+        if let sourceRoot = sourceRoot ?? workspace,
+           let head = git.commitHead?.sha,
+           let info = Self.mergeHeadInfo(headSha: head, workspace: sourceRoot, log: log)
+        {
+            git = git.updated(with: info)
+        }
+        #endif
         
         self.git = git.updated(with: Environment.gitOverrides(env: env))
         
@@ -126,20 +135,27 @@ internal final class Environment {
         guard !config.disableGitInformation else { return [:] }
         var gitAttributes: [String: String] = [:]
         gitAttributes[DDGitTags.gitRepository] = git.repositoryURL?.spanAttribute
-        gitAttributes[DDGitTags.gitCommit] = git.commitSHA
         gitAttributes[DDGitTags.gitBranch] = git.branch
         gitAttributes[DDGitTags.gitTag] = git.tag
-        gitAttributes[DDGitTags.gitCommitMessage] = git.commitMessage
-        gitAttributes[DDGitTags.gitAuthorName] = git.authorName
-        gitAttributes[DDGitTags.gitAuthorEmail] = git.authorEmail
-        gitAttributes[DDGitTags.gitAuthorDate] = git.authorDate?.spanAttribute
-        gitAttributes[DDGitTags.gitCommitterName] = git.committerName
-        gitAttributes[DDGitTags.gitCommitterEmail] = git.committerEmail
-        gitAttributes[DDGitTags.gitCommitterDate] = git.committerDate?.spanAttribute
-        gitAttributes[DDGitTags.gitCommitHeadSha] = git.pullRequestHeadSha
-        gitAttributes[DDGitTags.gitPullRequestBaseBranch] = git.pullRequestBaseBranch
-        gitAttributes[DDGitTags.gitPullRequestBaseBranchSha] = git.pullRequestBaseBranchSha
-        gitAttributes[DDGitTags.gitPullRequestBaseBranchHeadSha] = git.pullRequestBaseBranchHeadSha
+        gitAttributes[DDGitTags.gitCommitSha] = git.commit?.sha
+        gitAttributes[DDGitTags.gitCommitMessage] = git.commit?.message
+        gitAttributes[DDGitTags.gitAuthorName] = git.commit?.author?.name
+        gitAttributes[DDGitTags.gitAuthorEmail] = git.commit?.author?.email
+        gitAttributes[DDGitTags.gitAuthorDate] = git.commit?.author?.date?.spanAttribute
+        gitAttributes[DDGitTags.gitCommitterName] = git.commit?.committer?.name
+        gitAttributes[DDGitTags.gitCommitterEmail] = git.commit?.committer?.email
+        gitAttributes[DDGitTags.gitCommitterDate] = git.commit?.committer?.date?.spanAttribute
+        gitAttributes[DDGitTags.gitCommitHeadSha] = git.commitHead?.sha
+        gitAttributes[DDGitTags.gitCommitHeadMessage] = git.commitHead?.message
+        gitAttributes[DDGitTags.gitCommitHeadAuthorName] = git.commitHead?.author?.name
+        gitAttributes[DDGitTags.gitCommitHeadAuthorEmail] = git.commitHead?.author?.email
+        gitAttributes[DDGitTags.gitCommitHeadAuthorDate] = git.commitHead?.author?.date?.spanAttribute
+        gitAttributes[DDGitTags.gitCommitHeadCommitterName] = git.commitHead?.committer?.name
+        gitAttributes[DDGitTags.gitCommitHeadCommitterEmail] = git.commitHead?.committer?.email
+        gitAttributes[DDGitTags.gitCommitHeadCommitterDate] = git.commitHead?.committer?.date?.spanAttribute
+        gitAttributes[DDGitTags.gitPullRequestBaseBranch] = git.pullRequestBaseBranch?.name
+        gitAttributes[DDGitTags.gitPullRequestBaseBranchSha] = git.pullRequestBaseBranch?.sha
+        gitAttributes[DDGitTags.gitPullRequestBaseBranchHeadSha] = git.pullRequestBaseBranch?.headSha
         return gitAttributes
     }
     
@@ -160,16 +176,16 @@ internal final class Environment {
     
     private func validate(log: Logger) {
         // Warn on needed git onformation when not present
-        if git.commitSHA == nil {
+        if git.commit?.sha == nil {
             log.print("could not find git commit information")
         }
         if git.repositoryURL == nil {
             log.print("could not find git repository information")
         }
         if git.branch == nil && git.tag == nil {
-            log.print("could not find git branch or tag  information")
+            log.print("could not find git branch or tag information")
         }
-        if git.commitSHA == nil || git.repositoryURL == nil || (git.branch == nil && git.tag == nil) {
+        if git.commit?.sha == nil || git.repositoryURL == nil || (git.branch == nil && git.tag == nil) {
             log.print("Please check: https://docs.datadoghq.com/continuous_integration/troubleshooting")
         }
         validateGitOverrides(log: log)
@@ -205,17 +221,16 @@ internal final class Environment {
             repositoryURL: env["DD_GIT_REPOSITORY_URL"],
             branch: isTag ? nil : branch,
             tag: Git.normalize(branchOrTag: env["DD_GIT_TAG"]).0 ?? (isTag ? branch : nil),
-            commitSHA: env["DD_GIT_COMMIT_SHA"],
-            commitMessage: env["DD_GIT_COMMIT_MESSAGE"],
-            authorName: env["DD_GIT_COMMIT_AUTHOR_NAME"],
-            authorEmail: env["DD_GIT_COMMIT_AUTHOR_EMAIL"],
-            authorDate: env["DD_GIT_COMMIT_AUTHOR_DATE"],
-            committerName: env["DD_GIT_COMMIT_COMMITTER_NAME"],
-            committerEmail: env["DD_GIT_COMMIT_COMMITTER_EMAIL"],
-            committerDate: env["DD_GIT_COMMIT_COMMITTER_DATE"],
-            pullRequestHeadSha: env["DD_GIT_COMMIT_HEAD_SHA"],
-            pullRequestBaseBranch: env["DD_GIT_PULL_REQUEST_BASE_BRANCH"],
-            pullRequestBaseBranchSha: env["DD_GIT_PULL_REQUEST_BASE_BRANCH_SHA"]
+            commit: .maybe(sha: env["DD_GIT_COMMIT_SHA"],
+                           message: env["DD_GIT_COMMIT_MESSAGE"],
+                           author: .maybe(name: env["DD_GIT_COMMIT_AUTHOR_NAME"],
+                                          email: env["DD_GIT_COMMIT_AUTHOR_EMAIL"],
+                                          date: env["DD_GIT_COMMIT_AUTHOR_DATE"]),
+                           committer: .maybe(name: env["DD_GIT_COMMIT_COMMITTER_NAME"],
+                                             email: env["DD_GIT_COMMIT_COMMITTER_EMAIL"],
+                                             date: env["DD_GIT_COMMIT_COMMITTER_DATE"])),
+            commitHead: .maybe(sha: env["DD_GIT_COMMIT_HEAD_SHA"]),
+            pullRequestBaseBranch: .maybe(name: env["DD_GIT_PULL_REQUEST_BASE_BRANCH"], sha: env["DD_GIT_PULL_REQUEST_BASE_BRANCH_SHA"])
         )
     }
     
@@ -232,6 +247,36 @@ internal final class Environment {
         let rootDirectory = URL(fileURLWithPath: rootFolder as String, isDirectory: true)
         let gitInfo = try? GitInfo(gitFolder: rootDirectory.appendingPathComponent(".git"))
         return gitInfo
+    }
+    
+    static func mergeHeadInfo(headSha: String, workspace: String, log: Logger) -> Git? {
+        let git = { (cmd: String) -> String? in
+            Spawn.output(try: "git -C \"\(workspace)\" \(cmd)", log: log)
+        }
+        // Unshallow one commit
+        guard git("fetch --deepen=1 --update-shallow --filter=blob:none --recurse-submodules=no") != nil else {
+            return nil
+        }
+        guard let message = git("log -n 1 --format=%B \(headSha)") else {
+            return nil
+        }
+        guard let info = git("show -s --format=%an\t%ae\t%at\t%cn\t%ce\t%ct \(headSha)") else {
+            return nil
+        }
+        let fields = info.components(separatedBy: "\t")
+        guard fields.count >= 6 else { return nil }
+        let auhorDate = UInt(fields[2]).map { Date(timeIntervalSince1970: Double($0)) }?.spanAttribute ?? fields[1]
+        let commiterDate = UInt(fields[5]).map { Date(timeIntervalSince1970: Double($0)) }?.spanAttribute ?? fields[5]
+        return Git(
+            commitHead: .init(sha: headSha,
+                              message: message,
+                              author: .init(name: fields[0],
+                                            email: fields[1],
+                                            date: auhorDate),
+                              committer: .init(name: fields[3],
+                                               email: fields[4],
+                                               date: commiterDate))
+        )
     }
 
     
@@ -374,77 +419,176 @@ internal extension Environment {
 
 internal extension Environment {
     struct Git: CustomDebugStringConvertible {
+        struct AuthorInfo: CustomDebugStringConvertible {
+            let name: String?
+            let email: String?
+            let date: String?
+            
+            init(name: String? = nil, email: String? = nil, date: String? = nil) {
+                self.name = name
+                self.email = email
+                self.date = date
+            }
+            
+            func updated(name: String? = nil, email: String? = nil, date: String? = nil) -> Self {
+                .init(name: name ?? self.name, email: email ?? self.email, date: date ?? self.date)
+            }
+            
+            func updated(with info: Self?) -> Self {
+                updated(name: info?.name, email: info?.email, date: info?.date)
+            }
+            
+            func extended(name: String? = nil, email: String? = nil, date: String? = nil) -> Self {
+                .init(name: self.name ?? name, email: self.email ?? email, date: self.date ?? date)
+            }
+            
+            func extended(from info: Self?) -> Self {
+                extended(name: info?.name, email: info?.email, date: info?.date)
+            }
+            
+            var debugDescription: String {
+                "(name: \(name ?? ""), email: \(email ?? ""), date: \(date ?? ""))"
+            }
+            
+            static func maybe(name: String? = nil, email: String? = nil, date: String? = nil) -> Self? {
+                guard name != nil || email != nil || date != nil else {
+                    return nil
+                }
+                return .init(name: name, email: email, date: date)
+            }
+        }
+        
+        struct CommitInfo: CustomDebugStringConvertible {
+            let sha: String?
+            let message: String?
+            let author: AuthorInfo?
+            let committer: AuthorInfo?
+            
+            init(sha: String? = nil, message: String? = nil, author: AuthorInfo? = nil, committer: AuthorInfo? = nil) {
+                self.sha = sha
+                self.message = message
+                self.author = author
+                self.committer = committer
+            }
+            
+            func updated(sha: String? = nil, message: String? = nil, author: AuthorInfo? = nil, committer: AuthorInfo? = nil) -> Self {
+                .init(sha: sha ?? self.sha,
+                      message: message ?? self.message,
+                      author: self.author?.updated(with: author) ?? author,
+                      committer: self.committer?.updated(with: committer) ?? committer)
+            }
+            
+            func updated(with info: Self?) -> Self {
+                updated(sha: info?.sha, message: info?.message, author: info?.author, committer: info?.committer)
+            }
+            
+            func extended(sha: String? = nil, message: String? = nil, author: AuthorInfo? = nil, committer: AuthorInfo? = nil) -> Self {
+                .init(sha: self.sha ?? sha,
+                      message: self.message ?? message,
+                      author: self.author?.extended(from: author) ?? author,
+                      committer: self.committer?.extended(from: committer) ?? committer)
+            }
+            
+            func extended(from info: Self?) -> Self {
+                extended(sha: info?.sha,
+                         message: info?.message,
+                         author: info?.author,
+                         committer: info?.committer)
+            }
+            
+            var debugDescription: String {
+                """
+                (sha: \(sha ?? ""),
+                 message: \(message ?? ""),
+                 author: \(author?.debugDescription ?? ""),
+                 committer: \(committer?.debugDescription ?? ""))
+                """
+            }
+            
+            static func maybe(sha: String? = nil, message: String? = nil, author: AuthorInfo? = nil, committer: AuthorInfo? = nil) -> Self? {
+                guard sha != nil || message != nil || author != nil || committer != nil else {
+                    return nil
+                }
+                return .init(sha: sha, message: message, author: author, committer: committer)
+            }
+        }
+        
+        struct BaseBranchInfo: CustomDebugStringConvertible {
+            let name: String?
+            let sha: String?
+            let headSha: String?
+            
+            init(name: String? = nil, sha: String? = nil, headSha: String? = nil) {
+                self.name = name
+                self.sha = sha
+                self.headSha = headSha
+            }
+            
+            func updated(name: String? = nil, sha: String? = nil, headSha: String? = nil) -> Self {
+                .init(name: name ?? self.name, sha: sha ?? self.sha, headSha: headSha ?? self.headSha)
+            }
+            
+            func updated(with info: Self?) -> Self {
+                updated(name: info?.name, sha: info?.sha, headSha: info?.headSha)
+            }
+            
+            var debugDescription: String {
+                "(name: \(name ?? ""), sha: \(sha ?? ""), headSha: \(headSha ?? ""))"
+            }
+            
+            static func maybe(name: String? = nil, sha: String? = nil, headSha: String? = nil) -> Self? {
+                guard sha != nil || name != nil || headSha != nil else {
+                    return nil
+                }
+                return .init(name: name, sha: sha, headSha: headSha)
+            }
+        }
+        
         // git.*
         let repositoryURL: URL?
         let branch: String?
         let tag: String?
         
         // git.commit.*
-        let commitSHA: String?
-        let commitMessage: String?
+        let commit: CommitInfo?
         
-        // git.commit.author.*
-        let authorName: String?
-        let authorEmail: String?
-        let authorDate: String?
-        
-        // git.commit.committer.*
-        let committerName: String?
-        let committerEmail: String?
-        let committerDate: String?
+        // git.commit.head.*
+        let commitHead: CommitInfo?
         
         // git.pull_request.*
-        let pullRequestHeadSha: String?
-        let pullRequestBaseBranch: String?
-        let pullRequestBaseBranchSha: String?
-        let pullRequestBaseBranchHeadSha: String?
+        let pullRequestBaseBranch: BaseBranchInfo?
         
         var repositoryName: String? {
             repositoryURL?.deletingPathExtension().lastPathComponent
         }
         
         init(repositoryURL: URL? = nil, branch: String? = nil, tag: String? = nil,
-             commitSHA: String? = nil, commitMessage: String? = nil,
-             authorName: String? = nil, authorEmail: String? = nil, authorDate: String? = nil,
-             committerName: String? = nil, committerEmail: String? = nil, committerDate: String? = nil,
-             pullRequestHeadSha: String? = nil, pullRequestBaseBranch: String? = nil,
-             pullRequestBaseBranchSha: String? = nil, pullRequestBaseBranchHeadSha: String? = nil)
+             commit: CommitInfo? = nil, commitHead: CommitInfo? = nil,
+             pullRequestBaseBranch: BaseBranchInfo? = nil)
         {
             self.repositoryURL = repositoryURL
             self.branch = branch
             self.tag = tag
-            self.commitSHA = commitSHA
-            self.commitMessage = commitMessage
-            self.authorName = authorName
-            self.authorEmail = authorEmail
-            self.authorDate = authorDate
-            self.committerName = committerName
-            self.committerEmail = committerEmail
-            self.committerDate = committerDate
-            self.pullRequestHeadSha = pullRequestHeadSha
+            self.commit = commit
+            self.commitHead = commitHead
             self.pullRequestBaseBranch = pullRequestBaseBranch
-            self.pullRequestBaseBranchSha = pullRequestBaseBranchSha
-            self.pullRequestBaseBranchHeadSha = pullRequestBaseBranchHeadSha
         }
         
         func extended(from info: GitInfo) -> Git {
             let (_branch, isTag) = Self.normalize(branchOrTag: info.branch)
+            let infoCommit = CommitInfo(
+                sha: info.commit,
+                message: info.commitMessage,
+                author: .maybe(name: info.authorName, email: info.authorEmail, date: info.authorDate),
+                committer: .maybe(name: info.committerName, email: info.committerEmail, date: info.committerDate)
+            )
             return Git(
                 repositoryURL: repositoryURL ?? info.repository.flatMap { URL(string: $0) },
                 branch: branch ?? (isTag ? nil : _branch),
                 tag: tag ?? (isTag ? branch : nil),
-                commitSHA: commitSHA ?? info.commit,
-                commitMessage: commitMessage ?? info.commitMessage,
-                authorName: authorName ?? info.authorName,
-                authorEmail: authorEmail ?? info.authorEmail,
-                authorDate: authorDate ?? info.authorDate,
-                committerName: committerName ?? info.committerName,
-                committerEmail: committerEmail ?? info.committerEmail,
-                committerDate: committerDate ?? info.committerDate,
-                pullRequestHeadSha: pullRequestHeadSha,
-                pullRequestBaseBranch: pullRequestBaseBranch,
-                pullRequestBaseBranchSha: pullRequestBaseBranchSha,
-                pullRequestBaseBranchHeadSha: pullRequestBaseBranchHeadSha
+                commit: commit?.extended(from: infoCommit) ?? infoCommit,
+                commitHead: commitHead,
+                pullRequestBaseBranch: pullRequestBaseBranch
             )
         }
         
@@ -453,18 +597,9 @@ internal extension Environment {
                 repositoryURL: info.repositoryURL ?? repositoryURL,
                 branch: info.branch ?? branch,
                 tag: info.tag ?? tag,
-                commitSHA: info.commitSHA ?? commitSHA,
-                commitMessage: info.commitMessage ?? commitMessage,
-                authorName: info.authorName ?? authorName,
-                authorEmail: info.authorEmail ?? authorEmail,
-                authorDate: info.authorDate ?? authorDate,
-                committerName: info.committerName ?? committerName,
-                committerEmail: info.committerEmail ?? committerEmail,
-                committerDate: info.committerDate ?? committerDate,
-                pullRequestHeadSha: info.pullRequestHeadSha ?? pullRequestHeadSha,
-                pullRequestBaseBranch: info.pullRequestBaseBranch ?? pullRequestBaseBranch,
-                pullRequestBaseBranchSha: info.pullRequestBaseBranchSha ?? pullRequestBaseBranchSha,
-                pullRequestBaseBranchHeadSha: info.pullRequestBaseBranchHeadSha ?? pullRequestBaseBranchHeadSha
+                commit: commit?.updated(with: info.commit) ?? info.commit,
+                commitHead: commitHead?.updated(with: info.commitHead) ?? info.commitHead,
+                pullRequestBaseBranch: pullRequestBaseBranch?.updated(with: info.pullRequestBaseBranch) ?? info.pullRequestBaseBranch
             )
         }
         
@@ -499,17 +634,9 @@ internal extension Environment {
               Repository URL: \(repositoryURL?.spanAttribute ?? "")
               Branch: \(branch ?? "")
               Tag: \(tag ?? "")
-              Commit SHA: \(commitSHA ?? "")
-              Commit Message: \(commitMessage ?? "")
-              Author Name: \(authorName ?? "")
-              Author Email: \(authorEmail ?? "")
-              Author Date: \(authorDate ?? "")
-              Committer Name: \(committerName ?? "")
-              Committer Email: \(committerEmail ?? "")
-              Committer Date: \(committerDate ?? "")
-              Pull Request Head SHA: \(pullRequestHeadSha ?? "")
-              Pull Request Base Branch: \(pullRequestBaseBranch ?? "")
-              Pull Request Base Branch SHA: \(pullRequestBaseBranchSha ?? "")
+              Commit: \(commit?.debugDescription ?? "")
+              CommitHead: \(commitHead?.debugDescription ?? "")
+              Pull Request Base Branch: \(pullRequestBaseBranch?.debugDescription ?? "")
             """
         }
     }

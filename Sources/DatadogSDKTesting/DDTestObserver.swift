@@ -150,7 +150,8 @@ class DDTestObserver: NSObject, XCTestObservation {
             return
         }
         
-        let (feature, config) = context.features.testGroupConfiguration(for: group.name,
+        let testId = group.testId
+        let (feature, config) = context.features.testGroupConfiguration(for: testId.test,
                                                                         meta: group.currentTest!,
                                                                         in: suite)
         
@@ -163,7 +164,7 @@ class DDTestObserver: NSObject, XCTestObservation {
             skip.by = (feature.id, config.skipReason)
         }
         
-        context.features.testGroupWillStart(for: group.name, in: suite)
+        context.features.testGroupWillStart(for: testId.test, in: suite)
         
         state = context.new(group: group, in: suite, skip: skip)
         Log.debug("testRetryGroupWillStart: \(group.name)")

@@ -38,14 +38,14 @@ internal struct AppveyorCIEnvironmentReader: CIEnvironmentReader {
                 repositoryURL: URL(string: "https://github.com/\(repoName).git"),
                 branch: branch,
                 tag: normalize(tag: env["APPVEYOR_REPO_TAG_NAME"]),
-                commitSHA: env["APPVEYOR_REPO_COMMIT"],
-                commitMessage: env["APPVEYOR_REPO_COMMIT_MESSAGE"].map { message in
-                    env["APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED"].map { message + "\n" + $0 } ?? message
-                },
-                authorName: env["APPVEYOR_REPO_COMMIT_AUTHOR"],
-                authorEmail: env["APPVEYOR_REPO_COMMIT_AUTHOR_EMAIL"],
-                pullRequestHeadSha: env["APPVEYOR_PULL_REQUEST_HEAD_COMMIT"],
-                pullRequestBaseBranch: prBranch
+                commit: .maybe(sha: env["APPVEYOR_REPO_COMMIT"],
+                               message: env["APPVEYOR_REPO_COMMIT_MESSAGE"].map { message in
+                                   env["APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED"].map { message + "\n" + $0 } ?? message
+                               },
+                               author: .maybe(name: env["APPVEYOR_REPO_COMMIT_AUTHOR"],
+                                              email: env["APPVEYOR_REPO_COMMIT_AUTHOR_EMAIL"])),
+                commitHead: .maybe(sha: env["APPVEYOR_PULL_REQUEST_HEAD_COMMIT"]),
+                pullRequestBaseBranch: .maybe(name: prBranch)
             )
         )
     }

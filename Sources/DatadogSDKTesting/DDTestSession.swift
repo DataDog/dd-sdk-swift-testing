@@ -104,8 +104,11 @@ extension Session: TestSession {
         }
     }
     
-    func setSkipped() {
+    func set(skipped reason: String? = nil) {
         status = .skip
+        if let reason = reason {
+            meta[DDTestTags.testSkipReason] = reason
+        }
     }
     
     func nextTestIndex() -> UInt {
@@ -234,6 +237,10 @@ extension ModuleFeatureTagsHelper {
                 meta[DDTestSessionTags.testItrSkipped] = (itrSkipped > 0).spanAttribute
                 metrics[DDTestSessionTags.testItrSkippingCount] = Double(itrSkipped)
             }
+        }
+        
+        if DDTestMonitor.instance?.testManagement != nil {
+            meta[DDTestSessionTags.testTestManagementEnabled] = "true"
         }
         
         if metrics[DDTestSessionTags.testCoverageLines] == nil,

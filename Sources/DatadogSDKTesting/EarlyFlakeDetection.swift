@@ -8,7 +8,7 @@ import Foundation
 internal import EventsExporter
 
 final class EarlyFlakeDetection: TestHooksFeature {
-    static var id: String = "Early Flake Detection"
+    static var id: FeatureId = "Early Flake Detection"
     
     let knownTests: KnownTests
     let knownTestsCount: Double
@@ -71,51 +71,46 @@ final class EarlyFlakeDetection: TestHooksFeature {
     
     func testGroupConfiguration(for test: String, meta: UnskippableMethodCheckerFactory,
                                 in suite: any TestSuite,
-                                configuration: TestRetryGroupConfiguration.Configuration) -> TestRetryGroupConfiguration
+                                configuration: RetryGroupConfiguration.Iterator) -> RetryGroupConfiguration.Iterator
     {
-        // If we can retry this test - setup test group for retries
+        // If we can retry this test - setup test group for retries.
+        // Allow softer retry strategy
         return checkStatus(for: test, in: suite)
-            ? configuration.retry(strategy: .atLeastOneSucceeded)
+            ? configuration.retry(softer: .atLeastOneSucceeded)
             : configuration.next()
     }
     
-    func testWillStart(test: any TestRun, retryReason: String?, skipStatus: SkipStatus,
-                       executionCount: Int, failedExecutionCount: Int)
-    {
-        guard retryReason == id else { return }
-        test.set(tag: DDEfdTags.testIsRetry, value: "true")
-        test.set(tag: DDEfdTags.testRetryReason, value: DDTagValues.retryReasonEfd)
-    }
-    
-    func testGroupRetry(test: any TestRun, duration: TimeInterval, withStatus: TestStatus,
-                        skipStatus: SkipStatus, executionCount: Int, failedExecutionCount: Int) -> RetryStatus?
+    func testGroupRetry(test: any TestRun, duration: TimeInterval,
+                        withStatus: TestStatus, retryStatus: RetryStatus.Iterator,
+                        andInfo info: TestRunInfoStart) -> RetryStatus.Iterator
     {
         // EFD should be enabled for this test
-        guard checkStatus(for: test) else { return nil }
+        guard checkStatus(for: test) else { return retryStatus.next() }
         
         // Check how much repeats do we have
         let repeats = slowTestRetries.repeats(for: duration)
-        if executionCount < Int(repeats) - 1 {
+        if info.executions.total < Int(repeats) - 1 {
             // We can retry test
-            return .retry
+            return retryStatus.retry(reason: DDTagValues.retryReasonEarlyFlakeDetection,
+                                     ignoreErrors: true)
         } else {
             if repeats == 0 {
                 // Test is too long. EFD failed
                 test.set(tag: DDEfdTags.testEfdAbortReason, value: DDTagValues.efdAbortSlow)
             }
-            if failedExecutionCount >= executionCount {
+            if info.executions.failed >= info.executions.total {
                 // All previous executions failed
                 // Record errors for the current which is the last
-                return .recordErrors
+                return retryStatus.end()
             } else {
                 // We have at least one succeded. Pass
-                return .pass
+                return retryStatus.end(ignoreErrors: true)
             }
         }
     }
     
-    func shouldSuppressError(test: any TestRun, skipStatus: SkipStatus, executionCount: Int, failedExecutionCount: Int) -> Bool {
-        // if EFD enabled for this test suppress the error for now. We will handle it after in willFinish
+    func shouldSuppressError(test: any TestRun, info: TestRunInfoStart) -> Bool {
+        // if EFD enabled for this test suppress the error for now. We will handle it after in testGroupRetry
         return checkStatus(for: test)
     }
     

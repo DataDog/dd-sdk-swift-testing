@@ -37,9 +37,9 @@ internal final class TestManagementService {
     }
     
     func tests(
-        repositoryURL: String, commitMessage: String, module: String? = nil
+        repositoryURL: String, sha: String? = nil, commitMessage: String? = nil, module: String? = nil
     ) -> TestManagementTestsInfo? {
-        let testsPayload = TestsRequest(repositoryURL: repositoryURL, commitMessage: commitMessage, module: module)
+        let testsPayload = TestsRequest(repositoryURL: repositoryURL, sha: sha, commitMessage: commitMessage, module: module)
 
         guard let jsonData = testsPayload.jsonData,
               let response = testsUploader.uploadWithResponse(data: jsonData)
@@ -70,21 +70,23 @@ extension TestManagementService {
             
             struct Attributes: Codable {
                 let repositoryURL: String
-                let commitMessage: String
+                let commitMessage: String?
                 let module: String?
+                let sha: String?
                 
                 enum CodingKeys: String, CodingKey {
                     case repositoryURL = "repository_url"
                     case commitMessage = "commit_message"
                     case module
+                    case sha
                 }
             }
         }
         
-        init(repositoryURL: String, commitMessage: String, module: String? = nil) {
+        init(repositoryURL: String, sha: String? = nil, commitMessage: String? = nil, module: String? = nil) {
             self.data = Data(
                 attributes: Data.Attributes(
-                    repositoryURL: repositoryURL, commitMessage: commitMessage, module: module
+                    repositoryURL: repositoryURL, commitMessage: commitMessage, module: module, sha: sha
                 )
             )
         }
@@ -108,16 +110,38 @@ extension TestManagementService {
 public struct TestManagementTestsInfo: Codable {
     public let modules: [String: Module]
     
+    public init(modules: [String : Module]) {
+        self.modules = modules
+    }
+    
     public struct Module: Codable {
         public let suites: [String: Suite]
+        
+        public init(suites: [String : Suite]) {
+            self.suites = suites
+        }
     }
 
     public struct Suite: Codable {
         public let tests: [String: Test]
+        
+        public init(tests: [String : Test]) {
+            self.tests = tests
+        }
     }
 
     public struct Test: Codable {
         public let properties: Properties
+        
+        public init(properties: Properties) {
+            self.properties = properties
+        }
+        
+        public init(disabled: Bool = false, quarantined: Bool = false, attemptToFix: Bool = false) {
+            self.init(properties: .init(disabled: disabled,
+                                        quarantined: quarantined,
+                                        attemptToFix: attemptToFix))
+        }
         
         public struct Properties: Codable {
             public let disabled: Bool
@@ -128,6 +152,12 @@ public struct TestManagementTestsInfo: Codable {
                 case disabled
                 case quarantined
                 case attemptToFix = "attempt_to_fix"
+            }
+            
+            public init(disabled: Bool = false, quarantined: Bool = false, attemptToFix: Bool = false) {
+                self.disabled = disabled
+                self.quarantined = quarantined
+                self.attemptToFix = attemptToFix
             }
         }
     }

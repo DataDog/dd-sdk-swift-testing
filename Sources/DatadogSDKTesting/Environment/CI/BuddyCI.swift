@@ -27,11 +27,11 @@ internal struct BuddyCIEnvironmentReader: CIEnvironmentReader {
                 repositoryURL: env["BUDDY_SCM_URL"],
                 branch: normalize(branch: env["BUDDY_EXECUTION_BRANCH"]),
                 tag: normalize(branchOrTag: env["BUDDY_EXECUTION_TAG"]).0,
-                commitSHA: env["BUDDY_EXECUTION_REVISION"],
-                commitMessage: env["BUDDY_EXECUTION_REVISION_MESSAGE"],
-                committerName: env["BUDDY_EXECUTION_REVISION_COMMITTER_NAME"],
-                committerEmail: env["BUDDY_EXECUTION_REVISION_COMMITTER_EMAIL"],
-                pullRequestBaseBranch: env["BUDDY_RUN_PR_BASE_BRANCH"]
+                commit: .maybe(sha: env["BUDDY_EXECUTION_REVISION"],
+                               message: env["BUDDY_EXECUTION_REVISION_MESSAGE"],
+                               committer: .maybe(name: env["BUDDY_EXECUTION_REVISION_COMMITTER_NAME"],
+                                                 email: env["BUDDY_EXECUTION_REVISION_COMMITTER_EMAIL"])),
+                pullRequestBaseBranch: .maybe(name: env["BUDDY_RUN_PR_BASE_BRANCH"])
             )
         )
     }

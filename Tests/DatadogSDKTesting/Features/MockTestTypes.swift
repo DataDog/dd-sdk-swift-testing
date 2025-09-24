@@ -27,7 +27,12 @@ enum Mocks {
             status = .fail
         }
         
-        func setSkipped() { status = .skip }
+        func set(skipped reason: String? = nil) {
+            status = .skip
+            if let reason = reason {
+                tags[DDTestTags.testSkipReason] = reason
+            }
+        }
         
         func set(tag name: String, value: any SpanAttributeConvertible) {
             tags[name] = value.spanAttribute
@@ -184,7 +189,7 @@ enum Mocks {
                   skippableMethods: [name: !unskippable])
         }
         
-        var executionCount: Int { runs.count }
+        var executionCount: Int { runs.filter { $0.duration > 0 }.count }
         var failedExecutionCount: Int { runs.filter { $0.status == .fail }.count }
         
         var isSucceeded: Bool {
@@ -195,6 +200,7 @@ enum Mocks {
                 return runs.contains { $0.status == .pass }
             case .atMostOneFailed:
                 return failedExecutionCount <= 1
+            case .alwaysSucceeded: return true
             }
         }
         
@@ -222,10 +228,17 @@ enum Mocks {
         }
     }
     
-    enum ErrorSuppressionStatus {
+    enum ErrorSuppressionStatus: Equatable, Hashable {
         case normal
-        case suppressed
-        case unsuppressed
+        case suppressed(by: FeatureId)
+        case unsuppressed(by: FeatureId)
+        
+        var isSuppressed: Bool {
+            switch self {
+            case .suppressed(_): return true
+            default: return false
+            }
+        }
     }
     
     final class Test: TestBase, TestRun, Hashable, Equatable, CustomDebugStringConvertible {
@@ -236,7 +249,7 @@ enum Mocks {
         
         var xcStatus: TestStatus {
             guard status == .fail else { return status }
-            return errorStatus == .suppressed ? .pass : .fail
+            return errorStatus.isSuppressed ? .pass : .fail
         }
         
         init(name: String, suite: Suite) {
@@ -335,7 +348,7 @@ enum Mocks {
             return tests.contains(String(describing: (testSessionId, testSuiteId, spanId)))
         }
         
-        static var id: String { "CoverageCollector" }
+        static var id: FeatureId { "CoverageCollector" }
         func stop() {}
     }
 }

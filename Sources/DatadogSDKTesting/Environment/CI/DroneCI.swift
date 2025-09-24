@@ -36,11 +36,11 @@ internal struct DroneCIEnvironmentReader: CIEnvironmentReader {
                 repositoryURL: env["DRONE_GIT_HTTP_URL"],
                 branch: normalize(branch: env["DRONE_BRANCH"]),
                 tag: normalize(branchOrTag: env["DRONE_TAG"]).0,
-                commitSHA: env["DRONE_COMMIT_SHA"],
-                commitMessage: env["DRONE_COMMIT_MESSAGE"],
-                authorName: env["DRONE_COMMIT_AUTHOR_NAME"],
-                authorEmail: env["DRONE_COMMIT_AUTHOR_EMAIL"],
-                pullRequestBaseBranch: normalize(branch: pullRequestBaseBranch)
+                commit: .maybe(sha: env["DRONE_COMMIT_SHA"],
+                               message: env["DRONE_COMMIT_MESSAGE"],
+                               author: .maybe(name: env["DRONE_COMMIT_AUTHOR_NAME"],
+                                              email: env["DRONE_COMMIT_AUTHOR_EMAIL"])),
+                pullRequestBaseBranch: .maybe(name: normalize(branch: pullRequestBaseBranch))
             )
         )
     }

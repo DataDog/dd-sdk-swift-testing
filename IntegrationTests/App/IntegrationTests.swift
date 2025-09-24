@@ -120,7 +120,7 @@ public class NetworkIntegration: UnskippableTestCase {
     func testNetworkIntegration() throws {
         print("NetworkIntegration")
 
-        let url = URL(string: "https://httpbin.org/get")!
+        let url = URL(string: "https://httpbin.io/get")!
         let expec = expectation(description: "GET \(url)")
 
         let task = URLSession.shared.dataTask(with: url) { data, _, _ in

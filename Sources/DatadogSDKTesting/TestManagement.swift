@@ -8,45 +8,93 @@ import Foundation
 internal import EventsExporter
 
 final class TestManagement: TestHooksFeature {
-    static var id: String = "Flaky Test Management"
+    static var id: FeatureId = "Flaky Test Management"
     
-    let modules: [String: Module]
+    let module: Module
     let attemptToFixRetries: UInt
     
-    init(tests: TestManagementTestsInfo, attemptToFixRetries: UInt)
+    init(tests: TestManagementTestsInfo, attemptToFixRetries: UInt, module: String)
     {
         let mapped = tests.modules.map { ($0.key, Module(name: $0.key, module: $0.value)) }
-        self.modules = Dictionary(uniqueKeysWithValues: mapped)
+        let modules = Dictionary(uniqueKeysWithValues: mapped)
+        self.module = modules[module] ?? Module(name: module, suites: [:])
         self.attemptToFixRetries = attemptToFixRetries
     }
     
-    func testSuiteWillStart(suite: any TestSuite, testsCount: UInt) {}
-    
-    func testGroupWillStart(for test: String, in suite: any TestSuite) {}
-    
     func testGroupConfiguration(for test: String, meta: UnskippableMethodCheckerFactory,
                                 in suite: any TestSuite,
-                                configuration: TestRetryGroupConfiguration.Configuration) -> TestRetryGroupConfiguration
+                                configuration: RetryGroupConfiguration.Iterator) -> RetryGroupConfiguration.Iterator
     {
-        configuration.next()
+        guard let testInfo = module.suites[suite.name]?.tests[test] else {
+            return configuration.next()
+        }
+        if testInfo.attemptToFix {
+            let strategy: RetryGroupSuccessStrategy = testInfo.disabled || testInfo.quarantined ?
+                .alwaysSucceeded : .allSucceeded
+            return configuration.retry(strategy: strategy)
+        }
+        if testInfo.disabled {
+            return configuration.skip(reason: "Flaky test is disabled by Datadog",
+                                      status: .init(canBeSkipped: true, markedUnskippable: false),
+                                      strategy: .allSkipped)
+        }
+        if testInfo.quarantined {
+            // Do nothing but add success strategy
+            return configuration.next(successStrategy: .alwaysSucceeded)
+        }
+        // Do nothing.
+        return configuration.next()
     }
     
-    func testWillStart(test: any TestRun, retryReason: String?, skipStatus: SkipStatus,
-                       executionCount: Int, failedExecutionCount: Int)
-    {
+    func testWillStart(test: any TestRun, info: TestRunInfoStart) {
+        if let testInfo = module.suites[test.suite.name]?.tests[test.name] {
+            if testInfo.quarantined {
+                test.set(tag: DDTestManagementTags.testIsQuarantined, value: "true")
+            }
+            if testInfo.disabled {
+                test.set(tag: DDTestManagementTags.testIsTestDisabled, value: "true")
+            }
+            if testInfo.attemptToFix {
+                test.set(tag: DDTestManagementTags.testIsAttemptToFix, value: "true")
+            }
+        }
     }
     
-    func testWillFinish(test: any TestRun, duration: TimeInterval, withStatus: TestStatus,
-                        skipStatus: SkipStatus, executionCount: Int, failedExecutionCount: Int) {}
-    
-    func testGroupRetry(test: any TestRun, duration: TimeInterval, withStatus: TestStatus,
-                        skipStatus: SkipStatus, executionCount: Int, failedExecutionCount: Int) -> RetryStatus?
-    {
-        nil
+    func testWillFinish(test: any TestRun, duration: TimeInterval, withStatus status: TestStatus, andInfo info: TestRunInfoEnd) {
+        guard info.retry.feature == id else { return } // Check that was retried by us
+        guard info.executions.total > 0 && !info.retry.status.isRetry else { return } // last execution.
+        // Check that all executions passed
+        test.set(tag: DDTestManagementTags.testAttemptToFixPassed,
+                 value: info.executions.failed == 0 && status != .fail)
+        
     }
     
-    func shouldSuppressError(test: any TestRun, skipStatus: SkipStatus, executionCount: Int, failedExecutionCount: Int) -> Bool {
-        false
+    func testGroupRetry(test: any TestRun, duration: TimeInterval,
+                        withStatus status: TestStatus, retryStatus: RetryStatus.Iterator,
+                        andInfo info: TestRunInfoStart) -> RetryStatus.Iterator
+    {
+        guard let testInfo = module.suites[test.suite.name]?.tests[test.name] else {
+            return retryStatus.next()
+        }
+        if testInfo.attemptToFix {
+            if info.executions.total < attemptToFixRetries - 1 {
+                return retryStatus.retry(reason: DDTagValues.retryReasonAttemptToFix,
+                                         ignoreErrors: testInfo.disabled || testInfo.quarantined ? true : nil)
+            }
+            return retryStatus.end(ignoreErrors: testInfo.disabled || testInfo.quarantined ? true : nil)
+        }
+        return testInfo.disabled
+            ? retryStatus.end(ignoreErrors: true)
+            : retryStatus.next(ignoreErrors: testInfo.quarantined ? true : nil)
+    }
+    
+    func shouldSuppressError(test: any TestRun, info: TestRunInfoStart) -> Bool {
+        guard let testInfo = module.suites[test.suite.name]?.tests[test.name] else {
+            return false
+        }
+        return testInfo.disabled || testInfo.quarantined || ( // disabled or quarantined
+            testInfo.attemptToFix && info.executions.total < attemptToFixRetries
+        )
     }
     
     func stop() {}
@@ -57,10 +105,14 @@ extension TestManagement {
         let name: String
         let suites: [String: Suite]
         
+        init(name: String, suites: [String: Suite]) {
+            self.name = name
+            self.suites = suites
+        }
+        
         init(name: String, module: TestManagementTestsInfo.Module) {
             let mapped = module.suites.map { ($0.key, Suite(name: $0.key, suite: $0.value)) }
-            self.name = name
-            self.suites = Dictionary(uniqueKeysWithValues: mapped)
+            self.init(name: name, suites: Dictionary(uniqueKeysWithValues: mapped))
         }
     }
     
@@ -95,20 +147,24 @@ struct TestManagementFactory: FeatureFactory {
     
     let cacheFileName = "test_management_tests.json"
     let repository: String
-    let commitMessage: String
+    let commitSha: String
+    let commitMessage: String?
     let attemptToFixRetries: UInt
     let cacheFolder: Directory
     let exporter: EventsExporterProtocol
+    let module: String
     
-    init(repository: String, commitMessage: String,
-         attemptToFixRetries: UInt,
+    init(repository: String, commitSha: String, commitMessage: String?,
+         module: String, attemptToFixRetries: UInt,
          exporter: EventsExporterProtocol, cache: Directory
     ) {
         self.cacheFolder = cache
         self.repository = repository
+        self.commitSha = commitSha
         self.commitMessage = commitMessage
         self.attemptToFixRetries = attemptToFixRetries
         self.exporter = exporter
+        self.module = module
     }
     
     static func isEnabled(config: Config, env: Environment, remote: TracerSettings) -> Bool {
@@ -118,20 +174,21 @@ struct TestManagementFactory: FeatureFactory {
     func create(log: Logger) -> TestManagement? {
         if let tests = loadTestsFromDisk(log: log) {
             log.debug("Test Management Enabled")
-            return TestManagement(tests: tests, attemptToFixRetries: attemptToFixRetries)
+            return TestManagement(tests: tests, attemptToFixRetries: attemptToFixRetries, module: module)
         }
         guard let tests = getTests(exporter: exporter, log: log) else {
             return nil
         }
         saveTests(tests: tests)
         log.debug("Test Management Enabled")
-        return TestManagement(tests: tests, attemptToFixRetries: attemptToFixRetries)
+        return TestManagement(tests: tests, attemptToFixRetries: attemptToFixRetries, module: module)
     }
     
     private func loadTestsFromDisk(log: Logger) -> TestManagementTestsInfo? {
-        guard cacheFolder.hasFile(named: cacheFileName) else { return nil }
-        guard let data = try? cacheFolder.file(named: cacheFileName).read() else {
-            log.print("Test Management: Can't read \(cacheFileName) from \(cacheFolder)")
+        let fileName = "\(module)_\(cacheFileName)"
+        guard cacheFolder.hasFile(named: fileName) else { return nil }
+        guard let data = try? cacheFolder.file(named: fileName).read() else {
+            log.print("Test Management: Can't read \(fileName) from \(cacheFolder)")
             return nil
         }
         do {
@@ -145,7 +202,8 @@ struct TestManagementFactory: FeatureFactory {
     }
     
     private func getTests(exporter: EventsExporterProtocol, log: Logger) -> TestManagementTestsInfo? {
-        let tests = exporter.testManagementTests(repositoryURL: repository, commitMessage: commitMessage, module: nil)
+        let tests = exporter.testManagementTests(repositoryURL: repository, sha: commitSha,
+                                                 commitMessage: commitMessage, module: module)
         guard let tests = tests else {
             Log.print("Test Management: tests request failed")
             return nil
@@ -158,7 +216,7 @@ struct TestManagementFactory: FeatureFactory {
     
     private func saveTests(tests: TestManagementTestsInfo) {
         if let data = try? JSONEncoder().encode(tests) {
-            let testsFile = try? cacheFolder.createFile(named: cacheFileName)
+            let testsFile = try? cacheFolder.createFile(named: "\(module)_\(cacheFileName)")
             try? testsFile?.append(data: data)
         }
     }

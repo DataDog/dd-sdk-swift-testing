@@ -53,14 +53,14 @@ internal struct GitlabCIEnvironmentReader: CIEnvironmentReader {
                 repositoryURL: env["CI_REPOSITORY_URL"],
                 branch: normalize(branch: env["CI_COMMIT_REF_NAME"] ?? env["CI_COMMIT_BRANCH"]),
                 tag: normalize(branchOrTag: env["CI_COMMIT_TAG"]).0,
-                commitSHA: env["CI_COMMIT_SHA"],
-                commitMessage: env["CI_COMMIT_MESSAGE"],
-                authorName: authorName,
-                authorEmail: authorEmail,
-                authorDate: env["CI_COMMIT_TIMESTAMP"],
-                pullRequestBaseBranch: env["CI_MERGE_REQUEST_TARGET_BRANCH_NAME"],
-                pullRequestBaseBranchSha: env["CI_MERGE_REQUEST_DIFF_BASE_SHA"],
-                pullRequestBaseBranchHeadSha: env["CI_MERGE_REQUEST_TARGET_BRANCH_SHA"]
+                commit: .maybe(sha: env["CI_COMMIT_SHA"],
+                               message: env["CI_COMMIT_MESSAGE"],
+                               author: .maybe(name: authorName,
+                                              email: authorEmail,
+                                              date: env["CI_COMMIT_TIMESTAMP"])),
+                pullRequestBaseBranch: .maybe(name: env["CI_MERGE_REQUEST_TARGET_BRANCH_NAME"],
+                                              sha: env["CI_MERGE_REQUEST_DIFF_BASE_SHA"],
+                                              headSha: env["CI_MERGE_REQUEST_TARGET_BRANCH_SHA"])
             )
         )
     }

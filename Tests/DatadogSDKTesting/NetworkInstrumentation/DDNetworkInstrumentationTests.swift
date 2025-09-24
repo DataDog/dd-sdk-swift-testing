@@ -35,7 +35,7 @@ class DDNetworkInstrumentationTests: XCTestCase {
     func testItInterceptsDataTaskWithURL() throws {
         var testSpan: RecordEventsReadableSpan
 
-        let url = URL(string: "https://httpbin.org/get")!
+        let url = URL(string: "https://httpbin.io/get")!
         let expec = expectation(description: "GET \(url)")
         var task: URLSessionTask
         task = URLSession.shared.dataTask(with: url) { _, _, _ in
@@ -51,8 +51,8 @@ class DDNetworkInstrumentationTests: XCTestCase {
         XCTAssertEqual(spanData.name, "HTTP GET")
         XCTAssertNotNil(spanData.attributes["http.status_code"]?.description)
         XCTAssertEqual(spanData.attributes["http.scheme"]?.description, "https")
-        XCTAssertEqual(spanData.attributes["net.peer.name"]?.description, "httpbin.org")
-        XCTAssertEqual(spanData.attributes["http.url"]?.description, "https://httpbin.org/get")
+        XCTAssertEqual(spanData.attributes["net.peer.name"]?.description, "httpbin.io")
+        XCTAssertEqual(spanData.attributes["http.url"]?.description, "https://httpbin.io/get")
         XCTAssertEqual(spanData.attributes["http.method"]?.description, "GET")
         XCTAssertEqual(spanData.attributes["http.target"]?.description, "/get")
         XCTAssertFalse(spanData.attributes["http.request.headers"]?.description.isEmpty ?? true)
@@ -66,7 +66,7 @@ class DDNetworkInstrumentationTests: XCTestCase {
         DDInstrumentationControl.startPayloadCapture()
         DDInstrumentationControl.stopInjectingHeaders()
 
-        let url = URL(string: "https://httpbin.org/get")!
+        let url = URL(string: "https://httpbin.io/get")!
         let urlRequest = URLRequest(url: url)
         let expec = expectation(description: "GET \(url)")
         var task: URLSessionTask
@@ -83,8 +83,8 @@ class DDNetworkInstrumentationTests: XCTestCase {
         XCTAssertEqual(spanData.name, "HTTP GET")
         XCTAssertEqual(spanData.attributes["http.status_code"]?.description, "200")
         XCTAssertEqual(spanData.attributes["http.scheme"]?.description, "https")
-        XCTAssertEqual(spanData.attributes["net.peer.name"]?.description, "httpbin.org")
-        XCTAssertEqual(spanData.attributes["http.url"]?.description, "https://httpbin.org/get")
+        XCTAssertEqual(spanData.attributes["net.peer.name"]?.description, "httpbin.io")
+        XCTAssertEqual(spanData.attributes["http.url"]?.description, "https://httpbin.io/get")
         XCTAssertEqual(spanData.attributes["http.method"]?.description, "GET")
         XCTAssertEqual(spanData.attributes["http.target"]?.description, "/get")
         XCTAssertTrue(spanData.attributes["http.request.headers"]?.description.isEmpty ?? true)
@@ -98,7 +98,7 @@ class DDNetworkInstrumentationTests: XCTestCase {
     func testItReturnsErrorStatusForHTTPErrorStatus() throws {
         var testSpan: RecordEventsReadableSpan
 
-        let url = URL(string: "https://httpbin.org/status/404")!
+        let url = URL(string: "https://httpbin.io/status/404")!
         let expec = expectation(description: "GET \(url)")
         var task: URLSessionTask
         task = URLSession.shared.dataTask(with: url) { _, _, _ in
@@ -118,7 +118,7 @@ class DDNetworkInstrumentationTests: XCTestCase {
     func testItReturnsErrorStatusForNetworkErrors() {
         var testSpan: RecordEventsReadableSpan?
 
-        let url = URL(string: "http://127.0.0.1/404")!
+        let url = URL(string: "http://127.0.0.1:65554/404")!
         let expec = expectation(description: "GET \(url)")
         var task: URLSessionTask
         task = URLSession.shared.dataTask(with: url) { _, _, _ in
@@ -136,7 +136,7 @@ class DDNetworkInstrumentationTests: XCTestCase {
     }
 
     func testItInjectTracingHeaders() throws {
-        let url = URL(string: "https://httpbin.org/headers")!
+        let url = URL(string: "https://httpbin.io/headers")!
         let expec = expectation(description: "Headers \(url)")
         var task: URLSessionTask
 
@@ -158,9 +158,9 @@ class DDNetworkInstrumentationTests: XCTestCase {
         XCTAssertNotNil(headers?.object(forKey: "X-Datadog-Origin"))
         XCTAssertNotNil(headers?.object(forKey: "X-Datadog-Parent-Id"))
         XCTAssertNotNil(headers?.object(forKey: "X-Datadog-Trace-Id"))
-        XCTAssertEqual(headers?.object(forKey: "X-Datadog-Origin") as! String, "ciapp-test")
+        XCTAssertEqual(headers?.object(forKey: "X-Datadog-Origin") as! [String], ["ciapp-test"])
 
         let currentTraceId = try XCTUnwrap(containerSpan?.context.traceId)
-        XCTAssertEqual(headers?.object(forKey: "X-Datadog-Trace-Id") as! String, String(currentTraceId.rawLowerLong))
+        XCTAssertEqual(headers?.object(forKey: "X-Datadog-Trace-Id") as! [String], [String(currentTraceId.rawLowerLong)])
     }
 }

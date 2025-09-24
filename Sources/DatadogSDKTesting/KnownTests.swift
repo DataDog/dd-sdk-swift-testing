@@ -8,7 +8,7 @@ import Foundation
 internal import EventsExporter
 
 final class KnownTests: TestHooksFeature {
-    static var id: String = "Known Tests"
+    static var id: FeatureId = "Known Tests"
     
     let modules: [String: Module]
     
@@ -31,7 +31,7 @@ final class KnownTests: TestHooksFeature {
         isNew(test: test.name, in: test.suite.name, and: test.module.name)
     }
     
-    func testWillStart(test: any TestRun, retryReason: String?, skipStatus: SkipStatus, executionCount: Int, failedExecutionCount: Int) {
+    func testWillStart(test: any TestRun, info: TestRunInfoStart) {
         // Mark new tests
         if isNew(test: test) {
             test.set(tag: DDTestTags.testIsNew, value: "true")

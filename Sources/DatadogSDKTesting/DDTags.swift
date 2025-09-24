@@ -61,7 +61,9 @@ internal enum DDTestTags {
     static let testIsRUMActive = "test.is_rum_active"
     static let testIsNew = "test.is_new"
     static let testCommand = "test.command"
+    static let testSkipReason = "test.skip_reason"
     static let testSkippedByITR = "test.skipped_by_itr"
+    static let testHasFailedAllRetries = "test.has_failed_all_retries"
 }
 
 internal enum DDHostTags {
@@ -106,6 +108,7 @@ internal enum DDTestSessionTags {
     static let testItrSkippingCount = "test.itr.tests_skipping.count"
     static let testItrSkipped = "test.itr.tests_skipping.tests_skipped"
     static let testToolchain = "test.toolchain"
+    static let testTestManagementEnabled = "test.test_management.enabled"
     static let testSessionName = "test_session.name"
 }
 
@@ -113,7 +116,7 @@ internal enum DDGitTags {
     static let gitRepository = "git.repository_url"
     static let gitBranch = "git.branch"
     static let gitTag = "git.tag"
-    static let gitCommit = "git.commit.sha"
+    static let gitCommitSha = "git.commit.sha"
     static let gitCommitMessage = "git.commit.message"
     static let gitAuthorName = "git.commit.author.name"
     static let gitAuthorEmail = "git.commit.author.email"
@@ -122,6 +125,13 @@ internal enum DDGitTags {
     static let gitCommitterEmail = "git.commit.committer.email"
     static let gitCommitterDate = "git.commit.committer.date"
     static let gitCommitHeadSha = "git.commit.head.sha"
+    static let gitCommitHeadMessage = "git.commit.head.message"
+    static let gitCommitHeadAuthorName = "git.commit.head.author.name"
+    static let gitCommitHeadAuthorEmail = "git.commit.head.author.email"
+    static let gitCommitHeadAuthorDate = "git.commit.head.author.date"
+    static let gitCommitHeadCommitterName = "git.commit.head.committer.name"
+    static let gitCommitHeadCommitterEmail = "git.commit.head.committer.email"
+    static let gitCommitHeadCommitterDate = "git.commit.head.committer.date"
     static let gitPullRequestBaseBranch = "git.pull_request.base_branch"
     static let gitPullRequestBaseBranchSha = "git.pull_request.base_branch_sha"
     static let gitPullRequestBaseBranchHeadSha = "git.pull_request.base_branch_head_sha"
@@ -207,8 +217,9 @@ internal enum DDTagValues {
     static let efdAbortSlow = "slow"
     static let efdAbortFaulty = "faulty"
     
-    static let retryReasonEfd = "efd"
-    static let retryReasonAtr = "atr"
+    static let retryReasonEarlyFlakeDetection = "early_flake_detection"
+    static let retryReasonAutoTestRetry = "auto_test_retry"
+    static let retryReasonAttemptToFix = "attempt_to_fix"
 }
 
 internal enum DDItrTags {
@@ -223,6 +234,13 @@ internal enum DDEfdTags {
     static let testRetryReason = "test.retry_reason"
     static let testEfdEnabled = "test.early_flake.enabled"
     static let testEfdAbortReason = "test.early_flake.abort_reason"
+}
+
+internal enum DDTestManagementTags {
+    static let testAttemptToFixPassed = "test.test_management.attempt_to_fix_passed"
+    static let testIsQuarantined = "test.test_management.is_quarantined"
+    static let testIsTestDisabled = "test.test_management.is_test_disabled"
+    static let testIsAttemptToFix = "test.test_management.is_attempt_to_fix"
 }
 
 internal enum DDLibraryCapabilitiesTags {

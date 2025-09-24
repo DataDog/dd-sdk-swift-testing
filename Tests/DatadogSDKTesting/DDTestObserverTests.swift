@@ -18,13 +18,12 @@ internal class DDTestObserverTests: XCTestCase {
         XCTAssertNil(DDTracer.activeSpan)
         DDTestMonitor._env_recreate(env: ["DD_API_KEY": "fakeToken", "DD_DISABLE_TEST_INSTRUMENTING": "1"])
         testObserver = DDTestObserver()
-        testObserver.start()
         theSuite.setValue([self], forKey: "_mutableTests")
     }
 
     override func tearDown() {
-        testObserver.stop()
-        testObserver = nil
+        XCTAssertNil(testObserver)
+        DDTestMonitor.removeTestMonitor()
         DDTestMonitor._env_recreate()
         XCTAssertNil(DDTracer.activeSpan)
     }
@@ -37,6 +36,7 @@ internal class DDTestObserverTests: XCTestCase {
         }
         XCTAssertFalse(module.name.isEmpty)
         testObserver.testBundleDidFinish(Bundle.main)
+        destroyObserver()
     }
 
     func testWhenTestCaseWillStartIsCalled_testSpanIsCreated() {
@@ -53,6 +53,12 @@ internal class DDTestObserverTests: XCTestCase {
         
         let spanData = span.toSpanData()
 
+        testObserver.testCaseDidFinish(self)
+        testObserver.testRetryGroupDidFinish(group)
+        testObserver.testSuiteDidFinish(theSuite)
+        testObserver.testBundleDidFinish(Bundle.main)
+        destroyObserver()
+        
         XCTAssertEqual(spanData.name, "XCTest.test")
         XCTAssertEqual(spanData.attributes[DDGenericTags.type]?.description, DDTagValues.typeTest)
         XCTAssertEqual(spanData.attributes[DDGenericTags.resource]?.description, "\(testSuite).\(testName)")
@@ -61,11 +67,6 @@ internal class DDTestObserverTests: XCTestCase {
         XCTAssertEqual(spanData.attributes[DDTestTags.testFramework]?.description, "XCTest")
         XCTAssertEqual(spanData.attributes[DDTestTags.testType]?.description, DDTagValues.typeTest)
         XCTAssertEqual(spanData.attributes[DDHostTags.hostVCPUCount]?.description, String(Double(PlatformUtils.getCpuCount())))
-
-        testObserver.testCaseDidFinish(self)
-        testObserver.testRetryGroupDidFinish(group)
-        testObserver.testSuiteDidFinish(theSuite)
-        testObserver.testBundleDidFinish(Bundle.main)
     }
 
     func testWhenTestCaseDidFinishIsCalled_testStatusIsSet() {
@@ -76,17 +77,21 @@ internal class DDTestObserverTests: XCTestCase {
         testObserver.testCaseWillStart(self)
 
         let testSpan = OpenTelemetry.instance.contextProvider.activeSpan as! RecordEventsReadableSpan
+        
         var spanData = testSpan.toSpanData()
-        XCTAssertNil(spanData.attributes[DDTestTags.testStatus])
-
+        let statusBefore = spanData.attributes[DDTestTags.testStatus]
+        
         testObserver.testCaseDidFinish(self)
 
         spanData = testSpan.toSpanData()
-        XCTAssertNotNil(spanData.attributes[DDTestTags.testStatus])
-
+        
         testObserver.testRetryGroupDidFinish(group)
         testObserver.testSuiteDidFinish(theSuite)
         testObserver.testBundleDidFinish(Bundle.main)
+        destroyObserver()
+        
+        XCTAssertNil(statusBefore)
+        XCTAssertNotNil(spanData.attributes[DDTestTags.testStatus])
     }
 
     
@@ -97,19 +102,21 @@ internal class DDTestObserverTests: XCTestCase {
         testObserver.testRetryGroupWillStart(group)
         testObserver.testCaseWillStart(self)
         let issue = XCTIssue(type: .assertionFailure, compactDescription: "descrip", detailedDescription: nil, sourceCodeContext: XCTSourceCodeContext(), associatedError: nil, attachments: [])
-        testObserver.testCaseRetry(self, willRecord: issue)
+        //testObserver.testCaseRetry(self, willRecord: issue)
+        testObserver.testCase(self, didRecord: issue)
 
         let testSpan = OpenTelemetry.instance.contextProvider.activeSpan as! RecordEventsReadableSpan
         testObserver.testCaseDidFinish(self)
         let spanData = testSpan.toSpanData()
+        
+        testObserver.testRetryGroupDidFinish(group)
+        testObserver.testSuiteDidFinish(theSuite)
+        testObserver.testBundleDidFinish(Bundle.main)
+        destroyObserver()
 
         XCTAssertNotNil(spanData.attributes[DDTags.errorType])
         XCTAssertNotNil(spanData.attributes[DDTags.errorMessage])
         XCTAssertNil(spanData.attributes[DDTags.errorStack])
-
-        testObserver.testRetryGroupDidFinish(group)
-        testObserver.testSuiteDidFinish(theSuite)
-        testObserver.testBundleDidFinish(Bundle.main)
     }
 
     func testWhenTestCaseDidFinishIsCalledAndTheTestIsABenchmark_benchmarkTagsAreAdded() {
@@ -126,6 +133,15 @@ internal class DDTestObserverTests: XCTestCase {
         testObserver.testCaseDidFinish(self)
 
         let spanData = testSpan.toSpanData()
+
+        self.setValue(nil, forKey: "_activePerformanceMetricIDs")
+        self.setValue(nil, forKey: "_perfMetricsForID")
+
+        testObserver.testRetryGroupDidFinish(group)
+        testObserver.testSuiteDidFinish(theSuite)
+        testObserver.testBundleDidFinish(Bundle.main)
+        destroyObserver()
+        
         XCTAssertEqual(spanData.attributes[DDTestTags.testType]?.description, DDTagValues.typeBenchmark)
 
         let measure = DDBenchmarkTags.benchmark + "." + DDBenchmarkMeasuresTags.duration + "."
@@ -134,13 +150,6 @@ internal class DDTestObserverTests: XCTestCase {
         XCTAssertEqual(spanData.attributes[measure + DDBenchmarkTags.statisticsMin]?.description, "1000000000.0")
         XCTAssertEqual(spanData.attributes[measure + DDBenchmarkTags.statisticsMax]?.description, "5000000000.0")
         XCTAssertEqual(spanData.attributes[measure + DDBenchmarkTags.statisticsMedian]?.description, "3000000000.0")
-
-        self.setValue(nil, forKey: "_activePerformanceMetricIDs")
-        self.setValue(nil, forKey: "_perfMetricsForID")
-
-        testObserver.testRetryGroupDidFinish(group)
-        testObserver.testSuiteDidFinish(theSuite)
-        testObserver.testBundleDidFinish(Bundle.main)
     }
 
 
@@ -154,20 +163,25 @@ internal class DDTestObserverTests: XCTestCase {
         let error1Text = "error1"
         let error2Text = "error2"
         let issue = XCTIssue(type: .assertionFailure, compactDescription: error1Text, detailedDescription: nil, sourceCodeContext: XCTSourceCodeContext(), associatedError: nil, attachments: [])
-        testObserver.testCaseRetry(self, willRecord: issue)
+        testObserver.testCase(self, didRecord: issue)
 
         let issue2 = XCTIssue(type: .assertionFailure, compactDescription: error2Text, detailedDescription: nil, sourceCodeContext: XCTSourceCodeContext(), associatedError: nil, attachments: [])
-        testObserver.testCaseRetry(self, willRecord: issue2)
+        testObserver.testCase(self, didRecord: issue2)
 
         let testSpan = OpenTelemetry.instance.contextProvider.activeSpan as! RecordEventsReadableSpan
         testObserver.testCaseDidFinish(self)
         let spanData = testSpan.toSpanData()
 
-        XCTAssertTrue(spanData.attributes[DDTags.errorMessage]?.description.contains(exactWord: error1Text) ?? false)
-        XCTAssertTrue(spanData.attributes[DDTags.errorMessage]?.description.contains(exactWord: error2Text) ?? false)
-
         testObserver.testRetryGroupDidFinish(group)
         testObserver.testSuiteDidFinish(theSuite)
         testObserver.testBundleDidFinish(Bundle.main)
+        destroyObserver()
+        
+        XCTAssertTrue(spanData.attributes[DDTags.errorMessage]?.description.contains(exactWord: error1Text) ?? false)
+        XCTAssertTrue(spanData.attributes[DDTags.errorMessage]?.description.contains(exactWord: error2Text) ?? false)
+    }
+    
+    private func destroyObserver() {
+        testObserver = nil
     }
 }

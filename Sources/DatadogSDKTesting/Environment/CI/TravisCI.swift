@@ -38,10 +38,9 @@ internal struct TravisCIEnvironmentReader: CIEnvironmentReader {
                 repositoryURL: repositoryEnv.flatMap { URL(string: "https://github.com/\($0).git") },
                 branch: branch,
                 tag: normalize(tag: env["TRAVIS_TAG"]),
-                commitSHA: env["TRAVIS_COMMIT"],
-                commitMessage: env["TRAVIS_COMMIT_MESSAGE"],
-                pullRequestHeadSha: env["TRAVIS_PULL_REQUEST_SHA"],
-                pullRequestBaseBranch: prBranch
+                commit: .maybe(sha: env["TRAVIS_COMMIT"], message: env["TRAVIS_COMMIT_MESSAGE"]),
+                commitHead: .maybe(sha: env["TRAVIS_PULL_REQUEST_SHA"]),
+                pullRequestBaseBranch: .maybe(name: prBranch)
             )
         )
     }

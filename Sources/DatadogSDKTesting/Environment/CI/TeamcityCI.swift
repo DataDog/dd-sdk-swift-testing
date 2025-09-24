@@ -18,7 +18,7 @@ internal struct TeamcityCIEnvironmentReader: CIEnvironmentReader {
                 prNumber: env["TEAMCITY_PULLREQUEST_NUMBER"]
             ),
             git: .init(
-                pullRequestBaseBranch: env["TEAMCITY_PULLREQUEST_TARGET_BRANCH"]
+                pullRequestBaseBranch: .maybe(name: env["TEAMCITY_PULLREQUEST_TARGET_BRANCH"])
             )
         )
     }

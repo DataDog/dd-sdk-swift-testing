@@ -15,6 +15,7 @@ final class DDXCTestCaseRetryRun: XCTestCaseRun, DDXCTestSuppressedFailureRun {
     private var _suppressFailure: Bool = false
     
     private(set) var suppressedFailures: [XCTIssue] = []
+    private(set) var expectedFailuresCount: Int = 0
     
     var ddHasFailed: Bool {
         guard startDate != nil && stopDate != nil else {
@@ -23,9 +24,13 @@ final class DDXCTestCaseRetryRun: XCTestCaseRun, DDXCTestSuppressedFailureRun {
         return ddTotalFailureCount > 0
     }
     
-    var ddTotalFailureCount: Int { totalFailureCount + suppressedFailures.count }
+    var ddTotalFailureCount: Int {
+        totalFailureCount + expectedFailuresCount + suppressedFailures.count
+    }
     
     var canFail: Bool { ddTotalFailureCount > 0 }
+    
+    private(set) var skipReason: String? = nil
     
     func suppressFailure() {
         _suppressFailure = true
@@ -33,11 +38,31 @@ final class DDXCTestCaseRetryRun: XCTestCaseRun, DDXCTestSuppressedFailureRun {
     
     func recordSuppressedFailures() {
         let failures = suppressedFailures
+        // we don't have to preserve count because they will be added to totalFailureCount
         suppressedFailures = []
         for failure in failures {
             super.record(failure)
         }
     }
+    
+#if canImport(ObjectiveC)
+    func recordSuppressedFailuresAsExpected(reason: String) {
+        let failures = suppressedFailures
+        // we have to preserve their count, because they will not be attached to the test run
+        expectedFailuresCount += failures.count
+        suppressedFailures = []
+        let selector = "alloc"
+        for failure in failures {
+            if let expected = XCTExpectedFailure.self.perform(Selector(selector)).takeUnretainedValue() as? XCTExpectedFailure {
+                if let expected = expected.perform(Selector(("initWithFailureReason:issue:")), with: reason, with: failure)
+                                          .takeRetainedValue() as? XCTExpectedFailure
+                {
+                    self.perform(Selector(("recordExpectedFailure:")), with: expected)
+                }
+            }
+        }
+    }
+#endif
     
     override func stop() {
         NotificationCenter.test.postTestCaseRetryWillFinish(test as! XCTestCase)
@@ -53,6 +78,23 @@ final class DDXCTestCaseRetryRun: XCTestCaseRun, DDXCTestSuppressedFailureRun {
             super.record(issue)
         }
     }
+    
+#if canImport(ObjectiveC)
+    private typealias RecordSkip = @convention(c) (AnyObject, Selector, String, XCTSourceCodeContext?) -> Void
+    
+    // it's a hack to get skip messages
+    @objc(recordSkipWithDescription:sourceCodeContext:)
+    func recordSkip(description: String, sourceCodeContext context: XCTSourceCodeContext?) {
+        skipReason = description
+        // we cant call super here because we don't have an override
+        // so we will call super method with ObjC runtime API
+        let selector = #selector(self.recordSkip(description:sourceCodeContext:))
+        if let parent = class_getMethodImplementation(self.superclass, selector) {
+            let recordSkip = unsafeBitCast(parent, to: RecordSkip.self)
+            recordSkip(self, selector, description, context)
+        }
+    }
+#endif // canImport(ObjectiveC)
 }
 
 final class DDXCTestRetryGroupRun: XCTestRun, DDXCTestSuppressedFailureRun {
@@ -139,8 +181,6 @@ final class DDXCTestRetryGroup: XCTest {
     override var testRunClass: AnyClass? { DDXCTestRetryGroupRun.self }
     let testClass: XCTestCase.Type
     
-    private(set) var retryReason: String?
-    
     var groupRun: DDXCTestRetryGroupRun? { testRun.map { $0 as! DDXCTestRetryGroupRun } }
     
     let testId: (suite: String, test: String)
@@ -149,15 +189,12 @@ final class DDXCTestRetryGroup: XCTest {
     private let _testMethod: Selector
     private var _skipReason: String?
     private var _nextTest: XCTestCase?
-    private var _nextRetryReason: String?
     
     init(for test: XCTestCase) {
         self.currentTest = test
         self.testId = test.testId
         self._skipReason = nil
         self._nextTest = nil
-        self.retryReason = nil
-        self._nextRetryReason = nil
         self._name = test.name
         self.testClass = type(of: test)
         self._testMethod = test.invocation!.selector
@@ -167,13 +204,10 @@ final class DDXCTestRetryGroup: XCTest {
     func skip(reason: String) {
         _skipReason = reason
         _nextTest = nil
-        _nextRetryReason = nil
-        retryReason = nil
     }
     
-    func retry(reason: String) {
+    func retry() {
         _nextTest = testClass.init(selector: _testMethod)
-        _nextRetryReason = reason
         _skipReason = nil
     }
     
@@ -193,16 +227,16 @@ final class DDXCTestRetryGroup: XCTest {
                 test.perform(testCaseRun)
             }
             currentTest = _nextTest
-            retryReason = _nextRetryReason
             _nextTest = nil
-            _nextRetryReason = nil
         }
         testRun.stop()
     }
     
-    @objc var _requiredTestRunBaseClass: AnyClass? { XCTestRun.self }
-    
     override var description: String { "\(name)[\(testRun?.executionCount ?? 0)]" }
+    
+#if canImport(ObjectiveC)
+    @objc var _requiredTestRunBaseClass: AnyClass? { XCTestRun.self }
+#endif // canImport(ObjectiveC)
 }
 
 final class DDXCSkippedTestCase: XCTestCase {
@@ -240,6 +274,7 @@ extension DDXCTestRetryGroupRun {
         static var allSucceeded: Self { .custom { $0.ddTotalFailureCount == 0 } }
         static var atLeastOneSucceeded: Self { .custom { $0.failedExecutionCount < $0.executionCount } }
         static var atMostOneFailed: Self { .custom { $0.failedExecutionCount <= 1 } }
+        static var alwaysSucceeded: Self { .custom { _ in true } }
     }
     
     final class SkipStrategy: GroupStrategy {
@@ -305,6 +340,7 @@ extension RetryGroupSuccessStrategy {
         case .allSucceeded: return .allSucceeded
         case .atLeastOneSucceeded: return .atLeastOneSucceeded
         case .atMostOneFailed: return .atMostOneFailed
+        case .alwaysSucceeded: return .alwaysSucceeded
         }
     }
 }

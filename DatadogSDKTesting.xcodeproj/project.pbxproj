@@ -57,7 +57,9 @@
 		A77C12392D8DD2A9009C2BA1 /* Feature.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77C12382D8DD2A9009C2BA1 /* Feature.swift */; };
 		A77C123C2D9425C7009C2BA1 /* KnownTestsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77C123B2D9425C7009C2BA1 /* KnownTestsTests.swift */; };
 		A77C123E2D9474E6009C2BA1 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77C123D2D9474E6009C2BA1 /* Models.swift */; };
+		A794A8FF2E7990D20044FE3C /* TestManagementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A794A8FE2E7990C40044FE3C /* TestManagementTests.swift */; };
 		A7A98C202C8F44BC00C93E59 /* CoverageSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7A98C1F2C8F44BC00C93E59 /* CoverageSettings.swift */; };
+		A7AE65992E7D901D00EA568B /* RetryAndSkipTags.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AE65982E7D901600EA568B /* RetryAndSkipTags.swift */; };
 		A7B2671C2DB694B000505E7B /* OpenTelemetryApi in Frameworks */ = {isa = PBXBuildFile; productRef = A7B2671B2DB694B000505E7B /* OpenTelemetryApi */; };
 		A7B2671E2DB694B000505E7B /* OpenTelemetrySdk in Frameworks */ = {isa = PBXBuildFile; productRef = A7B2671D2DB694B000505E7B /* OpenTelemetrySdk */; };
 		A7B267222DB694EC00505E7B /* InMemoryExporter in Frameworks */ = {isa = PBXBuildFile; productRef = A7B267212DB694EC00505E7B /* InMemoryExporter */; };
@@ -365,7 +367,9 @@
 		A77C12382D8DD2A9009C2BA1 /* Feature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Feature.swift; sourceTree = "<group>"; };
 		A77C123B2D9425C7009C2BA1 /* KnownTestsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnownTestsTests.swift; sourceTree = "<group>"; };
 		A77C123D2D9474E6009C2BA1 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		A794A8FE2E7990C40044FE3C /* TestManagementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestManagementTests.swift; sourceTree = "<group>"; };
 		A7A98C1F2C8F44BC00C93E59 /* CoverageSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoverageSettings.swift; sourceTree = "<group>"; };
+		A7AE65982E7D901600EA568B /* RetryAndSkipTags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetryAndSkipTags.swift; sourceTree = "<group>"; };
 		A7B39C6F2BCFCD77007F98B2 /* SubprocessWait.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = SubprocessWait.c; sourceTree = "<group>"; };
 		A7B39C712BCFD234007F98B2 /* SubprocessWait.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SubprocessWait.h; sourceTree = "<group>"; };
 		A7B4D4C02C21DC510059F39B /* TagsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagsTests.swift; sourceTree = "<group>"; };
@@ -654,6 +658,7 @@
 		A77C123A2D941F27009C2BA1 /* Features */ = {
 			isa = PBXGroup;
 			children = (
+				A794A8FE2E7990C40044FE3C /* TestManagementTests.swift */,
 				A76F0F982E2A9F02009ACD06 /* TestImpactAnalysisTests.swift */,
 				A70B91122DF0AE11003F284F /* AutoTestRetriesTests.swift */,
 				A75DAB9B2DEE18D600F1B8A7 /* MockTestRunner.swift */,
@@ -1019,6 +1024,7 @@
 				A77C123D2D9474E6009C2BA1 /* Models.swift */,
 				A7B70E3B2C5CDE8B00E4AE09 /* Endpoint.swift */,
 				A718EC2C2CBD5DCE00C5F0D9 /* EarlyFlakeDetection.swift */,
+				A7AE65982E7D901600EA568B /* RetryAndSkipTags.swift */,
 				A77C12362D8DCB87009C2BA1 /* AutomaticTestRetries.swift */,
 				A77C12322D8C9798009C2BA1 /* KnownTests.swift */,
 				A77C12342D8C9F5D009C2BA1 /* TestManagement.swift */,
@@ -1589,6 +1595,7 @@
 				A74C91CA2E67278800B10681 /* DroneCI.swift in Sources */,
 				A7FC25D12BA1EB2900067E26 /* DDCrashes.swift in Sources */,
 				A71E64762BAA0AA100F2ACA5 /* XcodeCI.swift in Sources */,
+				A7AE65992E7D901D00EA568B /* RetryAndSkipTags.swift in Sources */,
 				A7FC25D02BA1EB2900067E26 /* SimpleSpanData.swift in Sources */,
 				A7FC25BE2BA1EADF00067E26 /* DDTest.swift in Sources */,
 				A7FC260F2BA1EC0500067E26 /* BinaryParser.swift in Sources */,
@@ -1632,6 +1639,7 @@
 				A70B91132DF0AE19003F284F /* AutoTestRetriesTests.swift in Sources */,
 				A7B4D4C12C21DC510059F39B /* TagsTests.swift in Sources */,
 				A7B6602F2C2E08A900AEBA6C /* TestImpactAnalysisSkippableTests.swift in Sources */,
+				A794A8FF2E7990D20044FE3C /* TestManagementTests.swift in Sources */,
 				A7FC26632BA1F6BF00067E26 /* StderrCaptureTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1860,7 +1868,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = "2.6.0";
+				MARKETING_VERSION = 2.6.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++20";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.CDatadogSDKTesting;
@@ -1901,7 +1909,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = "2.6.0";
+				MARKETING_VERSION = 2.6.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++20";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.CDatadogSDKTesting;
@@ -2271,7 +2279,7 @@
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
-				MARKETING_VERSION = "2.6.0";
+				MARKETING_VERSION = 2.6.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.IntegrationTestsUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -2296,7 +2304,7 @@
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
-				MARKETING_VERSION = "2.6.0";
+				MARKETING_VERSION = 2.6.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.IntegrationTestsUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -2371,7 +2379,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = "2.6.0";
+				MARKETING_VERSION = 2.6.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -2444,7 +2452,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LLVM_LTO = YES_THIN;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = "2.6.0";
+				MARKETING_VERSION = 2.6.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;

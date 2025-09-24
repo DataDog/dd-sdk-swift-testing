@@ -120,8 +120,11 @@ extension Module: TestModule {
         metrics[name] = value
     }
     
-    func setSkipped() {
+    func set(skipped reason: String? = nil) {
         status = .skip
+        if let reason = reason {
+            meta[DDTestTags.testSkipReason] = reason
+        }
     }
     
     func set(failed reason: TestError?) {

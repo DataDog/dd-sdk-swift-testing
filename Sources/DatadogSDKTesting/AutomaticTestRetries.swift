@@ -8,7 +8,7 @@ import Foundation
 internal import EventsExporter
 
 final class AutomaticTestRetries: TestHooksFeature {
-    static var id: String = "Automatic Test Retries"
+    static var id: FeatureId = "Automatic Test Retries"
     
     let failedTestRetriesCount: UInt
     let failedTestTotalRetriesMax: UInt
@@ -24,41 +24,35 @@ final class AutomaticTestRetries: TestHooksFeature {
         self._failedTestTotalRetries = Synced(0)
     }
     
-    func testWillStart(test: any TestRun, retryReason: String?, skipStatus: SkipStatus,
-                       executionCount: Int, failedExecutionCount: Int)
-    {
-        guard retryReason == id else { return }
-        test.set(tag: DDEfdTags.testIsRetry, value: "true")
-        test.set(tag: DDEfdTags.testRetryReason, value: DDTagValues.retryReasonAtr)
-    }
-    
     func testGroupConfiguration(for test: String, meta: UnskippableMethodCheckerFactory,
                                 in suite: any TestSuite,
-                                configuration: TestRetryGroupConfiguration.Configuration) -> TestRetryGroupConfiguration
+                                configuration: RetryGroupConfiguration.Iterator) -> RetryGroupConfiguration.Iterator
     {
-        configuration.retry(strategy: .atLeastOneSucceeded)
+        // Retry but allow softer successStrategy
+        configuration.retry(softer: .atLeastOneSucceeded)
     }
     
-    func testGroupRetry(test: any TestRun, duration: TimeInterval, withStatus status: TestStatus,
-                        skipStatus: SkipStatus, executionCount: Int, failedExecutionCount: Int) -> RetryStatus?
+    func testGroupRetry(test: any TestRun, duration: TimeInterval,
+                        withStatus status: TestStatus, retryStatus: RetryStatus.Iterator,
+                        andInfo info: TestRunInfoStart) -> RetryStatus.Iterator
     {
         if case .fail = status {
-            if executionCount < failedTestRetriesCount // we can retry more
+            if info.executions.total < failedTestRetriesCount // we can retry more
                && incrementRetries() != nil // and increased global retry counter successfully
             {
                 // we can retry this test more
-                return .retry
+                return retryStatus.retry(reason: DDTagValues.retryReasonAutoTestRetry,
+                                         ignoreErrors: true)
             } else {
-                // we can't retry anymore, record errors if we have them
-                return .recordErrors
+                // we can't retry anymore, end it
+                return retryStatus.end()
             }
         }
-        return nil
+        return retryStatus.next()
     }
     
-    
-    func shouldSuppressError(test: any TestRun, skipStatus: SkipStatus, executionCount: Int, failedExecutionCount: Int) -> Bool {
-        return executionCount < failedTestRetriesCount // we can retry test more
+    func shouldSuppressError(test: any TestRun, info: TestRunInfoStart) -> Bool {
+        return info.executions.total < failedTestRetriesCount // we can retry test more
             && _failedTestTotalRetries.value < failedTestTotalRetriesMax // and global counter allow us to retry
     }
     

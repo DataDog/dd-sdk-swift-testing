@@ -64,6 +64,7 @@ internal enum DDTestTags {
     static let testSkipReason = "test.skip_reason"
     static let testSkippedByITR = "test.skipped_by_itr"
     static let testHasFailedAllRetries = "test.has_failed_all_retries"
+    static let testFailureSuppressionReason = "test.failure_suppression_reason"
 }
 
 internal enum DDHostTags {
@@ -220,6 +221,10 @@ internal enum DDTagValues {
     static let retryReasonEarlyFlakeDetection = "early_flake_detection"
     static let retryReasonAutoTestRetry = "auto_test_retry"
     static let retryReasonAttemptToFix = "attempt_to_fix"
+    
+    static let failureSuppressionReasonATR = "auto_test_retry"
+    static let failureSuppressionReasonEFD = "early_flake_detection"
+    static let failureSuppressionReasonQuarantine = "quarantine"
 }
 
 internal enum DDItrTags {

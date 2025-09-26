@@ -77,8 +77,14 @@ final class TestManagement: TestHooksFeature {
         guard let testInfo = module.suites[test.suite.name]?.tests[test.name] else {
             return retryStatus.next()
         }
-        let errors: RetryStatus.ErrorsStatus? = testInfo.disabled || testInfo.quarantined ?
-            .suppressed(reason: DDTagValues.failureSuppressionReasonQuarantine) : nil
+        
+        let errors: RetryStatus.ErrorsStatus?
+        switch (testInfo.disabled, testInfo.quarantined) {
+        case (true, _): errors = .suppressed(reason: DDTagValues.failureSuppressionReasonDisabled)
+        case (false, true): errors = .suppressed(reason: DDTagValues.failureSuppressionReasonQuarantine)
+        case (false, false): errors = nil
+        }
+        
         if testInfo.attemptToFix {
             if info.executions.total < attemptToFixRetries - 1 {
                 return retryStatus.retry(reason: DDTagValues.retryReasonAttemptToFix,

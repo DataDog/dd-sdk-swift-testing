@@ -225,6 +225,7 @@ internal enum DDTagValues {
     static let failureSuppressionReasonATR = "auto_test_retry"
     static let failureSuppressionReasonEFD = "early_flake_detection"
     static let failureSuppressionReasonQuarantine = "quarantine"
+    static let failureSuppressionReasonDisabled = "disabled"
 }
 
 internal enum DDItrTags {

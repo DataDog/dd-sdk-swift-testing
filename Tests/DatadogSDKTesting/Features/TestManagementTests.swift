@@ -221,7 +221,7 @@ class TestManagementTests: XCTestCase {
         XCTAssertNil(tests["atfTest"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries])
         XCTAssertEqual(tests["atfTest"]?.runs.last?.tags[DDTestManagementTags.testAttemptToFixPassed], "false")
         XCTAssertEqual(tests["atfTest"]?.runs.filter {
-            $0.tags[DDTestTags.testFailureSuppressionReason] == DDTagValues.failureSuppressionReasonQuarantine
+            $0.tags[DDTestTags.testFailureSuppressionReason] == DDTagValues.failureSuppressionReasonDisabled
         }.count, 3)
         XCTAssertEqual(tests["atfTest"]?.isSucceeded, true)
         XCTAssertEqual(tests["atfTest"]?.isSkipped, false)

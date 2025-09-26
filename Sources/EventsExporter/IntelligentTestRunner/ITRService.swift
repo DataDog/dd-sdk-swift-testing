@@ -139,13 +139,13 @@ internal class ITRService {
 
         let tests = skipTests.data.map { skipTest in
             let customConfigurations: [String: String]?
-            if case .stringDict(let dict) = skipTest.attributes.configuration?["custom"] {
+            if case .stringDict(let dict) = skipTest.attributes.configurations?["custom"] {
                 customConfigurations = dict
             } else {
                 customConfigurations = nil
             }
 
-            let configurations: [String: String]? = skipTest.attributes.configuration?.compactMapValues {
+            let configurations: [String: String]? = skipTest.attributes.configurations?.compactMapValues {
                 switch $0 {
                     case .string(let string):
                         return string

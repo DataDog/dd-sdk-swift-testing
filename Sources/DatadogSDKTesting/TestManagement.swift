@@ -62,11 +62,12 @@ final class TestManagement: TestHooksFeature {
     
     func testWillFinish(test: any TestRun, duration: TimeInterval, withStatus status: TestStatus, andInfo info: TestRunInfoEnd) {
         guard info.retry.feature == id else { return } // Check that was retried by us
-        guard info.executions.total > 0 && !info.retry.status.isRetry else { return } // last execution.
-        // Check that all executions passed
-        test.set(tag: DDTestManagementTags.testAttemptToFixPassed,
-                 value: info.executions.failed == 0 && status != .fail)
-        
+        // Check that we retried test and this is the last execution.
+        if info.executions.total > 0 && !info.retry.status.isRetry {
+            // Check that all executions passed
+            test.set(tag: DDTestManagementTags.testAttemptToFixPassed,
+                     value: info.executions.failed == 0 && status != .fail)
+        }
     }
     
     func testGroupRetry(test: any TestRun, duration: TimeInterval,
@@ -76,16 +77,24 @@ final class TestManagement: TestHooksFeature {
         guard let testInfo = module.suites[test.suite.name]?.tests[test.name] else {
             return retryStatus.next()
         }
+        
+        let errors: RetryStatus.ErrorsStatus?
+        switch (testInfo.disabled, testInfo.quarantined) {
+        case (true, _): errors = .suppressed(reason: DDTagValues.failureSuppressionReasonDisabled)
+        case (false, true): errors = .suppressed(reason: DDTagValues.failureSuppressionReasonQuarantine)
+        case (false, false): errors = nil
+        }
+        
         if testInfo.attemptToFix {
             if info.executions.total < attemptToFixRetries - 1 {
                 return retryStatus.retry(reason: DDTagValues.retryReasonAttemptToFix,
-                                         ignoreErrors: testInfo.disabled || testInfo.quarantined ? true : nil)
+                                         errors: errors)
             }
-            return retryStatus.end(ignoreErrors: testInfo.disabled || testInfo.quarantined ? true : nil)
+            return retryStatus.end(errors: errors)
         }
         return testInfo.disabled
-            ? retryStatus.end(ignoreErrors: true)
-            : retryStatus.next(ignoreErrors: testInfo.quarantined ? true : nil)
+            ? retryStatus.end(errors: errors)
+            : retryStatus.next(errors: errors)
     }
     
     func shouldSuppressError(test: any TestRun, info: TestRunInfoStart) -> Bool {

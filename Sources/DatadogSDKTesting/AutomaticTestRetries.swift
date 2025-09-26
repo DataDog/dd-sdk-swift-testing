@@ -42,7 +42,7 @@ final class AutomaticTestRetries: TestHooksFeature {
             {
                 // we can retry this test more
                 return retryStatus.retry(reason: DDTagValues.retryReasonAutoTestRetry,
-                                         ignoreErrors: true)
+                                         errors: .suppressed(reason: DDTagValues.failureSuppressionReasonATR))
             } else {
                 // we can't retry anymore, end it
                 return retryStatus.end()

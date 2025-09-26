@@ -295,7 +295,10 @@ class TestImpactAnalysisTests: XCTestCase {
     }
     
     func tiaRunner(skip: [String], tests: KeyValuePairs<String, Mocks.Runner.TestMethod>) -> (Mocks.Runner, TestImpactAnalysis, Mocks.CoverageCollector) {
-        let skipped = SkipTests(correlationId: "abacaba", tests: skip.map { .init(name: $0, suite: "TIASuite") })
+        let skipped = SkipTests(correlationId: "abacaba",
+                                tests: skip.map { .init(name: $0,
+                                                        suite: "TIASuite",
+                                                        configuration: ["test.bundle": "TIAModule"]) })
         let collector = Mocks.CoverageCollector()
         let tia = TestImpactAnalysis(tests: skipped, coverage: Mocks.CoverageCollector())
         return (Mocks.Runner(features: [tia, RetryAndSkipTags()], tests: ["TIAModule": ["TIASuite": tests]]), tia, collector)

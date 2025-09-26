@@ -135,12 +135,12 @@ extension Mocks {
             features.testGroupWillStart(for: group.name, in: suite)
             
             var skip: (by: (feature: FeatureId, reason: String)?, status: SkipStatus) = (nil, config.skipStatus)
-            if let feature = feature, config.skipStatus.isSkipped {
-                skip.by = (feature.id, config.skipReason)
+            if let feature = feature, case .skip(reason: let reason, _) = config {
+                skip.by = (feature.id, reason)
             }
             
             var info = TestRunInfoEnd(skip: skip,
-                                      retry: (nil, .end(.init())),
+                                      retry: (nil, .end(errors: .unsuppressed)),
                                       executions: (0, 0))
             
             if let by = skip.by {
@@ -193,7 +193,7 @@ extension Mocks {
                                                                  withStatus: result.status, andInfo: info)
             
             if !retryStatus.ignoreErrors {
-                test.errorStatus = .unsuppressed(by: feature?.id ?? "default")
+                test.errorStatus = .unsuppressed(by: feature?.id ?? .notFeature)
             }
             
             // update info with the new retry
@@ -219,9 +219,9 @@ extension Mocks {
 extension TestRunInfoEnd {
     var startInfo: TestRunInfoStart {
         .init(skip: skip,
-              retry: retry.feature.map { (feature: $0,
-                                          reason: retry.status.retryReason,
-                                          errorsWasSuppressed: retry.status.ignoreErrors) },
+              retry: retry.feature.flatMap { id in retry.status.retryReason.map { (id, $0) } }.map {
+                  (feature: $0, reason: $1, errors: retry.status.errorsStatus)
+              },
               executions: executions)
     }
 }

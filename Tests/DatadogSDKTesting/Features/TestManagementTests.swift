@@ -18,6 +18,9 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["disabledTest"]?.runs.count, 1)
         XCTAssertEqual(tests["disabledTest"]?.runs.filter { $0.status == .skip }.count, 1)
         XCTAssertEqual(tests["disabledTest"]?.runs.filter { $0.xcStatus == .skip }.count, 1)
+        XCTAssertEqual(tests["disabledTest"]?.runs.filter {
+            $0.tags[DDTestTags.testFailureSuppressionReason] == nil
+        }.count, 1)
         XCTAssertEqual(tests["disabledTest"]?.isSucceeded, false)
         XCTAssertEqual(tests["disabledTest"]?.isSkipped, true)
         
@@ -25,6 +28,9 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.xcStatus == .fail }.count, 1)
+        XCTAssertEqual(tests["someTest"]?.runs.filter {
+            $0.tags[DDTestTags.testFailureSuppressionReason] == nil
+        }.count, 1)
         XCTAssertEqual(tests["someTest"]?.isSucceeded, false)
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
     }
@@ -38,6 +44,9 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["quarantinedTest"]?.runs.count, 1)
         XCTAssertEqual(tests["quarantinedTest"]?.runs.filter { $0.status == .fail }.count, 1)
         XCTAssertEqual(tests["quarantinedTest"]?.runs.filter { $0.xcStatus == .pass }.count, 1)
+        XCTAssertEqual(tests["quarantinedTest"]?.runs.filter {
+            $0.tags[DDTestTags.testFailureSuppressionReason] == DDTagValues.failureSuppressionReasonQuarantine
+        }.count, 1)
         XCTAssertEqual(tests["quarantinedTest"]?.isSucceeded, true)
         XCTAssertEqual(tests["quarantinedTest"]?.isSkipped, false)
         
@@ -45,6 +54,9 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.xcStatus == .fail }.count, 1)
+        XCTAssertEqual(tests["someTest"]?.runs.filter {
+            $0.tags[DDTestTags.testFailureSuppressionReason] == nil
+        }.count, 1)
         XCTAssertEqual(tests["someTest"]?.isSucceeded, false)
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
     }
@@ -61,6 +73,9 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["quarantinedTest"]?.runs.filter { $0.xcStatus == .pass }.count, 5)
         XCTAssertEqual(tests["quarantinedTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 4)
         XCTAssertEqual(tests["quarantinedTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonAutoTestRetry }.count, 4)
+        XCTAssertEqual(tests["quarantinedTest"]?.runs.filter {
+            $0.tags[DDTestTags.testFailureSuppressionReason] == DDTagValues.failureSuppressionReasonATR
+        }.count, 4)
         XCTAssertNil(tests["quarantinedTest"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries])
         XCTAssertEqual(tests["quarantinedTest"]?.isSucceeded, true)
         XCTAssertEqual(tests["quarantinedTest"]?.isSkipped, false)
@@ -74,6 +89,9 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 5)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonAutoTestRetry }.count, 5)
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries], "true")
+        XCTAssertEqual(tests["someTest"]?.runs.filter {
+            $0.tags[DDTestTags.testFailureSuppressionReason] == DDTagValues.failureSuppressionReasonATR
+        }.count, 5)
         XCTAssertEqual(tests["someTest"]?.isSucceeded, false)
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
     }
@@ -90,6 +108,12 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["quarantinedTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 5)
         XCTAssertEqual(tests["quarantinedTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonAutoTestRetry }.count, 5)
         XCTAssertEqual(tests["quarantinedTest"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries], "true")
+        XCTAssertEqual(tests["quarantinedTest"]?.runs.filter {
+            $0.tags[DDTestTags.testFailureSuppressionReason] == DDTagValues.failureSuppressionReasonATR
+        }.count, 5)
+        XCTAssertEqual(tests["quarantinedTest"]?.runs.filter {
+            $0.tags[DDTestTags.testFailureSuppressionReason] == DDTagValues.failureSuppressionReasonQuarantine
+        }.count, 1)
         XCTAssertEqual(tests["quarantinedTest"]?.isSucceeded, true)
         XCTAssertEqual(tests["quarantinedTest"]?.isSkipped, false)
         
@@ -102,6 +126,9 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 5)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonAutoTestRetry }.count, 5)
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries], "true")
+        XCTAssertEqual(tests["someTest"]?.runs.filter {
+            $0.tags[DDTestTags.testFailureSuppressionReason] == DDTagValues.failureSuppressionReasonATR
+        }.count, 5)
         XCTAssertEqual(tests["someTest"]?.isSucceeded, false)
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
     }
@@ -119,6 +146,9 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonAttemptToFix }.count, 19)
         XCTAssertNil(tests["atfTest"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries])
         XCTAssertEqual(tests["atfTest"]?.runs.last?.tags[DDTestManagementTags.testAttemptToFixPassed], "true")
+        XCTAssertEqual(tests["atfTest"]?.runs.filter {
+            $0.tags[DDTestTags.testFailureSuppressionReason] == nil
+        }.count, 20)
         XCTAssertEqual(tests["atfTest"]?.isSucceeded, true)
         XCTAssertEqual(tests["atfTest"]?.isSkipped, false)
         
@@ -131,6 +161,9 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 5)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonAutoTestRetry }.count, 5)
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries], "true")
+        XCTAssertEqual(tests["someTest"]?.runs.filter {
+            $0.tags[DDTestTags.testFailureSuppressionReason] == DDTagValues.failureSuppressionReasonATR
+        }.count, 5)
         XCTAssertEqual(tests["someTest"]?.isSucceeded, false)
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
     }
@@ -150,6 +183,9 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonAttemptToFix }.count, 19)
         XCTAssertNil(tests["atfTest"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries])
         XCTAssertEqual(tests["atfTest"]?.runs.last?.tags[DDTestManagementTags.testAttemptToFixPassed], "false")
+        XCTAssertEqual(tests["atfTest"]?.runs.filter {
+            $0.tags[DDTestTags.testFailureSuppressionReason] == nil
+        }.count, 20)
         XCTAssertEqual(tests["atfTest"]?.isSucceeded, false)
         XCTAssertEqual(tests["atfTest"]?.isSkipped, false)
         
@@ -162,6 +198,9 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 5)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonAutoTestRetry }.count, 5)
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries], "true")
+        XCTAssertEqual(tests["someTest"]?.runs.filter {
+            $0.tags[DDTestTags.testFailureSuppressionReason] == DDTagValues.failureSuppressionReasonATR
+        }.count, 5)
         XCTAssertEqual(tests["someTest"]?.isSucceeded, false)
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
     }
@@ -181,6 +220,9 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonAttemptToFix }.count, 19)
         XCTAssertNil(tests["atfTest"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries])
         XCTAssertEqual(tests["atfTest"]?.runs.last?.tags[DDTestManagementTags.testAttemptToFixPassed], "false")
+        XCTAssertEqual(tests["atfTest"]?.runs.filter {
+            $0.tags[DDTestTags.testFailureSuppressionReason] == DDTagValues.failureSuppressionReasonDisabled
+        }.count, 3)
         XCTAssertEqual(tests["atfTest"]?.isSucceeded, true)
         XCTAssertEqual(tests["atfTest"]?.isSkipped, false)
         
@@ -193,6 +235,9 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 5)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonAutoTestRetry }.count, 5)
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries], "true")
+        XCTAssertEqual(tests["someTest"]?.runs.filter {
+            $0.tags[DDTestTags.testFailureSuppressionReason] == DDTagValues.failureSuppressionReasonATR
+        }.count, 5)
         XCTAssertEqual(tests["someTest"]?.isSucceeded, false)
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
     }

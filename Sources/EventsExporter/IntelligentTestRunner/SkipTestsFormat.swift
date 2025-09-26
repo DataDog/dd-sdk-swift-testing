@@ -64,7 +64,7 @@ struct SkipTestsResponseFormat: Decodable {
         let name: String
         let parameters: String?
         let suite: String
-        let configuration: [String: JSONGeneric]?
+        let configurations: [String: JSONGeneric]?
     }
 
     struct SkipTestsResponseData: Decodable {

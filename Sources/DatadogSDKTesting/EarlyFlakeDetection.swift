@@ -92,7 +92,7 @@ final class EarlyFlakeDetection: TestHooksFeature {
         if info.executions.total < Int(repeats) - 1 {
             // We can retry test
             return retryStatus.retry(reason: DDTagValues.retryReasonEarlyFlakeDetection,
-                                     ignoreErrors: true)
+                                     errors: .suppressed(reason: DDTagValues.failureSuppressionReasonEFD))
         } else {
             if repeats == 0 {
                 // Test is too long. EFD failed
@@ -104,7 +104,7 @@ final class EarlyFlakeDetection: TestHooksFeature {
                 return retryStatus.end()
             } else {
                 // We have at least one succeded. Pass
-                return retryStatus.end(ignoreErrors: true)
+                return retryStatus.end(errors: .suppressed(reason: DDTagValues.failureSuppressionReasonEFD))
             }
         }
     }

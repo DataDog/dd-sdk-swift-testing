@@ -29,6 +29,9 @@ final class RetryAndSkipTags: TestHooksFeature {
                 test.set(tag: DDTestTags.testHasFailedAllRetries, value: "true")
             }
         }
+        if status == .fail, case .suppressed(reason: let reason) = info.retry.status.errorsStatus {
+            test.set(tag: DDTestTags.testFailureSuppressionReason, value: reason)
+        }
     }
     
     func stop() {}

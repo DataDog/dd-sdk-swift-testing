@@ -75,40 +75,35 @@ protocol FeatureFactory {
 
 enum RetryGroupConfiguration: Equatable, Hashable {
     struct Configuration: Equatable, Hashable {
-        let skipReason: String
         let skipStatus: SkipStatus
         let skipStrategy: RetryGroupSkipStrategy
         let successStrategy: RetryGroupSuccessStrategy
         
-        init(skipReason: String = "",
-             skipStatus: SkipStatus = .normalRun,
+        init(skipStatus: SkipStatus = .normalRun,
              skipStrategy: RetryGroupSkipStrategy = .allSkipped,
              successStrategy: RetryGroupSuccessStrategy = .allSucceeded)
         {
-            self.skipReason = skipReason
             self.skipStatus = skipStatus
             self.skipStrategy = skipStrategy
             self.successStrategy = successStrategy
         }
         
-        func updated(skipReason: String? = nil,
-                     skipStatus: SkipStatus? = nil,
+        func updated(skipStatus: SkipStatus? = nil,
                      skipStrategy: RetryGroupSkipStrategy? = nil,
                      successStrategy: RetryGroupSuccessStrategy? = nil) -> Self
         {
-            .init(skipReason: skipReason ?? self.skipReason,
-                  skipStatus: skipStatus ?? self.skipStatus,
+            .init(skipStatus: skipStatus ?? self.skipStatus,
                   skipStrategy: skipStrategy ?? self.skipStrategy,
                   successStrategy: successStrategy ?? self.successStrategy)
         }
     }
     
-    case skip(Configuration)
+    case skip(reason: String, configuration: Configuration)
     case retry(Configuration)
     
     var configuration: Configuration {
         switch self {
-        case .skip(let config): return config
+        case .skip(_, let config): return config
         case .retry(let config): return config
         }
     }
@@ -127,7 +122,12 @@ enum RetryGroupConfiguration: Equatable, Hashable {
         }
     }
     
-    var skipReason: String { configuration.skipReason }
+    var skipReason: String? {
+        switch self {
+        case .skip(reason: let reason, configuration: _): return reason
+        default: return nil
+        }
+    }
     var skipStatus: SkipStatus { configuration.skipStatus }
     var skipStrategy: RetryGroupSkipStrategy { configuration.skipStrategy }
     var successStrategy: RetryGroupSuccessStrategy { configuration.successStrategy }
@@ -176,15 +176,13 @@ extension RetryGroupConfiguration {
         var skipStrategy: RetryGroupSkipStrategy { configuration.skipStrategy }
         var successStrategy: RetryGroupSuccessStrategy { configuration.successStrategy }
         
-        func next(skipReason: String? = nil,
-                  skipStatus: SkipStatus? = nil,
+        func next(skipStatus: SkipStatus? = nil,
                   skipStrategy: RetryGroupSkipStrategy? = nil,
                   successStrategy: RetryGroupSuccessStrategy? = nil) -> Self
         {
             switch self {
             case .next(configuration: let conf):
-                return .next(configuration: conf.updated(skipReason: skipReason,
-                                                         skipStatus: skipStatus,
+                return .next(configuration: conf.updated(skipStatus: skipStatus,
                                                          skipStrategy: skipStrategy,
                                                          successStrategy: successStrategy))
             default: return self
@@ -194,9 +192,9 @@ extension RetryGroupConfiguration {
         func skip(reason: String, status: SkipStatus, strategy skip: RetryGroupSkipStrategy) -> Self {
             switch self {
             case .next(configuration: let conf):
-                return .stop(configuration: .skip(conf.updated(skipReason: reason,
-                                                               skipStatus: status,
-                                                               skipStrategy: skip)))
+                return .stop(configuration: .skip(reason: reason,
+                                                  configuration: conf.updated(skipStatus: status,
+                                                                              skipStrategy: skip)))
             default: return self
             }
             
@@ -250,29 +248,23 @@ struct SkipStatus: Equatable, Hashable {
 }
 
 enum RetryStatus: Equatable, Hashable {
-    struct Configuration: Equatable, Hashable {
-        // Ingore errors or record them
-        let ignoreErrors: Bool
+    enum ErrorsStatus: Equatable, Hashable {
+        case suppressed(reason: String)
+        case unsuppressed
         
-        // Reason for retry
-        let retryReason: String
-        
-        init(ignoreErrors: Bool = false, retryReason: String = "") {
-            self.ignoreErrors = ignoreErrors
-            self.retryReason = retryReason
-        }
-        
-        func updated(ignoreErrors: Bool? = nil, retryReason: String? = nil) -> Self {
-            .init(ignoreErrors: ignoreErrors ?? self.ignoreErrors,
-                  retryReason: retryReason ?? self.retryReason)
+        var ignore: Bool {
+            switch self {
+            case .suppressed: return true
+            case .unsuppressed: return false
+            }
         }
     }
     
     /// Stop retries.
-    case end(Configuration)
+    case end(errors: ErrorsStatus)
     
     /// Retry current test more.
-    case retry(Configuration)
+    case retry(reason: String, errors: ErrorsStatus)
     
     var isRetry: Bool {
         switch self {
@@ -283,26 +275,32 @@ enum RetryStatus: Equatable, Hashable {
         }
     }
     
-    var configuration: Configuration {
+    var retryReason: String? {
         switch self {
-        case .end(let conf): return conf
-        case .retry(let conf): return conf
+        case .retry(let reason, _): return reason
+        default: return nil
         }
     }
     
-    var retryReason: String { configuration.retryReason }
-    var ignoreErrors: Bool { configuration.ignoreErrors }
+    var errorsStatus: ErrorsStatus {
+        switch self {
+        case .end(errors: let status): return status
+        case .retry(reason: _, errors: let status): return status
+        }
+    }
+    
+    var ignoreErrors: Bool { errorsStatus.ignore }
 }
 
 extension RetryStatus {
     enum Iterator: Equatable, Hashable {
         /// Pass retry decision to the next feature
-        case next(configuration: RetryStatus.Configuration)
+        case next(errors: ErrorsStatus)
         /// Stop iteration.
         case stop(status: RetryStatus)
         
         init() {
-            self = .next(configuration: .init())
+            self = .next(errors: .unsuppressed)
         }
         
         var hasNext: Bool {
@@ -314,33 +312,31 @@ extension RetryStatus {
         
         var status: RetryStatus {
             switch self {
-            case .next(configuration: let config): return .end(config)
+            case .next(let status): return .end(errors: status)
             case .stop(status: let status): return status
             }
         }
         
-        func next(ignoreErrors: Bool? = nil, retryReason: String? = nil) -> Self {
+        func next(errors: ErrorsStatus? = nil) -> Self {
             switch self {
-            case .next(configuration: let config):
-                return .next(configuration: config.updated(ignoreErrors: ignoreErrors,
-                                                           retryReason: retryReason))
+            case .next(errors: let status):
+                return .next(errors: errors ?? status)
             default: return self
             }
         }
         
-        func retry(reason: String, ignoreErrors: Bool? = nil) -> Self {
+        func retry(reason: String, errors: ErrorsStatus? = nil) -> Self {
             switch self {
-            case .next(configuration: let config):
-                return .stop(status: .retry(config.updated(ignoreErrors: ignoreErrors,
-                                                           retryReason: reason)))
+            case .next(errors: let status):
+                return .stop(status: .retry(reason: reason, errors:  errors ?? status))
             default: return self
             }
         }
         
-        func end(ignoreErrors: Bool? = nil) -> Self {
+        func end(errors: ErrorsStatus? = nil) -> Self {
             switch self {
-            case .next(configuration: let config):
-                return .stop(status: .end(config.updated(ignoreErrors: ignoreErrors)))
+            case .next(errors: let status):
+                return .stop(status: .end(errors: errors ?? status))
             default: return self
             }
         }
@@ -354,7 +350,7 @@ struct TestRunInfo<RetryInfo> {
     let executions: (total: Int, failed: Int)
 }
 
-typealias TestRunInfoStart = TestRunInfo<(feature: FeatureId, reason: String, errorsWasSuppressed: Bool)?>
+typealias TestRunInfoStart = TestRunInfo<(feature: FeatureId, reason: String, errors: RetryStatus.ErrorsStatus)?>
 typealias TestRunInfoEnd = TestRunInfo<(feature: FeatureId?, status: RetryStatus)>
 
 // Default hooks implementation

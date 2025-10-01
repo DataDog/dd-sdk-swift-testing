@@ -8,7 +8,7 @@ import Foundation
 
 enum JSONGeneric {
     case string(String)
-    indirect case stringDict([String: String])
+    case stringDict([String: String])
 }
 
 extension JSONGeneric: Encodable {

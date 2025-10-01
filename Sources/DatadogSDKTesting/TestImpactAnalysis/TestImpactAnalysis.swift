@@ -10,7 +10,7 @@ internal import EventsExporter
 final class TestImpactAnalysis: TestHooksFeature {
     static var id: FeatureId = "Test Impact Analysis"
     
-    let suites: [String: Suite]
+    let modules: [String: [String: Suite]]
     let correlationId: String?
     let coverage: TestCoverageCollector?
     
@@ -25,18 +25,22 @@ final class TestImpactAnalysis: TestHooksFeature {
     
     init(tests: SkipTests?, coverage: TestCoverageCollector?) {
         if let tests = tests { // we have skipping enabled
-            var suites = [String: Suite]()
+            var modules = [String: [String: Suite]]()
             for test in tests.tests {
-                suites.get(key: test.suite, or: Suite(name: test.suite, methods: [:])) { suite in
-                    suite.methods.get(key: test.name, or: Test(name: test.name, configurations: [])) {
-                        $0.configurations.append(Configuration(standard: test.configuration, custom: test.customConfiguration))
+                guard let moduleName = test.configuration?["test.bundle"] else { continue }
+                modules.get(key: moduleName, or: [:]) { module in
+                    module.get(key: test.suite, or: Suite(name: test.suite, methods: [:])) { suite in
+                        suite.methods.get(key: test.name, or: Test(name: test.name, configurations: [])) {
+                            $0.configurations.append(Configuration(standard: test.configuration,
+                                                                   custom: test.customConfiguration))
+                        }
                     }
                 }
             }
-            self.suites = suites
+            self.modules = modules
             self.correlationId = tests.correlationId
         } else { // we will only try to gather code coverage
-            self.suites = [:]
+            self.modules = [:]
             self.correlationId = nil
         }
         self.unskippableCache = .init([:])
@@ -44,11 +48,11 @@ final class TestImpactAnalysis: TestHooksFeature {
         self.coverage = coverage
     }
     
-    func status(for clazz: UnskippableMethodCheckerFactory, named test: String, in suite: String) -> SkipStatus {
+    func status(for clazz: UnskippableMethodCheckerFactory, named test: String, suite: String, module: String) -> SkipStatus {
         let checker = unskippableCache.update { cache in
             cache.get(key: clazz.classId, or: clazz.unskippableMethods)
         }
-        return .init(canBeSkipped: suites[suite]?[test] != nil,
+        return .init(canBeSkipped: modules[module]?[suite]?[test] != nil,
                      markedUnskippable: !checker.canSkip(method: test))
     }
     
@@ -56,7 +60,7 @@ final class TestImpactAnalysis: TestHooksFeature {
                                 in suite: any TestSuite,
                                 configuration: RetryGroupConfiguration.Iterator) -> RetryGroupConfiguration.Iterator
     {
-        let status = status(for: meta, named: test, in: suite.name)
+        let status = status(for: meta, named: test, suite: suite.name, module: suite.module.name)
         if status.markedUnskippable {
             suite.set(tag: DDItrTags.itrUnskippable, value: true)
         }

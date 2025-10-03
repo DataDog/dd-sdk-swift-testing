@@ -6,7 +6,7 @@
 
 import Foundation
 import OpenTelemetrySdk
-import CodeCoverage
+import CodeCoverageParser
 
 internal class CoverageExporter {
     let coverageDirectory = "com.datadog.civisibility/coverage/v1"
@@ -66,7 +66,7 @@ internal class CoverageExporter {
         requestBuilder.addFieldsCallback = addCoverage
     }
 
-    func exportCoverage(coverage: URL, processor: CoverageProcessor, workspacePath: String?,
+    func exportCoverage(coverage: URL, parser: CoverageParser, workspacePath: String?,
                         testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64)
     {
         Log.debug("Start processing coverage: \(coverage.path)")
@@ -85,18 +85,19 @@ internal class CoverageExporter {
             }
         }
         
-        switch processor.filesCovered(in: coverage) {
-        case .failure(let error):
-            Log.print("Code coverage generation failed: \(error)")
-            return
-        case .success(let info):
+        do {
+            let info = try parser.filesCovered(in: coverage)
             coverageData = TestCodeCoverage(sessionId: testSessionId,
                                             suiteId: testSuiteId,
                                             spanId: spanId,
                                             workspace: workspacePath,
                                             files: info.files.values)
             coverageStorage.writer.write(value: coverageData!)
+        } catch {
+            Log.print("Code coverage generation failed: \(error)")
+            return
         }
+        
         Log.debug("End processing coverage: \(coverage.path)")
     }
 

@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		A70B91132DF0AE19003F284F /* AutoTestRetriesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A70B91122DF0AE11003F284F /* AutoTestRetriesTests.swift */; };
 		A71119A22BA8A4F400118323 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */; };
+		A7183A782E9030630093C831 /* CodeCoverageParser in Frameworks */ = {isa = PBXBuildFile; productRef = A7183A772E9030630093C831 /* CodeCoverageParser */; };
 		A718EC2D2CBD5DCE00C5F0D9 /* EarlyFlakeDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A718EC2C2CBD5DCE00C5F0D9 /* EarlyFlakeDetection.swift */; };
 		A718EC2F2CBD73F300C5F0D9 /* CacheManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A718EC2E2CBD73F300C5F0D9 /* CacheManager.swift */; };
 		A718EC312CBE754300C5F0D9 /* KnownTestsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A718EC302CBE754300C5F0D9 /* KnownTestsService.swift */; };
@@ -74,7 +75,6 @@
 		A7CC6D862C07D624003C13BC /* Tags.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7CC6D852C07D624003C13BC /* Tags.swift */; };
 		A7CC6D882C0F3F83003C13BC /* Tags+ObjC.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7CC6D872C0F3F83003C13BC /* Tags+ObjC.swift */; };
 		A7D23AF82C9B10A8006AB41D /* SpanMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D23AF72C9B10A8006AB41D /* SpanMetadata.swift */; };
-		A7D7E6502D074D9200B49C35 /* CodeCoverage in Frameworks */ = {isa = PBXBuildFile; productRef = A7D7E64F2D074D9200B49C35 /* CodeCoverage */; };
 		A7E0056D2C766EF7004D4B78 /* CoreTelephony.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7E0056C2C766EF7004D4B78 /* CoreTelephony.framework */; platformFilters = (ios, maccatalyst, macos, ); };
 		A7E233072BC6F46F0087D8F8 /* CDatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7E232DC2BC6E68B0087D8F8 /* CDatadogSDKTesting.framework */; };
 		A7E2330F2BC6F4E70087D8F8 /* CDatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7E232DC2BC6E68B0087D8F8 /* CDatadogSDKTesting.framework */; };
@@ -572,8 +572,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				A7E2330F2BC6F4E70087D8F8 /* CDatadogSDKTesting.framework in Frameworks */,
-				A7D7E6502D074D9200B49C35 /* CodeCoverage in Frameworks */,
 				A7B2671C2DB694B000505E7B /* OpenTelemetryApi in Frameworks */,
+				A7183A782E9030630093C831 /* CodeCoverageParser in Frameworks */,
 				A7B2671E2DB694B000505E7B /* OpenTelemetrySdk in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1243,7 +1243,7 @@
 				A7FC25612BA1E83500067E26 /* Frameworks */,
 				A7FC25622BA1E83500067E26 /* Resources */,
 				A7E2332C2BC81A880087D8F8 /* Embed Frameworks */,
-				A74EB8E22D0AEAA000FAD9B8 /* Copy CodeCoverage Framework */,
+				A7488D772E902ADD00642C71 /* Copy CodeCoverageParser framework */,
 			);
 			buildRules = (
 			);
@@ -1264,6 +1264,7 @@
 				A74EB8DF2D0AE8A600FAD9B8 /* CodeCoverage */,
 				A7B267212DB694EC00505E7B /* InMemoryExporter */,
 				A7B267232DB694EC00505E7B /* URLSessionInstrumentation */,
+				A71581E62E90285B007D2FA2 /* CodeCoverageParser */,
 			);
 			productName = DatadogSDKTesting;
 			productReference = A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */;
@@ -1299,7 +1300,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				A74EB8DC2D0A00D400FAD9B8 /* PBXTargetDependency */,
+				A7183A762E90305A0093C831 /* PBXTargetDependency */,
 				A7FC26F32BA867B000067E26 /* PBXTargetDependency */,
 				A7FC26EF2BA8676A00067E26 /* PBXTargetDependency */,
 				A7E233122BC6F4E70087D8F8 /* PBXTargetDependency */,
@@ -1309,6 +1310,7 @@
 				A7D7E64F2D074D9200B49C35 /* CodeCoverage */,
 				A7B2671B2DB694B000505E7B /* OpenTelemetryApi */,
 				A7B2671D2DB694B000505E7B /* OpenTelemetrySdk */,
+				A7183A772E9030630093C831 /* CodeCoverageParser */,
 			);
 			productName = EventsExporter;
 			productReference = A7FC25802BA1E87400067E26 /* EventsExporter.framework */;
@@ -1496,24 +1498,25 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		A74EB8E22D0AEAA000FAD9B8 /* Copy CodeCoverage Framework */ = {
+		A7488D772E902ADD00642C71 /* Copy CodeCoverageParser framework */ = {
 			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputFileListPaths = (
 			);
 			inputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/CodeCoverageParser.framework",
 			);
-			name = "Copy CodeCoverage Framework";
+			name = "Copy CodeCoverageParser framework";
 			outputFileListPaths = (
 			);
 			outputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/CodeCoverageParser.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/bash;
-			shellScript = "FRAMEWORKS_DIR=\"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\nmkdir -p \"${FRAMEWORKS_DIR}\"\ncp -af \"${BUILT_PRODUCTS_DIR}/CodeCoverage.framework\" \"${FRAMEWORKS_DIR}/\"\n";
+			shellPath = /bin/sh;
+			shellScript = "mkdir -p \"`dirname \"${SCRIPT_INPUT_FILE_0}\"`\"\ncp -af \"${SCRIPT_INPUT_FILE_0}\" \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -1763,9 +1766,9 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		A74EB8DC2D0A00D400FAD9B8 /* PBXTargetDependency */ = {
+		A7183A762E90305A0093C831 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			productRef = A74EB8DB2D0A00D400FAD9B8 /* CodeCoverage */;
+			productRef = A7183A752E90305A0093C831 /* CodeCoverageParser */;
 		};
 		A74EB8DE2D0A010A00FAD9B8 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -2558,7 +2561,7 @@
 			repositoryURL = "https://github.com/DataDog/swift-code-coverage.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 1.2.0;
+				minimumVersion = 2.0.0;
 			};
 		};
 		A7E2332F2BC82CD10087D8F8 /* XCRemoteSwiftPackageReference "Kronos" */ = {
@@ -2620,10 +2623,20 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		A74EB8DB2D0A00D400FAD9B8 /* CodeCoverage */ = {
+		A71581E62E90285B007D2FA2 /* CodeCoverageParser */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = A7D7E64E2D074D9200B49C35 /* XCRemoteSwiftPackageReference "swift-code-coverage" */;
-			productName = CodeCoverage;
+			productName = CodeCoverageParser;
+		};
+		A7183A752E90305A0093C831 /* CodeCoverageParser */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A7D7E64E2D074D9200B49C35 /* XCRemoteSwiftPackageReference "swift-code-coverage" */;
+			productName = CodeCoverageParser;
+		};
+		A7183A772E9030630093C831 /* CodeCoverageParser */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A7D7E64E2D074D9200B49C35 /* XCRemoteSwiftPackageReference "swift-code-coverage" */;
+			productName = CodeCoverageParser;
 		};
 		A74EB8DD2D0A010A00FAD9B8 /* CodeCoverage */ = {
 			isa = XCSwiftPackageProductDependency;

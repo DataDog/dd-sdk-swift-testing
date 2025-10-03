@@ -5,7 +5,7 @@
  */
 
 import Foundation
-import CodeCoverage
+import CodeCoverageParser
 
 struct TestCodeCoverage: Encodable {
     let sessionId: UInt64

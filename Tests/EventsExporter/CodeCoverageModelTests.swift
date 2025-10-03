@@ -6,7 +6,7 @@
 //
 
 import XCTest
-import CodeCoverage
+import CodeCoverageParser
 @testable import EventsExporter
 
 final class CodeCoverageModelTests: XCTestCase {

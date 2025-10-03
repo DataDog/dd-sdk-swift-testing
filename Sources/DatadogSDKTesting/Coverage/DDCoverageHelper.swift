@@ -19,7 +19,7 @@ protocol TestCoverageCollector: Feature {
 final class DDCoverageHelper: TestCoverageCollector {
     static var id: FeatureId = "Coverage Helper"
     
-    let collector: CoverageCollector
+    let processor: CoverageProcessor
     let exporter: EventsExporterProtocol
     let workspacePath: String?
 
@@ -29,7 +29,7 @@ final class DDCoverageHelper: TestCoverageCollector {
 
     init?(storagePath: Directory, exporter: EventsExporterProtocol, workspacePath: String?, priority: CodeCoveragePriority, debug: Bool) {
         do {
-            self.collector = try CoverageCollector(for: PlatformUtils.xcodeVersion, temp: storagePath.url)
+            self.processor = try CoverageProcessor(for: PlatformUtils.xcodeVersion, temp: storagePath.url)
             self.debug = debug
             self.storagePath = storagePath
             self.exporter = exporter
@@ -46,7 +46,7 @@ final class DDCoverageHelper: TestCoverageCollector {
     
     func startTest() {
         do {
-            try collector.startCoverageGathering()
+            try processor.startCoverageGathering()
         } catch {
             Log.debug("Can't start coverage gathering, error: \(error)")
         }
@@ -55,7 +55,7 @@ final class DDCoverageHelper: TestCoverageCollector {
     func endTest(testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64) {
         let file: URL
         do {
-            file = try collector.stopCoverageGathering()
+            file = try processor.stopCoverageGathering()
         } catch {
             Log.debug("Coverage gathering error: \(error)")
             return
@@ -64,7 +64,7 @@ final class DDCoverageHelper: TestCoverageCollector {
             guard FileManager.default.fileExists(atPath: file.path) else {
                 return
             }
-            self.exporter.export(coverage: file, processor: self.collector.processor, workspacePath: self.workspacePath,
+            self.exporter.export(coverage: file, parser: self.processor.parser, workspacePath: self.workspacePath,
                                  testSessionId: testSessionId, testSuiteId: testSuiteId, spanId: spanId)
         }
     }
@@ -148,10 +148,12 @@ final class DDCoverageHelper: TestCoverageCollector {
         // if not continuous mode then save all data
         if !llvmProfilePath.contains(exactWord: "%c") {
             // Save all profiling data
-            binaries.forEach { $0.write() }
+            binaries.writeCoverage()
         }
         // Locate profraw file
-        guard let llvmProfileUrl = CoverageCollector.currentCoverageFileURL else { return nil }
+        guard let llvmProfileUrl = CoverageParser.initialCoverageFileURL(coverageFilePath: llvmProfilePath) else {
+            return nil
+        }
         // Get total coverage
         let coverage = DDCoverageHelper.getModuleCoverage(profrawFile: llvmProfileUrl,
                                                           binaryImagePaths: binaries.map { $0.path })

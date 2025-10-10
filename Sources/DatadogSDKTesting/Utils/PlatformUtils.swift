@@ -173,14 +173,13 @@ struct PlatformUtils {
     
     static var xcodeVersion: XcodeVersion {
         guard let version = Int(getXcodeVersion(), radix: 10) else {
-            return .xcode16_3
+            return .xcode26
         }
         switch version {
-        case 1400..<1500: return .xcode14
-        case 1500..<1600: return .xcode15
         case 1600..<1630: return .xcode16_0
         case 1630..<1700: return .xcode16_3
-        default: return .xcode16_3
+        case 2600..<2700: return .xcode26
+        default: return .xcode26
         }
     }
 }

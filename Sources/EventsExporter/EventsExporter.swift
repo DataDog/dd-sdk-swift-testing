@@ -6,14 +6,14 @@
 
 import Foundation
 import OpenTelemetrySdk
-import CodeCoverage
+import CodeCoverageParser
 
 public protocol EventsExporterProtocol: SpanExporter {
     var endpointURLs: Set<String> { get }
     
     func exportEvent<T: Encodable>(event: T)
     func searchCommits(repositoryURL: String, commits: [String]) -> [String]
-    func export(coverage: URL, processor: CoverageProcessor, workspacePath: String?,
+    func export(coverage: URL, parser: CoverageParser, workspacePath: String?,
                 testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64)
     func uploadPackFiles(packFilesDirectory: Directory, commit: String, repository: String) throws
     func skippableTests(repositoryURL: String, sha: String, testLevel: ITRTestLevel,
@@ -88,10 +88,10 @@ public class EventsExporter: EventsExporterProtocol {
         return .success
     }
 
-    public func export(coverage: URL, processor: CoverageProcessor, workspacePath: String?,
+    public func export(coverage: URL, parser: CoverageParser, workspacePath: String?,
                        testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64)
     {
-        coverageExporter.exportCoverage(coverage: coverage, processor: processor, workspacePath: workspacePath,
+        coverageExporter.exportCoverage(coverage: coverage, parser: parser, workspacePath: workspacePath,
                                         testSessionId: testSessionId, testSuiteId: testSuiteId, spanId: spanId)
     }
 

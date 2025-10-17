@@ -204,6 +204,8 @@ internal class DDTestMonitor {
         tia?.stop()
         knownTests?.stop()
         testManagement?.stop()
+        DDTestMonitor.tracer.flush()
+        let _ = DDTestMonitor.tracer.eventsExporter?.flush()
         gitUploadQueue.waitUntilAllOperationsAreFinished()
     }
 

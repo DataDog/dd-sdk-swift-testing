@@ -121,7 +121,7 @@ github_release: release
 	@rm -f build/symbols/DatadogSDKTesting.symbols.zip
 	@mv build/symbols/DatadogSDKTesting.zip build/symbols/DatadogSDKTesting.symbols.zip
 	# make github release
-	@gh release create $(version) --draft --verify-tag --generate-notes \
+	@gh release create $(version) --prerelease --verify-tag --generate-notes \
 		build/xcframework/DatadogSDKTesting.zip build/symbols/DatadogSDKTesting.symbols.zip
 
 publish_pod:

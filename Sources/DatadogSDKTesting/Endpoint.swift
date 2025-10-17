@@ -31,8 +31,6 @@ public enum Endpoint {
     case staging
     // Datadog path scheme compatible server
     case other(testsBaseURL: URL, logsBaseURL: URL)
-    /// Fully-custom user-defined server.
-    case custom(testsURL: URL, logsURL: URL)
     
     internal var exporterEndpoint: EventsExporter.Endpoint {
         switch self {
@@ -43,7 +41,6 @@ public enum Endpoint {
         case .ap1: return .ap1
         case .staging: return .staging
         case let .other(testsBaseURL: tURL, logsBaseURL: lURL): return .other(testsBaseURL: tURL, logsBaseURL: lURL)
-        case let .custom(testsURL: tURL, logsURL: lURL): return .custom(testsURL: tURL, logsURL: lURL)
         }
     }
 }

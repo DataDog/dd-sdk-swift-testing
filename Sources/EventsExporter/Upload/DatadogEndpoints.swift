@@ -30,8 +30,6 @@ public enum Endpoint: CustomDebugStringConvertible {
     case staging
     // Datadog path scheme compatible server
     case other(testsBaseURL: URL, logsBaseURL: URL)
-    /// Fully-custom user-defined server.
-    case custom(testsURL: URL, logsURL: URL)
     
     internal var logsURL: URL {
         let endpoint = "/api/v2/logs"
@@ -43,7 +41,6 @@ public enum Endpoint: CustomDebugStringConvertible {
         case .ap1: return URL(string: "https://logs.browser-intake-ap1-datadoghq.com" + endpoint)!
         case .staging: return URL(string: "https://logs.browser-intake-datad0g.com" + endpoint)!
         case let .other(testsBaseURL: _, logsBaseURL: url): return url.appendingPathComponent(endpoint)
-        case let .custom(_, logsURL: logsUrl): return logsUrl
         }
     }
     
@@ -57,7 +54,6 @@ public enum Endpoint: CustomDebugStringConvertible {
         case .ap1: return URL(string: "https://citestcycle-intake.ap1.datadoghq.com" + endpoint)!
         case .staging: return URL(string: "https://citestcycle-intake.datad0g.com" + endpoint)!
         case let .other(testsBaseURL: url, logsBaseURL: _): return url.appendingPathComponent(endpoint)
-        case let .custom(testsURL: testsURL, _): return testsURL
         }
     }
     
@@ -71,7 +67,6 @@ public enum Endpoint: CustomDebugStringConvertible {
         case .ap1: return URL(string: "https://event-platform-intake.ap1.datadoghq.com" + endpoint)!
         case .staging: return URL(string: "https://event-platform-intake.datad0g.com" + endpoint)!
         case let .other(testsBaseURL: url, logsBaseURL: _): return url.appendingPathComponent(endpoint)
-        case let .custom(testsURL: testsURL, _): return testsURL
         }
     }
     
@@ -79,7 +74,6 @@ public enum Endpoint: CustomDebugStringConvertible {
         let endpoint = "/api/v2/git/repository/search_commits"
         switch self {
         case let .other(testsBaseURL: url, logsBaseURL: _): return url.appendingPathComponent(endpoint)
-        case let .custom(testsURL: testsURL, _): return testsURL
         default: return mainApi(endpoint: endpoint)!
         }
     }
@@ -88,7 +82,6 @@ public enum Endpoint: CustomDebugStringConvertible {
         let endpoint = "/api/v2/ci/tests/skippable"
         switch self {
         case let .other(testsBaseURL: url, logsBaseURL: _): return url.appendingPathComponent(endpoint)
-        case let .custom(testsURL: testsURL, _): return testsURL
         default: return mainApi(endpoint: endpoint)!
         }
     }
@@ -97,7 +90,6 @@ public enum Endpoint: CustomDebugStringConvertible {
         let endpoint = "/api/v2/git/repository/packfile"
         switch self {
         case let .other(testsBaseURL: url, logsBaseURL: _): return url.appendingPathComponent(endpoint)
-        case let .custom(testsURL: testsURL, _): return testsURL
         default: return mainApi(endpoint: endpoint)!
         }
     }
@@ -106,7 +98,6 @@ public enum Endpoint: CustomDebugStringConvertible {
         let endpoint = "/api/v2/libraries/tests/services/setting"
         switch self {
         case let .other(testsBaseURL: url, logsBaseURL: _): return url.appendingPathComponent(endpoint)
-        case let .custom(testsURL: testsURL, _): return testsURL
         default: return mainApi(endpoint: endpoint)!
         }
     }
@@ -115,7 +106,6 @@ public enum Endpoint: CustomDebugStringConvertible {
         let endpoint = "/api/v2/ci/libraries/tests"
         switch self {
         case let .other(testsBaseURL: url, logsBaseURL: _): return url.appendingPathComponent(endpoint)
-        case let .custom(testsURL: testsURL, _): return testsURL
         default: return mainApi(endpoint: endpoint)!
         }
     }
@@ -124,7 +114,6 @@ public enum Endpoint: CustomDebugStringConvertible {
         let endpoint = "/api/v2/test/libraries/test-management/tests"
         switch self {
         case let .other(testsBaseURL: url, logsBaseURL: _): return url.appendingPathComponent(endpoint)
-        case let .custom(testsURL: testsURL, _): return testsURL
         default: return mainApi(endpoint: endpoint)!
         }
     }
@@ -138,7 +127,6 @@ public enum Endpoint: CustomDebugStringConvertible {
         case .ap1: return "ap1"
         case .staging: return "staging"
         case let .other(testsBaseURL: tUrl, logsBaseURL: lUrl): return "other(tests: \(tUrl), logs: \(lUrl))"
-        case let .custom(testsURL: tUrl, logsURL: lUrl): return "custom(tests: \(tUrl), logs: \(lUrl))"
         }
     }
     

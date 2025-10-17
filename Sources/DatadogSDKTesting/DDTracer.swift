@@ -95,7 +95,7 @@ internal class DDTracer {
         let payloadCompression: Bool
         // When reporting tests to local server
         switch conf.endpoint {
-        case let .custom(testsURL: tURL, logsURL: _), let .other(testsBaseURL: tURL, logsBaseURL: _):
+        case let .other(testsBaseURL: tURL, logsBaseURL: _):
             payloadCompression = false
             Log.print("Reporting tests to \(tURL.absoluteURL)")
         default: payloadCompression = true

@@ -19,30 +19,9 @@ class EventsExporterTests: XCTestCase {
     }
 
     func testWhenExportSpanIsCalled_thenTraceAndLogsAreUploaded() throws {
-        var logsSent = false
-        var tracesSent = false
-        let expecTrace = expectation(description: "trace received")
-        expecTrace.assertForOverFulfill = false
-        let expecLog = expectation(description: "logs received")
-        expecLog.assertForOverFulfill = false
-
-        let server = HttpTestServer(url: URL(string: "http://127.0.0.1:33333"),
-                                    config: HttpTestServerConfig(tracesReceivedCallback: {
-                                                                     tracesSent = true
-                                                                     expecTrace.fulfill()
-                                                                 },
-                                                                 logsReceivedCallback: {
-                                                                     logsSent = true
-                                                                     expecLog.fulfill()
-                                                                 }))
-        DispatchQueue.global(qos: .default).async {
-            do {
-                try server.start()
-            } catch {
-                XCTFail()
-                return
-            }
-        }
+        let server = HttpTestServer(url: URL(string: "http://127.0.0.1:33333"))
+        try server.start()
+        
         let instrumentationLibraryName = "SimpleExporter"
         let instrumentationLibraryVersion = "semver:0.1.0"
 
@@ -52,9 +31,9 @@ class EventsExporterTests: XCTestCase {
                                                           environment: "environment",
                                                           hostname: "hostname",
                                                           apiKey: "apikey",
-                                                          endpoint: Endpoint.custom(
-                                                              testsURL: URL(string: "http://127.0.0.1:33333/traces")!,
-                                                              logsURL: URL(string: "http://127.0.0.1:33333/logs")!
+                                                          endpoint: .other(
+                                                            testsBaseURL: URL(string: "http://127.0.0.1:33333")!,
+                                                            logsBaseURL: URL(string: "http://127.0.0.1:33333")!
                                                           ),
                                                           metadata: .init(),
                                                           exporterId: "exporterId",
@@ -73,17 +52,25 @@ class EventsExporterTests: XCTestCase {
 
         simpleSpan(tracer: tracer)
         spanProcessor.shutdown()
-
-        let result = XCTWaiter().wait(for: [expecTrace, expecLog], timeout: 20, enforceOrder: false)
-
-        if result == .completed {
-            XCTAssertTrue(logsSent)
-            XCTAssertTrue(tracesSent)
-        } else {
-            XCTFail()
+        
+        var logsSent = false
+        var tracesSent = false
+        while !(tracesSent && logsSent) {
+            guard let request = server.waitForRequest(timeout: 20, remove: true) else {
+                server.stop()
+                XCTFail("Request not received")
+                return
+            }
+            if request.head.uri.hasPrefix("/api/v2/citestcycle") {
+                tracesSent = true
+            } else if request.head.uri.hasPrefix("/api/v2/logs") {
+                logsSent = true
+            }
         }
-
         server.stop()
+        
+        XCTAssertTrue(logsSent)
+        XCTAssertTrue(tracesSent)
     }
 
     private func simpleSpan(tracer: TracerSdk) {

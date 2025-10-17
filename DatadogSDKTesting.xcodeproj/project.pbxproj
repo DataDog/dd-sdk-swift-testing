@@ -225,8 +225,6 @@
 		A7FC26D12BA214CE00067E26 /* SimpleSpanData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7FC26D02BA214CE00067E26 /* SimpleSpanData.swift */; };
 		A7FC26DE2BA21B7D00067E26 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */; };
 		A7FC26DF2BA21B7D00067E26 /* DatadogSDKTesting.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		A7FC26EB2BA866BB00067E26 /* NIO in Frameworks */ = {isa = PBXBuildFile; productRef = A7FC26EA2BA866BB00067E26 /* NIO */; };
-		A7FC26ED2BA866D000067E26 /* NIOHTTP1 in Frameworks */ = {isa = PBXBuildFile; productRef = A7FC26EC2BA866D000067E26 /* NIOHTTP1 */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -584,8 +582,6 @@
 			files = (
 				A7B39C6C2BCFC799007F98B2 /* CDatadogSDKTesting.framework in Frameworks */,
 				A7FC25882BA1E87400067E26 /* EventsExporter.framework in Frameworks */,
-				A7FC26ED2BA866D000067E26 /* NIOHTTP1 in Frameworks */,
-				A7FC26EB2BA866BB00067E26 /* NIO in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1327,13 +1323,9 @@
 			dependencies = (
 				A7B39C6E2BCFC7CE007F98B2 /* PBXTargetDependency */,
 				A7FC258A2BA1E87400067E26 /* PBXTargetDependency */,
-				A7FC26E82BA8653D00067E26 /* PBXTargetDependency */,
-				A7FC26E62BA864FB00067E26 /* PBXTargetDependency */,
 			);
 			name = EventsExporterTests;
 			packageProductDependencies = (
-				A7FC26EA2BA866BB00067E26 /* NIO */,
-				A7FC26EC2BA866D000067E26 /* NIOHTTP1 */,
 			);
 			productName = EventsExporterTests;
 			productReference = A7FC25872BA1E87400067E26 /* EventsExporterTests.xctest */;
@@ -1422,7 +1414,6 @@
 			packageReferences = (
 				E1FB4839253891650083B263 /* XCRemoteSwiftPackageReference "plcrashreporter" */,
 				E17B7AA6253F02580081D7F3 /* XCRemoteSwiftPackageReference "SigmaSwiftStatistics" */,
-				E141EB5727EB44400057D747 /* XCRemoteSwiftPackageReference "swift-nio" */,
 				A7E2332F2BC82CD10087D8F8 /* XCRemoteSwiftPackageReference "Kronos" */,
 				A7D7E64E2D074D9200B49C35 /* XCRemoteSwiftPackageReference "swift-code-coverage" */,
 				A7B2671A2DB694B000505E7B /* XCRemoteSwiftPackageReference "opentelemetry-swift" */,
@@ -1806,14 +1797,6 @@
 			isa = PBXTargetDependency;
 			target = A7FC26A72BA20A6500067E26 /* IntegrationTestsApp */;
 			targetProxy = A7FC26C62BA20D1200067E26 /* PBXContainerItemProxy */;
-		};
-		A7FC26E62BA864FB00067E26 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			productRef = A7FC26E52BA864FB00067E26 /* NIO */;
-		};
-		A7FC26E82BA8653D00067E26 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			productRef = A7FC26E72BA8653D00067E26 /* NIOHTTP1 */;
 		};
 		A7FC26EF2BA8676A00067E26 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -2578,14 +2561,6 @@
 				minimumVersion = 1.12.1;
 			};
 		};
-		E141EB5727EB44400057D747 /* XCRemoteSwiftPackageReference "swift-nio" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/apple/swift-nio.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.0.0;
-			};
-		};
 		E157A719256E9D1D00CBCA52 /* XCRemoteSwiftPackageReference "plcrashreporter" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/microsoft/plcrashreporter.git";
@@ -2665,26 +2640,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A7E2332F2BC82CD10087D8F8 /* XCRemoteSwiftPackageReference "Kronos" */;
 			productName = Kronos;
-		};
-		A7FC26E52BA864FB00067E26 /* NIO */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E141EB5727EB44400057D747 /* XCRemoteSwiftPackageReference "swift-nio" */;
-			productName = NIO;
-		};
-		A7FC26E72BA8653D00067E26 /* NIOHTTP1 */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E141EB5727EB44400057D747 /* XCRemoteSwiftPackageReference "swift-nio" */;
-			productName = NIOHTTP1;
-		};
-		A7FC26EA2BA866BB00067E26 /* NIO */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E141EB5727EB44400057D747 /* XCRemoteSwiftPackageReference "swift-nio" */;
-			productName = NIO;
-		};
-		A7FC26EC2BA866D000067E26 /* NIOHTTP1 */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E141EB5727EB44400057D747 /* XCRemoteSwiftPackageReference "swift-nio" */;
-			productName = NIOHTTP1;
 		};
 		A7FC26EE2BA8676A00067E26 /* OpenTelemetrySdk */ = {
 			isa = XCSwiftPackageProductDependency;

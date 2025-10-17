@@ -19,23 +19,8 @@ class SpansExporterTests: XCTestCase {
     }
 
     func testWhenExportSpanIsCalled_thenTraceIsUploaded() throws {
-        var tracesSent = false
-        let expec = expectation(description: "traces received")
-        let server = HttpTestServer(url: URL(string: "http://127.0.0.1:33333"),
-                                    config: HttpTestServerConfig(tracesReceivedCallback: {
-                                                                     tracesSent = true
-                                                                     expec.fulfill()
-                                                                 },
-                                                                 logsReceivedCallback: nil))
-
-        DispatchQueue.global(qos: .default).async {
-            do {
-                try server.start()
-            } catch {
-                XCTFail()
-                return
-            }
-        }
+        let server = HttpTestServer(url: URL(string: "http://127.0.0.1:33333"))
+        try server.start()
 
         let configuration = ExporterConfiguration(serviceName: "serviceName",
                                                   applicationName: "applicationName",
@@ -43,9 +28,9 @@ class SpansExporterTests: XCTestCase {
                                                   environment: "environment",
                                                   hostname: nil,
                                                   apiKey: "apikey",
-                                                  endpoint: Endpoint.custom(
-                                                      testsURL: URL(string: "http://127.0.0.1:33333/traces")!,
-                                                      logsURL: URL(string: "http://127.0.0.1:33333/logs")!
+                                                  endpoint: .other(
+                                                    testsBaseURL: URL(string: "http://127.0.0.1:33333")!,
+                                                    logsBaseURL: URL(string: "http://127.0.0.1:33333")!
                                                   ),
                                                   metadata: .init(),
                                                   performancePreset: .instantDataDelivery,
@@ -56,16 +41,15 @@ class SpansExporterTests: XCTestCase {
 
         let spanData = createBasicSpan()
         spansExporter.exportSpan(span: spanData)
-
-        waitForExpectations(timeout: 30) { error in
-            if let error = error {
-                print("Error: \(error.localizedDescription)")
-                XCTFail()
-            }
+        
+        guard let request = server.waitForRequest(timeout: 30) else {
+            server.stop()
+            XCTFail("No request received")
+            return
         }
-        XCTAssertTrue(tracesSent)
-
         server.stop()
+
+        XCTAssertTrue(request.head.uri.hasPrefix("/api/v2/citestcycle"))
     }
 
     private func createBasicSpan() -> SpanData {

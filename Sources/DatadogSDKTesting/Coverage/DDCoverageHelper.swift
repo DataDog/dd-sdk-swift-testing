@@ -110,6 +110,7 @@ final class DDCoverageHelper: TestCoverageCollector {
         coverageWorkQueue.waitUntilAllOperationsAreFinished()
         coverageWorkQueue.qualityOfService = oldQos
         coverageWorkQueue.maxConcurrentOperationCount = oldConcurrency
+        let _ = exporter.flush()
     }
 
     fileprivate static func generateProfData(profrawFile: URL) -> URL? {

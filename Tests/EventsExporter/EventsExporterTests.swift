@@ -61,7 +61,6 @@ class EventsExporterTests: XCTestCase {
                 XCTFail("Request not received")
                 return
             }
-            print(request.head.uri)
             if request.head.uri.hasPrefix("/api/v2/citestcycle") {
                 tracesSent = true
             } else if request.head.uri.hasPrefix("/api/v2/logs") {

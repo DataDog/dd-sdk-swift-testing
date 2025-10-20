@@ -30,6 +30,7 @@ jobs:
         path: "*-tests.log"
 
   release:
+    name: Publish Release
     needs: [test]
     runs-on: macos-14
     permissions:
@@ -49,3 +50,17 @@ jobs:
       with:
         name: xcode-archive-logs
         path: "*-archive.log"
+  
+  publish-pod:
+    name: Publish Pod
+    needs: [release]
+    runs-on: macos-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        ref: "${{ github.event.inputs.version }}"
+    - name: Publish
+      env:
+        COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
+      run: make publish_pod

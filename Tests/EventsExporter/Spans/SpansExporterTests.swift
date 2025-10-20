@@ -21,6 +21,7 @@ class SpansExporterTests: XCTestCase {
     func testWhenExportSpanIsCalled_thenTraceIsUploaded() throws {
         let server = HttpTestServer(url: URL(string: "http://127.0.0.1:33333"))
         try server.start()
+        defer { server.stop() }
 
         let configuration = ExporterConfiguration(serviceName: "serviceName",
                                                   applicationName: "applicationName",
@@ -33,7 +34,7 @@ class SpansExporterTests: XCTestCase {
                                                     logsBaseURL: URL(string: "http://127.0.0.1:33333")!
                                                   ),
                                                   metadata: .init(),
-                                                  performancePreset: .instantDataDelivery,
+                                                  performancePreset: .readAllFiles,
                                                   exporterId: "exporterId",
                                                   logger: Log())
 
@@ -43,11 +44,9 @@ class SpansExporterTests: XCTestCase {
         spansExporter.exportSpan(span: spanData)
         
         guard let request = server.waitForRequest(timeout: 30) else {
-            server.stop()
             XCTFail("No request received")
             return
         }
-        server.stop()
 
         XCTAssertTrue(request.head.uri.hasPrefix("/api/v2/citestcycle"))
     }

@@ -32,7 +32,9 @@ public class HttpTestServer {
     
     // Request tracking for OTLP tests
     internal var receivedRequests: [HTTPTestRequest] = []
-    internal let receivedRequestsQueue = DispatchQueue(label: "HttpTestServer.requests")
+    internal let receivedRequestsQueue = DispatchQueue(label: "HttpTestServer.requests",
+                                                       qos: .userInteractive,
+                                                       target: .global(qos: .userInteractive))
     
     // Configuration for URLSession tests
     public var config: HttpTestServerConfig?
@@ -121,7 +123,9 @@ public class HttpTestServer {
         }
         
         isRunning = true
-        serverQueue = DispatchQueue(label: "HttpTestServer", attributes: .concurrent)
+        serverQueue = DispatchQueue(label: "HttpTestServer",
+                                    qos: .userInteractive,
+                                    attributes: .concurrent)
         
         // Start accept loop
         serverQueue?.async { [weak self] in
@@ -243,9 +247,11 @@ public class HttpTestServer {
                 continue
             }
             
-            // Handle client synchronously to ensure proper data handling
-            handleClient(socket: clientSocket)
-            close(clientSocket)
+            // Handle client asynchronously
+            serverQueue?.async {
+                self.handleClient(socket: clientSocket)
+                close(clientSocket)
+            }
         }
     }
     

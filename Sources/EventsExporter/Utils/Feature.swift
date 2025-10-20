@@ -6,14 +6,6 @@
 
 import Foundation
 
-/// Container with dependencies common to all features (Logging, Tracing and RUM).
-internal struct FeaturesCommonDependencies {
-    let performance: PerformancePreset
-    let httpClient: HTTPClient
-    let device: Device
-    let dateProvider: DateProvider
-}
-
 internal struct FeatureStorage {
     /// Writes data to files.
     let writer: FileWriter
@@ -34,7 +26,7 @@ internal struct FeatureUpload {
         featureName: String,
         storage: FeatureStorage,
         requestBuilder: RequestBuilder,
-        performance: PerformancePreset,
+        performance: UploadPerformancePreset,
         debug: Bool
     ) {
         let dataUploader = DataUploader(
@@ -47,7 +39,8 @@ internal struct FeatureUpload {
                 fileReader: storage.reader,
                 dataUploader: dataUploader,
                 delay: DataUploadDelay(performance: performance),
-                featureName: featureName
+                featureName: featureName,
+                priority: performance.uploadQueuePriority
             )
         )
     }

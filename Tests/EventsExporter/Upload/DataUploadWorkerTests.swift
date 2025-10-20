@@ -52,7 +52,8 @@ class DataUploadWorkerTests: XCTestCase {
             fileReader: reader,
             dataUploader: dataUploader,
             delay: DataUploadDelay(performance: UploadPerformanceMock.veryQuick),
-            featureName: .mockAny()
+            featureName: .mockAny(),
+            priority: .userInteractive
         )
 
         // Then
@@ -81,7 +82,8 @@ class DataUploadWorkerTests: XCTestCase {
             fileReader: reader,
             dataUploader: mockDataUploader,
             delay: DataUploadDelay(performance: UploadPerformanceMock.veryQuick),
-            featureName: .mockAny()
+            featureName: .mockAny(),
+            priority: .userInteractive
         )
 
         wait(for: [startUploadExpectation], timeout: 5.0)
@@ -106,7 +108,8 @@ class DataUploadWorkerTests: XCTestCase {
             fileReader: reader,
             dataUploader: mockDataUploader,
             delay: DataUploadDelay(performance: UploadPerformanceMock.veryQuick),
-            featureName: .mockAny()
+            featureName: .mockAny(),
+            priority: .userInteractive
         )
 
         wait(for: [startUploadExpectation], timeout: 0.5)
@@ -140,7 +143,8 @@ class DataUploadWorkerTests: XCTestCase {
             fileReader: reader,
             dataUploader: dataUploader,
             delay: mockDelay,
-            featureName: .mockAny()
+            featureName: .mockAny(),
+            priority: .userInteractive
         )
 
         // Then
@@ -171,7 +175,8 @@ class DataUploadWorkerTests: XCTestCase {
             fileReader: reader,
             dataUploader: dataUploader,
             delay: mockDelay,
-            featureName: .mockAny()
+            featureName: .mockAny(),
+            priority: .userInteractive
         )
 
         // Then
@@ -202,7 +207,8 @@ class DataUploadWorkerTests: XCTestCase {
             fileReader: reader,
             dataUploader: dataUploader,
             delay: mockDelay,
-            featureName: .mockAny()
+            featureName: .mockAny(),
+            priority: .userInteractive
         )
 
         // Then
@@ -224,7 +230,8 @@ class DataUploadWorkerTests: XCTestCase {
             fileReader: reader,
             dataUploader: dataUploader,
             delay: MockDelay(),
-            featureName: .mockAny()
+            featureName: .mockAny(),
+            priority: .userInteractive
         )
 
         // When
@@ -246,7 +253,8 @@ class DataUploadWorkerTests: XCTestCase {
             fileReader: reader,
             dataUploader: dataUploader,
             delay: DataUploadDelay(performance: UploadPerformanceMock.veryQuick),
-            featureName: .mockAny()
+            featureName: .mockAny(),
+            priority: .userInteractive
         )
 
         // Given

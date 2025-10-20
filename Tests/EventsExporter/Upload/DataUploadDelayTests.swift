@@ -13,7 +13,8 @@ class DataUploadDelayTests: XCTestCase {
         defaultUploadDelay: 5,
         minUploadDelay: 1,
         maxUploadDelay: 20,
-        uploadDelayChangeRate: 0.1
+        uploadDelayChangeRate: 0.1,
+        uploadQueuePriority: .userInteractive
     )
 
     func testWhenNotModified_itReturnsInitialDelay() {

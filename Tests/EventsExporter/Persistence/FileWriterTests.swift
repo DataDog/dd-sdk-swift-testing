@@ -57,7 +57,8 @@ class FileWriterTests: XCTestCase {
                     minFileAgeForRead: .mockAny(),
                     maxFileAgeForRead: .mockAny(),
                     maxObjectsInFile: .max,
-                    maxObjectSize: 17 // 17 bytes is enough to write {"key1":"value1"} JSON
+                    maxObjectSize: 17, // 17 bytes is enough to write {"key1":"value1"} JSON
+                    synchronousWrite: true
                 ),
                 dateProvider: SystemDateProvider()
             )
@@ -95,7 +96,8 @@ class FileWriterTests: XCTestCase {
                     minFileAgeForRead: .distantFuture,
                     maxFileAgeForRead: .distantFuture,
                     maxObjectsInFile: .max, // write to single file
-                    maxObjectSize: .max
+                    maxObjectSize: .max,
+                    synchronousWrite: true
                 ),
                 dateProvider: SystemDateProvider()
             )

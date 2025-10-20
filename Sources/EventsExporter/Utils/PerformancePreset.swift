@@ -31,6 +31,8 @@ internal protocol StoragePerformancePreset {
     /// Maximum size of serialized object data (in bytes).
     /// If serialized object data exceeds this limit, it is skipped (not written to file and not uploaded).
     var maxObjectSize: UInt64 { get }
+    /// Write objects to file synchronously
+    var synchronousWrite: Bool { get }
 }
 
 internal protocol UploadPerformancePreset {
@@ -48,27 +50,89 @@ internal protocol UploadPerformancePreset {
     /// If upload succeeds or fails, current interval is changed by this rate. Should be less or equal `1.0`.
     /// E.g: if rate is `0.1` then `delay` can be increased or decreased by `delay * 0.1`.
     var uploadDelayChangeRate: Double { get }
+    /// Priority for upload queue
+    var uploadQueuePriority: DispatchQoS { get }
 }
 
 public struct PerformancePreset: Equatable, StoragePerformancePreset, UploadPerformancePreset {
+    public struct Storage: Equatable, StoragePerformancePreset {
+        let maxFileSize: UInt64
+        let maxDirectorySize: UInt64
+        let maxFileAgeForWrite: TimeInterval
+        let minFileAgeForRead: TimeInterval
+        let maxFileAgeForRead: TimeInterval
+        let maxObjectsInFile: Int
+        let maxObjectSize: UInt64
+        let synchronousWrite: Bool
+        
+        public init(maxFileSize: UInt64, maxDirectorySize: UInt64,
+                    maxFileAgeForWrite: TimeInterval, minFileAgeForRead: TimeInterval,
+                    maxFileAgeForRead: TimeInterval, maxObjectsInFile: Int,
+                    maxObjectSize: UInt64, synchronousWrite: Bool)
+        {
+            self.maxFileSize = maxFileSize
+            self.maxDirectorySize = maxDirectorySize
+            self.maxFileAgeForWrite = maxFileAgeForWrite
+            self.minFileAgeForRead = minFileAgeForRead
+            self.maxFileAgeForRead = maxFileAgeForRead
+            self.maxObjectsInFile = maxObjectsInFile
+            self.maxObjectSize = maxObjectSize
+            self.synchronousWrite = synchronousWrite
+        }
+    }
+    
+    public struct Upload: Equatable, UploadPerformancePreset {
+        let initialUploadDelay: TimeInterval
+        let defaultUploadDelay: TimeInterval
+        let minUploadDelay: TimeInterval
+        let maxUploadDelay: TimeInterval
+        let uploadDelayChangeRate: Double
+        let uploadQueuePriority: DispatchQoS
+        
+        public init(initialUploadDelay: TimeInterval, defaultUploadDelay: TimeInterval,
+                    minUploadDelay: TimeInterval, maxUploadDelay: TimeInterval,
+                    uploadDelayChangeRate: Double, uploadQueuePriority: DispatchQoS)
+        {
+            self.initialUploadDelay = initialUploadDelay
+            self.defaultUploadDelay = defaultUploadDelay
+            self.minUploadDelay = minUploadDelay
+            self.maxUploadDelay = maxUploadDelay
+            self.uploadDelayChangeRate = uploadDelayChangeRate
+            self.uploadQueuePriority = uploadQueuePriority
+        }
+    }
+    
+    let storage: any StoragePerformancePreset
+    let upload: any UploadPerformancePreset
+    
+    public init(storage: Storage, upload: Upload) {
+        self.init(any: storage, upload: upload)
+    }
+    
+    init(any storage: any StoragePerformancePreset, upload: any UploadPerformancePreset) {
+        self.storage = storage
+        self.upload = upload
+    }
+    
     // MARK: - StoragePerformancePreset
 
-    let maxFileSize: UInt64
-    let maxDirectorySize: UInt64
-    let maxFileAgeForWrite: TimeInterval
-    let minFileAgeForRead: TimeInterval
-    let maxFileAgeForRead: TimeInterval
-    let maxObjectsInFile: Int
-    let maxObjectSize: UInt64
-    let synchronousWrite: Bool
+    var maxFileSize: UInt64 { storage.maxFileSize }
+    var maxDirectorySize: UInt64 { storage.maxDirectorySize }
+    var maxFileAgeForWrite: TimeInterval { storage.maxFileAgeForWrite }
+    var minFileAgeForRead: TimeInterval { storage.minFileAgeForRead }
+    var maxFileAgeForRead: TimeInterval { storage.maxFileAgeForRead }
+    var maxObjectsInFile: Int { storage.maxObjectsInFile }
+    var maxObjectSize: UInt64 { storage.maxObjectSize }
+    var synchronousWrite: Bool { storage.synchronousWrite }
 
     // MARK: - UploadPerformancePreset
 
-    let initialUploadDelay: TimeInterval
-    let defaultUploadDelay: TimeInterval
-    let minUploadDelay: TimeInterval
-    let maxUploadDelay: TimeInterval
-    let uploadDelayChangeRate: Double
+    var initialUploadDelay: TimeInterval { upload.initialUploadDelay }
+    var defaultUploadDelay: TimeInterval { upload.defaultUploadDelay }
+    var minUploadDelay: TimeInterval { upload.minUploadDelay }
+    var maxUploadDelay: TimeInterval { upload.maxUploadDelay }
+    var uploadDelayChangeRate: Double { upload.uploadDelayChangeRate }
+    var uploadQueuePriority: DispatchQoS { upload.uploadQueuePriority }
 
     // MARK: - Predefined presets
 
@@ -79,41 +143,77 @@ public struct PerformancePreset: Equatable, StoragePerformancePreset, UploadPerf
     /// Minimalizes number of data requests send to the server.
     public static let lowRuntimeImpact = PerformancePreset(
         // persistence
-        maxFileSize: 4 * 1_024 * 1_024, // 4MB
-        maxDirectorySize: 512 * 1_024 * 1_024, // 512 MB
-        maxFileAgeForWrite: 4.75,
-        minFileAgeForRead: 4.75 + 0.5, // `maxFileAgeForWrite` + 0.5s margin
-        maxFileAgeForRead: 18 * 60 * 60, // 18h
-        maxObjectsInFile: 500,
-        maxObjectSize: 256 * 1_024, // 256KB
-        synchronousWrite: false,
-
+        storage: .init(
+            maxFileSize: 4 * 1_024 * 1_024, // 4MB
+            maxDirectorySize: 512 * 1_024 * 1_024, // 512 MB
+            maxFileAgeForWrite: 4.75,
+            minFileAgeForRead: 4.75 + 0.5, // `maxFileAgeForWrite` + 0.5s margin
+            maxFileAgeForRead: 18 * 60 * 60, // 18h
+            maxObjectsInFile: 500,
+            maxObjectSize: 256 * 1_024, // 256KB
+            synchronousWrite: false
+        ),
         // upload
-        initialUploadDelay: 5, // postpone to not impact app launch time
-        defaultUploadDelay: 5,
-        minUploadDelay: 1,
-        maxUploadDelay: 20,
-        uploadDelayChangeRate: 0.1
+        upload: .init(
+            initialUploadDelay: 5, // postpone to not impact app launch time
+            defaultUploadDelay: 5,
+            minUploadDelay: 1,
+            maxUploadDelay: 20,
+            uploadDelayChangeRate: 0.1,
+            uploadQueuePriority: .utility
+        )
     )
 
     /// Performance preset optimized for instant data delivery.
     /// Minimalizes the time between receiving data form the user and delivering it to the server.
     public static let instantDataDelivery = PerformancePreset(
         // persistence
-        maxFileSize: `default`.maxFileSize,
-        maxDirectorySize: `default`.maxDirectorySize,
-        maxFileAgeForWrite: 2.75,
-        minFileAgeForRead: 2.75 + 0.5, // `maxFileAgeForWrite` + 0.5s margin
-        maxFileAgeForRead: `default`.maxFileAgeForRead,
-        maxObjectsInFile: `default`.maxObjectsInFile,
-        maxObjectSize: `default`.maxObjectSize,
-        synchronousWrite: true,
-
+        storage: .init(
+            maxFileSize: `default`.maxFileSize,
+            maxDirectorySize: `default`.maxDirectorySize,
+            maxFileAgeForWrite: 2.75,
+            minFileAgeForRead: 2.75 + 0.5, // `maxFileAgeForWrite` + 0.5s margin
+            maxFileAgeForRead: `default`.maxFileAgeForRead,
+            maxObjectsInFile: `default`.maxObjectsInFile,
+            maxObjectSize: `default`.maxObjectSize,
+            synchronousWrite: true
+        ),
         // upload
-        initialUploadDelay: 5, // send quick to have a chance for upload in short-lived app extensions
-        defaultUploadDelay: 3,
-        minUploadDelay: 1,
-        maxUploadDelay: 5,
-        uploadDelayChangeRate: 0.5 // reduce significantly for more uploads in short-lived app extensions
+        upload: .init(
+            initialUploadDelay: 5, // send quick to have a chance for upload in short-lived app extensions
+            defaultUploadDelay: 3,
+            minUploadDelay: 1,
+            maxUploadDelay: 5,
+            uploadDelayChangeRate: 0.5, // reduce significantly for more uploads in short-lived app extensions
+            uploadQueuePriority: .userInitiated
+        )
     )
+    
+    public static func == (lhs: PerformancePreset, rhs: PerformancePreset) -> Bool {
+        lhs.storage.isEqual(to: rhs.storage) && lhs.upload.isEqual(to: rhs.upload)
+    }
+}
+
+extension StoragePerformancePreset {
+    func isEqual(to other: StoragePerformancePreset) -> Bool {
+        maxFileSize == other.maxFileSize &&
+        maxDirectorySize == other.maxDirectorySize &&
+        maxFileAgeForWrite == other.maxFileAgeForWrite &&
+        minFileAgeForRead == other.minFileAgeForRead &&
+        maxFileAgeForRead == other.maxFileAgeForRead &&
+        maxObjectsInFile == other.maxObjectsInFile &&
+        maxObjectSize == other.maxObjectSize &&
+        synchronousWrite == other.synchronousWrite
+    }
+}
+
+extension UploadPerformancePreset {
+    func isEqual(to other: UploadPerformancePreset) -> Bool {
+        initialUploadDelay == other.initialUploadDelay &&
+        defaultUploadDelay == other.defaultUploadDelay &&
+        minUploadDelay == other.minUploadDelay &&
+        maxUploadDelay == other.maxUploadDelay &&
+        uploadDelayChangeRate == other.uploadDelayChangeRate &&
+        uploadQueuePriority == other.uploadQueuePriority
+    }
 }

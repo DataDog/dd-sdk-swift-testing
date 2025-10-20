@@ -28,6 +28,8 @@ class DDNetworkInstrumentationTests: XCTestCase {
 
     override func tearDown() {
         containerSpan?.end()
+        DDTestMonitor.instance?.stop()
+        DDTestMonitor.instance = nil
         DDTestMonitor._env_recreate()
         XCTAssertNil(DDTracer.activeSpan)
     }

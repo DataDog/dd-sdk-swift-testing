@@ -38,6 +38,9 @@
 		A71E647D2BAA0AA100F2ACA5 /* CIEnvironmentReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64672BAA0AA100F2ACA5 /* CIEnvironmentReader.swift */; };
 		A71E647E2BAA0AA100F2ACA5 /* EnvironmentReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64682BAA0AA100F2ACA5 /* EnvironmentReader.swift */; };
 		A71E64802BAB442300F2ACA5 /* ConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E647F2BAB442300F2ACA5 /* ConfigTests.swift */; };
+		A722B7DA2EA6785700F00FA6 /* HttpTestServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A722B7D82EA6785700F00FA6 /* HttpTestServer.swift */; };
+		A722B7E02EA6787C00F00FA6 /* TestUtils.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A722B7D02EA6783300F00FA6 /* TestUtils.framework */; };
+		A722B7E52EA6788300F00FA6 /* TestUtils.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A722B7D02EA6783300F00FA6 /* TestUtils.framework */; };
 		A7349B702E1820E300581793 /* DatadogSDKTesting.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A74246002BFF94FA00F7EC64 /* TestImpactAnalysisSkippabble.swift in Sources */ = {isa = PBXBuildFile; fileRef = A74245FF2BFF94FA00F7EC64 /* TestImpactAnalysisSkippabble.swift */; };
 		A74C91CA2E67278800B10681 /* DroneCI.swift in Sources */ = {isa = PBXBuildFile; fileRef = A74C91C92E67278800B10681 /* DroneCI.swift */; };
@@ -202,7 +205,6 @@
 		A7FC267E2BA1F81700067E26 /* DirectoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAEE27EB3B9E0057D747 /* DirectoryTests.swift */; };
 		A7FC267F2BA1F81D00067E26 /* TestsDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAF227EB3B9E0057D747 /* TestsDirectory.swift */; };
 		A7FC26802BA1F81D00067E26 /* DatadogExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAF327EB3B9E0057D747 /* DatadogExtensions.swift */; };
-		A7FC26812BA1F81D00067E26 /* HttpTestServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAF927EB3B9E0057D747 /* HttpTestServer.swift */; };
 		A7FC26822BA1F81D00067E26 /* DeviceMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAFA27EB3B9E0057D747 /* DeviceMock.swift */; };
 		A7FC26832BA1F81D00067E26 /* CoreMocks.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAF727EB3B9E0057D747 /* CoreMocks.swift */; };
 		A7FC26842BA1F81D00067E26 /* Encoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAF027EB3B9E0057D747 /* Encoding.swift */; };
@@ -228,6 +230,20 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		A722B7E22EA6787C00F00FA6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E1ABA04125231E2500ED8AEF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A722B7CF2EA6783300F00FA6;
+			remoteInfo = TestUtils;
+		};
+		A722B7E72EA6788300F00FA6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E1ABA04125231E2500ED8AEF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A722B7CF2EA6783300F00FA6;
+			remoteInfo = TestUtils;
+		};
 		A7B39C6D2BCFC7CE007F98B2 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = E1ABA04125231E2500ED8AEF /* Project object */;
@@ -347,6 +363,8 @@
 		A71E64672BAA0AA100F2ACA5 /* CIEnvironmentReader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CIEnvironmentReader.swift; sourceTree = "<group>"; };
 		A71E64682BAA0AA100F2ACA5 /* EnvironmentReader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EnvironmentReader.swift; sourceTree = "<group>"; };
 		A71E647F2BAB442300F2ACA5 /* ConfigTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigTests.swift; sourceTree = "<group>"; };
+		A722B7D02EA6783300F00FA6 /* TestUtils.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = TestUtils.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A722B7D82EA6785700F00FA6 /* HttpTestServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HttpTestServer.swift; sourceTree = "<group>"; };
 		A74245FF2BFF94FA00F7EC64 /* TestImpactAnalysisSkippabble.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestImpactAnalysisSkippabble.swift; sourceTree = "<group>"; };
 		A74C91C92E67278800B10681 /* DroneCI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DroneCI.swift; sourceTree = "<group>"; };
 		A74EB8E32D0AFD3C00FAD9B8 /* CodeCoverageModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeCoverageModelTests.swift; sourceTree = "<group>"; };
@@ -443,7 +461,6 @@
 		E141EAF627EB3B9E0057D747 /* ServerMock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ServerMock.swift; sourceTree = "<group>"; };
 		E141EAF727EB3B9E0057D747 /* CoreMocks.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CoreMocks.swift; sourceTree = "<group>"; };
 		E141EAF827EB3B9E0057D747 /* EquatableInTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EquatableInTests.swift; sourceTree = "<group>"; };
-		E141EAF927EB3B9E0057D747 /* HttpTestServer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HttpTestServer.swift; sourceTree = "<group>"; };
 		E141EAFA27EB3B9E0057D747 /* DeviceMock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeviceMock.swift; sourceTree = "<group>"; };
 		E141EAFC27EB3B9E0057D747 /* DataUploadWorkerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataUploadWorkerTests.swift; sourceTree = "<group>"; };
 		E141EAFD27EB3B9E0057D747 /* DataUploadDelayTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataUploadDelayTests.swift; sourceTree = "<group>"; };
@@ -534,6 +551,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		A722B7CD2EA6783300F00FA6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A7E232D92BC6E68B0087D8F8 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -561,6 +585,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A722B7E52EA6788300F00FA6 /* TestUtils.framework in Frameworks */,
 				A7FC256E2BA1E83500067E26 /* DatadogSDKTesting.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -580,6 +605,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A722B7E02EA6787C00F00FA6 /* TestUtils.framework in Frameworks */,
 				A7B39C6C2BCFC799007F98B2 /* CDatadogSDKTesting.framework in Frameworks */,
 				A7FC25882BA1E87400067E26 /* EventsExporter.framework in Frameworks */,
 			);
@@ -649,6 +675,14 @@
 				A71E64652BAA0AA100F2ACA5 /* BitbucketCI.swift */,
 			);
 			path = CI;
+			sourceTree = "<group>";
+		};
+		A722B7D92EA6785700F00FA6 /* TestUtils */ = {
+			isa = PBXGroup;
+			children = (
+				A722B7D82EA6785700F00FA6 /* HttpTestServer.swift */,
+			);
+			path = TestUtils;
 			sourceTree = "<group>";
 		};
 		A77C123A2D941F27009C2BA1 /* Features */ = {
@@ -839,7 +873,6 @@
 				E141EAF027EB3B9E0057D747 /* Encoding.swift */,
 				E141EAF827EB3B9E0057D747 /* EquatableInTests.swift */,
 				E141EAF427EB3B9E0057D747 /* FoundationMocks.swift */,
-				E141EAF927EB3B9E0057D747 /* HttpTestServer.swift */,
 				E141EAF527EB3B9E0057D747 /* LoggingFeatureMocks.swift */,
 				E141EAF627EB3B9E0057D747 /* ServerMock.swift */,
 				E141EAF127EB3B9E0057D747 /* SwiftExtensions.swift */,
@@ -1065,6 +1098,7 @@
 				A7FC26A82BA20A6500067E26 /* IntegrationTestsApp.app */,
 				A7FC26C02BA20D1200067E26 /* IntegrationTestsUITests.xctest */,
 				A7E232DC2BC6E68B0087D8F8 /* CDatadogSDKTesting.framework */,
+				A722B7D02EA6783300F00FA6 /* TestUtils.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1082,9 +1116,10 @@
 		E1ABA05725231E2500ED8AEF /* Tests */ = {
 			isa = PBXGroup;
 			children = (
-				A7C292122B9B2B39009C2979 /* fixtures */,
 				E1AD0736252E1E1A003705C1 /* DatadogSDKTesting */,
 				E141EADB27EB3B9E0057D747 /* EventsExporter */,
+				A722B7D92EA6785700F00FA6 /* TestUtils */,
+				A7C292122B9B2B39009C2979 /* fixtures */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -1182,6 +1217,13 @@
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
+		A722B7CB2EA6783300F00FA6 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A7E232D72BC6E68B0087D8F8 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
@@ -1210,6 +1252,26 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		A722B7CF2EA6783300F00FA6 /* TestUtils */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A722B7D52EA6783300F00FA6 /* Build configuration list for PBXNativeTarget "TestUtils" */;
+			buildPhases = (
+				A722B7CB2EA6783300F00FA6 /* Headers */,
+				A722B7CC2EA6783300F00FA6 /* Sources */,
+				A722B7CD2EA6783300F00FA6 /* Frameworks */,
+				A722B7CE2EA6783300F00FA6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TestUtils;
+			packageProductDependencies = (
+			);
+			productName = TestUtils;
+			productReference = A722B7D02EA6783300F00FA6 /* TestUtils.framework */;
+			productType = "com.apple.product-type.framework";
+		};
 		A7E232DB2BC6E68B0087D8F8 /* CDatadogSDKTesting */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = A7E232E22BC6E68B0087D8F8 /* Build configuration list for PBXNativeTarget "CDatadogSDKTesting" */;
@@ -1277,6 +1339,7 @@
 			);
 			dependencies = (
 				A7FC25702BA1E83500067E26 /* PBXTargetDependency */,
+				A722B7E82EA6788300F00FA6 /* PBXTargetDependency */,
 			);
 			name = DatadogSDKTestingTests;
 			productName = DatadogSDKTestingTests;
@@ -1323,6 +1386,7 @@
 			dependencies = (
 				A7B39C6E2BCFC7CE007F98B2 /* PBXTargetDependency */,
 				A7FC258A2BA1E87400067E26 /* PBXTargetDependency */,
+				A722B7E32EA6787C00F00FA6 /* PBXTargetDependency */,
 			);
 			name = EventsExporterTests;
 			packageProductDependencies = (
@@ -1378,6 +1442,9 @@
 				LastSwiftUpdateCheck = 1430;
 				LastUpgradeCheck = 1640;
 				TargetAttributes = {
+					A722B7CF2EA6783300F00FA6 = {
+						CreatedOnToolsVersion = 16.2;
+					};
 					A7E232DB2BC6E68B0087D8F8 = {
 						CreatedOnToolsVersion = 14.3.1;
 					};
@@ -1425,6 +1492,7 @@
 				A7E232DB2BC6E68B0087D8F8 /* CDatadogSDKTesting */,
 				A7FC25632BA1E83500067E26 /* DatadogSDKTesting */,
 				A7FC257F2BA1E87400067E26 /* EventsExporter */,
+				A722B7CF2EA6783300F00FA6 /* TestUtils */,
 				A7FC256C2BA1E83500067E26 /* DatadogSDKTestingTests */,
 				A7FC25862BA1E87400067E26 /* EventsExporterTests */,
 				A7FC26A72BA20A6500067E26 /* IntegrationTestsApp */,
@@ -1434,6 +1502,13 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		A722B7CE2EA6783300F00FA6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A7E232DA2BC6E68B0087D8F8 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1510,6 +1585,14 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		A722B7CC2EA6783300F00FA6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A722B7DA2EA6785700F00FA6 /* HttpTestServer.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A7E232D82BC6E68B0087D8F8 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1702,7 +1785,6 @@
 				A7FC267B2BA1F80E00067E26 /* FileWriterTests.swift in Sources */,
 				A7FC268D2BA1F82300067E26 /* DataUploadDelayTests.swift in Sources */,
 				A71D89262BD6CACD00531A90 /* Logger.swift in Sources */,
-				A7FC26812BA1F81D00067E26 /* HttpTestServer.swift in Sources */,
 				A7FC267C2BA1F80E00067E26 /* FilesOrchestratorTests.swift in Sources */,
 				A7FC26862BA1F81D00067E26 /* EquatableInTests.swift in Sources */,
 				A7FC267D2BA1F81700067E26 /* FileTests.swift in Sources */,
@@ -1758,6 +1840,16 @@
 		A7183A762E90305A0093C831 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			productRef = A7183A752E90305A0093C831 /* CodeCoverageParser */;
+		};
+		A722B7E32EA6787C00F00FA6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A722B7CF2EA6783300F00FA6 /* TestUtils */;
+			targetProxy = A722B7E22EA6787C00F00FA6 /* PBXContainerItemProxy */;
+		};
+		A722B7E82EA6788300F00FA6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A722B7CF2EA6783300F00FA6 /* TestUtils */;
+			targetProxy = A722B7E72EA6788300F00FA6 /* PBXContainerItemProxy */;
 		};
 		A74EB8DE2D0A010A00FAD9B8 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -1825,6 +1917,85 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		A722B7D62EA6783300F00FA6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				ENABLE_TESTING_SEARCH_PATHS = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2020-Present Datadog, Inc.";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACH_O_TYPE = staticlib;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.TestUtils;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SDKROOT = auto;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2,3";
+			};
+			name = Debug;
+		};
+		A722B7D72EA6783300F00FA6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				ENABLE_TESTING_SEARCH_PATHS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2020-Present Datadog, Inc.";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACH_O_TYPE = staticlib;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.TestUtils;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SDKROOT = auto;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2,3";
+			};
+			name = Release;
+		};
 		A7E232E02BC6E68B0087D8F8 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1832,7 +2003,6 @@
 				CLANG_WARN_COMMA = NO;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEAD_CODE_STRIPPING = YES;
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -1852,7 +2022,6 @@
 					"@loader_path/Frameworks",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = "2.6.2";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++20";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.CDatadogSDKTesting;
@@ -1874,7 +2043,6 @@
 				CLANG_WARN_COMMA = NO;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEAD_CODE_STRIPPING = YES;
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -1893,7 +2061,6 @@
 					"@loader_path/Frameworks",
 				);
 				MACH_O_TYPE = staticlib;
-				MARKETING_VERSION = "2.6.2";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++20";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.CDatadogSDKTesting;
@@ -1913,7 +2080,6 @@
 			buildSettings = {
 				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 				CODE_SIGN_STYLE = Automatic;
-				DEAD_CODE_STRIPPING = YES;
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -1957,7 +2123,6 @@
 			buildSettings = {
 				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 				CODE_SIGN_STYLE = Automatic;
-				DEAD_CODE_STRIPPING = YES;
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -1999,7 +2164,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				DEAD_CODE_STRIPPING = YES;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -2018,7 +2182,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				DEAD_CODE_STRIPPING = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTestingTests;
@@ -2037,7 +2200,6 @@
 			buildSettings = {
 				CLANG_WARN_COMMA = NO;
 				CODE_SIGN_STYLE = Automatic;
-				DEAD_CODE_STRIPPING = YES;
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -2075,7 +2237,6 @@
 			buildSettings = {
 				CLANG_WARN_COMMA = NO;
 				CODE_SIGN_STYLE = Automatic;
-				DEAD_CODE_STRIPPING = YES;
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -2111,8 +2272,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEAD_CODE_STRIPPING = YES;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -2135,8 +2294,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEAD_CODE_STRIPPING = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				OTHER_LDFLAGS = (
@@ -2162,7 +2319,6 @@
 				CODE_SIGN_ENTITLEMENTS = IntegrationTests/App/IntegrationTests.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
-				DEAD_CODE_STRIPPING = YES;
 				ENABLE_DEBUG_DYLIB = NO;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_TESTING_SEARCH_PATHS = YES;
@@ -2211,7 +2367,6 @@
 				CODE_SIGN_ENTITLEMENTS = IntegrationTests/App/IntegrationTests.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
-				DEAD_CODE_STRIPPING = YES;
 				ENABLE_DEBUG_DYLIB = NO;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_TESTING_SEARCH_PATHS = YES;
@@ -2257,13 +2412,10 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CODE_SIGN_ENTITLEMENTS = IntegrationTests/App/IntegrationTests.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEAD_CODE_STRIPPING = YES;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
-				MARKETING_VERSION = "2.6.2";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.IntegrationTestsUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -2283,12 +2435,9 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CODE_SIGN_ENTITLEMENTS = IntegrationTests/App/IntegrationTests.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEAD_CODE_STRIPPING = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
-				MARKETING_VERSION = "2.6.2";
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.IntegrationTestsUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -2363,7 +2512,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = "2.6.2";
+				MARKETING_VERSION = 2.6.2;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -2436,7 +2585,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LLVM_LTO = YES_THIN;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = "2.6.2";
+				MARKETING_VERSION = 2.6.2;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -2454,6 +2603,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		A722B7D52EA6783300F00FA6 /* Build configuration list for PBXNativeTarget "TestUtils" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A722B7D62EA6783300F00FA6 /* Debug */,
+				A722B7D72EA6783300F00FA6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		A7E232E22BC6E68B0087D8F8 /* Build configuration list for PBXNativeTarget "CDatadogSDKTesting" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

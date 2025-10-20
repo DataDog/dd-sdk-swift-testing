@@ -12,14 +12,16 @@ class FrameworkLoadHandlerTests: XCTestCase {
         XCTAssertNil(DDTracer.activeSpan)
         FrameworkLoadHandler.testObserver?.stop()
         FrameworkLoadHandler.testObserver = nil
+        DDTestMonitor.instance?.stop()
         DDTestMonitor.instance = nil
     }
 
     override func tearDownWithError() throws {
         FrameworkLoadHandler.testObserver?.stop()
         FrameworkLoadHandler.testObserver = nil
+        DDTestMonitor.instance?.stop()
+        DDTestMonitor.instance = nil
         DDTestMonitor._env_recreate()
-        DDTestMonitor.instance = DDTestMonitor()
         XCTAssertNil(DDTracer.activeSpan)
     }
 

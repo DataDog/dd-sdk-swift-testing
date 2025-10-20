@@ -17,6 +17,7 @@ struct StoragePerformanceMock: StoragePerformancePreset {
     let maxFileAgeForRead: TimeInterval
     let maxObjectsInFile: Int
     let maxObjectSize: UInt64
+    let synchronousWrite: Bool
 
     static let readAllFiles = StoragePerformanceMock(
         maxFileSize: .max,
@@ -25,7 +26,8 @@ struct StoragePerformanceMock: StoragePerformancePreset {
         minFileAgeForRead: -1, // make all files eligible for read
         maxFileAgeForRead: .distantFuture, // make all files eligible for read
         maxObjectsInFile: .max,
-        maxObjectSize: .max
+        maxObjectSize: .max,
+        synchronousWrite: true
     )
 
     static let writeEachObjectToNewFileAndReadAllFiles = StoragePerformanceMock(
@@ -35,7 +37,8 @@ struct StoragePerformanceMock: StoragePerformancePreset {
         minFileAgeForRead: readAllFiles.minFileAgeForRead,
         maxFileAgeForRead: readAllFiles.maxFileAgeForRead,
         maxObjectsInFile: 1, // write each data to new file
-        maxObjectSize: .max
+        maxObjectSize: .max,
+        synchronousWrite: true
     )
 }
 
@@ -45,14 +48,24 @@ struct UploadPerformanceMock: UploadPerformancePreset {
     let minUploadDelay: TimeInterval
     let maxUploadDelay: TimeInterval
     let uploadDelayChangeRate: Double
+    let uploadQueuePriority: DispatchQoS
 
     static let veryQuick = UploadPerformanceMock(
         initialUploadDelay: 0.05,
         defaultUploadDelay: 0.05,
         minUploadDelay: 0.05,
         maxUploadDelay: 0.05,
-        uploadDelayChangeRate: 0
+        uploadDelayChangeRate: 0,
+        uploadQueuePriority: .userInteractive
     )
+}
+
+extension PerformancePreset {
+    static let readAllFiles = Self(any: StoragePerformanceMock.readAllFiles,
+                                   upload: UploadPerformanceMock.veryQuick)
+    
+    static let writeEachObjectToNewFileAndReadAllFiles = Self(any: StoragePerformanceMock.writeEachObjectToNewFileAndReadAllFiles,
+                                                              upload: UploadPerformanceMock.veryQuick)
 }
 
 extension DataFormat {

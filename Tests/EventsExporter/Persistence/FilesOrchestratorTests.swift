@@ -128,7 +128,8 @@ class FilesOrchestratorTests: XCTestCase {
                 minFileAgeForRead: .mockAny(),
                 maxFileAgeForRead: .mockAny(),
                 maxObjectsInFile: 1, // create new file each time
-                maxObjectSize: .max
+                maxObjectSize: .max,
+                synchronousWrite: true
             ),
             dateProvider: RelativeDateProvider(advancingBySeconds: 1)
         )

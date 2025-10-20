@@ -107,6 +107,7 @@ internal class DDTestMonitor {
     
     private var isGitUploadSucceded: Bool = false
     private var serverTestingPort: CFMessagePort? = nil
+    private var isStopped: Bool = false
 
     static func installTestMonitor() -> Bool {
         guard DDTestMonitor.config.apiKey != nil else {
@@ -136,6 +137,7 @@ internal class DDTestMonitor {
     }
     
     static func removeTestMonitor() {
+        DDTestMonitor.instance?.stop()
         DDTestMonitor.instance = nil
         Log.debug("Clearing monitor")
         try? DDSymbolicator.dsymFilesDir.delete()
@@ -198,7 +200,9 @@ internal class DDTestMonitor {
         }
     }
     
-    deinit {
+    func stop() {
+        guard !isStopped else { return }
+        isStopped = true
         efd?.stop()
         atr?.stop()
         tia?.stop()
@@ -207,6 +211,12 @@ internal class DDTestMonitor {
         DDTestMonitor.tracer.flush()
         let _ = DDTestMonitor.tracer.eventsExporter?.flush()
         gitUploadQueue.waitUntilAllOperationsAreFinished()
+    }
+    
+    deinit {
+        if !isStopped {
+            Log.print("TestMonitor should be stopped before the deallocation")
+        }
     }
 
     func startGitUpload() {

@@ -33,6 +33,9 @@ class StderrCaptureTests: XCTestCase {
 
         let timeToCheck = StderrCapture.logDateFormatter.date(from: "2020-10-22 12:01:33.161546+0200")!
         XCTAssertEqual(spanData.events.first?.timestamp, timeToCheck)
+        
+        DDTestMonitor.instance?.stop()
+        DDTestMonitor.instance = nil
     }
 
     func testWhenWhenUIStepHappens_messageIsCapturedAndConvertedToEvents() {
@@ -54,6 +57,9 @@ class StderrCaptureTests: XCTestCase {
 
         let timeToCheck = date.addingTimeInterval(0.5)
         XCTAssertEqual(spanData.events.first?.timestamp, timeToCheck)
+        
+        DDTestMonitor.instance?.stop()
+        DDTestMonitor.instance = nil
     }
 
     func testStderrInitialises() {

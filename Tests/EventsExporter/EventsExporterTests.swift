@@ -8,6 +8,7 @@
 import OpenTelemetryApi
 @testable import OpenTelemetrySdk
 import XCTest
+import TestUtils
 
 class EventsExporterTests: XCTestCase {
     override func setUp() {
@@ -21,10 +22,11 @@ class EventsExporterTests: XCTestCase {
     func testWhenExportSpanIsCalled_thenTraceAndLogsAreUploaded() throws {
         let server = HttpTestServer(url: URL(string: "http://127.0.0.1:33333"))
         try server.start()
+        defer { server.stop() }
         
         let instrumentationLibraryName = "SimpleExporter"
         let instrumentationLibraryVersion = "semver:0.1.0"
-
+        
         let exporterConfiguration = ExporterConfiguration(serviceName: "serviceName",
                                                           applicationName: "applicationName",
                                                           applicationVersion: "applicationVersion",
@@ -36,28 +38,28 @@ class EventsExporterTests: XCTestCase {
                                                             logsBaseURL: URL(string: "http://127.0.0.1:33333")!
                                                           ),
                                                           metadata: .init(),
+                                                          performancePreset: .readAllFiles,
                                                           exporterId: "exporterId",
                                                           logger: Log())
-
+        
         let datadogExporter = try! EventsExporter(config: exporterConfiguration)
-
+        
         let spanProcessor = SimpleSpanProcessor(spanExporter: datadogExporter)
-
+        defer { spanProcessor.shutdown() }
+        
         OpenTelemetry.registerTracerProvider(tracerProvider:
             TracerProviderBuilder()
                 .add(spanProcessor: spanProcessor)
                 .build()
         )
         let tracer = OpenTelemetry.instance.tracerProvider.get(instrumentationName: instrumentationLibraryName, instrumentationVersion: instrumentationLibraryVersion) as! TracerSdk
-
+        
         simpleSpan(tracer: tracer)
-        spanProcessor.shutdown()
         
         var logsSent = false
         var tracesSent = false
         while !(tracesSent && logsSent) {
             guard let request = server.waitForRequest(timeout: 20, remove: true) else {
-                server.stop()
                 XCTFail("Request not received")
                 return
             }
@@ -67,7 +69,6 @@ class EventsExporterTests: XCTestCase {
                 logsSent = true
             }
         }
-        server.stop()
         
         XCTAssertTrue(logsSent)
         XCTAssertTrue(tracesSent)

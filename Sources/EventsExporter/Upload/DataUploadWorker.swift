@@ -14,7 +14,7 @@ internal protocol DataUploadWorkerType {
 
 internal class DataUploadWorker: DataUploadWorkerType {
     /// Queue to execute uploads.
-    internal let queue = DispatchQueue(label: "civisibility.datauploadworker", target: .global(qos: .utility))
+    internal let queue: DispatchQueue
     /// File reader providing data to upload.
     private let fileReader: FileReader
     /// Data uploader sending data to server.
@@ -33,11 +33,14 @@ internal class DataUploadWorker: DataUploadWorkerType {
         fileReader: FileReader,
         dataUploader: DataUploaderType,
         delay: Delay,
-        featureName: String
+        featureName: String,
+        priority: DispatchQoS
     ) {
         self.fileReader = fileReader
         self.dataUploader = dataUploader
         self.delay = delay
+        self.queue = DispatchQueue(label: "datadogtest.datauploadworker.\(featureName)",
+                                   target: .global(qos: priority.qosClass))
         self.featureName = featureName
 
         let uploadWork = DispatchWorkItem { [weak self] in

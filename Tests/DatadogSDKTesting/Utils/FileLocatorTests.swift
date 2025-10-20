@@ -15,7 +15,7 @@ internal class FileLocatorTests: XCTestCase {
         
         try FileManager.default.createDirectory(at: DDSymbolicator.dsymFilesDir.url,
                                                 withIntermediateDirectories: true)
-        
+        DDSymbolicator.dSYMFiles = []
         DDSymbolicator.createDSYMFileIfNeeded(forImageName: bundleName)
 
         let bundleFunctionInfo = FileLocator.testFunctionsInModule(bundleName)

@@ -8,13 +8,17 @@
 import OpenTelemetryApi
 import OpenTelemetrySdk
 import XCTest
+import TestUtils
 
 class DDNetworkInstrumentationTests: XCTestCase {
     var containerSpan: Span?
     let testSpanProcessor = SpySpanProcessor()
+    var server: HttpTestServer?
+    let url: URL = URL(string: "http://127.0.0.1:65432")!
 
-    override func setUp() {
+    override func setUpWithError() throws {
         XCTAssertNil(DDTracer.activeSpan)
+        server = HttpTestServer(url: url, config: .init())
         DDTestMonitor._env_recreate(env: ["DD_API_KEY": "fakeToken", "DD_DISABLE_TEST_INSTRUMENTING": "1"])
         DDTestMonitor.instance = DDTestMonitor()
         DDTestMonitor.instance?.instrumentationWorkQueue.waitUntilAllOperationsAreFinished()
@@ -24,6 +28,7 @@ class DDNetworkInstrumentationTests: XCTestCase {
         DDTestMonitor.instance?.injectHeaders = true // This is the default
         let spanName = "containerSpan"
         containerSpan = tracer.startSpan(name: spanName, attributes: [:])
+        try server?.start()
     }
 
     override func tearDown() {
@@ -31,13 +36,15 @@ class DDNetworkInstrumentationTests: XCTestCase {
         DDTestMonitor.instance?.stop()
         DDTestMonitor.instance = nil
         DDTestMonitor._env_recreate()
+        server?.stop()
+        server = nil
         XCTAssertNil(DDTracer.activeSpan)
     }
 
     func testItInterceptsDataTaskWithURL() throws {
         var testSpan: RecordEventsReadableSpan
 
-        let url = URL(string: "https://httpbin.io/get")!
+        let url = self.url.appendingPathComponent("success")
         let expec = expectation(description: "GET \(url)")
         var task: URLSessionTask
         task = URLSession.shared.dataTask(with: url) { _, _, _ in
@@ -52,11 +59,11 @@ class DDNetworkInstrumentationTests: XCTestCase {
         let spanData = testSpan.toSpanData()
         XCTAssertEqual(spanData.name, "HTTP GET")
         XCTAssertNotNil(spanData.attributes["http.status_code"]?.description)
-        XCTAssertEqual(spanData.attributes["http.scheme"]?.description, "https")
-        XCTAssertEqual(spanData.attributes["net.peer.name"]?.description, "httpbin.io")
-        XCTAssertEqual(spanData.attributes["http.url"]?.description, "https://httpbin.io/get")
+        XCTAssertEqual(spanData.attributes["http.scheme"]?.description, url.scheme)
+        XCTAssertEqual(spanData.attributes["net.peer.name"]?.description, url.host)
+        XCTAssertEqual(spanData.attributes["http.url"]?.description, url.absoluteString)
         XCTAssertEqual(spanData.attributes["http.method"]?.description, "GET")
-        XCTAssertEqual(spanData.attributes["http.target"]?.description, "/get")
+        XCTAssertEqual(spanData.attributes["http.target"]?.description, url.path)
         XCTAssertFalse(spanData.attributes["http.request.headers"]?.description.isEmpty ?? true)
         XCTAssertEqual(spanData.attributes["http.request.payload"]?.description, "<disabled>")
         XCTAssertEqual(spanData.attributes["http.response.payload"]?.description, "<disabled>")
@@ -68,7 +75,7 @@ class DDNetworkInstrumentationTests: XCTestCase {
         DDInstrumentationControl.startPayloadCapture()
         DDInstrumentationControl.stopInjectingHeaders()
 
-        let url = URL(string: "https://httpbin.io/get")!
+        let url = self.url.appendingPathComponent("success")
         let urlRequest = URLRequest(url: url)
         let expec = expectation(description: "GET \(url)")
         var task: URLSessionTask
@@ -84,14 +91,14 @@ class DDNetworkInstrumentationTests: XCTestCase {
         let spanData = testSpan.toSpanData()
         XCTAssertEqual(spanData.name, "HTTP GET")
         XCTAssertEqual(spanData.attributes["http.status_code"]?.description, "200")
-        XCTAssertEqual(spanData.attributes["http.scheme"]?.description, "https")
-        XCTAssertEqual(spanData.attributes["net.peer.name"]?.description, "httpbin.io")
-        XCTAssertEqual(spanData.attributes["http.url"]?.description, "https://httpbin.io/get")
+        XCTAssertEqual(spanData.attributes["http.scheme"]?.description, url.scheme)
+        XCTAssertEqual(spanData.attributes["net.peer.name"]?.description, url.host)
+        XCTAssertEqual(spanData.attributes["http.url"]?.description, url.absoluteString)
         XCTAssertEqual(spanData.attributes["http.method"]?.description, "GET")
-        XCTAssertEqual(spanData.attributes["http.target"]?.description, "/get")
+        XCTAssertEqual(spanData.attributes["http.target"]?.description, url.path)
         XCTAssertTrue(spanData.attributes["http.request.headers"]?.description.isEmpty ?? true)
         XCTAssertEqual(spanData.attributes["http.request.payload"]!.description, "<empty>")
-        XCTAssert(spanData.attributes["http.response.payload"]!.description.count > 20)
+        XCTAssert(spanData.attributes["http.response.payload"]!.description.count > 10)
 
         DDInstrumentationControl.stopPayloadCapture()
         DDInstrumentationControl.startInjectingHeaders()
@@ -100,7 +107,7 @@ class DDNetworkInstrumentationTests: XCTestCase {
     func testItReturnsErrorStatusForHTTPErrorStatus() throws {
         var testSpan: RecordEventsReadableSpan
 
-        let url = URL(string: "https://httpbin.io/status/404")!
+        let url = self.url.appendingPathComponent("404")
         let expec = expectation(description: "GET \(url)")
         var task: URLSessionTask
         task = URLSession.shared.dataTask(with: url) { _, _, _ in
@@ -138,7 +145,7 @@ class DDNetworkInstrumentationTests: XCTestCase {
     }
 
     func testItInjectTracingHeaders() throws {
-        let url = URL(string: "https://httpbin.io/headers")!
+        let url = self.url.appendingPathComponent("headers")
         let expec = expectation(description: "Headers \(url)")
         var task: URLSessionTask
 
@@ -152,17 +159,15 @@ class DDNetworkInstrumentationTests: XCTestCase {
             task.cancel()
         }
 
-        let json = try JSONSerialization.jsonObject(with: try XCTUnwrap(data), options: .fragmentsAllowed) as? NSDictionary
+        let headers = try JSONSerialization.jsonObject(with: try XCTUnwrap(data), options: .fragmentsAllowed) as? NSDictionary
 
-        let headers = (try XCTUnwrap(json))["headers"] as? NSDictionary
-
-        XCTAssertNotNil(headers?.object(forKey: "Traceparent"))
-        XCTAssertNotNil(headers?.object(forKey: "X-Datadog-Origin"))
-        XCTAssertNotNil(headers?.object(forKey: "X-Datadog-Parent-Id"))
-        XCTAssertNotNil(headers?.object(forKey: "X-Datadog-Trace-Id"))
-        XCTAssertEqual(headers?.object(forKey: "X-Datadog-Origin") as! [String], ["ciapp-test"])
+        XCTAssertNotNil(headers?.object(forKey: "traceparent"))
+        XCTAssertNotNil(headers?.object(forKey: "x-datadog-origin"))
+        XCTAssertNotNil(headers?.object(forKey: "x-datadog-parent-id"))
+        XCTAssertNotNil(headers?.object(forKey: "x-datadog-trace-id"))
+        XCTAssertEqual(headers?.object(forKey: "x-datadog-origin") as? String, "ciapp-test")
 
         let currentTraceId = try XCTUnwrap(containerSpan?.context.traceId)
-        XCTAssertEqual(headers?.object(forKey: "X-Datadog-Trace-Id") as! [String], [String(currentTraceId.rawLowerLong)])
+        XCTAssertEqual(headers?.object(forKey: "x-datadog-trace-id") as? String, String(currentTraceId.rawLowerLong))
     }
 }

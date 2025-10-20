@@ -347,7 +347,7 @@ public class HttpTestServer {
         
         // Handle URLSession test paths
         if config != nil {
-            handleURLSessionRequest(socket: clientSocket, path: path)
+            handleURLSessionRequest(socket: clientSocket, path: path, headers: headers)
             return
         }
 
@@ -372,7 +372,7 @@ public class HttpTestServer {
         sendSuccessResponse(socket: clientSocket)
     }
     
-    private func handleURLSessionRequest(socket: Int32, path: String) {
+    private func handleURLSessionRequest(socket: Int32, path: String, headers: [String: String]) {
         if path.hasPrefix("/success") || path.hasPrefix("/dontinstrument") {
             sendSuccessResponse(socket: socket)
             config?.successCallback?()
@@ -382,34 +382,45 @@ public class HttpTestServer {
         } else if path.hasPrefix("/error") {
             // Close without response
             config?.errorCallback?()
+        } else if path.hasPrefix("/headers") {
+            sendHeadersResponse(socket: socket, headers: headers)
+            config?.successCallback?()
         } else {
             sendNotFoundResponse(socket: socket)
         }
     }
     
     private func sendSuccessResponse(socket: Int32) {
-        let response = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+        let response = "HTTP/1.1 200 OK\r\nContent-Length: 17\r\nConnection: close\r\n\r\nSuccess response!"
         _ = response.withCString { ptr in
             send(socket, ptr, strlen(ptr), 0)
         }
     }
     
     private func sendErrorResponse(socket: Int32) {
-        let response = "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+        let response = "HTTP/1.1 400 Bad Request\r\nContent-Length: 15\r\nConnection: close\r\n\r\nError response!"
         _ = response.withCString { ptr in
             send(socket, ptr, strlen(ptr), 0)
         }
     }
     
     private func sendForbiddenResponse(socket: Int32) {
-        let response = "HTTP/1.1 403 Forbidden\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+        let response = "HTTP/1.1 403 Forbidden\r\nContent-Length: 19\r\nConnection: close\r\n\r\nForbidden response!"
         _ = response.withCString { ptr in
             send(socket, ptr, strlen(ptr), 0)
         }
     }
     
     private func sendNotFoundResponse(socket: Int32) {
-        let response = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+        let response = "HTTP/1.1 404 Not Found\r\nContent-Length: 19\r\nConnection: close\r\n\r\nNot Found response!"
+        _ = response.withCString { ptr in
+            send(socket, ptr, strlen(ptr), 0)
+        }
+    }
+    
+    private func sendHeadersResponse(socket: Int32, headers: [String: String]) {
+        let json = "{" + headers.map { key, value in "\"\(key)\":\"\(value)\"" }.joined(separator: ",") + "}"
+        let response = "HTTP/1.1 200 OK\r\nContent-Length: \(json.count)\r\nConnection: close\r\n\r\n\(json)"
         _ = response.withCString { ptr in
             send(socket, ptr, strlen(ptr), 0)
         }

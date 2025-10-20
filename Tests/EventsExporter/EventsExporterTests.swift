@@ -8,6 +8,7 @@
 import OpenTelemetryApi
 @testable import OpenTelemetrySdk
 import XCTest
+import TestUtils
 
 class EventsExporterTests: XCTestCase {
     override func setUp() {

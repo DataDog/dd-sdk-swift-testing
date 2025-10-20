@@ -8,6 +8,7 @@ import OpenTelemetryApi
 @testable import EventsExporter
 @testable import OpenTelemetrySdk
 import XCTest
+import TestUtils
 
 class SpansExporterTests: XCTestCase {
     override func setUp() {

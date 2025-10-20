@@ -6,6 +6,7 @@
 
 @testable import EventsExporter
 import OpenTelemetryApi
+import TestUtils
 @testable import OpenTelemetrySdk
 import XCTest
 

@@ -120,7 +120,7 @@ public class NetworkIntegration: UnskippableTestCase {
     func testNetworkIntegration() throws {
         print("NetworkIntegration")
 
-        let url = URL(string: "https://github.com")!
+        let url = URL(string: "https://github.com/DataDog/dd-sdk-swift-testing")!
         let expec = expectation(description: "GET \(url)")
 
         let task = URLSession.shared.dataTask(with: url) { data, _, _ in

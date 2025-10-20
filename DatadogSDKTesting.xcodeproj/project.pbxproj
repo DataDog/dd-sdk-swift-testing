@@ -39,10 +39,8 @@
 		A71E647E2BAA0AA100F2ACA5 /* EnvironmentReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E64682BAA0AA100F2ACA5 /* EnvironmentReader.swift */; };
 		A71E64802BAB442300F2ACA5 /* ConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71E647F2BAB442300F2ACA5 /* ConfigTests.swift */; };
 		A722B7DA2EA6785700F00FA6 /* HttpTestServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A722B7D82EA6785700F00FA6 /* HttpTestServer.swift */; };
-		A722B7E02EA6787C00F00FA6 /* TestUtils.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A722B7D02EA6783300F00FA6 /* TestUtils.framework */; platformFilters = (ios, macos, ); };
-		A722B7E12EA6787C00F00FA6 /* TestUtils.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A722B7D02EA6783300F00FA6 /* TestUtils.framework */; platformFilters = (ios, macos, ); settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		A722B7E52EA6788300F00FA6 /* TestUtils.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A722B7D02EA6783300F00FA6 /* TestUtils.framework */; platformFilters = (ios, macos, ); };
-		A722B7E62EA6788300F00FA6 /* TestUtils.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A722B7D02EA6783300F00FA6 /* TestUtils.framework */; platformFilters = (ios, macos, ); settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		A722B7E02EA6787C00F00FA6 /* TestUtils.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A722B7D02EA6783300F00FA6 /* TestUtils.framework */; };
+		A722B7E52EA6788300F00FA6 /* TestUtils.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A722B7D02EA6783300F00FA6 /* TestUtils.framework */; };
 		A7349B702E1820E300581793 /* DatadogSDKTesting.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A74246002BFF94FA00F7EC64 /* TestImpactAnalysisSkippabble.swift in Sources */ = {isa = PBXBuildFile; fileRef = A74245FF2BFF94FA00F7EC64 /* TestImpactAnalysisSkippabble.swift */; };
 		A74C91CA2E67278800B10681 /* DroneCI.swift in Sources */ = {isa = PBXBuildFile; fileRef = A74C91C92E67278800B10681 /* DroneCI.swift */; };
@@ -298,28 +296,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		A722B7E42EA6787C00F00FA6 /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				A722B7E12EA6787C00F00FA6 /* TestUtils.framework in Embed Frameworks */,
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		A722B7E92EA6788300F00FA6 /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				A722B7E62EA6788300F00FA6 /* TestUtils.framework in Embed Frameworks */,
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		A7349B6F2E1820D100581793 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1358,7 +1334,6 @@
 				A7FC25692BA1E83500067E26 /* Sources */,
 				A7FC256A2BA1E83500067E26 /* Frameworks */,
 				A7FC256B2BA1E83500067E26 /* Resources */,
-				A722B7E92EA6788300F00FA6 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -1405,7 +1380,6 @@
 				A7FC25832BA1E87400067E26 /* Sources */,
 				A7FC25842BA1E87400067E26 /* Frameworks */,
 				A7FC25852BA1E87400067E26 /* Resources */,
-				A722B7E42EA6787C00F00FA6 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -1869,19 +1843,11 @@
 		};
 		A722B7E32EA6787C00F00FA6 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			platformFilters = (
-				ios,
-				macos,
-			);
 			target = A722B7CF2EA6783300F00FA6 /* TestUtils */;
 			targetProxy = A722B7E22EA6787C00F00FA6 /* PBXContainerItemProxy */;
 		};
 		A722B7E82EA6788300F00FA6 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			platformFilters = (
-				ios,
-				macos,
-			);
 			target = A722B7CF2EA6783300F00FA6 /* TestUtils */;
 			targetProxy = A722B7E72EA6788300F00FA6 /* PBXContainerItemProxy */;
 		};

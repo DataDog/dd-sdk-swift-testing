@@ -10,6 +10,10 @@ internal protocol Delay {
     var current: TimeInterval { get }
     mutating func decrease()
     mutating func increase()
+    
+    /// Sets intevral.
+    /// Will return false if interval is bigger than max delay.
+    mutating func set(delay: TimeInterval) -> Bool
 }
 
 /// Mutable interval used for periodic data uploads.
@@ -37,5 +41,10 @@ internal struct DataUploadDelay: Delay {
 
     mutating func increase() {
         delay = min(delay * (1.0 + changeRate), maxDelay)
+    }
+    
+    mutating func set(delay: TimeInterval) -> Bool {
+        self.delay = delay
+        return delay <= maxDelay
     }
 }

@@ -10,11 +10,11 @@ import Foundation
 public struct Directory {
     public let url: URL
 
-    /// Creates subdirectory with given path under system caches directory.
-    /// RUMM-2169: Use `Directory.cache().createSubdirectory(path:)` instead.
-    public init(withSubdirectoryPath path: String) throws {
-        self.init(url: try Directory.cache().createSubdirectory(path: path).url)
-    }
+//    /// Creates subdirectory with given path under system caches directory.
+//    /// RUMM-2169: Use `Directory.cache().createSubdirectory(path:)` instead.
+//    public init(withSubdirectoryPath path: String) throws {
+//        self.init(url: try Directory.cache().createSubdirectory(path: path).url)
+//    }
 
     public init(url: URL) {
         self.url = url
@@ -81,7 +81,7 @@ public struct Directory {
         // Instead of iterating over all files and removing them one by one, we create a temporary
         // empty directory and replace source directory content with (empty) temporary folder.
         // This makes the deletion atomic, and is more performant in benchmarks.
-        let temporaryDirectory = try Directory(withSubdirectoryPath: "com.datadoghq/\(UUID().uuidString)")
+        let temporaryDirectory = try Directory.cache().createSubdirectory(path: "com.datadoghq/\(UUID().uuidString)")
         try retry(times: 3, delay: 0.001) {
             _ = try FileManager.default.replaceItemAt(url, withItemAt: temporaryDirectory.url)
         }

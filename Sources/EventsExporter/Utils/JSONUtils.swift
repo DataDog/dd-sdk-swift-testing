@@ -7,7 +7,7 @@
 import Foundation
 
 extension JSONEncoder {
-    static func `default`() -> JSONEncoder {
+    static var `default`: JSONEncoder = {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .custom { date, encoder in
             var container = encoder.singleValueContainer()
@@ -18,7 +18,7 @@ extension JSONEncoder {
             encoder.outputFormatting = [.withoutEscapingSlashes]
         }
         return encoder
-    }
+    }()
 }
 
 protocol JSONable {
@@ -28,7 +28,7 @@ protocol JSONable {
 
 extension JSONable where Self: Encodable {
     var jsonData: Data? {
-        return try? JSONEncoder().encode(self)
+        return try? JSONEncoder.default.encode(self)
     }
 
     var jsonString: String {

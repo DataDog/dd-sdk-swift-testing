@@ -6,73 +6,101 @@
 
 import Foundation
 
+
 /// A type that performs data uploads.
 internal protocol DataUploaderType {
-    func upload(data: Data) -> DataUploadStatus
+    func upload(data: Data, _ result: @escaping (DataUploadStatus) -> Void)
 }
 
-/// Synchronously uploads data to server using `HTTPClient`.
-internal final class DataUploader: DataUploaderType {
-    /// An unreachable upload status - only meant to satisfy the compiler.
-    private static let unreachableUploadStatus = DataUploadStatus(needsRetry: false)
-
-    private let httpClient: HTTPClient
-    private let requestBuilder: RequestBuilder
-
-    init(httpClient: HTTPClient, requestBuilder: RequestBuilder) {
-        self.httpClient = httpClient
-        self.requestBuilder = requestBuilder
+/// Uploads data to server using  provided closure as uploader.
+internal struct ClosureDataUploader: DataUploaderType {
+    typealias UploadCallback = (Data, @escaping (HTTPClient.RequestError?) -> Void) -> Void
+    
+    private let _upload: UploadCallback
+    
+    init(upload: @escaping UploadCallback) {
+        self._upload = upload
     }
-
-    /// Uploads data synchronously (will block current thread) and returns the upload status.
-    /// Uses timeout configured for `HTTPClient`.
-    func upload(data: Data) -> DataUploadStatus {
-        let request = createRequest(with: data)
-        var uploadStatus: DataUploadStatus?
-
-        let semaphore = DispatchSemaphore(value: 0)
-
-        httpClient.send(request: request) { result in
-            switch result {
-            case .success(let httpResponse):
-                uploadStatus = DataUploadStatus(httpResponse: httpResponse)
-            case .failure(let error):
-                uploadStatus = DataUploadStatus(networkError: error)
+    
+    func upload(data: Data, _ result: @escaping (DataUploadStatus) -> Void) {
+        _upload(data) { error in
+            guard let error = error else {
+                result(.success)
+                return
             }
-
-            semaphore.signal()
-        }
-
-        _ = semaphore.wait(timeout: .distantFuture)
-
-        return uploadStatus ?? DataUploader.unreachableUploadStatus
-    }
-
-    /// Uploads data synchronously (will block current thread) and returns the response data
-    /// Uses timeout configured for `HTTPClient`.
-    func uploadWithResponse(data: Data) -> Data? {
-        let request = createRequest(with: data)
-        var returnData: Data?
-
-        let semaphore = DispatchSemaphore(value: 0)
-
-        httpClient.sendWithResult(request: request) { result in
-            switch result {
-                case .success(let data):
-                    returnData = data
-                case .failure:
-                    returnData = nil
+            switch error {
+            case .transport, .inconsistentResponse:
+                result(.retry)
+            case .http(code: let code, headers: let headers, body: _):
+                result(.init(httpCode: code, headers: headers))
             }
-
-            semaphore.signal()
         }
-
-        _ = semaphore.wait(timeout: .distantFuture)
-
-        return returnData
-    }
-
-    private func createRequest(with data: Data) -> URLRequest {
-        return requestBuilder.uploadRequest(with: data)
     }
 }
+
+//
+///// Synchronously uploads data to server using `HTTPClient`.
+//internal final class DataUploader: DataUploaderType {
+//    /// An unreachable upload status - only meant to satisfy the compiler.
+//    private static let unreachableUploadStatus = DataUploadStatus(needsRetry: false, waitTime: nil)
+//
+//    private let httpClient: HTTPClient
+//    private let requestBuilder: RequestBuilder
+//
+//    init(httpClient: HTTPClient, requestBuilder: RequestBuilder) {
+//        self.httpClient = httpClient
+//        self.requestBuilder = requestBuilder
+//    }
+//
+//    /// Uploads data synchronously (will block current thread) and returns the upload status.
+//    /// Uses timeout configured for `HTTPClient`.
+//    func upload(data: Data) -> DataUploadStatus {
+//        let request = createRequest(with: data)
+//        var uploadStatus: DataUploadStatus?
+//
+//        let semaphore = DispatchSemaphore(value: 0)
+//
+//        httpClient.send(request: request) { result in
+//            switch result {
+//            case .success(let httpResponse):
+//                uploadStatus = DataUploadStatus(httpResponse: httpResponse)
+//            case .failure(let error):
+//                uploadStatus = DataUploadStatus(networkError: error)
+//            }
+//
+//            semaphore.signal()
+//        }
+//
+//        _ = semaphore.wait(timeout: .distantFuture)
+//
+//        return uploadStatus ?? DataUploader.unreachableUploadStatus
+//    }
+//
+//    /// Uploads data synchronously (will block current thread) and returns the response data
+//    /// Uses timeout configured for `HTTPClient`.
+//    func uploadWithResponse(data: Data) -> Data? {
+//        let request = createRequest(with: data)
+//        var returnData: Data?
+//
+//        let semaphore = DispatchSemaphore(value: 0)
+//
+//        httpClient.sendWithResult(request: request) { result in
+//            switch result {
+//                case .success(let data):
+//                    returnData = data
+//                case .failure:
+//                    returnData = nil
+//            }
+//
+//            semaphore.signal()
+//        }
+//
+//        _ = semaphore.wait(timeout: .distantFuture)
+//
+//        return returnData
+//    }
+//
+//    private func createRequest(with data: Data) -> URLRequest {
+//        return requestBuilder.uploadRequest(with: data)
+//    }
+//}

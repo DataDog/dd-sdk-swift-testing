@@ -158,7 +158,7 @@ public struct PerformancePreset: Equatable, StoragePerformancePreset, UploadPerf
             initialUploadDelay: 5, // postpone to not impact app launch time
             defaultUploadDelay: 5,
             minUploadDelay: 1,
-            maxUploadDelay: 20,
+            maxUploadDelay: 30,
             uploadDelayChangeRate: 0.1,
             uploadQueuePriority: .utility
         )
@@ -176,7 +176,7 @@ public struct PerformancePreset: Equatable, StoragePerformancePreset, UploadPerf
             maxFileAgeForRead: `default`.maxFileAgeForRead,
             maxObjectsInFile: `default`.maxObjectsInFile,
             maxObjectSize: `default`.maxObjectSize,
-            synchronousWrite: true
+            synchronousWrite: false
         ),
         // upload
         upload: .init(

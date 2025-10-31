@@ -6,7 +6,22 @@
 
 import Foundation
 
-internal class FilesOrchestrator {
+protocol FileOrhestratorType {
+    var writeFormat: FileWriteFormat { get set }
+    
+    // Read
+    func getReadableFile() throws -> ReadableFile?
+    func getAllFiles(excludingFilesNamed excludedFileNames: Set<String>) throws -> [ReadableFile]
+    func delete(readableFile: ReadableFile) throws
+    
+    // Write
+    func getWritableFile(writeSize: UInt64) throws -> (file: WritableFile, isNew: Bool)
+}
+
+// Object is not thread safe and should be accessed from the queue
+internal final class FilesOrchestrator: FileOrhestratorType {
+    var writeFormat: FileWriteFormat
+    
     /// Directory where files are stored.
     private let directory: Directory
     /// Date provider.
@@ -21,60 +36,44 @@ internal class FilesOrchestrator {
 
     init(
         directory: Directory,
+        writeFormat: FileWriteFormat,
         performance: StoragePerformancePreset,
         dateProvider: DateProvider
     ) {
         self.directory = directory
+        self.writeFormat = writeFormat
         self.performance = performance
         self.dateProvider = dateProvider
     }
 
     // MARK: - `WritableFile` orchestration
-
     func getWritableFile(writeSize: UInt64) throws -> WritableFile {
         if writeSize > performance.maxObjectSize {
             throw ExporterError(description: "data exceeds the maximum size of \(performance.maxObjectSize) bytes.")
         }
-
-        let lastWritableFileOrNil = reuseLastWritableFileIfPossible(writeSize: writeSize)
-
-        if let lastWritableFile = lastWritableFileOrNil { // if last writable file can be reused
+        if let lastWritableFile = try reuseLastWritableFileIfPossible(writeSize: writeSize) {
+            // if last writable file can be reused
             lastWritableFileUsesCount += 1
             return lastWritableFile
         } else {
-            // NOTE: RUMM-610 As purging files directory is a memory-expensive operation, do it only when we know
-            // that a new file will be created. With SDK's `PerformancePreset` this gives
-            // the process enough time to not over-allocate internal `_FileCache` and `_NSFastEnumerationEnumerator`
-            // objects, resulting with a flat allocations graph in a long term.
-            try purgeFilesDirectoryIfNeeded()
-
-            let newFileName = fileNameFrom(fileCreationDate: dateProvider.currentDate())
-            let newFile = try directory.createFile(named: newFileName)
-            lastWritableFileName = newFile.name
+            let newFile = try rotateFile()
             lastWritableFileUsesCount = 1
             return newFile
         }
     }
 
-    private func reuseLastWritableFileIfPossible(writeSize: UInt64) -> WritableFile? {
-        if let lastFileName = lastWritableFileName {
-            do {
-                guard let lastFile = try? directory.file(named: lastFileName) else {
-                    return nil
-                }
-                let fileCanBeUsedMoreTimes = (lastWritableFileUsesCount + 1) <= performance.maxObjectsInFile
-                let lastFileCreationDate = fileCreationDateFrom(fileName: lastFile.name)
-                let lastFileAge = dateProvider.currentDate().timeIntervalSince(lastFileCreationDate)
+    private func reuseLastWritableFileIfPossible(writeSize: UInt64) throws -> WritableFile? {
+        guard let lastFileName = lastWritableFileName else { return nil }
+        let lastFile = try directory.file(named: lastFileName)
+        let fileCanBeUsedMoreTimes = (lastWritableFileUsesCount + 1) <= performance.maxObjectsInFile
+        let lastFileCreationDate = fileCreationDateFrom(fileName: lastFile.name)
+        let lastFileAge = dateProvider.currentDate().timeIntervalSince(lastFileCreationDate)
 
-                let fileIsRecentEnough = lastFileAge <= performance.maxFileAgeForWrite
-                let fileHasRoomForMore = (try lastFile.size() + writeSize) <= performance.maxFileSize
+        let fileIsRecentEnough = lastFileAge <= performance.maxFileAgeForWrite
+        let fileHasRoomForMore = (try lastFile.size() + writeSize) <= performance.maxFileSize
 
-                if fileIsRecentEnough, fileHasRoomForMore, fileCanBeUsedMoreTimes {
-                    return lastFile
-                }
-            } catch {
-                Log.print("🔥 Failed to read previously used writable file: \(error)")
-            }
+        if fileIsRecentEnough, fileHasRoomForMore, fileCanBeUsedMoreTimes {
+            return lastFile
         }
         return nil
     }
@@ -157,6 +156,27 @@ internal class FilesOrchestrator {
         } else {
             return (file: file, creationDate: fileCreationDate)
         }
+    }
+    
+    private func rotateFile() throws -> WritableFile {
+        if let lastFileName = lastWritableFileName {
+            try writeFormat.end(file: directory.file(named: lastFileName))
+            lastWritableFileName = nil
+        }
+        
+        // NOTE: RUMM-610 As purging files directory is a memory-expensive operation, do it only when we know
+        // that a new file will be created. With SDK's `PerformancePreset` this gives
+        // the process enough time to not over-allocate internal `_FileCache` and `_NSFastEnumerationEnumerator`
+        // objects, resulting with a flat allocations graph in a long term.
+        try purgeFilesDirectoryIfNeeded()
+
+        let newFile = try directory.createFile(named: fileNameFrom(fileCreationDate: dateProvider.currentDate()))
+        try writeFormat.start(file: newFile)
+        
+        lastWritableFileName = newFile.name
+        lastWritableFileUsesCount = 0
+        
+        return newFile
     }
 }
 

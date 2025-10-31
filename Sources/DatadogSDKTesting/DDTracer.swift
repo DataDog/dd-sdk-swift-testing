@@ -4,9 +4,8 @@
  * Copyright 2020-Present Datadog, Inc.
  */
 
-internal import EventsExporter
 import Foundation
-internal import InMemoryExporter
+internal import EventsExporter
 internal import OpenTelemetryApi
 internal import OpenTelemetrySdk
 
@@ -151,7 +150,7 @@ internal class DDTracer {
 
     /// This method is called form the crash reporter if the previous run crashed while running a test. Then it recreates the span with the previous information
     /// and adds the error status and information
-    @discardableResult func createSpanFromCrash(spanData: SimpleSpanData, crashDate: Date?, errorType: String, errorMessage: String, errorStack: String) -> RecordEventsReadableSpan {
+    @discardableResult func createSpanFromCrash(spanData: SimpleSpanData, crashDate: Date?, errorType: String, errorMessage: String, errorStack: String) -> SpanSdk {
         var spanId: SpanId
         var parentContext: SpanContext?
         let traceId = TraceId(idHi: spanData.traceIdHi, idLo: spanData.traceIdLo)
@@ -198,20 +197,20 @@ internal class DDTracer {
         }
 
         let spanProcessor = MultiSpanProcessor(spanProcessors: tracerProviderSdk.getActiveSpanProcessors())
-        let span = RecordEventsReadableSpan.startSpan(context: spanContext,
-                                                      name: spanName,
-                                                      instrumentationScopeInfo: tracerSdk.instrumentationScopeInfo,
-                                                      kind: .internal,
-                                                      parentContext: parentContext,
-                                                      hasRemoteParent: false,
-                                                      spanLimits: tracerProviderSdk.getActiveSpanLimits(),
-                                                      spanProcessor: spanProcessor,
-                                                      clock: tracerProviderSdk.getActiveClock(),
-                                                      resource: Resource(),
-                                                      attributes: attributes,
-                                                      links: [SpanData.Link](),
-                                                      totalRecordedLinks: 0,
-                                                      startTime: startTime)
+        let span = SpanSdk.startSpan(context: spanContext,
+                                     name: spanName,
+                                     instrumentationScopeInfo: tracerSdk.instrumentationScopeInfo,
+                                     kind: .internal,
+                                     parentContext: parentContext,
+                                     hasRemoteParent: false,
+                                     spanLimits: tracerProviderSdk.getActiveSpanLimits(),
+                                     spanProcessor: spanProcessor,
+                                     clock: tracerProviderSdk.getActiveClock(),
+                                     resource: Resource(),
+                                     attributes: attributes,
+                                     links: [SpanData.Link](),
+                                     totalRecordedLinks: 0,
+                                     startTime: startTime)
 
         var minimumCrashTime = spanData.startTime.addingTimeInterval(TimeInterval.fromMicroseconds(1))
         if let crashDate = crashDate {
@@ -223,24 +222,24 @@ internal class DDTracer {
         return span
     }
 
-    @discardableResult func createSpanFromLaunchContext() -> RecordEventsReadableSpan {
+    @discardableResult func createSpanFromLaunchContext() -> SpanSdk {
         let attributes = AttributesDictionary(capacity: tracerProviderSdk.getActiveSpanLimits().attributeCountLimit)
         let spanProcessor = MultiSpanProcessor(spanProcessors: tracerProviderSdk.getActiveSpanProcessors())
 
-        let span = RecordEventsReadableSpan.startSpan(context: launchSpanContext!,
-                                                      name: "ApplicationUnderTest",
-                                                      instrumentationScopeInfo: tracerSdk.instrumentationScopeInfo,
-                                                      kind: .internal,
-                                                      parentContext: nil,
-                                                      hasRemoteParent: false,
-                                                      spanLimits: tracerProviderSdk.getActiveSpanLimits(),
-                                                      spanProcessor: spanProcessor,
-                                                      clock: tracerProviderSdk.getActiveClock(),
-                                                      resource: Resource(),
-                                                      attributes: attributes,
-                                                      links: [SpanData.Link](),
-                                                      totalRecordedLinks: 0,
-                                                      startTime: Date())
+        let span = SpanSdk.startSpan(context: launchSpanContext!,
+                                     name: "ApplicationUnderTest",
+                                     instrumentationScopeInfo: tracerSdk.instrumentationScopeInfo,
+                                     kind: .internal,
+                                     parentContext: nil,
+                                     hasRemoteParent: false,
+                                     spanLimits: tracerProviderSdk.getActiveSpanLimits(),
+                                     spanProcessor: spanProcessor,
+                                     clock: tracerProviderSdk.getActiveClock(),
+                                     resource: Resource(),
+                                     attributes: attributes,
+                                     links: [SpanData.Link](),
+                                     totalRecordedLinks: 0,
+                                     startTime: Date())
 
         return span
     }
@@ -274,7 +273,7 @@ internal class DDTracer {
 
     /// This method is only currently used for loggign the steps when runnning UITest
     func logString(string: String, timeIntervalSinceSpanStart: Double) {
-        guard let activeSpan = DDTracer.activeSpan as? RecordEventsReadableSpan else {
+        guard let activeSpan = DDTracer.activeSpan as? SpanSdk else {
             return
         }
         let timestamp = activeSpan.startTime.addingTimeInterval(timeIntervalSinceSpanStart)

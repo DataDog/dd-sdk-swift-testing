@@ -52,17 +52,38 @@ internal struct DataUploadStatus {
     /// If set to `false` then data associated with the upload should be deleted as it does not need any more upload
     /// attempts (i.e. the upload succeeded or failed due to unrecoverable client error).
     let needsRetry: Bool
+    
+    /// if server returned retry time we can use it
+    let waitTime: TimeInterval?
 }
 
 extension DataUploadStatus {
     // MARK: - Initialization
-
     init(httpResponse: HTTPURLResponse) {
         let statusCode = HTTPResponseStatusCode(rawValue: httpResponse.statusCode) ?? .unexpected
-        self.init(needsRetry: statusCode.needsRetry)
+        self.init(needsRetry: statusCode.needsRetry, waitTime: nil)
+    }
+    
+    init(httpCode: Int, headers: [HTTPHeader.Field: String]) {
+        let statusCode = HTTPResponseStatusCode(rawValue: httpCode) ?? .unexpected
+        switch statusCode {
+        case .tooManyRequests:
+            var waitTime: TimeInterval? = nil
+            if let retryAfter = headers[.retryAfterHeaderField], let retry = TimeInterval(retryAfter) {
+                waitTime = retry
+            } else if let rateLimit = headers[.rateLimitResetHeaderField], let retry = TimeInterval(rateLimit) {
+                waitTime = retry
+            }
+            self.init(needsRetry: true, waitTime: waitTime)
+        default:
+            self.init(needsRetry: statusCode.needsRetry, waitTime: nil)
+        }
     }
 
     init(networkError: Error) {
-        self.init(needsRetry: true)
+        self.init(needsRetry: true, waitTime: nil)
     }
+    
+    static var success: DataUploadStatus { .init(needsRetry: false, waitTime: nil) }
+    static var retry: DataUploadStatus { .init(needsRetry: true, waitTime: nil) }
 }

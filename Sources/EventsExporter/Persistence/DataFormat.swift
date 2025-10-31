@@ -27,3 +27,54 @@ internal struct DataFormat {
         self.separatorData = separator.data(using: .utf8)! // swiftlint:disable:this force_unwrapping
     }
 }
+
+protocol FileWriteFormat {
+    func start(file: File) throws
+    func add(element data: Data, to file: File) throws
+    func end(file: File) throws
+}
+
+protocol JSONFileHeader: Encodable {
+    static var batchFieldName: String { get }
+}
+
+extension APIVoidMeta: JSONFileHeader {
+    static var batchFieldName: String { "" }
+}
+
+struct JSONFileWriteFormat<Header: JSONFileHeader>: FileWriteFormat {
+    let encoder: JSONEncoder
+    let prefix: Data
+    let suffix: Data
+    let separator: Data
+    
+    init(header: Header, encoder: JSONEncoder) throws {
+        self.encoder = encoder
+        self.separator = Data([UInt8(ascii: ",")])
+        if header is APIVoidValue {
+            self.prefix = "[".data(using: .utf8)!
+            self.suffix = "]".data(using: .utf8)!
+        } else {
+            // Generating json object.
+            // Removing last '}'
+            // Adding array field for the batch
+            var headerData = try encoder.encode(header)
+            self.suffix = Data([UInt8(ascii: "]"), headerData.last!])
+            headerData[headerData.count - 1] = UInt8(ascii: ",")
+            headerData.append(contentsOf: "\"\(Header.batchFieldName)\":[".utf8)
+            self.prefix = headerData
+        }
+    }
+    
+    func start(file: File) throws {
+        try file.append(data: prefix, synchronized: true)
+    }
+    
+    func add(element data: Data, to file: File) throws {
+        try file.append(data: data + separator)
+    }
+    
+    func end(file: File) throws {
+        try file.append(data: suffix, synchronized: true)
+    }
+}

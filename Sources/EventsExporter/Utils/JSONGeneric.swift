@@ -6,9 +6,18 @@
 
 import Foundation
 
-enum JSONGeneric {
+enum JSONGeneric: CustomDebugStringConvertible {
     case string(String)
     case stringDict([String: String])
+    
+    var debugDescription: String {
+        switch self {
+        case .string(let value):
+            return value
+        case .stringDict(let value):
+            return value.debugDescription
+        }
+    }
 }
 
 extension JSONGeneric: Encodable {
@@ -40,7 +49,7 @@ extension JSONGeneric: Decodable {
         throw DecodingError.dataCorrupted(
             .init(
                 codingPath: container.codingPath,
-                debugDescription: "Cannot decode JSON"
+                debugDescription: "Cannot decode JSON. Expected string or string dictionary"
             )
         )
     }

@@ -23,22 +23,29 @@ struct TestCodeCoverage: Encodable {
         }
         
         init(info: CoverageInfo.File, workspace: String?) {
-            if let workspace = workspace, info.name.count >= workspace.count {
-                self.name = info.name.replacingOccurrences(
+            var coveredLines = IndexSet()
+            for location in info.segments.keys {
+                coveredLines.insert(integersIn: Int(location.startLine)...Int(location.endLine))
+            }
+            self.init(name: info.name, workspace: workspace, lines: coveredLines)
+        }
+        
+        init(name: String, workspace: String?, lines: IndexSet) {
+            if let workspace = workspace, name.count >= workspace.count {
+                self.name = name.replacingOccurrences(
                     of: workspace, with: "",
-                    range: info.name.startIndex..<info.name.index(info.name.startIndex, offsetBy: workspace.count)
+                    range: name.startIndex..<name.index(name.startIndex, offsetBy: workspace.count)
                 )
             } else {
-                self.name = info.name
+                self.name = name
             }
-            let coveredLines = info.coveredLines
-            guard let lastLine = coveredLines.last else {
+            guard let lastLine = lines.last else {
                 self.bitmap = Data()
                 return
             }
             var bitmap = Data(repeating: 0, count: lastLine % 8 == 0 ? lastLine / 8 : lastLine / 8 + 1)
             bitmap.withUnsafeMutableBytes { bytes in
-                for line in coveredLines {
+                for line in lines {
                     let line0 = line - 1
                     let index = line0 / 8
                     let byte = bytes[index]
@@ -63,14 +70,12 @@ struct TestCodeCoverage: Encodable {
         let workspacePath = workspace.map { $0.last == "/" ? $0 : $0 + "/" }
         self.files = files.map { File(info: $0, workspace: workspacePath) }
     }
-}
-
-extension CoverageInfo.File {
-    var coveredLines: IndexSet {
-        var indexes = IndexSet()
-        for location in segments.keys {
-            indexes.insert(integersIn: Int(location.startLine)...Int(location.endLine))
-        }
-        return indexes
+    
+    init(sessionId: UInt64, suiteId: UInt64, spanId: UInt64, workspace: String?, files: Dictionary<String, IndexSet>) {
+        self.sessionId = sessionId
+        self.suiteId = suiteId
+        self.spanId = spanId
+        let workspacePath = workspace.map { $0.last == "/" ? $0 : $0 + "/" }
+        self.files = files.map { File(name: $0.key, workspace: workspacePath, lines: $0.value) }
     }
 }

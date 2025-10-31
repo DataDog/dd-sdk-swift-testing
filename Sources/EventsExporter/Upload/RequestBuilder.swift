@@ -48,9 +48,9 @@ internal struct SingleRequestBuilder: RequestBuilder {
         headers.forEach { header in
             switch header.value {
             case .constant(let value):
-                precomputedHeaders[header.field] = value
+                precomputedHeaders[header.field.rawValue] = value
             case .dynamic(let value):
-                computedHeaders[header.field] = value
+                computedHeaders[header.field.rawValue] = value
             }
         }
 

@@ -5,34 +5,7 @@
  */
 
 import Foundation
-
-final class UnfairLock {
-    private let _lock: os_unfair_lock_t
-    
-    init() {
-        _lock = .allocate(capacity: 1)
-        _lock.initialize(to: .init())
-    }
-    
-    deinit {
-        _lock.deinitialize(count: 1)
-        _lock.deallocate()
-    }
-    
-    func lock() {
-        os_unfair_lock_lock(_lock)
-    }
-    
-    func unlock() {
-        os_unfair_lock_unlock(_lock)
-    }
-    
-    func whileLocked<T>(_ action: () throws -> T) rethrows -> T {
-        os_unfair_lock_lock(_lock)
-        defer { os_unfair_lock_unlock(_lock) }
-        return try action()
-    }
-}
+internal import EventsExporter
 
 struct Synced<V> {
     private var _value: V

@@ -9,7 +9,7 @@ import OpenTelemetrySdk
 
 /// Abstracts the `DataUploadWorker`, so we can have no-op uploader in tests.
 internal protocol DataUploadWorkerType {
-    func flush() -> SpanExporterResultCode
+    func flush() -> Bool
 }
 
 internal class DataUploadWorker: DataUploadWorkerType {
@@ -50,11 +50,15 @@ internal class DataUploadWorker: DataUploadWorkerType {
 
             if let batch = self.fileReader.readNextBatch() {
                 // Upload batch
-                let uploadStatus = self.dataUploader.upload(data: batch.data)
+                let uploadStatus = Waiter { self.dataUploader.upload(data: batch.data, $0) }.await()
 
                 // Delete or keep batch depending on the upload status
                 if uploadStatus.needsRetry {
-                    self.delay.increase()
+                    if let waitTime = uploadStatus.waitTime {
+                        _ = self.delay.set(delay: waitTime)
+                    } else {
+                        self.delay.increase()
+                    }
                 } else {
                     self.fileReader.markBatchAsRead(batch)
                     self.delay.decrease()
@@ -75,22 +79,22 @@ internal class DataUploadWorker: DataUploadWorkerType {
         guard let work = uploadWork else {
             return
         }
-
         queue.asyncAfter(deadline: .now() + delay, execute: work)
     }
 
     /// This method  gets remaining files at once, and uploads them
     /// It assures that periodic uploader cannot read or upload the files while the flush is being processed
-    internal func flush() -> SpanExporterResultCode {
-        let success = queue.sync {
-            self.fileReader.onRemainingBatches {
-                let uploadStatus = self.dataUploader.upload(data: $0.data)
-                if !uploadStatus.needsRetry {
-                    self.fileReader.markBatchAsRead($0)
+    internal func flush() -> Bool {
+        queue.sync {
+            self.fileReader.onRemainingBatches { batch in
+                let uploadStatus = Waiter { self.dataUploader.upload(data: batch.data, $0) }.await()
+                guard !uploadStatus.needsRetry else {
+                    return false
                 }
+                self.fileReader.markBatchAsRead(batch)
+                return true
             }
         }
-        return success ? .success : .failure
     }
 
     /// Cancels scheduled uploads and stops scheduling next ones.

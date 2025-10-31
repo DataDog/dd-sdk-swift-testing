@@ -74,7 +74,7 @@ internal class CoverageExporter {
         
         defer {
             if configuration.debug.saveCodeCoverageFiles {
-                if let coverageData = coverageData, let data = try? JSONEncoder.default().encode(coverageData) {
+                if let coverageData = coverageData, let data = try? JSONEncoder.apiEncoder.encode(coverageData) {
                     let testName = coverage.deletingPathExtension().lastPathComponent.components(separatedBy: "__").last!
                     let jsonURL = coverage.deletingLastPathComponent()
                         .appendingPathComponent(testName + ".json", isDirectory: false)

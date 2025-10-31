@@ -16,6 +16,9 @@ internal protocol WritableFile {
 
     /// Synchronously appends given data at the end of this file.
     func append(data: Data, synchronized: Bool) throws
+    
+    /// Deletes this file.
+    func delete() throws
 }
 
 /// Provides convenient interface for reading contents and metadata of the file.

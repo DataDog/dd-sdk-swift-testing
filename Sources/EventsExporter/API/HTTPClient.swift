@@ -7,11 +7,11 @@
 import Foundation
 
 /// Client for sending requests over HTTP.
-internal final class HTTPClient {
+public final class HTTPClient {
     private let session: URLSession
     private let debug: Bool
     
-    convenience init(debug: Bool) {
+    public convenience init(debug: Bool) {
         let configuration: URLSessionConfiguration = .ephemeral
         // NOTE: RUMM-610 Default behaviour of `.ephemeral` session is to cache requests.
         // To not leak requests memory (including their `.httpBody` which may be significant)
@@ -22,33 +22,29 @@ internal final class HTTPClient {
         self.init(session: URLSession(configuration: configuration), debug: debug)
     }
     
-    init(session: URLSession, debug: Bool) {
+    public init(session: URLSession, debug: Bool) {
         self.session = session
         self.debug = debug
     }
     
-    func send(request: URLRequest, _ completion: @escaping (Result<HTTPURLResponse, RequestError>) -> Void) {
-        let task = session.dataTask(with: deflate(request)) { data, response, error in
-            self.log(request: request, response: (data, response, error))
-            completion(httpClientResult(for: (data, response, error)))
+    func send(request: URLRequest) -> AsyncResult<HTTPURLResponse, RequestError> {
+        .wrap { completion in
+            let task = session.dataTask(with: deflate(request)) { data, response, error in
+                self.log(request: request, response: (data, response, error))
+                completion(httpClientResult(for: (data, response, error)))
+            }
+            task.resume()
         }
-        task.resume()
     }
     
-    func sendWithResult(request: URLRequest, completion: @escaping (Result<Data, RequestError>) -> Void) {
-        let task = session.dataTask(with: deflate(request)) { data, response, error in
-            self.log(request: request, response: (data, response, error))
-            completion(httpClientResultWithData(for: (data, response, error)))
+    func sendWithResponse(request: URLRequest) -> AsyncResult<Data, RequestError> {
+        .wrap { completion in
+            let task = session.dataTask(with: deflate(request)) { data, response, error in
+                self.log(request: request, response: (data, response, error))
+                completion(httpClientResultWithData(for: (data, response, error)))
+            }
+            task.resume()
         }
-        task.resume()
-    }
-    
-    func sendWithResponse(request: URLRequest, _ completion: @escaping (Result<Data, RequestError>) -> Void) {
-        let task = session.dataTask(with: deflate(request)) { data, response, error in
-            self.log(request: request, response: (data, response, error))
-            completion(httpClientResultWithData(for: (data, response, error)))
-        }
-        task.resume()
     }
     
     private func deflate(_ request: URLRequest) -> URLRequest {
@@ -78,7 +74,7 @@ internal final class HTTPClient {
                   """)
     }
         
-    enum RequestError: Error {
+    public enum RequestError: Error {
         case http(code: Int, headers: [HTTPHeader.Field: String], body: Data?)
         case inconsistentResponse
         case transport(any Error)
@@ -110,39 +106,6 @@ extension URL {
         var components = URLComponents(url: self, resolvingAgainstBaseURL: true)!
         components.queryItems = components.queryItems.map { $0 + queryItems } ?? queryItems
         self = components.url!
-    }
-}
-
-protocol ResultLike {
-    associatedtype Success
-    associatedtype Failure
-    
-    func get() throws -> Success
-}
-
-extension Result: ResultLike {}
-
-final class Waiter<T> {
-    private let _semaphore: DispatchSemaphore
-    private var _value: T!
-    
-    init(_ wrap: (@escaping (T) -> Void) -> Void) {
-        self._semaphore = DispatchSemaphore(value: 0)
-        wrap { result in
-            self._value = result
-            self._semaphore.signal()
-        }
-    }
-    
-    func await() -> T {
-        _semaphore.wait()
-        return _value
-    }
-}
-
-extension Waiter where T: ResultLike {
-    func get() throws -> T.Success {
-        return try self.await().get()
     }
 }
 

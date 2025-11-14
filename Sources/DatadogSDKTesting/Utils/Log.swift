@@ -45,6 +45,18 @@ final class Log: Logger {
             return try operation()
         }
     }
+    
+    func measureAsync<T, E>(name: String, _ operation: () -> AsyncResult<T, E>) -> AsyncResult<T, E> {
+        if isDebug {
+            let startTime = CFAbsoluteTimeGetCurrent()
+            return operation().peek { [weak self] _ in
+                let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
+                self?.print(prefix: "[Debug][DatadogSDKTesting] ", message: "Time elapsed for \(name): \(timeElapsed) s.")
+            }
+        } else {
+            return operation()
+        }
+    }
 
     private func print(prefix: String, message: String) {
         let msg = "note: \(prefix)\(message.replacingOccurrences(of: "\n", with: "\nnote: "))"

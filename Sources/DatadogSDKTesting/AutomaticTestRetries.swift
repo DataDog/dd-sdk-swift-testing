@@ -81,9 +81,16 @@ struct AutomaticTestRetriesFactory: FeatureFactory {
         remote.flakyTestRetriesEnabled && config.testRetriesEnabled
     }
     
-    func create(log: Logger) -> AutomaticTestRetries? {
+    func create(log: Logger) -> AsyncResult<FT, any Error> {
         log.debug("Automatic Test Retries Enabled")
-        return AutomaticTestRetries(failedTestRetriesCount: config.testRetriesTestRetryCount,
-                                    failedTestTotalRetriesMax: config.testRetriesTotalRetryCount)
+        let atr = AutomaticTestRetries(failedTestRetriesCount: config.testRetriesTestRetryCount,
+                                       failedTestTotalRetriesMax: config.testRetriesTotalRetryCount)
+        return .value(atr)
     }
+    
+//    func create(log: Logger) -> AutomaticTestRetries? {
+//        log.debug("Automatic Test Retries Enabled")
+//        return AutomaticTestRetries(failedTestRetriesCount: config.testRetriesTestRetryCount,
+//                                    failedTestTotalRetriesMax: config.testRetriesTotalRetryCount)
+//    }
 }

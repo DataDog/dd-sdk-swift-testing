@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol TestOpmimizationApi: APIService {
+public protocol TestOpmimizationApi: APIService {
     var settings: SettingsApi { get }
     var knownTests: KnownTestsApi { get }
     var git: GitUploadApi { get }
@@ -17,8 +17,8 @@ protocol TestOpmimizationApi: APIService {
     var logs: LogsApi { get }
 }
 
-struct TestOpmimizationApiService: TestOpmimizationApi {
-    var endpoint: Endpoint {
+public struct TestOpmimizationApiService: TestOpmimizationApi {
+    public var endpoint: Endpoint {
         get { settings.endpoint }
         set {
             settings.endpoint = newValue
@@ -30,7 +30,7 @@ struct TestOpmimizationApiService: TestOpmimizationApi {
             logs.endpoint = newValue
         }
     }
-    var headers: [HTTPHeader] {
+    public var headers: [HTTPHeader] {
         get { settings.headers }
         set {
             settings.headers = newValue
@@ -43,7 +43,7 @@ struct TestOpmimizationApiService: TestOpmimizationApi {
         }
     }
     
-    var encoder: JSONEncoder {
+    public var encoder: JSONEncoder {
         get { settings.encoder }
         set {
             settings.encoder = newValue
@@ -56,7 +56,7 @@ struct TestOpmimizationApiService: TestOpmimizationApi {
         }
     }
     
-    var decoder: JSONDecoder {
+    public var decoder: JSONDecoder {
         get { settings.decoder }
         set {
             settings.decoder = newValue
@@ -69,15 +69,15 @@ struct TestOpmimizationApiService: TestOpmimizationApi {
         }
     }
     
-    var settings: SettingsApi
-    var knownTests: KnownTestsApi
-    var git: GitUploadApi
-    var tia: TestImpactAnalysisApi
-    var testManagement: TestManagementApi
-    var spans: SpansApi
-    var logs: LogsApi
+    public var settings: SettingsApi
+    public var knownTests: KnownTestsApi
+    public var git: GitUploadApi
+    public var tia: TestImpactAnalysisApi
+    public var testManagement: TestManagementApi
+    public var spans: SpansApi
+    public var logs: LogsApi
     
-    init(config: APIServiceConfig, httpClient: HTTPClient, log: Logger) {
+    public init(config: APIServiceConfig, httpClient: HTTPClient, log: Logger) {
         settings = SettingsApiService(config: config, httpClient: httpClient, log: log)
         knownTests = KnownTestsApiService(config: config, httpClient: httpClient, log: log)
         git = GitUploadApiService(config: config, httpClient: httpClient, log: log)
@@ -85,5 +85,15 @@ struct TestOpmimizationApiService: TestOpmimizationApi {
         testManagement = TestManagementApiService(config: config, httpClient: httpClient, log: log)
         spans = SpansApiService(config: config, httpClient: httpClient, log: log)
         logs = LogsApiService(config: config, httpClient: httpClient, log: log)
+    }
+    
+    public var endpointURLs: Set<URL> {
+        settings.endpointURLs
+            .union(knownTests.endpointURLs)
+            .union(git.endpointURLs)
+            .union(tia.endpointURLs)
+            .union(testManagement.endpointURLs)
+            .union(spans.endpointURLs)
+            .union(logs.endpointURLs)
     }
 }

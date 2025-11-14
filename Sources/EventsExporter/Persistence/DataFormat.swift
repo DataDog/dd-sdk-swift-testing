@@ -6,75 +6,53 @@
 
 import Foundation
 
-/// Describes the format of writing and reading data from files.
-internal struct DataFormat {
-    /// Prefixes the batch payload read from file.
-    let prefixData: Data
-    /// Suffixes the batch payload read from file.
-    let suffixData: Data
-    /// Separates entities written to file.
-    let separatorData: Data
-
-    // MARK: - Initialization
-
-    init(
-        prefix: String,
-        suffix: String,
-        separator: String
-    ) {
-        self.prefixData = prefix.data(using: .utf8)! // swiftlint:disable:this force_unwrapping
-        self.suffixData = suffix.data(using: .utf8)! // swiftlint:disable:this force_unwrapping
-        self.separatorData = separator.data(using: .utf8)! // swiftlint:disable:this force_unwrapping
-    }
-}
-
-protocol FileWriteFormat {
-    func start(file: File) throws
-    func add(element data: Data, to file: File) throws
-    func end(file: File) throws
+protocol DataFormatType {
+    var prefix: Data { get }
+    var suffix: Data { get }
+    var separator: Data { get }
 }
 
 protocol JSONFileHeader: Encodable {
     static var batchFieldName: String { get }
 }
 
-extension APIVoidMeta: JSONFileHeader {
-    static var batchFieldName: String { "" }
-}
-
-struct JSONFileWriteFormat<Header: JSONFileHeader>: FileWriteFormat {
-    let encoder: JSONEncoder
+/// Describes the format of writing and reading data from files.
+internal struct DataFormat: DataFormatType {
+    /// Prefixes the batch payload read from file.
     let prefix: Data
+    /// Suffixes the batch payload read from file.
     let suffix: Data
+    /// Separates entities written to file.
     let separator: Data
     
-    init(header: Header, encoder: JSONEncoder) throws {
-        self.encoder = encoder
-        self.separator = Data([UInt8(ascii: ",")])
-        if header is APIVoidValue {
-            self.prefix = "[".data(using: .utf8)!
-            self.suffix = "]".data(using: .utf8)!
-        } else {
-            // Generating json object.
-            // Removing last '}'
-            // Adding array field for the batch
-            var headerData = try encoder.encode(header)
-            self.suffix = Data([UInt8(ascii: "]"), headerData.last!])
-            headerData[headerData.count - 1] = UInt8(ascii: ",")
-            headerData.append(contentsOf: "\"\(Header.batchFieldName)\":[".utf8)
-            self.prefix = headerData
-        }
+    // MARK: - Initialization
+    
+    init(prefix: Data, suffix: Data, separator: Data) {
+        self.prefix = prefix
+        self.suffix = suffix
+        self.separator = separator
     }
     
-    func start(file: File) throws {
-        try file.append(data: prefix, synchronized: true)
+    init<H: JSONFileHeader>(header: H, encoder: JSONEncoder) throws {
+        let separator = ",".data(using: .utf8)!
+        let suffix: Data
+        let prefix: Data
+        
+        // Generating json object.
+        // Removing last '}'
+        // Adding array field for the batch
+        var headerData = try encoder.encode(header)
+        headerData[headerData.count - 1] = UInt8(ascii: ",")
+        headerData.append(contentsOf: "\"\(H.batchFieldName)\":[".utf8)
+        prefix = headerData
+        suffix = "]}".data(using: .utf8)!
+        
+        self.init(prefix: prefix, suffix: suffix, separator: separator)
     }
     
-    func add(element data: Data, to file: File) throws {
-        try file.append(data: data + separator)
-    }
-    
-    func end(file: File) throws {
-        try file.append(data: suffix, synchronized: true)
+    static var jsonArray: Self {
+        .init(prefix: "[".data(using: .utf8)!,
+              suffix: "]".data(using: .utf8)!,
+              separator: ",".data(using: .utf8)!)
     }
 }

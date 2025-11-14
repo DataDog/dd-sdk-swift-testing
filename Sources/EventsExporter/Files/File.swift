@@ -35,7 +35,7 @@ internal protocol ReadableFile {
 
 /// An immutable `struct` designed to provide optimized and thread safe interface for file manipulation.
 /// It doesn't own the file, which means the file presence is not guaranteed - the file can be deleted by OS at any time (e.g. due to memory pressure).
-public struct File: WritableFile, ReadableFile {
+public struct File: WritableFile, ReadableFile, Equatable {
     let url: URL
     let name: String
 
@@ -52,7 +52,6 @@ public struct File: WritableFile, ReadableFile {
         // https://github.com/DataDog/dd-sdk-ios/issues/214
         // https://en.wikipedia.org/wiki/Xcode#11.x_series
         // compiler version needs to have iOS 13.4+ as base SDK
-        #if compiler(>=5.2)
         /**
           Even though the `fileHandle.seekToEnd()` should be available since iOS 13.0:
           ```
@@ -75,15 +74,15 @@ public struct File: WritableFile, ReadableFile {
             try fileHandle.seekToEnd()
             try fileHandle.write(contentsOf: data)
         } else {
-            legacyAppend(data, to: fileHandle)
+            legacyAppend(data, to: fileHandle, synchronized: synchronized)
         }
-        #else
-        try legacyAppend(data, to: fileHandle)
-        #endif
     }
 
-    private func legacyAppend(_ data: Data, to fileHandle: FileHandle) {
+    private func legacyAppend(_ data: Data, to fileHandle: FileHandle, synchronized: Bool) {
         defer {
+            if synchronized {
+                fileHandle.synchronizeFile()
+            }
             fileHandle.closeFile()
         }
         fileHandle.seekToEndOfFile()
@@ -97,7 +96,6 @@ public struct File: WritableFile, ReadableFile {
         // https://github.com/DataDog/dd-sdk-ios/issues/214
         // https://en.wikipedia.org/wiki/Xcode#11.x_series
         // compiler version needs to have iOS 13.4+ as base SDK
-        #if compiler(>=5.2)
         /**
           Even though the `fileHandle.seekToEnd()` should be available since iOS 13.0:
           ```
@@ -116,9 +114,6 @@ public struct File: WritableFile, ReadableFile {
         } else {
             return legacyRead(from: fileHandle)
         }
-        #else
-        return legacyRead(from: fileHandle)
-        #endif
     }
 
     private func legacyRead(from fileHandle: FileHandle) -> Data {

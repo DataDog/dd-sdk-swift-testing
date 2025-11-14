@@ -24,13 +24,13 @@ internal enum DDCrashes {
     private static var crashCustomData = [String: Data]()
     fileprivate static var sanitizerURL: URL!
 
-    static func install(folder: Directory, disableMach: Bool) {
+    static func install(folder: Directory, disableMach: Bool, tracer: DDTracer) {
         if sharedPLCrashReporter == nil {
-            installPLCrashReporterHandler(folder: folder, disableMach: disableMach)
+            installPLCrashReporterHandler(folder: folder, disableMach: disableMach, tracer: tracer)
         }
     }
 
-    private static func installPLCrashReporterHandler(folder: Directory, disableMach: Bool) {
+    private static func installPLCrashReporterHandler(folder: Directory, disableMach: Bool, tracer: DDTracer) {
         let signalHandler: PLCrashReporterSignalHandlerType
         #if os(macOS) || os(iOS)
             signalHandler = disableMach ? .BSD : .mach
@@ -52,13 +52,13 @@ internal enum DDCrashes {
         var callback = PLCrashReporterCallbacks(version: 0, context: nil, handleSignal: signalCallback)
         plCrashReporter.setCrash(&callback)
         sharedPLCrashReporter = plCrashReporter
-        handlePLCrashReport()
+        handlePLCrashReport(tracer: tracer)
         plCrashReporter.enable()
     }
 
     /// This method loads existing crash reports and purge the folder.
     /// If the crash  contains a serialized span it passes this data to the tracer to recreate the crashed span
-    private static func handlePLCrashReport() {
+    private static func handlePLCrashReport(tracer: DDTracer) {
         guard let plCrashReporter = sharedPLCrashReporter,
               plCrashReporter.hasPendingCrashReport()
         else {
@@ -90,11 +90,11 @@ internal enum DDCrashes {
                         }
                     }
 
-                    DDTestMonitor.tracer.createSpanFromCrash(spanData: spanData,
-                                                             crashDate: crashReport.systemInfo.timestamp,
-                                                             errorType: errorType,
-                                                             errorMessage: errorMessage,
-                                                             errorStack: crashLog)
+                    tracer.createSpanFromCrash(spanData: spanData,
+                                               crashDate: crashReport.systemInfo.timestamp,
+                                               errorType: errorType,
+                                               errorMessage: errorMessage,
+                                               errorStack: crashLog)
                     if let executionOrderString = spanData.stringAttributes[DDTestTags.testExecutionOrder],
                        let executionOrder = UInt(executionOrderString),
                        let executionProcessIdString = spanData.stringAttributes[DDTestTags.testExecutionProcessId],

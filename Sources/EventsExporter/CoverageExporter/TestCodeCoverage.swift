@@ -7,7 +7,7 @@
 import Foundation
 import CodeCoverageParser
 
-struct TestCodeCoverage: Encodable {
+public struct TestCodeCoverage: Encodable {
     let sessionId: UInt64
     let suiteId: UInt64
     let spanId: UInt64

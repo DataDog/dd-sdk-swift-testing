@@ -6,46 +6,54 @@
 
 import Foundation
 
-internal struct FeatureStorage {
-    /// Writes data to files.
-    let writer: FileWriter
-    /// Reads data from files.
-    let reader: FileReader
-
-    init(writer: FileWriter, reader: FileReader) {
-        self.writer = writer
-        self.reader = reader
-    }
-}
-
-internal struct FeatureUpload {
+internal struct FeatureStoreAndUpload: DataUploadWorkerType {
     /// Uploads data to server.
     let uploader: DataUploadWorkerType
+    /// Writer for this feature
+    let writer: FileWriter
 
     init(
         featureName: String,
-        storage: FeatureStorage,
-        requestBuilder: RequestBuilder,
+        reader: FileReader, writer: FileWriter,
         performance: UploadPerformancePreset,
-        debug: Bool
+        uploader: DataUploaderType
     ) {
-        let dataUploader = DataUploader(
-            httpClient: HTTPClient(debug: debug),
-            requestBuilder: requestBuilder
-        )
-
         self.init(
             uploader: DataUploadWorker(
-                fileReader: storage.reader,
-                dataUploader: dataUploader,
+                fileReader: reader,
+                dataUploader: uploader,
                 delay: DataUploadDelay(performance: performance),
                 featureName: featureName,
                 priority: performance.uploadQueuePriority
-            )
+            ),
+            writer: writer
         )
     }
 
-    init(uploader: DataUploadWorkerType) {
+    init(uploader: DataUploadWorkerType, writer: FileWriter) {
         self.uploader = uploader
+        self.writer = writer
+    }
+    
+    func update(dataFormat: DataFormatType) {
+        writer.update(dataFormat: dataFormat)
+        uploader.update(dataFormat: dataFormat)
+    }
+    
+    func write<T: Encodable>(value: T) -> AsyncResult<Void, any Error> {
+        writer.write(value: value)
+    }
+
+    func writeSync<T: Encodable>(value: T) throws {
+        try writer.writeSync(value: value)
+    }
+    
+    func flush() throws -> Bool {
+        writer.closeCurrentFile()
+        return try uploader.flush()
+    }
+    
+    func stop() {
+        uploader.stop()
     }
 }

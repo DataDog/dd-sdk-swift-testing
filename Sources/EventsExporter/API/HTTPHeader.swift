@@ -17,48 +17,48 @@ enum ContentEncoding: String {
     case deflate
 }
 
-struct HTTPHeader {
-    struct Field: ExpressibleByStringLiteral, CustomStringConvertible, RawRepresentable, Equatable, Hashable {
-        typealias StringLiteralType = String
-        typealias RawValue = String
+public struct HTTPHeader {
+    public struct Field: ExpressibleByStringLiteral, CustomStringConvertible, RawRepresentable, Equatable, Hashable {
+        public typealias StringLiteralType = String
+        public typealias RawValue = String
         
-        var rawValue: String
-        var description: String { rawValue }
+        public var rawValue: String
+        public var description: String { rawValue }
         
-        init(_ value: String) {
+        public init(_ value: String) {
             self.rawValue = value.lowercased()
         }
         
-        init(stringLiteral value: String) {
+        public init(stringLiteral value: String) {
             self.init(value)
         }
         
-        init?(rawValue: String) {
+        public init?(rawValue: String) {
             self.init(rawValue)
         }
         
-        static let contentTypeHeaderField: Self = "Content-Type"
-        static let contentEncodingHeaderField: Self = "Content-Encoding"
-        static let userAgentHeaderField: Self = "User-Agent"
-        static let apiKeyHeaderField: Self = "DD-API-KEY"
-        static let applicationKeyHeaderField: Self = "DD-APPLICATION-KEY"
-        static let traceIDHeaderField: Self = "X-Datadog-Trace-Id"
-        static let parentSpanIDHeaderField: Self = "X-Datadog-Parent-Id"
-        static let samplingPriorityHeaderField: Self = "X-Datadog-Sampling-Priority"
-        static let hostnameHeaderField: Self = "X-Datadog-Hostname"
-        static let retryAfterHeaderField: Self = "Retry-After"
-        static let rateLimitResetHeaderField: Self = "X-RateLimit-Reset"
+        public static let contentTypeHeaderField: Self = "Content-Type"
+        public static let contentEncodingHeaderField: Self = "Content-Encoding"
+        public static let userAgentHeaderField: Self = "User-Agent"
+        public static let apiKeyHeaderField: Self = "DD-API-KEY"
+        public static let applicationKeyHeaderField: Self = "DD-APPLICATION-KEY"
+        public static let traceIDHeaderField: Self = "X-Datadog-Trace-Id"
+        public static let parentSpanIDHeaderField: Self = "X-Datadog-Parent-Id"
+        public static let samplingPriorityHeaderField: Self = "X-Datadog-Sampling-Priority"
+        public static let hostnameHeaderField: Self = "X-Datadog-Hostname"
+        public static let retryAfterHeaderField: Self = "Retry-After"
+        public static let rateLimitResetHeaderField: Self = "X-RateLimit-Reset"
     }
 
-    enum Value: ExpressibleByStringLiteral {
-        typealias StringLiteralType = String
+    public enum Value: ExpressibleByStringLiteral {
+        public typealias StringLiteralType = String
         
         /// If the header's value is constant.
         case constant(_ value: String)
         /// If the header's value is different each time.
         case dynamic(_ value: () -> String)
         
-        init(stringLiteral value: String) {
+        public init(stringLiteral value: String) {
             self = .constant(value)
         }
         

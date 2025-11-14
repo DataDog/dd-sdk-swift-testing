@@ -160,19 +160,19 @@ struct TestManagementFactory: FeatureFactory {
     let commitMessage: String?
     let attemptToFixRetries: UInt
     let cacheFolder: Directory
-    let exporter: EventsExporterProtocol
+    let api: TestManagementApi
     let module: String
     
     init(repository: String, commitSha: String, commitMessage: String?,
          module: String, attemptToFixRetries: UInt,
-         exporter: EventsExporterProtocol, cache: Directory
+         api: TestManagementApi, cache: Directory
     ) {
         self.cacheFolder = cache
         self.repository = repository
         self.commitSha = commitSha
         self.commitMessage = commitMessage
         self.attemptToFixRetries = attemptToFixRetries
-        self.exporter = exporter
+        self.api = api
         self.module = module
     }
     
@@ -180,17 +180,21 @@ struct TestManagementFactory: FeatureFactory {
         remote.testManagement.enabled && config.testManagementEnabled
     }
     
-    func create(log: Logger) -> TestManagement? {
+    func create(log: Logger) -> AsyncResult<TestManagement, any Error> {
         if let tests = loadTestsFromDisk(log: log) {
             log.debug("Test Management Enabled")
-            return TestManagement(tests: tests, attemptToFixRetries: attemptToFixRetries, module: module)
+            return .value(TestManagement(tests: tests, attemptToFixRetries: attemptToFixRetries, module: module))
         }
-        guard let tests = getTests(exporter: exporter, log: log) else {
-            return nil
-        }
-        saveTests(tests: tests)
-        log.debug("Test Management Enabled")
-        return TestManagement(tests: tests, attemptToFixRetries: attemptToFixRetries, module: module)
+        return api
+            .tests(repositoryURL: repository, sha: commitSha, commitMessage: commitMessage, module: module)
+            .mapError { $0 as (any Error) }
+            .flatMapValue { tests in
+                // if we have empty array we can disable Test Management functionality
+                guard !tests.modules.isEmpty else { return .error(EmptyResponseError()) }
+                log.debug("Test Management Enabled")
+                self.saveTests(tests: tests)
+                return .value(TestManagement(tests: tests, attemptToFixRetries: attemptToFixRetries, module: module))
+            }
     }
     
     private func loadTestsFromDisk(log: Logger) -> TestManagementTestsInfo? {
@@ -210,23 +214,12 @@ struct TestManagementFactory: FeatureFactory {
         }
     }
     
-    private func getTests(exporter: EventsExporterProtocol, log: Logger) -> TestManagementTestsInfo? {
-        let tests = exporter.testManagementTests(repositoryURL: repository, sha: commitSha,
-                                                 commitMessage: commitMessage, module: module)
-        guard let tests = tests else {
-            Log.print("Test Management: tests request failed")
-            return nil
-        }
-        Log.debug("Test Management: tests: \(tests)")
-        // if we have empty array we can disable Test Management functionality
-        guard tests.modules.count > 0 else { return nil }
-        return tests
-    }
-    
     private func saveTests(tests: TestManagementTestsInfo) {
         if let data = try? JSONEncoder().encode(tests) {
             let testsFile = try? cacheFolder.createFile(named: "\(module)_\(cacheFileName)")
             try? testsFile?.append(data: data)
         }
     }
+    
+    struct EmptyResponseError: Error {}
 }

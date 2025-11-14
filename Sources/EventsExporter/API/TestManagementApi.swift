@@ -7,11 +7,10 @@
 
 import Foundation
 
-protocol TestManagementApi: APIService {
+public protocol TestManagementApi: APIService {
     func tests(
-        repositoryURL: String, sha: String?, commitMessage: String?, module: String?,
-        _ response: @escaping (Result<TestManagementTestsInfo, APICallError>) -> Void
-    )
+        repositoryURL: String, sha: String?, commitMessage: String?, module: String?
+    ) -> AsyncResult<TestManagementTestsInfo, APICallError>
 }
 
 struct TestManagementApiService: TestManagementApi {
@@ -33,8 +32,8 @@ struct TestManagementApiService: TestManagementApi {
         self.decoder = config.decoder
     }
     
-    func tests(repositoryURL: String, sha: String?, commitMessage: String?, module: String?,
-               _ response: @escaping (Result<TestManagementTestsInfo, APICallError>) -> Void)
+    func tests(repositoryURL: String, sha: String?,
+               commitMessage: String?, module: String?) -> AsyncResult<TestManagementTestsInfo, APICallError>
     {
         let request = TestsRequest(repositoryUrl: repositoryURL,
                                    commitMessage: commitMessage,
@@ -42,16 +41,16 @@ struct TestManagementApiService: TestManagementApi {
                                    sha: sha)
         let log = self.log
         log.debug("TestManagement tests request: \(request)")
-        httpClient.call(TestsCall.self,
+        return httpClient.call(TestsCall.self,
                         url: endpoint.testManagementTestsURL,
                         data: .init(attributes: request),
                         headers: headers + [.contentTypeHeader(contentType: .applicationJSON)],
                         coders: (encoder, decoder))
-        {
-            log.debug("TestManamement tests response: \($0)")
-            response($0.map { .init(modules: $0.data.attributes.modules) })
-        }
+            .peek { log.debug("TestManamement tests response: \($0)") }
+            .mapValue { .init(modules: $0.data.attributes.modules) }
     }
+    
+    var endpointURLs: Set<URL> { [endpoint.testManagementTestsURL] }
 }
 
 extension TestManagementApiService {
@@ -68,5 +67,15 @@ extension TestManagementApiService {
         let modules: [String: TestManagementTestsInfo.Module]
         
         static var apiType: String = "ci_app_libraries_tests"
+    }
+}
+
+private extension Endpoint {
+    var testManagementTestsURL: URL {
+        let endpoint = "/api/v2/test/libraries/test-management/tests"
+        switch self {
+        case let .other(testsBaseURL: url, logsBaseURL: _): return url.appendingPathComponent(endpoint)
+        default: return mainApi(endpoint: endpoint)!
+        }
     }
 }

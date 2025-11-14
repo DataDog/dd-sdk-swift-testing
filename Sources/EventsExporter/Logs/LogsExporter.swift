@@ -24,63 +24,49 @@ internal enum LogConstants {
 internal class LogsExporter {
     let logsDirectory = "com.datadog.civisibility/logs/v1"
     let configuration: ExporterConfiguration
-    let logsStorage: FeatureStorage
-    let logsUpload: FeatureUpload
+    let logsStorage: FeatureStoreAndUpload
 
-    init(config: ExporterConfiguration) throws {
+    init(config: ExporterConfiguration, api: LogsApi) throws {
         self.configuration = config
 
-        let filesOrchestrator = FilesOrchestrator(
+        let filesOrchestrator = try FilesOrchestrator(
             directory: try Directory.cache().createSubdirectory(path: logsDirectory),
             performance: configuration.performancePreset,
             dateProvider: SystemDateProvider()
         )
 
-        let dataFormat = DataFormat(prefix: "[", suffix: "]", separator: ",")
+        let dataFormat = DataFormat.jsonArray
 
         let logsFileWriter = FileWriter(
+            entity: "logs",
             dataFormat: dataFormat,
-            orchestrator: filesOrchestrator
+            orchestrator: filesOrchestrator,
+            encoder: .apiEncoder
         )
 
         let logsFileReader = FileReader(
             dataFormat: dataFormat,
             orchestrator: filesOrchestrator
         )
+        
+        let uploader = ClosureDataUploader { data, response in
+            api.uploadLogs(batch: data) { response($0.error) }
+        }
 
-        logsStorage = FeatureStorage(writer: logsFileWriter, reader: logsFileReader)
-
-        let requestBuilder = SingleRequestBuilder(
-            url: configuration.endpoint.logsURL,
-            queryItems: [
-                .ddsource(source: LogConstants.ddSource),
-                .ddtags(tags: [LogConstants.ddProduct])
-            ],
-            headers: [
-                .contentTypeHeader(contentType: .applicationJSON),
-                .userAgentHeader(
-                    appName: configuration.applicationName,
-                    appVersion: configuration.version,
-                    device: Device.current
-                ),
-                .apiKeyHeader(apiKey: configuration.apiKey)
-            ] + (configuration.payloadCompression ? [HTTPHeader.contentEncodingHeader(contentEncoding: .deflate)] : [])
-        )
-
-        logsUpload = FeatureUpload(featureName: "logsUpload",
-                                   storage: logsStorage,
-                                   requestBuilder: requestBuilder,
-                                   performance: configuration.performancePreset,
-                                   debug: config.debug.logNetworkRequests)
+        logsStorage = FeatureStoreAndUpload(featureName: "logs",
+                                            reader: logsFileReader,
+                                            writer: logsFileWriter,
+                                            performance: config.performancePreset,
+                                            uploader: uploader)
     }
 
     func exportLogs(fromSpan span: SpanData) {
         span.events.forEach {
             let log = DDLog(event: $0, span: span, configuration: configuration)
             if configuration.performancePreset.synchronousWrite {
-                logsStorage.writer.writeSync(value: log)
+                try? logsStorage.writeSync(value: log)
             } else {
-                logsStorage.writer.write(value: log)
+                logsStorage.write(value: log) { _ in }
             }
         }
     }

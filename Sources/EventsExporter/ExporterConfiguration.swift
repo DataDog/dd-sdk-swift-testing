@@ -13,24 +13,13 @@ internal struct ExporterError: Error, CustomStringConvertible {
 public struct ExporterConfiguration {
     /// The name of the service, resource, version,... that will be reported to the backend.
     var serviceName: String
-    var applicationName: String
+    
+    /// Application version
     var version: String
-    var hostname: String?
-
-    /// API key for authentication
-    var apiKey: String
-
-    /// Endpoint that will be used for reporting.
-    var endpoint: Endpoint
-    /// Exporter will deflate payloads before sending
-    var payloadCompression: Bool
 
     var source: String
     /// Performance preset for reporting
     var performancePreset: PerformancePreset
-
-    /// Exporter ID for tracing
-    var exporterId: String
     
     var metadata: SpanMetadata
     
@@ -39,7 +28,7 @@ public struct ExporterConfiguration {
     }
     
     var logger: Logger
-    var debug: Debug
+    var debugSaveCodeCoverageFiles: Bool
 
     public init(
         serviceName: String, applicationName: String, applicationVersion: String,

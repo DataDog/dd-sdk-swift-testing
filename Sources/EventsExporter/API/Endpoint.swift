@@ -31,93 +31,6 @@ public enum Endpoint: CustomDebugStringConvertible {
     // Datadog path scheme compatible server
     case other(testsBaseURL: URL, logsBaseURL: URL)
     
-    internal var logsURL: URL {
-        let endpoint = "/api/v2/logs"
-        switch self {
-        case .us1: return URL(string: "https://logs.browser-intake-datadoghq.com" + endpoint)!
-        case .us3: return URL(string: "https://logs.browser-intake-us3-datadoghq.com" + endpoint)!
-        case .us5: return URL(string: "https://logs.browser-intake-us5-datadoghq.com" + endpoint)!
-        case .eu1: return URL(string: "https://mobile-http-intake.logs.datadoghq.eu" + endpoint)!
-        case .ap1: return URL(string: "https://logs.browser-intake-ap1-datadoghq.com" + endpoint)!
-        case .staging: return URL(string: "https://logs.browser-intake-datad0g.com" + endpoint)!
-        case let .other(testsBaseURL: _, logsBaseURL: url): return url.appendingPathComponent(endpoint)
-        }
-    }
-    
-    internal var spansURL: URL {
-        let endpoint = "/api/v2/citestcycle"
-        switch self {
-        case .us1: return URL(string: "https://citestcycle-intake.datadoghq.com" + endpoint)!
-        case .us3: return URL(string: "https://citestcycle-intake.us3.datadoghq.com" + endpoint)!
-        case .us5: return URL(string: "https://citestcycle-intake.us5.datadoghq.com" + endpoint)!
-        case .eu1: return URL(string: "https://citestcycle-intake.datadoghq.eu" + endpoint)!
-        case .ap1: return URL(string: "https://citestcycle-intake.ap1.datadoghq.com" + endpoint)!
-        case .staging: return URL(string: "https://citestcycle-intake.datad0g.com" + endpoint)!
-        case let .other(testsBaseURL: url, logsBaseURL: _): return url.appendingPathComponent(endpoint)
-        }
-    }
-    
-    internal var coverageURL: URL {
-        let endpoint = "/api/v2/citestcov"
-        switch self {
-        case .us1: return URL(string: "https://event-platform-intake.datadoghq.com" + endpoint)!
-        case .us3: return URL(string: "https://event-platform-intake.us3.datadoghq.com" + endpoint)!
-        case .us5: return URL(string: "https://event-platform-intake.us5.datadoghq.com" + endpoint)!
-        case .eu1: return URL(string: "https://event-platform-intake.datadoghq.eu" + endpoint)!
-        case .ap1: return URL(string: "https://event-platform-intake.ap1.datadoghq.com" + endpoint)!
-        case .staging: return URL(string: "https://event-platform-intake.datad0g.com" + endpoint)!
-        case let .other(testsBaseURL: url, logsBaseURL: _): return url.appendingPathComponent(endpoint)
-        }
-    }
-    
-    internal var searchCommitsURL: URL {
-        let endpoint = "/api/v2/git/repository/search_commits"
-        switch self {
-        case let .other(testsBaseURL: url, logsBaseURL: _): return url.appendingPathComponent(endpoint)
-        default: return mainApi(endpoint: endpoint)!
-        }
-    }
-    
-    internal var skippableTestsURL: URL {
-        let endpoint = "/api/v2/ci/tests/skippable"
-        switch self {
-        case let .other(testsBaseURL: url, logsBaseURL: _): return url.appendingPathComponent(endpoint)
-        default: return mainApi(endpoint: endpoint)!
-        }
-    }
-    
-    internal var packfileURL: URL {
-        let endpoint = "/api/v2/git/repository/packfile"
-        switch self {
-        case let .other(testsBaseURL: url, logsBaseURL: _): return url.appendingPathComponent(endpoint)
-        default: return mainApi(endpoint: endpoint)!
-        }
-    }
-    
-    internal var settingsURL: URL {
-        let endpoint = "/api/v2/libraries/tests/services/setting"
-        switch self {
-        case let .other(testsBaseURL: url, logsBaseURL: _): return url.appendingPathComponent(endpoint)
-        default: return mainApi(endpoint: endpoint)!
-        }
-    }
-    
-    internal var knownTestsURL: URL {
-        let endpoint = "/api/v2/ci/libraries/tests"
-        switch self {
-        case let .other(testsBaseURL: url, logsBaseURL: _): return url.appendingPathComponent(endpoint)
-        default: return mainApi(endpoint: endpoint)!
-        }
-    }
-
-    internal var testManagementTestsURL: URL {
-        let endpoint = "/api/v2/test/libraries/test-management/tests"
-        switch self {
-        case let .other(testsBaseURL: url, logsBaseURL: _): return url.appendingPathComponent(endpoint)
-        default: return mainApi(endpoint: endpoint)!
-        }
-    }
-    
     public var debugDescription: String {
         switch self {
         case .us1: return "us1"
@@ -130,15 +43,19 @@ public enum Endpoint: CustomDebugStringConvertible {
         }
     }
     
-    private func mainApi(endpoint: String) -> URL? {
+    internal var site: String? {
         switch self {
-        case .us1: return URL(string: "https://api.datadoghq.com" + endpoint)
-        case .us3: return URL(string: "https://api.us3.datadoghq.com" + endpoint)
-        case .us5: return URL(string: "https://api.us5.datadoghq.com" + endpoint)
-        case .eu1: return URL(string: "https://api.datadoghq.eu" + endpoint)
-        case .ap1: return URL(string: "https://api.ap1.datadoghq.com" + endpoint)
-        case .staging: return URL(string: "https://api.datad0g.com" + endpoint)
-        default: return nil
+        case .us1: return "datadoghq.com"
+        case .us3: return "us3.datadoghq.com"
+        case .us5: return "us5.datadoghq.com"
+        case .eu1: return "datadoghq.eu"
+        case .ap1: return "ap1.datadoghq.com"
+        case .staging: return "datad0g.com"
+        case let .other(testsBaseURL: tUrl, logsBaseURL: lUrl): return nil
         }
+    }
+    
+    internal func mainApi(endpoint: String) -> URL? {
+        site.flatMap { URL(string: "https://api.\($0)\(endpoint)") }
     }
 }

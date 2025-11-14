@@ -75,12 +75,12 @@ struct KnownTestsFactory: FeatureFactory {
     let configurations: [String: String]
     let customConfigurations: [String: String]
     let cacheFolder: Directory
-    let exporter: EventsExporterProtocol
+    let api: KnownTestsApi
     let cacheFileName = "known_tests.json"
     
     init(repository: String, service: String, environment: String,
          configurations: [String: String], custom: [String: String],
-         exporter: EventsExporterProtocol, cache: Directory
+         api: KnownTestsApi, cache: Directory
     ) {
         self.configurations = configurations
         self.customConfigurations = custom
@@ -88,24 +88,28 @@ struct KnownTestsFactory: FeatureFactory {
         self.repository = repository
         self.service = service
         self.environment = environment
-        self.exporter = exporter
+        self.api = api
     }
     
     static func isEnabled(config: Config, env: Environment, remote: TracerSettings) -> Bool {
         remote.knownTestsEnabled
     }
     
-    func create(log: Logger) -> KnownTests? {
+    func create(log: Logger) -> AsyncResult<FT, any Error> {
         if let tests = loadTestsFromDisk(log: log) {
             log.debug("Known Tests Enabled")
-            return KnownTests(tests: tests)
+            return .value(KnownTests(tests: tests))
         }
-        guard let tests = getTests(exporter: exporter, log: log) else {
-            return nil
-        }
-        saveTests(tests: tests)
-        log.debug("Known Tests Enabled")
-        return KnownTests(tests: tests)
+        return api
+            .tests(service: service, env: environment, repositoryURL: repository,
+                   configurations: configurations, customConfigurations: customConfigurations)
+            .mapError { $0 as (any Error) }
+            .flatMapValue { tests in
+                guard !tests.isEmpty else { return .error(EmptyResponseError()) }
+                log.debug("Known Tests Enabled")
+                self.saveTests(tests: tests)
+                return .value(KnownTests(tests: tests))
+            }
     }
     
     private func loadTestsFromDisk(log: Logger) -> KnownTestsMap? {
@@ -124,25 +128,12 @@ struct KnownTestsFactory: FeatureFactory {
         }
     }
     
-    private func getTests(exporter: EventsExporterProtocol, log: Logger) -> KnownTestsMap? {
-        let tests = exporter.knownTests(
-            service: service, env: environment, repositoryURL: repository,
-            configurations: configurations, customConfigurations: customConfigurations
-        )
-        guard let tests = tests else {
-            Log.print("Known Tests: tests request failed")
-            return nil
-        }
-        Log.debug("Known Tests: tests: \(tests)")
-        // if we have empty array we should disable Known Tests functionality
-        guard tests.count > 0 else { return nil }
-        return tests
-    }
-    
     private func saveTests(tests: KnownTestsMap) {
         if let data = try? JSONEncoder().encode(tests) {
             let testsFile = try? cacheFolder.createFile(named: cacheFileName)
             try? testsFile?.append(data: data)
         }
     }
+    
+    struct EmptyResponseError: Error {}
 }

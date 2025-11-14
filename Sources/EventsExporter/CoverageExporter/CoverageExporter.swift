@@ -9,61 +9,42 @@ import OpenTelemetrySdk
 import CodeCoverageParser
 
 internal class CoverageExporter {
-    let coverageDirectory = "com.datadog.civisibility/coverage/v1"
+    let coverageDirectory = "com.datadog.testoptimization/coverage/v1"
     let configuration: ExporterConfiguration
-    let coverageStorage: FeatureStorage
-    let coverageUpload: FeatureUpload
+    let coverageStorage: FeatureStoreAndUpload
 
-    init(config: ExporterConfiguration) throws {
+    init(config: ExporterConfiguration, api: TestImpactAnalysisApi) throws {
         self.configuration = config
-
-        let filesOrchestrator = FilesOrchestrator(
-            directory: try Directory(withSubdirectoryPath: coverageDirectory),
-            performance: PerformancePreset.instantDataDelivery,
+        
+        let filesOrchestrator = try FilesOrchestrator(
+            directory: try Directory.cache().createSubdirectory(path: coverageDirectory),
+            performance: configuration.performancePreset,
             dateProvider: SystemDateProvider()
         )
         
-        let prefix = """
-        {
-        "version": 2,
-        "coverages": [
-        """
-
-        let suffix = "]\n}"
-
-        let dataFormat = DataFormat(prefix: prefix, suffix: suffix, separator: ",")
+        let dataFormat = try DataFormat(header: Header(), encoder: api.encoder)
 
         let coverageFileWriter = FileWriter(
+            entity: "coverage",
             dataFormat: dataFormat,
-            orchestrator: filesOrchestrator
+            orchestrator: filesOrchestrator,
+            encoder: api.encoder
         )
 
         let coverageFileReader = FileReader(
             dataFormat: dataFormat,
             orchestrator: filesOrchestrator
         )
+        
+        let uploader = ClosureDataUploader { data, response in
+            api.uploadCoverage(batch: data) { response($0.error) }
+        }
 
-        coverageStorage = FeatureStorage(writer: coverageFileWriter, reader: coverageFileReader)
-
-        let requestBuilder = MultipartRequestBuilder(
-            url: configuration.endpoint.coverageURL,
-            queryItems: [],
-            headers: [
-                .userAgentHeader(
-                    appName: configuration.applicationName,
-                    appVersion: configuration.version,
-                    device: Device.current
-                ),
-                .apiKeyHeader(apiKey: config.apiKey)
-            ] // + (configuration.payloadCompression ? [HTTPHeader.contentEncodingHeader(contentEncoding: .deflate)] : [])
-        )
-
-        coverageUpload = FeatureUpload(featureName: "coverageUpload",
-                                       storage: coverageStorage,
-                                       requestBuilder: requestBuilder,
-                                       performance: configuration.performancePreset,
-                                       debug: config.debug.logNetworkRequests)
-        requestBuilder.addFieldsCallback = addCoverage
+        coverageStorage = .init(featureName: "coverage",
+                                reader: coverageFileReader,
+                                writer: coverageFileWriter,
+                                performance: config.performancePreset,
+                                uploader: uploader)
     }
 
     func exportCoverage(coverage: URL, parser: CoverageParser, workspacePath: String?,
@@ -73,7 +54,7 @@ internal class CoverageExporter {
         var coverageData: TestCodeCoverage? = nil
         
         defer {
-            if configuration.debug.saveCodeCoverageFiles {
+            if configuration.debugSaveCodeCoverageFiles {
                 if let coverageData = coverageData, let data = try? JSONEncoder.apiEncoder.encode(coverageData) {
                     let testName = coverage.deletingPathExtension().lastPathComponent.components(separatedBy: "__").last!
                     let jsonURL = coverage.deletingLastPathComponent()
@@ -92,7 +73,7 @@ internal class CoverageExporter {
                                             spanId: spanId,
                                             workspace: workspacePath,
                                             files: info.files.values)
-            coverageStorage.writer.write(value: coverageData!)
+            coverageStorage.writer.write(value: coverageData!) { _ in }
         } catch {
             Log.print("Code coverage generation failed: \(error)")
             return
@@ -100,11 +81,11 @@ internal class CoverageExporter {
         
         Log.debug("End processing coverage: \(coverage.path)")
     }
-
-    private func addCoverage(request: MultipartFormDataRequest, data: Data?) {
-        guard let data = data else { return }
-        request.addDataField(named: "coverage", data: data, mimeType: .applicationJSON)
-        request.addDataField(named: "event", data: #"{"dummy": true}"#.data(using: .utf8)!, mimeType: .applicationJSON)
-    }
 }
 
+private extension CoverageExporter {
+    struct Header: JSONFileHeader {
+        let version: String = "2"
+        static var batchFieldName: String { "coverages" }
+    }
+}

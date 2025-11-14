@@ -7,49 +7,37 @@
 
 import Foundation
 
-protocol TestImpactAnalysisApi: APIService {
+public protocol TestImpactAnalysisApi: APIService {
     func skippableTests(repositoryURL: String, sha: String,
                         environment: String, service: String,
                         tiaLevel: TIALevel, configurations: [String: String],
-                        customConfigurations: [String: String],
-                        _ response: @escaping (Result<SkipTests2, APICallError>) -> Void)
+                        customConfigurations: [String: String]) -> AsyncResult<SkipTests2, APICallError>
     
-    func uploadCoverage(batch: TestCodeCoverage.Batch,
-                        _ response: @escaping (Result<Void, APICallError>) -> Void)
+    func uploadCoverage(batch: TestCodeCoverage.Batch) -> AsyncResult<Void, APICallError>
     
-    func uploadCoverage(batch url: URL,
-                        _ response: @escaping (Result<Void, APICallError>) -> Void)
+    func uploadCoverage(batch url: URL) -> AsyncResult<Void, APICallError>
     
-    func uploadCoverage(batch data: Data,
-                        _ response: @escaping (Result<Void, HTTPClient.RequestError>) -> Void)
+    func uploadCoverage(batch data: Data) -> AsyncResult<Void, HTTPClient.RequestError>
 }
 
 extension TestImpactAnalysisApi {
-    func uploadCoverage(batch: TestCodeCoverage.Batch,
-                        _ response: @escaping (Result<Void, APICallError>) -> Void)
-    {
+    func uploadCoverage(batch: TestCodeCoverage.Batch) -> AsyncResult<Void, APICallError> {
         do {
             let data = try encoder.encode(batch)
-            uploadCoverage(batch: data) { res in
-                response(res.mapError(APICallError.init))
-            }
+            return uploadCoverage(batch: data).mapError(APICallError.init)
         } catch let err as EncodingError {
-            response(.failure(.encoding(err)))
+            return .error(.encoding(err))
         } catch {
-            response(.failure(.unknownError(error)))
+            return .error(.unknownError(error))
         }
     }
     
-    func uploadCoverage(batch url: URL,
-                        _ response: @escaping (Result<Void, APICallError>) -> Void)
-    {
+    func uploadCoverage(batch url: URL) -> AsyncResult<Void, APICallError> {
         do {
             let data = try Data(contentsOf: url, options: [.mappedIfSafe])
-            uploadCoverage(batch: data) { res in
-                response(res.mapError(APICallError.init))
-            }
+            return uploadCoverage(batch: data).mapError(APICallError.init)
         } catch {
-            response(.failure(.fileSystem(error)))
+            return .error(.fileSystem(error))
         }
     }
 }
@@ -114,7 +102,7 @@ public struct SkipTests2: Codable {
 }
 
 extension TestCodeCoverage {
-    struct Batch: Encodable {
+    public struct Batch: Encodable {
         let version: Int = 2
         let coverages: [TestCodeCoverage]
         
@@ -146,9 +134,7 @@ struct TestImpactAnalysisApiService: TestImpactAnalysisApi {
     func skippableTests(repositoryURL: String, sha: String,
                         environment: String, service: String,
                         tiaLevel: TIALevel, configurations: [String: String],
-                        customConfigurations: [String: String],
-                        _ response: @escaping (Result<SkipTests2, APICallError>) -> Void)
-    {
+                        customConfigurations: [String: String])  -> AsyncResult<SkipTests2, APICallError> {
         var configurations: [String: JSONGeneric] = configurations.mapValues { .string($0) }
         configurations["custom"] = .stringDict(customConfigurations)
         
@@ -158,21 +144,17 @@ struct TestImpactAnalysisApiService: TestImpactAnalysisApi {
                                    testLevel: tiaLevel)
         let log = self.log
         log.debug("Skippable tests request: \(request)")
-        httpClient.call(TestsCall.self,
+        return httpClient.call(TestsCall.self,
                         url: endpoint.skippableTestsURL,
                         data: .init(attributes: request),
                         headers: headers + [.contentTypeHeader(contentType: .applicationJSON)],
                         coders: (encoder, decoder))
-        {
-            log.debug("Skippable tests response: \($0)")
-            response($0.map { SkipTests2(correlationId: $0.meta.correlationId,
-                                         tests: $0.data.attributes) })
-        }
+            .peek { log.debug("Skippable tests response: \($0)") }
+            .mapValue { SkipTests2(correlationId: $0.meta.correlationId,
+                                   tests: $0.data.attributes) }
     }
     
-    func uploadCoverage(batch data: Data,
-                        _ response: @escaping (Result<Void, HTTPClient.RequestError>) -> Void)
-    {
+    func uploadCoverage(batch data: Data) -> AsyncResult<Void, HTTPClient.RequestError> {
         let log = self.log
         var request = MultipartFormURLRequest(url: endpoint.coverageURL)
         request.headers = headers
@@ -185,11 +167,12 @@ struct TestImpactAnalysisApiService: TestImpactAnalysisApi {
                        filename: "DummyEvent.json",
                        contentType: .applicationJSON)
         log.debug("Uploading coverage batch...")
-        httpClient.send(request: request) {
+        return httpClient.send(request: request).peek {
             log.debug("Coverage batch upload response: \($0)")
-            response($0.map { _ in })
-        }
+        }.asVoid
     }
+    
+    var endpointURLs: Set<URL> { [endpoint.skippableTestsURL, endpoint.coverageURL] }
 }
 
 extension TestImpactAnalysisApiService {
@@ -215,5 +198,23 @@ extension TestImpactAnalysisApiService {
         let configurations: [String: JSONGeneric]?
         
         static var apiType: String = "test"
+    }
+}
+
+private extension Endpoint {
+    var skippableTestsURL: URL {
+        let endpoint = "/api/v2/ci/tests/skippable"
+        switch self {
+        case let .other(testsBaseURL: url, logsBaseURL: _): return url.appendingPathComponent(endpoint)
+        default: return mainApi(endpoint: endpoint)!
+        }
+    }
+    
+    var coverageURL: URL {
+        let endpoint = "/api/v2/citestcov"
+        switch self {
+        case .other(testsBaseURL: let url, logsBaseURL: _): return url.appendingPathComponent(endpoint)
+        default: return URL(string: "https://event-platform-intake.\(site!)\(endpoint)")!
+        }
     }
 }

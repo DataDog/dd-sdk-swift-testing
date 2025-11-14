@@ -11,6 +11,7 @@ public protocol Logger {
     func print(_ message: String)
     func debug(_ wrapped: @autoclosure () -> String)
     func measure<T>(name: String, _ operation: () throws -> T) rethrows -> T
+    func measureAsync<T, E>(name: String, _ operation: () -> AsyncResult<T, E>) -> AsyncResult<T, E>
 }
 
 struct Log {

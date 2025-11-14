@@ -7,16 +7,15 @@
 
 import Foundation
 
-protocol SettingsApi: APIService {
+public protocol SettingsApi: APIService {
     func tracerSettings(service: String, env: String,
                         repositoryURL: String, branch: String, sha: String,
                         tiaLevel: TIALevel,
                         configurations: [String: String],
-                        customConfigurations: [String: String],
-                        _ response: @escaping (Result<TracerSettings2, APICallError>) -> Void)
+                        customConfigurations: [String: String]) -> AsyncResult<TracerSettings, APICallError>
 }
 
-public struct TracerSettings2 {
+public struct TracerSettings {
     public var itr: ITR
     public var efd: EFD
     public var flakyTestRetriesEnabled: Bool
@@ -133,8 +132,7 @@ struct SettingsApiService: SettingsApi {
                                repositoryURL: String, branch: String, sha: String,
                                tiaLevel: TIALevel,
                                configurations: [String: String],
-                               customConfigurations: [String: String],
-                               _ response: @escaping (Result<TracerSettings2, APICallError>) -> Void)
+                               customConfigurations: [String: String]) -> AsyncResult<TracerSettings, APICallError>
     {
         var configurations: [String: JSONGeneric] = configurations.mapValues { .string($0) }
         configurations["custom"] = .stringDict(customConfigurations)
@@ -147,16 +145,16 @@ struct SettingsApiService: SettingsApi {
                                       testLevel: tiaLevel)
         let log = self.log
         log.debug("Tracer settings request: \(request)")
-        httpClient.call(SettingsCall.self,
+        return httpClient.call(SettingsCall.self,
                         url: endpoint.settingsURL,
                         data: .init(attributes: request),
                         headers: headers + [.contentTypeHeader(contentType: .applicationJSON)],
                         coders: (encoder, decoder))
-        {
-            log.debug("Tracer settings response: \($0)")
-            response($0.map{ TracerSettings2(response: $0.data.attributes) })
-        }
+            .peek { log.debug("Tracer settings response: \($0)") }
+            .mapValue { TracerSettings(response: $0.data.attributes) }
     }
+    
+    var endpointURLs: Set<URL> { [endpoint.settingsURL] }
 }
 
 extension SettingsApiService {
@@ -199,5 +197,15 @@ extension SettingsApiService {
         let testManagement: TestManagement
         
         static var apiType: String = "ci_app_tracers_test_service_settings"
+    }
+}
+
+private extension Endpoint {
+    var settingsURL: URL {
+        let endpoint = "/api/v2/libraries/tests/services/setting"
+        switch self {
+        case let .other(testsBaseURL: url, logsBaseURL: _): return url.appendingPathComponent(endpoint)
+        default: return mainApi(endpoint: endpoint)!
+        }
     }
 }

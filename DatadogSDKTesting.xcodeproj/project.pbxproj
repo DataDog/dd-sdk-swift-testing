@@ -63,6 +63,7 @@
 		A74EB8E02D0AE8A600FAD9B8 /* CodeCoverage in Frameworks */ = {isa = PBXBuildFile; productRef = A74EB8DF2D0AE8A600FAD9B8 /* CodeCoverage */; };
 		A74EB8E42D0AFD3C00FAD9B8 /* CodeCoverageModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A74EB8E32D0AFD3C00FAD9B8 /* CodeCoverageModelTests.swift */; };
 		A74EB8E62D0B449300FAD9B8 /* TestCodeCoverage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A74EB8E52D0B449300FAD9B8 /* TestCodeCoverage.swift */; };
+		A75306C12EC4AEE800CEFE91 /* Async.swift in Sources */ = {isa = PBXBuildFile; fileRef = A75306C02EC4AEE500CEFE91 /* Async.swift */; };
 		A75D33832DC28E8900553EDA /* MockTestTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A75D33822DC28E8100553EDA /* MockTestTypes.swift */; };
 		A75DAB9C2DEE18DD00F1B8A7 /* MockTestRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A75DAB9B2DEE18D600F1B8A7 /* MockTestRunner.swift */; };
 		A76174BD2CB3E3780098CE99 /* DDXCTestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = A76174BC2CB3E3780098CE99 /* DDXCTestCase.swift */; };
@@ -77,6 +78,7 @@
 		A77C12392D8DD2A9009C2BA1 /* Feature.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77C12382D8DD2A9009C2BA1 /* Feature.swift */; };
 		A77C123C2D9425C7009C2BA1 /* KnownTestsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77C123B2D9425C7009C2BA1 /* KnownTestsTests.swift */; };
 		A77C123E2D9474E6009C2BA1 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77C123D2D9474E6009C2BA1 /* Models.swift */; };
+		A78F014C2EC666400015564E /* BreakableResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = A78F014B2EC666370015564E /* BreakableResult.swift */; };
 		A794A8FF2E7990D20044FE3C /* TestManagementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A794A8FE2E7990C40044FE3C /* TestManagementTests.swift */; };
 		A7A98C202C8F44BC00C93E59 /* CoverageSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7A98C1F2C8F44BC00C93E59 /* CoverageSettings.swift */; };
 		A7AE65992E7D901D00EA568B /* RetryAndSkipTags.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AE65982E7D901600EA568B /* RetryAndSkipTags.swift */; };
@@ -398,6 +400,7 @@
 		A74C91C92E67278800B10681 /* DroneCI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DroneCI.swift; sourceTree = "<group>"; };
 		A74EB8E32D0AFD3C00FAD9B8 /* CodeCoverageModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeCoverageModelTests.swift; sourceTree = "<group>"; };
 		A74EB8E52D0B449300FAD9B8 /* TestCodeCoverage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestCodeCoverage.swift; sourceTree = "<group>"; };
+		A75306C02EC4AEE500CEFE91 /* Async.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Async.swift; sourceTree = "<group>"; };
 		A75D33822DC28E8100553EDA /* MockTestTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockTestTypes.swift; sourceTree = "<group>"; };
 		A75DAB9B2DEE18D600F1B8A7 /* MockTestRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockTestRunner.swift; sourceTree = "<group>"; };
 		A76174BC2CB3E3780098CE99 /* DDXCTestCase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDXCTestCase.swift; sourceTree = "<group>"; };
@@ -412,6 +415,7 @@
 		A77C12382D8DD2A9009C2BA1 /* Feature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Feature.swift; sourceTree = "<group>"; };
 		A77C123B2D9425C7009C2BA1 /* KnownTestsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnownTestsTests.swift; sourceTree = "<group>"; };
 		A77C123D2D9474E6009C2BA1 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		A78F014B2EC666370015564E /* BreakableResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreakableResult.swift; sourceTree = "<group>"; };
 		A794A8FE2E7990C40044FE3C /* TestManagementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestManagementTests.swift; sourceTree = "<group>"; };
 		A7A98C1F2C8F44BC00C93E59 /* CoverageSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoverageSettings.swift; sourceTree = "<group>"; };
 		A7AE65982E7D901600EA568B /* RetryAndSkipTags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetryAndSkipTags.swift; sourceTree = "<group>"; };
@@ -803,6 +807,7 @@
 		E116D7D925248C280022779D /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				A78F014B2EC666370015564E /* BreakableResult.swift */,
 				A72D54472EAFC37F00C662A5 /* InstrumentationUtils.swift */,
 				A72D543D2EAFC26700C662A5 /* InMemoryExporter.swift */,
 				A76174BE2CB45F9B0098CE99 /* XCTestExtensions.swift */,
@@ -976,6 +981,7 @@
 		E143CF0027D7790200F4018A /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				A75306C02EC4AEE500CEFE91 /* Async.swift */,
 				A72D545A2EB3BC3800C662A5 /* UnfairLock.swift */,
 				81894A4E29B0A28B00108C51 /* Retrying.swift */,
 				E1F69C2A28C72FAD0042156E /* Log.swift */,
@@ -1699,6 +1705,7 @@
 				A7E233332BC93D100087D8F8 /* Synced.swift in Sources */,
 				A7FC25D42BA1EB3400067E26 /* BinaryImages.swift in Sources */,
 				A7FC25B62BA1EADF00067E26 /* DDTestModule.swift in Sources */,
+				A78F014C2EC666400015564E /* BreakableResult.swift in Sources */,
 				A71E646A2BAA0AA100F2ACA5 /* Environment.swift in Sources */,
 				A7FC25D22BA1EB2900067E26 /* SimpleSpanSerializer.swift in Sources */,
 				A7FC25BA2BA1EADF00067E26 /* DDTags.swift in Sources */,
@@ -1791,6 +1798,7 @@
 				A7FC26442BA1ECE400067E26 /* LogEncoder.swift in Sources */,
 				A77C12312D8C976B009C2BA1 /* TestManagementService.swift in Sources */,
 				A72D54572EB12C9100C662A5 /* GitUploadApi.swift in Sources */,
+				A75306C12EC4AEE800CEFE91 /* Async.swift in Sources */,
 				A72D54512EB11CD700C662A5 /* MultipartFormURLRequest.swift in Sources */,
 				A7FC26432BA1ECE400067E26 /* LogSanitizer.swift in Sources */,
 				A72D54552EB12A6A00C662A5 /* TestManagementApi.swift in Sources */,
@@ -2574,7 +2582,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = "2.6.3";
+				MARKETING_VERSION = 2.6.3;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -2647,7 +2655,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LLVM_LTO = YES_THIN;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = "2.6.3";
+				MARKETING_VERSION = 2.6.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -2753,8 +2761,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/open-telemetry/opentelemetry-swift-core.git";
 			requirement = {
-				branch = main;
-				kind = branch;
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.3.0;
 			};
 		};
 		A7D7E64E2D074D9200B49C35 /* XCRemoteSwiftPackageReference "swift-code-coverage" */ = {

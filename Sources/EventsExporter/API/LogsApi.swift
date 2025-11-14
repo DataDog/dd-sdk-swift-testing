@@ -7,28 +7,21 @@
 
 import Foundation
 
-protocol LogsApi: APIService {
+public protocol LogsApi: APIService {
 //    func uploadLogs(batch: //Create batch type,
 //                    _ response: @escaping (Result<Void, APICallError>) -> Void)
     
-    func uploadLogs(batch url: URL,
-                    _ response: @escaping (Result<Void, APICallError>) -> Void)
-    
-    func uploadLogs(batch data: Data,
-                    _ response: @escaping (Result<Void, HTTPClient.RequestError>) -> Void)
+    func uploadLogs(batch url: URL) -> AsyncResult<Void, APICallError>
+    func uploadLogs(batch data: Data) -> AsyncResult<Void, HTTPClient.RequestError>
 }
 
 extension LogsApi {
-    func uploadLogs(batch url: URL,
-                    _ response: @escaping (Result<Void, APICallError>) -> Void)
-    {
+    func uploadLogs(batch url: URL) -> AsyncResult<Void, APICallError> {
         do {
             let data = try Data(contentsOf: url, options: [.mappedIfSafe])
-            uploadLogs(batch: data) { res in
-                response(res.mapError(APICallError.init))
-            }
+            return uploadLogs(batch: data).mapError(APICallError.init)
         } catch {
-            response(.failure(.fileSystem(error)))
+            return .error(.fileSystem(error))
         }
     }
     
@@ -53,7 +46,7 @@ struct LogsApiService: LogsApi {
         self.decoder = config.decoder
     }
     
-    func uploadLogs(batch data: Data, _ response: @escaping (Result<Void, HTTPClient.RequestError>) -> Void) {
+    func uploadLogs(batch data: Data) -> AsyncResult<Void, HTTPClient.RequestError> {
         var url = endpoint.logsURL
         url.appendQueryItems([
             .ddsource(source: LogQueryValues.ddsource),
@@ -66,9 +59,25 @@ struct LogsApiService: LogsApi {
         request.httpBody = data
         let log = self.log
         log.debug("Uploading logs...")
-        httpClient.send(request: request) {
+        return httpClient.send(request: request).peek {
             log.debug("Logs upload result: \($0)")
-            response($0.map { _ in })
+        }.asVoid
+    }
+    
+    var endpointURLs: Set<URL> { [endpoint.logsURL] }
+}
+
+private extension Endpoint {
+    var logsURL: URL {
+        let endpoint = "/api/v2/logs"
+        switch self {
+        case .us1: return URL(string: "https://logs.browser-intake-datadoghq.com" + endpoint)!
+        case .us3: return URL(string: "https://logs.browser-intake-us3-datadoghq.com" + endpoint)!
+        case .us5: return URL(string: "https://logs.browser-intake-us5-datadoghq.com" + endpoint)!
+        case .eu1: return URL(string: "https://mobile-http-intake.logs.datadoghq.eu" + endpoint)!
+        case .ap1: return URL(string: "https://logs.browser-intake-ap1-datadoghq.com" + endpoint)!
+        case .staging: return URL(string: "https://logs.browser-intake-datad0g.com" + endpoint)!
+        case let .other(testsBaseURL: _, logsBaseURL: url): return url.appendingPathComponent(endpoint)
         }
     }
 }

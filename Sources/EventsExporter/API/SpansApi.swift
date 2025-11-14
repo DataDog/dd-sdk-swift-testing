@@ -7,28 +7,21 @@
 
 import Foundation
 
-protocol SpansApi: APIService {
+public protocol SpansApi: APIService {
 //    func uploadSpans(batch: //Create batch type,
 //                     _ response: @escaping (Result<Void, APICallError>) -> Void)
     
-    func uploadSpans(batch url: URL,
-                     _ response: @escaping (Result<Void, APICallError>) -> Void)
-    
-    func uploadSpans(batch data: Data,
-                     _ response: @escaping (Result<Void, HTTPClient.RequestError>) -> Void)
+    func uploadSpans(batch url: URL) -> AsyncResult<Void, APICallError>
+    func uploadSpans(batch data: Data) -> AsyncResult<Void, HTTPClient.RequestError>
 }
 
 extension SpansApi {
-    func uploadSpans(batch url: URL,
-                     _ response: @escaping (Result<Void, APICallError>) -> Void)
-    {
+    func uploadSpans(batch url: URL) -> AsyncResult<Void, APICallError> {
         do {
             let data = try Data(contentsOf: url, options: [.mappedIfSafe])
-            uploadSpans(batch: data) { res in
-                response(res.mapError(APICallError.init))
-            }
+            return uploadSpans(batch: data).mapError(APICallError.init)
         } catch {
-            response(.failure(.fileSystem(error)))
+            return .error(.fileSystem(error))
         }
     }
     
@@ -53,7 +46,7 @@ struct SpansApiService: SpansApi {
         self.decoder = config.decoder
     }
     
-    func uploadSpans(batch data: Data, _ response: @escaping (Result<Void, HTTPClient.RequestError>) -> Void) {
+    func uploadSpans(batch data: Data) -> AsyncResult<Void, HTTPClient.RequestError> {
         var request = URLRequest(url: endpoint.spansURL)
         request.httpMethod = "POST"
         request.httpHeaders = headers
@@ -61,9 +54,20 @@ struct SpansApiService: SpansApi {
         request.httpBody = data
         let log = self.log
         log.debug("Uploading spans...")
-        httpClient.send(request: request) {
+        return httpClient.send(request: request).peek {
             log.debug("Spans upload result: \($0)")
-            response($0.map { _ in })
+        }.asVoid
+    }
+    
+    var endpointURLs: Set<URL> { [endpoint.spansURL] }
+}
+
+private extension Endpoint {
+    var spansURL: URL {
+        let endpoint = "/api/v2/citestcycle"
+        switch self {
+        case let .other(testsBaseURL: url, logsBaseURL: _): return url.appendingPathComponent(endpoint)
+        default: return URL(string: "https://citestcycle-intake.\(site!)\(endpoint)")!
         }
     }
 }

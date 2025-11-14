@@ -12,14 +12,14 @@ import SystemConfiguration
 #endif
 
 /// Describes current mobile device.
-internal class Device {
+public struct Device {
     // MARK: - Info
 
     var model: String
     var osName: String
     var osVersion: String
 
-    init(
+    public init(
         model: String,
         osName: String,
         osVersion: String)
@@ -30,14 +30,14 @@ internal class Device {
     }
 
     #if !os(macOS)
-    convenience init(uiDevice: UIDevice, processInfo: ProcessInfo) {
+    public init(uiDevice: UIDevice, processInfo: ProcessInfo) {
         self.init(
             model: uiDevice.model,
             osName: uiDevice.systemName,
             osVersion: uiDevice.systemVersion)
     }
     #else
-    convenience init(processInfo: ProcessInfo) {
+    public init(processInfo: ProcessInfo) {
         self.init(
             model: "Mac",
             osName: processInfo.hostName,
@@ -47,7 +47,7 @@ internal class Device {
 
     /// Returns current mobile device  if `UIDevice` is available on this platform.
     /// On other platforms returns `nil`.
-    static var current: Device {
+    public static var current: Device {
         #if os(macOS)
         return Device(processInfo: ProcessInfo.processInfo)
         #elseif os(iOS) && !targetEnvironment(simulator)

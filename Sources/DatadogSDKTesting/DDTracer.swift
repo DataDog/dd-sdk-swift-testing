@@ -72,7 +72,7 @@ internal class DDTracer {
         tracerSdk = tracerProviderSdk.get(instrumentationName: id, instrumentationVersion: version) as! TracerSdk
     }
 
-    convenience init() {
+    convenience init(config: Config, environment: Environment, api: TestOpmimizationApi) {
         let conf = DDTestMonitor.config
         let env = DDTestMonitor.env
         var launchSpanContext: SpanContext? = nil
@@ -86,21 +86,6 @@ internal class DDTracer {
                                                    traceFlags: TraceFlags().settingIsSampled(false),
                                                    traceState: TraceState())
         }
-
-        let bundle = Bundle.main
-        let identifier = bundle.bundleIdentifier ?? "com.datadoghq.DatadogSDKTesting"
-        let version = (bundle.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "unknown"
-
-        let payloadCompression: Bool
-        // When reporting tests to local server
-        switch conf.endpoint {
-        case let .other(testsBaseURL: tURL, logsBaseURL: _):
-            payloadCompression = false
-            Log.print("Reporting tests to \(tURL.absoluteURL)")
-        default: payloadCompression = true
-        }
-
-        let hostnameToReport: String? = (conf.reportHostname && !DDTestMonitor.developerMachineHostName.isEmpty) ? DDTestMonitor.developerMachineHostName : nil
         
         let metadata = SpanMetadata(libraryVersion: DDTestMonitor.tracerVersion,
                                     env: DDTestMonitor.env,

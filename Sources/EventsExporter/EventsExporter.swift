@@ -11,6 +11,8 @@ import CodeCoverageParser
 public protocol EventsExporterProtocol: SpanExporter {
     var endpointURLs: Set<String> { get }
     
+    func setMetadata(_ metadata: SpanMetadata)
+    
     func exportEvent<T: Encodable>(event: T)
     func searchCommits(repositoryURL: String, commits: [String]) -> [String]
     func export(coverage: URL, parser: CoverageParser, workspacePath: String?,
@@ -41,11 +43,11 @@ public class EventsExporter: EventsExporterProtocol {
     var knownTestsService: KnownTestsService
     var testManagementService: TestManagementService
 
-    public init(config: ExporterConfiguration) throws {
+    public init(config: ExporterConfiguration, api: TestOpmimizationApi) throws {
         self.configuration = config
         Log.setLogger(config.logger)
-        spansExporter = try SpansExporter(config: configuration)
-        logsExporter = try LogsExporter(config: configuration)
+        spansExporter = try SpansExporter(config: configuration, api: api.spans)
+        logsExporter = try LogsExporter(config: configuration, api: api.logs)
         coverageExporter = try CoverageExporter(config: configuration)
         itrService = try ITRService(config: configuration)
         settingsService = try SettingsService(config: configuration)
@@ -65,6 +67,10 @@ public class EventsExporter: EventsExporterProtocol {
             }
         }
         return .success
+    }
+    
+    public func setMetadata(_ metadata: SpanMetadata) {
+        spansExporter.setMetadata(metadata)
     }
 
     public func exportEvent<T: Encodable>(event: T) {
@@ -140,17 +146,5 @@ public class EventsExporter: EventsExporterProtocol {
 
     public func shutdown(explicitTimeout: TimeInterval?) {
         _ = self.flush(explicitTimeout: explicitTimeout)
-    }
-
-    public var endpointURLs: Set<String> {
-        [configuration.endpoint.logsURL.absoluteString,
-         configuration.endpoint.spansURL.absoluteString,
-         configuration.endpoint.coverageURL.absoluteString,
-         configuration.endpoint.searchCommitsURL.absoluteString,
-         configuration.endpoint.skippableTestsURL.absoluteString,
-         configuration.endpoint.packfileURL.absoluteString,
-         configuration.endpoint.settingsURL.absoluteString,
-         configuration.endpoint.knownTestsURL.absoluteString,
-         configuration.endpoint.testManagementTestsURL.absoluteString]
     }
 }

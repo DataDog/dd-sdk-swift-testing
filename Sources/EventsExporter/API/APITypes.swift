@@ -53,11 +53,13 @@ extension Array: APIResponseData where Element: APIResponseData {
     var isTypeValid: Bool { allSatisfy { $0.isTypeValid } }
 }
 
-protocol APIService {
+public protocol APIService {
     var endpoint: Endpoint { get set }
     var headers: [HTTPHeader] { get set }
     var encoder: JSONEncoder { get set }
     var decoder: JSONDecoder { get set }
+    
+    var endpointURLs: Set<URL> { get }
     
     init(config: APIServiceConfig, httpClient: HTTPClient, log: Logger)
 }
@@ -228,7 +230,7 @@ struct APICall<Request: APIRequestData,
     private init() {}
 }
 
-enum APICallError: Error {
+public enum APICallError: Error {
     case transport(any Error)
     case httpError(code: Int, headers: [HTTPHeader.Field: String], body: Data?)
     case encoding(EncodingError)
@@ -238,7 +240,7 @@ enum APICallError: Error {
     case fileSystem(any Error)
     case unknownError(any Error)
     
-    init(from error: HTTPClient.RequestError) {
+    public init(from error: HTTPClient.RequestError) {
         switch error {
         case .http(code: let code, headers: let headers, body: let body):
             self = .httpError(code: code, headers: headers, body: body)
@@ -250,7 +252,7 @@ enum APICallError: Error {
     }
 }
 
-struct APIServiceConfig {
+public struct APIServiceConfig {
     let applicationName: String
     let version: String
     let device: Device
@@ -285,10 +287,24 @@ struct APIServiceConfig {
         ] + (payloadCompression ? [.contentEncodingHeader(contentEncoding: .deflate)] : []) +
             (hostname != nil ? [.hostnameHeader(hostname: hostname!)] : [])
     }
+    
+    public init(applicationName: String, version: String,
+                device: Device, hostname: String?, apiKey: String,
+                endpoint: Endpoint, clientId: String, payloadCompression: Bool)
+    {
+        self.applicationName = applicationName
+        self.version = version
+        self.device = device
+        self.hostname = hostname
+        self.apiKey = apiKey
+        self.endpoint = endpoint
+        self.clientId = clientId
+        self.payloadCompression = payloadCompression
+    }
 }
 
 extension JSONEncoder {
-    static let apiEncoder: JSONEncoder = {
+    public static let apiEncoder: JSONEncoder = {
         var encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         encoder.dataEncodingStrategy = .base64
@@ -309,7 +325,7 @@ extension JSONEncoder {
 }
 
 extension JSONDecoder {
-    static let apiDecoder: JSONDecoder = {
+    public static let apiDecoder: JSONDecoder = {
         var decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         decoder.keyDecodingStrategy = .convertFromSnakeCase
@@ -332,16 +348,14 @@ extension HTTPClient {
     func call<Request, Response>(_ call: APICall<Request, Response>.Type,
                                  url: URL, meta: Request.Meta, data: Request,
                                  headers: [HTTPHeader]? = nil,
-                                 coders: (JSONEncoder, JSONDecoder) = (.apiEncoder, .apiDecoder),
-                                 _ completion: @escaping (Result<APIEnvelope<Response>, APICallError>) -> Void)
+                                 coders: (JSONEncoder, JSONDecoder) = (.apiEncoder, .apiDecoder)) -> AsyncResult<APIEnvelope<Response>, APICallError>
     where Request: APIRequestData, Response: APIResponseData
     {
         let requestData: Data
         let requestId: String?
         switch call.request(meta: meta, data: data, coder: coders.0) {
         case .failure(let err):
-            completion(.failure(err))
-            return
+            return .error(err)
         case .success(let (id, data)):
             requestId = id
             requestData = data
@@ -354,21 +368,19 @@ extension HTTPClient {
         }
         request.httpBody = requestData
         
-        sendWithResponse(request: request) { result in
-            let response = result
+        return sendWithResponse(request: request).map { result in
+            result
                 .mapError { APICallError(from: $0) }
                 .flatMap { call.response(from: $0, requestId: requestId, coder: coders.1) }
-            completion(response)
         }
     }
     
     func call<Request, Response>(_ call: APICall<Request, Response>.Type,
                                  url: URL, data: Request,
                                  headers: [HTTPHeader]? = nil,
-                                 coders: (JSONEncoder, JSONDecoder) = (.apiEncoder, .apiDecoder),
-                                 _ completion: @escaping (Result<APIEnvelope<Response>, APICallError>) -> Void)
+                                 coders: (JSONEncoder, JSONDecoder) = (.apiEncoder, .apiDecoder)) ->  AsyncResult<APIEnvelope<Response>, APICallError>
     where Request: APIRequestData, Response: APIResponseData, Request.Meta: APIVoidValue
     {
-        self.call(call, url: url, meta: .void, data: data, headers: headers, coders: coders, completion)
+        self.call(call, url: url, meta: .void, data: data, headers: headers, coders: coders)
     }
 }

@@ -6,7 +6,7 @@
 
 import Foundation
 
-public struct TracerSettings {
+public struct TracerSettings2 {
     public var itr: ITR
     public var efd: EFD
     public var flakyTestRetriesEnabled: Bool
@@ -133,7 +133,7 @@ internal class SettingsService {
     func settings(
         service: String, env: String, repositoryURL: String, branch: String, sha: String,
         testLevel: ITRTestLevel, configurations: [String: String], customConfigurations: [String: String]
-    ) -> TracerSettings? {
+    ) -> TracerSettings2? {
         var configurations: [String: JSONGeneric] = configurations.mapValues { .string($0) }
         configurations["custom"] = .stringDict(customConfigurations)
         

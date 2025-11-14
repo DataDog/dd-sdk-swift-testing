@@ -7,6 +7,7 @@
 internal import EventsExporter
 internal import OpenTelemetryApi
 internal import OpenTelemetrySdk
+internal import protocol EventsExporter.Logger
 
 #if canImport(UIKit)
     import UIKit
@@ -32,7 +33,7 @@ internal class DDTestMonitor {
     static var instance: DDTestMonitor?
     static var clock: Clock = DDTestMonitor.config.disableNTPClock ? DateClock() : NTPClock()
 
-    static var tracer = DDTracer()
+    //static var tracer = DDTracer()
     static var env = Environment(config: config, env: envReader, log: Log.instance)
     static var config: Config = Config(env: envReader)
     
@@ -105,6 +106,9 @@ internal class DDTestMonitor {
         }
     }
     
+    private let logger: Logger
+    private let tracer: DDTracer
+    private var api: TestOpmimizationApi
     private var isGitUploadSucceded: Bool = false
     private var serverTestingPort: CFMessagePort? = nil
     private var isStopped: Bool = false
@@ -145,11 +149,51 @@ internal class DDTestMonitor {
     }
 
     init() {
-        Log.debug("Config:\n\(DDTestMonitor.config)")
-        Log.debug("Environment:\n\(DDTestMonitor.env)")
-        Log.debug("Session ID:\n\(DDTestMonitor.sessionId)")
+        let log = Log(env: DDTestMonitor.envReader)
+        log.boostrap(config: DDTestMonitor.config)
+        self.logger = log
+    
+        log.debug("Config:\n\(DDTestMonitor.config)")
+        log.debug("Environment:\n\(DDTestMonitor.env)")
+        log.debug("Session ID:\(DDTestMonitor.sessionId)")
         maxPayloadSize = DDTestMonitor.config.maxPayloadSize
         messageChannelUUID = DDTestMonitor.config.messageChannelUUID ?? UUID().uuidString
+        
+        // Create API
+        let bundle = Bundle.main
+        let identifier = bundle.bundleIdentifier ?? "com.datadoghq.DatadogSDKTesting"
+        let version = (bundle.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "unknown"
+
+        let payloadCompression: Bool
+        // When reporting tests to local server
+        switch DDTestMonitor.config.endpoint {
+        case let .other(testsBaseURL: tURL, logsBaseURL: _):
+            payloadCompression = false
+            Log.print("Reporting tests to \(tURL.absoluteURL)")
+        default: payloadCompression = true
+        }
+        
+        let clientId = String(SpanId.random().rawValue)
+
+        let hostnameToReport: String? = (DDTestMonitor.config.reportHostname && !DDTestMonitor.developerMachineHostName.isEmpty) ? DDTestMonitor.developerMachineHostName : nil
+        
+        let apiConfig = APIServiceConfig(applicationName: identifier,
+                                         version: version,
+                                         device: .current,
+                                         hostname: hostnameToReport,
+                                         apiKey: DDTestMonitor.config.apiKey!,
+                                         endpoint: DDTestMonitor.config.endpoint.exporterEndpoint,
+                                         clientId: clientId,
+                                         payloadCompression: payloadCompression)
+        
+        let httpClient = HTTPClient(debug: DDTestMonitor.config.extraDebugNetwork)
+        
+        self.api = TestOpmimizationApiService(config: apiConfig, httpClient: httpClient, log: log)
+        
+        let tracer = DDTracer(config: DDTestMonitor.config,
+                              environment: DDTestMonitor.env,
+                              api: self.api)
+        self.tracer = tracer
         
         if DDTestMonitor.config.isBinaryUnderUITesting {
             launchNotificationObserver = NotificationCenter.default.addObserver(
@@ -159,7 +203,7 @@ internal class DDTestMonitor {
                 /// As crash reporter is initialized in testBundleWillStart() method, we initialize it here
                 /// because dont have test observer
                 self.setupCrashHandler()
-                let launchedSpan = DDTestMonitor.tracer.createSpanFromLaunchContext()
+                let launchedSpan = tracer.createSpanFromLaunchContext()
                 let simpleSpan = SimpleSpanData(spanData: launchedSpan.toSpanData())
                 DDCrashes.setCurrent(spanData: simpleSpan)
             }
@@ -175,11 +219,11 @@ internal class DDTestMonitor {
                         data[DDUISettingsTags.uiSettingsOrientation] = PlatformUtils.getOrientation()
                     #endif
                     guard let port = self.testingPort else {
-                        Log.debug("DatadogTestingPort CFMessagePortCreateRemote failed")
+                        log.debug("DatadogTestingPort CFMessagePortCreateRemote failed")
                         return
                     }
                     guard let encoded = try? JSONSerialization.data(withJSONObject: data) else {
-                        Log.debug("Json encoding failed for: \(data)")
+                        log.debug("Json encoding failed for: \(data)")
                         return
                     }
                     let timeout: CFTimeInterval = 1.0
@@ -191,9 +235,9 @@ internal class DDTestMonitor {
                                                           nil,
                                                           nil)
                     if status == kCFMessagePortSuccess {
-                        Log.debug("DatadogTestingPort Success: \(data)")
+                        log.debug("DatadogTestingPort Success: \(data)")
                     } else {
-                        Log.debug("DatadogTestingPort Error: \(status)")
+                        log.debug("DatadogTestingPort Error: \(status)")
                     }
                 }
             #endif
@@ -208,8 +252,7 @@ internal class DDTestMonitor {
         tia?.stop()
         knownTests?.stop()
         testManagement?.stop()
-        DDTestMonitor.tracer.flush()
-        let _ = DDTestMonitor.tracer.eventsExporter?.flush()
+        tracer.flush()
         gitUploadQueue.waitUntilAllOperationsAreFinished()
     }
     
@@ -222,7 +265,7 @@ internal class DDTestMonitor {
     func startGitUpload() {
         /// Check Git is up to date and no local changes
         let workspace = DDTestMonitor.env.workspacePath ?? ""
-        guard DDTestMonitor.env.isCI || GitUploader.statusUpToDate(workspace: workspace, log: Log.instance) else {
+        guard DDTestMonitor.env.isCI || GitUploader.statusUpToDate(workspace: workspace, log: logger) else {
             Log.print("Git status is not up to date")
             return
         }
@@ -233,35 +276,41 @@ internal class DDTestMonitor {
             return
         }
         
-        DDTestMonitor.instance?.gitUploadQueue.addOperation {
-            if DDTestMonitor.config.gitUploadEnabled {
-                Log.debug("Git Upload Enabled")
-                guard let exporter = DDTestMonitor.tracer.eventsExporter else {
-                    Log.print("GitUpload error: event exporter is nil")
-                    self.isGitUploadSucceded = false
-                    return
-                }
-                DDTestMonitor.instance?.gitUploader = GitUploader(
-                    log: Log.instance, exporter: exporter, workspace: workspace,
-                    commitFolder: try? DDTestMonitor.cacheManager?.commit(feature: "git")
-                )
-            } else {
-                Log.debug("Git Upload Disabled")
-                self.isGitUploadSucceded = false
-                return
-            }
+        let api = self.api
+        let log = self.logger
+        let config = DDTestMonitor.config
+        
+        guard config.gitUploadEnabled else {
+            log.debug("Git Upload Disabled")
+            self.isGitUploadSucceded = false
+            return
+        }
+        
+        gitUploadQueue.addOperation { [weak self] in
+            self?.gitUploader = GitUploader(log: log,
+                                            api: api.git,
+                                            workspace: workspace,
+                                            commitFolder: try? DDTestMonitor.cacheManager?.commit(feature: "git"))
             
-            self.isGitUploadSucceded = DDTestMonitor.instance?.gitUploader?.sendGitInfo(
-                repositoryURL: DDTestMonitor.env.git.repositoryURL, commit: commit
-            ) ?? false
+            do {
+                try self?.gitUploader?.sendGitInfo(repositoryURL: DDTestMonitor.env.git.repositoryURL,
+                                                          commit: commit).await().get()
+                self?.isGitUploadSucceded = true
+            } catch {
+                log.print("Git Upload failed: \(error)")
+                self?.isGitUploadSucceded = false
+            }
         }
     }
 
     func startTestOptimization() {
         var tracerBackendConfig: TracerSettings? = nil
+        atr = nil
         tia = nil
         efd = nil
         let service = DDTestMonitor.env.service
+        let api = self.api
+        let logger = self.logger
         
         guard let branchOrTag = (DDTestMonitor.env.git.branch ?? DDTestMonitor.env.git.tag),
               let commit = DDTestMonitor.env.git.commit?.sha else {
@@ -275,135 +324,133 @@ internal class DDTestMonitor {
         }
         
         let getTracerConfig = { (log: String) in
-            if let eventsExporter = DDTestMonitor.tracer.eventsExporter {
-                return Log.measure(name: log) {
-                    eventsExporter.tracerSettings(
-                        service: service,
-                        env: DDTestMonitor.env.environment,
-                        repositoryURL: repository,
-                        branch: branchOrTag,
-                        sha: commit,
-                        testLevel: .test,
-                        configurations: DDTestMonitor.env.baseConfigurations,
-                        customConfigurations: DDTestMonitor.config.customConfigurations
-                    )
-                }
-            } else {
-                return nil
+            return logger.measure(name: log) {
+                api.settings.tracerSettings(service: service,
+                                            env: DDTestMonitor.env.environment,
+                                            repositoryURL: repository,
+                                            branch: branchOrTag,
+                                            sha: commit,
+                                            tiaLevel: .test,
+                                            configurations: DDTestMonitor.env.baseConfigurations,
+                                            customConfigurations: DDTestMonitor.config.customConfigurations).await()
             }
         }
         
         let updateTracerConfig = BlockOperation { [self] in
-            tracerBackendConfig = getTracerConfig("Get Tracer Config")
-            guard var config = tracerBackendConfig else {
-                Log.debug("Tracer Config request failed")
+            switch getTracerConfig("Get Tracer Config") {
+            case .failure(let err):
+                logger.print("Failed to get tracer config: \(err)")
+                tracerBackendConfig = nil
+                return
+            case .success(let config):
+                tracerBackendConfig = config
+                logger.debug("Tracer Config: \(config)")
+            }
+            guard tracerBackendConfig!.itr.requireGit else { return }
+            logger.debug("ITR requires Git upload")
+            gitUploadQueue.waitUntilAllOperationsAreFinished()
+            guard isGitUploadSucceded else {
+                Log.print("ITR requires Git but Git Upload failed. Disabling ITR")
+                tracerBackendConfig!.itr.itrEnabled = false
                 return
             }
-            Log.debug("Tracer Config: \(config)")
-            if config.itr.requireGit {
-                Log.debug("ITR requires Git upload")
-                gitUploadQueue.waitUntilAllOperationsAreFinished()
-                if isGitUploadSucceded {
-                    config = getTracerConfig("Get Tracer Config after git upload") ?? config
-                    Log.debug("Tracer config: \(config)")
-                } else {
-                    Log.print("ITR requires Git but Git Upload failed. Disabling ITR")
-                    config.itr.itrEnabled = false
-                }
+            switch getTracerConfig("Get Tracer Config after git upload") {
+            case .failure(let err):
+                logger.print("Failed to get tracer config after git upload: \(err)")
+            case .success(let config):
                 tracerBackendConfig = config
+                logger.debug("Tracer Config after git upload: \(config)")
             }
         }
         testOptimizationSetupQueue.addOperation(updateTracerConfig)
         
         let automaticTestRetries = BlockOperation {
             guard let remote = tracerBackendConfig else {
-                Log.print("ATR: error: backend config can't be loaded")
+                logger.print("ATR: error: backend config can't be loaded")
                 return
             }
             guard AutomaticTestRetriesFactory.isEnabled(config: DDTestMonitor.config,
                                                         env: DDTestMonitor.env,
                                                         remote: remote)
             else {
-                Log.print("ATR: disabled")
+                logger.print("ATR: disabled")
                 return
             }
-            self.atr = AutomaticTestRetriesFactory(config: DDTestMonitor.config).create(log: Log.instance)
+            self.atr = try? AutomaticTestRetriesFactory(config: DDTestMonitor.config).create(log: logger).await().get()
         }
         automaticTestRetries.addDependency(updateTracerConfig)
         testOptimizationSetupQueue.addOperation(automaticTestRetries)
         
         let knownTestsSetup = BlockOperation {
             guard let remote = tracerBackendConfig else {
-                Log.print("Known Tests: error: backend config can't be loaded")
+                logger.print("Known Tests: error: backend config can't be loaded")
                 return
             }
             guard KnownTestsFactory.isEnabled(config: DDTestMonitor.config,
                                               env: DDTestMonitor.env,
                                               remote: remote)
             else {
-                Log.print("Known Tests: disabled")
-                return
-            }
-            guard let eventsExporter = DDTestMonitor.tracer.eventsExporter else {
-                Log.print("Known Tests: init failed. Exporter is nil")
+                logger.print("Known Tests: disabled")
                 return
             }
             guard let cache = try? DDTestMonitor.cacheManager?.session(feature: "known_tests") else {
-                Log.print("Known Tests: init failed. Can't create cache directiry.")
+                logger.print("Known Tests: init failed. Can't create cache directiry.")
                 return
             }
             let factory = KnownTestsFactory(repository: repository, service: service,
                                             environment: DDTestMonitor.env.environment,
                                             configurations: DDTestMonitor.env.baseConfigurations,
                                             custom: DDTestMonitor.config.customConfigurations,
-                                            exporter: eventsExporter, cache: cache)
-            self.knownTests = factory.create(log: Log.instance)
+                                            api: api.knownTests, cache: cache)
+            do {
+                self.knownTests = try factory.create(log: Log.instance).await().get()
+            } catch {
+                self.knownTests = nil
+                logger.print("Known Tests: init failed: \(error)")
+            }
+            
         }
         knownTestsSetup.addDependency(updateTracerConfig)
         testOptimizationSetupQueue.addOperation(knownTestsSetup)
         
         let efdSetup = BlockOperation {
             guard let remote = tracerBackendConfig else {
-                Log.print("EFD: error: backend config can't be loaded")
+                logger.print("EFD: error: backend config can't be loaded")
                 return
             }
             guard EarlyFlakeDetectionFactory.isEnabled(config: DDTestMonitor.config, env: DDTestMonitor.env, remote: remote)
             else {
-                Log.print("EFD: disabled")
+                logger.print("EFD: disabled")
                 return
             }
             guard let knownTests = self.knownTests else {
-                Log.print("EFD: init failed. Known Tests is nil")
+                logger.print("EFD: init failed. Known Tests is nil")
                 return
             }
-            self.efd = EarlyFlakeDetectionFactory(knownTests: knownTests, settings: remote.efd).create(log: Log.instance)
+            self.efd = try? EarlyFlakeDetectionFactory(knownTests: knownTests, settings: remote.efd).create(log: logger).await().get()
         }
         efdSetup.addDependency(knownTestsSetup)
         testOptimizationSetupQueue.addOperation(efdSetup)
         
         let testManagementSetup = BlockOperation {
             guard let remote = tracerBackendConfig else {
-                Log.print("Test Management: error: backend config can't be loaded")
+                logger.print("Test Management: error: backend config can't be loaded")
                 return
             }
             guard TestManagementFactory.isEnabled(config: DDTestMonitor.config,
                                                   env: DDTestMonitor.env,
                                                   remote: remote)
             else {
-                Log.print("Test Management is disabled")
-                return
-            }
-            guard let eventsExporter = DDTestMonitor.tracer.eventsExporter else {
-                Log.print("Test Management: init failed. Exporter is nil")
+                logger.print("Test Management is disabled")
                 return
             }
             guard let cache = try? DDTestMonitor.cacheManager?.session(feature: "test_management") else {
-                Log.print("Test Management: init failed. Can't create cache directiry.")
+                logger.print("Test Management: init failed. Can't create cache directiry.")
                 return
             }
             let attemptToFixRetryCount = DDTestMonitor.config.testManagementAttemptToFixRetries ?? remote.testManagement.attemptToFixRetries
             guard let module = Bundle.testBundle?.name else {
-                Log.print("Test Management: init failed. Can't determine test module")
+                logger.print("Test Management: init failed. Can't determine test module")
                 return
             }
             let sha = DDTestMonitor.env.git.commitHead?.sha ?? commit
@@ -414,9 +461,13 @@ internal class DDTestMonitor {
                                                 commitMessage: message,
                                                 module: module,
                                                 attemptToFixRetries: attemptToFixRetryCount,
-                                                exporter: eventsExporter,
+                                                api: api.testManagement,
                                                 cache: cache)
-            self.testManagement = factory.create(log: Log.instance)
+            do {
+                self.testManagement = try factory.create(log: logger).await().get()
+            } catch {
+                logger.print("Test Management: init failed: \(error)")
+            }
         }
         testManagementSetup.addDependency(updateTracerConfig)
         testOptimizationSetupQueue.addOperation(testManagementSetup)
@@ -431,10 +482,6 @@ internal class DDTestMonitor {
                                                       remote: remote)
             else {
                 Log.print("TIA: disabled")
-                return
-            }
-            guard let eventsExporter = DDTestMonitor.tracer.eventsExporter else {
-                Log.print("TIA: init failed. Exporter is nil")
                 return
             }
             guard let cache = try? DDTestMonitor.cacheManager?.session(feature: "tia") else {
@@ -542,7 +589,8 @@ internal class DDTestMonitor {
         Log.measure(name: "Crash handler install") {
             DDCrashes.install(
                 folder: try! DDTestMonitor.cacheManager!.session(feature: "crash"),
-                disableMach: DDTestMonitor.config.disableMachCrashHandler
+                disableMach: DDTestMonitor.config.disableMachCrashHandler,
+                tracer: self.tracer
             )
         }
     }

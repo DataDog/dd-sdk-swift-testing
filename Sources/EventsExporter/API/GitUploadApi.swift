@@ -7,40 +7,29 @@
 
 import Foundation
 
-protocol GitUploadApi: APIService {
-    func searchCommits(repositoryURL: String, commits: [String],
-                       _ response: @escaping (Result<[String], APICallError>) -> Void)
+public protocol GitUploadApi: APIService {
+    func searchCommits(repositoryURL: String, commits: [String]) -> AsyncResult<[String], APICallError>
     
-    func uploadPackFile(file: URL, commit: String, repositoryURL: String,
-                        _ response: @escaping (Result<Void, APICallError>) -> Void)
+    func uploadPackFile(file: URL, commit: String, repositoryURL: String) -> AsyncResult<Void, APICallError>
     
-    func uploadPackFile(name: String, data: Data, commit: String, repositoryURL: String,
-                        _ response: @escaping (Result<Void, HTTPClient.RequestError>) -> Void)
+    func uploadPackFile(name: String, data: Data, commit: String,
+                        repositoryURL: String) -> AsyncResult<Void, HTTPClient.RequestError>
     
-    func uploadPackFiles(directory: URL, commit: String, repositoryURL: String,
-                         _ response: @escaping (Result<Void, APICallError>) -> Void)
+    func uploadPackFiles(directory: URL, commit: String, repositoryURL: String) -> AsyncResult<Void, APICallError>
 }
 
 extension GitUploadApi {
-    func uploadPackFile(file: URL, commit: String, repositoryURL: String,
-                        _ response: @escaping (Result<Void, APICallError>) -> Void)
-    {
+    func uploadPackFile(file: URL, commit: String, repositoryURL: String) -> AsyncResult<Void, APICallError> {
         do {
             let data = try Data(contentsOf: file, options: [.mappedIfSafe])
-            uploadPackFile(name: file.lastPathComponent, data: data,
-                           commit: commit, repositoryURL: repositoryURL)
-            {
-                response($0.mapError(APICallError.init))
-            }
+            return uploadPackFile(name: file.lastPathComponent, data: data,
+                                  commit: commit, repositoryURL: repositoryURL).mapError(APICallError.init)
         } catch {
-            response(.failure(.fileSystem(error)))
-            return
+            return .error(.fileSystem(error))
         }
     }
     
-    func uploadPackFiles(directory: URL, commit: String, repositoryURL: String,
-                         _ response: @escaping (Result<Void, APICallError>) -> Void)
-    {
+    func uploadPackFiles(directory: URL, commit: String, repositoryURL: String) -> AsyncResult<Void, APICallError> {
         let files: [URL]
         do {
             files = try FileManager.default
@@ -48,26 +37,16 @@ extension GitUploadApi {
                                      includingPropertiesForKeys: [.isRegularFileKey, .canonicalPathKey])
                 .filter { $0.pathExtension == "pack" }
         } catch {
-            response(.failure(.fileSystem(error)))
-            return
+            return .error(.fileSystem(error))
         }
-        uploadNextFile(index: 0, files: files, commit: commit, repositoryURL: repositoryURL, response)
+        return uploadNextFile(index: 0, files: files, commit: commit, repositoryURL: repositoryURL)
     }
     
-    private func uploadNextFile(index: Int, files: [URL], commit: String, repositoryURL: String,
-                                _ response: @escaping (Result<Void, APICallError>) -> Void)
+    private func uploadNextFile(index: Int, files: [URL], commit: String, repositoryURL: String) -> AsyncResult<Void, APICallError>
     {
-        guard index < files.count else {
-            response(.success(()))
-            return
-        }
-        uploadPackFile(file: files[index], commit: commit, repositoryURL: repositoryURL) { result in
-            switch result {
-            case .success(_):
-                self.uploadNextFile(index: index+1, files: files, commit: commit,
-                                    repositoryURL: repositoryURL, response)
-            case .failure(let err): response(.failure(err))
-            }
+        guard index < files.count else { return .value(()) }
+        return uploadPackFile(file: files[index], commit: commit, repositoryURL: repositoryURL).flatMapValue { _ in
+            self.uploadNextFile(index: index+1, files: files, commit: commit, repositoryURL: repositoryURL)
         }
     }
 }
@@ -91,27 +70,22 @@ struct GitUploadApiService: GitUploadApi {
         self.decoder = config.decoder
     }
     
-    func searchCommits(repositoryURL: String, commits: [String],
-                       _ response: @escaping (Result<[String], APICallError>) -> Void)
-    {
+    func searchCommits(repositoryURL: String, commits: [String]) -> AsyncResult<[String], APICallError> {
         let meta = CommitRequestMeta(repositoryUrl: repositoryURL)
         let request = commits.map { APIData<CommitRequestMeta, Commit>(id: $0) }
         let log = self.log
         log.debug("Search commits request: [meta: \(meta), data: \(request)]")
-        httpClient.call(CommitsCall.self,
+        return httpClient.call(CommitsCall.self,
                         url: endpoint.searchCommitsURL,
                         meta: meta, data: request,
                         headers: headers + [.contentTypeHeader(contentType: .applicationJSON)],
                         coders: (encoder, decoder))
-        {
-            log.debug("Search commits response: \($0)")
-            response($0.map { $0.data.map { $0.id! } })
-        }
+            .peek { log.debug("Search commits response: \($0)") }
+            .mapValue { $0.data.map { $0.id! }}
     }
     
-    func uploadPackFile(name: String, data: Data, commit: String, repositoryURL: String,
-                        _ response: @escaping (Result<Void, HTTPClient.RequestError>) -> Void)
-    {
+    func uploadPackFile(name: String, data: Data, commit: String,
+                        repositoryURL: String) -> AsyncResult<Void, HTTPClient.RequestError> {
         let log = self.log
         let meta = CommitRequestMeta(repositoryUrl: repositoryURL)
         let pushedSha = APIEnvelope<APIData<CommitRequestMeta, Commit>>(meta: meta, data: .init(id: commit))
@@ -128,11 +102,12 @@ struct GitUploadApiService: GitUploadApi {
                        filename: name + ".json",
                        contentType: .applicationJSON)
         log.debug("Uploading packfile \(name) for commit \(commit)")
-        httpClient.send(request: request) {
+        return httpClient.send(request: request).peek {
             log.debug("Packfile upload response: \($0)")
-            response($0.map { _ in })
-        }
+        }.asVoid
     }
+    
+    var endpointURLs: Set<URL> { [endpoint.searchCommitsURL, endpoint.packfileURL] }
 }
 
 extension GitUploadApiService {
@@ -143,5 +118,23 @@ extension GitUploadApiService {
     
     struct CommitRequestMeta: Encodable {
         let repositoryUrl: String
+    }
+}
+
+private extension Endpoint {
+    var searchCommitsURL: URL {
+        let endpoint = "/api/v2/git/repository/search_commits"
+        switch self {
+        case let .other(testsBaseURL: url, logsBaseURL: _): return url.appendingPathComponent(endpoint)
+        default: return mainApi(endpoint: endpoint)!
+        }
+    }
+    
+    var packfileURL: URL {
+        let endpoint = "/api/v2/git/repository/packfile"
+        switch self {
+        case let .other(testsBaseURL: url, logsBaseURL: _): return url.appendingPathComponent(endpoint)
+        default: return mainApi(endpoint: endpoint)!
+        }
     }
 }

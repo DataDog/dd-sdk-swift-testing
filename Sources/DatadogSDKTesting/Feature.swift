@@ -70,7 +70,9 @@ protocol FeatureFactory {
     associatedtype FT: Feature
     
     static func isEnabled(config: Config, env: Environment, remote: TracerSettings) -> Bool
-    func create(log: Logger) -> FT?
+    //func create(log: Logger) -> FT?
+    
+    func create(log: Logger) -> AsyncResult<FT, any Error>
 }
 
 enum RetryGroupConfiguration: Equatable, Hashable {

@@ -150,13 +150,13 @@ struct TestImpactAnalysisFactory: FeatureFactory {
     let cacheFolder: Directory
     let commitSha: String
     let repository: String
-    let exporter: EventsExporterProtocol
+    let api: TestImpactAnalysisApi
     let skippingEnabled: Bool
     let coverageConfig: Coverage?
     
     init(configurations: [String: String],
          custom: [String: String],
-         exporter: EventsExporterProtocol,
+         api: TestImpactAnalysisApi,
          commit: String, repository: String,
          cache: Directory, skippingEnabled: Bool,
          coverage: Coverage?)
@@ -164,7 +164,7 @@ struct TestImpactAnalysisFactory: FeatureFactory {
         self.configurations = configurations
         self.customConfigurations = custom
         self.cacheFolder = cache
-        self.exporter = exporter
+        self.api = api
         self.repository = repository
         self.commitSha = commit
         self.coverageConfig = coverage
@@ -198,7 +198,7 @@ struct TestImpactAnalysisFactory: FeatureFactory {
         return !isExcluded(branch)
     }
     
-    func create(log: Logger) -> TestImpactAnalysis? {
+    func create(log: Logger) -> AsyncResult<FT, any Error> {
         guard skippingEnabled else {
             return create(log: log, tests: nil)
         }
@@ -212,7 +212,7 @@ struct TestImpactAnalysisFactory: FeatureFactory {
         return create(log: log, tests: tests)
     }
     
-    private func create(log: Logger, tests: SkipTests?) -> TestImpactAnalysis {
+    private func create(log: Logger, tests: SkipTests?) -> AsyncResult<FT, any Error> {
         let coverage = coverageConfig.flatMap { config in
             DDCoverageHelper(storagePath: config.tempFolder,
                              exporter: exporter,

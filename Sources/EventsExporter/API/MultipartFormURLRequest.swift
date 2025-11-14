@@ -59,11 +59,11 @@ struct MultipartFormURLRequest {
 }
 
 extension HTTPClient {
-    func send(request: MultipartFormURLRequest, _ completion: @escaping (Result<HTTPURLResponse, RequestError>) -> Void) {
-        send(request: request.asURLRequest, completion)
+    func send(request: MultipartFormURLRequest) -> AsyncResult<HTTPURLResponse, RequestError> {
+        send(request: request.asURLRequest)
     }
     
-    func sendWithResponse(request: MultipartFormURLRequest, _ completion: @escaping (Result<Data, RequestError>) -> Void) {
-        sendWithResponse(request: request.asURLRequest, completion)
+    func sendWithResponse(request: MultipartFormURLRequest) -> AsyncResult<Data, RequestError> {
+        sendWithResponse(request: request.asURLRequest)
     }
 }

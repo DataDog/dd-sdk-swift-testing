@@ -153,17 +153,18 @@ extension TestManagement {
 
 struct TestManagementFactory: FeatureFactory {
     typealias FT = TestManagement
-    
+
     let cacheFileName = "test_management_tests.json"
     let repository: String
     let commitSha: String
     let commitMessage: String?
+    let branch: String?
     let attemptToFixRetries: UInt
     let cacheFolder: Directory
     let exporter: EventsExporterProtocol
     let module: String
-    
-    init(repository: String, commitSha: String, commitMessage: String?,
+
+    init(repository: String, commitSha: String, commitMessage: String?, branch: String?,
          module: String, attemptToFixRetries: UInt,
          exporter: EventsExporterProtocol, cache: Directory
     ) {
@@ -171,6 +172,7 @@ struct TestManagementFactory: FeatureFactory {
         self.repository = repository
         self.commitSha = commitSha
         self.commitMessage = commitMessage
+        self.branch = branch
         self.attemptToFixRetries = attemptToFixRetries
         self.exporter = exporter
         self.module = module
@@ -212,7 +214,7 @@ struct TestManagementFactory: FeatureFactory {
     
     private func getTests(exporter: EventsExporterProtocol, log: Logger) -> TestManagementTestsInfo? {
         let tests = exporter.testManagementTests(repositoryURL: repository, sha: commitSha,
-                                                 commitMessage: commitMessage, module: module)
+                                                 commitMessage: commitMessage, module: module, branch: branch)
         guard let tests = tests else {
             Log.print("Test Management: tests request failed")
             return nil

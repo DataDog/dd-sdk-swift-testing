@@ -455,10 +455,12 @@ internal class DDTestMonitor {
             }
             let sha = DDTestMonitor.env.git.commitHead?.sha ?? commit
             let message = DDTestMonitor.env.git.commitHead?.message ?? DDTestMonitor.env.git.commit?.message
-            
+            let branch = DDTestMonitor.env.git.branch
+
             let factory = TestManagementFactory(repository: repository,
                                                 commitSha: sha,
                                                 commitMessage: message,
+                                                branch: branch,
                                                 module: module,
                                                 attemptToFixRetries: attemptToFixRetryCount,
                                                 api: api.testManagement,

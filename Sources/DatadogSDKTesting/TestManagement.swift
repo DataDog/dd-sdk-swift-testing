@@ -153,17 +153,18 @@ extension TestManagement {
 
 struct TestManagementFactory: FeatureFactory {
     typealias FT = TestManagement
-    
+
     let cacheFileName = "test_management_tests.json"
     let repository: String
     let commitSha: String
     let commitMessage: String?
+    let branch: String?
     let attemptToFixRetries: UInt
     let cacheFolder: Directory
     let api: TestManagementApi
     let module: String
-    
-    init(repository: String, commitSha: String, commitMessage: String?,
+
+    init(repository: String, commitSha: String, commitMessage: String?, branch: String?,
          module: String, attemptToFixRetries: UInt,
          api: TestManagementApi, cache: Directory
     ) {
@@ -171,6 +172,7 @@ struct TestManagementFactory: FeatureFactory {
         self.repository = repository
         self.commitSha = commitSha
         self.commitMessage = commitMessage
+        self.branch = branch
         self.attemptToFixRetries = attemptToFixRetries
         self.api = api
         self.module = module

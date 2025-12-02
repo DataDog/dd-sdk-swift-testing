@@ -27,7 +27,7 @@ public protocol EventsExporterProtocol: SpanExporter {
         configurations: [String: String], customConfigurations: [String: String]
     ) -> KnownTestsMap?
     func testManagementTests(
-        repositoryURL: String, sha: String?, commitMessage: String?, module: String?
+        repositoryURL: String, sha: String?, commitMessage: String?, module: String?, branch: String?
     ) -> TestManagementTestsInfo?
 }
 
@@ -133,9 +133,9 @@ public class EventsExporter: EventsExporterProtocol {
     }
     
     public func testManagementTests(
-        repositoryURL: String, sha: String? = nil, commitMessage: String? = nil, module: String? = nil
+        repositoryURL: String, sha: String? = nil, commitMessage: String? = nil, module: String? = nil, branch: String? = nil
     ) -> TestManagementTestsInfo? {
-        testManagementService.tests(repositoryURL: repositoryURL, sha: sha, commitMessage: commitMessage, module: module)
+        testManagementService.tests(repositoryURL: repositoryURL, sha: sha, commitMessage: commitMessage, module: module, branch: branch)
     }
 
     public func shutdown(explicitTimeout: TimeInterval?) {

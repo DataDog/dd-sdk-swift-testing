@@ -37,9 +37,9 @@ internal final class TestManagementService {
     }
     
     func tests(
-        repositoryURL: String, sha: String? = nil, commitMessage: String? = nil, module: String? = nil
+        repositoryURL: String, sha: String? = nil, commitMessage: String? = nil, module: String? = nil, branch: String? = nil
     ) -> TestManagementTestsInfo? {
-        let testsPayload = TestsRequest(repositoryURL: repositoryURL, sha: sha, commitMessage: commitMessage, module: module)
+        let testsPayload = TestsRequest(repositoryURL: repositoryURL, sha: sha, commitMessage: commitMessage, module: module, branch: branch)
 
         guard let jsonData = testsPayload.jsonData,
               let response = testsUploader.uploadWithResponse(data: jsonData)
@@ -73,20 +73,22 @@ extension TestManagementService {
                 let commitMessage: String?
                 let module: String?
                 let sha: String?
-                
+                let branch: String?
+
                 enum CodingKeys: String, CodingKey {
                     case repositoryURL = "repository_url"
                     case commitMessage = "commit_message"
                     case module
                     case sha
+                    case branch
                 }
             }
         }
         
-        init(repositoryURL: String, sha: String? = nil, commitMessage: String? = nil, module: String? = nil) {
+        init(repositoryURL: String, sha: String? = nil, commitMessage: String? = nil, module: String? = nil, branch: String? = nil) {
             self.data = Data(
                 attributes: Data.Attributes(
-                    repositoryURL: repositoryURL, commitMessage: commitMessage, module: module, sha: sha
+                    repositoryURL: repositoryURL, commitMessage: commitMessage, module: module, sha: sha, branch: branch
                 )
             )
         }

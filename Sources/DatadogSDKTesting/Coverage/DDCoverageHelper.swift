@@ -20,19 +20,19 @@ final class DDCoverageHelper: TestCoverageCollector {
     static var id: FeatureId = "Coverage Helper"
     
     let processor: CoverageProcessor
-    let api: TestImpactAnalysisApi
+    let exporter: CoverageExporterType
     let workspacePath: String?
 
     let storagePath: Directory
     let debug: Bool
     let coverageWorkQueue: OperationQueue
 
-    init?(storagePath: Directory, api: TestImpactAnalysisApi, workspacePath: String?, priority: CodeCoveragePriority, debug: Bool) {
+    init?(storagePath: Directory, exporter: CoverageExporterType, workspacePath: String?, priority: CodeCoveragePriority, debug: Bool) {
         do {
             self.processor = try CoverageProcessor(for: PlatformUtils.xcodeVersion, temp: storagePath.url)
             self.debug = debug
             self.storagePath = storagePath
-            self.api = api
+            self.exporter = exporter
             self.workspacePath = workspacePath
             coverageWorkQueue = OperationQueue()
             coverageWorkQueue.qualityOfService = priority.qos

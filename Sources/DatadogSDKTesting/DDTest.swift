@@ -49,16 +49,16 @@ public final class Test: NSObject {
         
         self.startTime = testStartTime
 
-        span = DDTestMonitor.tracer.startSpan(name: "\(suite.session.testFramework).test",
-                                              attributes: attributes,
-                                              startTime: testStartTime)
+        span = DDTestMonitor.instance!.tracer.startSpan(name: "\(suite.session.testFramework).test",
+                                                        attributes: attributes,
+                                                        startTime: testStartTime)
         span.setAttribute(key: DDTestTags.testExecutionOrder, value: Int(currentTestExecutionOrder))
         span.setAttribute(key: DDTestTags.testExecutionProcessId, value: initialProcessId)
 
         super.init()
         DDTestMonitor.instance?.currentTest = self
 
-        DDTestMonitor.tracer.addPropagationsHeadersToEnvironment()
+        DDTestMonitor.instance?.tracer.addPropagationsHeadersToEnvironment()
         
         // Move to the global when we will support global metrics
         for metric in DDTestMonitor.env.baseMetrics {
@@ -127,7 +127,7 @@ public final class Test: NSObject {
         } else {
             errorInfo?.addExtraError(message: message)
         }
-        DDTestMonitor.tracer.logError(string: "\(type): \(message)")
+        //DDTestMonitor.instance?.tracer.logError(string: "\(type): \(message)")
     }
 
     private func setErrorInformation() {

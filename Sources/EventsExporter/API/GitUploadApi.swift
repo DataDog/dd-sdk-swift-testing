@@ -45,7 +45,7 @@ extension GitUploadApi {
     private func uploadNextFile(index: Int, files: [URL], commit: String, repositoryURL: String) -> AsyncResult<Void, APICallError>
     {
         guard index < files.count else { return .value(()) }
-        return uploadPackFile(file: files[index], commit: commit, repositoryURL: repositoryURL).flatMapValue { _ in
+        return uploadPackFile(file: files[index], commit: commit, repositoryURL: repositoryURL).flatMap { _ in
             self.uploadNextFile(index: index+1, files: files, commit: commit, repositoryURL: repositoryURL)
         }
     }
@@ -81,7 +81,7 @@ struct GitUploadApiService: GitUploadApi {
                         headers: headers + [.contentTypeHeader(contentType: .applicationJSON)],
                         coders: (encoder, decoder))
             .peek { log.debug("Search commits response: \($0)") }
-            .mapValue { $0.data.map { $0.id! }}
+            .map { $0.data.map { $0.id! }}
     }
     
     func uploadPackFile(name: String, data: Data, commit: String,

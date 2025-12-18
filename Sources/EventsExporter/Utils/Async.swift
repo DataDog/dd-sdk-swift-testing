@@ -200,7 +200,6 @@ public final class Waiter<T> {
     private var _value: T?
     private let _semaphore: DispatchSemaphore
     
-    
     public init(_ wrap: (@escaping (T) -> Void) -> Void) {
         self._semaphore = DispatchSemaphore(value: 0)
         wrap { result in

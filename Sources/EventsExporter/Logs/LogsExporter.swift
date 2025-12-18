@@ -21,17 +21,23 @@ internal enum LogConstants {
     static let ddProduct = "datadog.product:citest"
 }
 
-internal class LogsExporter {
+public protocol LogsExporterType: OpenTelemetrySdk.LogRecordExporter {
+    func exportLogs(fromSpan span: SpanData)
+}
+
+internal class LogsExporter: LogsExporterType {
     let logsDirectory = "com.datadog.civisibility/logs/v1"
-    let configuration: ExporterConfiguration
+    //let configuration: ExporterConfiguration
+    let synchronousWrite: Bool
     let logsStorage: FeatureStoreAndUpload
 
     init(config: ExporterConfiguration, api: LogsApi) throws {
-        self.configuration = config
+        //self.configuration = config
+        self.synchronousWrite = config.performancePreset.synchronousWrite
 
         let filesOrchestrator = try FilesOrchestrator(
             directory: try Directory.cache().createSubdirectory(path: logsDirectory),
-            performance: configuration.performancePreset,
+            performance: config.performancePreset,
             dateProvider: SystemDateProvider()
         )
 
@@ -49,8 +55,8 @@ internal class LogsExporter {
             orchestrator: filesOrchestrator
         )
         
-        let uploader = ClosureDataUploader { data, response in
-            api.uploadLogs(batch: data) { response($0.error) }
+        let uploader = ClosureDataUploader { data in
+            api.uploadLogs(batch: data)
         }
 
         logsStorage = FeatureStoreAndUpload(featureName: "logs",
@@ -59,15 +65,60 @@ internal class LogsExporter {
                                             performance: config.performancePreset,
                                             uploader: uploader)
     }
+    
+    func export(logRecords: [ReadableLogRecord], explicitTimeout: TimeInterval?) -> ExportResult {
+        logRecords.forEach {
+            if let context = $0.spanContext {
+                _writeLog(DDLog(log: $0, span: context))
+            }
+        }
+        return .success
+    }
 
     func exportLogs(fromSpan span: SpanData) {
         span.events.forEach {
-            let log = DDLog(event: $0, span: span, configuration: configuration)
-            if configuration.performancePreset.synchronousWrite {
-                try? logsStorage.writeSync(value: log)
-            } else {
-                logsStorage.write(value: log) { _ in }
-            }
+            _writeLog(DDLog(event: $0, span: span))
         }
     }
+    
+    func forceFlush(explicitTimeout: TimeInterval?) -> ExportResult {
+        do {
+            return try logsStorage.flush() ? .success : .failure
+        } catch {
+            return .failure
+        }
+    }
+    
+    func shutdown(explicitTimeout: TimeInterval?) {
+        logsStorage.stop()
+    }
+    
+    private func _writeLog(_ log: DDLog) {
+        if synchronousWrite {
+            try? logsStorage.writeSync(value: log)
+        } else {
+            let _ = logsStorage.write(value: log)
+        }
+    }
+}
+
+internal class SpanEventsLogExporterAdapter: SpansExporterType {
+    var logsExporter: LogsExporterType
+    
+    init(logsExporter: LogsExporterType) {
+        self.logsExporter = logsExporter
+    }
+    
+    func export(spans: [SpanData], explicitTimeout: TimeInterval?) -> SpanExporterResultCode {
+        spans.forEach { logsExporter.exportLogs(fromSpan: $0) }
+        return .success
+    }
+    
+    func flush(explicitTimeout: TimeInterval?) -> SpanExporterResultCode {
+        .success
+    }
+    
+    func shutdown(explicitTimeout: TimeInterval?) {}
+    
+    func setMetadata(_ meta: SpanMetadata) {}
 }

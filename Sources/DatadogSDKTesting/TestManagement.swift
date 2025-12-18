@@ -190,7 +190,7 @@ struct TestManagementFactory: FeatureFactory {
         return api
             .tests(repositoryURL: repository, sha: commitSha, commitMessage: commitMessage, module: module)
             .mapError { $0 as (any Error) }
-            .flatMapValue { tests in
+            .flatMap { tests in
                 // if we have empty array we can disable Test Management functionality
                 guard !tests.modules.isEmpty else { return .error(EmptyResponseError()) }
                 log.debug("Test Management Enabled")

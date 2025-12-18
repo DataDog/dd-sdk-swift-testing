@@ -107,7 +107,7 @@ internal class DDTestMonitor {
     }
     
     private let logger: Logger
-    private let tracer: DDTracer
+    public let tracer: DDTracer
     private var api: TestOpmimizationApi
     private var isGitUploadSucceded: Bool = false
     private var serverTestingPort: CFMessagePort? = nil
@@ -188,11 +188,18 @@ internal class DDTestMonitor {
         
         let httpClient = HTTPClient(debug: DDTestMonitor.config.extraDebugNetwork)
         
-        self.api = TestOpmimizationApiService(config: apiConfig, httpClient: httpClient, log: log)
+        let api = TestOpmimizationApiService(config: apiConfig, httpClient: httpClient, log: log)
+        self.api = api
         
-        let tracer = DDTracer(config: DDTestMonitor.config,
-                              environment: DDTestMonitor.env,
-                              api: self.api)
+        let tracer = log.measure(name: "Tracer init") {
+             DDTracer(config: DDTestMonitor.config,
+                      environment: DDTestMonitor.env,
+                      applicationId: identifier,
+                      applicationVersion: version,
+                      tracerVersion: DDTestMonitor.tracerVersion,
+                      exporterId: clientId,
+                      api: api, log: log)
+        }
         self.tracer = tracer
         
         if DDTestMonitor.config.isBinaryUnderUITesting {
@@ -496,20 +503,31 @@ internal class DDTestMonitor {
                     Log.print("Code Coverage init failed. Can't create temp directory.")
                     return
                 }
+                guard let exporter = self.tracer.eventsExporter?.coverageExporter else {
+                    logger.print("Code Coverage init failed. Exporter is nil.")
+                    return
+                }
                 coverage = .init(workspacePath: DDTestMonitor.env.workspacePath,
                                  priority: DDTestMonitor.config.codeCoveragePriority,
                                  tempFolder: temp,
-                                 debug: DDTestMonitor.config.extraDebugCodeCoverage)
+                                 debug: DDTestMonitor.config.extraDebugCodeCoverage,
+                                 exporter: exporter)
             }
             let factory = TestImpactAnalysisFactory(configurations: DDTestMonitor.env.baseConfigurations,
                                                     custom: DDTestMonitor.config.customConfigurations,
-                                                    exporter: eventsExporter,
+                                                    api: api.tia,
                                                     commit: commit,
                                                     repository: repository,
+                                                    environment: DDTestMonitor.env.environment,
+                                                    service: DDTestMonitor.env.service,
                                                     cache: cache,
                                                     skippingEnabled: remote.itr.testsSkipping,
                                                     coverage: coverage)
-            self.tia = factory.create(log: Log.instance)
+            do {
+                self.tia = try factory.create(log: logger).await().get()
+            } catch {
+                logger.print("TIA: init failed: \(error)")
+            }
         }
         tiaSetup.addDependency(updateTracerConfig)
         testOptimizationSetupQueue.addOperation(tiaSetup)
@@ -518,10 +536,6 @@ internal class DDTestMonitor {
     func startInstrumenting() {
         guard !DDTestMonitor.config.disableTestInstrumenting else {
             return
-        }
-
-        Log.measure(name: "DDTracer") {
-            _ = DDTestMonitor.tracer
         }
 
         if !DDTestMonitor.config.disableNetworkInstrumentation {

@@ -151,7 +151,7 @@ struct SettingsApiService: SettingsApi {
                         headers: headers + [.contentTypeHeader(contentType: .applicationJSON)],
                         coders: (encoder, decoder))
             .peek { log.debug("Tracer settings response: \($0)") }
-            .mapValue { TracerSettings(response: $0.data.attributes) }
+            .map { TracerSettings(response: $0.data.attributes) }
     }
     
     var endpointURLs: Set<URL> { [endpoint.settingsURL] }

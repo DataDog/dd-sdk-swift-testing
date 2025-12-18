@@ -14,10 +14,15 @@ public struct ExporterConfiguration {
     /// The name of the service, resource, version,... that will be reported to the backend.
     var serviceName: String
     
-    /// Application version
-    var version: String
+    /// Exporter Id
+    var exporterId: String
 
+    /// Events source
     var source: String
+    
+    /// Application Version
+    var applicationVersion: String
+    
     /// Performance preset for reporting
     var performancePreset: PerformancePreset
     
@@ -28,29 +33,27 @@ public struct ExporterConfiguration {
     }
     
     var logger: Logger
-    var debugSaveCodeCoverageFiles: Bool
+    var debugSaveCodeCoverageFilesAt: URL?
 
     public init(
-        serviceName: String, applicationName: String, applicationVersion: String,
-        environment: String, hostname: String?, apiKey: String,
-        endpoint: Endpoint, metadata: SpanMetadata,
-        payloadCompression: Bool = true, source: String = "ios",
-        performancePreset: PerformancePreset = .default, exporterId: String, logger: Logger,
-        debug: Debug = .init()
+        serviceName: String,
+        environment: String,
+        version: String,
+        metadata: SpanMetadata,
+        source: String = "ios",
+        performancePreset: PerformancePreset = .default,
+        exporterId: String,
+        logger: Logger,
+        debugSaveCodeCoverageFilesAt: URL? = nil
     ) {
         self.serviceName = serviceName
-        self.applicationName = applicationName
-        self.version = applicationVersion
-        self.hostname = hostname
-        self.apiKey = apiKey
-        self.endpoint = endpoint
-        self.payloadCompression = payloadCompression
         self.source = source
+        self.applicationVersion = version
         self.performancePreset = performancePreset
         self.exporterId = exporterId
         self.metadata = metadata
         self.logger = logger
-        self.debug = debug
+        self.debugSaveCodeCoverageFilesAt = debugSaveCodeCoverageFilesAt
         self.environment = environment
         _setEnv()
     }

@@ -27,12 +27,12 @@ final class TestImpactAnalysis: TestHooksFeature {
         if let tests = tests { // we have skipping enabled
             var modules = [String: [String: Suite]]()
             for test in tests.tests {
-                guard let moduleName = test.configuration?["test.bundle"] else { continue }
+                guard let moduleName = test.module else { continue }
                 modules.get(key: moduleName, or: [:]) { module in
                     module.get(key: test.suite, or: Suite(name: test.suite, methods: [:])) { suite in
                         suite.methods.get(key: test.name, or: Test(name: test.name, configurations: [])) {
-                            $0.configurations.append(Configuration(standard: test.configuration,
-                                                                   custom: test.customConfiguration))
+                            $0.configurations.append(Configuration(standard: test.configurations,
+                                                                   custom: test.customConfigurations))
                         }
                     }
                 }
@@ -150,6 +150,8 @@ struct TestImpactAnalysisFactory: FeatureFactory {
     let cacheFolder: Directory
     let commitSha: String
     let repository: String
+    let environment: String
+    let service: String
     let api: TestImpactAnalysisApi
     let skippingEnabled: Bool
     let coverageConfig: Coverage?
@@ -158,6 +160,7 @@ struct TestImpactAnalysisFactory: FeatureFactory {
          custom: [String: String],
          api: TestImpactAnalysisApi,
          commit: String, repository: String,
+         environment: String, service: String,
          cache: Directory, skippingEnabled: Bool,
          coverage: Coverage?)
     {
@@ -167,6 +170,8 @@ struct TestImpactAnalysisFactory: FeatureFactory {
         self.api = api
         self.repository = repository
         self.commitSha = commit
+        self.environment = environment
+        self.service = service
         self.coverageConfig = coverage
         self.skippingEnabled = skippingEnabled
     }
@@ -205,17 +210,22 @@ struct TestImpactAnalysisFactory: FeatureFactory {
         if let tests = loadTestsFromDisk(log: log) {
             return create(log: log, tests: tests)
         }
-        guard let tests = getTests(exporter: exporter, log: log) else {
-            return nil
+        return api.skippableTests(repositoryURL: repository.spanAttribute,
+                           sha: commitSha, environment: environment, service: service,
+                           tiaLevel: .test, configurations: configurations,
+                           customConfigurations: customConfigurations)
+        .mapError { $0 as (any Error) }
+        .flatMap { tests in
+            log.debug("TIA tests: \(tests)")
+            self.saveTests(tests: tests)
+            return self.create(log: log, tests: tests)
         }
-        saveTests(tests: tests)
-        return create(log: log, tests: tests)
     }
     
     private func create(log: Logger, tests: SkipTests?) -> AsyncResult<FT, any Error> {
         let coverage = coverageConfig.flatMap { config in
             DDCoverageHelper(storagePath: config.tempFolder,
-                             exporter: exporter,
+                             exporter: config.exporter,
                              workspacePath: config.workspacePath,
                              priority: config.priority,
                              debug: config.debug)
@@ -224,7 +234,7 @@ struct TestImpactAnalysisFactory: FeatureFactory {
         if coverage != nil {
             log.debug("Code Coverage Enabled")
         }
-        return TestImpactAnalysis(tests: tests, coverage: coverage)
+        return .value(TestImpactAnalysis(tests: tests, coverage: coverage))
     }
     
     private func loadTestsFromDisk(log: Logger) -> SkipTests? {
@@ -243,19 +253,6 @@ struct TestImpactAnalysisFactory: FeatureFactory {
         }
     }
     
-    private func getTests(exporter: EventsExporterProtocol, log: Logger) -> SkipTests? {
-        let tests = exporter.skippableTests(
-            repositoryURL: repository.spanAttribute, sha: commitSha, testLevel: .test,
-            configurations: configurations, customConfigurations: customConfigurations
-        )
-        guard let tests = tests else {
-            Log.print("TIA: tests request failed")
-            return nil
-        }
-        Log.debug("TIA: tests: \(tests)")
-        return tests
-    }
-    
     private func saveTests(tests: SkipTests) {
         if let data = try? JSONEncoder().encode(tests) {
             let testsFile = try? cacheFolder.createFile(named: cacheFileName)
@@ -271,5 +268,6 @@ extension TestImpactAnalysisFactory {
         let priority: CodeCoveragePriority
         let tempFolder: Directory
         let debug: Bool
+        let exporter: CoverageExporterType
     }
 }

@@ -8,52 +8,31 @@ import Foundation
 import OpenTelemetrySdk
 import CodeCoverageParser
 
-public protocol EventsExporterProtocol: SpanExporter {
-    var endpointURLs: Set<String> { get }
+public protocol EventsExporterProtocol {
+    var configuration: ExporterConfiguration { get }
+    var coverageExporter: CoverageExporterType { get }
+    var spansExporter: SpansExporterType { get }
+    var logsExporter: LogsExporterType { get }
     
     func setMetadata(_ metadata: SpanMetadata)
-    
-    func exportEvent<T: Encodable>(event: T)
-    func searchCommits(repositoryURL: String, commits: [String]) -> [String]
-    func export(coverage: URL, parser: CoverageParser, workspacePath: String?,
-                testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64)
-    func uploadPackFiles(packFilesDirectory: Directory, commit: String, repository: String) throws
-    func skippableTests(repositoryURL: String, sha: String, testLevel: ITRTestLevel,
-                        configurations: [String: String], customConfigurations: [String: String]) -> SkipTests?
-    func tracerSettings(
-        service: String, env: String, repositoryURL: String, branch: String, sha: String,
-        testLevel: ITRTestLevel, configurations: [String: String], customConfigurations: [String: String]
-    ) -> TracerSettings?
-    func knownTests(
-        service: String, env: String, repositoryURL: String,
-        configurations: [String: String], customConfigurations: [String: String]
-    ) -> KnownTestsMap?
-    func testManagementTests(
-        repositoryURL: String, sha: String?, commitMessage: String?, module: String?, branch: String?
-    ) -> TestManagementTestsInfo?
 }
 
 public class EventsExporter: EventsExporterProtocol {
-    let configuration: ExporterConfiguration
-    var spansExporter: SpansExporter
-    var logsExporter: LogsExporter
-    var coverageExporter: CoverageExporter
-    var itrService: ITRService
-    var settingsService: SettingsService
-    var knownTestsService: KnownTestsService
-    var testManagementService: TestManagementService
+    public let configuration: ExporterConfiguration
+    public private(set) var spansExporter: SpansExporterType
+    public private(set) var logsExporter: LogsExporterType
+    public private(set) var coverageExporter: CoverageExporterType
 
     public init(config: ExporterConfiguration, api: TestOpmimizationApi) throws {
         self.configuration = config
         Log.setLogger(config.logger)
-        spansExporter = try SpansExporter(config: configuration, api: api.spans)
         logsExporter = try LogsExporter(config: configuration, api: api.logs)
-        coverageExporter = try CoverageExporter(config: configuration)
-        itrService = try ITRService(config: configuration)
-        settingsService = try SettingsService(config: configuration)
-        knownTestsService = try KnownTestsService(config: configuration)
-        testManagementService = try TestManagementService(config: configuration)
-        Log.debug("EventsExporter created: \(spansExporter.runtimeId), endpoint: \(config.endpoint)")
+        
+        let spans = try SpansExporter(config: configuration, api: api.spans)
+        spansExporter = MultiSpanExporter(spanExporters: [spans, SpanEventsLogExporterAdapter(logsExporter: logsExporter)])
+        
+        coverageExporter = try CoverageExporter(config: configuration, api: api.tia)
+        config.logger.debug("EventsExporter created: \(config.exporterId), endpoint: \(api.endpoint)")
     }
 
     public func export(spans: [SpanData], explicitTimeout: TimeInterval?) -> SpanExporterResultCode {
@@ -82,15 +61,9 @@ public class EventsExporter: EventsExporterProtocol {
     }
 
     public func flush(explicitTimeout: TimeInterval?) -> SpanExporterResultCode {
-        // TODO: Honor the timeout
-        logsExporter.logsStorage.writer.queue.sync {}
-        spansExporter.spansStorage.writer.queue.sync {}
-        coverageExporter.coverageStorage.writer.queue.sync {}
-
-        _ = logsExporter.logsUpload.uploader.flush()
-        _ = spansExporter.spansUpload.uploader.flush()
-        _ = coverageExporter.coverageUpload.uploader.flush()
-
+        let spans = spansExporter.flush(explicitTimeout: explicitTimeout)
+        let logs = logsExporter.forceFlush(explicitTimeout: explicitTimeout)
+        let coverage = coverageExporter.flush()
         return .success
     }
 

@@ -267,7 +267,7 @@ public struct APIServiceConfig {
     /// Client ID for tracing
     let clientId: String
     
-    /// Services will deflate payloads before sending
+    /// API will deflate payloads before sending
     let payloadCompression: Bool
     
     let encoder: JSONEncoder = .apiEncoder
@@ -368,7 +368,7 @@ extension HTTPClient {
         }
         request.httpBody = requestData
         
-        return sendWithResponse(request: request).map { result in
+        return sendWithResponse(request: request).mapResult { result in
             result
                 .mapError { APICallError(from: $0) }
                 .flatMap { call.response(from: $0, requestId: requestId, coder: coders.1) }

@@ -8,6 +8,7 @@ import Foundation
 internal import EventsExporter
 internal import OpenTelemetryApi
 internal import OpenTelemetrySdk
+internal import protocol EventsExporter.Logger
 
 enum DDHeaders: String, CaseIterable {
     case traceIDField = "x-datadog-trace-id"
@@ -20,6 +21,8 @@ enum DDHeaders: String, CaseIterable {
 internal class DDTracer {
     let tracerSdk: TracerSdk
     let tracerProviderSdk: TracerProviderSdk
+    let loggerSdk: LoggerSdk
+    let endpointURLs: Set<String>
     var eventsExporter: EventsExporterProtocol?
     private var launchSpanContext: SpanContext?
 
@@ -38,18 +41,34 @@ internal class DDTracer {
         return launchSpanContext != nil
     }
     
-    init(id: String, version: String, exporter: EventsExporterProtocol?, enabled: Bool, launchContext: SpanContext?) {
+    init(sdkId: String, sdkVersion: String,
+         applicationId: String, applicationVersion: String,
+         environment: String, service: String,
+         exporter: EventsExporterProtocol?, endpointURLs: Set<String>,
+         enabled: Bool, launchContext: SpanContext?, log: Logger)
+    {
         self.launchSpanContext = launchContext
         self.eventsExporter = exporter
+        self.endpointURLs = endpointURLs
         
         let exporterToUse: SpanExporter
         if !enabled {
-            exporterToUse = InMemoryExporter()
-        } else if let exporter = eventsExporter {
-            exporterToUse = exporter as SpanExporter
+            exporterToUse = NoopSpanExporter()
+        } else if let exporter = eventsExporter?.spansExporter {
+            exporterToUse = exporter
         } else {
-            Log.print("Failed creating Datadog exporter.")
-            exporterToUse = InMemoryExporter()
+            Log.print("Failed creating DataDog span exporter.")
+            exporterToUse = NoopSpanExporter()
+        }
+        
+        let logExporterToUse: LogRecordExporter
+        if !enabled {
+            logExporterToUse = NoopLogRecordExporter.instance
+        } else if let exporter = eventsExporter?.logsExporter {
+            logExporterToUse = exporter
+        } else {
+            log.print("Failed creating DataDog log exporter")
+            logExporterToUse = NoopLogRecordExporter.instance
         }
         
         let spanProcessor: SpanProcessor
@@ -62,17 +81,45 @@ internal class DDTracer {
         // sync clock
         try! DDTestMonitor.clock.sync()
         
+        var resource = Resource()
+        resource.applicationName = applicationId
+        resource.applicationVersion = applicationVersion
+        resource.environment = environment
+        resource.service = service
+        resource.sdkLanguage = "swift"
+        resource.sdkName = sdkId
+        resource.sdkVersion = sdkVersion
+        
         tracerProviderSdk = TracerProviderBuilder().with(sampler: Samplers.alwaysOn)
             .with(spanLimits: SpanLimits().settingAttributeCountLimit(attributeCountLimit))
             .with(clock: DDTestMonitor.clock)
+            .with(resource: resource)
             .add(spanProcessor: spanProcessor)
+            .build()
+        
+        let loggerProviderSdk = LoggerProviderBuilder()
+            .with(logLimits: .init(maxAttributeCount: Int(attributeCountLimit)))
+            .with(clock: DDTestMonitor.clock)
+            .with(resource: resource)
+            .with(processors: [SimpleLogRecordProcessor(logRecordExporter: logExporterToUse)])
             .build()
 
         OpenTelemetry.registerTracerProvider(tracerProvider: tracerProviderSdk)
-        tracerSdk = tracerProviderSdk.get(instrumentationName: id, instrumentationVersion: version) as! TracerSdk
+        OpenTelemetry.registerLoggerProvider(loggerProvider: loggerProviderSdk)
+        
+        tracerSdk = tracerProviderSdk.get(instrumentationName: sdkId,
+                                          instrumentationVersion: sdkVersion) as! TracerSdk
+        loggerSdk = loggerProviderSdk
+            .loggerBuilder(instrumentationScopeName: sdkId)
+            .setIncludeTraceContext(true)
+            .setInstrumentationVersion(sdkVersion)
+            .build() as! LoggerSdk
     }
 
-    convenience init(config: Config, environment: Environment, api: TestOpmimizationApi) {
+    convenience init(config: Config, environment: Environment,
+                     applicationId: String, applicationVersion: String,
+                     tracerVersion: String, exporterId: String, api: TestOpmimizationApi, log: Logger)
+    {
         let conf = DDTestMonitor.config
         let env = DDTestMonitor.env
         var launchSpanContext: SpanContext? = nil
@@ -87,30 +134,27 @@ internal class DDTracer {
                                                    traceState: TraceState())
         }
         
-        let metadata = SpanMetadata(libraryVersion: DDTestMonitor.tracerVersion,
-                                    env: DDTestMonitor.env,
+        let metadata = SpanMetadata(libraryVersion: tracerVersion,
+                                    env: environment,
                                     capabilities: .libraryCapabilities)
         
         let exporterConfiguration = ExporterConfiguration(
             serviceName: env.service,
-            applicationName: identifier,
-            applicationVersion: version,
             environment: env.environment,
-            hostname: hostnameToReport,
-            apiKey: conf.apiKey ?? "",
-            endpoint: conf.endpoint.exporterEndpoint,
+            version: applicationVersion,
             metadata: metadata,
-            payloadCompression: payloadCompression,
             performancePreset: .instantDataDelivery,
-            exporterId: String(SpanId.random().rawValue),
-            logger: Log.instance,
-            debug: .init(logNetworkRequests: conf.extraDebugNetwork,
-                         saveCodeCoverageFiles: conf.extraDebugCodeCoverage)
+            exporterId: exporterId,
+            logger: log,
+            debugSaveCodeCoverageFiles: conf.extraDebugCodeCoverage
         )
-        let eventsExporter = try? EventsExporter(config: exporterConfiguration)
+        let eventsExporter = try? EventsExporter(config: exporterConfiguration, api: api)
         
-        self.init(id: identifier, version: version, exporter: eventsExporter,
-                  enabled: !conf.disableTracesExporting, launchContext: launchSpanContext)
+        let endpointURLs = Set(api.endpointURLs.map { $0.absoluteString })
+        
+        self.init(id: applicationId, version: applicationVersion, exporter: eventsExporter,
+                  endpointURLs: endpointURLs, enabled: !conf.disableTracesExporting,
+                  launchContext: launchSpanContext, log: log)
     }
 
     func startSpan(name: String, attributes: [String: String], startTime: Date? = nil) -> Span {
@@ -191,9 +235,9 @@ internal class DDTracer {
                                      spanLimits: tracerProviderSdk.getActiveSpanLimits(),
                                      spanProcessor: spanProcessor,
                                      clock: tracerProviderSdk.getActiveClock(),
-                                     resource: Resource(),
+                                     resource: tracerProviderSdk.getActiveResource(),
                                      attributes: attributes,
-                                     links: [SpanData.Link](),
+                                     links: [],
                                      totalRecordedLinks: 0,
                                      startTime: startTime)
 
@@ -220,9 +264,9 @@ internal class DDTracer {
                                      spanLimits: tracerProviderSdk.getActiveSpanLimits(),
                                      spanProcessor: spanProcessor,
                                      clock: tracerProviderSdk.getActiveClock(),
-                                     resource: Resource(),
+                                     resource: tracerProviderSdk.getActiveResource(),
                                      attributes: attributes,
-                                     links: [SpanData.Link](),
+                                     links: [],
                                      totalRecordedLinks: 0,
                                      startTime: Date())
 
@@ -237,14 +281,22 @@ internal class DDTracer {
                 DDTestTags.testSuite: AttributeValue.string(currentTest.suite.name),
                 DDTestTags.testModule: AttributeValue.string(currentTest.module.name)]
     }
+    
+    private func threadAndTestAttributes() -> [String: AttributeValue] {
+        var attrs = testAttributes()
+        if let name = Thread.current.name {
+            attrs[SemanticConventions.Thread.name.rawValue] = .string(name)
+        }
+        return attrs
+    }
 
     private func attributesForString(_ string: String) -> [String: AttributeValue] {
-        return testAttributes().merging(["message": AttributeValue.string(string)]) { _, other in other }
+        return threadAndTestAttributes().merging(["message": AttributeValue.string(string)]) { _, other in other }
     }
 
     private func attributesForError(_ string: String) -> [String: AttributeValue] {
-        return testAttributes().merging(["message": AttributeValue.string(string),
-                                         "status": AttributeValue.string("error")]) { _, other in other }
+        return threadAndTestAttributes().merging(["message": AttributeValue.string(string),
+                                                  "status": AttributeValue.string("error")]) { _, other in other }
     }
 
     func logString(string: String, date: Date? = nil) {
@@ -252,8 +304,13 @@ internal class DDTracer {
             // This is a special case when an app executed trough a UITest, logs without a span
             return logStringAppUITested(string: string, date: date)
         }
-
-        DDTracer.activeSpan?.addEvent(name: "logString", attributes: attributesForString(string), timestamp: date ?? Date())
+        var builder = loggerSdk.logRecordBuilder()
+            .setEventName("logString")
+            .setAttributes(attributesForString(string))
+        if let date = date {
+            builder = builder.setObservedTimestamp(date)
+        }
+        builder.emit()
     }
 
     /// This method is only currently used for loggign the steps when runnning UITest
@@ -262,17 +319,24 @@ internal class DDTracer {
             return
         }
         let timestamp = activeSpan.startTime.addingTimeInterval(timeIntervalSinceSpanStart)
-        activeSpan.addEvent(name: "logString", attributes: attributesForString(string), timestamp: timestamp)
+        logString(string: string, date: timestamp)
     }
 
     /// This method is only currently used when logging with an app being launched from a UITest, and no span has been created in the App.
     /// It creates a "non-sampled" instantaneous span that wont be serialized but where we can add the log using the SpanId and TraceId of the
     /// test Span that lunched the app.
     func logStringAppUITested(string: String, date: Date? = nil) {
-        let auxSpan = createSpanFromLaunchContext()
-        auxSpan.addEvent(name: "logString", attributes: attributesForString(string), timestamp: date ?? Date())
-        auxSpan.status = .ok
-        auxSpan.end()
+        guard let context = launchSpanContext else {
+            return
+        }
+        var builder = loggerSdk.logRecordBuilder()
+            .setEventName("logString")
+            .setSpanContext(context)
+            .setAttributes(attributesForString(string))
+        if let date = date {
+            builder = builder.setObservedTimestamp(date)
+        }
+        builder.emit()
     }
 
     /// This method is only currently used when logging with an app being launched from a UITest, and no span has been created in the App.
@@ -363,10 +427,6 @@ internal class DDTracer {
             headers[EnvironmentKey.testExecutionId.rawValue] = String(propagationContext.traceId.rawLowerLong)
         }
         return headers
-    }
-
-    func endpointURLs() -> Set<String> {
-        return eventsExporter?.endpointURLs ?? Set<String>()
     }
 }
 

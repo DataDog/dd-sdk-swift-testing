@@ -55,7 +55,7 @@ struct KnownTestsApiService: KnownTestsApi {
                         headers: headers + [.contentTypeHeader(contentType: .applicationJSON)],
                         coders: (encoder, decoder))
             .peek { log.debug("Known tests response: \($0)") }
-            .mapValue { $0.data.attributes.tests }
+            .map { $0.data.attributes.tests }
     }
     
     var endpointURLs: Set<URL> { [endpoint.knownTestsURL] }

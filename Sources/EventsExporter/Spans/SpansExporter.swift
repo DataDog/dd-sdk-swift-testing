@@ -7,7 +7,11 @@
 import Foundation
 import OpenTelemetrySdk
 
-internal class SpansExporter {
+public protocol SpansExporterType: OpenTelemetrySdk.SpanExporter {
+    func setMetadata(_ meta: SpanMetadata)
+}
+
+internal class SpansExporter: SpansExporterType {
     let spansDirectory = "com.datadog.testoptimization/spans/v1"
     let configuration: ExporterConfiguration
     let spansStorage: FeatureStoreAndUpload
@@ -59,14 +63,14 @@ internal class SpansExporter {
 
     func exportSpan(span: SpanData) {
         if span.attributes["type"]?.description == "test" {
-            let ciTestEnvelope = CITestEnvelope(DDSpan(spanData: span, serviceName: configuration.serviceName, applicationVersion: configuration.version))
+            let ciTestEnvelope = CITestEnvelope(DDSpan(spanData: span, serviceName: configuration.serviceName, applicationVersion: configuration.applicationVersion))
             if configuration.performancePreset.synchronousWrite {
                 try? spansStorage.writeSync(value: ciTestEnvelope)
             } else {
                 let _ = spansStorage.write(value: ciTestEnvelope)
             }
         } else {
-            let spanEnvelope = SpanEnvelope(DDSpan(spanData: span, serviceName: configuration.serviceName, applicationVersion: configuration.version))
+            let spanEnvelope = SpanEnvelope(DDSpan(spanData: span, serviceName: configuration.serviceName, applicationVersion: configuration.applicationVersion))
             if configuration.performancePreset.synchronousWrite {
                 try? spansStorage.writer.writeSync(value: spanEnvelope)
             } else {
@@ -75,11 +79,22 @@ internal class SpansExporter {
         }
     }
     
-    func flush() throws -> Bool {
-        try spansStorage.flush()
+    func export(spans: [SpanData], explicitTimeout: TimeInterval?) -> SpanExporterResultCode {
+        for span in spans {
+            exportSpan(span: span)
+        }
+        return .success
     }
     
-    func stop() {
+    func flush(explicitTimeout: TimeInterval?) -> SpanExporterResultCode {
+        do {
+            return try spansStorage.flush() ? .success : .failure
+        } catch {
+            return .failure
+        }
+    }
+    
+    func shutdown(explicitTimeout: TimeInterval?) {
         spansStorage.stop()
     }
 }
@@ -89,5 +104,34 @@ extension SpansExporter {
         let version: String = "1"
         let metadata: [String: [String: SpanMetadata.Value]]
         static var batchFieldName: String { "events" }
+    }
+}
+
+
+internal class MultiSpanExporter: SpansExporterType {
+    var spanExporters: [SpansExporterType]
+    var exporter: OpenTelemetrySdk.MultiSpanExporter
+    
+    init(spanExporters: [SpansExporterType]) {
+        self.spanExporters = spanExporters
+        self.exporter = .init(spanExporters: spanExporters)
+    }
+    
+    func export(spans: [SpanData], explicitTimeout: TimeInterval?) -> SpanExporterResultCode {
+        exporter.export(spans: spans, explicitTimeout: explicitTimeout)
+    }
+    
+    func flush(explicitTimeout: TimeInterval?) -> SpanExporterResultCode {
+        exporter.flush(explicitTimeout: explicitTimeout)
+    }
+    
+    func shutdown(explicitTimeout: TimeInterval?) {
+        exporter.shutdown(explicitTimeout: explicitTimeout)
+    }
+    
+    func setMetadata(_ meta: SpanMetadata) {
+        for spanExporter in spanExporters {
+            spanExporter.setMetadata(meta)
+        }
     }
 }

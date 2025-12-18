@@ -88,7 +88,7 @@ internal struct DDSpan: Encodable {
         try SpanEncoder().encode(sanitizedSpan, to: encoder)
     }
 
-    internal init(spanData: SpanData, serviceName: String, applicationVersion: String) {
+    internal init(spanData: SpanData) {
         self.traceID = spanData.traceId
         self.spanID = spanData.spanId
         self.parentID = spanData.parentSpanId
@@ -99,7 +99,7 @@ internal struct DDSpan: Encodable {
             self.name = spanData.name + "." + spanData.kind.rawValue
         }
 
-        self.serviceName = serviceName
+        self.serviceName = spanData.resource.service ?? ""
         self.resource = spanData.attributes["resource"]?.description ?? spanData.name
         self.startTime = spanData.startTime.timeIntervalSince1970.toNanoseconds
         self.duration = spanData.endTime.timeIntervalSince(spanData.startTime).toNanoseconds
@@ -119,6 +119,11 @@ internal struct DDSpan: Encodable {
 
         let spanType = spanData.attributes["type"] ?? spanData.attributes["db.type"]
         self.type = spanType?.description ?? spanData.kind.rawValue
+        
+//        if self.type.hasSuffix("test") {
+//            self.sessionID = spanData.attributes["test_session_id"]
+//            self.sessionID = UInt64(spanData.attributes["test_session_id"]?.description ?? "0", radix: 16) ?? 0
+//        }
 
         if self.type == "test" {
             self.sessionID = UInt64(spanData.attributes["test_session_id"]?.description ?? "0", radix: 16) ?? 0
@@ -132,7 +137,7 @@ internal struct DDSpan: Encodable {
             self.itrCorrelationId = nil
         }
 
-        self.applicationVersion = applicationVersion
+        self.applicationVersion = spanData.instrumentationScope.applicationVersion ?? ""
         self.tags = spanData.attributes.filter {
             !DDSpan.filteredTagKeys.contains($0.key)
         }

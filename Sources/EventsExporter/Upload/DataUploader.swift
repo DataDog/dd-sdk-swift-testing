@@ -6,7 +6,6 @@
 
 import Foundation
 
-
 /// A type that performs data uploads.
 internal protocol DataUploaderType {
     func upload(data: Data) -> AsyncResult<DataUploadStatus, Never>
@@ -24,7 +23,7 @@ internal struct ClosureDataUploader: DataUploaderType {
     
     func upload(data: Data) -> AsyncResult<DataUploadStatus, Never> {
         _upload(data)
-            .mapValue { .success }
+            .map { .success }
             .flatMapError { error in
                 switch error {
                 case .transport, .inconsistentResponse:

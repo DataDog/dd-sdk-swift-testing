@@ -100,8 +100,10 @@ internal class DDTracer {
             Log.print("Reporting tests to \(tURL.absoluteURL)")
         default: payloadCompression = true
         }
-
-        let hostnameToReport: String? = (conf.reportHostname && !DDTestMonitor.developerMachineHostName.isEmpty) ? DDTestMonitor.developerMachineHostName : nil
+        
+        let hostnameToReport = DDTestMonitor.developerMachineHostName.flatMap { name in
+            conf.reportHostname && !name.isEmpty ? name : nil
+        }
         
         let metadata = SpanMetadata(libraryVersion: DDTestMonitor.tracerVersion,
                                     env: DDTestMonitor.env,

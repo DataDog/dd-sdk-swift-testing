@@ -80,7 +80,7 @@ internal class DDTestMonitor {
     private let testOptimizationSetupQueue = OperationQueue()
     let gitUploadQueue = OperationQueue()
 
-    static let developerMachineHostName: String = try! Spawn.output("hostname")
+    static let developerMachineHostName: String? = try? Spawn.output("hostname")
 
     // Advanced features
     var gitUploader: GitUploader? = nil

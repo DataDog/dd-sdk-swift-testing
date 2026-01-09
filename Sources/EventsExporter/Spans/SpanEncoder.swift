@@ -136,8 +136,8 @@ internal struct DDSpan: Encodable {
             self.suiteID = nil
             self.itrCorrelationId = nil
         }
-
-        self.applicationVersion = spanData.instrumentationScope.applicationVersion ?? ""
+        
+        self.applicationVersion = spanData.resource.applicationVersion ?? ""
         self.tags = spanData.attributes.filter {
             !DDSpan.filteredTagKeys.contains($0.key)
         }

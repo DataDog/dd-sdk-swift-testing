@@ -135,48 +135,56 @@ internal class CoverageExporter: CoverageExporterType {
         return .success
     }
 
-    func export(coverage: URL, parser: CoverageParser, workspacePath: String?,
-                testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64)
-    {
-        log.debug("Start processing coverage: \(coverage.path)")
-        var coverageData: TestCodeCoverage? = nil
-        
-        defer {
-            if configuration.debugSaveCodeCoverageFiles {
-                if let coverageData = coverageData, let data = try? JSONEncoder.apiEncoder.encode(coverageData) {
-                    let testName = coverage.deletingPathExtension().lastPathComponent.components(separatedBy: "__").last!
-                    let jsonURL = coverage.deletingLastPathComponent()
-                        .appendingPathComponent(testName + ".json", isDirectory: false)
-                    try? data.write(to: jsonURL)
-                }
-            } else {
-                try? FileManager.default.removeItem(at: coverage)
-            }
-        }
-        
-        do {
-            let info = try parser.filesCovered(in: coverage)
-            coverageData = TestCodeCoverage(sessionId: testSessionId,
-                                            suiteId: testSuiteId,
-                                            spanId: spanId,
-                                            workspace: workspacePath,
-                                            files: info.files.values)
-            try coverageStorage.writer.writeSync(value: coverageData!)
-        } catch {
-            log.print("Code coverage generation failed: \(error)")
-            return
-        }
-        
-        log.debug("End processing coverage: \(coverage.path)")
-    }
+//    func export(coverage: URL, parser: CoverageParser, workspacePath: String?,
+//                testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64)
+//    {
+//        log.debug("Start processing coverage: \(coverage.path)")
+//        var coverageData: TestCodeCoverage? = nil
+//        
+//        defer {
+//            guard let path = configuration.debugSaveCodeCoverageFilesAt else {
+//                try? FileManager.default.removeItem(at: coverage)
+//            }
+//            if let path = configuration.debugSaveCodeCoverageFilesAt {
+//                if let coverageData = coverageData, let data = try? JSONEncoder.apiEncoder.encode(coverageData) {
+//                    let testName = coverage.deletingPathExtension().lastPathComponent.components(separatedBy: "__").last!
+//                    let jsonURL = coverage.deletingLastPathComponent()
+//                        .appendingPathComponent(testName + ".json", isDirectory: false)
+//                    try? data.write(to: jsonURL)
+//                }
+//            } else {
+//                try? FileManager.default.removeItem(at: coverage)
+//            }
+//        }
+//        
+//        do {
+//            let info = try parser.filesCovered(in: coverage)
+//            coverageData = TestCodeCoverage(sessionId: testSessionId,
+//                                            suiteId: testSuiteId,
+//                                            spanId: spanId,
+//                                            workspace: workspacePath,
+//                                            files: info.files.values)
+//            try coverageStorage.writer.writeSync(value: coverageData!)
+//        } catch {
+//            log.print("Code coverage generation failed: \(error)")
+//            return
+//        }
+//        
+//        log.debug("End processing coverage: \(coverage.path)")
+//    }
     
-    func flush() -> SpanExporterResultCode {
+    func forceFlush(explicitTimeout: TimeInterval? = nil) -> ExportResult {
         do {
             return try coverageStorage.flush() ? .success : .failure
         } catch {
             log.print("Coverage flush failed: \(error)")
             return .failure
         }
+    }
+    
+    func shutdown(explicitTimeout: TimeInterval?) {
+        let _ = self.forceFlush(explicitTimeout: explicitTimeout)
+        coverageStorage.stop()
     }
     
     private func _writeCoverage(_ data: TestCodeCoverage) {

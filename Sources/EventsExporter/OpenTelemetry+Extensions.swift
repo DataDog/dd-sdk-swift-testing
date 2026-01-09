@@ -120,3 +120,29 @@ public extension Dictionary where Key == String, Value == AttributeValue {
         }
     }
 }
+
+protocol ResultCodeCompatible {
+    var isSuccess: Bool { get }
+}
+
+extension ResultCodeCompatible {
+    static func && (lhs: Self, rhs: ResultCodeCompatible) -> Bool {
+        lhs.isSuccess && rhs.isSuccess
+    }
+    
+    static func && (lhs: Bool, rhs: Self) -> Bool {
+        lhs && rhs.isSuccess
+    }
+    
+    static func && (lhs: Self, rhs: Bool) -> Bool {
+        lhs.isSuccess && rhs
+    }
+}
+
+extension SpanExporterResultCode: ResultCodeCompatible {
+    var isSuccess: Bool { self == .success }
+}
+
+extension ExportResult: ResultCodeCompatible {
+    var isSuccess: Bool { self == .success }
+}

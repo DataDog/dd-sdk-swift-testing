@@ -62,6 +62,7 @@ final class DDCoverageHelper: TestCoverageCollector {
         }
         coverageWorkQueue.addOperation {
             guard FileManager.default.fileExists(atPath: file.path) else {
+                Log.debug("Coverage file is missing at: \(file.path)")
                 return
             }
             self.exporter.export(coverage: file, parser: self.processor.parser, workspacePath: self.workspacePath,

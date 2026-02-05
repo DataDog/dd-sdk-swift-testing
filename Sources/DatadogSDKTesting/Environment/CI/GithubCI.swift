@@ -43,6 +43,14 @@ internal struct GithubCIEnvironmentReader: CIEnvironmentReader {
         environment["GITHUB_RUN_ID"] = env["GITHUB_RUN_ID", String.self]
         environment["GITHUB_RUN_ATTEMPT"] = env["GITHUB_RUN_ATTEMPT", String.self]
         
+        let jobId = getJobId(env: env)
+        
+        let jobUrl = envRunId.flatMap { runId in
+            jobId.map { (runId, $0) }
+        }.flatMap { (runId, jobId) in
+            URL(string: "\(githubServerEnv)/\(repositoryEnv)/actions/runs/\(runId)/job/\(jobId)")
+        } ?? URL(string: "\(githubServerEnv)/\(repositoryEnv)/commit/\(commit ?? "")/checks")
+        
         return (
             ci: .init(
                 provider: "github",
@@ -50,9 +58,9 @@ internal struct GithubCIEnvironmentReader: CIEnvironmentReader {
                 pipelineName: env["GITHUB_WORKFLOW"],
                 pipelineNumber: env["GITHUB_RUN_NUMBER"],
                 pipelineURL: URL(string: "\(githubServerEnv)/\(repositoryEnv)/actions/runs/\(envRunId ?? "")" + attempts),
-                jobId: env["GITHUB_JOB"],
+                jobId: jobId ?? env["GITHUB_JOB"],
                 jobName: env["GITHUB_JOB"],
-                jobURL: URL(string: "\(githubServerEnv)/\(repositoryEnv)/commit/\(commit ?? "")/checks"),
+                jobURL: jobUrl,
                 workspacePath: expand(path: env["GITHUB_WORKSPACE"], env: env),
                 environment: environment
             ),
@@ -87,5 +95,44 @@ internal struct GithubCIEnvironmentReader: CIEnvironmentReader {
         }
         
         return (pullRequest.head.sha, pullRequest.base.sha)
+    }
+    
+    private func getJobId(env: any EnvironmentReader) -> String? {
+        if let id: String = env["JOB_CHECK_RUN_ID"] {
+            return id
+        }
+        
+        let files: [URL] = diagnosticDirs.compactMap { dir -> ([URL]?) in
+            guard let contents = try? FileManager.default.contentsOfDirectory(at: dir,
+                                                                              includingPropertiesForKeys: nil,
+                                                                              options: [.skipsHiddenFiles, .skipsSubdirectoryDescendants])
+            else {
+                return nil
+            }
+            return contents.filter { $0.pathExtension == "log" && $0.lastPathComponent.hasPrefix("Worker_") }
+        }.flatMap { $0 }
+        
+        let regex = jobIdRegex
+        for file in files {
+            guard let data = try? String(contentsOf: file) else {
+                continue
+            }
+            if let match = regex.firstMatch(in: data, range: NSRange(location: 0, length: data.utf16.count)) {
+                return String(data[Range(match.range(at: 1), in: data)!])
+            }
+        }
+        
+        return nil
+    }
+    
+    private var jobIdRegex: NSRegularExpression {
+        try! NSRegularExpression(pattern: #""k":\\s*"check_run_id"[^}]*"v":\\s*(\\d+)(?:\\.\\d+)?"#)
+    }
+    
+    private var diagnosticDirs: [URL] {
+        [
+            URL(fileURLWithPath: "/home/runner/actions-runner/cached/_diag", isDirectory: true), // for SaaS
+            URL(fileURLWithPath: "/home/runner/actions-runner/_diag", isDirectory: true), // for self-hosted
+        ]
     }
 }

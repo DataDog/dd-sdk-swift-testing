@@ -31,7 +31,7 @@ public protocol EventsExporterProtocol: SpanExporter {
     ) -> TestManagementTestsInfo?
 }
 
-public class EventsExporter: EventsExporterProtocol {
+public final class EventsExporter: EventsExporterProtocol {
     let configuration: ExporterConfiguration
     var spansExporter: SpansExporter
     var logsExporter: LogsExporter

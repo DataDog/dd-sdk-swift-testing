@@ -34,5 +34,5 @@ internal let iso8601DateFormatter: DateFormatterType = {
 }()
 
 public extension TimeInterval {
-    var toNanosecondsUInt: UInt64 { UInt64(toNanoseconds) }
+    var toNanosecondsUInt: UInt64 { UInt64(clamping: toNanoseconds) }
 }

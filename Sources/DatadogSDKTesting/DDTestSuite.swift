@@ -5,6 +5,7 @@
  */
 
 import Foundation
+internal import EventsExporter
 internal import OpenTelemetryApi
 
 @objc(DDTestSuite)

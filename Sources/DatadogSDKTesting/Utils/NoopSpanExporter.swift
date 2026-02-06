@@ -8,15 +8,15 @@ import Foundation
 internal import OpenTelemetrySdk
 
 final class NoopSpanExporter: SpanExporter {
-    public init() {}
+    init() {}
 
-    public func export(spans: [SpanData], explicitTimeout: TimeInterval? = nil) -> SpanExporterResultCode {
+    func export(spans: [SpanData], explicitTimeout: TimeInterval? = nil) -> SpanExporterResultCode {
         .success
     }
 
-    public func flush(explicitTimeout: TimeInterval? = nil) -> SpanExporterResultCode {
+    func flush(explicitTimeout: TimeInterval? = nil) -> SpanExporterResultCode {
         .success
     }
 
-    public func shutdown(explicitTimeout: TimeInterval? = nil) {}
+    func shutdown(explicitTimeout: TimeInterval? = nil) {}
 }

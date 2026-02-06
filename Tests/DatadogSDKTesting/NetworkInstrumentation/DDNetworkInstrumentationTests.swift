@@ -42,7 +42,7 @@ class DDNetworkInstrumentationTests: XCTestCase {
     }
 
     func testItInterceptsDataTaskWithURL() throws {
-        var testSpan: RecordEventsReadableSpan
+        var testSpan: SpanSdk
 
         let url = self.url.appendingPathComponent("success")
         let expec = expectation(description: "GET \(url)")
@@ -71,7 +71,7 @@ class DDNetworkInstrumentationTests: XCTestCase {
     }
 
     func testItInterceptsDataTaskWithURLRequest() throws {
-        var testSpan: RecordEventsReadableSpan
+        var testSpan: SpanSdk
         DDInstrumentationControl.startPayloadCapture()
         DDInstrumentationControl.stopInjectingHeaders()
 
@@ -105,7 +105,7 @@ class DDNetworkInstrumentationTests: XCTestCase {
     }
 
     func testItReturnsErrorStatusForHTTPErrorStatus() throws {
-        var testSpan: RecordEventsReadableSpan
+        var testSpan: SpanSdk
 
         let url = self.url.appendingPathComponent("404")
         let expec = expectation(description: "GET \(url)")
@@ -125,7 +125,7 @@ class DDNetworkInstrumentationTests: XCTestCase {
     }
 
     func testItReturnsErrorStatusForNetworkErrors() {
-        var testSpan: RecordEventsReadableSpan?
+        var testSpan: SpanSdk?
 
         let url = URL(string: "http://127.0.0.1:65554/404")!
         let expec = expectation(description: "GET \(url)")

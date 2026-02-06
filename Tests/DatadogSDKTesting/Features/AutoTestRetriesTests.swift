@@ -22,6 +22,8 @@ final class AutoTestRetriesLogicTests: XCTestCase {
         XCTAssertNil(tests["someTest"]?.runs.first?.tags[DDEfdTags.testRetryReason])
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 4)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonAutoTestRetry }.count, 4)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
         XCTAssertNil(tests["someTest"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries])
     }
     
@@ -38,6 +40,8 @@ final class AutoTestRetriesLogicTests: XCTestCase {
         XCTAssertNil(tests["someTest"]?.runs.first?.tags[DDEfdTags.testIsRetry])
         XCTAssertNil(tests["someTest"]?.runs.first?.tags[DDEfdTags.testRetryReason])
         XCTAssertNil(tests["someTest"]?.runs.first?.tags[DDTestTags.testHasFailedAllRetries])
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
     }
     
     func testAtrRetriesFailedTestAndFailsLastIfAllFailed() throws {
@@ -57,6 +61,8 @@ final class AutoTestRetriesLogicTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 5)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonAutoTestRetry }.count, 5)
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries], "true")
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
     }
     
     func testAtrRetriesFailedTestAndPassesIfLastPassed() throws {
@@ -76,6 +82,8 @@ final class AutoTestRetriesLogicTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 5)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonAutoTestRetry }.count, 5)
         XCTAssertNil(tests["someTest"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries])
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
     }
     
     func testAtrStopRetryingAfterGlobalMaxReached() throws {
@@ -99,6 +107,8 @@ final class AutoTestRetriesLogicTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 5)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonAutoTestRetry }.count, 5)
         XCTAssertNil(tests["someTest"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries])
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
         
         // someTest2 should have only 4 runs (main + 3 retries) because global limit of 8 reached
         XCTAssertNotNil(tests["someTest2"])
@@ -113,6 +123,8 @@ final class AutoTestRetriesLogicTests: XCTestCase {
         XCTAssertEqual(tests["someTest2"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 3)
         XCTAssertEqual(tests["someTest2"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonAutoTestRetry }.count, 3)
         XCTAssertEqual(tests["someTest2"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries], "true")
+        XCTAssertEqual(tests["someTest2"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["someTest2"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
         
         XCTAssertEqual(atr.failedTestTotalRetries, 8)
     }
@@ -134,6 +146,8 @@ final class AutoTestRetriesLogicTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 4)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonAutoTestRetry }.count, 4)
         XCTAssertNil(tests["someTest"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries])
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
     }
     
     func extractTests(_ session: Mocks.Session) throws -> [String: Mocks.Group] {

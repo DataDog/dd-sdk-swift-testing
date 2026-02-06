@@ -24,6 +24,8 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertEqual(tests["skipTest"]?.runs.first?.tags[DDTestTags.testSkipReason], "Skipped by Test Impact Analysis")
         XCTAssertEqual(tests["skipTest"]?.isSucceeded, false)
         XCTAssertEqual(tests["skipTest"]?.isSkipped, true)
+        XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["skipTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusSkip)
         XCTAssertEqual(tia.skippedCount, 1)
         
         XCTAssertNotNil(tests["someTest"])
@@ -36,6 +38,8 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertNil(tests["someTest"]?.runs.first?.tags[DDTestTags.testSkipReason])
         XCTAssertEqual(tests["someTest"]?.isSucceeded, false)
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
     }
     
     func testTestImpactAnalysisDoesntSkipUnskippable() throws {

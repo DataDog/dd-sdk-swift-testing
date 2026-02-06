@@ -21,6 +21,15 @@ private struct GitHubEvent: Decodable {
 }
 
 internal struct GithubCIEnvironmentReader: CIEnvironmentReader {
+    private let _diagnosticDirs: [URL]
+    
+    init(diagnosticDirs: [URL] = [
+        URL(fileURLWithPath: "/home/runner/actions-runner/cached/_diag", isDirectory: true), // for SaaS
+        URL(fileURLWithPath: "/home/runner/actions-runner/_diag", isDirectory: true), // for self-hosted
+    ]) {
+        self._diagnosticDirs = diagnosticDirs
+    }
+    
     func isActive(env: any EnvironmentReader) -> Bool {
         env["GITHUB_ACTIONS"] ?? env["GITHUB_ACTION"] ?? "" != ""
     }
@@ -102,7 +111,7 @@ internal struct GithubCIEnvironmentReader: CIEnvironmentReader {
             return id
         }
         
-        let files: [URL] = diagnosticDirs.compactMap { dir -> ([URL]?) in
+        let files: [URL] = _diagnosticDirs.compactMap { dir -> ([URL]?) in
             guard let contents = try? FileManager.default.contentsOfDirectory(at: dir,
                                                                               includingPropertiesForKeys: nil,
                                                                               options: [.skipsHiddenFiles, .skipsSubdirectoryDescendants])
@@ -127,12 +136,5 @@ internal struct GithubCIEnvironmentReader: CIEnvironmentReader {
     
     private var jobIdRegex: NSRegularExpression {
         try! NSRegularExpression(pattern: #""k":\s*"check_run_id"[^}]*"v":\s*(\d+)(?:\.\d+)?"#)
-    }
-    
-    private var diagnosticDirs: [URL] {
-        [
-            URL(fileURLWithPath: "/home/runner/actions-runner/cached/_diag", isDirectory: true), // for SaaS
-            URL(fileURLWithPath: "/home/runner/actions-runner/_diag", isDirectory: true), // for self-hosted
-        ]
     }
 }

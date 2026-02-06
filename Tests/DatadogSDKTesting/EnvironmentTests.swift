@@ -282,6 +282,57 @@ class EnvironmentTests: XCTestCase {
         XCTAssertEqual(metadata[string: .test, DDGitTags.gitPullRequestBaseBranch], "override-base-branch")
         XCTAssertEqual(metadata[string: .test, DDGitTags.gitPullRequestBaseBranchSha], "override-base-sha")
     }
+    
+    func testGithubCIJobIdVariable() {
+        var testEnvironment = [String: SpanAttributeConvertible]()
+        testEnvironment["GITHUB_ACTIONS"] = "true"
+        testEnvironment["GITHUB_REPOSITORY"] = "test-owner/test-repo"
+        testEnvironment["GITHUB_SHA"] = "df289512a51123083a8e6931dd6f57bb3883d4c4"
+        testEnvironment["GITHUB_RUN_ID"] = "123456789"
+        testEnvironment["JOB_CHECK_RUN_ID"] = "666666666"
+        
+        let env = createEnv(testEnvironment)
+        
+        XCTAssertEqual(env.ci?.jobId, "666666666")
+    }
+    
+    func testGithubCIJobLogFile() throws {
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir,
+                                                withIntermediateDirectories: true)
+        let tempFile = tempDir.appendingPathComponent("Worker_abacaba_123.log", isDirectory: false)
+        try #"""
+          {
+            "test": 123,
+            "job": {
+              "t": 2,
+              "d": [
+                {
+                  "k": "check_run_id",
+                  "v": 5411116365.0
+                }
+              ]
+            }
+          }
+        """#.write(toFile: tempFile.path, atomically: true, encoding: .utf8)
+        defer {
+            try? FileManager.default.removeItem(at: tempFile)
+            try? FileManager.default.removeItem(at: tempDir)
+        }
+        
+        var testEnvironment = [String: String]()
+        testEnvironment["GITHUB_ACTIONS"] = "true"
+        testEnvironment["GITHUB_REPOSITORY"] = "test-owner/test-repo"
+        testEnvironment["GITHUB_SHA"] = "df289512a51123083a8e6931dd6f57bb3883d4c4"
+        testEnvironment["GITHUB_RUN_ID"] = "123456789"
+        
+        let reader = ProcessEnvironmentReader(environment: testEnvironment, infoDictionary: [:])
+        let parser = GithubCIEnvironmentReader(diagnosticDirs: [tempDir])
+        let env = parser.read(env: reader)
+        
+        XCTAssertEqual(env.ci.jobId, "5411116365")
+    }
 
     func testSpecs() throws {
         let fixturesURL = Bundle(for: type(of: self)).resourceURL!

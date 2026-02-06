@@ -4,5 +4,4 @@
 #  https://help.github.com/en/articles/about-code-owners
 #
 
-* @ypopovych @DataDog/swift
-
+* @ypopovych @DataDog/ci-app-libraries @DataDog/swift

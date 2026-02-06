@@ -126,7 +126,7 @@ internal struct GithubCIEnvironmentReader: CIEnvironmentReader {
     }
     
     private var jobIdRegex: NSRegularExpression {
-        try! NSRegularExpression(pattern: #""k":\\s*"check_run_id"[^}]*"v":\\s*(\\d+)(?:\\.\\d+)?"#)
+        try! NSRegularExpression(pattern: #""k":\s*"check_run_id"[^}]*"v":\s*(\d+)(?:\.\d+)?"#)
     }
     
     private var diagnosticDirs: [URL] {

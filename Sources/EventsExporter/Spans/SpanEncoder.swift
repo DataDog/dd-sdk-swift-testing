@@ -101,8 +101,8 @@ internal struct DDSpan: Encodable {
 
         self.serviceName = serviceName
         self.resource = spanData.attributes["resource"]?.description ?? spanData.name
-        self.startTime = spanData.startTime.timeIntervalSince1970.toNanoseconds
-        self.duration = spanData.endTime.timeIntervalSince(spanData.startTime).toNanoseconds
+        self.startTime = spanData.startTime.timeIntervalSince1970.toNanosecondsUInt
+        self.duration = spanData.endTime.timeIntervalSince(spanData.startTime).toNanosecondsUInt
 
         switch spanData.status {
             case .error(let errorDescription):

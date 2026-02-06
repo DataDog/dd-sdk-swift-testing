@@ -6,7 +6,6 @@
 
 internal import EventsExporter
 import Foundation
-internal import InMemoryExporter
 internal import OpenTelemetryApi
 internal import OpenTelemetrySdk
 
@@ -45,12 +44,12 @@ internal class DDTracer {
         
         let exporterToUse: SpanExporter
         if !enabled {
-            exporterToUse = InMemoryExporter()
+            exporterToUse = NoopSpanExporter()
         } else if let exporter = eventsExporter {
             exporterToUse = exporter as SpanExporter
         } else {
             Log.print("Failed creating Datadog exporter.")
-            exporterToUse = InMemoryExporter()
+            exporterToUse = NoopSpanExporter()
         }
         
         let spanProcessor: SpanProcessor

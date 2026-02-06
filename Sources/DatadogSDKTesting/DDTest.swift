@@ -246,7 +246,7 @@ extension Test: TestRun {
 extension Test {
     func internalEnd(status: TestStatus, endTime: Date? = nil) {
         let testEndTime = endTime ?? DDTestMonitor.clock.now
-        duration = testEndTime.timeIntervalSince(startTime).toNanoseconds
+        duration = testEndTime.timeIntervalSince(startTime).toNanosecondsUInt
         
         switch status {
         case .pass:

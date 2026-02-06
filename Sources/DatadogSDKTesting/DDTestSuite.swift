@@ -42,7 +42,7 @@ public final class Suite: NSObject, Encodable {
     }
 
     private func internalEnd(endTime: Date? = nil) {
-        duration = (endTime ?? DDTestMonitor.clock.now).timeIntervalSince(startTime).toNanoseconds
+        duration = (endTime ?? DDTestMonitor.clock.now).timeIntervalSince(startTime).toNanosecondsUInt
         /// Export module event
 
         let suiteAttributes: [String: String] = [

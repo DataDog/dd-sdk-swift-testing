@@ -38,7 +38,7 @@ public final class Module: NSObject, Encodable {
     }
     
     private func internalEnd(endTime: Date? = nil) {
-        duration = (endTime ?? DDTestMonitor.clock.now).timeIntervalSince(startTime).toNanoseconds
+        duration = (endTime ?? DDTestMonitor.clock.now).timeIntervalSince(startTime).toNanosecondsUInt
 
         // If there is a Sanitizer message, we fail the module so error can be shown
         if let sanitizerInfo = SanitizerHelper.getSaniziterInfo() {

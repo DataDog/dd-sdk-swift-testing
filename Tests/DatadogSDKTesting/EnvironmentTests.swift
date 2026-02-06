@@ -294,6 +294,7 @@ class EnvironmentTests: XCTestCase {
         let env = createEnv(testEnvironment)
         
         XCTAssertEqual(env.ci?.jobId, "666666666")
+        XCTAssertEqual(env.ci?.jobURL?.absoluteString, "https://github.com/test-owner/test-repo/actions/runs/123456789/job/666666666")
     }
     
     func testGithubCIJobLogFile() throws {
@@ -332,6 +333,7 @@ class EnvironmentTests: XCTestCase {
         let env = parser.read(env: reader)
         
         XCTAssertEqual(env.ci.jobId, "5411116365")
+        XCTAssertEqual(env.ci.jobURL?.absoluteString, "https://github.com/test-owner/test-repo/actions/runs/123456789/job/5411116365")
     }
 
     func testSpecs() throws {

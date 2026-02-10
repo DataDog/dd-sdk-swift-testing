@@ -51,6 +51,7 @@ internal enum DDTestTags {
     static let testFramework = "test.framework"
     static let testType = "test.type"
     static let testStatus = "test.status"
+    static let testFinalStatus = "test.final_status"
     static let testSourceFile = "test.source.file"
     static let testSourceStartLine = "test.source.start"
     static let testSourceEndLine = "test.source.end"

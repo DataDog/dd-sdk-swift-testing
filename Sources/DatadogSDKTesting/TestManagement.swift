@@ -61,12 +61,27 @@ final class TestManagement: TestHooksFeature {
     }
     
     func testWillFinish(test: any TestRun, duration: TimeInterval, withStatus status: TestStatus, andInfo info: TestRunInfoEnd) {
-        guard info.retry.feature == id else { return } // Check that was retried by us
-        // Check that we retried test and this is the last execution.
-        if info.executions.total > 0 && !info.retry.status.isRetry {
+        // Check that this is the last run of the test
+        guard !info.retry.status.isRetry else { return }
+        // Skip logic (disabled test)
+        if info.skip.by?.feature == id && status == .skip {
+            // We skipped this test so we can mark it
+            // mark test with final skip status (disabled)
+            test.set(tag: DDTestTags.testFinalStatus, value: status)
+        }
+        // Retry logic (ATF)
+        // Check that was retried by us
+        guard info.retry.feature == id else { return }
+        // Check that we retried this test (we have previous runs).
+        if info.executions.total > 0 {
             // Check that all executions passed
-            test.set(tag: DDTestManagementTags.testAttemptToFixPassed,
-                     value: info.executions.failed == 0 && status != .fail)
+            let atfPassed = info.executions.failed == 0 && status != .fail
+            test.set(tag: DDTestManagementTags.testAttemptToFixPassed, value: atfPassed)
+            // Quarantine and Disable will disable errors, so we should pass.
+            // Otherwise it depends on ATF results
+            let finalStatus: TestStatus = info.retry.status.ignoreErrors ? .pass : (atfPassed ? .pass : .fail)
+            // mark test with final status
+            test.set(tag: DDTestTags.testFinalStatus, value: finalStatus)
         }
     }
     

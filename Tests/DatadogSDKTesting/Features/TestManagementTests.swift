@@ -23,6 +23,8 @@ class TestManagementTests: XCTestCase {
         }.count, 1)
         XCTAssertEqual(tests["disabledTest"]?.isSucceeded, false)
         XCTAssertEqual(tests["disabledTest"]?.isSkipped, true)
+        XCTAssertEqual(tests["disabledTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["disabledTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusSkip)
         
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 1)
@@ -33,6 +35,8 @@ class TestManagementTests: XCTestCase {
         }.count, 1)
         XCTAssertEqual(tests["someTest"]?.isSucceeded, false)
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
     }
     
     func testTMRunsQuarantinedTestAndSuppressesResult() throws {
@@ -49,6 +53,8 @@ class TestManagementTests: XCTestCase {
         }.count, 1)
         XCTAssertEqual(tests["quarantinedTest"]?.isSucceeded, true)
         XCTAssertEqual(tests["quarantinedTest"]?.isSkipped, false)
+        XCTAssertEqual(tests["quarantinedTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["quarantinedTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
         
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 1)
@@ -59,6 +65,8 @@ class TestManagementTests: XCTestCase {
         }.count, 1)
         XCTAssertEqual(tests["someTest"]?.isSucceeded, false)
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
     }
     
     func testTMRunsQuarantinedTestAndSuppressesResultAndATRWorks() throws {
@@ -79,6 +87,8 @@ class TestManagementTests: XCTestCase {
         XCTAssertNil(tests["quarantinedTest"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries])
         XCTAssertEqual(tests["quarantinedTest"]?.isSucceeded, true)
         XCTAssertEqual(tests["quarantinedTest"]?.isSkipped, false)
+        XCTAssertEqual(tests["quarantinedTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["quarantinedTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
         
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 6)
@@ -94,6 +104,8 @@ class TestManagementTests: XCTestCase {
         }.count, 5)
         XCTAssertEqual(tests["someTest"]?.isSucceeded, false)
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
     }
     
     func testTMRunsQuarantinedTestAndSuppressesResultWhenATRFails() throws {
@@ -116,6 +128,8 @@ class TestManagementTests: XCTestCase {
         }.count, 1)
         XCTAssertEqual(tests["quarantinedTest"]?.isSucceeded, true)
         XCTAssertEqual(tests["quarantinedTest"]?.isSkipped, false)
+        XCTAssertEqual(tests["quarantinedTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["quarantinedTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
         
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 6)
@@ -131,6 +145,8 @@ class TestManagementTests: XCTestCase {
         }.count, 5)
         XCTAssertEqual(tests["someTest"]?.isSucceeded, false)
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
     }
     
     func testTMAttemptToFixWorks() throws {
@@ -151,6 +167,8 @@ class TestManagementTests: XCTestCase {
         }.count, 20)
         XCTAssertEqual(tests["atfTest"]?.isSucceeded, true)
         XCTAssertEqual(tests["atfTest"]?.isSkipped, false)
+        XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["atfTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
         
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 6)
@@ -166,6 +184,8 @@ class TestManagementTests: XCTestCase {
         }.count, 5)
         XCTAssertEqual(tests["someTest"]?.isSucceeded, false)
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
     }
     
     func testTMAttemptToFixFailsForFailedTest() throws {
@@ -188,6 +208,8 @@ class TestManagementTests: XCTestCase {
         }.count, 20)
         XCTAssertEqual(tests["atfTest"]?.isSucceeded, false)
         XCTAssertEqual(tests["atfTest"]?.isSkipped, false)
+        XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["atfTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
         
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 6)
@@ -203,6 +225,8 @@ class TestManagementTests: XCTestCase {
         }.count, 5)
         XCTAssertEqual(tests["someTest"]?.isSucceeded, false)
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
     }
     
     func testTMAttemptToFixDoesntFailForDisabledTest() throws {
@@ -225,6 +249,8 @@ class TestManagementTests: XCTestCase {
         }.count, 3)
         XCTAssertEqual(tests["atfTest"]?.isSucceeded, true)
         XCTAssertEqual(tests["atfTest"]?.isSkipped, false)
+        XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["atfTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
         
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 6)
@@ -240,6 +266,8 @@ class TestManagementTests: XCTestCase {
         }.count, 5)
         XCTAssertEqual(tests["someTest"]?.isSucceeded, false)
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
     }
     
     func testTMAttemptToFixDoesntFailForQuarantinedTest() throws {
@@ -259,6 +287,8 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["atfTest"]?.runs.last?.tags[DDTestManagementTags.testAttemptToFixPassed], "false")
         XCTAssertEqual(tests["atfTest"]?.isSucceeded, true)
         XCTAssertEqual(tests["atfTest"]?.isSkipped, false)
+        XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["atfTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
         
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 6)
@@ -271,6 +301,8 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries], "true")
         XCTAssertEqual(tests["someTest"]?.isSucceeded, false)
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
     }
     
     func tmRunner(fix: [String] = [], disabled: [String] = [],

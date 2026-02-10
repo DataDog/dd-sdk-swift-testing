@@ -96,6 +96,7 @@ final class TestImpactAnalysis: TestHooksFeature {
         case .skip:
             if info.skip.by?.feature == id && info.skip.status.isSkipped {
                 test.set(tag: DDTestTags.testSkippedByITR, value: "true")
+                test.set(tag: DDTestTags.testFinalStatus, value: TestStatus.skip)
                 _skippedCount.update { $0 += 1 }
             }
         }

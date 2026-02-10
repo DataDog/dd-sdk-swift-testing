@@ -56,6 +56,15 @@ final class AutomaticTestRetries: TestHooksFeature {
             && _failedTestTotalRetries.value < failedTestTotalRetriesMax // and global counter allow us to retry
     }
     
+    func testWillFinish(test: any TestRun, duration: TimeInterval, withStatus status: TestStatus, andInfo info: TestRunInfoEnd) {
+        guard info.retry.feature == id else { return }
+        if !info.retry.status.isRetry { // last run. Save status
+            // We have to fix status for the suppressed errors if needed.
+            test.set(tag: DDTestTags.testFinalStatus,
+                     value: status.final(ignoreErrors: info.retry.status.ignoreErrors))
+        }
+    }
+    
     private func incrementRetries() -> UInt? {
         _failedTestTotalRetries.update { cnt in
             cnt.checkedAdd(1, max: failedTestTotalRetriesMax).map {

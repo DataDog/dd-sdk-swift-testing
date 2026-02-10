@@ -20,6 +20,7 @@ final class KnownTestsLogicTests: XCTestCase {
         let knownTestsMap = [module: [knownSuite: [knownSuiteKnownTest]]]
         
         let feature: TestHooksFeature = KnownTests(tests: knownTestsMap)
+        let retryAndSkipTags = RetryAndSkipTags()
         
         let testsToRun: Mocks.Runner.Tests = [module: [
             knownSuite: [
@@ -29,7 +30,7 @@ final class KnownTestsLogicTests: XCTestCase {
             unknownSuite: [unknownSuiteUnknownTest: .fail("SomeERROR")]
         ]]
         
-        let results = Mocks.Runner(features: [feature], tests: testsToRun).run()
+        let results = Mocks.Runner(features: [feature, retryAndSkipTags], tests: testsToRun).run()
         
         let knownSuiteResult = results[module]![knownSuite]!
         let unknownSuiteResult = results[module]![unknownSuite]!
@@ -38,5 +39,12 @@ final class KnownTestsLogicTests: XCTestCase {
         XCTAssertNil(knownSuiteResult[knownSuiteKnownTest]?[0]?.tags[DDTestTags.testIsNew])
         XCTAssertEqual(knownSuiteResult[knownSuiteUnknownTest]?[0]?.tags[DDTestTags.testIsNew], "true")
         XCTAssertEqual(unknownSuiteResult[unknownSuiteUnknownTest]?[0]?.tags[DDTestTags.testIsNew], "true")
+        
+        XCTAssertEqual(knownSuiteResult[knownSuiteKnownTest]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(knownSuiteResult[knownSuiteKnownTest]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
+        XCTAssertEqual(knownSuiteResult[knownSuiteUnknownTest]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(knownSuiteResult[knownSuiteUnknownTest]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
+        XCTAssertEqual(unknownSuiteResult[unknownSuiteUnknownTest]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(unknownSuiteResult[unknownSuiteUnknownTest]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
     }
 }

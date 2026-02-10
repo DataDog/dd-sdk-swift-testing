@@ -82,6 +82,10 @@ public enum TestStatus: Int {
     case pass
     case fail
     case skip
+    
+    func final(ignoreErrors: Bool) -> Self {
+        self == .fail && ignoreErrors ? .pass : self
+    }
 }
 
 extension TestStatus: SpanAttributeConvertible {

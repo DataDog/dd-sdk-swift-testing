@@ -114,6 +114,16 @@ final class EarlyFlakeDetection: TestHooksFeature {
         return checkStatus(for: test)
     }
     
+    func testWillFinish(test: any TestRun, duration: TimeInterval, withStatus status: TestStatus, andInfo info: TestRunInfoEnd) {
+        guard info.retry.feature == id else { return }
+        // Set final status for test
+        if !info.retry.status.isRetry {
+            // We have to fix status for the suppressed errors if needed.
+            test.set(tag: DDTestTags.testFinalStatus,
+                     value: status.final(ignoreErrors: info.retry.status.ignoreErrors))
+        }
+    }
+    
     func stop() {}
 }
 

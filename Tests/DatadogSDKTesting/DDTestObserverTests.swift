@@ -49,7 +49,7 @@ internal class DDTestObserverTests: XCTestCase {
         let testName = "testWhenTestCaseWillStartIsCalled_testSpanIsCreated"
         let testSuite = "DDTestObserverTests"
         //let testBundle = testObserver.module?.bundleName
-        let span = OpenTelemetry.instance.contextProvider.activeSpan as! RecordEventsReadableSpan
+        let span = OpenTelemetry.instance.contextProvider.activeSpan as! SpanSdk
         
         let spanData = span.toSpanData()
 
@@ -76,7 +76,7 @@ internal class DDTestObserverTests: XCTestCase {
         testObserver.testRetryGroupWillStart(group)
         testObserver.testCaseWillStart(self)
 
-        let testSpan = OpenTelemetry.instance.contextProvider.activeSpan as! RecordEventsReadableSpan
+        let testSpan = OpenTelemetry.instance.contextProvider.activeSpan as! SpanSdk
         
         var spanData = testSpan.toSpanData()
         let statusBefore = spanData.attributes[DDTestTags.testStatus]
@@ -105,7 +105,7 @@ internal class DDTestObserverTests: XCTestCase {
         //testObserver.testCaseRetry(self, willRecord: issue)
         testObserver.testCase(self, didRecord: issue)
 
-        let testSpan = OpenTelemetry.instance.contextProvider.activeSpan as! RecordEventsReadableSpan
+        let testSpan = OpenTelemetry.instance.contextProvider.activeSpan as! SpanSdk
         testObserver.testCaseDidFinish(self)
         let spanData = testSpan.toSpanData()
         
@@ -125,7 +125,7 @@ internal class DDTestObserverTests: XCTestCase {
         testObserver.testSuiteWillStart(theSuite)
         testObserver.testRetryGroupWillStart(group)
         testObserver.testCaseWillStart(self)
-        let testSpan = OpenTelemetry.instance.contextProvider.activeSpan as! RecordEventsReadableSpan
+        let testSpan = OpenTelemetry.instance.contextProvider.activeSpan as! SpanSdk
         let perfMetric = XCTPerformanceMetric.wallClockTime
         self.setValue([perfMetric], forKey: "_activePerformanceMetricIDs")
         self.setValue([perfMetric: ["measurements": [1, 2, 3, 4, 5]]], forKey: "_perfMetricsForID")
@@ -168,7 +168,7 @@ internal class DDTestObserverTests: XCTestCase {
         let issue2 = XCTIssue(type: .assertionFailure, compactDescription: error2Text, detailedDescription: nil, sourceCodeContext: XCTSourceCodeContext(), associatedError: nil, attachments: [])
         testObserver.testCase(self, didRecord: issue2)
 
-        let testSpan = OpenTelemetry.instance.contextProvider.activeSpan as! RecordEventsReadableSpan
+        let testSpan = OpenTelemetry.instance.contextProvider.activeSpan as! SpanSdk
         testObserver.testCaseDidFinish(self)
         let spanData = testSpan.toSpanData()
 

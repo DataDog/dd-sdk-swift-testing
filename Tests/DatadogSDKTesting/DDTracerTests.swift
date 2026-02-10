@@ -26,7 +26,7 @@ class DDTracerTests: XCTestCase {
         let attributes = ["myKey": "myValue"]
         let spanName = "myName"
 
-        let span = tracer.startSpan(name: spanName, attributes: attributes) as! RecordEventsReadableSpan
+        let span = tracer.startSpan(name: spanName, attributes: attributes) as! SpanSdk
 
         let spanData = span.toSpanData()
         XCTAssertEqual(spanData.name, spanName)
@@ -40,7 +40,7 @@ class DDTracerTests: XCTestCase {
         let tracer = DDTracer()
         let spanName = "myName"
 
-        let span = tracer.startSpan(name: spanName, attributes: [:]) as! RecordEventsReadableSpan
+        let span = tracer.startSpan(name: spanName, attributes: [:]) as! SpanSdk
         let spanData = span.toSpanData()
         let headers = tracer.tracePropagationHTTPHeaders()
 
@@ -87,7 +87,7 @@ class DDTracerTests: XCTestCase {
     func testAddingTagsWithOpenTelemetry() {
         let tracer = DDTracer()
         let spanName = "myName"
-        let span = tracer.startSpan(name: spanName, attributes: [:]) as! RecordEventsReadableSpan
+        let span = tracer.startSpan(name: spanName, attributes: [:]) as! SpanSdk
 
         // Get active Span with OpentelemetryApi and set tags
         OpenTelemetry.instance.contextProvider.activeSpan?.setAttribute(key: "OTTag", value: "OTValue")
@@ -219,7 +219,7 @@ class DDTracerTests: XCTestCase {
         let tracer = DDTracer()
         let spanName = "myName"
 
-        let span = tracer.startSpan(name: spanName, attributes: [:]) as! RecordEventsReadableSpan
+        let span = tracer.startSpan(name: spanName, attributes: [:]) as! SpanSdk
         let spanData = span.toSpanData()
         let environmentValues = tracer.environmentPropagationHTTPHeaders()
 
@@ -253,7 +253,7 @@ class DDTracerTests: XCTestCase {
         let tracer = DDTracer()
         let spanName = "myName"
 
-        let span = tracer.startSpan(name: spanName, attributes: [:]) as! RecordEventsReadableSpan
+        let span = tracer.startSpan(name: spanName, attributes: [:]) as! SpanSdk
         let spanData = span.toSpanData()
         let environmentValues = tracer.environmentPropagationHTTPHeaders()
 

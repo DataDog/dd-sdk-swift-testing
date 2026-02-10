@@ -5,6 +5,7 @@
  */
 
 import Foundation
+internal import EventsExporter
 internal import OpenTelemetryApi
 
 @objc(DDTestSession)
@@ -63,7 +64,7 @@ public final class Session: NSObject, Encodable {
     }
     
     private func internalEnd(endTime: Date? = nil) {
-        duration = (endTime ?? DDTestMonitor.clock.now).timeIntervalSince(startTime).toNanoseconds
+        duration = (endTime ?? DDTestMonitor.clock.now).timeIntervalSince(startTime).toNanosecondsUInt
 
         let sessionStatus: String = status.spanAttribute
         /// Export session event

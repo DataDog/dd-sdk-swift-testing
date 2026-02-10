@@ -12,7 +12,7 @@ import OpenTelemetrySdk
 /// An implementation of the SpanProcessor that converts the ReadableSpan SpanData
 ///  and passes it to the configured exporter.
 class SpySpanProcessor: SpanProcessor {
-    var lastProcessedSpan: RecordEventsReadableSpan?
+    var lastProcessedSpan: SpanSdk?
 
     init() {}
 
@@ -22,7 +22,7 @@ class SpySpanProcessor: SpanProcessor {
     func onStart(parentContext: SpanContext?, span: ReadableSpan) {}
 
     func onEnd(span: ReadableSpan) {
-        lastProcessedSpan = span as? RecordEventsReadableSpan
+        lastProcessedSpan = span as? SpanSdk
     }
 
     func shutdown(explicitTimeout: TimeInterval?) {}

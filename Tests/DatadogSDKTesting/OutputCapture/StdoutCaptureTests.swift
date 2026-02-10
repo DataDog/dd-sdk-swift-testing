@@ -22,7 +22,7 @@ class StdoutCaptureTests: XCTestCase {
         let stringToCapture = "This should be captured"
 
         StdoutCapture.startCapturing()
-        let span = tracer.startSpan(name: "Unnamed", attributes: [:]) as! RecordEventsReadableSpan
+        let span = tracer.startSpan(name: "Unnamed", attributes: [:]) as! SpanSdk
         print(stringToCapture)
         span.status = .ok
         span.end()
@@ -40,7 +40,7 @@ class StdoutCaptureTests: XCTestCase {
 
         StdoutCapture.startCapturing()
         StdoutCapture.stopCapturing()
-        let span = tracer.startSpan(name: "Unnamed", attributes: [:]) as! RecordEventsReadableSpan
+        let span = tracer.startSpan(name: "Unnamed", attributes: [:]) as! SpanSdk
         print(stringToCapture)
         span.status = .ok
         span.end()
@@ -55,7 +55,7 @@ class StdoutCaptureTests: XCTestCase {
         let stringToCapture = "This should  not be captured"
 
         StdoutCapture.startCapturing()
-        let span = tracer.startSpan(name: "Unnamed", attributes: [:]) as! RecordEventsReadableSpan
+        let span = tracer.startSpan(name: "Unnamed", attributes: [:]) as! SpanSdk
         fputs(stringToCapture, stdout)
         let spanData = span.toSpanData()
         span.status = .ok

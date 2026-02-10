@@ -5,6 +5,7 @@
  */
 
 import Foundation
+internal import EventsExporter
 internal import OpenTelemetryApi
 internal import OpenTelemetrySdk
 internal import SigmaSwiftStatistics
@@ -81,7 +82,7 @@ public final class Test: NSObject {
             }
         }
         
-        if let testSpan = span as? RecordEventsReadableSpan {
+        if let testSpan = span as? SpanSdk {
             let simpleSpan = SimpleSpanData(spanData: testSpan.toSpanData(), moduleStartTime: module.startTime, suiteStartTime: suite.startTime)
             DDCrashes.setCurrent(spanData: simpleSpan)
         }
@@ -91,7 +92,7 @@ public final class Test: NSObject {
         self.span.setAttribute(key: DDTestTags.testIsUITest, value: value ? "true" : "false")
 
         // Set default UI values if nor previously set and update crash customData
-        if let testSpan = span as? RecordEventsReadableSpan {
+        if let testSpan = span as? SpanSdk {
             let spanData = testSpan.toSpanData()
             if spanData.attributes[DDUISettingsTags.uiSettingsAppearance] == nil {
                 setTag(key: DDUISettingsTags.uiSettingsAppearance, value: PlatformUtils.getAppearance())
@@ -246,7 +247,7 @@ extension Test: TestRun {
 extension Test {
     func internalEnd(status: TestStatus, endTime: Date? = nil) {
         let testEndTime = endTime ?? DDTestMonitor.clock.now
-        duration = testEndTime.timeIntervalSince(startTime).toNanoseconds
+        duration = testEndTime.timeIntervalSince(startTime).toNanosecondsUInt
         
         switch status {
         case .pass:

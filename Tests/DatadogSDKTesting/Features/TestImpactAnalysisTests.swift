@@ -58,6 +58,8 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertEqual(tests["skipTest"]?.isSucceeded, false)
         XCTAssertEqual(tests["skipTest"]?.isSkipped, false)
         XCTAssertEqual(tia.skippedCount, 0)
+        XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["skipTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
         
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 1)
@@ -69,6 +71,8 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertNil(tests["someTest"]?.runs.first?.tags[DDTestTags.testSkipReason])
         XCTAssertEqual(tests["someTest"]?.isSucceeded, false)
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
     }
     
     // TIA + EFD
@@ -91,6 +95,8 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertEqual(tests["skipTest"]?.isSucceeded, false)
         XCTAssertEqual(tests["skipTest"]?.isSkipped, true)
         XCTAssertEqual(tia.skippedCount, 1)
+        XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["skipTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusSkip)
         
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 10)
@@ -105,6 +111,8 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testSkipReason] == nil }.count, 10)
         XCTAssertEqual(tests["someTest"]?.isSucceeded, true)
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
     }
     
     func testTestImpactAnalysisSkipsEFDUnknownTest() throws {
@@ -126,6 +134,8 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertEqual(tests["skipTest"]?.isSucceeded, false)
         XCTAssertEqual(tests["skipTest"]?.isSkipped, true)
         XCTAssertEqual(tia.skippedCount, 1)
+        XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["skipTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusSkip)
         
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 10)
@@ -140,6 +150,8 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testSkipReason] == nil }.count, 10)
         XCTAssertEqual(tests["someTest"]?.isSucceeded, true)
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
     }
     
     func testTestImpactAnalysisUnskippableEFDWorks() throws {
@@ -161,6 +173,8 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertEqual(tests["skipTest"]?.isSucceeded, true)
         XCTAssertEqual(tests["skipTest"]?.isSkipped, false)
         XCTAssertEqual(tia.skippedCount, 0)
+        XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["skipTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
         
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 10)
@@ -175,6 +189,8 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testSkipReason] == nil }.count, 10)
         XCTAssertEqual(tests["someTest"]?.isSucceeded, true)
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
     }
     
     // TIA + ATR
@@ -196,6 +212,8 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertEqual(tests["skipTest"]?.isSucceeded, false)
         XCTAssertEqual(tests["skipTest"]?.isSkipped, true)
         XCTAssertEqual(tia.skippedCount, 1)
+        XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["skipTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusSkip)
         
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 4)
@@ -210,6 +228,8 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testSkipReason] == nil }.count, 4)
         XCTAssertEqual(tests["someTest"]?.isSucceeded, true)
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
     }
     
     func testTestImpactAnalysisAndATRWorksTogetherUnskippable() throws {
@@ -230,6 +250,8 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertEqual(tests["skipTest"]?.isSucceeded, true)
         XCTAssertEqual(tests["skipTest"]?.isSkipped, false)
         XCTAssertEqual(tia.skippedCount, 0)
+        XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["skipTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
         
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 4)
@@ -243,6 +265,8 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testSkipReason] == nil }.count, 4)
         XCTAssertEqual(tests["someTest"]?.isSucceeded, true)
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
     }
     
     // TIA + EFD + ATR
@@ -266,6 +290,8 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertEqual(tests["skipTest"]?.isSucceeded, false)
         XCTAssertEqual(tests["skipTest"]?.isSkipped, true)
         XCTAssertEqual(tia.skippedCount, 1)
+        XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["skipTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusSkip)
         
         // EFD works
         XCTAssertNotNil(tests["unknownTest"])
@@ -281,6 +307,8 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertEqual(tests["unknownTest"]?.runs.filter { $0.tags[DDTestTags.testSkipReason] == nil }.count, 10)
         XCTAssertEqual(tests["unknownTest"]?.isSucceeded, true)
         XCTAssertEqual(tests["unknownTest"]?.isSkipped, false)
+        XCTAssertEqual(tests["unknownTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["unknownTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
         
         // ATR works
         XCTAssertNotNil(tests["knownTest"])
@@ -296,6 +324,8 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertEqual(tests["knownTest"]?.runs.filter { $0.tags[DDTestTags.testSkipReason] == nil }.count, 4)
         XCTAssertEqual(tests["knownTest"]?.isSucceeded, true)
         XCTAssertEqual(tests["knownTest"]?.isSkipped, false)
+        XCTAssertEqual(tests["knownTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["knownTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
     }
     
     func tiaRunner(skip: [String], tests: KeyValuePairs<String, Mocks.Runner.TestMethod>) -> (Mocks.Runner, TestImpactAnalysis, Mocks.CoverageCollector) {

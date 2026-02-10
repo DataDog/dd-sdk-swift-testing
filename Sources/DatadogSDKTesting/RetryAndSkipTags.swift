@@ -32,11 +32,13 @@ final class RetryAndSkipTags: TestHooksFeature {
         if status == .fail, case .suppressed(reason: let reason) = info.retry.status.errorsStatus {
             test.set(tag: DDTestTags.testFailureSuppressionReason, value: reason)
         }
-        if !info.retry.status.isRetry {
-            // This is the last run of this test
-            // We have to fix status for the suppressed errors if needed.
-            let finalStatus: TestStatus = (status == .fail && info.retry.status.ignoreErrors) ? .pass : status
-            test.set(tag: DDTestTags.testFinalStatus, value: finalStatus)
+        if !info.retry.status.isRetry,
+           (info.retry.feature ?? .notFeature) == .notFeature,
+           (info.skip.by?.feature ?? .notFeature) == .notFeature
+        {
+            // This is the last run and test wasn't handled by any features (skip or retry)
+            test.set(tag: DDTestTags.testFinalStatus,
+                     value: status.final(ignoreErrors: info.retry.status.ignoreErrors))
         }
     }
     

@@ -39,7 +39,7 @@ enum Mocks {
         }
         
         func end(time: Date?) {
-            duration = (time ?? Date()).timeIntervalSince(startTime).toNanosecondsUInt
+            duration = UInt64(clamping: (time ?? Date()).timeIntervalSince(startTime).toNanoseconds)
         }
         
         func set(metric name: String, value: Double) {

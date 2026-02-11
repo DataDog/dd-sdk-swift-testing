@@ -5,7 +5,6 @@
  */
 
 import Foundation
-internal import EventsExporter
 internal import OpenTelemetryApi
 
 @objc(DDTestModule)
@@ -39,7 +38,7 @@ public final class Module: NSObject, Encodable {
     }
     
     private func internalEnd(endTime: Date? = nil) {
-        duration = (endTime ?? DDTestMonitor.clock.now).timeIntervalSince(startTime).toNanosecondsUInt
+        duration = (endTime ?? DDTestMonitor.clock.now).timeIntervalSince(startTime).toNanoseconds
 
         // If there is a Sanitizer message, we fail the module so error can be shown
         if let sanitizerInfo = SanitizerHelper.getSaniziterInfo() {

@@ -5,7 +5,6 @@
  */
 
 import Foundation
-internal import EventsExporter
 internal import OpenTelemetryApi
 internal import OpenTelemetrySdk
 internal import SigmaSwiftStatistics
@@ -247,7 +246,7 @@ extension Test: TestRun {
 extension Test {
     func internalEnd(status: TestStatus, endTime: Date? = nil) {
         let testEndTime = endTime ?? DDTestMonitor.clock.now
-        duration = testEndTime.timeIntervalSince(startTime).toNanosecondsUInt
+        duration = testEndTime.timeIntervalSince(startTime).toNanoseconds
         
         switch status {
         case .pass:

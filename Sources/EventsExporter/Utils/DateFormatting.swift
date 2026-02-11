@@ -5,7 +5,6 @@
  */
 
 import Foundation
-import OpenTelemetryApi
 
 internal protocol DateFormatterType {
     func string(from date: Date) -> String
@@ -32,7 +31,3 @@ internal let iso8601DateFormatter: DateFormatterType = {
         return iso8601Formatter
     }
 }()
-
-public extension TimeInterval {
-    var toNanosecondsUInt: UInt64 { UInt64(clamping: toNanoseconds) }
-}

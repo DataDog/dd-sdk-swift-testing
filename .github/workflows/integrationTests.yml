@@ -17,9 +17,9 @@ jobs:
           - xcode: "Xcode_16.4"
             os: "macos-15"
           - xcode: "Xcode_26.0"
-            os: "macos-15"
+            os: "macos-26"
           - xcode: "Xcode_26.2"
-            os: "macos-15"
+            os: "macos-26"
     runs-on: ${{ matrix.env.os }}
     steps:
     - name: Checkout
@@ -46,9 +46,9 @@ jobs:
           - xcode: "Xcode_16.4"
             os: "macos-15"
           - xcode: "Xcode_26.0"
-            os: "macos-15"
+            os: "macos-26"
           - xcode: "Xcode_26.2"
-            os: "macos-15"
+            os: "macos-26"
         platform: ["macOS", "iOSsim", "tvOSsim"]
     runs-on: ${{ matrix.env.os }}
     env:

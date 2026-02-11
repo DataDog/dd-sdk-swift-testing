@@ -141,7 +141,7 @@ tests/unit/%:
 tests/integration/%:
 	$(if $(IOS_SIMULATOR),,$(eval IOS_SIMULATOR = iPhone 17))
 	$(if $(TVOS_SIMULATOR),,$(eval TVOS_SIMULATOR = Apple TV))
-	$(if $(filter $*,iOSsim),$(eval SIMULATOR=$(IOS_SIMULATOR)),$(eval SIMULATOR = ''))
+	$(if $(filter $*,iOSsim),$(eval SIMULATOR=$(IOS_SIMULATOR)),$(eval SIMULATOR :=))
 	$(if $(filter $*,tvOSsim),$(eval SIMULATOR=$(TVOS_SIMULATOR)),)
 	$(call xctest,IntegrationTests,$*,$(XC_LOG),$(SIMULATOR))
 

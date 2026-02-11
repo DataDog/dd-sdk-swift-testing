@@ -134,7 +134,7 @@ clean:
 tests/unit/%:
 	$(if $(IOS_SIMULATOR),,$(eval IOS_SIMULATOR = iPhone 17))
 	$(if $(TVOS_SIMULATOR),,$(eval TVOS_SIMULATOR = Apple TV))
-	$(call xctest,$*,macOS,$(XC_LOG),'')
+	$(call xctest,$*,macOS,$(XC_LOG),)
 	$(call xctest,$*,iOSsim,$(XC_LOG),$(IOS_SIMULATOR))
 	$(call xctest,$*,tvOSsim,$(XC_LOG),$(TVOS_SIMULATOR))
 	

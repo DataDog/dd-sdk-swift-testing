@@ -6,7 +6,7 @@
 check_defined = $(strip $(foreach 1,$1, $(call __check_defined,$1,$(strip $(value 2)))))
 __check_defined = $(if $(value $1),, $(error Undefined $1$(if $2, ($2))$(if $(value @), required by target '$@')))
 
-# params: scheme, platform, logfile
+# params: scheme, platform, logfile, simulator
 define xctest
 	$(if $(filter $2,macOS),$(eval SDK=macosx)$(eval DEST='platform=macOS,arch=arm64'),)
 	$(if $(filter $2,iOSsim),$(eval SDK=iphonesimulator)$(eval DEST='platform=iOS Simulator,name=$4'),)

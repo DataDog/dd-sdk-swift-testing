@@ -9,8 +9,8 @@ __check_defined = $(if $(value $1),, $(error Undefined $1$(if $2, ($2))$(if $(va
 # params: scheme, platform, logfile
 define xctest
 	$(if $(filter $2,macOS),$(eval SDK=macosx)$(eval DEST='platform=macOS,arch=arm64'),)
-	$(if $(filter $2,iOSsim),$(eval SDK=iphonesimulator)$(eval DEST='platform=iOS Simulator,name=iPhone 16'),)
-	$(if $(filter $2,tvOSsim),$(eval SDK=appletvsimulator)$(eval DEST='platform=tvOS Simulator,name=Apple TV'),)
+	$(if $(filter $2,iOSsim),$(eval SDK=iphonesimulator)$(eval DEST='platform=iOS Simulator,name=$4'),)
+	$(if $(filter $2,tvOSsim),$(eval SDK=appletvsimulator)$(eval DEST='platform=tvOS Simulator,name=$4'),)
 	$(if $3,\
 		set -o pipefail; xcodebuild -scheme $1 -sdk $(SDK) -destination $(DEST) test | tee $1-$2-$3.log | xcbeautify,\
 		xcodebuild -scheme $1 -sdk $(SDK) -destination $(DEST) test)
@@ -132,12 +132,18 @@ clean:
 	rm -rf ./build
 
 tests/unit/%:
-	$(call xctest,$*,macOS,$(XC_LOG))
-	$(call xctest,$*,iOSsim,$(XC_LOG))
-	$(call xctest,$*,tvOSsim,$(XC_LOG))
+	$(if $(IOS_SIMULATOR),,$(eval IOS_SIMULATOR = iPhone 17))
+	$(if $(TVOS_SIMULATOR),,$(eval TVOS_SIMULATOR = Apple TV))
+	$(call xctest,$*,macOS,$(XC_LOG),'')
+	$(call xctest,$*,iOSsim,$(XC_LOG),$(IOS_SIMULATOR))
+	$(call xctest,$*,tvOSsim,$(XC_LOG),$(TVOS_SIMULATOR))
 	
 tests/integration/%:
-	$(call xctest,IntegrationTests,$*,$(XC_LOG))
+	$(if $(IOS_SIMULATOR),,$(eval IOS_SIMULATOR = iPhone 17))
+	$(if $(TVOS_SIMULATOR),,$(eval TVOS_SIMULATOR = Apple TV))
+	$(if $(filter $*,iOSsim),$(eval SIMULATOR=$(IOS_SIMULATOR)),$(eval SIMULATOR = ''))
+	$(if $(filter $*,tvOSsim),$(eval SIMULATOR=$(TVOS_SIMULATOR)),)
+	$(call xctest,IntegrationTests,$*,$(XC_LOG),$(SIMULATOR))
 
 tests/unit: tests/unit/EventsExporter tests/unit/DatadogSDKTesting
 

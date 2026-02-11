@@ -14,12 +14,20 @@ jobs:
         env:
           - xcode: "Xcode_16.2"
             os: "macos-14"
+            iossim: "iPhone 16"
+            tvossim: "Apple TV"
           - xcode: "Xcode_16.4"
             os: "macos-15"
+            iossim: "iPhone 16"
+            tvossim: "Apple TV"
           - xcode: "Xcode_26.0"
             os: "macos-26"
+            iossim: "iPhone 17"
+            tvossim: "Apple TV"
           - xcode: "Xcode_26.2"
             os: "macos-26"
+            iossim: "iPhone 17"
+            tvossim: "Apple TV"
     runs-on: ${{ matrix.env.os }}
     steps:
     - name: Checkout
@@ -27,7 +35,7 @@ jobs:
     - name: Select ${{ matrix.env.xcode }}
       run: sudo xcode-select --switch /Applications/${{ matrix.env.xcode }}.app
     - name: Unit tests
-      run: make XC_LOG=unit tests/unit
+      run: make XC_LOG=unit IOS_SIMULATOR="${{ matrix.env.iossim }}" TVOS_SIMULATOR="${{ matrix.env.tvossim }}" tests/unit
     - name: Attach Xcode logs
       if: '!cancelled()'
       uses: actions/upload-artifact@v4
@@ -43,12 +51,20 @@ jobs:
         env:
           - xcode: "Xcode_16.2"
             os: "macos-14"
+            iossim: "iPhone 16"
+            tvossim: "Apple TV"
           - xcode: "Xcode_16.4"
             os: "macos-15"
+            iossim: "iPhone 16"
+            tvossim: "Apple TV"
           - xcode: "Xcode_26.0"
             os: "macos-26"
+            iossim: "iPhone 17"
+            tvossim: "Apple TV"
           - xcode: "Xcode_26.2"
             os: "macos-26"
+            iossim: "iPhone 17"
+            tvossim: "Apple TV"
         platform: ["macOS", "iOSsim", "tvOSsim"]
     runs-on: ${{ matrix.env.os }}
     env:
@@ -59,7 +75,7 @@ jobs:
     - name: Select ${{ matrix.env.xcode }}
       run: sudo xcode-select --switch /Applications/${{ matrix.env.xcode }}.app
     - name: Run tests for ${{ matrix.platform }}
-      run: make XC_LOG=integration tests/integration/${{ matrix.platform }}
+      run: make XC_LOG=integration IOS_SIMULATOR="${{ matrix.env.iossim }}" TVOS_SIMULATOR="${{ matrix.env.tvossim }}" tests/integration/${{ matrix.platform }}
     - name: Attach Xcode logs
       if: '!cancelled()'
       uses: actions/upload-artifact@v4

@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  test-15-Unit:
+  unit:
     name: Run Unit Tests
     strategy:
       fail-fast: false
@@ -14,9 +14,11 @@ jobs:
         env:
           - xcode: "Xcode_16.2"
             os: "macos-14"
-          - xcode: "Xcode_16.3"
-            os: "macos-15"
           - xcode: "Xcode_16.4"
+            os: "macos-15"
+          - xcode: "Xcode_26.0"
+            os: "macos-15"
+          - xcode: "Xcode_26.2"
             os: "macos-15"
     runs-on: ${{ matrix.env.os }}
     steps:
@@ -33,7 +35,7 @@ jobs:
         name: ${{ matrix.env.xcode }}-unit-logs
         path: "*-unit.log"
 
-  test-15-Integration:
+  integration:
     name: Run Integration Tests
     strategy:
       fail-fast: false
@@ -41,9 +43,11 @@ jobs:
         env:
           - xcode: "Xcode_16.2"
             os: "macos-14"
-          - xcode: "Xcode_16.3"
-            os: "macos-15"
           - xcode: "Xcode_16.4"
+            os: "macos-15"
+          - xcode: "Xcode_26.0"
+            os: "macos-15"
+          - xcode: "Xcode_26.2"
             os: "macos-15"
         platform: ["macOS", "iOSsim", "tvOSsim"]
     runs-on: ${{ matrix.env.os }}

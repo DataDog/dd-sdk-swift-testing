@@ -21,7 +21,7 @@ jobs:
     - name: Select Xcode 16.2
       run: sudo xcode-select --switch /Applications/Xcode_16.2.app
     - name: Test
-      run: make XC_LOG=tests tests
+      run: make XC_LOG=tests IOS_SIMULATOR="iPhone 16" TVOS_SIMULATOR="Apple TV" tests
     - name: Attach Xcode logs
       if: '!cancelled()'
       uses: actions/upload-artifact@v4

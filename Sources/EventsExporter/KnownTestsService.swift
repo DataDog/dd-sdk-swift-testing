@@ -132,10 +132,10 @@ internal final class KnownTestsService {
         }
 
         guard let known = try? JSONDecoder().decode(TestsResponse.self, from: response) else {
-            Log.debug("EFD Tests Request invalid response: \(String(decoding: response, as: UTF8.self))")
+            Log.debug("Known Tests Request invalid response: \(String(decoding: response, as: UTF8.self))")
             return nil
         }
-        Log.debug("EFD Tests Request response: \(String(decoding: response, as: UTF8.self))")
+        Log.debug("Known Tests Request response: \(String(decoding: response, as: UTF8.self))")
 
         let attrs = known.data.attributes
         return KnownTestsResult(tests: attrs.tests,

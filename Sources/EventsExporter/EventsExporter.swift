@@ -124,12 +124,25 @@ public final class EventsExporter: EventsExporterProtocol {
         )
     }
     
+    /// Returns all known tests by fetching every page and merging results.
     public func knownTests(
         service: String, env: String, repositoryURL: String,
         configurations: [String: String], customConfigurations: [String: String]
     ) -> KnownTestsMap? {
         knownTestsService.tests(service: service, env: env, repositoryURL: repositoryURL,
-                                configurations: configurations, customConfigurations: customConfigurations)
+                                configurations: configurations,
+                                customConfigurations: customConfigurations)?.tests
+    }
+
+    /// Returns a single page of known tests with pagination info when provided.
+    public func knownTests(
+        service: String, env: String, repositoryURL: String,
+        configurations: [String: String], customConfigurations: [String: String],
+        page: KnownTestsPageInfo
+    ) -> KnownTestsResult? {
+        knownTestsService.tests(service: service, env: env, repositoryURL: repositoryURL,
+                                configurations: configurations, customConfigurations: customConfigurations,
+                                pageInfo: page)
     }
     
     public func testManagementTests(

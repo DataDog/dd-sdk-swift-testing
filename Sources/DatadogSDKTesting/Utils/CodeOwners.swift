@@ -6,15 +6,17 @@
 
 import Foundation
 
-struct CodeOwnerEntry {
-    var path: String
-    var codeowners: [String]
-}
-
 struct CodeOwners {
-    var section = [String: [CodeOwnerEntry]]()
-
-    init?(workspacePath: URL) {
+    typealias SectionEntry = (path: NSRegularExpression, owners: [String])
+    typealias Section = (name: String, entries: Array<SectionEntry>)
+    
+    let sections: [Section]
+    
+    init(sections: [Section]) {
+        self.sections = sections
+    }
+    
+    init(workspacePath: URL) throws(ParsingError) {
         // Search on the possible locations CODEOWNER can exist
         let locations = [
             workspacePath.appendingPathComponent("CODEOWNERS", isDirectory: false),
@@ -30,103 +32,303 @@ struct CodeOwners {
         ]
         let fm = FileManager.default
         guard let location = locations.first(where: { fm.fileExists(atPath: $0.path) }) else {
-            return nil
+            throw .codeOwnersFileNotFound
         }
         guard let codeOwnersContent = try? String(contentsOf: location) else {
-            return nil
+            throw .cantReadFile(location)
         }
-        self.init(content: codeOwnersContent)
+        try self.init(parsing: codeOwnersContent)
     }
-
-    init(content: String) {
-        // Parse all lines that include information
-        var currentSectionName = "[empty]"
-        content.components(separatedBy: .newlines).forEach {
-            let line = $0.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
-            if line.isEmpty || line.hasPrefix("#") {
-                return
-            }
-
-            if line.hasPrefix("["), line.hasSuffix("]") {
-                let sectionName = String(String(line.dropFirst()).dropLast()).lowercased()
-                if !sectionName.isEmpty {
-                    currentSectionName = sectionName
+    
+    
+    init(parsing content: String) throws(ParsingError) {
+        var sections: [String: Array<SectionEntry>] = [:]
+        var sectionsOrder: Array<String> = []
+        let lines = content.components(separatedBy: .newlines).map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        var index = Self._skipCommentLines(lines: lines, lineIndex: 0)
+        var parsedEmptySection: Bool = false
+        
+        while index < lines.count {
+            let line = lines[index]
+            if let offset = try Self._isSectionHeader(line: line, index: index) {
+                let section = try Self._parseSection(lines: lines, lineIndex: index, offset: offset)
+                if sections[section.name] != nil {
+                    sections[section.name]!.append(contentsOf: section.entries)
+                } else {
+                    sections[section.name] = section.entries
+                    sectionsOrder.append(section.name)
                 }
-                return
-            }
-
-            let lineComponents = line.components(separatedBy: .whitespaces).filter { !$0.isEmpty }
-
-            let owners = lineComponents.dropFirst()
-            if let path = lineComponents.first,
-               !owners.isEmpty
-            {
-                var currentSection = section[currentSectionName] ?? []
-                currentSection.append(CodeOwnerEntry(path: path, codeowners: owners.map { String($0) }))
-                section[currentSectionName] = currentSection
+                index = section.index
+            } else {
+                guard !parsedEmptySection else {
+                    throw .foundEmptySectionAfterRealSection(line, index)
+                }
+                let section = try Self._parseSection(named: "[]",
+                                                     defaultOwners: [],
+                                                     lines: lines,
+                                                     lineIndex: index)
+                sections["[]"] = section.entries
+                sectionsOrder.append("[]")
+                index = section.index
+                parsedEmptySection = true
             }
         }
+        self.init(sections: sectionsOrder.map { ($0, sections[$0]!) })
     }
-
+    
     func ownersForPath(_ path: String) -> String? {
         let fullPath = path.first == "/" ? path : "/" + path
-        let codeowners = section.values.reduce(into: []) { (res, section) in
-            section.last { codeOwnersWildcard(fullPath, pattern: $0.path) }.map {
-                res.append(contentsOf: $0.codeowners)
-            }
-        }
-        return codeowners.isEmpty ? nil : "[\"" + codeowners.joined(separator: "\",\"") + "\"]"
-    }
-
-    private func codeOwnersWildcard(_ string: String, pattern: String) -> Bool {
-        var finalPattern: String = pattern
-
-        let includesAnythingBefore: Bool
-        let includesAnythingAfter: Bool
-
-        if pattern.hasPrefix("/") {
-            includesAnythingBefore = false
-        } else {
-            if finalPattern.hasPrefix("*") {
-                finalPattern = String(finalPattern.dropFirst())
-            }
-            includesAnythingBefore = true
-        }
-
-        if pattern.hasSuffix("/") {
-            includesAnythingAfter = true
-        } else if pattern.hasSuffix("/*") {
-            includesAnythingAfter = true
-            finalPattern = String(finalPattern.dropLast())
-        } else {
-            includesAnythingAfter = false
-        }
-
-        if includesAnythingAfter {
-            var found = true
-            if includesAnythingBefore {
-                found = string.contains(finalPattern)
-            } else {
-                found = string.hasPrefix(finalPattern)
-            }
-            guard found else {
-                return false
-            }
-            if !pattern.hasSuffix("/*") {
-                return true
-            } else {
-                if let patternEnd = string.range(of: finalPattern)?.upperBound {
-                    let remainingString = string[patternEnd...]
-                    return remainingString.firstIndex(of: "/") == nil
+        // Last matching rule wins (across all sections). If it has empty owners, return [].
+        var codeowners: [String] = []
+        for sectionEntries in sections {
+            var lastMatch: [String]?
+            for entry in sectionEntries.entries {
+                if entry.path.firstMatch(in: fullPath, range: NSRange(location: 0, length: fullPath.count)) != nil {
+                    lastMatch = entry.owners
                 }
-                return false
             }
-
-        } else {
-            if includesAnythingBefore {
-                return string.hasSuffix(finalPattern)
+            if let lastMatch {
+                codeowners.append(contentsOf: lastMatch)
             }
-            return string == finalPattern
         }
+        guard !codeowners.isEmpty else { return nil }
+        return "[\"" + codeowners.joined(separator: "\",\"") + "\"]"
+    }
+}
+
+extension CodeOwners {
+    enum ParsingError: Error {
+        case codeOwnersFileNotFound
+        case cantReadFile(URL)
+        case badSectionLine(String, Int)
+        case cantFindClosingBracket(String, Int)
+        case emptySectionName(String, Int)
+        case foundEmptySectionAfterRealSection(String, Int)
+        case patternError(String, String, Int)
+        case patternRegexError(String, any Error, Int)
+    }
+}
+
+
+
+private extension CodeOwners {
+    struct SlidingWindow {
+        let pattern: String
+        private var index: String.Index
+        private(set) var _0: Character?
+        private(set) var _1: Character?
+        private(set) var _2: Character?
+        
+        init(pattern: String) {
+            self.pattern = pattern
+            self.index = pattern.startIndex
+            _0 = nil; _1 = nil; _2 = pattern[index]
+            advance()
+        }
+        
+        var isEnd: Bool { index == pattern.endIndex }
+        
+        mutating func advance(amount: Int = 1) {
+            for _ in 0..<amount { _advance() }
+        }
+        
+        private mutating func _advance() {
+            self._0 = _1
+            self._1 = _2
+            if !isEnd {
+                index = pattern.index(after: index)
+            }
+            self._2 = isEnd ? nil : pattern[index]
+        }
+    }
+    
+    static func _parseSection(named name: String, defaultOwners: [String],
+                                      lines: [String], lineIndex: Int) throws(ParsingError) -> (entries: [SectionEntry], index: Int)
+    {
+        var index = _skipCommentLines(lines: lines, lineIndex: lineIndex)
+        var entries: [SectionEntry] = []
+        while index < lines.count {
+            let line = lines[index]
+            guard try _isSectionHeader(line: line, index: index) == nil else { // end of the section
+                break
+            }
+            var record = try _parseOwnersRecord(line: line, lineIndex: index)
+            if record.owners.isEmpty {
+                record.owners = defaultOwners
+            }
+            entries.append(record)
+            index = _skipCommentLines(lines: lines, lineIndex: index + 1)
+        }
+        return (entries, index)
+    }
+    
+    static func _parseSection(lines: [String], lineIndex: Int, offset: Int) throws(ParsingError) -> (name: String, entries: [SectionEntry], index: Int) {
+        let line = lines[lineIndex]
+        let header = try _parseSectionHeader(from: line.suffix(from: line.index(line.startIndex, offsetBy: offset)), index: lineIndex)
+        let section = try _parseSection(named: header.name, defaultOwners: header.owners, lines: lines, lineIndex: lineIndex + 1)
+        return (name: header.name, entries: section.entries, index: section.index)
+    }
+    
+    static func _isSectionHeader(line: String, index: Int) throws(ParsingError) -> Int? {
+        switch line[line.startIndex] {
+        case "[": return 1
+        case "^":
+            guard line.count > 2, line[line.index(after: line.startIndex)] == "[" else {
+                throw .badSectionLine(line, index)
+            }
+            return 2
+        default: return nil
+        }
+    }
+    
+    static func _parseSectionHeader(from line: Substring, index: Int) throws(ParsingError) -> (name: String, owners: [String]) {
+        guard let closeIndex = line.firstIndex(of: "]") else {
+            throw .cantFindClosingBracket(String(line), index)
+        }
+        let sectionName = String(line[line.startIndex..<closeIndex]).trimmingCharacters(in: .whitespaces)
+        guard !sectionName.isEmpty else {
+            throw .emptySectionName(String(line), index)
+        }
+        let ownersSubstring = line.suffix(from: line.index(after: closeIndex))
+        let owners: [String]
+        if let ownersStart = _firstUnescapedIndex(of: " ", in: ownersSubstring) {
+            owners = _parseOwners(line: ownersSubstring.suffix(from: ownersSubstring.index(after: ownersStart)))
+        } else {
+            owners = []
+        }
+        return (sectionName.lowercased(), owners)
+    }
+    
+    static func _parseOwnersRecord(line: String, lineIndex: Int) throws(ParsingError) -> SectionEntry {
+        let pathPart: String
+        let owners: [String]
+        if let splitIndex = _firstUnescapedIndex(of: " ", in: Substring(line)) {
+            owners = _parseOwners(line: line.suffix(from: line.index(after: splitIndex)))
+            pathPart = line.prefix(upTo: splitIndex).trimmingCharacters(in: .whitespaces)
+        } else {
+            owners = []
+            pathPart = line
+        }
+        
+        var window = SlidingWindow(
+            pattern: pathPart // unescape path
+                .replacingOccurrences(of: "\\ ", with: " ")
+                .replacingOccurrences(of: "\\#", with: "#")
+        )
+        var pattern: String = ""
+        let isPath = window.pattern.firstIndex(of: "/") != nil
+        var isFinished: Bool = false
+        var hasFolderGlob: Bool = false
+        
+        while !isFinished {
+            switch (window._0, window._1, window._2) {
+            // Start of the path
+            case (nil, "*", nil), (nil, "/", nil): // starts with / or *, 1 symbol
+                pattern = ".*"
+                window.advance(amount: 2)
+            case (nil, .some(let char), nil): // one symbol. File named like that
+                pattern = "^.*?/\(_escapeRegex(char: char))"
+                window.advance(amount: 2)
+            case (nil, "/", _): // /something
+                pattern = "^/"
+                window.advance(amount: 2)
+            case (nil, .some(_), .some(_)): // start of parsing
+                pattern += "^.*?"
+                window.advance()
+            // Inside the path
+            case ("*", "*", "/"), ("*", "*", nil):
+                pattern += ".*?"
+                hasFolderGlob = true
+                window.advance(amount: 3)
+            case ("*", "*", .some(let char)):
+                throw .patternError(window.pattern,
+                                    "Unknown character \(char) after **. Expected / or last symbol",
+                                    lineIndex)
+            case ("*", _, _):
+                pattern += isPath ? "[^/]*" : ".*?"
+                window.advance()
+            // End of the path
+            case ("/", "*", nil):
+                pattern += "/[^/]+"
+                window.advance(amount: 2)
+            case (.some(let char), "/", nil):
+                pattern += "\(_escapeRegex(char: char))/.*"
+                window.advance(amount: 2)
+            case (.some(let char), nil, nil): // end of the path without traling /
+                pattern += _escapeRegex(char: char)
+                // if it's not a glob treating like "path/", else like "path/*"
+                let ext = hasFolderGlob ? "/[^/]*" : "/.*"
+                // we check for exact path or for children of folder with this path
+                pattern = "(?:\(pattern)$)|(?:\(pattern)\(ext))"
+                window.advance()
+            // Default char handler
+            case (.some(let char), _, _):
+                pattern += _escapeRegex(char: char)
+                window.advance()
+            // End of the parsing. Window is empty
+            case (nil, nil, nil): isFinished = true
+            // Something went wrong.
+            default: throw .patternError(window.pattern, "Unexpected state: \(window)", lineIndex)
+            }
+        }
+        pattern += "$"
+        
+        do {
+            let regex = try NSRegularExpression(pattern: pattern)
+            return (regex, owners)
+        } catch {
+            throw .patternRegexError(line, error, lineIndex)
+        }
+    }
+    
+    static func _escapeRegex(char: Character) -> String {
+        switch char {
+        case ".": return "\\."
+        case "+": return "\\+"
+        case "*": return "\\*"
+        case "?": return "\\?"
+        case "(": return "\\("
+        case ")": return "\\)"
+        case "\\": return "\\\\"
+        case "[": return "\\["
+        case "]": return "\\]"
+        default: return String(char)
+        }
+    }
+    
+    static func _parseOwners(line: Substring) -> [String] {
+        var endIndex = line.endIndex
+        if let commentIndex = _firstUnescapedIndex(of: "#", in: line) {
+            endIndex = commentIndex
+        }
+        return line.prefix(upTo: endIndex).components(separatedBy: .whitespaces).filter { !$0.isEmpty }
+    }
+    
+    static func _skipCommentLines(lines: [String], lineIndex: Int) -> Int {
+        var lineIndex = lineIndex
+        for line in lines[lineIndex...] {
+            guard line.isEmpty || line[line.startIndex] == "#" else { break }
+            lineIndex += 1
+        }
+        return lineIndex
+    }
+    
+    static func _firstUnescapedIndex(of char: Character, in string: Substring) -> Substring.Index? {
+        var prevIndex: Substring.Index = string.startIndex
+        var currentSubstring = string
+        var found: Bool = false
+        while let subIndex = currentSubstring.firstIndex(of: char) {
+            let offset = currentSubstring.distance(from: currentSubstring.startIndex, to: subIndex)
+            guard offset > 0 else { return prevIndex }
+            if currentSubstring[currentSubstring.index(before: subIndex)] == "\\" {
+                prevIndex = string.index(prevIndex, offsetBy: offset + 1)
+                currentSubstring = string.suffix(from: prevIndex)
+            } else {
+                prevIndex = string.index(prevIndex, offsetBy: offset)
+                found = true
+                break
+            }
+        }
+        return found ? prevIndex : nil
     }
 }

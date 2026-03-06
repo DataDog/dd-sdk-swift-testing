@@ -283,16 +283,11 @@ private extension CodeOwners {
     
     static func _escapeRegex(char: Character) -> String {
         switch char {
-        case ".": return "\\."
-        case "+": return "\\+"
-        case "*": return "\\*"
-        case "?": return "\\?"
-        case "(": return "\\("
-        case ")": return "\\)"
-        case "\\": return "\\\\"
-        case "[": return "\\["
-        case "]": return "\\]"
-        default: return String(char)
+        case ".", "+", "*", "?", "(", ")", "\\",
+             "[", "]", "{", "}", "^", "$", "|":
+            return "\\\(char)"
+        default:
+            return String(char)
         }
     }
     

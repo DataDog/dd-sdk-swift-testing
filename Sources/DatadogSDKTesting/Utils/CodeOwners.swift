@@ -216,7 +216,6 @@ private extension CodeOwners {
                 .replacingOccurrences(of: "\\#", with: "#")
         )
         var pattern: String = ""
-        let isPath = window.pattern.firstIndex(of: "/") != nil
         var isFinished: Bool = false
         var hasFolderGlob: Bool = false
         
@@ -226,14 +225,15 @@ private extension CodeOwners {
             case (nil, "*", nil), (nil, "/", nil): // starts with / or *, 1 symbol
                 pattern = ".*"
                 window.advance(amount: 2)
-            case (nil, .some(let char), nil): // one symbol. File named like that
+            case (nil, .some(let char), nil): // one symbol. File named like that or folder
                 pattern = "^.*?/\(_escapeRegex(char: char))"
+                pattern = "(?:\(pattern)$)|(?:\(pattern)/.*)"
                 window.advance(amount: 2)
             case (nil, "/", _): // /something
                 pattern = "^/"
                 window.advance(amount: 2)
             case (nil, .some(_), .some(_)): // start of parsing
-                pattern += "^.*?"
+                pattern += "^.*?/"
                 window.advance()
             // Inside the path
             case ("*", "*", "/"), ("*", "*", nil):
@@ -245,7 +245,7 @@ private extension CodeOwners {
                                     "Unknown character \(char) after **. Expected / or last symbol",
                                     lineIndex)
             case ("*", _, _):
-                pattern += isPath ? "[^/]*" : ".*?"
+                pattern += "[^/]*"
                 window.advance()
             // End of the path
             case ("/", "*", nil):

@@ -254,6 +254,40 @@ class CodeOwnersGitlabTests: XCTestCase {
     }
 }
 
+class CodeOwnersEdgeCases: XCTestCase {
+    let codeOwnersEdgeCases = ##"""
+    a @owner1
+    b @owner2
+    """##
+
+    func testCodeOwnersIsCorrectlyInitialized() throws {
+        let codeOwners = try CodeOwners(parsing: codeOwnersEdgeCases)
+        XCTAssertEqual(codeOwners.sections.count, 1)
+        XCTAssertEqual(codeOwners.sections.first?.entries.count, 2)
+    }
+
+    func testCodeOwnersOneFile() throws {
+        let codeOwners = try CodeOwners(parsing: codeOwnersEdgeCases)
+        let possibleOwner = codeOwners.ownersForPath("a")
+        let defaultOwner = try XCTUnwrap(possibleOwner)
+        XCTAssertTrue(defaultOwner.contains("\"@owner1\""))
+        
+        let possibleOwner2 = codeOwners.ownersForPath("aa")
+        XCTAssertNil(possibleOwner2)
+        
+        let possibleOwner3 = codeOwners.ownersForPath("b")
+        let defaultOwner3 = try XCTUnwrap(possibleOwner3)
+        XCTAssertTrue(defaultOwner3.contains("\"@owner2\""))
+        
+        let possibleOwner4 = codeOwners.ownersForPath("bb")
+        XCTAssertNil(possibleOwner4)
+        
+        let possibleOwner5 = codeOwners.ownersForPath("/a/some/file")
+        let defaultOwner5 = try XCTUnwrap(possibleOwner5)
+        XCTAssertTrue(defaultOwner5.contains("\"@owner1\""))
+    }
+}
+
 // MARK: - Ported from datadog-ci-rb spec/datadog/ci/codeowners/matcher_spec.rb
 // https://github.com/DataDog/datadog-ci-rb/blob/main/spec/datadog/ci/codeowners/matcher_spec.rb
 // Swift API: ownersForPath returns "[\"@owner1\",\"@owner2\"]" or nil (Ruby list_owners returns [String] or nil)
@@ -338,6 +372,7 @@ class CodeOwnersMatcherSpecTests: XCTestCase {
         let codeOwners = try CodeOwners(parsing: codeownersContent)
         expectOwners(codeOwners.ownersForPath("/path/to/file.rb"), equals: ["@owner1"])
         expectOwners(codeOwners.ownersForPath("/path/to/another_file.rb"), equals: ["@owner2"])
+        expectOwners(codeOwners.ownersForPath("/path/to/subfolder/file.rb"), equals: nil)
     }
 
     // MARK: - When the codeowners file contains section lines

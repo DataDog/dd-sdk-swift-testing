@@ -182,7 +182,7 @@ private extension CodeOwners {
     }
     
     static func _parseSectionHeader(from line: Substring, index: Int) throws(ParsingError) -> (name: String, owners: [String]) {
-        guard let closeIndex = line.firstIndex(of: "]") else {
+        guard let closeIndex = _firstUnescapedIndex(of: "]", in: line) else {
             throw .cantFindClosingBracket(String(line), index)
         }
         let sectionName = String(line[line.startIndex..<closeIndex]).trimmingCharacters(in: .whitespaces)

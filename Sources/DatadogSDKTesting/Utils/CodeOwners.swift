@@ -82,7 +82,9 @@ struct CodeOwners {
     func ownersForPath(_ path: String) -> String? {
         let fullPath = path.first == "/" ? path : "/" + path
         let fullPathRange = NSRange(location: 0, length: fullPath.utf16.count)
-        // Last matching rule wins (across all sections). If it has empty owners, return [].
+        // Last matching rule wins (inside one section).
+        // Owners from the all sections are combined.
+        // If it has empty owners, return nil.
         // Negated patterns (!) exclude paths from their section; once excluded, cannot be included again.
         var codeowners: [String] = []
         for sectionEntries in sections {
@@ -192,7 +194,7 @@ private extension CodeOwners {
         var entries: [SectionEntry] = []
         while index < lines.count {
             let line = lines[index]
-            guard try _isSectionHeader(line: line, index: index) == nil else { // end of the section
+            guard _isSectionHeader(line: line, index: index) == nil else { // end of the section
                 break
             }
             var record = try _parseOwnersRecord(line: line, lineIndex: index)
@@ -212,7 +214,7 @@ private extension CodeOwners {
         return (name: header.name, entries: section.entries, index: section.index)
     }
     
-    static func _isSectionHeader(line: String, index: Int) throws(ParsingError) -> Int? {
+    static func _isSectionHeader(line: String, index: Int) -> Int? {
         switch line[line.startIndex] {
         case "[": return 1
         case "^" where line.count > 2 && line[line.index(after: line.startIndex)] == "[":

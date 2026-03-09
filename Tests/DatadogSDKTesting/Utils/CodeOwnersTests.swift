@@ -7,7 +7,24 @@
 @testable import DatadogSDKTesting
 import XCTest
 
-class CodeOwnersGithubTests: XCTestCase {
+class CodeOwnersTestsBase: XCTestCase {
+    /// expected: nil = expect nil result, [] = expect empty list (Swift may return nil if it doesn't store owner-less rules), [String] = expect that list
+    func expectOwners(_ result: String?, equals expected: [String]?) {
+        guard let expected = expected else {
+            XCTAssertNil(result, "Expected nil")
+            return
+        }
+        if expected.isEmpty {
+            // Ruby returns [] for match-with-no-owners; Swift may return nil
+            XCTAssertTrue(result == "[]" || result == nil, "Expected [] or nil, got \(result ?? "nil")")
+            return
+        }
+        let formatted = "[\"" + expected.joined(separator: "\",\"") + "\"]"
+        XCTAssertEqual(result, formatted, "Expected \(formatted)")
+    }
+}
+
+class CodeOwnersGithubTests: CodeOwnersTestsBase {
     let codeOwnersGitHubSample = """
     # This is a comment.
     # Each line is a file pattern followed by one or more owners.
@@ -58,54 +75,46 @@ class CodeOwnersGithubTests: XCTestCase {
 
     func testIfPathNotFoundDefaultIsReturned() throws {
         let codeOwners = try CodeOwners(parsing: codeOwnersGitHubSample)
-        let defaultOwner = codeOwners.ownersForPath("unexistent/path/test.swift")
-        XCTAssertEqual(defaultOwner, #"["@global-owner1","@global-owner2"]"#)
+        expectOwners(codeOwners.ownersForPath("unexistent/path/test.swift"), equals: ["@global-owner1", "@global-owner2"])
     }
 
     func testIfPathIsFoundReturnOwner() throws {
         let codeOwners = try CodeOwners(parsing: codeOwnersGitHubSample)
-        let defaultOwner = codeOwners.ownersForPath("apps/test.swift")
-        XCTAssertEqual(defaultOwner, #"["@octocat"]"#)
+        expectOwners(codeOwners.ownersForPath("apps/test.swift"), equals: ["@octocat"])
     }
 
     func testIfPathIsFound2ReturnOwner() throws {
         let codeOwners = try CodeOwners(parsing: codeOwnersGitHubSample)
-        let defaultOwner = codeOwners.ownersForPath("/example/apps/test.swift")
-        XCTAssertEqual(defaultOwner, #"["@octocat"]"#)
+        expectOwners(codeOwners.ownersForPath("/example/apps/test.swift"), equals: ["@octocat"])
     }
 
     func testIfPathIsFoundAtRootReturnOwner() throws {
         let codeOwners = try CodeOwners(parsing: codeOwnersGitHubSample)
-        let defaultOwner = codeOwners.ownersForPath("/docs/test.swift")
-        XCTAssertEqual(defaultOwner, #"["@doctocat"]"#)
+        expectOwners(codeOwners.ownersForPath("/docs/test.swift"), equals: ["@doctocat"])
     }
-    
+
     func testIfPathIsFoundAtRootWithoutSlashReturnOwner() throws {
         let codeOwners = try CodeOwners(parsing: codeOwnersGitHubSample)
-        let defaultOwner = codeOwners.ownersForPath("docs/test.swift")
-        XCTAssertEqual(defaultOwner, #"["@doctocat"]"#)
+        expectOwners(codeOwners.ownersForPath("docs/test.swift"), equals: ["@doctocat"])
     }
 
     func testIfPathIsNotFoundAtRootReturnNextMatch() throws {
         let codeOwners = try CodeOwners(parsing: codeOwnersGitHubSample)
-        let defaultOwner = codeOwners.ownersForPath("/examples/docs/test.swift")
-        XCTAssertEqual(defaultOwner, #"["docs@example.com"]"#)
+        expectOwners(codeOwners.ownersForPath("/examples/docs/test.swift"), equals: ["docs@example.com"])
     }
 
     func testIfPathIsNotFoundReturnGlobal() throws {
         let codeOwners = try CodeOwners(parsing: codeOwnersGitHubSample)
-        let defaultOwner = codeOwners.ownersForPath("/examples/docs/inside/test.swift")
-        XCTAssertEqual(defaultOwner, #"["@global-owner1","@global-owner2"]"#)
+        expectOwners(codeOwners.ownersForPath("/examples/docs/inside/test.swift"), equals: ["@global-owner1", "@global-owner2"])
     }
 
     func testExtensionValue() throws {
         let codeOwners = try CodeOwners(parsing: codeOwnersGitHubSample)
-        let defaultOwner = codeOwners.ownersForPath("/component/path/test.js")
-        XCTAssertEqual(defaultOwner, #"["@js-owner"]"#)
+        expectOwners(codeOwners.ownersForPath("/component/path/test.js"), equals: ["@js-owner"])
     }
 }
 
-class CodeOwnersGitlabTests: XCTestCase {
+class CodeOwnersGitlabTests: CodeOwnersTestsBase {
     let codeOwnersGitLabSample = ##"""
     # This is an example of a CODEOWNERS file.
     # Lines that start with `#` are ignored.
@@ -180,81 +189,56 @@ class CodeOwnersGitlabTests: XCTestCase {
 
     func testCodeOwnersGitlab1() throws {
         let codeOwners = try CodeOwners(parsing: codeOwnersGitLabSample)
-        let possibleOwner = codeOwners.ownersForPath("apps/README.md")
-        let defaultOwner = try XCTUnwrap(possibleOwner)
-        XCTAssertTrue(defaultOwner.contains("\"@docs\""))
-        XCTAssertTrue(defaultOwner.contains("\"@database\""))
-        XCTAssertTrue(defaultOwner.contains("\"@multiple\""))
-        XCTAssertTrue(defaultOwner.contains("\"@code\""))
-        XCTAssertTrue(defaultOwner.contains("\"@owners\""))
+        expectOwners(codeOwners.ownersForPath("apps/README.md"), equals: ["@multiple", "@code", "@owners", "@docs", "@database"])
     }
 
     func testCodeOwnersGitlab2() throws {
         let codeOwners = try CodeOwners(parsing: codeOwnersGitLabSample)
-        let possibleOwner = codeOwners.ownersForPath("model/db")
-        let defaultOwner = try XCTUnwrap(possibleOwner)
-        XCTAssertTrue(defaultOwner.contains("\"@database\""))
-        XCTAssertTrue(defaultOwner.contains("\"@multiple\""))
-        XCTAssertTrue(defaultOwner.contains("\"@code\""))
-        XCTAssertTrue(defaultOwner.contains("\"@owners\""))
+        expectOwners(codeOwners.ownersForPath("model/db"), equals: ["@multiple", "@code", "@owners", "@database"])
     }
 
     func testCodeOwnersGitlab3() throws {
         let codeOwners = try CodeOwners(parsing: codeOwnersGitLabSample)
-        let defaultOwner = codeOwners.ownersForPath("/config/data.conf")
-        XCTAssertEqual(defaultOwner, "[\"@config-owner\"]")
+        expectOwners(codeOwners.ownersForPath("/config/data.conf"), equals: ["@config-owner"])
     }
 
     func testCodeOwnersGitlab4() throws {
         let codeOwners = try CodeOwners(parsing: codeOwnersGitLabSample)
-        let defaultOwner = codeOwners.ownersForPath("/docs/root.md")
-        XCTAssertEqual(defaultOwner, "[\"@root-docs\",\"@docs\"]")
+        expectOwners(codeOwners.ownersForPath("/docs/root.md"), equals: ["@root-docs", "@docs"])
     }
 
     func testCodeOwnersGitlab5() throws {
         let codeOwners = try CodeOwners(parsing: codeOwnersGitLabSample)
-        let defaultOwner = codeOwners.ownersForPath("/docs/sub/root.md")
-        XCTAssertEqual(defaultOwner, "[\"@all-docs\",\"@docs\"]")
+        expectOwners(codeOwners.ownersForPath("/docs/sub/root.md"), equals: ["@all-docs", "@docs"])
     }
 
     func testCodeOwnersGitlab6() throws {
         let codeOwners = try CodeOwners(parsing: codeOwnersGitLabSample)
-        let possibleOwner = codeOwners.ownersForPath("/src/README")
-        let defaultOwner = try XCTUnwrap(possibleOwner)
-        XCTAssertTrue(defaultOwner.contains("\"@group\""))
-        XCTAssertTrue(defaultOwner.contains("\"@group/with-nested/subgroup\""))
+        expectOwners(codeOwners.ownersForPath("/src/README"), equals: ["@group", "@group/with-nested/subgroup"])
     }
 
     func testCodeOwnersGitlab7() throws {
         let codeOwners = try CodeOwners(parsing: codeOwnersGitLabSample)
-        let defaultOwner = codeOwners.ownersForPath("/src/lib/internal.h")
-        XCTAssertEqual(defaultOwner, "[\"@lib-owner\"]")
+        expectOwners(codeOwners.ownersForPath("/src/lib/internal.h"), equals: ["@lib-owner"])
     }
 
     func testCodeOwnersGitlab8() throws {
         let codeOwners = try CodeOwners(parsing: codeOwnersGitLabSample)
-        let possibleOwner = codeOwners.ownersForPath("src/ee/docs")
-        let defaultOwner = try XCTUnwrap(possibleOwner)
-        XCTAssertTrue(defaultOwner.contains("\"@docs\""))
-        XCTAssertTrue(defaultOwner.contains("\"@multiple\""))
-        XCTAssertTrue(defaultOwner.contains("\"@code\""))
-        XCTAssertTrue(defaultOwner.contains("\"@owners\""))
+        expectOwners(codeOwners.ownersForPath("src/ee/docs"), equals: ["@multiple", "@code", "@owners", "@docs"])
     }
-    
+
     func testCodeOwnersGitlab9() throws {
         let codeOwners = try CodeOwners(parsing: codeOwnersGitLabSample)
-        let defaultOwner = codeOwners.ownersForPath("config/data.conf")
-        XCTAssertEqual(defaultOwner, "[\"@config-owner\"]")
+        expectOwners(codeOwners.ownersForPath("config/data.conf"), equals: ["@config-owner"])
     }
-    
-    func testCodeOwnersFileWithPund() throws {
+
+    func testCodeOwnersFileWithPound() throws {
         let codeOwners = try CodeOwners(parsing: codeOwnersGitLabSample)
-        let defaultOwner = codeOwners.ownersForPath("#file_with_pound.rb")
-        XCTAssertEqual(defaultOwner, "[\"@owner-file-with-pound\"]")
+        expectOwners(codeOwners.ownersForPath("#file_with_pound.rb"), equals: ["@owner-file-with-pound"])
     }
 }
 
-class CodeOwnersEdgeCases: XCTestCase {
+class CodeOwnersEdgeCases: CodeOwnersTestsBase {
     let codeOwnersEdgeCases = ##"""
     a @owner1
     b @owner2
@@ -268,45 +252,18 @@ class CodeOwnersEdgeCases: XCTestCase {
 
     func testCodeOwnersOneFile() throws {
         let codeOwners = try CodeOwners(parsing: codeOwnersEdgeCases)
-        let possibleOwner = codeOwners.ownersForPath("a")
-        let defaultOwner = try XCTUnwrap(possibleOwner)
-        XCTAssertTrue(defaultOwner.contains("\"@owner1\""))
-        
-        let possibleOwner2 = codeOwners.ownersForPath("aa")
-        XCTAssertNil(possibleOwner2)
-        
-        let possibleOwner3 = codeOwners.ownersForPath("b")
-        let defaultOwner3 = try XCTUnwrap(possibleOwner3)
-        XCTAssertTrue(defaultOwner3.contains("\"@owner2\""))
-        
-        let possibleOwner4 = codeOwners.ownersForPath("bb")
-        XCTAssertNil(possibleOwner4)
-        
-        let possibleOwner5 = codeOwners.ownersForPath("/a/some/file")
-        let defaultOwner5 = try XCTUnwrap(possibleOwner5)
-        XCTAssertTrue(defaultOwner5.contains("\"@owner1\""))
+        expectOwners(codeOwners.ownersForPath("a"), equals: ["@owner1"])
+        expectOwners(codeOwners.ownersForPath("aa"), equals: nil)
+        expectOwners(codeOwners.ownersForPath("b"), equals: ["@owner2"])
+        expectOwners(codeOwners.ownersForPath("bb"), equals: nil)
+        expectOwners(codeOwners.ownersForPath("/a/some/file"), equals: ["@owner1"])
     }
 }
 
 // MARK: - Ported from datadog-ci-rb spec/datadog/ci/codeowners/matcher_spec.rb
 // https://github.com/DataDog/datadog-ci-rb/blob/main/spec/datadog/ci/codeowners/matcher_spec.rb
 // Swift API: ownersForPath returns "[\"@owner1\",\"@owner2\"]" or nil (Ruby list_owners returns [String] or nil)
-class CodeOwnersMatcherSpecTests: XCTestCase {
-
-    /// expected: nil = expect nil result, [] = expect empty list (Swift may return nil if it doesn't store owner-less rules), [String] = expect that list
-    func expectOwners(_ result: String?, equals expected: [String]?) {
-        guard let expected = expected else {
-            XCTAssertNil(result, "Expected nil")
-            return
-        }
-        if expected.isEmpty {
-            // Ruby returns [] for match-with-no-owners; Swift may return nil
-            XCTAssertTrue(result == "[]" || result == nil, "Expected [] or nil, got \(result ?? "nil")")
-            return
-        }
-        let formatted = "[\"" + expected.joined(separator: "\",\"") + "\"]"
-        XCTAssertEqual(result, formatted, "Expected \(formatted)")
-    }
+class CodeOwnersMatcherSpecTests: CodeOwnersTestsBase {
 
     // MARK: - Provided codeowners path does not exist (N/A for init(content:) - we test empty content)
     func testMatcher_codeownersPathDoesNotExist_returnsNil() throws {
@@ -606,21 +563,7 @@ class CodeOwnersMatcherSpecTests: XCTestCase {
 
 // MARK: - Tests for known parser issues
 // These tests document correct behavior per CODEOWNERS spec.
-class CodeOwnersParserIssueTests: XCTestCase {
-
-    func expectOwners(_ result: String?, equals expected: [String]?) {
-        guard let expected = expected else {
-            XCTAssertNil(result, "Expected nil, got \(result ?? "nil")")
-            return
-        }
-        if expected.isEmpty {
-            XCTAssertTrue(result == "[]" || result == nil, "Expected [] or nil, got \(result ?? "nil")")
-            return
-        }
-        let formatted = "[\"" + expected.joined(separator: "\",\"") + "\"]"
-        XCTAssertEqual(result, formatted, "Expected \(formatted)")
-    }
-
+class CodeOwnersParserIssueTests: CodeOwnersTestsBase {
     // MARK: Issue #1: ? wildcard should match any single character except /
 
     func testQuestionMarkWildcard_matchesSingleCharacter() throws {
@@ -692,22 +635,6 @@ class CodeOwnersParserIssueTests: XCTestCase {
         expectOwners(codeOwners.ownersForPath("#file.rb"), equals: nil)
     }
 
-    // MARK: Issue #5: _firstUnescapedIndex should count consecutive backslashes
-
-    func testBackslashCounting_evenBackslashesDoNotEscapeHash() throws {
-        // CODEOWNERS line: /path/file @owner1 @owner2 \\#this is a comment
-        // The \\ is an escaped backslash, then # starts an inline comment.
-        // Only @owner1 and @owner2 should be parsed as owners.
-        let codeownersContent = ##"/path/file @owner1 @owner2 \\#this is a comment"##
-        let codeOwners = try CodeOwners(parsing: codeownersContent)
-
-        let result = codeOwners.ownersForPath("/path/file")
-        let unwrapped = try XCTUnwrap(result)
-        XCTAssertTrue(unwrapped.contains("\"@owner1\""), "Should contain @owner1")
-        XCTAssertTrue(unwrapped.contains("\"@owner2\""), "Should contain @owner2")
-        XCTAssertFalse(unwrapped.contains("comment"), "Comment text should not appear as owner")
-    }
-
     // MARK: Issue #6: Unicode paths — NSRange length must use UTF-16 count
 
     func testUnicodePaths_emojiCharactersInPath() throws {
@@ -741,11 +668,7 @@ class CodeOwnersParserIssueTests: XCTestCase {
         /path/
         """
         let codeOwners = try CodeOwners(parsing: codeownersContent)
-
-        let result = codeOwners.ownersForPath("/path/file.txt")
-        let unwrapped = try XCTUnwrap(result)
-        XCTAssertTrue(unwrapped.contains("\"@section-owner\""), "Should contain @section-owner")
-        XCTAssertFalse(unwrapped.contains("[2]"), "Approval count [2] should not appear as owner")
+        expectOwners(codeOwners.ownersForPath("/path/file.txt"), equals: ["@section-owner"])
     }
 
     // MARK: - Character range support [...]

@@ -81,6 +81,7 @@ struct CodeOwners {
     
     func ownersForPath(_ path: String) -> String? {
         let fullPath = path.first == "/" ? path : "/" + path
+        let fullPathRange = NSRange(location: 0, length: fullPath.utf16.count)
         // Last matching rule wins (across all sections). If it has empty owners, return [].
         // Negated patterns (!) exclude paths from their section; once excluded, cannot be included again.
         var codeowners: [String] = []
@@ -88,7 +89,7 @@ struct CodeOwners {
             var lastMatch: [String]?
             var isExcluded = false
             for entry in sectionEntries.entries {
-                if entry.path.firstMatch(in: fullPath, range: NSRange(location: 0, length: fullPath.count)) != nil {
+                if entry.path.firstMatch(in: fullPath, range: fullPathRange) != nil {
                     if entry.isNegated {
                         isExcluded = true
                     } else if !isExcluded {
@@ -194,10 +195,15 @@ private extension CodeOwners {
         guard !sectionName.isEmpty else {
             throw .emptySectionName(String(line), index)
         }
-        let ownersSubstring = line.suffix(from: line.index(after: closeIndex))
+        var afterHeader = line.suffix(from: line.index(after: closeIndex))
+        // Skip optional approval count like [2] or [n] after the section name
+        let trimmed = afterHeader.drop(while: { $0.isWhitespace })
+        if trimmed.first == "[", let end = trimmed.firstIndex(of: "]") {
+            afterHeader = trimmed.suffix(from: trimmed.index(after: end))
+        }
         let owners: [String]
-        if let ownersStart = _firstUnescapedIndex(of: .whitespaces, in: ownersSubstring) {
-            owners = _parseOwners(line: ownersSubstring.suffix(from: ownersSubstring.index(after: ownersStart)))
+        if let ownersStart = _firstUnescapedIndex(of: .whitespaces, in: afterHeader) {
+            owners = _parseOwners(line: afterHeader.suffix(from: afterHeader.index(after: ownersStart)))
         } else {
             owners = []
         }
@@ -231,14 +237,12 @@ private extension CodeOwners {
         }
         
         var window = SlidingWindow(
-            pattern: pathPart // unescape path
-                .replacingOccurrences(of: "\\\\", with: "\\")
-                .replacingOccurrences(of: "\\ ", with: " ")
-                .replacingOccurrences(of: "\\#", with: "#")
+            pattern: _unescapePath(pathPart)
         )
         var pattern: String = ""
         var isFinished: Bool = false
         var hasFolderGlob: Bool = false
+        var hasPathContent: Bool = false
         
         while !isFinished {
             switch (window._0, window._1, window._2) {
@@ -256,15 +260,20 @@ private extension CodeOwners {
                 pattern += "^.*?/"
                 window.advance()
             // Inside the path
-            case ("*", "*", "/"), ("*", "*", nil):
+            case ("*", "*", "/"):
+                pattern += "(?:.*/)?"
+                if hasPathContent { hasFolderGlob = true }
+                window.advance(amount: 3)
+            case ("*", "*", nil):
                 pattern += ".*?"
-                hasFolderGlob = true
+                if hasPathContent { hasFolderGlob = true }
                 window.advance(amount: 3)
             case ("*", "*", .some(let char)):
                 throw .patternError(window.pattern,
                                     "Unknown character \(char) after **. Expected / or last symbol",
                                     lineIndex)
             case ("*", _, _):
+                hasPathContent = true
                 pattern += "[^/]*"
                 window.advance()
             // End of the path
@@ -274,15 +283,14 @@ private extension CodeOwners {
             case (.some(let char), "/", nil):
                 pattern += "\(_escapeRegex(char: char))/.*"
                 window.advance(amount: 2)
-            case (.some(let char), nil, nil): // end of the path without traling /
+            case (.some(let char), nil, nil): // end of the path without trailing /
                 pattern += _escapeRegex(char: char)
-                // if it's not a glob treating like "path/", else like "path/*"
                 let ext = hasFolderGlob ? "/[^/]*" : "/.*"
-                // we check for exact path or for children of folder with this path
                 pattern += "(?:$|(?:\(ext)))"
                 window.advance()
             // Default char handler
             case (.some(let char), _, _):
+                if char != "/" { hasPathContent = true }
                 pattern += _escapeRegex(char: char)
                 window.advance()
             // End of the parsing. Window is empty
@@ -301,9 +309,47 @@ private extension CodeOwners {
         }
     }
     
+    private static let _escapedQuestion: Character = "\u{F8FF}"
+    private static let _escapedAsterisk: Character = "\u{F8FE}"
+
+    static func _unescapePath(_ path: String) -> String {
+        var result = ""
+        var i = path.startIndex
+        while i < path.endIndex {
+            let c = path[i]
+            if c == "\\", path.index(after: i) < path.endIndex {
+                let next = path[path.index(after: i)]
+                switch next {
+                case "\\", " ", "#":
+                    result.append(next)
+                    i = path.index(i, offsetBy: 2)
+                case "?":
+                    result.append(_escapedQuestion)
+                    i = path.index(i, offsetBy: 2)
+                case "*":
+                    result.append(_escapedAsterisk)
+                    i = path.index(i, offsetBy: 2)
+                default:
+                    result.append(c)
+                    i = path.index(after: i)
+                }
+            } else {
+                result.append(c)
+                i = path.index(after: i)
+            }
+        }
+        return result
+    }
+    
     static func _escapeRegex(char: Character) -> String {
         switch char {
-        case ".", "+", "*", "?", "(", ")", "\\",
+        case "?":
+            return "[^/]"
+        case _escapedQuestion:
+            return "\\?"
+        case _escapedAsterisk:
+            return "\\*"
+        case ".", "+", "*", "(", ")", "\\",
              "[", "]", "{", "}", "^", "$", "|":
             return "\\\(char)"
         default:
@@ -329,22 +375,21 @@ private extension CodeOwners {
     }
     
     static func _firstUnescapedIndex(of charSet: CharacterSet, in string: Substring) -> Substring.Index? {
-        var prevIndex: Substring.Index = string.startIndex
-        var currentSubstring = string
-        var found: Bool = false
-        while let subIndex = currentSubstring.firstIndex(where: { charSet.contains($0) }) {
-            let offset = currentSubstring.distance(from: currentSubstring.startIndex, to: subIndex)
-            guard offset > 0 else { return prevIndex }
-            if currentSubstring[currentSubstring.index(before: subIndex)] == "\\" {
-                prevIndex = string.index(prevIndex, offsetBy: offset + 1)
-                currentSubstring = string.suffix(from: prevIndex)
-            } else {
-                prevIndex = string.index(prevIndex, offsetBy: offset)
-                found = true
-                break
+        var i = string.startIndex
+        while i < string.endIndex {
+            let c = string[i]
+            if c == "\\" {
+                let next = string.index(after: i)
+                guard next < string.endIndex else { break }
+                i = string.index(after: next)
+                continue
             }
+            if charSet.contains(c) {
+                return i
+            }
+            i = string.index(after: i)
         }
-        return found ? prevIndex : nil
+        return nil
     }
     
     static let _commentSymbols = CharacterSet(charactersIn: "#")

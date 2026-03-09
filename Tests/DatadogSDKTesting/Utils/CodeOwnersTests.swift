@@ -603,3 +603,178 @@ class CodeOwnersMatcherSpecTests: XCTestCase {
         expectOwners(codeOwners.ownersForPath("spec/helpers_spec.rb"), equals: ["@dev-team", "@qa-team"])
     }
 }
+
+// MARK: - Tests for known parser issues
+// These tests document correct behavior per CODEOWNERS spec.
+class CodeOwnersParserIssueTests: XCTestCase {
+
+    func expectOwners(_ result: String?, equals expected: [String]?) {
+        guard let expected = expected else {
+            XCTAssertNil(result, "Expected nil, got \(result ?? "nil")")
+            return
+        }
+        if expected.isEmpty {
+            XCTAssertTrue(result == "[]" || result == nil, "Expected [] or nil, got \(result ?? "nil")")
+            return
+        }
+        let formatted = "[\"" + expected.joined(separator: "\",\"") + "\"]"
+        XCTAssertEqual(result, formatted, "Expected \(formatted)")
+    }
+
+    // MARK: Issue #1: ? wildcard should match any single character except /
+
+    func testQuestionMarkWildcard_matchesSingleCharacter() throws {
+        let codeownersContent = """
+        file?.txt @owner
+        file2\\?.txt @owner2
+        """
+        let codeOwners = try CodeOwners(parsing: codeownersContent)
+
+        expectOwners(codeOwners.ownersForPath("fileA.txt"), equals: ["@owner"])
+        expectOwners(codeOwners.ownersForPath("file1.txt"), equals: ["@owner"])
+        expectOwners(codeOwners.ownersForPath("file2?.txt"), equals: ["@owner2"])
+        expectOwners(codeOwners.ownersForPath("file2A.txt"), equals: nil)
+
+        expectOwners(codeOwners.ownersForPath("file.txt"), equals: nil)
+        expectOwners(codeOwners.ownersForPath("fileAB.txt"), equals: nil)
+        expectOwners(codeOwners.ownersForPath("file/.txt"), equals: nil)
+        
+    }
+
+    // MARK: Issue #2: **/ should enforce path-segment boundaries
+
+    func testDoubleStarSlash_shouldNotMatchPartialSegments() throws {
+        let codeownersContent = """
+        * @owner
+        **/logs @octocat
+        """
+        let codeOwners = try CodeOwners(parsing: codeownersContent)
+
+        expectOwners(codeOwners.ownersForPath("/build/logs/file.txt"), equals: ["@octocat"])
+        expectOwners(codeOwners.ownersForPath("/logs/file.txt"), equals: ["@octocat"])
+
+        // "logs" as a substring of another segment must NOT match
+        expectOwners(codeOwners.ownersForPath("/prologs/file.txt"), equals: ["@owner"])
+        expectOwners(codeOwners.ownersForPath("/catalogsys/file.txt"), equals: ["@owner"])
+        expectOwners(codeOwners.ownersForPath("/mylogs/file.txt"), equals: ["@owner"])
+    }
+
+    // MARK: Issue #3: **/name should match all subdirectory depths (equivalent to bare name)
+
+    func testDoubleStarName_matchesAllSubdirectoryDepths() throws {
+        let codeownersContent = """
+        * @owner
+        **/logs @octocat
+        """
+        let codeOwners = try CodeOwners(parsing: codeownersContent)
+
+        // One level deep
+        expectOwners(codeOwners.ownersForPath("/build/logs/file.txt"), equals: ["@octocat"])
+
+        // Multiple levels deep — **/logs should be equivalent to logs
+        expectOwners(codeOwners.ownersForPath("/build/logs/sub/file.txt"), equals: ["@octocat"])
+        expectOwners(codeOwners.ownersForPath("/build/logs/sub/deep/file.txt"), equals: ["@octocat"])
+        expectOwners(codeOwners.ownersForPath("/logs/a/b/c/file.txt"), equals: ["@octocat"])
+    }
+
+    // MARK: Issue #4: Chained replacingOccurrences mis-processes \\# and \\ sequences
+
+    func testEscapeChaining_doubleBackslashBeforeHash() throws {
+        // CODEOWNERS content: \\#file.rb @owner
+        // \\  = escaped backslash → literal \
+        // #file.rb  = literal (since \# was NOT used; but after chained replacement,
+        //             the \# produced by step 1 is consumed by step 3)
+        // Correct unescaped path: \#file.rb
+        let codeownersContent = ##"\\#file.rb @owner"##
+        let codeOwners = try CodeOwners(parsing: codeownersContent)
+
+        expectOwners(codeOwners.ownersForPath("\\#file.rb"), equals: ["@owner"])
+        expectOwners(codeOwners.ownersForPath("#file.rb"), equals: nil)
+    }
+
+    // MARK: Issue #5: _firstUnescapedIndex should count consecutive backslashes
+
+    func testBackslashCounting_evenBackslashesDoNotEscapeHash() throws {
+        // CODEOWNERS line: /path/file @owner1 @owner2 \\#this is a comment
+        // The \\ is an escaped backslash, then # starts an inline comment.
+        // Only @owner1 and @owner2 should be parsed as owners.
+        let codeownersContent = ##"/path/file @owner1 @owner2 \\#this is a comment"##
+        let codeOwners = try CodeOwners(parsing: codeownersContent)
+
+        let result = codeOwners.ownersForPath("/path/file")
+        let unwrapped = try XCTUnwrap(result)
+        XCTAssertTrue(unwrapped.contains("\"@owner1\""), "Should contain @owner1")
+        XCTAssertTrue(unwrapped.contains("\"@owner2\""), "Should contain @owner2")
+        XCTAssertFalse(unwrapped.contains("comment"), "Comment text should not appear as owner")
+    }
+
+    // MARK: Issue #6: Unicode paths — NSRange length must use UTF-16 count
+
+    func testUnicodePaths_emojiCharactersInPath() throws {
+        let codeownersContent = """
+        *.txt @owner
+        """
+        let codeOwners = try CodeOwners(parsing: codeownersContent)
+
+        // 🎉 is 1 Swift Character but 2 UTF-16 code units.
+        // Using String.count for NSRange makes the range too short.
+        expectOwners(codeOwners.ownersForPath("/🎉.txt"), equals: ["@owner"])
+        expectOwners(codeOwners.ownersForPath("/path/🎉test.txt"), equals: ["@owner"])
+    }
+
+    func testUnicodePaths_flagEmojiInPath() throws {
+        let codeownersContent = """
+        /docs/ @owner
+        """
+        let codeOwners = try CodeOwners(parsing: codeownersContent)
+
+        // 🇺🇦 is 1 Swift Character but 4 UTF-16 code units.
+        expectOwners(codeOwners.ownersForPath("/docs/readme-🇺🇦.md"), equals: ["@owner"])
+    }
+
+    // MARK: Issue #7: Section approval count [n] leaking as owner with unusual spacing
+
+    func testSectionApprovalCount_notLeakedAsOwner() throws {
+        // [Section] [2] @section-owner — the [2] is an approval count, not an owner
+        let codeownersContent = """
+        [Section] [2] @section-owner
+        /path/
+        """
+        let codeOwners = try CodeOwners(parsing: codeownersContent)
+
+        let result = codeOwners.ownersForPath("/path/file.txt")
+        let unwrapped = try XCTUnwrap(result)
+        XCTAssertTrue(unwrapped.contains("\"@section-owner\""), "Should contain @section-owner")
+        XCTAssertFalse(unwrapped.contains("[2]"), "Approval count [2] should not appear as owner")
+    }
+
+    // MARK: - Regression tests for fixed issues
+
+    func testRegression_caretAtStartOfLine_treatedAsPath() throws {
+        let codeownersContent = """
+        ^test.txt @owner
+        """
+        let codeOwners = try CodeOwners(parsing: codeownersContent)
+        expectOwners(codeOwners.ownersForPath("^test.txt"), equals: ["@owner"])
+    }
+
+    func testRegression_emptyNegatedPattern_throwsInsteadOfCrash() throws {
+        let codeownersContent = """
+        * @owner
+        !
+        """
+        XCTAssertThrowsError(try CodeOwners(parsing: codeownersContent))
+    }
+
+    func testRegression_tabSeparator_betweenPathAndOwners() throws {
+        let codeownersContent = "/path/to/file\t@owner"
+        let codeOwners = try CodeOwners(parsing: codeownersContent)
+        expectOwners(codeOwners.ownersForPath("/path/to/file"), equals: ["@owner"])
+    }
+
+    func testRegression_tabSeparator_multipleOwners() throws {
+        let codeownersContent = "/path/to/file\t@owner1\t@owner2"
+        let codeOwners = try CodeOwners(parsing: codeownersContent)
+        expectOwners(codeOwners.ownersForPath("/path/to/file"), equals: ["@owner1", "@owner2"])
+    }
+}

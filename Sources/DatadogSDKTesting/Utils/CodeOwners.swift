@@ -7,7 +7,7 @@
 import Foundation
 
 struct CodeOwners {
-    typealias SectionEntry = (path: NSRegularExpression, owners: [String])
+    typealias SectionEntry = (path: NSRegularExpression, owners: [String], isNegated: Bool)
     typealias Section = (name: String, entries: Array<SectionEntry>)
     
     let sections: [Section]
@@ -79,15 +79,21 @@ struct CodeOwners {
     func ownersForPath(_ path: String) -> String? {
         let fullPath = path.first == "/" ? path : "/" + path
         // Last matching rule wins (across all sections). If it has empty owners, return [].
+        // Negated patterns (!) exclude paths from their section; once excluded, cannot be included again.
         var codeowners: [String] = []
         for sectionEntries in sections {
             var lastMatch: [String]?
+            var isExcluded = false
             for entry in sectionEntries.entries {
                 if entry.path.firstMatch(in: fullPath, range: NSRange(location: 0, length: fullPath.count)) != nil {
-                    lastMatch = entry.owners
+                    if entry.isNegated {
+                        isExcluded = true
+                    } else if !isExcluded {
+                        lastMatch = entry.owners
+                    }
                 }
             }
-            if let lastMatch {
+            if !isExcluded, let lastMatch {
                 codeowners.append(contentsOf: lastMatch)
             }
         }
@@ -200,14 +206,21 @@ private extension CodeOwners {
     }
     
     static func _parseOwnersRecord(line: String, lineIndex: Int) throws(ParsingError) -> SectionEntry {
-        let pathPart: String
+        var pathPart: String
         let owners: [String]
         if let splitIndex = _firstUnescapedIndex(of: " ", in: Substring(line)) {
             owners = _parseOwners(line: line.suffix(from: line.index(after: splitIndex)))
             pathPart = line.prefix(upTo: splitIndex).trimmingCharacters(in: .whitespaces)
         } else {
             owners = []
-            pathPart = line
+            pathPart = line.trimmingCharacters(in: .whitespaces)
+        }
+        
+        let isNegated: Bool = pathPart[pathPart.startIndex] == "!"
+        if isNegated {
+            pathPart = pathPart
+                .suffix(from: pathPart.index(after: pathPart.startIndex))
+                .trimmingCharacters(in: .whitespaces)
         }
         
         var window = SlidingWindow(
@@ -275,7 +288,7 @@ private extension CodeOwners {
         
         do {
             let regex = try NSRegularExpression(pattern: pattern)
-            return (regex, owners)
+            return (regex, owners, isNegated)
         } catch {
             throw .patternRegexError(line, error, lineIndex)
         }

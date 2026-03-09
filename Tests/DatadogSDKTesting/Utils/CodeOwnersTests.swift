@@ -510,6 +510,74 @@ class CodeOwnersMatcherSpecTests: XCTestCase {
         expectOwners(codeOwners.ownersForPath("other/file.txt"), equals: ["@owner"])
     }
 
+    // MARK: - Negated path support (! prefix, GitLab-style exclusions)
+    func testMatcher_negatedPath_excludesMatchingPaths() throws {
+        let codeownersContent = """
+        * @owner
+
+        /apps/ @octocat
+        !/apps/github
+        """
+        let codeOwners = try CodeOwners(parsing: codeownersContent)
+
+        expectOwners(codeOwners.ownersForPath("/apps/logs.txt"), equals: ["@octocat"])
+        expectOwners(codeOwners.ownersForPath("/apps/1/logs.txt"), equals: ["@octocat"])
+        expectOwners(codeOwners.ownersForPath("/apps/deeply/nested/logs/logs.txt"), equals: ["@octocat"])
+
+        expectOwners(codeOwners.ownersForPath("apps/github"), equals: [])
+        expectOwners(codeOwners.ownersForPath("apps/github/codeowners"), equals: [])
+
+        expectOwners(codeOwners.ownersForPath("other/file.txt"), equals: ["@owner"])
+    }
+
+    // MARK: - Path exclusion with multiple sections (GitLab documentation examples)
+    // Exclusions apply per section. If you need different exclusions for different owners, use multiple sections:
+    // https://docs.gitlab.com/user/project/codeowners/reference/#exclusion-patterns
+    func testMatcher_negatedPath_multipleSections_exclusionPerSection() throws {
+        let codeownersContent = """
+        * @username
+        !pom.xml
+
+        [Ruby]
+        *.rb @ruby-team
+        !/config/**/*.rb
+
+        [Config]
+        /config/ @ops-team
+        """
+        let codeOwners = try CodeOwners(parsing: codeownersContent)
+
+        // pom.xml: excluded from default section. No other section matches. Result: nil
+        expectOwners(codeOwners.ownersForPath("pom.xml"), equals: [])
+
+        // /lib/foo.rb: default + Ruby section (not excluded). Config doesn't match.
+        expectOwners(codeOwners.ownersForPath("/lib/foo.rb"), equals: ["@username", "@ruby-team"])
+
+        // /config/routes.rb: default gives @username. Ruby: *.rb matches but !/config/**/*.rb excludes.
+        // Config: /config/ matches @ops-team. Config Ruby files don't need Ruby approval but still need ops.
+        expectOwners(codeOwners.ownersForPath("/config/routes.rb"), equals: ["@username", "@ops-team"])
+
+        // /config/settings.yml: default + Config only (not a Ruby file)
+        expectOwners(codeOwners.ownersForPath("/config/settings.yml"), equals: ["@username", "@ops-team"])
+    }
+
+    /// Exclusion in one section does not block owners from another section.
+    /// From GitLab: "Files matching an exclusion pattern do not require code owner approval for that section."
+    func testMatcher_negatedPath_excludedInOneSection_canGetOwnersFromAnother() throws {
+        let codeownersContent = """
+        * @username
+        !pom.xml
+
+        [Build]
+        pom.xml @build-team
+        """
+        let codeOwners = try CodeOwners(parsing: codeownersContent)
+
+        // pom.xml excluded from default section, but [Build] section still assigns @build-team
+        expectOwners(codeOwners.ownersForPath("pom.xml"), equals: ["@build-team"])
+        expectOwners(codeOwners.ownersForPath("/pom.xml"), equals: ["@build-team"])
+    }
+
     // MARK: - GitLab format with default owner per section
     func testMatcher_gitlabDefaultOwnerPerSection_returnsListOfOwners() throws {
         let codeownersContent = """

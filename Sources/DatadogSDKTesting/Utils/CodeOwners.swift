@@ -214,6 +214,7 @@ private extension CodeOwners {
             pattern: pathPart // unescape path
                 .replacingOccurrences(of: "\\ ", with: " ")
                 .replacingOccurrences(of: "\\#", with: "#")
+                .replacingOccurrences(of: "\\\\", with: "\\")
         )
         var pattern: String = ""
         var isFinished: Bool = false
@@ -226,8 +227,7 @@ private extension CodeOwners {
                 pattern = ".*"
                 window.advance(amount: 2)
             case (nil, .some(let char), nil): // one symbol. File named like that or folder
-                pattern = "^.*?/\(_escapeRegex(char: char))"
-                pattern = "(?:\(pattern)$)|(?:\(pattern)/.*)"
+                pattern = "^.*?/\(_escapeRegex(char: char))(?:$|(?:/.*))"
                 window.advance(amount: 2)
             case (nil, "/", _): // /something
                 pattern = "^/"
@@ -259,7 +259,7 @@ private extension CodeOwners {
                 // if it's not a glob treating like "path/", else like "path/*"
                 let ext = hasFolderGlob ? "/[^/]*" : "/.*"
                 // we check for exact path or for children of folder with this path
-                pattern = "(?:\(pattern)$)|(?:\(pattern)\(ext))"
+                pattern += "(?:$|(?:\(ext)))"
                 window.advance()
             // Default char handler
             case (.some(let char), _, _):

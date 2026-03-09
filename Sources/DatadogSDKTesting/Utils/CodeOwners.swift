@@ -53,7 +53,7 @@ struct CodeOwners {
         
         while index < lines.count {
             let line = lines[index]
-            if let offset = try Self._isSectionHeader(line: line, index: index) {
+            if let offset = try Self._isSectionHeader(line: line) {
                 let section = try Self._parseSection(lines: lines, lineIndex: index, offset: offset)
                 if sections[section.name] != nil {
                     sections[section.name]!.append(contentsOf: section.entries)
@@ -194,7 +194,7 @@ private extension CodeOwners {
         var entries: [SectionEntry] = []
         while index < lines.count {
             let line = lines[index]
-            guard _isSectionHeader(line: line, index: index) == nil else { // end of the section
+            guard _isSectionHeader(line: line) == nil else { // end of the section
                 break
             }
             var record = try _parseOwnersRecord(line: line, lineIndex: index)
@@ -214,7 +214,7 @@ private extension CodeOwners {
         return (name: header.name, entries: section.entries, index: section.index)
     }
     
-    static func _isSectionHeader(line: String, index: Int) -> Int? {
+    static func _isSectionHeader(line: String) -> Int? {
         switch line[line.startIndex] {
         case "[": return 1
         case "^" where line.count > 2 && line[line.index(after: line.startIndex)] == "[":

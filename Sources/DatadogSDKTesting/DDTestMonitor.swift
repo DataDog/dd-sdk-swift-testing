@@ -528,7 +528,13 @@ internal class DDTestMonitor {
         if let workspacePath = DDTestMonitor.env.workspacePath {
             instrumentationWorkQueue.addOperation {
                 self.codeOwners = Log.measure(name: "createCodeOwners") {
-                    CodeOwners(workspacePath: URL(fileURLWithPath: workspacePath, isDirectory: true))
+                    do {
+                        return try CodeOwners(workspacePath: URL(fileURLWithPath: workspacePath,
+                                                                 isDirectory: true))
+                    } catch {
+                        Log.print("Codeowners parsing failed \(error)")
+                        return nil
+                    }
                 }
             }
         }

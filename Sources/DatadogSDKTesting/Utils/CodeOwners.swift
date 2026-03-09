@@ -149,6 +149,40 @@ private extension CodeOwners {
             }
             self._2 = isEnd ? nil : pattern[index]
         }
+
+        /// When `_0 == "["`, scans ahead through `_1`, `_2`, and the remaining
+        /// pattern to find the matching `"]"`.
+        /// Returns the content between the brackets and the total number of
+        /// characters to advance (including `[` and `]`).
+        func findClosingBracket() -> (content: String, advanceCount: Int)? {
+            var content = ""
+            var totalAdvance = 1 // 1 for [ in _0
+
+            guard let c1 = _1 else { return nil }
+            if c1 == "]" { return nil } // [] is empty/invalid
+            content.append(c1)
+            totalAdvance += 1
+
+            if let c2 = _2 {
+                if c2 == "]" { return (content, totalAdvance + 1) }
+                content.append(c2)
+                totalAdvance += 1
+            } else {
+                return nil
+            }
+
+            guard !isEnd else { return nil }
+            var i = pattern.index(after: index)
+            while i < pattern.endIndex {
+                let c = pattern[i]
+                if c == "]" { return (content, totalAdvance + 1) }
+                content.append(c)
+                totalAdvance += 1
+                i = pattern.index(after: i)
+            }
+
+            return nil
+        }
     }
     
     static func _parseSection(named name: String, defaultOwners: [String],
@@ -288,6 +322,19 @@ private extension CodeOwners {
                 let ext = hasFolderGlob ? "/[^/]*" : "/.*"
                 pattern += "(?:$|(?:\(ext)))"
                 window.advance()
+            // Char range handler
+            case (.some(let char), _, _) where char == "[":
+                guard let (content, advanceCount) = window.findClosingBracket() else {
+                    fallthrough
+                }
+                hasPathContent = true
+                pattern += _bracketToRegex(content)
+                window.advance(amount: advanceCount)
+                // We need to test for the case when bracket was the last symbol
+                if window.isEnd {
+                    let ext = hasFolderGlob ? "/[^/]*" : "/.*"
+                    pattern += "(?:$|(?:\(ext)))"
+                }
             // Default char handler
             case (.some(let char), _, _):
                 if char != "/" { hasPathContent = true }
@@ -311,6 +358,8 @@ private extension CodeOwners {
     
     private static let _escapedQuestion: Character = "\u{F8FF}"
     private static let _escapedAsterisk: Character = "\u{F8FE}"
+    private static let _escapedOpenBracket: Character = "\u{F8FD}"
+    private static let _escapedCloseBracket: Character = "\u{F8FC}"
 
     static func _unescapePath(_ path: String) -> String {
         var result = ""
@@ -328,6 +377,12 @@ private extension CodeOwners {
                     i = path.index(i, offsetBy: 2)
                 case "*":
                     result.append(_escapedAsterisk)
+                    i = path.index(i, offsetBy: 2)
+                case "[":
+                    result.append(_escapedOpenBracket)
+                    i = path.index(i, offsetBy: 2)
+                case "]":
+                    result.append(_escapedCloseBracket)
                     i = path.index(i, offsetBy: 2)
                 default:
                     result.append(c)
@@ -349,6 +404,10 @@ private extension CodeOwners {
             return "\\?"
         case _escapedAsterisk:
             return "\\*"
+        case _escapedOpenBracket:
+            return "\\["
+        case _escapedCloseBracket:
+            return "\\]"
         case ".", "+", "*", "(", ")", "\\",
              "[", "]", "{", "}", "^", "$", "|":
             return "\\\(char)"
@@ -357,6 +416,26 @@ private extension CodeOwners {
         }
     }
     
+    static func _bracketToRegex(_ content: String) -> String {
+        var result = "["
+        var chars = Substring(content)
+        if chars.first == "!" {
+            result += "^"
+            chars = chars.dropFirst()
+        }
+        for c in chars {
+            switch c {
+            case _escapedQuestion: result += "?"
+            case _escapedAsterisk: result += "*"
+            case _escapedOpenBracket: result += "\\["
+            case _escapedCloseBracket: result += "\\]"
+            default: result.append(c)
+            }
+        }
+        result += "]"
+        return result
+    }
+
     static func _parseOwners(line: Substring) -> [String] {
         var endIndex = line.endIndex
         if let commentIndex = _firstUnescapedIndex(of: _commentSymbols, in: line) {

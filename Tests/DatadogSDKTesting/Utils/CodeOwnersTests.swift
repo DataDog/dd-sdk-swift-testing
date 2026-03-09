@@ -748,6 +748,122 @@ class CodeOwnersParserIssueTests: XCTestCase {
         XCTAssertFalse(unwrapped.contains("[2]"), "Approval count [2] should not appear as owner")
     }
 
+    // MARK: - Character range support [...]
+
+    func testCharacterRange_basicRange_matchesSingleCharInRange() throws {
+        let codeownersContent = """
+        /src/file[0-9].txt @owner
+        """
+        let codeOwners = try CodeOwners(parsing: codeownersContent)
+
+        expectOwners(codeOwners.ownersForPath("/src/file0.txt"), equals: ["@owner"])
+        expectOwners(codeOwners.ownersForPath("/src/file5.txt"), equals: ["@owner"])
+        expectOwners(codeOwners.ownersForPath("/src/file9.txt"), equals: ["@owner"])
+
+        expectOwners(codeOwners.ownersForPath("/src/fileA.txt"), equals: nil)
+        expectOwners(codeOwners.ownersForPath("/src/file.txt"), equals: nil)
+        expectOwners(codeOwners.ownersForPath("/src/file12.txt"), equals: nil)
+    }
+
+    func testCharacterRange_characterSet_matchesListedChars() throws {
+        let codeownersContent = """
+        /src/file[abc].txt @owner
+        """
+        let codeOwners = try CodeOwners(parsing: codeownersContent)
+
+        expectOwners(codeOwners.ownersForPath("/src/filea.txt"), equals: ["@owner"])
+        expectOwners(codeOwners.ownersForPath("/src/fileb.txt"), equals: ["@owner"])
+        expectOwners(codeOwners.ownersForPath("/src/filec.txt"), equals: ["@owner"])
+
+        expectOwners(codeOwners.ownersForPath("/src/filed.txt"), equals: nil)
+        expectOwners(codeOwners.ownersForPath("/src/file.txt"), equals: nil)
+    }
+
+    func testCharacterRange_negatedWithExclamation_excludesChars() throws {
+        let codeownersContent = """
+        * @fallback
+        /src/file[!0-9].txt @owner
+        """
+        let codeOwners = try CodeOwners(parsing: codeownersContent)
+
+        expectOwners(codeOwners.ownersForPath("/src/filea.txt"), equals: ["@owner"])
+        expectOwners(codeOwners.ownersForPath("/src/fileZ.txt"), equals: ["@owner"])
+
+        expectOwners(codeOwners.ownersForPath("/src/file5.txt"), equals: ["@fallback"])
+        expectOwners(codeOwners.ownersForPath("/src/file0.txt"), equals: ["@fallback"])
+    }
+
+    func testCharacterRange_alphabeticRange() throws {
+        let codeownersContent = """
+        /docs/chapter-[a-f].md @owner
+        """
+        let codeOwners = try CodeOwners(parsing: codeownersContent)
+
+        expectOwners(codeOwners.ownersForPath("/docs/chapter-a.md"), equals: ["@owner"])
+        expectOwners(codeOwners.ownersForPath("/docs/chapter-f.md"), equals: ["@owner"])
+        expectOwners(codeOwners.ownersForPath("/docs/chapter-c.md"), equals: ["@owner"])
+
+        expectOwners(codeOwners.ownersForPath("/docs/chapter-g.md"), equals: nil)
+        expectOwners(codeOwners.ownersForPath("/docs/chapter-z.md"), equals: nil)
+    }
+
+    func testCharacterRange_atEndOfPattern_matchesSubdirectories() throws {
+        let codeownersContent = """
+        /src/module[AB] @owner
+        """
+        let codeOwners = try CodeOwners(parsing: codeownersContent)
+
+        expectOwners(codeOwners.ownersForPath("/src/moduleA"), equals: ["@owner"])
+        expectOwners(codeOwners.ownersForPath("/src/moduleB"), equals: ["@owner"])
+        expectOwners(codeOwners.ownersForPath("/src/moduleA/file.txt"), equals: ["@owner"])
+        expectOwners(codeOwners.ownersForPath("/src/moduleB/sub/file.txt"), equals: ["@owner"])
+
+        expectOwners(codeOwners.ownersForPath("/src/moduleC"), equals: nil)
+    }
+
+    func testCharacterRange_multipleRanges_inSamePattern() throws {
+        let codeownersContent = """
+        /src/v[0-9].[0-9].txt @owner
+        """
+        let codeOwners = try CodeOwners(parsing: codeownersContent)
+
+        expectOwners(codeOwners.ownersForPath("/src/v1.0.txt"), equals: ["@owner"])
+        expectOwners(codeOwners.ownersForPath("/src/v3.5.txt"), equals: ["@owner"])
+
+        expectOwners(codeOwners.ownersForPath("/src/v1.txt"), equals: nil)
+        expectOwners(codeOwners.ownersForPath("/src/va.0.txt"), equals: nil)
+    }
+
+    func testCharacterRange_withWildcards_combinedPatterns() throws {
+        let codeownersContent = """
+        **/log[0-9].txt @owner
+        """
+        let codeOwners = try CodeOwners(parsing: codeownersContent)
+
+        expectOwners(codeOwners.ownersForPath("/log1.txt"), equals: ["@owner"])
+        expectOwners(codeOwners.ownersForPath("/var/log5.txt"), equals: ["@owner"])
+        expectOwners(codeOwners.ownersForPath("/a/b/c/log9.txt"), equals: ["@owner"])
+
+        expectOwners(codeOwners.ownersForPath("/logA.txt"), equals: nil)
+    }
+
+    func testCharacterRange_escapedBracket_treatedAsLiteral() throws {
+        let codeownersContent = ##"/src/\[file\].txt @owner"##
+        let codeOwners = try CodeOwners(parsing: codeownersContent)
+
+        expectOwners(codeOwners.ownersForPath("/src/[file].txt"), equals: ["@owner"])
+        expectOwners(codeOwners.ownersForPath("/src/f.txt"), equals: nil)
+    }
+
+    func testCharacterRange_unmatchedOpenBracket_treatedAsLiteral() throws {
+        let codeownersContent = """
+        /src/[file.txt @owner
+        """
+        let codeOwners = try CodeOwners(parsing: codeownersContent)
+
+        expectOwners(codeOwners.ownersForPath("/src/[file.txt"), equals: ["@owner"])
+    }
+
     // MARK: - Regression tests for fixed issues
 
     func testRegression_caretAtStartOfLine_treatedAsPath() throws {

@@ -28,6 +28,9 @@ struct CodeOwners {
                 .appendingPathComponent("CODEOWNERS", isDirectory: false),
             workspacePath
                 .appendingPathComponent(".docs", isDirectory: true)
+                .appendingPathComponent("CODEOWNERS", isDirectory: false),
+            workspacePath
+                .appendingPathComponent("docs", isDirectory: true)
                 .appendingPathComponent("CODEOWNERS", isDirectory: false)
         ]
         let fm = FileManager.default
@@ -106,7 +109,6 @@ extension CodeOwners {
     enum ParsingError: Error {
         case codeOwnersFileNotFound
         case cantReadFile(URL)
-        case badSectionLine(String, Int)
         case cantFindClosingBracket(String, Int)
         case emptySectionName(String, Int)
         case foundEmptySectionAfterRealSection(String, Int)
@@ -178,17 +180,14 @@ private extension CodeOwners {
     static func _isSectionHeader(line: String, index: Int) throws(ParsingError) -> Int? {
         switch line[line.startIndex] {
         case "[": return 1
-        case "^":
-            guard line.count > 2, line[line.index(after: line.startIndex)] == "[" else {
-                throw .badSectionLine(line, index)
-            }
+        case "^" where line.count > 2 && line[line.index(after: line.startIndex)] == "[":
             return 2
         default: return nil
         }
     }
     
     static func _parseSectionHeader(from line: Substring, index: Int) throws(ParsingError) -> (name: String, owners: [String]) {
-        guard let closeIndex = _firstUnescapedIndex(of: "]", in: line) else {
+        guard let closeIndex = _firstUnescapedIndex(of: _headerEndSymbol, in: line) else {
             throw .cantFindClosingBracket(String(line), index)
         }
         let sectionName = String(line[line.startIndex..<closeIndex]).trimmingCharacters(in: .whitespaces)
@@ -197,7 +196,7 @@ private extension CodeOwners {
         }
         let ownersSubstring = line.suffix(from: line.index(after: closeIndex))
         let owners: [String]
-        if let ownersStart = _firstUnescapedIndex(of: " ", in: ownersSubstring) {
+        if let ownersStart = _firstUnescapedIndex(of: .whitespaces, in: ownersSubstring) {
             owners = _parseOwners(line: ownersSubstring.suffix(from: ownersSubstring.index(after: ownersStart)))
         } else {
             owners = []
@@ -208,12 +207,16 @@ private extension CodeOwners {
     static func _parseOwnersRecord(line: String, lineIndex: Int) throws(ParsingError) -> SectionEntry {
         var pathPart: String
         let owners: [String]
-        if let splitIndex = _firstUnescapedIndex(of: " ", in: Substring(line)) {
+        if let splitIndex = _firstUnescapedIndex(of: .whitespaces, in: Substring(line)) {
             owners = _parseOwners(line: line.suffix(from: line.index(after: splitIndex)))
             pathPart = line.prefix(upTo: splitIndex).trimmingCharacters(in: .whitespaces)
         } else {
             owners = []
             pathPart = line.trimmingCharacters(in: .whitespaces)
+        }
+        
+        guard pathPart.count > 0 else {
+            throw .patternError(line, "Pattern is empty after cleanup", lineIndex)
         }
         
         let isNegated: Bool = pathPart[pathPart.startIndex] == "!"
@@ -223,11 +226,15 @@ private extension CodeOwners {
                 .trimmingCharacters(in: .whitespaces)
         }
         
+        guard pathPart.count > 0 else {
+            throw .patternError(line, "Negated pattern is empty after cleanup", lineIndex)
+        }
+        
         var window = SlidingWindow(
             pattern: pathPart // unescape path
+                .replacingOccurrences(of: "\\\\", with: "\\")
                 .replacingOccurrences(of: "\\ ", with: " ")
                 .replacingOccurrences(of: "\\#", with: "#")
-                .replacingOccurrences(of: "\\\\", with: "\\")
         )
         var pattern: String = ""
         var isFinished: Bool = false
@@ -306,7 +313,7 @@ private extension CodeOwners {
     
     static func _parseOwners(line: Substring) -> [String] {
         var endIndex = line.endIndex
-        if let commentIndex = _firstUnescapedIndex(of: "#", in: line) {
+        if let commentIndex = _firstUnescapedIndex(of: _commentSymbols, in: line) {
             endIndex = commentIndex
         }
         return line.prefix(upTo: endIndex).components(separatedBy: .whitespaces).filter { !$0.isEmpty }
@@ -315,17 +322,17 @@ private extension CodeOwners {
     static func _skipCommentLines(lines: [String], lineIndex: Int) -> Int {
         var lineIndex = lineIndex
         for line in lines[lineIndex...] {
-            guard line.isEmpty || line[line.startIndex] == "#" else { break }
+            guard line.isEmpty || _commentSymbols.contains(line[line.startIndex]) else { break }
             lineIndex += 1
         }
         return lineIndex
     }
     
-    static func _firstUnescapedIndex(of char: Character, in string: Substring) -> Substring.Index? {
+    static func _firstUnescapedIndex(of charSet: CharacterSet, in string: Substring) -> Substring.Index? {
         var prevIndex: Substring.Index = string.startIndex
         var currentSubstring = string
         var found: Bool = false
-        while let subIndex = currentSubstring.firstIndex(of: char) {
+        while let subIndex = currentSubstring.firstIndex(where: { charSet.contains($0) }) {
             let offset = currentSubstring.distance(from: currentSubstring.startIndex, to: subIndex)
             guard offset > 0 else { return prevIndex }
             if currentSubstring[currentSubstring.index(before: subIndex)] == "\\" {
@@ -338,5 +345,14 @@ private extension CodeOwners {
             }
         }
         return found ? prevIndex : nil
+    }
+    
+    static let _commentSymbols = CharacterSet(charactersIn: "#")
+    static let _headerEndSymbol = CharacterSet(charactersIn: "]")
+}
+
+private extension CharacterSet {
+    func contains(_ char: Character) -> Bool {
+        char.unicodeScalars.allSatisfy { contains($0) }
     }
 }

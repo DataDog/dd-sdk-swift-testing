@@ -1,0 +1,12 @@
+# Policy for: .github/workflows/createRelease.yml in DataDog/dd-sdk-swift-testing
+issuer: https://token.actions.githubusercontent.com
+subject: repo:DataDog/dd-sdk-swift-testing:ref:refs/heads/main
+
+claim_pattern:
+  event_name: workflow_dispatch
+  job_workflow_ref: DataDog/dd-sdk-swift-testing/\.github/workflows/createRelease\.yml@refs/heads/main
+  ref: refs/heads/main
+  repository: DataDog/dd-sdk-swift-testing
+
+permissions:
+  contents: write

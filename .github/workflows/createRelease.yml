@@ -34,15 +34,22 @@ jobs:
     needs: [test]
     runs-on: macos-14
     permissions:
-      contents: write
+      contents: read
+      id-token: write
     steps:
     - name: Checkout
       uses: actions/checkout@v4
+    - name: Get GitHub token via dd-octo-sts
+      uses: DataDog/dd-octo-sts-action@acaa02eee7e3bb0839e4272dacb37b8f3b58ba80 # v1.0.3
+      id: octo-sts
+      with:
+        scope: DataDog/dd-sdk-swift-testing
+        policy: self.github.create-release.workflow-dispatch
     - name: Select Xcode 16.2
       run: sudo xcode-select --switch /Applications/Xcode_16.2.app
     - name: Build and upload XCFrameworks, create draft release
       env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ steps.octo-sts.outputs.token }}
       run: make XC_LOG=archive version=${{ github.event.inputs.version }} github_release
     - name: Attach Xcode logs
       if: '!cancelled()'

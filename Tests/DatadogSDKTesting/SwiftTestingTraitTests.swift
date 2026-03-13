@@ -22,7 +22,7 @@ struct SwiftTestingTraitTests {
     
     @Test
     func scopingTraitIsApplied() async throws {
-        let observer = DatadogSwiftTestingScopingTrait.mockObserver
+        let observer = try #require(DatadogSwiftTestingScopingTrait.sharedObserver as? MockSwiftTestingObserver)
     }
     
     @Test
@@ -72,7 +72,7 @@ struct SwiftTestingTraitTests {
 }
 
 private final class MockSwiftTestingObserver: SwiftTestingObserverType {
-    let tests: Synced<[String: [String: [String: Int]]]> = .init([:])
+    let tests: Synced<[String: [String: [String: [SwiftTestingTestStatus]]]]> = .init([:])
     
     func register(test: some SwiftTestingTest) async throws {
         tests.update { tests in
@@ -83,7 +83,7 @@ private final class MockSwiftTestingObserver: SwiftTestingObserverType {
                     }
                 } else {
                     module.get(key: test.suite, or: [:]) { suite in
-                        suite[test.name] = 0
+                        suite[test.name] = []
                     }
                 }
             }
@@ -107,9 +107,10 @@ private final class MockSwiftTestingObserver: SwiftTestingObserverType {
     
     func didRun(testRun test: some SwiftTestingTestRun, status: SwiftTestingTestStatus) async throws -> RetryStatus {
         let count = tests.update { tests in
-            let count = tests[test.module]![test.suite]![test.name]! + 1
-            tests[test.module]![test.suite]![test.name] = count
-            return count
+            var runs = tests[test.module]![test.suite]![test.name]!
+            runs.append(status)
+            tests[test.module]![test.suite]![test.name] = runs
+            return runs.count
         }
         let name = test.name.lowercased()
         let ignore: RetryStatus.ErrorsStatus = name.contains("ignore") ? .suppressed(reason: "suppress_test") : .unsuppressed
@@ -118,8 +119,6 @@ private final class MockSwiftTestingObserver: SwiftTestingObserverType {
         }
         return count < 5 ? .retry(reason: "retry_test", errors: .suppressed(reason: "retry_test")) : .end(errors: ignore)
     }
-    
-    
 }
 
 private struct ObserverInitScopingTrait: SuiteTrait, TestScoping {
@@ -136,26 +135,64 @@ private struct ObserverInitScopingTrait: SuiteTrait, TestScoping {
             DatadogSwiftTestingScopingTrait.sharedObserver = nil
         }
         
-        let issues: Synced<[String: Testing.Issue]> = .init([:])
+        let issues: Synced<[String: Int]> = .init([:])
         try await withKnownIssue(isIntermittent: true) {
             try await function()
         } matching: { issue in
             if let err = issue.error as? SwiftTestingTraitTests.TestError {
-                issues.update { $0[err.name] = issue }
+                issues.update { $0.get(key: err.name, or: 0) { $0 += 1 } }
                 return true
             } else if let err = issue.error as? TestExecutionFailedError {
-                let test = err.issues.first!.comments.first!.rawValue
-                issues.update { $0[test] = issue }
+                let test: String
+                if let err = err.issues.first!.error as? SwiftTestingTraitTests.TestError {
+                    test = err.name
+                } else {
+                    test = err.issues.first!.comments.first!.rawValue
+                }
+                issues.update { $0.get(key: test, or: 0) { $0 += 1 } }
                 return true
             }
-            return issue.comments.first?.rawValue.contains("fail") ?? false
+            if issue.comments.first?.rawValue.lowercased().contains("fail") ?? false {
+                issues.update { $0.get(key: issue.comments.first!.rawValue, or: 0) { $0 += 1 } }
+                return true
+            }
+            return false
         }
-    }
-}
-
-private extension DatadogSwiftTestingScopingTrait {
-    static var mockObserver: MockSwiftTestingObserver {
-        sharedObserver! as! MockSwiftTestingObserver
+        
+        let observer = try #require(DatadogSwiftTestingScopingTrait.sharedObserver as? MockSwiftTestingObserver)
+        let tests = observer.tests.value
+        let suite = try #require(tests[test.module]?[test.suite])
+        let errors = issues.value
+        
+        #expect(suite["scopingTraitIsApplied()"] == [.passed])
+        #expect(errors["scopingTraitIsApplied()"] == nil)
+        
+        #expect(suite["testSkip()"] == [.skipped(reason: "skip_test")])
+        #expect(errors["testSkip()"] == nil)
+        
+        #expect(suite["testRetryIgnore()"] == Array(repeating: .failed, count: 5))
+        #expect(errors["testRetryIgnore()"] == nil)
+        
+        #expect(suite["testRetryFail()"] == Array(repeating: .failed, count: 5))
+        #expect(errors["testRetryFail()"] == 1)
+        
+        #expect(suite["testRetryErrorIgnore()"] == Array(repeating: .failed, count: 5))
+        #expect(errors["testRetryErrorIgnore()"] == nil)
+        
+        #expect(suite["testRetryErrorFail()"] == Array(repeating: .failed, count: 5))
+        #expect(errors["testRetryErrorFail()"] == 1)
+        
+        #expect(suite["testPass()"] == [.passed])
+        #expect(errors["testPass()"] == nil)
+        
+        #expect(suite["testFail()"] == [.failed])
+        #expect(errors["testFail()"] == 1)
+        
+        #expect(suite["testError()"] == [.failed])
+        #expect(errors["testError()"] == 1)
+        
+        #expect(suite["testErrorIgnore()"] == [.failed])
+        #expect(errors["testErrorIgnore()"] == nil)
     }
 }
 

@@ -9,15 +9,15 @@ import OpenTelemetryApi
 import OpenTelemetrySdk
 import XCTest
 
-internal class DDTestObserverTests: XCTestCase {
-    var testObserver: DDTestObserver!
+internal class DDXCTestObserverTests: XCTestCase {
+    var testObserver: DDXCTestObserver!
 
     let theSuite = XCTestSuite(name: "DDTestObserverTests")
 
     override func setUp() {
         XCTAssertNil(DDTracer.activeSpan)
         DDTestMonitor._env_recreate(env: ["DD_API_KEY": "fakeToken", "DD_DISABLE_TEST_INSTRUMENTING": "1"])
-        testObserver = DDTestObserver()
+        testObserver = DDXCTestObserver()
         theSuite.setValue([self], forKey: "_mutableTests")
     }
 

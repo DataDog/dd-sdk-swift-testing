@@ -102,7 +102,13 @@ extension Testing.Test: SwiftTestingTest {
     var module: String { id.moduleName }
     
     var suite: String {
-        return isSuite ? name : id.nameComponents.first!
+        guard !isSuite else { return name }
+        let components = id.nameComponents
+        if components.count > 1 || components.first?.last != ")" {
+            return components.first!
+        } else {
+            return "#" + sourceLocation.fileName.replacingOccurrences(of: ".swift", with: "")
+        }
     }
 }
 

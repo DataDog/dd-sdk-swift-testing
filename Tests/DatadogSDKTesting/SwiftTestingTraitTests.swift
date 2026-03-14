@@ -6,6 +6,7 @@
 //
 
 import Testing
+import Foundation
 @testable import DatadogSDKTesting
 
 @Suite(.initObserver, .datadogTesting)
@@ -23,6 +24,9 @@ struct SwiftTestingTraitTests {
     @Test
     func scopingTraitIsApplied() async throws {
         let observer = try #require(DatadogSwiftTestingScopingTrait.sharedObserver as? MockSwiftTestingObserver)
+        let tests = observer.tests.value
+        let suite = try #require(tests[Testing.Test.current!.module]?[Testing.Test.current!.suite])
+        #expect(Testing.Test.current?.suite == "\(type(of: self))")
     }
     
     @Test
@@ -69,6 +73,16 @@ struct SwiftTestingTraitTests {
     func testErrorIgnore() async throws {
         throw TestError.test(Testing.Test.current!.name)
     }
+}
+
+@Test(.initObserver, .datadogTesting)
+func testFuncRetryErrorFail() async throws {
+    throw SwiftTestingTraitTests.TestError.test(Testing.Test.current!.name)
+}
+
+@Test(.initObserver, .datadogTesting)
+func testFuncRegistration() async throws {
+    #expect(Testing.Test.current?.suite == "#" + URL(string: #file)!.deletingPathExtension().lastPathComponent)
 }
 
 private final class MockSwiftTestingObserver: SwiftTestingObserverType {
@@ -121,7 +135,7 @@ private final class MockSwiftTestingObserver: SwiftTestingObserverType {
     }
 }
 
-private struct ObserverInitScopingTrait: SuiteTrait, TestScoping {
+private struct ObserverInitScopingTrait: SuiteTrait, TestTrait, TestScoping {
     let isRecursive: Bool = false
     
     func prepare(for test: Testing.Test) async throws {
@@ -164,35 +178,26 @@ private struct ObserverInitScopingTrait: SuiteTrait, TestScoping {
         let suite = try #require(tests[test.module]?[test.suite])
         let errors = issues.value
         
-        #expect(suite["scopingTraitIsApplied()"] == [.passed])
-        #expect(errors["scopingTraitIsApplied()"] == nil)
+        let expected: [String: (status: [SwiftTestingTestStatus], errors: Int?)] = [
+            "scopingTraitIsApplied()": ([.passed], nil),
+            "testSkip()": ([.skipped(reason: "skip_test")], nil),
+            "testRetryIgnore()": (Array(repeating: .failed, count: 5), nil),
+            "testRetryFail()": (Array(repeating: .failed, count: 5), 1),
+            "testRetryErrorIgnore()": (Array(repeating: .failed, count: 5), nil),
+            "testRetryErrorFail()": (Array(repeating: .failed, count: 5), 1),
+            "testPass()": ([.passed], nil),
+            "testFail()": ([.failed], 1),
+            "testError()": ([.failed], 1),
+            "testErrorIgnore()": ([.failed], nil),
+            "testFuncRetryErrorFail()": (Array(repeating: .failed, count: 5), 1),
+            "testFuncRegistration()": ([.passed], nil),
+        ]
         
-        #expect(suite["testSkip()"] == [.skipped(reason: "skip_test")])
-        #expect(errors["testSkip()"] == nil)
-        
-        #expect(suite["testRetryIgnore()"] == Array(repeating: .failed, count: 5))
-        #expect(errors["testRetryIgnore()"] == nil)
-        
-        #expect(suite["testRetryFail()"] == Array(repeating: .failed, count: 5))
-        #expect(errors["testRetryFail()"] == 1)
-        
-        #expect(suite["testRetryErrorIgnore()"] == Array(repeating: .failed, count: 5))
-        #expect(errors["testRetryErrorIgnore()"] == nil)
-        
-        #expect(suite["testRetryErrorFail()"] == Array(repeating: .failed, count: 5))
-        #expect(errors["testRetryErrorFail()"] == 1)
-        
-        #expect(suite["testPass()"] == [.passed])
-        #expect(errors["testPass()"] == nil)
-        
-        #expect(suite["testFail()"] == [.failed])
-        #expect(errors["testFail()"] == 1)
-        
-        #expect(suite["testError()"] == [.failed])
-        #expect(errors["testError()"] == 1)
-        
-        #expect(suite["testErrorIgnore()"] == [.failed])
-        #expect(errors["testErrorIgnore()"] == nil)
+        for (test, status) in suite {
+            let expect = try #require(expected[test])
+            #expect(status == expect.status)
+            #expect(errors[test] == expect.errors)
+        }
     }
 }
 

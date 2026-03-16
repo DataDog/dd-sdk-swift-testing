@@ -82,7 +82,7 @@ func testFuncRetryErrorFail() async throws {
 
 @Test(.initObserver, .datadogTesting)
 func testFuncRegistration() async throws {
-    #expect(Testing.Test.current?.suite == "#" + URL(string: #file)!.deletingPathExtension().lastPathComponent)
+    #expect(Testing.Test.current?.suite == "[\(URL(string: #file)!.deletingPathExtension().lastPathComponent)]")
 }
 
 private final class MockSwiftTestingObserver: SwiftTestingObserverType {

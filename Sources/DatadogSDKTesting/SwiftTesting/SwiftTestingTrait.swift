@@ -107,7 +107,7 @@ extension Testing.Test: SwiftTestingTest {
         if components.count > 1 || components.first?.last != ")" {
             return components.first!
         } else {
-            return "#" + sourceLocation.fileName.replacingOccurrences(of: ".swift", with: "")
+            return "[\(sourceLocation.fileName.replacingOccurrences(of: ".swift", with: ""))]"
         }
     }
 }

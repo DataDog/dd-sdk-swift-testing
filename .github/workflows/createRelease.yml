@@ -17,14 +17,14 @@ jobs:
     runs-on: macos-14
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
     - name: Select Xcode 16.2
       run: sudo xcode-select --switch /Applications/Xcode_16.2.app
     - name: Test
       run: make XC_LOG=tests IOS_SIMULATOR="iPhone 16" TVOS_SIMULATOR="Apple TV" tests
     - name: Attach Xcode logs
       if: '!cancelled()'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         name: xcode-tests-logs
         path: "*-tests.log"
@@ -37,7 +37,7 @@ jobs:
       contents: write
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
     - name: Select Xcode 16.2
       run: sudo xcode-select --switch /Applications/Xcode_16.2.app
     - name: Build and upload XCFrameworks, create draft release
@@ -46,7 +46,7 @@ jobs:
       run: make XC_LOG=archive version=${{ github.event.inputs.version }} github_release
     - name: Attach Xcode logs
       if: '!cancelled()'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         name: xcode-archive-logs
         path: "*-archive.log"
@@ -57,7 +57,7 @@ jobs:
     runs-on: macos-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       with:
         ref: "${{ github.event.inputs.version }}"
     - name: Publish

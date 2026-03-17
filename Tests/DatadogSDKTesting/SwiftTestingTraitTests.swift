@@ -23,10 +23,6 @@ struct SwiftTestingTraitTests {
     
     @Test
     func scopingTraitIsApplied() async throws {
-        let provider = try #require(DatadogSwiftTestingTrait.sharedSuiteProvider as? SwiftTestingSuiteProvider)
-        let observer = try #require(provider.observer as? MockSwiftTestingObserver)
-        let tests = observer.tests.value
-        let suite = try #require(tests[Testing.Test.current!.module]?[Testing.Test.current!.suite])
         #expect(Testing.Test.current?.suite == "\(type(of: self))")
     }
     
@@ -94,8 +90,6 @@ private final class MockSwiftTestingSessionProvider: TestSessionProvider {
 }
 
 private final class MockSwiftTestingObserver: SwiftTestingObserverType {
-    let tests: Synced<[String: [String: [String: [SwiftTestingTestStatus]]]]> = .init([:])
-
     func willStart(suite: any SwiftTestingSuiteContextType) async {
         let session = suite.suite.session as! Mocks.Session
         let module = suite.suite.module as! Mocks.Module
@@ -120,9 +114,6 @@ private final class MockSwiftTestingObserver: SwiftTestingObserverType {
         let suite = group.test.suite.suite as! Mocks.Suite
         let mGroup = Mocks.Group(name: group.test.info.name, suite: suite, unskippable: false)
         suite.add(group: mGroup)
-        tests.update { tests in
-            tests[group.test.info.module, default: [:]][group.test.info.suite, default: [:]][group.test.info.name] = []
-        }
     }
 
     func didFinish(group: any SwiftTestingRetryGroupContextType) async {}
@@ -142,10 +133,9 @@ private final class MockSwiftTestingObserver: SwiftTestingObserverType {
     }
 
     func willFinish(testRun test: any SwiftTestingTestRunContextType, with status: SwiftTestingTestStatus) async -> SwiftTestingTestRunRetry {
-        let count = tests.update { tests in
-            tests[test.info.module, default: [:]][test.info.suite, default: [:]][test.info.name, default: []].append(status)
-            return tests[test.info.module]![test.info.suite]![test.info.name]!.count
-        }
+        let suite = test.test.suite as! Mocks.Suite
+        let group = suite.tests[test.test.name]!
+        let count = group.runs.count
         let name = test.info.name.lowercased()
         let ignore: RetryStatus.ErrorsStatus = name.contains("ignore") ? .suppressed(reason: "suppress_test") : .unsuppressed
         guard name.contains("retry") else {

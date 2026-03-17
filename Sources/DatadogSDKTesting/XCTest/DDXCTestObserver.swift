@@ -8,7 +8,7 @@ import Foundation
 internal import EventsExporter
 internal import XCTest
 
-class DDTestObserver: NSObject, XCTestObservation {
+class DDXCTestObserver: NSObject, XCTestObservation {
     private(set) var state: State
     private var observers: [NSObjectProtocol]
 
@@ -369,7 +369,7 @@ class DDTestObserver: NSObject, XCTestObservation {
     }
 }
 
-extension DDTestObserver {
+extension DDXCTestObserver {
     enum State {
         case none
         case configError

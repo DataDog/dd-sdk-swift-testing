@@ -140,6 +140,12 @@ extension Module: TestModule {
     func end(time: Date?) { end(endTime: time) }
 }
 
+extension Module: TestSuiteProvider {
+    func startSuite(named: String) -> any TestRunProvider & TestSuite {
+        suiteStart(name: named)
+    }
+}
+
 extension Module {
     enum StaticCodingKeys: String, CodingKey {
         case test_session_id

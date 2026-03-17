@@ -53,7 +53,7 @@ struct CodeOwners {
         
         while index < lines.count {
             let line = lines[index]
-            if let offset = try Self._isSectionHeader(line: line) {
+            if let offset = Self._isSectionHeader(line: line) {
                 let section = try Self._parseSection(lines: lines, lineIndex: index, offset: offset)
                 if sections[section.name] != nil {
                     sections[section.name]!.append(contentsOf: section.entries)

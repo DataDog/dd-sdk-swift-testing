@@ -23,7 +23,7 @@ struct SwiftTestingTraitTests {
     
     @Test
     func scopingTraitIsApplied() async throws {
-        let observer = try #require(DatadogSwiftTestingScopingTrait.sharedObserver as? MockSwiftTestingObserver)
+        let provider = try #require(DatadogSwiftTestingTrait.sharedSuiteProvider as? SwiftTestingSuiteProvider)
         let tests = observer.tests.value
         let suite = try #require(tests[Testing.Test.current!.module]?[Testing.Test.current!.suite])
         #expect(Testing.Test.current?.suite == "\(type(of: self))")
@@ -85,6 +85,13 @@ func testFuncRegistration() async throws {
     #expect(Testing.Test.current?.suite == "[\(URL(string: #file)!.deletingPathExtension().lastPathComponent)]")
 }
 
+
+private final class MockSwiftTestingSessionProvider: TestSessionProvider {
+    func startSession() async throws -> any TestModuleProvider & TestSession {
+        Mocks.Session(name: "TestSession")
+    }
+}
+
 private final class MockSwiftTestingObserver: SwiftTestingObserverType {
     let tests: Synced<[String: [String: [String: [SwiftTestingTestStatus]]]]> = .init([:])
     
@@ -139,14 +146,15 @@ private struct ObserverInitScopingTrait: SuiteTrait, TestTrait, TestScoping {
     let isRecursive: Bool = false
     
     func prepare(for test: Testing.Test) async throws {
-        if DatadogSwiftTestingScopingTrait.sharedObserver == nil {
-            DatadogSwiftTestingScopingTrait.sharedObserver = MockSwiftTestingObserver()
+        if DatadogSwiftTestingTrait.sharedSuiteProvider == nil {
+            DatadogSwiftTestingTrait.sharedSuiteProvider = SwiftTestingSuiteProvider(provider: MockSwiftTestingSessionProvider(),
+                                                                                     observer: MockSwiftTestingObserver())
         }
     }
     
     func provideScope(for test: Testing.Test, testCase: Testing.Test.Case?, performing function: @Sendable () async throws -> Void) async throws {
         defer {
-            DatadogSwiftTestingScopingTrait.sharedObserver = nil
+            DatadogSwiftTestingTrait.sharedSuiteProvider = nil
         }
         
         let issues: Synced<[String: Int]> = .init([:])

@@ -5,7 +5,7 @@
  */
 
 import Foundation
-internal import OpenTelemetryApi
+@preconcurrency internal import OpenTelemetryApi
 
 @objc(DDTestSession)
 public final class Session: NSObject, Encodable {
@@ -169,6 +169,11 @@ public extension Session {
     }
 }
 
+extension Session: TestModuleProvider {
+    func startModule(named: String) -> any TestModule & TestSuiteProvider {
+        moduleStart(name: named)
+    }
+}
 
 extension Session {
     enum StaticCodingKeys: String, CodingKey {

@@ -7,7 +7,7 @@
 import Foundation
 internal import OpenTelemetryApi
 
-protocol TestModel: AnyObject {
+protocol TestModel: AnyObject, Sendable {
     var id: SpanId { get }
     var name: String { get }
     var startTime: Date { get }
@@ -35,15 +35,31 @@ protocol TestSession: TestContainer {
     func nextTestIndex() -> UInt
 }
 
+protocol TestSessionProvider: Sendable {
+    func startSession() async throws -> any TestSession & TestModuleProvider
+}
+
 protocol TestModule: TestContainer {
     var session: any TestSession { get }
     var localization: String { get }
+}
+
+protocol TestModuleProvider: Sendable {
+    func startModule(named: String) -> any TestModule & TestSuiteProvider
 }
 
 protocol TestSuite: TestContainer {
     var session: any TestSession { get }
     var module: any TestModule { get }
     var localization: String { get }
+}
+
+protocol TestSuiteProvider: Sendable {
+    func startSuite(named: String) -> any TestSuite & TestRunProvider
+}
+
+protocol TestRunProvider: Sendable {
+    func startTest(named: String) -> any TestRun
 }
 
 extension TestSuite {
@@ -117,6 +133,10 @@ struct TestError {
 }
 
 extension TestModel {
+    internal var endTime: Date {
+        startTime.addingTimeInterval(.fromNanoseconds(Int64(duration)))
+    }
+    
     /// saves error tags to the model
     internal func set(errorTags error: TestError) {
         set(tag: DDTags.errorType, value: error.type)

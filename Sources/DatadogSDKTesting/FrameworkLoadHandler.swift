@@ -8,7 +8,7 @@ import Foundation
 internal import CDatadogSDKTesting
 
 enum FrameworkLoadHandler {
-    static var testObserver: DDTestObserver?
+    static var testObserver: DDXCTestObserver?
     
     public static func handleLoad() {
         libraryLoaded()
@@ -29,7 +29,7 @@ enum FrameworkLoadHandler {
 
         if config.isInTestMode {
             if config.isTestObserverNeeded && !config.disableTestInstrumenting {
-                testObserver = DDTestObserver()
+                testObserver = DDXCTestObserver()
                 testObserver?.start()
                 DispatchQueue.global().async {
                     try! DDTestMonitor.clock.sync()
@@ -63,7 +63,7 @@ internal func __AutoUnloadHook() {
     FrameworkLoadHandler.libraryUnloaded()
 }
 
-// Don't delete this. It simply tells compiler not to remove AutoLoadHandler from binary
+// Don't delete this. It simply tells compiler to not remove AutoLoadHandler from binary
 // This method can be called from C only. Swift will hide it
 @_cdecl("__load_handler__")
 internal func __load_handler__() {

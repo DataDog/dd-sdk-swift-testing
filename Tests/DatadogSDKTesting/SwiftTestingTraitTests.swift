@@ -70,6 +70,11 @@ struct SwiftTestingTraitTests {
     func testErrorIgnore() async throws {
         throw TestError.test(Testing.Test.current!.name)
     }
+    
+    @Test(arguments: zip([1, 2, 3], ["1", "2", "3"]))
+    func testParameterized(p1: Int, p2: String) async throws {
+        #expect("\(p1)" == p2)
+    }
 }
 
 @Test(.observerTester, .datadogTesting)
@@ -112,8 +117,8 @@ private final class MockSwiftTestingObserver: SwiftTestingObserverType {
 
     func willStart(group: any SwiftTestingRetryGroupContextType) async {
         let suite = group.test.suite.suite as! Mocks.Suite
-        let mGroup = Mocks.Group(name: group.test.info.name, suite: suite, unskippable: false)
-        suite.add(group: mGroup)
+        let group = suite.tests[group.test.info.name] ?? .init(name: group.test.info.name, suite: suite, unskippable: false)
+        suite.add(group: group)
     }
 
     func didFinish(group: any SwiftTestingRetryGroupContextType) async {}
@@ -217,6 +222,7 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
             "testErrorIgnore()": ([.failed], nil),
             "testFuncRetryErrorFail()": (Array(repeating: .failed, count: 5), 1),
             "testFuncRegistration()": ([.passed], nil),
+            "testParameterized(p1:p2:)": (Array(repeating: .passed, count: 3), nil)
         ]
         
         for test in suite {

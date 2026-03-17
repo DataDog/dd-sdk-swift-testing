@@ -86,6 +86,7 @@ protocol SwiftTestingSuiteContextType: Sendable {
     var suite: any TestSuite { get }
     var info: any SwiftTestingTestInfoType { get }
     var observer: any SwiftTestingObserverType { get }
+    var testsCount: Int { get }
     
     func createTest(named: String) -> any TestRun
     
@@ -94,7 +95,11 @@ protocol SwiftTestingSuiteContextType: Sendable {
 }
 
 protocol SwiftTestingSuiteRegistryType: AnyObject, Sendable {
+    var registeredTests: [String: [String: Set<String>]] { get async }
+    
     func register(test: some SwiftTestingTestInfoType) async throws
+    
+    func count(for suite: some SwiftTestingTestInfoType) async -> Int?
     
     func suite(
         virtual test: some SwiftTestingTestInfoType,
@@ -165,11 +170,13 @@ struct SwiftTestingSuiteContext: SwiftTestingSuiteContextType {
     var suite: any TestSuite { _suite }
     let info: any SwiftTestingTestInfoType
     let observer: any SwiftTestingObserverType
+    let testsCount: Int
     
-    init(suite: any TestSuite & TestRunProvider, info: any SwiftTestingTestInfoType, observer: any SwiftTestingObserverType) {
+    init(suite: any TestSuite & TestRunProvider, info: any SwiftTestingTestInfoType, testsCount: Int, observer: any SwiftTestingObserverType) {
         self._suite = suite
         self.info = info
         self.observer = observer
+        self.testsCount = testsCount
     }
     
     func createTest(named: String) -> any TestRun {
@@ -209,10 +216,12 @@ struct SwiftTestingVirtualSuiteContext: SwiftTestingSuiteContextType {
     var suite: any TestSuite { _suite }
     let info: any SwiftTestingTestInfoType
     let observer: any SwiftTestingObserverType
+    let testsCount: Int
    
     init(suite: any TestSuite & TestRunProvider, tests: Set<String>, info: any SwiftTestingTestInfoType,
          observer: any SwiftTestingObserverType, registry: any SwiftTestingSuiteRegistryType)
     {
+        self.testsCount = tests.count
         self._state = .init(tests: tests)
         self._registry = registry
         self._suite = suite
@@ -246,10 +255,18 @@ final class SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
         private var _tests: [String: [String: Set<String>]] = [:]
         private var _suites: [String: [String: any SwiftTestingSuiteContextType]] = [:]
         
+        var registeredTests: [String: [String: Set<String>]] {
+            _tests
+        }
+        
         func register(test: some SwiftTestingTestInfoType) {
-            if !test.isSuite && !test.hasSuite {
+            if !test.isSuite {
                 _tests[test.module, default: [:]][test.suite, default: []].insert(test.name)
             }
+        }
+        
+        func count(for suite: some SwiftTestingTestInfoType) -> Int? {
+            _tests[suite.module]?[suite.suite]?.count
         }
         
         func suite(
@@ -271,44 +288,60 @@ final class SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
     
     actor State {
         private let _provider: any TestSessionProvider
-        private var _module: Task<any TestModule & TestSuiteProvider, any Error>? = nil
+        private var _session: Task<any TestSession & TestModuleProvider, any Error>? = nil
+        private var _modules: [String: any TestModule & TestSuiteProvider] = [:]
         
         init(provider: any TestSessionProvider) {
             self._provider = provider
         }
         
-        func module(or name: @autoclosure () -> String) async throws -> any TestModule & TestSuiteProvider {
-            if let module = _module {
-                return try await module.value
+        func module(name: String) async throws -> any TestModule & TestSuiteProvider {
+            if let module = _modules[name] {
+                return module
             }
-            let named = name()
-            _module = Task { try await self._provider.startSession().startModule(named: named) }
-            return try await _module!.value
+            let session = try await self.activeSession
+            if let module = _modules[name] {
+                return module
+            }
+            let module = session.startModule(named: name)
+            _modules[name] = module
+            return module
+        }
+        
+        var activeSession: any TestSession & TestModuleProvider {
+            get async throws {
+                if let session = _session {
+                    return try await session.value
+                }
+                _session = Task { try await self._provider.startSession() }
+                return try await _session!.value
+            }
         }
     }
     
     let registry: any SwiftTestingSuiteRegistryType
+    let observer: any SwiftTestingObserverType
     private let _state: State
-    private let _observer: any SwiftTestingObserverType
     
     init(provider: any TestSessionProvider, observer: any SwiftTestingObserverType) {
-        self.registry = Registry()
         self._state = .init(provider: provider)
-        self._observer = observer
+        self.registry = Registry()
+        self.observer = observer
     }
     
     func with(suite info: some SwiftTestingTestInfoType,
               performing function: @Sendable (any SwiftTestingSuiteContextType) async throws -> Void) async throws
     {
         let suite = try await self.createSuite(test: info)
-        let context = SwiftTestingSuiteContext(suite: suite, info: info, observer: _observer)
-        await _observer.willStart(suite: context)
+        let count = await registry.count(for: info)
+        let context = SwiftTestingSuiteContext(suite: suite, info: info, testsCount: count ?? 0, observer: observer)
+        await observer.willStart(suite: context)
         
         try await doThrow {
             try await function(context)
         } finally: {
             suite.end()
-            await _observer.didFinish(suite: context)
+            await observer.didFinish(suite: context)
         }
     }
     
@@ -318,16 +351,22 @@ final class SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
         let suite = try await registry.suite(virtual: test) { tests in
             let suite = try await self.createSuite(test: test)
             let context = SwiftTestingVirtualSuiteContext(suite: suite, tests: tests, info: test,
-                                                          observer: _observer, registry: self.registry)
-            await _observer.willStart(suite: context)
+                                                          observer: observer, registry: self.registry)
+            await observer.willStart(suite: context)
             return context
         }
         try await function(suite)
         // We don't end suite. It will end automatically when all tests will be finished
     }
     
+    var session: any TestSession & TestModuleProvider {
+        get async throws {
+            try await _state.activeSession
+        }
+    }
+    
     private func createSuite(test: some SwiftTestingTestInfoType) async throws -> any TestSuite & TestRunProvider {
-        try await self._state.module(or: test.module).startSuite(named: test.suite)
+        try await self._state.module(name: test.module).startSuite(named: test.suite)
     }
 }
 

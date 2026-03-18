@@ -209,11 +209,9 @@ struct SwiftTestingSuiteContext: Sendable {
     }
 }
 
-
 final class SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
     actor Registry: SwiftTestingTestRegistryType {
         private var _tests: [String: [String: Set<String>]] = [:]
-        private var _suites: [String: [String: SwiftTestingSuiteContext]] = [:]
         
         var registeredTests: [String: [String: Set<String>]] {
             _tests
@@ -321,8 +319,7 @@ final class SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
         
         func didEnded(suite: any TestSuite) throws -> Bool {
             guard case .active(let context) = _modules[suite.module.name] else {
-                // throw an error. Wrong state
-                return false
+                throw SwiftTestingRegistryError.moduleAlreadyEnded(name: suite.module.name)
             }
             context.active.removeValue(forKey: suite.name)
             if context.left.isEmpty && context.active.isEmpty {

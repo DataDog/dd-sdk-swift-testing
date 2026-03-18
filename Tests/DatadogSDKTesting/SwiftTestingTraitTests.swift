@@ -4,9 +4,11 @@
  * Copyright 2020-Present Datadog, Inc.
  */
 
-import Testing
 import Foundation
 @testable import DatadogSDKTesting
+
+#if canImport(Testing)
+import Testing
 
 @Suite(.observerTester, .datadogTesting)
 struct SwiftTestingTraitTests {
@@ -244,3 +246,4 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
 private extension Testing.Trait where Self == ObserverTesterTrait {
     static var observerTester: Self { Self() }
 }
+#endif

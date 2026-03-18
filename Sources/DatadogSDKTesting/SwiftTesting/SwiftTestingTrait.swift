@@ -4,8 +4,10 @@
  * Copyright 2020-Present Datadog, Inc.
  */
 
-import Testing
 import Foundation
+
+#if canImport(Testing)
+import Testing
 
 public struct DatadogSwiftTestingTrait: TestTrait, SuiteTrait {
     public typealias TestScopeProvider = DatadogSwiftTestingScopeProvider
@@ -222,3 +224,4 @@ extension DatadogSwiftTestingTrait {
         }
     }
 }
+#endif

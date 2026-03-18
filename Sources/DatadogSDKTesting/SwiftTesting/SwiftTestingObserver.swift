@@ -5,18 +5,18 @@
  */
 
 protocol SwiftTestingObserverType: AnyObject, Sendable {
-    func willStart(suite: any SwiftTestingSuiteContextType) async
-    func didFinish(suite: any SwiftTestingSuiteContextType) async
+    func willStart(suite: borrowing SwiftTestingSuiteContext) async
+    func didFinish(suite: borrowing SwiftTestingSuiteContext) async
     
-    func willStart(test: any SwiftTestingTestContextType) async
-    func didFinish(test: any SwiftTestingTestContextType) async
+    func willStart(test: borrowing SwiftTestingTestContext) async
+    func didFinish(test: borrowing SwiftTestingTestContext) async
     
-    func runGroupConfiguration(test: any SwiftTestingTestContextType) async -> RetryGroupConfiguration
-    func willStart(group: any SwiftTestingRetryGroupContextType) async
-    func didFinish(group: any SwiftTestingRetryGroupContextType) async
+    func runGroupConfiguration(test: borrowing SwiftTestingTestContext) async -> RetryGroupConfiguration
+    func willStart(group: borrowing SwiftTestingRetryGroupContext) async
+    func didFinish(group: borrowing SwiftTestingRetryGroupContext) async
     
-    func willStart(testRun test: any SwiftTestingTestRunContextType) async
-    func shouldSuppressError(for testRun: some SwiftTestingTestRunContextType) -> Bool
-    func willFinish(testRun test: any SwiftTestingTestRunContextType, with status: SwiftTestingTestStatus) async -> SwiftTestingTestRunRetry
-    func didFinish(testRun test: any SwiftTestingTestRunContextType) async
+    func willStart(testRun test: borrowing SwiftTestingTestRunContext) async
+    func shouldSuppressError(for testRun: borrowing SwiftTestingTestRunContext) -> Bool
+    func willFinish(testRun test: borrowing SwiftTestingTestRunContext, with status: SwiftTestingTestStatus) async -> SwiftTestingTestRunRetry
+    func didFinish(testRun test: borrowing SwiftTestingTestRunContext) async
 }

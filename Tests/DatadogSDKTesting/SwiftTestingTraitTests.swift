@@ -94,41 +94,42 @@ private final class MockSwiftTestingSessionProvider: TestSessionProvider {
 }
 
 private final class MockSwiftTestingObserver: SwiftTestingObserverType {
-    func willStart(suite: any SwiftTestingSuiteContextType) async {
+    func willStart(suite: borrowing SwiftTestingSuiteContext) async {
         let session = suite.suite.session as! Mocks.Session
         let module = suite.suite.module as! Mocks.Module
         session.add(module: module)
         module.add(suite: suite.suite as! Mocks.Suite)
     }
 
-    func didFinish(suite: any SwiftTestingSuiteContextType) async {}
+    func didFinish(suite: borrowing SwiftTestingSuiteContext) async {}
 
-    func willStart(test: any SwiftTestingTestContextType) async {}
+    func willStart(test: borrowing SwiftTestingTestContext) async {}
 
-    func didFinish(test: any SwiftTestingTestContextType) async {}
+    func didFinish(test: borrowing SwiftTestingTestContext) async {}
 
-    func runGroupConfiguration(test: any SwiftTestingTestContextType) async -> RetryGroupConfiguration {
+    func runGroupConfiguration(test: borrowing SwiftTestingTestContext) async -> RetryGroupConfiguration {
         if test.info.name.lowercased().contains("skip") {
             return .skip(reason: "skip_test", configuration: .init(skipStatus: .init(canBeSkipped: true, markedUnskippable: false)))
         }
         return .retry(.init(skipStatus: .init(canBeSkipped: false, markedUnskippable: false)))
     }
 
-    func willStart(group: any SwiftTestingRetryGroupContextType) async {
+    func willStart(group: borrowing SwiftTestingRetryGroupContext) async {
         let suite = group.test.suite.suite as! Mocks.Suite
-        let group = suite.tests[group.test.info.name] ?? .init(name: group.test.info.name, suite: suite, unskippable: false)
-        suite.add(group: group)
+        let testName = group.test.info.name
+        let testGroup = suite.tests[testName] ?? .init(name: testName, suite: suite, unskippable: false)
+        suite.add(group: testGroup)
     }
 
-    func didFinish(group: any SwiftTestingRetryGroupContextType) async {}
+    func didFinish(group: borrowing SwiftTestingRetryGroupContext) async {}
 
-    func willStart(testRun test: any SwiftTestingTestRunContextType) async {
+    func willStart(testRun test: borrowing SwiftTestingTestRunContext) async {
         let suite = test.test.suite as! Mocks.Suite
         let group = suite.tests[test.test.name]!
         group.add(run: test.test as! Mocks.Test)
     }
 
-    func shouldSuppressError(for testRun: some SwiftTestingTestRunContextType) -> Bool {
+    func shouldSuppressError(for testRun: borrowing SwiftTestingTestRunContext) -> Bool {
         let name = testRun.info.name.lowercased()
         if name.contains("ignore") || name.contains("retry") {
             return true
@@ -136,7 +137,7 @@ private final class MockSwiftTestingObserver: SwiftTestingObserverType {
         return false
     }
 
-    func willFinish(testRun test: any SwiftTestingTestRunContextType, with status: SwiftTestingTestStatus) async -> SwiftTestingTestRunRetry {
+    func willFinish(testRun test: borrowing SwiftTestingTestRunContext, with status: SwiftTestingTestStatus) async -> SwiftTestingTestRunRetry {
         let suite = test.test.suite as! Mocks.Suite
         let group = suite.tests[test.test.name]!
         let count = group.runs.count
@@ -148,7 +149,7 @@ private final class MockSwiftTestingObserver: SwiftTestingObserverType {
         return count < 5 ? .retry(.retry(reason: "retry_test", errors: .suppressed(reason: "retry_test"))) : .retry(.end(errors: ignore))
     }
 
-    func didFinish(testRun test: any SwiftTestingTestRunContextType) async {}
+    func didFinish(testRun test: borrowing SwiftTestingTestRunContext) async {}
 }
 
 private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {

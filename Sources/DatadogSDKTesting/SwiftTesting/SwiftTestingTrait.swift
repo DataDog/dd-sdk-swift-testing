@@ -130,8 +130,8 @@ public struct DatadogSwiftTestingScopeProvider: TestScoping {
         }
     }
     
-    @TaskLocal static var datadogSuite: (any SwiftTestingSuiteContextType)? = nil
-    @TaskLocal static var datadogTest: (any SwiftTestingTestContextType)? = nil
+    @TaskLocal static var datadogSuite: SwiftTestingSuiteContext? = nil
+    @TaskLocal static var datadogTest: SwiftTestingTestContext? = nil
 }
 
 

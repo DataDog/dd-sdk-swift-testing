@@ -94,6 +94,13 @@ private final class MockSwiftTestingSessionProvider: TestSessionProvider {
 }
 
 private final class MockSwiftTestingObserver: SwiftTestingObserverType {
+    func willStart(module: any TestModule) async {}
+    
+    func didFinish(module: any TestModule) async {
+        // Cleanup
+        DatadogSwiftTestingTrait.sharedSuiteProvider = nil
+    }
+    
     func willStart(suite: borrowing SwiftTestingSuiteContext) async {
         let session = suite.suite.session as! Mocks.Session
         let module = suite.suite.module as! Mocks.Module
@@ -163,10 +170,6 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
     }
     
     func provideScope(for test: Testing.Test, testCase: Testing.Test.Case?, performing function: @Sendable () async throws -> Void) async throws {
-        defer {
-            DatadogSwiftTestingTrait.sharedSuiteProvider = nil
-        }
-        
         let issues: Synced<[String: Int]> = .init([:])
         try await withKnownIssue(isIntermittent: true) {
             try await function()
@@ -201,6 +204,7 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
         }
         
         let suiteProvider = try #require(DatadogSwiftTestingTrait.sharedSuiteProvider as? SwiftTestingSuiteProvider)
+        
         let tests = await suiteProvider.registry.registeredTests
         let suite = try #require(tests[test.module]?[test.suite])
         
@@ -225,7 +229,10 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
             "testParameterized(p1:p2:)": (Array(repeating: .passed, count: 3), nil)
         ]
         
-        for test in suite {
+        // If we have a suite we should check for all tests.
+        // If we have function we need check only for function, scope will be called for each
+        let testsList = test.isSuite ? suite : [test.name]
+        for test in testsList {
             let expect = try #require(expected[test])
             let status = try #require(statuses[test]).runs.map { $0.status }
             #expect(status == expect.status.map { $0.testStatus })

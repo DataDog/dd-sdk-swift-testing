@@ -5,6 +5,9 @@
  */
 
 protocol SwiftTestingObserverType: AnyObject, Sendable {
+    func willStart(module: any TestModule) async
+    func didFinish(module: any TestModule) async
+    
     func willStart(suite: borrowing SwiftTestingSuiteContext) async
     func didFinish(suite: borrowing SwiftTestingSuiteContext) async
     

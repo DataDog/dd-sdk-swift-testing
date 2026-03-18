@@ -54,7 +54,7 @@ protocol SwiftTestingTestRegistryType: AnyObject, Sendable {
     func suites(for module: String) async throws -> Set<String>
 }
 
-protocol SwiftTestingSuiteProviderType: AnyObject, Sendable {
+protocol SwiftTestingSuiteProviderType: Sendable {
     var registry: any SwiftTestingTestRegistryType { get }
     
     func with(suite: some SwiftTestingTestInfoType,
@@ -209,7 +209,7 @@ struct SwiftTestingSuiteContext: Sendable {
     }
 }
 
-final class SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
+struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
     actor Registry: SwiftTestingTestRegistryType {
         private var _tests: [String: [String: Set<String>]] = [:]
         
@@ -269,6 +269,7 @@ final class SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
         private var _modules: [String: ModuleState] = [:]
         
         nonisolated let registry: Registry
+        nonisolated let observer: any SwiftTestingObserverType
         
         var activeSession: any TestSession & TestModuleProvider {
             get async throws {
@@ -280,9 +281,10 @@ final class SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
             }
         }
         
-        init(provider: any TestSessionProvider, registry: Registry) {
+        init(provider: any TestSessionProvider, observer: any SwiftTestingObserverType, registry: Registry) {
             self._provider = provider
             self.registry = registry
+            self.observer = observer
         }
         
         func module(name: String) async throws -> ModuleContext {
@@ -301,6 +303,7 @@ final class SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
             let module = session.startModule(named: name)
             let context = ModuleContext(module: module, left: suites)
             _modules[name] = .active(context)
+            await observer.willStart(module: context.module)
             return context
         }
         
@@ -332,12 +335,11 @@ final class SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
     }
     
     var registry: any SwiftTestingTestRegistryType { _state.registry }
-    let observer: any SwiftTestingObserverType
+    var observer: any SwiftTestingObserverType { _state.observer }
     private let _state: State
     
     init(provider: any TestSessionProvider, observer: any SwiftTestingObserverType) {
-        self._state = .init(provider: provider, registry: Registry())
-        self.observer = observer
+        self._state = .init(provider: provider, observer: observer, registry: Registry())
     }
     
     func with(suite info: some SwiftTestingTestInfoType,
@@ -378,6 +380,7 @@ final class SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
                 await observer.didFinish(suite: context)
                 if try await _state.didEnded(suite: context.suite) {
                     context.suite.module.end()
+                    await observer.didFinish(module: context.suite.module)
                 }
             }
         }

@@ -5,6 +5,8 @@
  */
 
 protocol SwiftTestingObserverType: AnyObject, Sendable {
+    func willStart(session: any TestSession, with config: SessionConfig) async
+    
     func willStart(module: any TestModule) async
     func didFinish(module: any TestModule) async
     
@@ -22,4 +24,51 @@ protocol SwiftTestingObserverType: AnyObject, Sendable {
     func shouldSuppressError(for testRun: borrowing SwiftTestingTestRunContext) -> Bool
     func willFinish(testRun test: borrowing SwiftTestingTestRunContext, with status: SwiftTestingTestStatus) async -> SwiftTestingTestRunRetry
     func didFinish(testRun test: borrowing SwiftTestingTestRunContext) async
+}
+
+final class NoopSwiftTestingObserver: SwiftTestingObserverType {
+    func willStart(session: any TestSession, with config: SessionConfig) async {
+    }
+    
+    func willStart(module: any TestModule) async {
+    }
+    
+    func didFinish(module: any TestModule) async {
+    }
+    
+    func willStart(suite: borrowing SwiftTestingSuiteContext) async {
+    }
+    
+    func didFinish(suite: borrowing SwiftTestingSuiteContext) async {
+    }
+    
+    func willStart(test: borrowing SwiftTestingTestContext) async {
+    }
+    
+    func didFinish(test: borrowing SwiftTestingTestContext) async {
+    }
+    
+    func runGroupConfiguration(test: borrowing SwiftTestingTestContext) async -> RetryGroupConfiguration {
+        .retry(.init())
+    }
+    
+    func willStart(group: borrowing SwiftTestingRetryGroupContext) async {
+    }
+    
+    func didFinish(group: borrowing SwiftTestingRetryGroupContext) async {
+    }
+    
+    func willStart(testRun test: borrowing SwiftTestingTestRunContext) async {
+    }
+    
+    func shouldSuppressError(for testRun: borrowing SwiftTestingTestRunContext) -> Bool {
+        false
+    }
+    
+    func willFinish(testRun test: borrowing SwiftTestingTestRunContext, with status: SwiftTestingTestStatus) async -> SwiftTestingTestRunRetry {
+        .retry(.end(errors: .unsuppressed))
+    }
+    
+    func didFinish(testRun test: borrowing SwiftTestingTestRunContext) async {
+    }
 }

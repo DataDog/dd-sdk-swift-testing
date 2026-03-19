@@ -6,6 +6,7 @@
 
 import Foundation
 internal import OpenTelemetryApi
+internal import SigmaSwiftStatistics
 
 protocol TestModel: AnyObject, Sendable {
     var id: SpanId { get }
@@ -31,16 +32,18 @@ extension TestContainer {
 }
 
 protocol TestSession: TestContainer {
-    var testFramework: String { get }
+    var testFrameworks: Set<String> { get }
     func nextTestIndex() -> UInt
 }
 
 protocol TestSessionProvider: Sendable {
-    func startSession() async throws -> any TestSession & TestModuleProvider
+    func startSession() async throws -> (session: any TestSession & TestModuleProvider,
+                                         config: SessionConfig)
 }
 
 protocol TestModule: TestContainer {
     var session: any TestSession { get }
+    var testFrameworks: Set<String> { get }
     var localization: String { get }
 }
 
@@ -52,10 +55,11 @@ protocol TestSuite: TestContainer {
     var session: any TestSession { get }
     var module: any TestModule { get }
     var localization: String { get }
+    var testFramework: String { get }
 }
 
 protocol TestSuiteProvider: Sendable {
-    func startSuite(named: String) -> any TestSuite & TestRunProvider
+    func startSuite(named: String, framework: String) -> any TestSuite & TestRunProvider
 }
 
 protocol TestRunProvider: Sendable {
@@ -158,6 +162,56 @@ extension TestModel {
             self.set(metric: key, value: Double(value))
         } else if let value = value as? SpanAttributeConvertible {
             self.set(tag: key, value: value)
+        }
+    }
+}
+
+extension TestRun {
+    func add(benchmark name: String, samples: [Double], info: String?) {
+        set(tag:  DDTestTags.testType, value: DDTagValues.typeBenchmark)
+
+        let tag = DDBenchmarkTags.benchmark + "." + name + "."
+
+        if let benchmarkInfo = info {
+            self.set(tag: tag + DDBenchmarkTags.benchmarkInfo, value: benchmarkInfo)
+        }
+        set(metric: tag + DDBenchmarkTags.benchmarkRun, value: Double(samples.count))
+        set(metric: tag + DDBenchmarkTags.statisticsN, value: Double(samples.count))
+        if let average = Sigma.average(samples) {
+            set(metric: tag + DDBenchmarkTags.benchmarkMean, value: average)
+        }
+        if let max = Sigma.max(samples) {
+            set(metric: tag + DDBenchmarkTags.statisticsMax, value: max)
+        }
+        if let min = Sigma.min(samples) {
+            set(metric: tag + DDBenchmarkTags.statisticsMin, value: min)
+        }
+        if let mean = Sigma.average(samples) {
+            set(metric: tag + DDBenchmarkTags.statisticsMean, value: mean)
+        }
+        if let median = Sigma.median(samples) {
+            set(metric: tag + DDBenchmarkTags.statisticsMedian, value: median)
+        }
+        if let stdDev = Sigma.standardDeviationSample(samples) {
+            set(metric: tag + DDBenchmarkTags.statisticsStdDev, value: stdDev)
+        }
+        if let stdErr = Sigma.standardErrorOfTheMean(samples) {
+            set(metric: tag + DDBenchmarkTags.statisticsStdErr, value: stdErr)
+        }
+        if let kurtosis = Sigma.kurtosisA(samples), kurtosis.isFinite {
+            set(metric: tag + DDBenchmarkTags.statisticsKurtosis, value: kurtosis)
+        }
+        if let skewness = Sigma.skewnessA(samples), skewness.isFinite {
+            set(metric: tag + DDBenchmarkTags.statisticsSkewness, value: skewness)
+        }
+        if let percentile99 = Sigma.percentile(samples, percentile: 0.99) {
+            set(metric: tag + DDBenchmarkTags.statisticsP99, value: percentile99)
+        }
+        if let percentile95 = Sigma.percentile(samples, percentile: 0.95) {
+            set(metric: tag + DDBenchmarkTags.statisticsP95, value: percentile95)
+        }
+        if let percentile90 = Sigma.percentile(samples, percentile: 0.90) {
+            set(metric: tag + DDBenchmarkTags.statisticsP90, value: percentile90)
         }
     }
 }

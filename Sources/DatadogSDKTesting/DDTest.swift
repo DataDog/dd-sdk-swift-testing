@@ -37,7 +37,7 @@ public final class Test: NSObject {
             DDTestTags.testName: name,
             DDTestTags.testSuite: suite.name,
             DDTestTags.testModule: suite.module.name,
-            DDTestTags.testFramework: suite.session.testFramework,
+            DDTestTags.testFramework: suite.testFramework,
             DDTestTags.testType: DDTagValues.typeTest,
             DDTestTags.testIsUITest: "false",
             DDTestSuiteVisibilityTags.testSessionId: suite.session.id.hexString,
@@ -49,7 +49,7 @@ public final class Test: NSObject {
         
         self.startTime = testStartTime
 
-        span = DDTestMonitor.tracer.startSpan(name: "\(suite.session.testFramework).test",
+        span = DDTestMonitor.tracer.startSpan(name: "\(suite.testFramework).test",
                                               attributes: attributes,
                                               startTime: testStartTime)
         span.setAttribute(key: DDTestTags.testExecutionOrder, value: Int(currentTestExecutionOrder))
@@ -161,51 +161,7 @@ public final class Test: NSObject {
     ///   - samples: Array for values sampled for the measure
     ///   - info: (Optional) Extra information about the benchmark
     @objc func addBenchmarkData(name: String, samples: [Double], info: String?) {
-        span.setAttribute(key: DDTestTags.testType, value: DDTagValues.typeBenchmark)
-
-        let tag = DDBenchmarkTags.benchmark + "." + name + "."
-
-        if let benchmarkInfo = info {
-            span.setAttribute(key: tag + DDBenchmarkTags.benchmarkInfo, value: benchmarkInfo)
-        }
-        span.setAttribute(key: tag + DDBenchmarkTags.benchmarkRun, value: samples.count)
-        span.setAttribute(key: tag + DDBenchmarkTags.statisticsN, value: samples.count)
-        if let average = Sigma.average(samples) {
-            span.setAttribute(key: tag + DDBenchmarkTags.benchmarkMean, value: average)
-        }
-        if let max = Sigma.max(samples) {
-            span.setAttribute(key: tag + DDBenchmarkTags.statisticsMax, value: max)
-        }
-        if let min = Sigma.min(samples) {
-            span.setAttribute(key: tag + DDBenchmarkTags.statisticsMin, value: min)
-        }
-        if let mean = Sigma.average(samples) {
-            span.setAttribute(key: tag + DDBenchmarkTags.statisticsMean, value: mean)
-        }
-        if let median = Sigma.median(samples) {
-            span.setAttribute(key: tag + DDBenchmarkTags.statisticsMedian, value: median)
-        }
-        if let stdDev = Sigma.standardDeviationSample(samples) {
-            span.setAttribute(key: tag + DDBenchmarkTags.statisticsStdDev, value: stdDev)
-        }
-        if let stdErr = Sigma.standardErrorOfTheMean(samples) {
-            span.setAttribute(key: tag + DDBenchmarkTags.statisticsStdErr, value: stdErr)
-        }
-        if let kurtosis = Sigma.kurtosisA(samples), kurtosis.isFinite {
-            span.setAttribute(key: tag + DDBenchmarkTags.statisticsKurtosis, value: kurtosis)
-        }
-        if let skewness = Sigma.skewnessA(samples), skewness.isFinite {
-            span.setAttribute(key: tag + DDBenchmarkTags.statisticsSkewness, value: skewness)
-        }
-        if let percentile99 = Sigma.percentile(samples, percentile: 0.99) {
-            span.setAttribute(key: tag + DDBenchmarkTags.statisticsP99, value: percentile99)
-        }
-        if let percentile95 = Sigma.percentile(samples, percentile: 0.95) {
-            span.setAttribute(key: tag + DDBenchmarkTags.statisticsP95, value: percentile95)
-        }
-        if let percentile90 = Sigma.percentile(samples, percentile: 0.90) {
-            span.setAttribute(key: tag + DDBenchmarkTags.statisticsP90, value: percentile90)
-        }
+        add(benchmark: name, samples: samples, info: info)
     }
     
     /// Current active test
@@ -232,10 +188,6 @@ extension Test: TestRun {
     
     func add(error: TestError) {
         setErrorInfo(type: error.type, message: error.message ?? "", callstack: error.stack)
-    }
-    
-    func add(benchmark name: String, samples: [Double], info: String?) {
-        addBenchmarkData(name: name, samples: samples, info: info)
     }
     
     func end(status: TestStatus, time: Date?) {
@@ -267,6 +219,10 @@ extension Test {
         DDCrashes.setCurrent(spanData: nil)
         DDTestMonitor.instance?.currentTest = nil
     }
+}
+
+extension TestRun {
+    
 }
 
 private struct ErrorInfo {

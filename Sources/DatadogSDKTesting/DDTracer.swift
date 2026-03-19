@@ -60,7 +60,13 @@ internal class DDTracer {
         }
 
         // sync clock
-        try! DDTestMonitor.clock.sync()
+        waitForAsync {
+            do {
+                try await DDTestMonitor.clock.sync()
+            } catch {
+                DDTestMonitor.clock = DateClock()
+            }
+        }
         
         tracerProviderSdk = TracerProviderBuilder().with(sampler: Samplers.alwaysOn)
             .with(spanLimits: SpanLimits().settingAttributeCountLimit(attributeCountLimit))

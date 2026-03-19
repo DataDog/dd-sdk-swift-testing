@@ -9,6 +9,7 @@ internal import CDatadogSDKTesting
 
 enum FrameworkLoadHandler {
     static var testObserver: DDXCTestObserver?
+    static var sessionProvider: (any TestSessionProvider)?
     
     public static func handleLoad() {
         libraryLoaded()
@@ -29,11 +30,16 @@ enum FrameworkLoadHandler {
 
         if config.isInTestMode {
             if config.isTestObserverNeeded && !config.disableTestInstrumenting {
-                testObserver = DDXCTestObserver()
+                let session = SessionBootstrapper(log: Log.instance)
+                sessionProvider = session
+                
+                
+                testObserver = DDXCTestObserver(sessionProvider: session)
                 testObserver?.start()
-                DispatchQueue.global().async {
-                    try! DDTestMonitor.clock.sync()
-                }
+                
+                DatadogSwiftTestingTrait.sharedSuiteProvider = SwiftTestingSuiteProvider(provider: session,
+                                                                                         observer: NoopSwiftTestingObserver())
+                Task.detached { try? await DDTestMonitor.clock.sync() }
             } else if config.isBinaryUnderUITesting {
                 print("note: [DatadogSDKTesting] Application launched from UITest while being instrumented")
                 DDTestMonitor.instance = DDTestMonitor()

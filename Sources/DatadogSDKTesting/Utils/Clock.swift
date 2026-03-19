@@ -9,10 +9,10 @@ internal import Kronos
 internal import OpenTelemetrySdk
 
 protocol Clock: OpenTelemetrySdk.Clock {
-    func sync() throws
+    func sync() async throws
 }
 
-final class NTPClock: Clock {
+final class NTPClock: Clock, Sendable {
     /// List of Datadog NTP pools.
     static let datadogNTPServers = [
         "0.datadog.pool.ntp.org",
@@ -21,29 +21,11 @@ final class NTPClock: Clock {
         "3.datadog.pool.ntp.org"
     ]
     
-    final class RunLoopWaiter {
-        private let _sema: DispatchSemaphore = DispatchSemaphore(value: 0)
-        private var _locked: Bool = true
-        
-        func wait() {
-            if Thread.isMainThread {
-                while _locked { CFRunLoopRunInMode(.defaultMode, 0, true) }
-            } else {
-                _sema.wait()
-                _sema.signal() // So other threads who are waiting can wake up
-            }
-        }
-        
-        func signal() {
-            _locked = false
-            _sema.signal()
-        }
-    }
-    
     enum State {
         case nonsynced
         case synced(() -> Date)
-        case syncing(RunLoopWaiter)
+        case syncing(Task<Void, any Error>)
+        case failed
         
         func now() throws -> Date {
             switch self {
@@ -53,41 +35,39 @@ final class NTPClock: Clock {
         }
     }
     
-    private var _state: Synced<State> = Synced(.nonsynced)
+    private let _state: Synced<State> = Synced(.nonsynced)
     
-    func sync() throws {
-        _state.update { state -> RunLoopWaiter? in
+    func sync() async throws {
+        let task = _state.update { state -> Task<Void, any Error>? in
             switch state {
             case .synced(_): return nil
-            case .syncing(let w): return w
-            case .nonsynced:
-                let waiter = RunLoopWaiter()
-                state = .syncing(waiter)
-                
-                if Thread.isMainThread {
-                    self._sync(waiter: waiter)
-                } else {
-                    DispatchQueue.main.async { self._sync(waiter: waiter) }
+            case .syncing(let task): return task
+            case .nonsynced, .failed:
+                let task = Task.detached { @MainActor in
+                    try await withUnsafeThrowingContinuation { cont in
+                        self._sync(continuation: cont)
+                    }
                 }
-                
-                return waiter
+                state = .syncing(task)
+                return task
             }
-        }?.wait()
+        }
+        try await task?.value
     }
     
     // Should be called on the main thread
-    private func _sync(waiter: RunLoopWaiter) {
+    private func _sync(continuation: UnsafeContinuation<Void, any Error>) {
         Kronos.Clock.sync(
             from: Self.datadogNTPServers.randomElement()!,
             samples: 2, first: nil
         ) { date, _ in
             if date != nil {
                 self._state.update { $0 = .synced({ Kronos.Clock.now! }) }
+                continuation.resume()
             } else {
-                self._state.update { $0 = .synced({ Date() }) }
-                Log.print("NTP server sync failed")
+                self._state.update { $0 = .failed }
+                continuation.resume(throwing: InternalError(description: "NTP server sync failed"))
             }
-            waiter.signal()
         }
     }
 
@@ -95,7 +75,7 @@ final class NTPClock: Clock {
 }
 
 final class DateClock: Clock {
-    func sync() throws {}
+    func sync() async {}
     
     var now: Date { Date() }
 }

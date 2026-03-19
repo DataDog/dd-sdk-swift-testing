@@ -9,22 +9,26 @@ internal import OpenTelemetryApi
 
 @objc(DDTestSuite)
 public final class Suite: NSObject, Encodable {
+    private let _module: Module
     let name: String
-    let module: TestModule
+    var module: TestModule { _module }
     let id: SpanId
     let startTime: Date
     var duration: UInt64
     var meta: [String: String] = [:]
     var metrics: [String: Double] = [:]
     var status: TestStatus
+    var testFramework: String
     var localization: String
 
-    init(name: String, module: TestModule, startTime: Date? = nil) {
+    init(name: String, module: Module, framework: String, startTime: Date? = nil) {
         self.name = name
-        self.module = module
+        self._module = module
         self.startTime = DDTestMonitor.instance?.crashedModuleInfo?.suiteStartTime ?? startTime ?? DDTestMonitor.clock.now
         self.duration = 0
         self.status = .pass
+        self.testFramework = framework
+        module.addFramework(framework)
 
         if DDTestMonitor.instance?.crashedModuleInfo?.crashedSuiteName == name {
             self.id = DDTestMonitor.instance?.crashedModuleInfo?.crashedSuiteId ?? SpanId.random()
@@ -49,7 +53,7 @@ public final class Suite: NSObject, Encodable {
             DDGenericTags.type: DDTagValues.typeSuiteEnd,
             DDTestTags.testSuite: name,
             DDTestTags.testModule: module.name,
-            DDTestTags.testFramework: module.session.testFramework,
+            DDTestTags.testFramework: testFramework,
             DDTestTags.testStatus: status.spanAttribute,
             DDTestSuiteVisibilityTags.testSessionId: String(session.id.rawValue),
             DDTestSuiteVisibilityTags.testModuleId: String(module.id.rawValue),
@@ -155,7 +159,7 @@ extension Suite {
         try container.encode(meta, forKey: .meta)
         try container.encode(metrics, forKey: .metrics)
         try container.encode(status == .fail ? 1 : 0, forKey: .error)
-        try container.encode("\(session.testFramework).suite", forKey: .name)
+        try container.encode("\(testFramework).suite", forKey: .name)
         try container.encode("\(name)", forKey: .resource)
         try container.encode(DDTestMonitor.env.service, forKey: .service)
     }

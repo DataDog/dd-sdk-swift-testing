@@ -12,54 +12,39 @@ public final class Session: NSObject, Encodable {
     let id: SpanId
     let name: String
     let startTime: Date
+    let configuration: SessionConfig
     public var resource: String
-    public var testFramework: String
+    public private(set) var testFrameworks: Set<String>
     var duration: UInt64
     var meta: [String: String] = [:]
     var metrics: [String: Double] = [:]
     var status: TestStatus
+    
     
     private var _testRunsCount: Synced<UInt> = Synced(0)
     var testRunsCount: UInt { _testRunsCount.value }
     
     var configError: Bool = false
     
-    init(name: String, command: String? = nil, startTime: Date? = nil) {
+    init(name: String, config: SessionConfig, command: String? = nil, startTime: Date? = nil) {
         self.duration = 0
         self.status = .pass
         self.name = name
-        self.testFramework = "Swift API"
+        self.testFrameworks = []
         self.resource = name
+        self.configuration = config
         
         self.meta[DDTestTags.testCommand] = command
         
-        try! DDTestMonitor.clock.sync()
-
-        let beforeLoadingTime = DDTestMonitor.clock.now
-        // TODO: Move it from the session init
-        if DDTestMonitor.instance == nil {
-            var success = false
-            Log.measure(name: "installTestMonitor") {
-                success = DDTestMonitor.installTestMonitor()
-            }
-            if !success {
-                configError = true
-            }
-        }
-        Log.debug("Install Test monitor time interval: \(DDTestMonitor.clock.now.timeIntervalSince(beforeLoadingTime))")
-        
-        DDTestMonitor.instance?.setupCrashHandler()
-        
-        let sessionStartTime = startTime ?? beforeLoadingTime
-        if let crashedModuleInfo = DDTestMonitor.instance?.crashedModuleInfo {
+        let sessionStartTime = startTime ?? config.clock.now
+        if let crash = config.crash {
             self.status = .fail
-            self.id = crashedModuleInfo.crashedSessionId
-            self.startTime = crashedModuleInfo.sessionStartTime ?? sessionStartTime
+            self.id = crash.crashedSessionId
+            self.startTime = crash.sessionStartTime ?? sessionStartTime
         } else {
             self.id = SpanId.random()
             self.startTime = sessionStartTime
         }
-        Log.debug("Session loading time interval: \(DDTestMonitor.clock.now.timeIntervalSince(beforeLoadingTime))")
     }
     
     private func internalEnd(endTime: Date? = nil) {
@@ -69,7 +54,7 @@ public final class Session: NSObject, Encodable {
         /// Export session event
         let sessionAttributes: [String: String] = [
             DDGenericTags.type: DDTagValues.typeSessionEnd,
-            DDTestTags.testFramework: testFramework,
+            DDTestTags.testFramework: testFrameworks.joined(separator: ","),
             DDTestTags.testStatus: sessionStatus,
             DDTestSuiteVisibilityTags.testSessionId: String(id.rawValue),
         ]
@@ -85,6 +70,10 @@ public final class Session: NSObject, Encodable {
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: SessionEnvelope(self))
         Log.debug("Exported session_end event sessionId: \(self.id)")
         DDTestMonitor.tracer.flush()
+    }
+    
+    func addFramework(_ name: String) {
+        testFrameworks.insert(name)
     }
 }
 
@@ -129,13 +118,14 @@ public extension Session {
     ///   - command: Optional, test command that started this session
     ///   - startTime: Optional, the time where the session started
     @objc static func start(name: String, command: String? = nil, startTime: Date? = nil) -> Session {
-        return Session(name: name, command: command, startTime: startTime)
+        let config = SessionConfig(activeFeatures: [], clock: DDTestMonitor.clock, crash: nil)
+        return Session(name: name, config: config, command: command, startTime: startTime)
     }
 
     @objc static func start(name: String) -> Session {
         return start(name: name, command: nil)
     }
-
+    
     /// Ends the session
     /// - Parameters:
     ///   - endTime: Optional, the time where the session ended

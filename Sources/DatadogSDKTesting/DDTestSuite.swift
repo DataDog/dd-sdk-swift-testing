@@ -124,6 +124,12 @@ extension Suite: TestSuite {
     func end(time: Date?) { end(endTime: time) }
 }
 
+extension Suite: TestRunProvider {
+    func startTest(named: String) -> any TestRun {
+        testStart(name: named)
+    }
+}
+
 extension Suite {
     enum StaticCodingKeys: String, CodingKey {
         case test_session_id

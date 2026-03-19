@@ -47,7 +47,7 @@ enum Mocks {
         }
     }
     
-    final class Session: TestBase, TestSession, Hashable, Equatable, CustomDebugStringConvertible {
+    final class Session: TestBase, TestSession, TestModuleProvider, Hashable, Equatable, CustomDebugStringConvertible {
         var testIndex: UInt = 0
         var testFramework: String = ""
         
@@ -80,9 +80,13 @@ enum Mocks {
             hasher.combine(id)
             hasher.combine(name)
         }
+        
+        func startModule(named: String) -> any TestModule & TestSuiteProvider {
+            Mocks.Module(name: named, session: self)
+        }
     }
     
-    final class Module: TestBase, TestModule, Hashable, Equatable, CustomDebugStringConvertible {
+    final class Module: TestBase, TestModule, TestSuiteProvider, Hashable, Equatable, CustomDebugStringConvertible {
         weak var _session: Session?
         var session: any TestSession { _session! }
         var localization: String = ""
@@ -117,9 +121,13 @@ enum Mocks {
             hasher.combine(name)
             hasher.combine(_session)
         }
+        
+        func startSuite(named: String) -> any TestRunProvider & TestSuite {
+            Mocks.Suite(name: named, module: self)
+        }
     }
     
-    final class Suite: TestBase, TestSuite, Hashable, Equatable, CustomDebugStringConvertible {
+    final class Suite: TestBase, TestSuite, TestRunProvider, Hashable, Equatable, CustomDebugStringConvertible {
         weak var _module: Module?
         var module: any TestModule { _module! }
         var localization: String = ""
@@ -155,6 +163,10 @@ enum Mocks {
             hasher.combine(id)
             hasher.combine(name)
             hasher.combine(_module)
+        }
+        
+        func startTest(named: String) -> any TestRun {
+            Mocks.Test(name: named, suite: self)
         }
     }
     

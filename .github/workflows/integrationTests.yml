@@ -12,10 +12,6 @@ jobs:
       fail-fast: false
       matrix:
         env:
-          - xcode: "Xcode_16.2"
-            os: "macos-14"
-            iossim: "iPhone 16"
-            tvossim: "Apple TV"
           - xcode: "Xcode_16.4"
             os: "macos-15"
             iossim: "iPhone 16"
@@ -49,10 +45,6 @@ jobs:
       fail-fast: false
       matrix:
         env:
-          - xcode: "Xcode_16.2"
-            os: "macos-14"
-            iossim: "iPhone 16"
-            tvossim: "Apple TV"
           - xcode: "Xcode_16.4"
             os: "macos-15"
             iossim: "iPhone 16"

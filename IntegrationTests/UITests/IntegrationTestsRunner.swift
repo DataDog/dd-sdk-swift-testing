@@ -6,7 +6,6 @@
 
 internal import OpenTelemetryApi
 internal import OpenTelemetrySdk
-@testable import DatadogSDKTesting
 import XCTest
 
 class IntegrationTestsRunner: XCTestCase {

@@ -12,9 +12,9 @@ class DDXCTestObserver: NSObject, XCTestObservation {
     private(set) var state: State
     private var observers: [NSObjectProtocol]
 
-    init(sessionProvider: any TestSessionProvider) {
+    init(session: any TestSessionManager) {
         XCUIApplication.swizzleMethods
-        state = .start(sessionProvider)
+        state = .start(session)
         observers = []
         super.init()
     }
@@ -42,7 +42,7 @@ class DDXCTestObserver: NSObject, XCTestObservation {
     }
 
     func testBundleWillStart(_ testBundle: Bundle) {
-        guard case .start(let provider) = state else {
+        guard case .start(let manager) = state else {
             Log.print("testBundleWillStart: Bad observer state: \(state), expected: .none")
             return
         }
@@ -51,7 +51,7 @@ class DDXCTestObserver: NSObject, XCTestObservation {
         
         do {
             let session = try waitForAsync {
-                try await provider.startSession()
+                try await (session: manager.session, config: manager.sessionConfig)
             }
             state = .module(session.session.startModule(named: bundleName), config: session.config)
             Log.debug("testBundleWillStart: \(bundleName)")
@@ -370,7 +370,7 @@ class DDXCTestObserver: NSObject, XCTestObservation {
 
 extension DDXCTestObserver {
     enum State {
-        case start(any TestSessionProvider)
+        case start(any TestSessionManager)
         case startError(any Error)
         case end
         case module(any TestModule & TestSuiteProvider, config: SessionConfig)

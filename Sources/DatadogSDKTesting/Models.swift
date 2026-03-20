@@ -36,9 +36,23 @@ protocol TestSession: TestContainer {
     func nextTestIndex() -> UInt
 }
 
+protocol TestSessionManagerObserver: Sendable, Identifiable<ObjectIdentifier> {
+    func willStart(session: any TestSession, with config: SessionConfig) async
+    func didFinish(session: any TestSession, with config: SessionConfig) async
+}
+
 protocol TestSessionProvider: Sendable {
-    func startSession() async throws -> (session: any TestSession & TestModuleProvider,
-                                         config: SessionConfig)
+    func startSession(named: String, config: SessionConfig, startTime: Date) async throws -> any TestSession & TestModuleProvider
+}
+
+protocol TestSessionManager: Sendable {
+    var session: any TestSession & TestModuleProvider { get async throws }
+    var sessionConfig: SessionConfig { get async throws }
+    
+    func add(observer: any TestSessionManagerObserver) async
+    func remove(observer: any TestSessionManagerObserver) async
+    
+    func stop() async
 }
 
 protocol TestModule: TestContainer {
@@ -134,6 +148,13 @@ struct TestError {
         self.stack = stack
         self.crashLog = crashLog
     }
+}
+
+struct SessionConfig {
+    let activeFeatures: [any TestHooksFeature]
+    let clock: Clock
+    let crash: CrashedModuleInformation?
+    let command: String?
 }
 
 extension TestModel {

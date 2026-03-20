@@ -13,14 +13,15 @@ enum Mocks {
     class TestBase: TestContainer {
         var id: SpanId = .random()
         var name: String
-        var startTime: Date = Date()
+        var startTime: Date
         var duration: UInt64 = 0
         var status: TestStatus = .pass
         var tags: [String: String] = [:]
         var metrics: [String: Double] = [:]
         
-        init(name: String) {
+        init(name: String, startTime: Date = Date()) {
             self.name = name
+            self.startTime = startTime
         }
         
         func set(failed reason: TestError?) {
@@ -49,7 +50,7 @@ enum Mocks {
     
     final class Session: TestBase, TestSession, TestModuleProvider, Hashable, Equatable, CustomDebugStringConvertible {
         var testIndex: UInt = 0
-        var testFramework: String = ""
+        var testFrameworks: Set<String> = []
         
         var modules: [String: Module] = [:]
         
@@ -84,11 +85,20 @@ enum Mocks {
         func startModule(named: String) -> any TestModule & TestSuiteProvider {
             Mocks.Module(name: named, session: self)
         }
+        
+        final class Provider: TestSessionProvider {
+            func startSession(named name: String, config: SessionConfig, startTime: Date) async throws -> any TestModuleProvider & TestSession {
+                let session = Session(name: name, startTime: startTime)
+                session.startTime = startTime
+                return session
+            }
+        }
     }
     
     final class Module: TestBase, TestModule, TestSuiteProvider, Hashable, Equatable, CustomDebugStringConvertible {
-        weak var _session: Session?
+        weak let _session: Session?
         var session: any TestSession { _session! }
+        var testFrameworks: Set<String> = []
         var localization: String = ""
         
         var suites: [String: Suite] = [:]
@@ -122,21 +132,25 @@ enum Mocks {
             hasher.combine(_session)
         }
         
-        func startSuite(named: String) -> any TestRunProvider & TestSuite {
-            Mocks.Suite(name: named, module: self)
+        func startSuite(named: String, framework: String) -> any TestRunProvider & TestSuite {
+            testFrameworks.insert(framework)
+            _session?.testFrameworks.insert(framework)
+            return Mocks.Suite(name: named, module: self, framework: framework)
         }
     }
     
     final class Suite: TestBase, TestSuite, TestRunProvider, Hashable, Equatable, CustomDebugStringConvertible {
-        weak var _module: Module?
+        weak let _module: Module?
         var module: any TestModule { _module! }
         var localization: String = ""
         
+        let testFramework: String
         var unskippable: Bool = false
         var tests: [String: Group] = [:]
         
-        init(name: String, module: Module) {
+        init(name: String, module: Module, framework: String) {
             self._module = module
+            self.testFramework = framework
             super.init(name: name)
         }
         
@@ -254,7 +268,7 @@ enum Mocks {
     }
     
     final class Test: TestBase, TestRun, Hashable, Equatable, CustomDebugStringConvertible {
-        weak var _suite: Suite?
+        weak let _suite: Suite?
         var suite: any TestSuite { _suite! }
         var error: TestError? = nil
         var errorStatus: ErrorSuppressionStatus = .normal
@@ -362,5 +376,76 @@ enum Mocks {
         
         static var id: FeatureId { "CoverageCollector" }
         func stop() {}
+    }
+    
+    final actor SessionManager: TestSessionManager {
+        typealias SessionWithConfig = (session: any TestModuleProvider & TestSession,
+                                       config: SessionConfig)
+        
+        private var _session: Task<SessionWithConfig, any Error>?
+        private var _observers: [any TestSessionManagerObserver]
+        let provider: any TestSessionProvider
+        let config: SessionConfig
+        
+        init(provider: any TestSessionProvider, config: SessionConfig) {
+            self._session = nil
+            self.provider = provider
+            self._observers = []
+            self.config = config
+        }
+        
+        var session: any TestModuleProvider & TestSession {
+            get async throws {
+                try await _bootstrappedSession.session
+            }
+        }
+        
+        var sessionConfig: SessionConfig {
+            get async throws {
+                try await _bootstrappedSession.config
+            }
+        }
+        
+        func add(observer: any TestSessionManagerObserver) async {
+            _observers.append(observer)
+            if let session = try? await _session?.value {
+                await observer.willStart(session: session.session, with: session.config)
+            }
+        }
+        
+        func remove(observer: any TestSessionManagerObserver) {
+            _observers.removeAll { $0.id == observer.id }
+        }
+        
+        func stop() async {
+            guard let session = try? await _session?.value else {
+                return
+            }
+            session.session.end()
+            _session = nil
+            for observer in _observers {
+                await observer.didFinish(session: session.session, with: session.config)
+            }
+        }
+        
+        private var _bootstrappedSession: SessionWithConfig {
+            get async throws {
+                if let session = _session {
+                    return try await session.value
+                }
+                _session = Task.detached { try await self.bootstrapSession() }
+                return try await _session!.value
+            }
+        }
+        
+        private func bootstrapSession() async throws -> SessionWithConfig {
+            let startTime = config.clock.now
+            
+            let session = try await provider.startSession(named: "Mock.session", config: config, startTime: startTime)
+            for observer in _observers {
+                await observer.willStart(session: session, with: config)
+            }
+            return (session, config)
+        }
     }
 }

@@ -26,7 +26,7 @@ public final class Session: NSObject, Encodable {
     
     var configError: Bool = false
     
-    init(name: String, config: SessionConfig, command: String? = nil, startTime: Date? = nil) {
+    init(name: String, config: SessionConfig, startTime: Date? = nil) {
         self.duration = 0
         self.status = .pass
         self.name = name
@@ -34,7 +34,7 @@ public final class Session: NSObject, Encodable {
         self.resource = name
         self.configuration = config
         
-        self.meta[DDTestTags.testCommand] = command
+        self.meta[DDTestTags.testCommand] = config.command
         
         let sessionStartTime = startTime ?? config.clock.now
         if let crash = config.crash {
@@ -118,8 +118,8 @@ public extension Session {
     ///   - command: Optional, test command that started this session
     ///   - startTime: Optional, the time where the session started
     @objc static func start(name: String, command: String? = nil, startTime: Date? = nil) -> Session {
-        let config = SessionConfig(activeFeatures: [], clock: DDTestMonitor.clock, crash: nil)
-        return Session(name: name, config: config, command: command, startTime: startTime)
+        let config = SessionConfig(activeFeatures: [], clock: DDTestMonitor.clock, crash: nil, command: command)
+        return Session(name: name, config: config, startTime: startTime)
     }
 
     @objc static func start(name: String) -> Session {

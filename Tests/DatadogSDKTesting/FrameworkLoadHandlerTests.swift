@@ -10,17 +10,11 @@ import XCTest
 class FrameworkLoadHandlerTests: XCTestCase {
     override func setUp() {
         XCTAssertNil(DDTracer.activeSpan)
-        FrameworkLoadHandler.testObserver?.stop()
-        FrameworkLoadHandler.testObserver = nil
-        DDTestMonitor.instance?.stop()
-        DDTestMonitor.instance = nil
+        FrameworkLoadHandler.handleUnload()
     }
 
     override func tearDownWithError() throws {
-        FrameworkLoadHandler.testObserver?.stop()
-        FrameworkLoadHandler.testObserver = nil
-        DDTestMonitor.instance?.stop()
-        DDTestMonitor.instance = nil
+        FrameworkLoadHandler.handleUnload()
         DDTestMonitor._env_recreate()
         XCTAssertNil(DDTracer.activeSpan)
     }
@@ -32,6 +26,7 @@ class FrameworkLoadHandlerTests: XCTestCase {
         FrameworkLoadHandler.handleLoad()
 
         XCTAssertNotNil(FrameworkLoadHandler.testObserver)
+        XCTAssertNotNil(DatadogSwiftTestingTrait.sharedSuiteProvider)
     }
 
     func testWhenTestRunnerIsConfiguredAndIsInOtherTestingMode_ItIsInitialised() {
@@ -42,6 +37,7 @@ class FrameworkLoadHandlerTests: XCTestCase {
         FrameworkLoadHandler.handleLoad()
 
         XCTAssertNotNil(FrameworkLoadHandler.testObserver)
+        XCTAssertNotNil(DatadogSwiftTestingTrait.sharedSuiteProvider)
     }
 
     func testWhenTestRunnerIsNotConfigured_ItIsNotInitialised() {
@@ -50,6 +46,7 @@ class FrameworkLoadHandlerTests: XCTestCase {
         FrameworkLoadHandler.handleLoad()
 
         XCTAssertNil(FrameworkLoadHandler.testObserver)
+        XCTAssertNil(DatadogSwiftTestingTrait.sharedSuiteProvider)
     }
 
     func testWhenTestRunnerIsConfiguredButSetOff_ItIsNotInitialised() {
@@ -59,6 +56,7 @@ class FrameworkLoadHandlerTests: XCTestCase {
         FrameworkLoadHandler.handleLoad()
 
         XCTAssertNil(FrameworkLoadHandler.testObserver)
+        XCTAssertNil(DatadogSwiftTestingTrait.sharedSuiteProvider)
     }
 
     func testWhenTestRunnerIsConfiguredButNotInTestingMode_ItIsNotInitialised() {
@@ -66,6 +64,7 @@ class FrameworkLoadHandlerTests: XCTestCase {
         FrameworkLoadHandler.handleLoad()
 
         XCTAssertNil(FrameworkLoadHandler.testObserver)
+        XCTAssertNil(DatadogSwiftTestingTrait.sharedSuiteProvider)
     }
     
     private func setEnv(env: [String: String]) {

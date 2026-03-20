@@ -4,9 +4,7 @@
  * Copyright 2020-Present Datadog, Inc.
  */
 
-protocol SwiftTestingObserverType: AnyObject, Sendable {
-    func willStart(session: any TestSession, with config: SessionConfig) async
-    
+protocol SwiftTestingObserverType: AnyObject, Sendable, TestSessionManagerObserver {
     func willStart(module: any TestModule) async
     func didFinish(module: any TestModule) async
     
@@ -28,6 +26,9 @@ protocol SwiftTestingObserverType: AnyObject, Sendable {
 
 final class NoopSwiftTestingObserver: SwiftTestingObserverType {
     func willStart(session: any TestSession, with config: SessionConfig) async {
+    }
+    
+    func didFinish(session: any TestSession, with config: SessionConfig) async {
     }
     
     func willStart(module: any TestModule) async {

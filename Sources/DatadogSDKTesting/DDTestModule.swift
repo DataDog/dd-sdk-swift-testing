@@ -9,21 +9,23 @@ internal import OpenTelemetryApi
 
 @objc(DDTestModule)
 public final class Module: NSObject, Encodable {
+    private let _session: Session
     let name: String
-    let session: TestSession
+    var session: TestSession { _session }
     let id: SpanId
     let startTime: Date
     var duration: UInt64
+    var testFrameworks: Set<String> = []
     var meta: [String: String] = [:]
     var metrics: [String: Double] = [:]
     var status: TestStatus
     var localization: String
 
-    init(name: String, session: TestSession, startTime: Date?) {
+    init(name: String, session: Session, startTime: Date?) {
         self.duration = 0
         self.status = .pass
         self.name = name
-        self.session = session
+        self._session = session
 
         let moduleStartTime = startTime ?? DDTestMonitor.clock.now
         if let crashedModuleInfo = DDTestMonitor.instance?.crashedModuleInfo {
@@ -50,7 +52,7 @@ public final class Module: NSObject, Encodable {
         let moduleAttributes: [String: String] = [
             DDGenericTags.type: DDTagValues.typeModuleEnd,
             DDTestTags.testModule: name,
-            DDTestTags.testFramework: session.testFramework,
+            DDTestTags.testFramework: testFrameworks.joined(separator: ","),
             DDTestTags.testStatus: moduleStatus,
             DDTestSuiteVisibilityTags.testModuleId: String(id.rawValue),
             DDTestSuiteVisibilityTags.testSessionId: String(session.id.rawValue),
@@ -72,6 +74,11 @@ public final class Module: NSObject, Encodable {
         
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: ModuleEnvelope(self))
         Log.debug("Exported module_end event moduleId: \(self.id)")
+    }
+    
+    func addFramework(_ name: String) {
+        testFrameworks.insert(name)
+        _session.addFramework(name)
     }
 }
 
@@ -102,7 +109,7 @@ public extension Module {
     ///   - name: name of the suite
     ///   - startTime: Optional, the time where the suite started
     @objc func suiteStart(name: String, startTime: Date? = nil) -> Suite {
-        let suite = Suite(name: name, module: self, startTime: startTime)
+        let suite = Suite(name: name, module: self, framework: "SwiftAPI", startTime: startTime)
         return suite
     }
 
@@ -141,8 +148,8 @@ extension Module: TestModule {
 }
 
 extension Module: TestSuiteProvider {
-    func startSuite(named: String) -> any TestRunProvider & TestSuite {
-        suiteStart(name: named)
+    func startSuite(named: String, framework: String) -> any TestRunProvider & TestSuite {
+        Suite(name: named, module: self, framework: framework)
     }
 }
 
@@ -169,7 +176,7 @@ extension Module {
         try container.encode(meta, forKey: .meta)
         try container.encode(metrics, forKey: .metrics)
         try container.encode(status == .fail ? 1 : 0, forKey: .error)
-        try container.encode("\(session.testFramework).module", forKey: .name)
+        try container.encode("swift.module", forKey: .name)
         try container.encode(name, forKey: .resource)
         try container.encode(DDTestMonitor.env.service, forKey: .service)
     }

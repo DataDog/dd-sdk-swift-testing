@@ -88,19 +88,21 @@ func testFuncRegistration() async throws {
     #expect(Testing.Test.current?.suite == "[\(URL(string: #file)!.deletingPathExtension().lastPathComponent)]")
 }
 
-
-private final class MockSwiftTestingSessionProvider: TestSessionProvider {
-    func startSession() async throws -> any TestModuleProvider & TestSession {
-        Mocks.Session(name: "TestSession")
-    }
-}
-
 private final class MockSwiftTestingObserver: SwiftTestingObserverType {
+    func willStart(session: any TestSession, with config: SessionConfig) async {}
+    
+    func didFinish(session: any TestSession, with config: SessionConfig) async {
+        // Cleanup
+        DatadogSwiftTestingTrait.sharedSuiteProvider = nil
+    }
+    
     func willStart(module: any TestModule) async {}
     
     func didFinish(module: any TestModule) async {
         // Cleanup
-        DatadogSwiftTestingTrait.sharedSuiteProvider = nil
+        if let provider = DatadogSwiftTestingTrait.sharedSuiteProvider as? SwiftTestingSuiteProvider {
+            Task.detached { await provider.session.stop() }
+        }
     }
     
     func willStart(suite: borrowing SwiftTestingSuiteContext) async {
@@ -166,7 +168,11 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
     
     func prepare(for test: Testing.Test) async throws {
         if DatadogSwiftTestingTrait.sharedSuiteProvider == nil {
-            DatadogSwiftTestingTrait.sharedSuiteProvider = SwiftTestingSuiteProvider(provider: MockSwiftTestingSessionProvider(),
+            let session = Mocks.SessionManager(provider: Mocks.Session.Provider(), config: .init(activeFeatures: [],
+                                                                                                 clock: DateClock(),
+                                                                                                 crash: nil,
+                                                                                                 command: nil))
+            DatadogSwiftTestingTrait.sharedSuiteProvider = SwiftTestingSuiteProvider(session: session,
                                                                                      observer: MockSwiftTestingObserver())
         }
     }
@@ -210,7 +216,7 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
         let tests = await suiteProvider.registry.registeredTests
         let suite = try #require(tests[test.module]?[test.suite])
         
-        let session = try await #require(suiteProvider.session as? Mocks.Session)
+        let session = try await #require(suiteProvider.session.session as? Mocks.Session)
         
         let statuses = try #require(session.modules[test.module]?.suites[test.suite])
         let errors = issues.value

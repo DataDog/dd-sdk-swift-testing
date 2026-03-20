@@ -29,7 +29,7 @@ extension XCTestRun {
     }
 }
 
-extension Test {
+extension TestRun {
     func addBenchmarkTagsIfNeeded(from testCase: XCTestCase) {
         guard let metrics = testCase.value(forKey: "_perfMetricsForID") as? [XCTPerformanceMetric: AnyObject] else {
             return
@@ -116,7 +116,7 @@ extension Test {
                     name = info ?? "unknown_measure"
             }
             if currentlyAddedBenchmarks < maximumAllowedBenchmarks {
-                addBenchmarkData(name: name, samples: samples, info: info)
+                add(benchmark: name, samples: samples, info: info)
                 currentlyAddedBenchmarks += 1
             } else {
                 Log.print(#"Maximum allowed benchmarks per test reached, following benchmark not added: "\#(name)""#)

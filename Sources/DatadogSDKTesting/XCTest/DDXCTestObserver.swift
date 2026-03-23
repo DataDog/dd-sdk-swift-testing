@@ -53,7 +53,7 @@ class DDXCTestObserver: NSObject, XCTestObservation {
             let session = try waitForAsync {
                 try await (session: manager.session, config: manager.sessionConfig)
             }
-            state = .module(session.session.startModule(named: bundleName), config: session.config)
+            state = .module(session.session.module(named: bundleName), config: session.config)
             Log.debug("testBundleWillStart: \(bundleName)")
         } catch {
             Log.print("Session initialisation failed: \(error)")
@@ -109,7 +109,7 @@ class DDXCTestObserver: NSObject, XCTestObservation {
         let wrappedTests = tests.map { DDXCTestRetryGroup(for: $0) }
         testSuite.setValue(wrappedTests, forKey: "_mutableTests")
         
-        let suite = module.startSuite(named: testSuite.name, framework: "XCTest")
+        let suite = module.startSuite(named: testSuite.name, at: nil, framework: "XCTest")
         
         config.activeFeatures.testSuiteWillStart(suite: suite, testsCount: UInt(wrappedTests.count))
         

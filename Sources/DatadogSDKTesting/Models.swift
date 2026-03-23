@@ -42,11 +42,11 @@ protocol TestSessionManagerObserver: Sendable, Identifiable<ObjectIdentifier> {
 }
 
 protocol TestSessionProvider: Sendable {
-    func startSession(named: String, config: SessionConfig, startTime: Date) async throws -> any TestSession & TestModuleProvider
+    func startSession(named: String, config: SessionConfig, startTime: Date) async throws -> any TestSession & TestModuleManager
 }
 
 protocol TestSessionManager: Sendable {
-    var session: any TestSession & TestModuleProvider { get async throws }
+    var session: any TestSession & TestModuleManager { get async throws }
     var sessionConfig: SessionConfig { get async throws }
     
     func add(observer: any TestSessionManagerObserver) async
@@ -62,7 +62,14 @@ protocol TestModule: TestContainer {
 }
 
 protocol TestModuleProvider: Sendable {
-    func startModule(named: String) -> any TestModule & TestSuiteProvider
+    func startModule(named: String, at: Date?) -> any TestModule & TestSuiteProvider
+}
+
+protocol TestModuleManager: Sendable {
+    var moduleShouldEnd: Bool { get }
+    
+    func module(named: String) -> any TestModule & TestSuiteProvider
+    func stopModules()
 }
 
 protocol TestSuite: TestContainer {
@@ -73,7 +80,7 @@ protocol TestSuite: TestContainer {
 }
 
 protocol TestSuiteProvider: Sendable {
-    func startSuite(named: String, framework: String) -> any TestSuite & TestRunProvider
+    func startSuite(named: String, at: Date?, framework: String) -> any TestSuite & TestRunProvider
 }
 
 protocol TestRunProvider: Sendable {

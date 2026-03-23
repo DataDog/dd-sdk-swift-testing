@@ -1,0 +1,125 @@
+/*
+ * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
+ * This product includes software developed at Datadog (https://www.datadoghq.com/).
+ * Copyright 2020-Present Datadog, Inc.
+ */
+
+import Foundation
+internal import EventsExporter
+
+final actor SessionManager: TestSessionManager {
+    typealias SessionWithConfig = (session: any TestModuleProvider & TestSession,
+                                   config: SessionConfig)
+    
+    private var _session: Task<SessionWithConfig, any Error>?
+    private var _observers: [any TestSessionManagerObserver]
+    let provider: any TestSessionProvider
+    let log: Logger
+    
+    init(log: Logger, provider: any TestSessionProvider) {
+        self._session = nil
+        self.log = log
+        self.provider = provider
+        self._observers = []
+    }
+    
+    var session: any TestModuleProvider & TestSession {
+        get async throws {
+            try await _bootstrappedSession.session
+        }
+    }
+    
+    var sessionConfig: SessionConfig {
+        get async throws {
+            try await _bootstrappedSession.config
+        }
+    }
+    
+    func add(observer: any TestSessionManagerObserver) async {
+        _observers.append(observer)
+        if let session = try? await _session?.value {
+            await observer.willStart(session: session.session, with: session.config)
+        }
+    }
+    
+    func remove(observer: any TestSessionManagerObserver) {
+        _observers.removeAll { $0.id == observer.id }
+    }
+    
+    func stop() async {
+        guard let session = try? await _session?.value else {
+            return
+        }
+        session.session.end()
+        _session = nil
+        for observer in _observers {
+            await observer.didFinish(session: session.session, with: session.config)
+        }
+        DDTestMonitor.removeTestMonitor()
+    }
+    
+    private var _bootstrappedSession: SessionWithConfig {
+        get async throws {
+            if let session = _session {
+                return try await session.value
+            }
+            _session = Task.detached { try await self.bootstrapSession() }
+            return try await _session!.value
+        }
+    }
+    
+    private func bootstrapSession() async throws -> SessionWithConfig {
+        do {
+            try await DDTestMonitor.clock.sync()
+        } catch {
+            log.print("Clock sync failed: \(error)")
+            DDTestMonitor.clock = DateClock()
+        }
+        
+        let startTime = DDTestMonitor.clock.now
+        
+        if DDTestMonitor.instance == nil {
+            try log.measure(name: "Install Test Monitor") {
+                guard DDTestMonitor.installTestMonitor() else {
+                    throw BoostrapError.monitorInitFailed
+                }
+            }
+        }
+        
+        guard let monitor = DDTestMonitor.instance else {
+            throw BoostrapError.monitorIsNil
+        }
+        
+        log.measure(name: "Setup crash handler") {
+            monitor.setupCrashHandler()
+        }
+        
+        let config = SessionConfig(
+            activeFeatures: monitor.activeFeatures,
+            clock: DDTestMonitor.clock,
+            crash: monitor.crashedModuleInfo,
+            command: DDTestMonitor.env.testCommand
+        )
+        
+        let session = try await provider.startSession(named: "Swift.session", config: config, startTime: startTime)
+        for observer in _observers {
+            await observer.willStart(session: session, with: config)
+        }
+        return (session, config)
+    }
+}
+
+extension SessionManager {
+    enum BoostrapError: Error {
+        case monitorInitFailed
+        case monitorIsNil
+    }
+}
+
+extension Session {
+    struct Provider: TestSessionProvider {
+        func startSession(named name: String, config: SessionConfig, startTime: Date) async throws -> any TestModuleProvider & TestSession {
+            Session(name: name, config: config, startTime: startTime)
+        }
+    }
+}

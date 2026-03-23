@@ -127,7 +127,7 @@ struct SwiftTestingTestContext: Sendable {
 }
 
 struct SwiftTestingSuiteContext: Sendable {
-    actor State {
+    final actor State {
         private var _tests: Set<String>
         
         var isEnded: Bool { _tests.isEmpty }
@@ -210,7 +210,7 @@ struct SwiftTestingSuiteContext: Sendable {
 }
 
 struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
-    actor Registry: SwiftTestingTestRegistryType {
+    final actor Registry: SwiftTestingTestRegistryType {
         private var _tests: [String: [String: Set<String>]] = [:]
         
         var registeredTests: [String: [String: Set<String>]] {
@@ -245,7 +245,7 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
         }
     }
     
-    actor State {
+    final actor State {
         final class ModuleContext {
             var module: any TestModule & TestSuiteProvider
             var active: [String: Task<SwiftTestingSuiteContext, any Error>]
@@ -264,25 +264,15 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
             case ended
         }
         
-        private let _provider: any TestSessionProvider
-        private var _session: Task<any TestSession & TestModuleProvider, any Error>? = nil
         private var _modules: [String: ModuleState] = [:]
+        private var _observerAdded: Bool = false
         
         nonisolated let registry: Registry
         nonisolated let observer: any SwiftTestingObserverType
+        nonisolated let session: any TestSessionManager
         
-        var activeSession: any TestSession & TestModuleProvider {
-            get async throws {
-                if let session = _session {
-                    return try await session.value
-                }
-                _session = Task { try await self._provider.startSession() }
-                return try await _session!.value
-            }
-        }
-        
-        init(provider: any TestSessionProvider, observer: any SwiftTestingObserverType, registry: Registry) {
-            self._provider = provider
+        init(session: any TestSessionManager, observer: any SwiftTestingObserverType, registry: Registry) {
+            self.session = session
             self.registry = registry
             self.observer = observer
         }
@@ -294,7 +284,8 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
             case .ended: throw SwiftTestingRegistryError.moduleAlreadyEnded(name: name)
             case .notStarted: break
             }
-            let session = try await self.activeSession
+            await self._ensureSessionObserver()
+            let session = try await self.session.session
             let suites = try await self.registry.suites(for: name)
             if case .active(let context) = _modules[name] {
                 // other thread created it
@@ -332,14 +323,21 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
             _modules[suite.module.name] = .active(context)
             return false
         }
+        
+        private func _ensureSessionObserver() async {
+            if !_observerAdded {
+                _observerAdded = true
+                await self.session.add(observer: observer)
+            }
+        }
     }
     
     var registry: any SwiftTestingTestRegistryType { _state.registry }
     var observer: any SwiftTestingObserverType { _state.observer }
     private let _state: State
     
-    init(provider: any TestSessionProvider, observer: any SwiftTestingObserverType) {
-        self._state = .init(provider: provider, observer: observer, registry: Registry())
+    init(session: any TestSessionManager, observer: any SwiftTestingObserverType) {
+        self._state = .init(session: session, observer: observer, registry: Registry())
     }
     
     func with(suite info: some SwiftTestingTestInfoType,
@@ -347,7 +345,7 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
     {
         let suite = try await self._state.suite(named: info.suite, in: info.module) { mod in
             let count = try await self.registry.count(for: info)
-            let suite = mod.startSuite(named: info.suite)
+            let suite = mod.startSuite(named: info.suite, framework: "Testing")
             return .init(suite: suite, info: info, testsCount: count, observer: self.observer)
         }
         if suite.isNew {
@@ -361,7 +359,7 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
     {
         let suite = try await self._state.suite(named: test.suite, in: test.module) { mod in
             let tests = try await self.registry.tests(for: test)
-            let suite = mod.startSuite(named: test.suite)
+            let suite = mod.startSuite(named: test.suite, framework: "Testing")
             return SwiftTestingSuiteContext(suite: suite, tests: tests, info: test, observer: self.observer)
         }
         if suite.isNew {
@@ -386,10 +384,8 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
         }
     }
     
-    var session: any TestSession & TestModuleProvider {
-        get async throws {
-            try await _state.activeSession
-        }
+    var session: any TestSessionManager {
+        _state.session
     }
 }
 

@@ -56,6 +56,8 @@
 		A7675D4D2F64847300A05B5F /* SwiftTestingTraitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7675D4C2F64846500A05B5F /* SwiftTestingTraitTests.swift */; };
 		A7675D4F2F6980D600A05B5F /* SwiftTestingObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7675D4E2F6980D000A05B5F /* SwiftTestingObserver.swift */; };
 		A7675D682F6B207F00A05B5F /* DDTags.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA07125231F4700ED8AEF /* DDTags.swift */; };
+		A7675D6C2F6C58C100A05B5F /* SessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7675D6B2F6C58BB00A05B5F /* SessionManager.swift */; };
+		A7675D6E2F6C70C100A05B5F /* Task+Sync.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7675D6D2F6C70BD00A05B5F /* Task+Sync.swift */; };
 		A76F0F992E2A9F0D009ACD06 /* TestImpactAnalysisTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A76F0F982E2A9F02009ACD06 /* TestImpactAnalysisTests.swift */; };
 		A77C122F2D89CFC2009C2BA1 /* SDKCapabilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77C122E2D89CFC2009C2BA1 /* SDKCapabilities.swift */; };
 		A77C12312D8C976B009C2BA1 /* TestManagementService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77C12302D8C976B009C2BA1 /* TestManagementService.swift */; };
@@ -382,6 +384,8 @@
 		A7675D4A2F64742500A05B5F /* SwiftTestingContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftTestingContext.swift; sourceTree = "<group>"; };
 		A7675D4C2F64846500A05B5F /* SwiftTestingTraitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftTestingTraitTests.swift; sourceTree = "<group>"; };
 		A7675D4E2F6980D000A05B5F /* SwiftTestingObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftTestingObserver.swift; sourceTree = "<group>"; };
+		A7675D6B2F6C58BB00A05B5F /* SessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionManager.swift; sourceTree = "<group>"; };
+		A7675D6D2F6C70BD00A05B5F /* Task+Sync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Task+Sync.swift"; sourceTree = "<group>"; };
 		A76F0F982E2A9F02009ACD06 /* TestImpactAnalysisTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestImpactAnalysisTests.swift; sourceTree = "<group>"; };
 		A77C122E2D89CFC2009C2BA1 /* SDKCapabilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SDKCapabilities.swift; sourceTree = "<group>"; };
 		A77C12302D8C976B009C2BA1 /* TestManagementService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TestManagementService.swift; sourceTree = "<group>"; };
@@ -791,6 +795,7 @@
 		E116D7D925248C280022779D /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				A7675D6D2F6C70BD00A05B5F /* Task+Sync.swift */,
 				A7B012162F364D00000270A4 /* NoopSpanExporter.swift */,
 				A7E233322BC93D100087D8F8 /* Synced.swift */,
 				E1293F8828DB515F00D31DD6 /* SanitizerHelper.swift */,
@@ -1095,6 +1100,7 @@
 				A7AE65982E7D901600EA568B /* RetryAndSkipTags.swift */,
 				A77C12362D8DCB87009C2BA1 /* AutomaticTestRetries.swift */,
 				A77C12322D8C9798009C2BA1 /* KnownTests.swift */,
+				A7675D6B2F6C58BB00A05B5F /* SessionManager.swift */,
 				A77C12342D8C9F5D009C2BA1 /* TestManagement.swift */,
 				E158E2DB25471DA000DBCD6C /* DDInstrumentationControl.swift */,
 				8194A2242940B33100B4B592 /* DDTestSession.swift */,
@@ -1696,6 +1702,8 @@
 				A7FC25DF2BA1EBF300067E26 /* StdoutCapture.swift in Sources */,
 				A71E64782BAA0AA100F2ACA5 /* AzureCI.swift in Sources */,
 				A7FC25D32BA1EB3400067E26 /* DDSymbolicator.swift in Sources */,
+				A7675D6E2F6C70C100A05B5F /* Task+Sync.swift in Sources */,
+				A7675D6C2F6C58C100A05B5F /* SessionManager.swift in Sources */,
 				A718EC2D2CBD5DCE00C5F0D9 /* EarlyFlakeDetection.swift in Sources */,
 				A7FC25C12BA1EAF500067E26 /* GitUploader.swift in Sources */,
 				A71E646B2BAA0AA100F2ACA5 /* Span+Environment.swift in Sources */,

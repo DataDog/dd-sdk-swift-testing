@@ -11,13 +11,18 @@ import XCTest
 
 internal class DDXCTestObserverTests: XCTestCase {
     var testObserver: DDXCTestObserver!
+    var session: SessionManager!
 
     let theSuite = XCTestSuite(name: "DDTestObserverTests")
 
     override func setUp() {
         XCTAssertNil(DDTracer.activeSpan)
-        DDTestMonitor._env_recreate(env: ["DD_API_KEY": "fakeToken", "DD_DISABLE_TEST_INSTRUMENTING": "1"])
-        testObserver = DDXCTestObserver()
+        DDTestMonitor._env_recreate(env: ["DD_API_KEY": "fakeToken",
+                                          "DD_DISABLE_TEST_INSTRUMENTING": "1",
+                                          "DD_DISABLE_CRASH_HANDLER": "1"])
+        session = SessionManager(log: Mocks.CatchLogger(isDebug: true),
+                                 provider: Session.Provider())
+        testObserver = DDXCTestObserver(session: session)
         theSuite.setValue([self], forKey: "_mutableTests")
     }
 
@@ -30,7 +35,7 @@ internal class DDXCTestObserverTests: XCTestCase {
 
     func testWhenTestBundleWillStartIsCalled_testBundleNameIsSet() throws {
         testObserver.testBundleWillStart(Bundle.main)
-        guard case .module(let module) = testObserver.state else {
+        guard case .module(let module, _) = testObserver.state else {
             XCTFail("Bad observer state: \(testObserver.state)")
             return
         }
@@ -146,7 +151,7 @@ internal class DDXCTestObserverTests: XCTestCase {
 
         let measure = DDBenchmarkTags.benchmark + "." + DDBenchmarkMeasuresTags.duration + "."
         XCTAssertEqual(spanData.attributes[measure + DDBenchmarkTags.benchmarkMean]?.description, "3000000000.0")
-        XCTAssertEqual(spanData.attributes[measure + DDBenchmarkTags.statisticsN]?.description, "5")
+        XCTAssertEqual(spanData.attributes[measure + DDBenchmarkTags.statisticsN]?.description, "5.0")
         XCTAssertEqual(spanData.attributes[measure + DDBenchmarkTags.statisticsMin]?.description, "1000000000.0")
         XCTAssertEqual(spanData.attributes[measure + DDBenchmarkTags.statisticsMax]?.description, "5000000000.0")
         XCTAssertEqual(spanData.attributes[measure + DDBenchmarkTags.statisticsMedian]?.description, "3000000000.0")
@@ -182,6 +187,7 @@ internal class DDXCTestObserverTests: XCTestCase {
     }
     
     private func destroyObserver() {
+        waitForAsync { await self.session.stop() }
         testObserver = nil
     }
 }

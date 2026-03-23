@@ -15,11 +15,7 @@ public struct DatadogSwiftTestingTrait: TestTrait, SuiteTrait {
     public let isRecursive: Bool = true
     private let _provider: (any SwiftTestingSuiteProviderType)?
     
-    public init() {
-        self.init(provider: Self.sharedSuiteProvider)
-    }
-    
-    init(provider: (any SwiftTestingSuiteProviderType)?) {
+    init(provider: (any SwiftTestingSuiteProviderType)? = nil) {
         self._provider = provider
     }
     
@@ -28,14 +24,18 @@ public struct DatadogSwiftTestingTrait: TestTrait, SuiteTrait {
     }
     
     public func scopeProvider(for test: Testing.Test, testCase: Testing.Test.Case?) -> TestScopeProvider? {
-        guard let provider = _provider else {
+        guard let provider = _activeProvider else {
             return nil
         }
         return TestScopeProvider(provider: provider)
     }
     
     func prepare(test: some SwiftTestingTestInfoType) async throws {
-        try await _provider?.registry.register(test: test)
+        try await _activeProvider?.registry.register(test: test)
+    }
+    
+    private var _activeProvider: (any SwiftTestingSuiteProviderType)? {
+        _provider ?? Self.sharedSuiteProvider
     }
     
     static var sharedSuiteProvider: (any SwiftTestingSuiteProviderType)? = nil

@@ -28,7 +28,6 @@ public final class Suite: NSObject, Encodable {
         self.duration = 0
         self.status = .pass
         self.testFramework = framework
-        module.addFramework(framework)
 
         if DDTestMonitor.instance?.crashedModuleInfo?.crashedSuiteName == name {
             self.id = DDTestMonitor.instance?.crashedModuleInfo?.crashedSuiteId ?? SpanId.random()

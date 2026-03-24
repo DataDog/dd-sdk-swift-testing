@@ -20,19 +20,19 @@ public final class Session: NSObject, Encodable {
     var metrics: [String: Double] = [:]
     var status: TestStatus
     
-    
     private var _testRunsCount: Synced<UInt> = Synced(0)
     var testRunsCount: UInt { _testRunsCount.value }
     
-    var configError: Bool = false
+    private let _moduleManager: any TestModuleManagerSession
     
-    init(name: String, config: SessionConfig, startTime: Date? = nil) {
+    init(name: String, config: SessionConfig, modules: any TestModuleManagerSession, startTime: Date? = nil) {
         self.duration = 0
         self.status = .pass
         self.name = name
         self.testFrameworks = []
         self.resource = name
         self.configuration = config
+        self._moduleManager = modules
         
         self.meta[DDTestTags.testCommand] = config.command
         
@@ -119,7 +119,7 @@ public extension Session {
     ///   - startTime: Optional, the time where the session started
     @objc static func start(name: String, command: String? = nil, startTime: Date? = nil) -> Session {
         let config = SessionConfig(activeFeatures: [], clock: DDTestMonitor.clock, crash: nil, command: command)
-        return Session(name: name, config: config, startTime: startTime)
+        return Session(name: name, config: config, modules: Module.StatelessManager(), startTime: startTime)
     }
 
     @objc static func start(name: String) -> Session {
@@ -151,7 +151,7 @@ public extension Session {
     ///   - name: name of the module
     ///   - startTime: Optional, the time where the module started
     @objc func moduleStart(name: String, startTime: Date? = nil) -> Module {
-        return Module(name: name, session: self, startTime: startTime)
+        return _moduleManager.module(named: name, at: startTime, provider: self) as! Module
     }
 
     @objc func moduleStart(name: String) -> Module {
@@ -160,8 +160,22 @@ public extension Session {
 }
 
 extension Session: TestModuleProvider {
-    func startModule(named: String) -> any TestModule & TestSuiteProvider {
-        moduleStart(name: named)
+    func startModule(named name: String, at start: Date?) -> any TestModule & TestSuiteProvider {
+        Module(name: name, session: self, startTime: start)
+    }
+}
+
+extension Session: TestModuleManager {
+    var moduleShouldEnd: Bool {
+        _moduleManager.moduleShouldEnd
+    }
+    
+    func module(named name: String) -> any TestModule & TestSuiteProvider {
+        moduleStart(name: name)
+    }
+    
+    func stopModules() {
+        _moduleManager.stopModules()
     }
 }
 

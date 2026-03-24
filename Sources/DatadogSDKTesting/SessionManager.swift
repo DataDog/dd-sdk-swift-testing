@@ -8,7 +8,7 @@ import Foundation
 internal import EventsExporter
 
 final actor SessionManager: TestSessionManager {
-    typealias SessionWithConfig = (session: any TestModuleProvider & TestSession,
+    typealias SessionWithConfig = (session: any TestModuleManager & TestSession,
                                    config: SessionConfig)
     
     private var _session: Task<SessionWithConfig, any Error>?
@@ -23,7 +23,7 @@ final actor SessionManager: TestSessionManager {
         self._observers = []
     }
     
-    var session: any TestModuleProvider & TestSession {
+    var session: any TestModuleManager & TestSession {
         get async throws {
             try await _bootstrappedSession.session
         }
@@ -50,12 +50,14 @@ final actor SessionManager: TestSessionManager {
         guard let session = try? await _session?.value else {
             return
         }
+        session.session.stopModules()
         session.session.end()
         _session = nil
         for observer in _observers {
             await observer.didFinish(session: session.session, with: session.config)
         }
         DDTestMonitor.removeTestMonitor()
+        DDTestMonitor.tracer.flush()
     }
     
     private var _bootstrappedSession: SessionWithConfig {
@@ -118,8 +120,71 @@ extension SessionManager {
 
 extension Session {
     struct Provider: TestSessionProvider {
-        func startSession(named name: String, config: SessionConfig, startTime: Date) async throws -> any TestModuleProvider & TestSession {
-            Session(name: name, config: config, startTime: startTime)
+        func startSession(named name: String, config: SessionConfig, startTime: Date) async throws -> any TestModuleManager & TestSession {
+            Session(name: name, config: config,
+                    modules: Module.StatefulManager(),
+                    startTime: startTime)
+        }
+    }
+}
+
+protocol TestModuleManagerSession: Sendable {
+    var moduleShouldEnd: Bool { get }
+    
+    func module(named: String, at: Date?, provider: any TestModuleProvider) -> any TestModule & TestSuiteProvider
+    func stopModules()
+}
+
+extension Module {
+    struct StatelessManager: TestModuleManagerSession, Sendable {
+        let moduleShouldEnd: Bool = true
+        
+        func module(named name: String,
+                    at start: Date?,
+                    provider: any TestModuleProvider) -> any TestModule & TestSuiteProvider
+        {
+            provider.startModule(named: name, at: start)
+        }
+        
+        func stopModules() {}
+    }
+    
+    struct StatefulManager: TestModuleManagerSession, @unchecked Sendable {
+        struct State {
+            var modules: [String: any TestModule & TestSuiteProvider]
+            var moduleShouldEnd: Bool
+        }
+        private let _state: Synced<State>
+        var moduleShouldEnd: Bool { _state.value.moduleShouldEnd }
+        
+        init() {
+            self._state = .init(.init(modules: [:], moduleShouldEnd: false))
+        }
+        
+        func module(named name: String,
+                    at start: Date?,
+                    provider: any TestModuleProvider) -> any TestModule & TestSuiteProvider
+        {
+            _state.update { state in
+                if let module = state.modules[name] {
+                    return module
+                }
+                let module = provider.startModule(named: name, at: start)
+                state.modules[name] = module
+                return module
+            }
+        }
+        
+        func stopModules() {
+            let modules = _state.update { state in
+                state.moduleShouldEnd = true
+                let modules = state.modules
+                state.modules = [:]
+                return modules
+            }
+            for module in modules.values {
+                module.end(time: module.duration > 0 ? module.endTime : nil)
+            }
         }
     }
 }

@@ -48,7 +48,7 @@ enum Mocks {
         }
     }
     
-    final class Session: TestBase, TestSession, TestModuleProvider, Hashable, Equatable, CustomDebugStringConvertible {
+    final class Session: TestBase, TestSession, TestModuleProvider, TestModuleManager, Hashable, Equatable, CustomDebugStringConvertible {
         var testIndex: UInt = 0
         var testFrameworks: Set<String> = []
         
@@ -82,12 +82,22 @@ enum Mocks {
             hasher.combine(name)
         }
         
-        func startModule(named: String) -> any TestModule & TestSuiteProvider {
-            Mocks.Module(name: named, session: self)
+        func startModule(named name: String, at start: Date?) -> any TestModule & TestSuiteProvider {
+            let module = Mocks.Module(name: name, session: self)
+            module.startTime = start ?? module.startTime
+            return module
         }
         
+        var moduleShouldEnd: Bool { true }
+        
+        func module(named name: String) -> any DatadogSDKTesting.TestModule & DatadogSDKTesting.TestSuiteProvider {
+            startModule(named: name, at: nil)
+        }
+        
+        func stopModules() {}
+        
         final class Provider: TestSessionProvider {
-            func startSession(named name: String, config: SessionConfig, startTime: Date) async throws -> any TestModuleProvider & TestSession {
+            func startSession(named name: String, config: SessionConfig, startTime: Date) async throws -> any TestModuleManager & TestSession {
                 let session = Session(name: name, startTime: startTime)
                 session.startTime = startTime
                 return session
@@ -132,10 +142,12 @@ enum Mocks {
             hasher.combine(_session)
         }
         
-        func startSuite(named: String, framework: String) -> any TestRunProvider & TestSuite {
+        func startSuite(named name: String, at start: Date?, framework: String) -> any DatadogSDKTesting.TestRunProvider & DatadogSDKTesting.TestSuite {
             testFrameworks.insert(framework)
             _session?.testFrameworks.insert(framework)
-            return Mocks.Suite(name: named, module: self, framework: framework)
+            let suite = Mocks.Suite(name: name, module: self, framework: framework)
+            suite.startTime = start ?? suite.startTime
+            return suite
         }
     }
     
@@ -379,7 +391,7 @@ enum Mocks {
     }
     
     final actor SessionManager: TestSessionManager {
-        typealias SessionWithConfig = (session: any TestModuleProvider & TestSession,
+        typealias SessionWithConfig = (session: any TestModuleManager & TestSession,
                                        config: SessionConfig)
         
         private var _session: Task<SessionWithConfig, any Error>?
@@ -394,7 +406,7 @@ enum Mocks {
             self.config = config
         }
         
-        var session: any TestModuleProvider & TestSession {
+        var session: any TestModuleManager & TestSession {
             get async throws {
                 try await _bootstrappedSession.session
             }

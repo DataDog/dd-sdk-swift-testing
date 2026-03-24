@@ -291,7 +291,7 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
                 // other thread created it
                 return context
             }
-            let module = session.startModule(named: name)
+            let module = session.module(named: name)
             let context = ModuleContext(module: module, left: suites)
             _modules[name] = .active(context)
             await observer.willStart(module: context.module)
@@ -345,7 +345,7 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
     {
         let suite = try await self._state.suite(named: info.suite, in: info.module) { mod in
             let count = try await self.registry.count(for: info)
-            let suite = mod.startSuite(named: info.suite, framework: "Testing")
+            let suite = mod.startSuite(named: info.suite, at: nil, framework: "Testing")
             return .init(suite: suite, info: info, testsCount: count, observer: self.observer)
         }
         if suite.isNew {
@@ -359,7 +359,7 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
     {
         let suite = try await self._state.suite(named: test.suite, in: test.module) { mod in
             let tests = try await self.registry.tests(for: test)
-            let suite = mod.startSuite(named: test.suite, framework: "Testing")
+            let suite = mod.startSuite(named: test.suite, at: nil, framework: "Testing")
             return SwiftTestingSuiteContext(suite: suite, tests: tests, info: test, observer: self.observer)
         }
         if suite.isNew {

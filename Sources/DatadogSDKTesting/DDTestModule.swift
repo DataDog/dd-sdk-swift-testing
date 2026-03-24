@@ -5,7 +5,7 @@
  */
 
 import Foundation
-internal import OpenTelemetryApi
+@preconcurrency internal import OpenTelemetryApi
 
 @objc(DDTestModule)
 public final class Module: NSObject, Encodable {
@@ -40,12 +40,19 @@ public final class Module: NSObject, Encodable {
     }
     
     private func internalEnd(endTime: Date? = nil) {
-        duration = (endTime ?? DDTestMonitor.clock.now).timeIntervalSince(startTime).toNanoseconds
-
+        let shouldEnd = _session.moduleShouldEnd
+        
+        let newDuration = (endTime ?? _session.configuration.clock.now).timeIntervalSince(startTime).toNanoseconds
+        if newDuration > duration {
+            duration = newDuration
+        }
+        
         // If there is a Sanitizer message, we fail the module so error can be shown
         if let sanitizerInfo = SanitizerHelper.getSaniziterInfo() {
             self.set(failed: .init(type: "Sanitizer Error", stack: sanitizerInfo))
         }
+        
+        guard shouldEnd else { return }
         
         let moduleStatus = status.spanAttribute
         /// Export module event
@@ -109,8 +116,7 @@ public extension Module {
     ///   - name: name of the suite
     ///   - startTime: Optional, the time where the suite started
     @objc func suiteStart(name: String, startTime: Date? = nil) -> Suite {
-        let suite = Suite(name: name, module: self, framework: "SwiftAPI", startTime: startTime)
-        return suite
+        startSuite(named: name, at: startTime, framework: "SwiftManual") as! Suite
     }
 
     @objc func suiteStart(name: String) -> Suite {
@@ -148,8 +154,9 @@ extension Module: TestModule {
 }
 
 extension Module: TestSuiteProvider {
-    func startSuite(named: String, framework: String) -> any TestRunProvider & TestSuite {
-        Suite(name: named, module: self, framework: framework)
+    func startSuite(named name: String, at start: Date?, framework: String) -> any TestRunProvider & TestSuite {
+        addFramework(framework)
+        return Suite(name: name, module: self, framework: framework, startTime: start)
     }
 }
 
@@ -176,7 +183,7 @@ extension Module {
         try container.encode(meta, forKey: .meta)
         try container.encode(metrics, forKey: .metrics)
         try container.encode(status == .fail ? 1 : 0, forKey: .error)
-        try container.encode("swift.module", forKey: .name)
+        try container.encode("Swift.module", forKey: .name)
         try container.encode(name, forKey: .resource)
         try container.encode(DDTestMonitor.env.service, forKey: .service)
     }

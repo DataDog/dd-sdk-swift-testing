@@ -8,11 +8,11 @@ import Foundation
 internal import Kronos
 internal import OpenTelemetrySdk
 
-protocol Clock: OpenTelemetrySdk.Clock {
+protocol Clock: OpenTelemetrySdk.Clock, Sendable {
     func sync() async throws
 }
 
-final class NTPClock: Clock, Sendable {
+final class NTPClock: Clock {
     /// List of Datadog NTP pools.
     static let datadogNTPServers = [
         "0.datadog.pool.ntp.org",
@@ -43,7 +43,7 @@ final class NTPClock: Clock, Sendable {
             case .synced(_): return nil
             case .syncing(let task): return task
             case .nonsynced, .failed:
-                let task = Task.detached { @MainActor in
+                let task = Task { @MainActor in
                     try await withUnsafeThrowingContinuation { cont in
                         self._sync(continuation: cont)
                     }

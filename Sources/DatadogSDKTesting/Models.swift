@@ -5,7 +5,8 @@
  */
 
 import Foundation
-internal import OpenTelemetryApi
+internal import EventsExporter
+@preconcurrency internal import OpenTelemetryApi
 internal import SigmaSwiftStatistics
 
 protocol TestModel: AnyObject, Sendable {
@@ -157,11 +158,13 @@ struct TestError {
     }
 }
 
-struct SessionConfig {
+struct SessionConfig: Sendable {
     let activeFeatures: [any TestHooksFeature]
+    let platform: Environment.Platform
     let clock: Clock
     let crash: CrashedModuleInformation?
     let command: String?
+    let log: Logger
 }
 
 extension TestModel {

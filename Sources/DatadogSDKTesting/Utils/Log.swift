@@ -5,11 +5,13 @@
  */
 
 import Foundation
-internal import EventsExporter
+internal import protocol EventsExporter.Logger
 
-final class Log: Logger {
-    var isDebug: Bool = false
-    var isDebugTracerCallStack: Bool
+protocol Logger: EventsExporter.Logger, Sendable {}
+
+final class Log: Logger, @unchecked Sendable {
+    private(set) var isDebug: Bool = false
+    private(set) var isDebugTracerCallStack: Bool
     let isSwiftPrint: Bool
     
     init(env: EnvironmentReader) {

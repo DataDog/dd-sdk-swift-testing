@@ -169,9 +169,11 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
     func prepare(for test: Testing.Test) async throws {
         if DatadogSwiftTestingTrait.sharedSuiteProvider == nil {
             let session = Mocks.SessionManager(provider: Mocks.Session.Provider(), config: .init(activeFeatures: [],
+                                                                                                 platform: DDTestMonitor.env.platform,
                                                                                                  clock: DateClock(),
                                                                                                  crash: nil,
-                                                                                                 command: nil))
+                                                                                                 command: nil,
+                                                                                                 log: Mocks.CatchLogger()))
             DatadogSwiftTestingTrait.sharedSuiteProvider = SwiftTestingSuiteProvider(session: session,
                                                                                      observer: MockSwiftTestingObserver())
         }

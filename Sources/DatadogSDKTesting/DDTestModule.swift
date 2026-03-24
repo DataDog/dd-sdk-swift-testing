@@ -9,82 +9,91 @@ import Foundation
 
 @objc(DDTestModule)
 public final class Module: NSObject, Encodable {
-    private let _session: Session
-    let name: String
-    var session: TestSession { _session }
+    struct MutableState {
+        var duration: UInt64 = 0
+        var meta: [String: String] = [:]
+        var metrics: [String: Double] = [:]
+        var status: TestStatus = .pass
+        var testFrameworks: Set<String> = []
+    }
+    
+    public let name: String
+    public let startTime: Date
+    public let localization: String
+    
+    public var testFrameworks: Set<String> { _state.value.testFrameworks }
+    public var duration: UInt64 { _state.value.duration }
+    public var meta: [String: String] { _state.value.meta }
+    public var metrics: [String: Double] { _state.value.metrics }
+    public var status: TestStatus { _state.value.status }
+    
     let id: SpanId
-    let startTime: Date
-    var duration: UInt64
-    var testFrameworks: Set<String> = []
-    var meta: [String: String] = [:]
-    var metrics: [String: Double] = [:]
-    var status: TestStatus
-    var localization: String
+    var session: TestSession { _session }
+    var configuration: SessionConfig { _session.configuration }
+    
+    private let _session: Session
+    private let _state: Synced<MutableState>
 
     init(name: String, session: Session, startTime: Date?) {
-        self.duration = 0
-        self.status = .pass
         self.name = name
         self._session = session
 
-        let moduleStartTime = startTime ?? DDTestMonitor.clock.now
-        if let crashedModuleInfo = DDTestMonitor.instance?.crashedModuleInfo {
-            self.status = .fail
-            self.id = crashedModuleInfo.crashedModuleId
-            self.startTime = crashedModuleInfo.moduleStartTime ?? moduleStartTime
+        var state = MutableState()
+        let moduleStartTime = startTime ?? session.configuration.clock.now
+        if let crash = session.configuration.crash {
+            state.status = .fail
+            self.id = crash.crashedModuleId
+            self.startTime = crash.moduleStartTime ?? moduleStartTime
         } else {
             self.id = SpanId.random()
             self.startTime = moduleStartTime
         }
         self.localization = PlatformUtils.getLocalization()
+        self._state = .init(state)
     }
     
     private func internalEnd(endTime: Date? = nil) {
         let shouldEnd = _session.moduleShouldEnd
-        
-        let newDuration = (endTime ?? _session.configuration.clock.now).timeIntervalSince(startTime).toNanoseconds
-        if newDuration > duration {
-            duration = newDuration
-        }
-        
+        let duration = (endTime ?? configuration.clock.now).timeIntervalSince(startTime).toNanoseconds
         // If there is a Sanitizer message, we fail the module so error can be shown
         if let sanitizerInfo = SanitizerHelper.getSaniziterInfo() {
             self.set(failed: .init(type: "Sanitizer Error", stack: sanitizerInfo))
         }
-        
         guard shouldEnd else { return }
         
-        let moduleStatus = status.spanAttribute
-        /// Export module event
-        let moduleAttributes: [String: String] = [
-            DDGenericTags.type: DDTagValues.typeModuleEnd,
-            DDTestTags.testModule: name,
-            DDTestTags.testFramework: testFrameworks.joined(separator: ","),
-            DDTestTags.testStatus: moduleStatus,
-            DDTestSuiteVisibilityTags.testModuleId: String(id.rawValue),
-            DDTestSuiteVisibilityTags.testSessionId: String(session.id.rawValue),
-        ]
-        meta.merge(moduleAttributes) { _, new in new }
-        
-        // Move to the global when we will support global metrics
-        metrics.merge(DDTestMonitor.env.baseMetrics) { _, new in new }
-        
-        meta[DDUISettingsTags.uiSettingsModuleLocalization] = localization
-        
-        addFeatureTags()
+        let linesCovered = _state.update { state in
+            if duration > state.duration {
+                state.duration = duration
+            }
+            state.meta[DDGenericTags.type] = DDTagValues.typeModuleEnd
+            state.meta[DDTestTags.testModule] = name
+            state.meta[DDTestTags.testFramework] = state.testFrameworks.joined(separator: ",")
+            state.meta[DDTestTags.testStatus] = state.status.spanAttribute
+            state.meta[DDTestSuiteVisibilityTags.testModuleId] = String(id.rawValue)
+            state.meta[DDTestSuiteVisibilityTags.testSessionId] = String(session.id.rawValue)
+            state.meta[DDUISettingsTags.uiSettingsModuleLocalization] = localization
+            
+            // Move to the global when we will support global metrics
+            state.metrics.merge(DDTestMonitor.env.baseMetrics) { _, new in new }
+            
+            addFeatureTags(meta: &state.meta, metrics: &state.metrics)
+            
+            // To cache result of command call and not to process it twice
+            // Hack for XCTest. Should be handled better
+            return state.metrics[DDTestSessionTags.testCoverageLines]
+        }
         
         // To cache result of command call and not to process it twice
         // Hack for XCTest. Should be handled better
-        if let linesCovered = metrics[DDTestSessionTags.testCoverageLines] {
+        if let linesCovered {
             session.set(metric: DDTestSessionTags.testCoverageLines, value: linesCovered)
         }
-        
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: ModuleEnvelope(self))
-        Log.debug("Exported module_end event moduleId: \(self.id)")
+        configuration.log.debug("Exported module_end event moduleId: \(self.id)")
     }
     
     func addFramework(_ name: String) {
-        testFrameworks.insert(name)
+        let _ = _state.update { $0.testFrameworks.insert(name) }
         _session.addFramework(name)
     }
 }
@@ -126,22 +135,30 @@ public extension Module {
 
 extension Module: TestModule {
     func set(tag name: String, value: SpanAttributeConvertible) {
-        meta[name] = value.spanAttribute
+        _state.update {
+            $0.meta[name] = value.spanAttribute
+        }
     }
     
     func set(metric name: String, value: Double) {
-        metrics[name] = value
+        _state.update {
+            $0.metrics[name] = value
+        }
     }
     
     func set(skipped reason: String? = nil) {
-        status = .skip
-        if let reason = reason {
-            meta[DDTestTags.testSkipReason] = reason
+        _state.update {
+            $0.status = .skip
+            if let reason = reason {
+                $0.meta[DDTestTags.testSkipReason] = reason
+            }
         }
     }
     
     func set(failed reason: TestError?) {
-        status = .fail
+        _state.update {
+            $0.status = .fail
+        }
         var errorMessage = "Module \(name) failed"
         if let error = reason {
             set(errorTags: error)
@@ -206,4 +223,8 @@ extension Module {
     }
 }
 
-extension Module: ModuleFeatureTagsHelper {}
+extension Module: ModuleFeatureTagsHelper {
+    var activeFeatures: [any TestHooksFeature] {
+        configuration.activeFeatures
+    }
+}

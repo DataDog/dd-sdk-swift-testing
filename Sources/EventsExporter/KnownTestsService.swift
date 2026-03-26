@@ -81,7 +81,7 @@ internal final class KnownTestsService {
         pageInfo: KnownTestsPageInfo? = nil
     ) -> KnownTestsResult? {
         var configurations: [String: JSONGeneric] = configurations.mapValues { .string($0) }
-        configurations["custom"] = .stringDict(customConfigurations)
+        configurations["custom"] = .init(customConfigurations)
         
         let onePageOnly: Bool = (pageInfo != nil)
         var tests: KnownTestsMap = [:]

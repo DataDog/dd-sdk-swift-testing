@@ -18,15 +18,7 @@ internal import OpenTelemetrySdk
     let didBecomeActiveNotificationName = NSApplication.didBecomeActiveNotification
 #endif
 
-struct CrashedModuleInformation {
-    var crashedSessionId: SpanId
-    var crashedModuleId: SpanId
-    var crashedSuiteId: SpanId
-    var crashedSuiteName: String
-    var sessionStartTime: Date?
-    var moduleStartTime: Date?
-    var suiteStartTime: Date?
-}
+
 
 internal class DDTestMonitor {
     static var instance: DDTestMonitor?
@@ -71,7 +63,7 @@ internal class DDTestMonitor {
     var isRumActive: Bool = false
     let messageChannelUUID: String
 
-    var crashedModuleInfo: CrashedModuleInformation?
+    var crashInfo: CrashInformation?
     
     var codeOwners: CodeOwners? = nil
     var bundleFunctionInfo: FunctionMap = .init()
@@ -89,21 +81,8 @@ internal class DDTestMonitor {
     var efd: EarlyFlakeDetection? = nil
     var atr: AutomaticTestRetries? = nil
     var testManagement: TestManagement? = nil
-
-    var rLock = NSRecursiveLock()
-    private var privateCurrentTest: Test?
-    var currentTest: Test? {
-        get {
-            rLock.lock()
-            defer { rLock.unlock() }
-            return privateCurrentTest
-        }
-        set {
-            rLock.lock()
-            defer { rLock.unlock() }
-            privateCurrentTest = newValue
-        }
-    }
+    
+    let lock: UnfairLock = .init()
     
     private var isGitUploadSucceded: Bool = false
     private var serverTestingPort: CFMessagePort? = nil
@@ -160,7 +139,9 @@ internal class DDTestMonitor {
                 /// because dont have test observer
                 self.setupCrashHandler()
                 let launchedSpan = DDTestMonitor.tracer.createSpanFromLaunchContext()
-                let simpleSpan = SimpleSpanData(spanData: launchedSpan.toSpanData())
+                let simpleSpan = SimpleSpanData(spanData: launchedSpan.toSpanData(),
+                                                sessionStartTime: Date(),
+                                                moduleStartTime: Date())
                 DDCrashes.setCurrent(spanData: simpleSpan)
             }
 
@@ -597,24 +578,24 @@ internal class DDTestMonitor {
     }
 
     func startAttributeListener() {
-        rLock.lock()
-        defer { rLock.unlock() }
+        lock.lock()
+        defer { lock.unlock() }
         
         guard serverTestingPort == nil else { return }
         
         func attributeCallback(port: CFMessagePort?, msgid: Int32, data: CFData?, info: UnsafeMutableRawPointer?) -> Unmanaged<CFData>? {
             switch msgid {
                 case DDCFMessageID.setCustomTags:
-                    if let data = data as Data?,
-                       let decoded = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
-                    {
-                        decoded.forEach {
-                            DDTestMonitor.instance?.currentTest?.setTag(key: $0.key, value: $0.value)
+                if let data = data as Data?, let decoded = try? JSONDecoder().decode([String: JSONGeneric].self, from: data) {
+                        if let test = Test.active {
+                            decoded.forEach {
+                                test.set(tag: $0.key, value: $0.value)
+                            }
                         }
                     }
                 case DDCFMessageID.enableRUM:
                     DDTestMonitor.instance?.isRumActive = true
-                    DDTestMonitor.instance?.currentTest?.setTag(key: DDTestTags.testIsRUMActive, value: String("true"))
+                    Test.active?.set(tag: DDTestTags.testIsRUMActive, value: true)
                 case DDCFMessageID.forceFlush:
                     Log.debug("CFMessagePort forceFlush")
                 default:

@@ -27,7 +27,7 @@ public final class Test: NSObject {
     func setIsUITest(_ value: Bool) {
         self.span.setAttribute(key: DDTestTags.testIsUITest, value: value ? "true" : "false")
 
-        // Set default UI values if nor previously set and update crash customData
+        // Set default UI values if nor previously set
         let attributes = span.getAttributes()
         if attributes[DDUISettingsTags.uiSettingsAppearance] == nil {
             setTag(key: DDUISettingsTags.uiSettingsAppearance, value: PlatformUtils.getAppearance())
@@ -37,8 +37,6 @@ public final class Test: NSObject {
             setTag(key: DDUISettingsTags.uiSettingsOrientation, value: PlatformUtils.getOrientation())
         }
 #endif
-        let simpleSpan = SimpleSpanData(spanData: span.toSpanData(), sessionStertTine: session.startTime, moduleStartTime: module.startTime, suiteStartTime: suite.startTime)
-        DDCrashes.setCurrent(spanData: simpleSpan)
     }
 
     /// Adds a extra tag or attribute to the test, any number of tags can be reported
@@ -148,8 +146,6 @@ extension Test {
         StderrCapture.syncData()
         span.end(time: endTime)
         DDTestMonitor.instance?.networkInstrumentation?.endAndCleanAliveSpans()
-        DDCrashes.setCurrent(spanData: nil)
-        DDTestMonitor.instance?.currentTest = nil
     }
     
     static func withActiveTest<T>(named name: String, in suite: Suite, at start: Date? = nil,
@@ -204,7 +200,7 @@ extension Test {
         ]
         
         // TODO: Move to common medatada when we will have common metrics
-        for metric in DDTestMonitor.env.baseMetrics {
+        for metric in suite.configuration.metrics {
             attributes[metric.key] = .double(metric.value)
         }
         

@@ -115,7 +115,7 @@ internal class ITRService {
     func skippableTests(repositoryURL: String, sha: String, testLevel: ITRTestLevel,
                         configurations: [String: String], customConfigurations: [String: String]) -> SkipTests? {
         var itrConfig: [String: JSONGeneric] = configurations.mapValues { .string($0) }
-        itrConfig["custom"] = .stringDict(customConfigurations)
+        itrConfig["custom"] = .init(customConfigurations)
 
         let skippablePayload = SkipTestsRequestFormat(env: exporterConfiguration.environment,
                                                       service: exporterConfiguration.serviceName,
@@ -139,8 +139,13 @@ internal class ITRService {
 
         let tests = skipTests.data.map { skipTest in
             let customConfigurations: [String: String]?
-            if case .stringDict(let dict) = skipTest.attributes.configurations?["custom"] {
-                customConfigurations = dict
+            if case .object(let dict) = skipTest.attributes.configurations?["custom"] {
+                customConfigurations = dict.compactMapValues {
+                    switch $0 {
+                    case .string(let s): return s
+                    default: return nil
+                    }
+                }
             } else {
                 customConfigurations = nil
             }

@@ -23,7 +23,7 @@ public final class Session: NSObject, Encodable {
     public let resource: String
     public var testFrameworks: Set<String> { _state.value.testFrameworks }
     public var duration: UInt64 { _state.value.duration }
-    public var meta: [String: String] { _state.value.meta }
+    public var tags: [String: String] { _state.value.meta }
     public var metrics: [String: Double] { _state.value.metrics }
     public var status: TestStatus { _state.value.status }
     
@@ -44,10 +44,10 @@ public final class Session: NSObject, Encodable {
         state.meta[DDTestTags.testCommand] = config.command
         
         let sessionStartTime = startTime ?? config.clock.now
-        if let crash = config.crash {
+        if let crash = config.crash?.session {
             state.status = .fail
-            self.id = crash.crashedSessionId
-            self.startTime = crash.sessionStartTime ?? sessionStartTime
+            self.id = crash.id
+            self.startTime = crash.startTime
         } else {
             self.id = SpanId.random()
             self.startTime = sessionStartTime
@@ -57,6 +57,12 @@ public final class Session: NSObject, Encodable {
     
     private func internalEnd(endTime: Date? = nil) {
         let duration = (endTime ?? configuration.clock.now).timeIntervalSince(startTime).toNanoseconds
+        
+        // If there is a Sanitizer message, we fail the session so error can be shown
+        if let sanitizerInfo = SanitizerHelper.getSaniziterInfo() {
+            self.set(failed: .init(type: "Sanitizer Error", stack: sanitizerInfo))
+        }
+        
         _state.update { state in
             state.duration = duration
             state.meta[DDGenericTags.type] = DDTagValues.typeSessionEnd
@@ -66,7 +72,7 @@ public final class Session: NSObject, Encodable {
             state.meta[DDTestSessionTags.testToolchain] = configuration.platform.runtimeName.lowercased() + "-" + configuration.platform.runtimeVersion
             
             // Move to the global when we will support global metrics
-            state.metrics.merge(DDTestMonitor.env.baseMetrics) { _, new in new }
+            state.metrics.merge(configuration.metrics) { _, new in new }
             
             addFeatureTags(meta: &state.meta, metrics: &state.metrics)
         }
@@ -134,6 +140,8 @@ public extension Session {
                                    clock: DDTestMonitor.clock,
                                    crash: nil,
                                    command: command,
+                                   service: DDTestMonitor.env.service,
+                                   metrics: DDTestMonitor.env.baseMetrics,
                                    log: Log.instance)
         return Session(name: name, config: config, modules: Module.StatelessManager(), startTime: startTime)
     }
@@ -210,15 +218,21 @@ extension Session {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: StaticCodingKeys.self)
-        try container.encode(id.rawValue, forKey: .test_session_id)
-        try container.encode(startTime.timeIntervalSince1970.toNanoseconds, forKey: .start)
-        try container.encode(duration, forKey: .duration)
-        try container.encode(meta, forKey: .meta)
-        try container.encode(metrics, forKey: .metrics)
-        try container.encode(status == .fail ? 1 : 0, forKey: .error)
-        try container.encode(name, forKey: .name)
-        try container.encode(resource, forKey: .resource)
-        try container.encode(DDTestMonitor.env.service, forKey: .service)
+        try _state.use { state in
+            try container.encode(id.rawValue, forKey: .test_session_id)
+            try container.encode(startTime.timeIntervalSince1970.toNanoseconds, forKey: .start)
+            try container.encode(state.duration, forKey: .duration)
+            try container.encode(state.meta, forKey: .meta)
+            try container.encode(state.metrics, forKey: .metrics)
+            try container.encode(state.status == .fail ? 1 : 0, forKey: .error)
+            if state.testFrameworks.count == 1, let framework = state.testFrameworks.first {
+                try container.encode("\(framework).session", forKey: .name)
+            } else {
+                try container.encode("Swift.session", forKey: .name)
+            }
+            try container.encode(resource, forKey: .resource)
+            try container.encode(configuration.service, forKey: .service)
+        }
     }
 
     struct SessionEnvelope: Encodable {

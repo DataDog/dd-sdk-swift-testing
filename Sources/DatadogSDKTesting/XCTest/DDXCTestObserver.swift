@@ -55,7 +55,9 @@ class DDXCTestObserver: NSObject, XCTestObservation {
             let session = try waitForAsync {
                 try await (session: manager.session, config: manager.sessionConfig)
             }
-            state = .module(session.session.module(named: bundleName), config: session.config)
+            let module = session.session.module(named: bundleName)
+            state = .module(module, config: session.config)
+            DDCrashes.setCurrent(spanData: module.toCrashData)
             log.debug("testBundleWillStart: \(bundleName)")
         } catch {
             log.print("Session initialisation failed: \(error)")
@@ -76,6 +78,7 @@ class DDXCTestObserver: NSObject, XCTestObservation {
         }
         module.end()
         state = .end
+        DDCrashes.setCurrent(spanData: nil)
         log.debug("testBundleDidFinish: \(module.name)")
     }
 
@@ -112,9 +115,10 @@ class DDXCTestObserver: NSObject, XCTestObservation {
         testSuite.setValue(wrappedTests, forKey: "_mutableTests")
         
         let suite = module.startSuite(named: testSuite.name, at: nil, framework: "XCTest")
+        DDCrashes.setCurrent(spanData: suite.toCrashData)
         config.activeFeatures.testSuiteWillStart(suite: suite, testsCount: UInt(wrappedTests.count))
         
-        state = .suite(suite: suite, context: SuiteContext(parent: parent, config: config))
+        state = .suite(suite: suite, context: SuiteContext(parent: parent, module: module, config: config))
         log.debug("testSuiteWillStart: \(testSuite.name)")
     }
 
@@ -139,6 +143,7 @@ class DDXCTestObserver: NSObject, XCTestObservation {
             suite.set(status: testSuite.testRun?.status ?? .pass)
             suite.end()
             state = context.back(from: suite)
+            DDCrashes.setCurrent(spanData: context.module.toCrashData)
             log.debug("testSuiteDidFinish: \(testSuite.name)")
         default:
             log.print("testSuiteDidFinish: Bad observer state: \(state), expected: .suite or .container")
@@ -396,20 +401,22 @@ extension DDXCTestObserver {
     
     final class SuiteContext {
         let parent: ContainerSuite?
+        let module: any TestModule & TestSuiteProvider
         let config: SessionConfig
         var features: [any TestHooksFeature] { config.activeFeatures }
         
-        init(parent: ContainerSuite?, config: SessionConfig)
+        init(parent: ContainerSuite?, module: any TestModule & TestSuiteProvider, config: SessionConfig)
         {
             self.parent = parent
             self.config = config
+            self.module = module
         }
         
         func back(from suite: any TestSuite) -> State {
             parent == nil ?
-                .module(suite.module as! any TestModule & TestSuiteProvider, config: config) :
+                .module(module, config: config) :
                 .container(suite: parent!,
-                           inside: suite.module as! any TestModule & TestSuiteProvider,
+                           inside: module,
                            config: config)
         }
     }

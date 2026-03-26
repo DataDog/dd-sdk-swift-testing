@@ -22,7 +22,7 @@ public final class Suite: NSObject, Encodable {
     public let localization: String
     
     var duration: UInt64 { _state.value.duration }
-    var meta: [String: String] { _state.value.meta }
+    var tags: [String: String] { _state.value.meta }
     var metrics: [String: Double] { _state.value.metrics }
     var status: TestStatus { _state.value.status }
     var configuration: SessionConfig { _module.configuration }
@@ -39,35 +39,44 @@ public final class Suite: NSObject, Encodable {
         self.testFramework = framework
         self.localization = PlatformUtils.getLocalization()
         var state = MutableState()
-        if let crash = _module.configuration.crash, crash.crashedSuiteName == name {
+        if let crash = module.configuration.crash?.suite, crash.name == name {
             state.status = .fail
-            self.id = crash.crashedSuiteId
-            self.startTime = crash.suiteStartTime ?? startTime ?? _module.configuration.clock.now
+            self.id = crash.id
+            self.startTime = crash.startTime
         } else {
             self.id = SpanId.random()
-            self.startTime = startTime ?? _module.configuration.clock.now
+            self.startTime = startTime ?? module.configuration.clock.now
         }
+        
+        state.meta[DDTestTags.testSuite] = name
+        state.meta[DDTestTags.testModule] = module.name
+        state.meta[DDTestTags.testFramework] = testFramework
+        state.meta[DDTestSuiteVisibilityTags.testSessionId] = String(module.session.id.rawValue)
+        state.meta[DDTestSuiteVisibilityTags.testModuleId] = String(module.id.rawValue)
+        state.meta[DDTestSuiteVisibilityTags.testSuiteId] = String(id.rawValue)
+        state.meta[DDUISettingsTags.uiSettingsSuiteLocalization] = localization
+        state.meta[DDUISettingsTags.uiSettingsModuleLocalization] = module.localization
+            
+        // Move to the global when we will support global metrics
+        state.metrics.merge(module.configuration.metrics) { _, new in new }
+        
         self._state = .init(state)
+        
+        super.init()
+        
+        if let crash = module.configuration.crash?.suite,
+           let error = crash.error, crash.name == name
+        {
+            set(failed: error)
+        }
     }
 
     private func internalEnd(endTime: Date? = nil) {
         let duration = (endTime ?? configuration.clock.now).timeIntervalSince(startTime).toNanoseconds
-        
         _state.update { state in
             state.duration = duration
             state.meta[DDGenericTags.type] = DDTagValues.typeSuiteEnd
-            state.meta[DDTestTags.testSuite] = name
-            state.meta[DDTestTags.testModule] = module.name
-            state.meta[DDTestTags.testFramework] = testFramework
             state.meta[DDTestTags.testStatus] = state.status.spanAttribute
-            state.meta[DDTestSuiteVisibilityTags.testSessionId] = String(session.id.rawValue)
-            state.meta[DDTestSuiteVisibilityTags.testModuleId] = String(module.id.rawValue)
-            state.meta[DDTestSuiteVisibilityTags.testSuiteId] = String(id.rawValue)
-            state.meta[DDUISettingsTags.uiSettingsSuiteLocalization] = localization
-            state.meta[DDUISettingsTags.uiSettingsModuleLocalization] = module.localization
-            
-            // Move to the global when we will support global metrics
-            state.metrics.merge(DDTestMonitor.env.baseMetrics) { _, new in new }
         }
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: SuiteEnvelope(self))
         Log.debug("Exported suite_end event suiteId: \(self.id)")
@@ -182,17 +191,19 @@ extension Suite {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: StaticCodingKeys.self)
-        try container.encode(session.id.rawValue, forKey: .test_session_id)
-        try container.encode(module.id.rawValue, forKey: .test_module_id)
-        try container.encode(id.rawValue, forKey: .test_suite_id)
-        try container.encode(startTime.timeIntervalSince1970.toNanoseconds, forKey: .start)
-        try container.encode(duration, forKey: .duration)
-        try container.encode(meta, forKey: .meta)
-        try container.encode(metrics, forKey: .metrics)
-        try container.encode(status == .fail ? 1 : 0, forKey: .error)
-        try container.encode("\(testFramework).suite", forKey: .name)
-        try container.encode("\(name)", forKey: .resource)
-        try container.encode(DDTestMonitor.env.service, forKey: .service)
+        try _state.use { state in
+            try container.encode(session.id.rawValue, forKey: .test_session_id)
+            try container.encode(module.id.rawValue, forKey: .test_module_id)
+            try container.encode(id.rawValue, forKey: .test_suite_id)
+            try container.encode(startTime.timeIntervalSince1970.toNanoseconds, forKey: .start)
+            try container.encode(state.duration, forKey: .duration)
+            try container.encode(state.meta, forKey: .meta)
+            try container.encode(state.metrics, forKey: .metrics)
+            try container.encode(state.status == .fail ? 1 : 0, forKey: .error)
+            try container.encode("\(testFramework).suite", forKey: .name)
+            try container.encode(name, forKey: .resource)
+            try container.encode(configuration.service, forKey: .service)
+        }
     }
 
     struct SuiteEnvelope: Encodable {

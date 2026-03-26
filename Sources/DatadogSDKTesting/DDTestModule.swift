@@ -23,7 +23,7 @@ public final class Module: NSObject, Encodable {
     
     public var testFrameworks: Set<String> { _state.value.testFrameworks }
     public var duration: UInt64 { _state.value.duration }
-    public var meta: [String: String] { _state.value.meta }
+    public var tags: [String: String] { _state.value.meta }
     public var metrics: [String: Double] { _state.value.metrics }
     public var status: TestStatus { _state.value.status }
     
@@ -40,25 +40,29 @@ public final class Module: NSObject, Encodable {
 
         var state = MutableState()
         let moduleStartTime = startTime ?? session.configuration.clock.now
-        if let crash = session.configuration.crash {
+        if let crash = session.configuration.crash?.module, crash.name == name {
             state.status = .fail
-            self.id = crash.crashedModuleId
-            self.startTime = crash.moduleStartTime ?? moduleStartTime
+            self.id = crash.id
+            self.startTime = crash.startTime
         } else {
             self.id = SpanId.random()
             self.startTime = moduleStartTime
         }
         self.localization = PlatformUtils.getLocalization()
         self._state = .init(state)
+        super.init()
+        
+        if let crash = session.configuration.crash?.module,
+           let error = crash.error, crash.name == name
+        {
+            set(failed: error)
+        }
     }
     
     private func internalEnd(endTime: Date? = nil) {
         let shouldEnd = _session.moduleShouldEnd
         let duration = (endTime ?? configuration.clock.now).timeIntervalSince(startTime).toNanoseconds
-        // If there is a Sanitizer message, we fail the module so error can be shown
-        if let sanitizerInfo = SanitizerHelper.getSaniziterInfo() {
-            self.set(failed: .init(type: "Sanitizer Error", stack: sanitizerInfo))
-        }
+        
         guard shouldEnd else { return }
         
         let linesCovered = _state.update { state in
@@ -75,7 +79,7 @@ public final class Module: NSObject, Encodable {
             state.meta[DDUISettingsTags.uiSettingsModuleLocalization] = localization
             
             // Move to the global when we will support global metrics
-            state.metrics.merge(DDTestMonitor.env.baseMetrics) { _, new in new }
+            state.metrics.merge(configuration.metrics) { _, new in new }
             
             addFeatureTags(meta: &state.meta, metrics: &state.metrics)
             
@@ -194,16 +198,22 @@ extension Module {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: StaticCodingKeys.self)
-        try container.encode(session.id.rawValue, forKey: .test_session_id)
-        try container.encode(id.rawValue, forKey: .test_module_id)
-        try container.encode(startTime.timeIntervalSince1970.toNanoseconds, forKey: .start)
-        try container.encode(duration, forKey: .duration)
-        try container.encode(meta, forKey: .meta)
-        try container.encode(metrics, forKey: .metrics)
-        try container.encode(status == .fail ? 1 : 0, forKey: .error)
-        try container.encode("Swift.module", forKey: .name)
-        try container.encode(name, forKey: .resource)
-        try container.encode(DDTestMonitor.env.service, forKey: .service)
+        try _state.use { state in
+            try container.encode(session.id.rawValue, forKey: .test_session_id)
+            try container.encode(id.rawValue, forKey: .test_module_id)
+            try container.encode(startTime.timeIntervalSince1970.toNanoseconds, forKey: .start)
+            try container.encode(state.duration, forKey: .duration)
+            try container.encode(state.meta, forKey: .meta)
+            try container.encode(state.metrics, forKey: .metrics)
+            try container.encode(state.status == .fail ? 1 : 0, forKey: .error)
+            if state.testFrameworks.count == 1, let framework = state.testFrameworks.first {
+                try container.encode("\(framework).module", forKey: .name)
+            } else {
+                try container.encode("Swift.module", forKey: .name)
+            }
+            try container.encode(name, forKey: .resource)
+            try container.encode(DDTestMonitor.env.service, forKey: .service)
+        }
     }
 
     struct ModuleEnvelope: Encodable {

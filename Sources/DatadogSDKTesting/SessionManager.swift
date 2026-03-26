@@ -100,8 +100,10 @@ final actor SessionManager: TestSessionManager {
             activeFeatures: monitor.activeFeatures,
             platform: DDTestMonitor.env.platform,
             clock: DDTestMonitor.clock,
-            crash: monitor.crashedModuleInfo,
+            crash: monitor.crashInfo,
             command: DDTestMonitor.env.testCommand,
+            service: DDTestMonitor.env.service,
+            metrics: DDTestMonitor.env.baseMetrics,
             log: log
         )
         

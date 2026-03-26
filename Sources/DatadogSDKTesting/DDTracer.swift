@@ -25,10 +25,7 @@ internal class DDTracer {
 
     private let attributeCountLimit: UInt = 1024
 
-    static var activeSpan: Span? {
-        return OpenTelemetry.instance.contextProvider.activeSpan ??
-            DDTestMonitor.instance?.currentTest?.span
-    }
+    static var activeSpan: Span? { OpenTelemetry.instance.contextProvider.activeSpan ?? Test.current?.span }
 
     var propagationContext: SpanContext? {
         return DDTracer.activeSpan?.context ?? launchSpanContext
@@ -135,26 +132,6 @@ internal class DDTracer {
         self.init(id: identifier, version: version, exporter: eventsExporter,
                   enabled: !conf.disableTracesExporting, launchContext: launchSpanContext)
     }
-
-    func startSpan(name: String, attributes: [String: String], startTime: Date? = nil) -> Span {
-        let spanBuilder = tracerSdk.spanBuilder(spanName: name)
-        attributes.forEach {
-            spanBuilder.setAttribute(key: $0.key, value: $0.value)
-        }
-        if let startTime = startTime {
-            spanBuilder.setStartTime(time: startTime)
-        }
-        /// launchSpanContext will only be available when running in the app launched from UITest, so assign this as the parent
-        /// when there is no one
-        if let launchContext = launchSpanContext {
-            spanBuilder.setParent(launchContext)
-        } else {
-            spanBuilder.setNoParent()
-        }
-        spanBuilder.setActive(true)
-        let span = spanBuilder.startSpan()
-        return span
-    }
     
     private func createSpanBuilder(name: String, attributes: [String: AttributeValue], startTime: Date? = nil) -> SpanBuilder {
         let spanBuilder = tracerSdk.spanBuilder(spanName: name)
@@ -194,7 +171,7 @@ internal class DDTracer {
 
     /// This method is called form the crash reporter if the previous run crashed while running a test. Then it recreates the span with the previous information
     /// and adds the error status and information
-    @discardableResult func createSpanFromCrash(spanData: SimpleSpanData, crashDate: Date?, errorType: String, errorMessage: String, errorStack: String) -> SpanSdk {
+    @discardableResult func createSpanFromCrash(spanData: SimpleSpanData, crashDate: Date?, error: TestError) -> SpanSdk {
         var spanId: SpanId
         var parentContext: SpanContext?
         let traceId = TraceId(idHi: spanData.traceIdHi, idLo: spanData.traceIdLo)
@@ -224,19 +201,17 @@ internal class DDTracer {
         }
 
         attributes.updateValue(value: AttributeValue.string(DDTagValues.statusFail), forKey: DDTestTags.testStatus)
-        attributes.updateValue(value: AttributeValue.string(errorType), forKey: DDTags.errorType)
-        if errorStack.count < 5000 {
-            attributes.updateValue(value: AttributeValue.string(errorMessage), forKey: DDTags.errorMessage)
-            attributes.updateValue(value: AttributeValue.string(errorStack), forKey: DDTags.errorStack)
-        } else {
-            attributes.updateValue(value: AttributeValue.string(errorMessage + ". Check error.crash_log for the full crash log."), forKey: DDTags.errorMessage)
-
-            let crashedThread = DDSymbolicator.calculateCrashedThread(stack: errorStack)
-            attributes.updateValue(value: AttributeValue.string(crashedThread), forKey: "\(DDTags.errorStack)")
-
-            let splitted = errorStack.split(by: 5000)
-            for i in 0 ..< splitted.count {
-                attributes.updateValue(value: AttributeValue.string(splitted[i]), forKey: "\(DDTags.errorCrashLog).\(String(format: "%02d", i))")
+        attributes.updateValue(value: AttributeValue.string(error.type), forKey: DDTags.errorType)
+        if let message = error.message {
+            attributes.updateValue(value: AttributeValue.string(message), forKey: DDTags.errorMessage)
+        }
+        if let stack = error.stack {
+            attributes.updateValue(value: AttributeValue.string(stack), forKey: DDTags.errorStack)
+        }
+        if let crash = error.crashLog {
+            for i in 0 ..< crash.count {
+                attributes.updateValue(value: AttributeValue.string(crash[i]),
+                                       forKey: "\(DDTags.errorCrashLog).\(String(format: "%02d", i))")
             }
         }
 
@@ -260,7 +235,7 @@ internal class DDTracer {
         if let crashDate = crashDate {
             minimumCrashTime = max(minimumCrashTime, crashDate)
         }
-        span.status = .error(description: errorMessage)
+        span.status = .error(description: error.message ?? error.type)
         span.end(time: minimumCrashTime)
         self.flush()
         return span
@@ -289,7 +264,7 @@ internal class DDTracer {
     }
 
     private func testAttributes() -> [String: AttributeValue] {
-        guard let currentTest = DDTestMonitor.instance?.currentTest else {
+        guard let currentTest = Test.active else {
             return [:]
         }
         return [DDTestTags.testName: AttributeValue.string(currentTest.name),

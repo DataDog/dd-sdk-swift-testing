@@ -21,6 +21,9 @@ protocol TestModel: AnyObject, Sendable {
 }
 
 protocol TestContainer: TestModel {
+    var tags: [String: String] { get }
+    var metrics: [String: Double] { get }
+    
     func set(failed reason: TestError?)
     func set(skipped reason: String?)
     
@@ -162,13 +165,26 @@ struct TestError {
     let type: String
     let message: String?
     let stack: String?
-    let crashLog: String?
+    let crashLog: [String]?
     
-    init(type: String, message: String? = nil, stack: String? = nil, crashLog: String? = nil) {
+    init(type: String, message: String? = nil, stack: String? = nil) {
         self.type = type
-        self.message = message
-        self.stack = stack
-        self.crashLog = crashLog
+        guard let stack else {
+            self.message = message
+            self.stack = nil
+            self.crashLog = nil
+            return
+        }
+        if stack.count < 5000 {
+            self.message = message
+            self.stack = stack
+            self.crashLog = nil
+        } else {
+            self.message = message.map { $0 + ". " } ?? ""
+                + "Check error.crash_log for the full crash log."
+            self.stack = DDSymbolicator.calculateCrashedThread(stack: stack)
+            self.crashLog = stack.split(by: 5000)
+        }
     }
 }
 
@@ -176,8 +192,10 @@ struct SessionConfig: Sendable {
     let activeFeatures: [any TestHooksFeature]
     let platform: Environment.Platform
     let clock: Clock
-    let crash: CrashedModuleInformation?
+    let crash: CrashInformation?
     let command: String?
+    let service: String
+    let metrics: [String: Double]
     let log: Logger
 }
 
@@ -196,7 +214,10 @@ extension TestModel {
             set(tag: DDTags.errorStack, value: stack)
         }
         if let crash = error.crashLog {
-            set(tag: DDTags.errorCrashLog, value: crash)
+            for i in 0 ..< crash.count {
+                set(tag: "\(DDTags.errorCrashLog).\(String(format: "%02d", i))",
+                    value: crash[i])
+            }
         }
     }
     
@@ -257,6 +278,19 @@ extension TestRun {
         }
         if let percentile90 = Sigma.percentile(samples, percentile: 0.90) {
             set(metric: tag + DDBenchmarkTags.statisticsP90, value: percentile90)
+        }
+    }
+    
+    func set(tag name: String, value: JSONGeneric) {
+        switch value {
+        case .nil: break
+        case .int(let i): set(metric: name, value: Double(i))
+        case .float(let n): set(metric: name, value: n)
+        case .bool(let b): set(tag: name, value: b.spanAttribute)
+        case .string(let s): set(tag: name, value: s)
+        case .date(let d): set(tag: name, value: JSONGeneric.formatter.string(from: d))
+        case .bytes(let b): set(tag: name, value: b.base64EncodedString())
+        default: set(tag: name, value: value.debugDescription)
         }
     }
 }

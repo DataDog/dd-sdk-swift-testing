@@ -259,7 +259,7 @@ extension Test {
         ]
         
         // TODO: Move to common medatada when we will have common metrics
-        for metric in DDTestMonitor.env.baseMetrics {
+        for metric in suite.configuration.metrics {
             attributes[metric.key] = .double(metric.value)
         }
         

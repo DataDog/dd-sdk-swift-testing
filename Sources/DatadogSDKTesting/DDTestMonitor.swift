@@ -308,7 +308,11 @@ internal class DDTestMonitor {
                     Log.debug("Tracer config: \(config)")
                 } else {
                     Log.print("ITR requires Git but Git Upload failed. Disabling ITR")
-                    config.itr.itrEnabled = false
+                    config = .init(itr: .init(itrEnabled: false),
+                                   efd: config.efd,
+                                   flakyTestRetriesEnabled: config.flakyTestRetriesEnabled,
+                                   knownTestsEnabled: config.knownTestsEnabled,
+                                   testManagement: config.testManagement)
                 }
                 tracerBackendConfig = config
             }

@@ -9,101 +9,112 @@ import Foundation
 
 @objc(DDTestSession)
 public final class Session: NSObject, Encodable {
+    struct MutableState {
+        var duration: UInt64 = 0
+        var meta: [String: String] = [:]
+        var metrics: [String: Double] = [:]
+        var status: TestStatus = .pass
+        var testRunsCount: UInt = 0
+        var testFrameworks: Set<String> = []
+    }
+    
+    public let name: String
+    public let startTime: Date
+    public let resource: String
+    public var testFrameworks: Set<String> { _state.value.testFrameworks }
+    public var duration: UInt64 { _state.value.duration }
+    public var meta: [String: String] { _state.value.meta }
+    public var metrics: [String: Double] { _state.value.metrics }
+    public var status: TestStatus { _state.value.status }
+    
     let id: SpanId
-    let name: String
-    let startTime: Date
     let configuration: SessionConfig
-    public var resource: String
-    public private(set) var testFrameworks: Set<String>
-    var duration: UInt64
-    var meta: [String: String] = [:]
-    var metrics: [String: Double] = [:]
-    var status: TestStatus
+    var testRunsCount: UInt { _state.value.testRunsCount }
     
-    private var _testRunsCount: Synced<UInt> = Synced(0)
-    var testRunsCount: UInt { _testRunsCount.value }
-    
+    private let _state: Synced<MutableState>
     private let _moduleManager: any TestModuleManagerSession
     
     init(name: String, config: SessionConfig, modules: any TestModuleManagerSession, startTime: Date? = nil) {
-        self.duration = 0
-        self.status = .pass
         self.name = name
-        self.testFrameworks = []
         self.resource = name
         self.configuration = config
         self._moduleManager = modules
         
-        self.meta[DDTestTags.testCommand] = config.command
+        var state = MutableState()
+        state.meta[DDTestTags.testCommand] = config.command
         
         let sessionStartTime = startTime ?? config.clock.now
         if let crash = config.crash {
-            self.status = .fail
+            state.status = .fail
             self.id = crash.crashedSessionId
             self.startTime = crash.sessionStartTime ?? sessionStartTime
         } else {
             self.id = SpanId.random()
             self.startTime = sessionStartTime
         }
+        self._state = .init(state)
     }
     
     private func internalEnd(endTime: Date? = nil) {
-        duration = (endTime ?? DDTestMonitor.clock.now).timeIntervalSince(startTime).toNanoseconds
-
-        let sessionStatus: String = status.spanAttribute
-        /// Export session event
-        let sessionAttributes: [String: String] = [
-            DDGenericTags.type: DDTagValues.typeSessionEnd,
-            DDTestTags.testFramework: testFrameworks.joined(separator: ","),
-            DDTestTags.testStatus: sessionStatus,
-            DDTestSuiteVisibilityTags.testSessionId: String(id.rawValue),
-        ]
-        meta.merge(sessionAttributes) { _, new in new }
-        
-        // Move to the global when we will support global metrics
-        metrics.merge(DDTestMonitor.env.baseMetrics) { _, new in new }
-        
-        meta[DDTestSessionTags.testToolchain] = DDTestMonitor.env.platform.runtimeName.lowercased() + "-" + DDTestMonitor.env.platform.runtimeVersion
-        
-        addFeatureTags()
-        
+        let duration = (endTime ?? configuration.clock.now).timeIntervalSince(startTime).toNanoseconds
+        _state.update { state in
+            state.duration = duration
+            state.meta[DDGenericTags.type] = DDTagValues.typeSessionEnd
+            state.meta[DDTestTags.testFramework] = state.testFrameworks.joined(separator: ",")
+            state.meta[DDTestTags.testStatus] = state.status.spanAttribute
+            state.meta[DDTestSuiteVisibilityTags.testSessionId] = String(id.rawValue)
+            state.meta[DDTestSessionTags.testToolchain] = configuration.platform.runtimeName.lowercased() + "-" + configuration.platform.runtimeVersion
+            
+            // Move to the global when we will support global metrics
+            state.metrics.merge(DDTestMonitor.env.baseMetrics) { _, new in new }
+            
+            addFeatureTags(meta: &state.meta, metrics: &state.metrics)
+        }
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: SessionEnvelope(self))
-        Log.debug("Exported session_end event sessionId: \(self.id)")
+        configuration.log.debug("Exported session_end event sessionId: \(self.id)")
         DDTestMonitor.tracer.flush()
     }
     
     func addFramework(_ name: String) {
-        testFrameworks.insert(name)
+        let _ = _state.update { $0.testFrameworks.insert(name) }
     }
 }
 
 extension Session: TestSession {
     func set(tag name: String, value: any SpanAttributeConvertible) {
-        meta[name] = value.spanAttribute
+        _state.update {
+            $0.meta[name] = value.spanAttribute
+        }
     }
     
     func set(metric name: String, value: Double) {
-        metrics[name] = value
+        _state.update {
+            $0.metrics[name] = value
+        }
     }
     
     func set(failed reason: TestError?) {
-        status = .fail
+        _state.update {
+            $0.status = .fail
+        }
         if let error = reason {
             set(errorTags: error)
         }
     }
     
     func set(skipped reason: String? = nil) {
-        status = .skip
-        if let reason = reason {
-            meta[DDTestTags.testSkipReason] = reason
+        _state.update {
+            $0.status = .skip
+            if let reason = reason {
+                $0.meta[DDTestTags.testSkipReason] = reason
+            }
         }
     }
     
     func nextTestIndex() -> UInt {
-        _testRunsCount.update { cnt in
-            defer { cnt += 1 }
-            return cnt
+        _state.update { state in
+            defer { state.testRunsCount += 1}
+            return state.testRunsCount
         }
     }
     
@@ -118,7 +129,12 @@ public extension Session {
     ///   - command: Optional, test command that started this session
     ///   - startTime: Optional, the time where the session started
     @objc static func start(name: String, command: String? = nil, startTime: Date? = nil) -> Session {
-        let config = SessionConfig(activeFeatures: [], clock: DDTestMonitor.clock, crash: nil, command: command)
+        let config = SessionConfig(activeFeatures: [],
+                                   platform: DDTestMonitor.env.platform,
+                                   clock: DDTestMonitor.clock,
+                                   crash: nil,
+                                   command: command,
+                                   log: Log.instance)
         return Session(name: name, config: config, modules: Module.StatelessManager(), startTime: startTime)
     }
 
@@ -224,18 +240,19 @@ extension Session {
 }
 
 protocol ModuleFeatureTagsHelper: AnyObject {
-    var meta: [String: String] { get set }
-    var metrics: [String: Double] { get set }
-    func addFeatureTags()
+    var activeFeatures: [any TestHooksFeature] { get }
+    func addFeatureTags(meta: inout [String: String], metrics: inout [String: Double])
 }
 
-extension Session: ModuleFeatureTagsHelper {}
+extension Session: ModuleFeatureTagsHelper {
+    var activeFeatures: [any TestHooksFeature] { configuration.activeFeatures }
+}
 
 extension ModuleFeatureTagsHelper {
-    func addFeatureTags() {
+    func addFeatureTags(meta: inout [String: String], metrics: inout [String: Double]) {
         var itrSkipped: UInt = 0
         
-        if let tia = DDTestMonitor.instance?.tia {
+        if let tia = activeFeatures.first(where: { $0 is TestImpactAnalysis }) as? TestImpactAnalysis {
             meta[DDTestSessionTags.testCodeCoverageEnabled] = tia.isCoverageEnabled.spanAttribute
             meta[DDTestSessionTags.testSkippingEnabled] = tia.isSkippingEnabled.spanAttribute
             
@@ -248,7 +265,7 @@ extension ModuleFeatureTagsHelper {
             }
         }
         
-        if DDTestMonitor.instance?.testManagement != nil {
+        if activeFeatures.first(where: { $0 is TestManagement }) != nil {
             meta[DDTestSessionTags.testTestManagementEnabled] = "true"
         }
         
@@ -259,7 +276,7 @@ extension ModuleFeatureTagsHelper {
             metrics[DDTestSessionTags.testCoverageLines] = linesCovered
         }
         
-        if let efd = DDTestMonitor.instance?.efd {
+        if let efd = activeFeatures.first(where: { $0 is EarlyFlakeDetection }) as? EarlyFlakeDetection {
             meta[DDEfdTags.testEfdEnabled] = "true"
             if efd.sessionFailed {
                 meta[DDEfdTags.testEfdAbortReason] = DDTagValues.efdAbortFaulty

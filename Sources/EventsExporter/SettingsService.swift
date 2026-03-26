@@ -7,33 +7,40 @@
 import Foundation
 
 public struct TracerSettings {
-    public var itr: ITR
-    public var efd: EFD
-    public var flakyTestRetriesEnabled: Bool
-    public var knownTestsEnabled: Bool
-    public var testManagement: TestManagement
+    public let itr: ITR
+    public let efd: EFD
+    public let flakyTestRetriesEnabled: Bool
+    public let knownTestsEnabled: Bool
+    public let testManagement: TestManagement
     
     public var efdIsEnabled: Bool {
         knownTestsEnabled && efd.enabled
     }
 
     public struct ITR {
-        public var itrEnabled: Bool
-        public var codeCoverage: Bool
-        public var testsSkipping: Bool
-        public var requireGit: Bool
+        public let itrEnabled: Bool
+        public let codeCoverage: Bool
+        public let testsSkipping: Bool
+        public let requireGit: Bool
         
         init(attrs: SettingsService.SettingsResponse.Data.Attributes) {
-            itrEnabled = attrs.itrEnabled
-            codeCoverage = attrs.codeCoverage
-            testsSkipping = attrs.testsSkipping
-            requireGit = attrs.requireGit
+            self.init(itrEnabled: attrs.itrEnabled, codeCoverage: attrs.codeCoverage,
+                      testsSkipping: attrs.testsSkipping, requireGit: attrs.requireGit)
+        }
+        
+        public init(itrEnabled: Bool = false, codeCoverage: Bool = false,
+                    testsSkipping: Bool = false, requireGit: Bool = false)
+        {
+            self.itrEnabled = itrEnabled
+            self.codeCoverage = codeCoverage
+            self.testsSkipping = testsSkipping
+            self.requireGit = requireGit
         }
     }
 
     public struct TestManagement {
-        public var enabled: Bool
-        public var attemptToFixRetries: UInt
+        public let enabled: Bool
+        public let attemptToFixRetries: UInt
 
         init(attrs: SettingsService.SettingsResponse.Data.Attributes.TestManagement) {
             enabled = attrs.enabled
@@ -42,18 +49,19 @@ public struct TracerSettings {
     }
 
     public struct EFD {
-        public var enabled: Bool
-        public var slowTestRetries: TimeTable
-        public var faultySessionThreshold: Double
+        public let enabled: Bool
+        public let slowTestRetries: TimeTable
+        public let faultySessionThreshold: Double
         
         public struct TimeTable {
-            public var times: [(time: TimeInterval, count: UInt)]
+            public let times: [(time: TimeInterval, count: UInt)]
             
-            init(attrs: [String: UInt]) {
-                times = attrs.compactMap { (key, val) in
+            public init(attrs: [String: UInt] = [:]) {
+                var times = attrs.compactMap { (key, val) in
                     Self.time(key).map { (time: $0, count: val) }
                 }
                 times.sort { l, r in l.time < r.time }
+                self.times = times
             }
             
             public func repeats(for time: TimeInterval) -> UInt {
@@ -84,19 +92,27 @@ public struct TracerSettings {
             slowTestRetries = TimeTable(attrs: attrs.slowTestRetries)
         }
         
-        public init() {
-            enabled = false
-            faultySessionThreshold = 0
-            slowTestRetries = TimeTable(attrs: [:])
+        public init(enabled: Bool = false, faultySessionThreshold: Double = 0, slowTestRetries: TimeTable = .init()) {
+            self.enabled = enabled
+            self.faultySessionThreshold = faultySessionThreshold
+            self.slowTestRetries = slowTestRetries
         }
     }
     
     init(attrs: SettingsService.SettingsResponse.Data.Attributes) {
-        flakyTestRetriesEnabled = attrs.flakyTestRetriesEnabled
-        knownTestsEnabled = attrs.knownTestsEnabled
-        itr = ITR(attrs: attrs)
-        efd = EFD(attrs: attrs.earlyFlakeDetection)
-        testManagement = TestManagement(attrs: attrs.testManagement)
+        self.init(itr: ITR(attrs: attrs),
+                  efd: EFD(attrs: attrs.earlyFlakeDetection),
+                  flakyTestRetriesEnabled: attrs.flakyTestRetriesEnabled,
+                  knownTestsEnabled: attrs.knownTestsEnabled,
+                  testManagement: TestManagement(attrs: attrs.testManagement))
+    }
+    
+    public init(itr: ITR, efd: EFD, flakyTestRetriesEnabled: Bool, knownTestsEnabled: Bool, testManagement: TestManagement) {
+        self.itr = itr
+        self.efd = efd
+        self.flakyTestRetriesEnabled = flakyTestRetriesEnabled
+        self.knownTestsEnabled = knownTestsEnabled
+        self.testManagement = testManagement
     }
 }
 

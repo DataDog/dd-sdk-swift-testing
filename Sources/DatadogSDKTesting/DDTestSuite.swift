@@ -5,67 +5,69 @@
  */
 
 import Foundation
-internal import OpenTelemetryApi
+@preconcurrency internal import OpenTelemetryApi
 
 @objc(DDTestSuite)
 public final class Suite: NSObject, Encodable {
-    private let _module: Module
-    let name: String
-    var module: TestModule { _module }
+    struct MutableState {
+        var duration: UInt64 = 0
+        var meta: [String: String] = [:]
+        var metrics: [String: Double] = [:]
+        var status: TestStatus = .pass
+    }
+    
+    public let name: String
+    public let startTime: Date
+    public let testFramework: String
+    public let localization: String
+    
+    var duration: UInt64 { _state.value.duration }
+    var meta: [String: String] { _state.value.meta }
+    var metrics: [String: Double] { _state.value.metrics }
+    var status: TestStatus { _state.value.status }
+    var configuration: SessionConfig { _module.configuration }
+    
     let id: SpanId
-    let startTime: Date
-    var duration: UInt64
-    var meta: [String: String] = [:]
-    var metrics: [String: Double] = [:]
-    var status: TestStatus
-    var testFramework: String
-    var localization: String
+    var module: TestModule { _module }
+    
+    private let _module: Module
+    private let _state: Synced<MutableState>
 
     init(name: String, module: Module, framework: String, startTime: Date? = nil) {
         self.name = name
         self._module = module
-        self.startTime = DDTestMonitor.instance?.crashedModuleInfo?.suiteStartTime ?? startTime ?? DDTestMonitor.clock.now
-        self.duration = 0
-        self.status = .pass
         self.testFramework = framework
-
-        if DDTestMonitor.instance?.crashedModuleInfo?.crashedSuiteName == name {
-            self.id = DDTestMonitor.instance?.crashedModuleInfo?.crashedSuiteId ?? SpanId.random()
-            DDTestMonitor.instance?.crashedModuleInfo = nil
-            self.status = .fail
+        self.localization = PlatformUtils.getLocalization()
+        var state = MutableState()
+        if let crash = _module.configuration.crash, crash.crashedSuiteName == name {
+            state.status = .fail
+            self.id = crash.crashedSuiteId
+            self.startTime = crash.suiteStartTime ?? startTime ?? _module.configuration.clock.now
         } else {
             self.id = SpanId.random()
+            self.startTime = startTime ?? _module.configuration.clock.now
         }
-        self.localization = PlatformUtils.getLocalization()
-
-        // If we are recovering from a crash, clean the crash information
-        if DDTestMonitor.instance?.crashedModuleInfo != nil {
-            DDTestMonitor.instance?.crashedModuleInfo = nil
-        }
+        self._state = .init(state)
     }
 
     private func internalEnd(endTime: Date? = nil) {
-        duration = (endTime ?? DDTestMonitor.clock.now).timeIntervalSince(startTime).toNanoseconds
-        /// Export module event
-
-        let suiteAttributes: [String: String] = [
-            DDGenericTags.type: DDTagValues.typeSuiteEnd,
-            DDTestTags.testSuite: name,
-            DDTestTags.testModule: module.name,
-            DDTestTags.testFramework: testFramework,
-            DDTestTags.testStatus: status.spanAttribute,
-            DDTestSuiteVisibilityTags.testSessionId: String(session.id.rawValue),
-            DDTestSuiteVisibilityTags.testModuleId: String(module.id.rawValue),
-            DDTestSuiteVisibilityTags.testSuiteId: String(id.rawValue)
-        ]
-        meta.merge(suiteAttributes) { _, new in new }
+        let duration = (endTime ?? configuration.clock.now).timeIntervalSince(startTime).toNanoseconds
         
-        // Move to the global when we will support global metrics
-        metrics.merge(DDTestMonitor.env.baseMetrics) { _, new in new }
-        
-        meta[DDUISettingsTags.uiSettingsSuiteLocalization] = localization
-        meta[DDUISettingsTags.uiSettingsModuleLocalization] = module.localization
-        
+        _state.update { state in
+            state.meta[DDGenericTags.type] = DDTagValues.typeSuiteEnd
+            state.meta[DDTestTags.testSuite] = name
+            state.meta[DDTestTags.testModule] = module.name
+            state.meta[DDTestTags.testFramework] = testFramework
+            state.meta[DDTestTags.testStatus] = state.status.spanAttribute
+            state.meta[DDTestSuiteVisibilityTags.testSessionId] = String(session.id.rawValue)
+            state.meta[DDTestSuiteVisibilityTags.testModuleId] = String(module.id.rawValue)
+            state.meta[DDTestSuiteVisibilityTags.testSuiteId] = String(id.rawValue)
+            state.meta[DDUISettingsTags.uiSettingsSuiteLocalization] = localization
+            state.meta[DDUISettingsTags.uiSettingsModuleLocalization] = module.localization
+            
+            // Move to the global when we will support global metrics
+            state.metrics.merge(DDTestMonitor.env.baseMetrics) { _, new in new }
+        }
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: SuiteEnvelope(self))
         Log.debug("Exported suite_end event suiteId: \(self.id)")
     }
@@ -100,22 +102,30 @@ public final class Suite: NSObject, Encodable {
 
 extension Suite: TestSuite {
     func set(tag name: String, value: SpanAttributeConvertible) {
-        meta[name] = value.spanAttribute
+        _state.update {
+            $0.meta[name] = value.spanAttribute
+        }
     }
     
     func set(metric name: String, value: Double) {
-        metrics[name] = value
+        _state.update {
+            $0.metrics[name] = value
+        }
     }
     
     func set(skipped reason: String? = nil) {
-        status = .skip
-        if let reason = reason {
-            meta[DDTestTags.testSkipReason] = reason
+        _state.update {
+            $0.status = .skip
+            if let reason = reason {
+                $0.meta[DDTestTags.testSkipReason] = reason
+            }
         }
     }
     
     func set(failed reason: TestError?) {
-        status = .fail
+        _state.update {
+            $0.status = .fail
+        }
         var errorMessage = "Suite \(name) failed"
         if let error = reason {
             set(errorTags: error)

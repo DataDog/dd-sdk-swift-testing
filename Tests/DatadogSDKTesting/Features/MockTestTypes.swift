@@ -6,18 +6,34 @@
 
 import Foundation
 @testable import DatadogSDKTesting
-import protocol EventsExporter.Logger
-import OpenTelemetryApi
+@preconcurrency import OpenTelemetryApi
+
+protocol MockTestModuleInfo {
+    var duration: UInt64 { get set }
+    var status: TestStatus { get set }
+    var tags: [String: String] { get set }
+    var metrics: [String: Double] { get set }
+    init()
+}
 
 enum Mocks {
-    class TestBase: TestContainer {
-        var id: SpanId = .random()
-        var name: String
-        var startTime: Date
+    struct ModuleInfo: MockTestModuleInfo {
         var duration: UInt64 = 0
         var status: TestStatus = .pass
         var tags: [String: String] = [:]
         var metrics: [String: Double] = [:]
+    }
+    
+    class TestBase<Info: MockTestModuleInfo>: TestContainer, @unchecked Sendable {
+        let _state: Synced<Info> = .init(.init())
+        
+        let id: SpanId = .random()
+        let name: String
+        let startTime: Date
+        var duration: UInt64 { _state.value.duration }
+        var status: TestStatus { _state.value.status }
+        var tags: [String: String] { _state.value.tags }
+        var metrics: [String: Double] { _state.value.metrics }
         
         init(name: String, startTime: Date = Date()) {
             self.name = name
@@ -25,51 +41,71 @@ enum Mocks {
         }
         
         func set(failed reason: TestError?) {
-            status = .fail
+            _state.update { $0.status = .fail }
         }
         
         func set(skipped reason: String? = nil) {
-            status = .skip
-            if let reason = reason {
-                tags[DDTestTags.testSkipReason] = reason
+            _state.update {
+                $0.status = .skip
+                if let reason = reason {
+                    $0.tags[DDTestTags.testSkipReason] = reason
+                }
             }
         }
         
         func set(tag name: String, value: any SpanAttributeConvertible) {
-            tags[name] = value.spanAttribute
+            _state.update {
+                $0.tags[name] = value.spanAttribute
+            }
         }
         
         func end(time: Date?) {
-            duration = (time ?? Date()).timeIntervalSince(startTime).toNanoseconds
+            _state.update {
+                $0.duration = (time ?? Date()).timeIntervalSince(startTime).toNanoseconds
+            }
         }
         
         func set(metric name: String, value: Double) {
-            metrics[name] = value
+            _state.update {
+                $0.metrics[name] = value
+            }
         }
     }
     
-    final class Session: TestBase, TestSession, TestModuleProvider, TestModuleManager, Hashable, Equatable, CustomDebugStringConvertible {
-        var testIndex: UInt = 0
-        var testFrameworks: Set<String> = []
+    final class Session: TestBase<Session.SessionInfo>, TestSession, TestModuleProvider, TestModuleManager, Hashable, Equatable, CustomDebugStringConvertible, @unchecked Sendable {
+        struct SessionInfo: MockTestModuleInfo {
+            var duration: UInt64 = 0
+            var status: TestStatus = .pass
+            var tags: [String: String] = [:]
+            var metrics: [String: Double] = [:]
+            var testIndex: UInt = 0
+            var testFrameworks: Set<String> = []
+            var modules: [String: Module] = [:]
+        }
         
-        var modules: [String: Module] = [:]
+        var modules: [String: Module] { _state.value.modules }
+        var testFrameworks: Set<String> { _state.value.testFrameworks }
         
         func nextTestIndex() -> UInt {
-            defer { testIndex += 1 }
-            return testIndex
+            _state.update { state in
+                defer { state.testIndex += 1 }
+                return state.testIndex
+            }
         }
         
         func add(module: Module) {
             guard module.session.id == self.id else { return }
-            modules[module.name] = module
+            _state.update { state in
+                state.modules[module.name] = module
+            }
         }
         
         subscript(_ module: String) -> Module? {
-            modules[module]
+            _state.value.modules[module]
         }
         
         var debugDescription: String {
-            let mods = modules.values.map{ $0.debugDescription }
+            let mods = _state.value.modules.values.map{ $0.debugDescription }
             return "[\(mods.joined(separator: ", "))]"
         }
         
@@ -83,9 +119,7 @@ enum Mocks {
         }
         
         func startModule(named name: String, at start: Date?) -> any TestModule & TestSuiteProvider {
-            let module = Mocks.Module(name: name, session: self)
-            module.startTime = start ?? module.startTime
-            return module
+            return Mocks.Module(name: name, session: self, startTime: start ?? Date())
         }
         
         var moduleShouldEnd: Bool { true }
@@ -98,37 +132,50 @@ enum Mocks {
         
         final class Provider: TestSessionProvider {
             func startSession(named name: String, config: SessionConfig, startTime: Date) async throws -> any TestModuleManager & TestSession {
-                let session = Session(name: name, startTime: startTime)
-                session.startTime = startTime
-                return session
+                return Session(name: name, startTime: startTime)
             }
         }
     }
     
-    final class Module: TestBase, TestModule, TestSuiteProvider, Hashable, Equatable, CustomDebugStringConvertible {
-        weak let _session: Session?
-        var session: any TestSession { _session! }
-        var testFrameworks: Set<String> = []
-        var localization: String = ""
+    final class Module: TestBase<Module.ModuleInfo>, TestModule, TestSuiteProvider, Hashable, Equatable, CustomDebugStringConvertible, @unchecked Sendable {
+        struct ModuleInfo: MockTestModuleInfo {
+            var duration: UInt64 = 0
+            var status: TestStatus = .pass
+            var tags: [String: String] = [:]
+            var metrics: [String: Double] = [:]
+            var testFrameworks: Set<String> = []
+            var suites: [String: Suite] = [:]
+            var localization: String = ""
+        }
         
-        var suites: [String: Suite] = [:]
+        weak let _session: Session!
+        var session: any TestSession { _session }
+        var testFrameworks: Set<String> { _state.value.testFrameworks }
+        var suites: [String: Suite] { _state.value.suites }
+        var localization: String {
+            get { _state.value.localization }
+            set { _state.update { $0.localization = newValue } }
+        }
         
-        init(name: String, session: Session) {
+        init(name: String, session: Session, startTime: Date = Date()) {
             self._session = session
-            super.init(name: name)
+            super.init(name: name, startTime: startTime)
         }
         
         func add(suite: Suite) {
             guard suite.module.id == self.id else { return }
-            suites[suite.name] = suite
+            _state.update {
+                $0.suites[suite.name] = suite
+            }
+            
         }
         
         subscript(_ suite: String) -> Suite? {
-            suites[suite]
+            _state.value.suites[suite]
         }
         
         var debugDescription: String {
-            let suites = suites.values.map{ $0.debugDescription }
+            let suites = _state.value.suites.values.map{ $0.debugDescription }
             return "\(name): [\(suites.joined(separator: ", "))]"
         }
         
@@ -143,33 +190,52 @@ enum Mocks {
         }
         
         func startSuite(named name: String, at start: Date?, framework: String) -> any DatadogSDKTesting.TestRunProvider & DatadogSDKTesting.TestSuite {
-            testFrameworks.insert(framework)
-            _session?.testFrameworks.insert(framework)
-            let suite = Mocks.Suite(name: name, module: self, framework: framework)
-            suite.startTime = start ?? suite.startTime
-            return suite
+            let _ = _state.update {
+                $0.testFrameworks.insert(framework)
+            }
+            let _ = _session?._state.update {
+                $0.testFrameworks.insert(framework)
+            }
+            return Mocks.Suite(name: name, module: self, framework: framework, startTime: start ?? Date())
         }
     }
     
-    final class Suite: TestBase, TestSuite, TestRunProvider, Hashable, Equatable, CustomDebugStringConvertible {
-        weak let _module: Module?
-        var module: any TestModule { _module! }
-        var localization: String = ""
+    final class Suite: TestBase<Suite.SuiteInfo>, TestSuite, TestRunProvider, Hashable, Equatable, CustomDebugStringConvertible, @unchecked Sendable {
+        struct SuiteInfo: MockTestModuleInfo {
+            var duration: UInt64 = 0
+            var status: TestStatus = .pass
+            var tags: [String: String] = [:]
+            var metrics: [String: Double] = [:]
+            var tests: [String: Group] = [:]
+            var localization: String = ""
+            var unskippable: Bool = false
+        }
         
+        weak let _module: Module!
         let testFramework: String
-        var unskippable: Bool = false
-        var tests: [String: Group] = [:]
         
-        init(name: String, module: Module, framework: String) {
+        var module: any TestModule { _module }
+        var localization: String {
+            get { _state.value.localization }
+            set { _state.update { $0.localization = newValue } }
+        }
+        var unskippable: Bool {
+            get { _state.value.unskippable }
+            set { _state.update { $0.unskippable = newValue } }
+        }
+        var tests: [String: Group] { _state.value.tests }
+        
+        init(name: String, module: Module, framework: String, startTime: Date = Date()) {
             self._module = module
             self.testFramework = framework
-            super.init(name: name)
+            super.init(name: name, startTime: startTime)
         }
         
         func add(group: Group) {
             guard group.suite == nil || group.suite?.id == self.id else { return }
-            group.suite = self
-            tests[group.name] = group
+            _state.update {
+                $0.tests[group.name] = group
+            }
         }
         
         subscript(_ test: String) -> Group? {
@@ -196,14 +262,37 @@ enum Mocks {
         }
     }
     
-    final class Group: UnskippableMethodCheckerFactory, Equatable, Hashable, CustomDebugStringConvertible {
-        var name: String
-        weak var suite: Suite!
-        var unskippable: Bool = false
-        var runs: [Test] = []
+    final class Group: UnskippableMethodCheckerFactory, Equatable, Hashable, CustomDebugStringConvertible, Sendable {
+        struct GroupInfo {
+            var unskippable: Bool = false
+            var runs: [Test] = []
+            
+            var skipStrategy: RetryGroupSkipStrategy = .allSkipped
+            var successStrategy: RetryGroupSuccessStrategy = .allSucceeded
+        }
         
-        var skipStrategy: RetryGroupSkipStrategy = .allSkipped
-        var successStrategy: RetryGroupSuccessStrategy = .allSucceeded
+        let name: String
+        weak let suite: Suite!
+        let _state: Synced<GroupInfo> = .init(.init())
+        
+        
+        var unskippable: Bool {
+            get { _state.value.unskippable }
+            set { _state.update { $0.unskippable = newValue } }
+        }
+        var skipStrategy: RetryGroupSkipStrategy {
+            get { _state.value.skipStrategy }
+            set { _state.update { $0.skipStrategy = newValue } }
+        }
+        
+        var successStrategy: RetryGroupSuccessStrategy {
+            get { _state.value.successStrategy }
+            set { _state.update { $0.successStrategy = newValue } }
+        }
+        
+        var runs: [Test] { _state.value.runs }
+        
+        
         
         init(name: String, suite: Suite, unskippable: Bool) {
             self.name = name
@@ -212,7 +301,9 @@ enum Mocks {
         }
         
         func add(run: Test) {
-            runs.append(run)
+            _state.update {
+                $0.runs.append(run)
+            }
         }
         
         subscript(_ run: Int) -> Test? {
@@ -279,11 +370,24 @@ enum Mocks {
         }
     }
     
-    final class Test: TestBase, TestRun, Hashable, Equatable, CustomDebugStringConvertible {
+    final class Test: TestBase<Test.ModuleInfo>, TestRun, Hashable, Equatable, CustomDebugStringConvertible, @unchecked Sendable {
+        struct ModuleInfo: MockTestModuleInfo {
+            var duration: UInt64 = 0
+            var status: TestStatus = .pass
+            var tags: [String: String] = [:]
+            var metrics: [String: Double] = [:]
+            var error: TestError? = nil
+            var errorStatus: ErrorSuppressionStatus = .normal
+        }
+        
         weak let _suite: Suite?
         var suite: any TestSuite { _suite! }
-        var error: TestError? = nil
-        var errorStatus: ErrorSuppressionStatus = .normal
+        
+        var error: TestError? { _state.value.error }
+        var errorStatus: ErrorSuppressionStatus {
+            get { _state.value.errorStatus }
+            set { _state.update { $0.errorStatus = newValue } }
+        }
         
         var xcStatus: TestStatus {
             guard status == .fail else { return status }
@@ -296,19 +400,23 @@ enum Mocks {
         }
         
         func add(error: TestError) {
-            self.error = error
-            tags[DDTags.errorType] = error.type
-            tags[DDTags.errorMessage] = error.message
-            tags[DDTags.errorStack] = error.stack
+            _state.update { state in
+                state.error = error
+                state.tags[DDTags.errorType] = error.type
+                state.tags[DDTags.errorMessage] = error.message
+                state.tags[DDTags.errorStack] = error.stack
+            }
         }
         
         func add(benchmark name: String, samples: [Double], info: String?) {
-            tags[DDTestTags.testType] = DDTagValues.typeBenchmark
+            _state.update {
+                $0.tags[DDTestTags.testType] = DDTagValues.typeBenchmark
+            }
         }
         
         func end(status: TestStatus, time: Date?) {
             super.end(time: time)
-            self.status = status
+            _state.update { $0.status = status }
         }
         
         var debugDescription: String {
@@ -326,17 +434,17 @@ enum Mocks {
         }
     }
     
-    final class CatchLogger: EventsExporter.Logger {
-        var logs: [String]
-        var isDebug: Bool
+    final class CatchLogger: DatadogSDKTesting.Logger {
+        let logs: Synced<[String]>
+        let isDebug: Bool
         
         init(isDebug: Bool = true) {
-            self.logs = []
+            self.logs = .init([])
             self.isDebug = isDebug
         }
         
         func clear() {
-            self.logs.removeAll()
+            self.logs.update { $0.removeAll() }
         }
         
         func print(_ message: String) {
@@ -363,7 +471,7 @@ enum Mocks {
         }
         
         private func print(prefix: String, message: String) {
-            logs.append("\(prefix)\(message)")
+            logs.update { $0.append("\(prefix)\(message)") }
         }
     }
     

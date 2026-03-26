@@ -98,9 +98,11 @@ final actor SessionManager: TestSessionManager {
         
         let config = SessionConfig(
             activeFeatures: monitor.activeFeatures,
+            platform: DDTestMonitor.env.platform,
             clock: DDTestMonitor.clock,
             crash: monitor.crashedModuleInfo,
-            command: DDTestMonitor.env.testCommand
+            command: DDTestMonitor.env.testCommand,
+            log: log
         )
         
         let session = try await provider.startSession(named: "Swift.session", config: config, startTime: startTime)
@@ -188,3 +190,4 @@ extension Module {
         }
     }
 }
+

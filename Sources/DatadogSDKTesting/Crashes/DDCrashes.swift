@@ -95,17 +95,11 @@ internal enum DDCrashes {
                                                              errorType: errorType,
                                                              errorMessage: errorMessage,
                                                              errorStack: crashLog)
-                    if let executionOrderString = spanData.stringAttributes[DDTestTags.testExecutionOrder],
-                       let executionOrder = UInt(executionOrderString),
-                       let executionProcessIdString = spanData.stringAttributes[DDTestTags.testExecutionProcessId],
-                       let processId = Int(executionProcessIdString),
-                       let sessionID = spanData.stringAttributes[DDTestSuiteVisibilityTags.testSessionId],
+                    if let sessionID = spanData.stringAttributes[DDTestSuiteVisibilityTags.testSessionId],
                        let moduleID = spanData.stringAttributes[DDTestSuiteVisibilityTags.testModuleId],
                        let suiteID = spanData.stringAttributes[DDTestSuiteVisibilityTags.testSuiteId],
                        let suiteName = spanData.stringAttributes[DDTestTags.testSuite]
                     {
-                        DDTestMonitor.instance?.currentTest?.currentTestExecutionOrder = executionOrder
-                        DDTestMonitor.instance?.currentTest?.initialProcessId = processId
                         DDTestMonitor.instance?.crashedModuleInfo = CrashedModuleInformation(
                             crashedSessionId: SpanId(fromHexString: sessionID),
                             crashedModuleId: SpanId(fromHexString: moduleID),

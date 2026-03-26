@@ -13,7 +13,7 @@ final class AutomaticTestRetries: TestHooksFeature {
     let failedTestRetriesCount: UInt
     let failedTestTotalRetriesMax: UInt
     
-    private var _failedTestTotalRetries: Synced<UInt>
+    private let _failedTestTotalRetries: Synced<UInt>
     var failedTestTotalRetries: UInt { _failedTestTotalRetries.value }
     
     init(failedTestRetriesCount: UInt,

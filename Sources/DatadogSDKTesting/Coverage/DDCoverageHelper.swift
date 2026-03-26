@@ -5,9 +5,9 @@
  */
 
 import Foundation
-internal import EventsExporter
+@preconcurrency internal import EventsExporter
 internal import CDatadogSDKTesting
-internal import CodeCoverage
+@preconcurrency internal import CodeCoverage
 
 typealias cFunc = @convention(c) () -> Void
 

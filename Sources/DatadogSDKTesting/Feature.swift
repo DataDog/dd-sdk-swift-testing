@@ -32,7 +32,7 @@ extension Feature {
     var id: FeatureId { Self.id }
 }
 
-protocol TestHooksFeature: Feature {
+protocol TestHooksFeature: Feature, Sendable {
     /// Start of the suite
     func testSuiteWillStart(suite: any TestSuite, testsCount: UInt) -> Void
     /// Configuration for retry group. Feature can interrupt iteration or send it to the next feature with updated config.

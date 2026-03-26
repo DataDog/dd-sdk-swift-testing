@@ -19,9 +19,9 @@ final class TestImpactAnalysis: TestHooksFeature {
     var isSkippingEnabled: Bool { correlationId != nil }
     var isCoverageEnabled: Bool { coverage != nil }
     
-    private var _skippedCount: Synced<UInt>
+    private let _skippedCount: Synced<UInt>
     
-    private(set) var unskippableCache: Synced<[ObjectIdentifier: UnskippableMethodChecker]>
+    let unskippableCache: Synced<[ObjectIdentifier: UnskippableMethodChecker]>
     
     init(tests: SkipTests?, coverage: TestCoverageCollector?) {
         if let tests = tests { // we have skipping enabled

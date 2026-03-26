@@ -16,12 +16,10 @@ class StderrCaptureTests: XCTestCase {
     override func tearDown() {}
 
     func testWhenWhenErrorHappens_errorIsCapturedAndConvertedToEvents() {
-        DDTestMonitor.instance = DDTestMonitor()
-        let tracer = DDTestMonitor.tracer
+        let tracer = DDTracer()
         let stringToCapture = "2020-10-22 12:01:33.161546+0200 xctest[91153:14310375] This should be captured"
 
         let span = tracer.startSpan(name: "Unnamed", attributes: [:]) as! SpanSdk
-        DDTestMonitor.instance?.currentTest?.span = span
         StderrCapture.stderrMessage(string: stringToCapture)
         Thread.sleep(forTimeInterval: 0.5)
         span.status = .ok
@@ -33,21 +31,15 @@ class StderrCaptureTests: XCTestCase {
 
         let timeToCheck = StderrCapture.logDateFormatter.date(from: "2020-10-22 12:01:33.161546+0200")!
         XCTAssertEqual(spanData.events.first?.timestamp, timeToCheck)
-        
-        DDTestMonitor.instance?.stop()
-        DDTestMonitor.instance = nil
     }
 
     func testWhenWhenUIStepHappens_messageIsCapturedAndConvertedToEvents() {
-        DDTestMonitor.instance = DDTestMonitor()
-        let tracer = DDTestMonitor.tracer
+        let tracer = DDTracer()
         let stringToCapture = "    t =     0.50s Open com.datadoghq.DemoSwift"
-
         let date = Date()
         let span = tracer.startSpan(name: "Unnamed", attributes: [:], startTime: date) as! SpanSdk
-        DDTestMonitor.instance?.currentTest?.span = span
         StderrCapture.stderrMessage(string: stringToCapture)
-        Thread.sleep(forTimeInterval: 0.6)
+        Thread.sleep(forTimeInterval: 0.5)
         span.status = .ok
         span.end()
         let spanData = span.toSpanData()
@@ -57,9 +49,6 @@ class StderrCaptureTests: XCTestCase {
 
         let timeToCheck = date.addingTimeInterval(0.5)
         XCTAssertEqual(spanData.events.first?.timestamp, timeToCheck)
-        
-        DDTestMonitor.instance?.stop()
-        DDTestMonitor.instance = nil
     }
 
     func testStderrInitialises() {

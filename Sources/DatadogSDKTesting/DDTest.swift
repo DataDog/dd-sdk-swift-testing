@@ -5,29 +5,26 @@
  */
 
 import Foundation
-internal import OpenTelemetryApi
-internal import OpenTelemetrySdk
+@preconcurrency internal import OpenTelemetryApi
+@preconcurrency internal import OpenTelemetrySdk
 internal import SigmaSwiftStatistics
 
 @objc(DDTest)
 public final class Test: NSObject {
-    var currentTestExecutionOrder: UInt
-    var initialProcessId = Int(ProcessInfo.processInfo.processIdentifier)
+    let currentTestExecutionOrder: UInt
+    let initialProcessId = Int(ProcessInfo.processInfo.processIdentifier)
 
     let name: String
-    let startTime: Date
-    var span: Span
-    var duration: UInt64
+    let span: SpanSdk
 
     let suite: TestSuite
 
-    private var errorInfo: ErrorInfo?
+    private let errorInfo: Synced<ErrorInfo?> = .init(nil)
 
     init(name: String, suite: TestSuite, startTime: Date? = nil) {
         let testStartTime = startTime ?? DDTestMonitor.clock.now
         self.name = name
         self.suite = suite
-        self.duration = 0
 
         currentTestExecutionOrder = suite.session.nextTestIndex()
 
@@ -47,11 +44,9 @@ public final class Test: NSObject {
             DDUISettingsTags.uiSettingsModuleLocalization: suite.module.localization,
         ]
         
-        self.startTime = testStartTime
-
         span = DDTestMonitor.tracer.startSpan(name: "\(suite.testFramework).test",
                                               attributes: attributes,
-                                              startTime: testStartTime)
+                                              startTime: testStartTime) as! SpanSdk
         span.setAttribute(key: DDTestTags.testExecutionOrder, value: Int(currentTestExecutionOrder))
         span.setAttribute(key: DDTestTags.testExecutionProcessId, value: initialProcessId)
 
@@ -81,29 +76,26 @@ public final class Test: NSObject {
             }
         }
         
-        if let testSpan = span as? SpanSdk {
-            let simpleSpan = SimpleSpanData(spanData: testSpan.toSpanData(), moduleStartTime: module.startTime, suiteStartTime: suite.startTime)
-            DDCrashes.setCurrent(spanData: simpleSpan)
-        }
+        let simpleSpan = SimpleSpanData(spanData: span.toSpanData(), moduleStartTime: module.startTime, suiteStartTime: suite.startTime)
+        DDCrashes.setCurrent(spanData: simpleSpan)
     }
 
     func setIsUITest(_ value: Bool) {
         self.span.setAttribute(key: DDTestTags.testIsUITest, value: value ? "true" : "false")
 
         // Set default UI values if nor previously set and update crash customData
-        if let testSpan = span as? SpanSdk {
-            let spanData = testSpan.toSpanData()
-            if spanData.attributes[DDUISettingsTags.uiSettingsAppearance] == nil {
-                setTag(key: DDUISettingsTags.uiSettingsAppearance, value: PlatformUtils.getAppearance())
-            }
-#if os(iOS)
-            if spanData.attributes[DDUISettingsTags.uiSettingsOrientation] == nil {
-                setTag(key: DDUISettingsTags.uiSettingsOrientation, value: PlatformUtils.getOrientation())
-            }
-#endif
-            let simpleSpan = SimpleSpanData(spanData: testSpan.toSpanData(), sessionStertTine: session.startTime, moduleStartTime: module.startTime, suiteStartTime: suite.startTime)
-            DDCrashes.setCurrent(spanData: simpleSpan)
+        
+        let spanData = span.toSpanData()
+        if spanData.attributes[DDUISettingsTags.uiSettingsAppearance] == nil {
+            setTag(key: DDUISettingsTags.uiSettingsAppearance, value: PlatformUtils.getAppearance())
         }
+#if os(iOS)
+        if spanData.attributes[DDUISettingsTags.uiSettingsOrientation] == nil {
+            setTag(key: DDUISettingsTags.uiSettingsOrientation, value: PlatformUtils.getOrientation())
+        }
+#endif
+        let simpleSpan = SimpleSpanData(spanData: span.toSpanData(), sessionStertTine: session.startTime, moduleStartTime: module.startTime, suiteStartTime: suite.startTime)
+        DDCrashes.setCurrent(spanData: simpleSpan)
     }
 
     /// Adds a extra tag or attribute to the test, any number of tags can be reported
@@ -122,16 +114,18 @@ public final class Test: NSObject {
     ///   - message: The message associated with the error
     ///   - callstack: (Optional) The callstack associated with the error
     @objc public func setErrorInfo(type: String, message: String, callstack: String? = nil) {
-        if errorInfo == nil {
-            errorInfo = ErrorInfo(type: type, message: message, callstack: callstack)
-        } else {
-            errorInfo?.addExtraError(message: message)
+        errorInfo.update { errorInfo in
+            if errorInfo == nil {
+                errorInfo = ErrorInfo(type: type, message: message, callstack: callstack)
+            } else {
+                errorInfo?.addExtraError(message: message)
+            }
         }
         DDTestMonitor.tracer.logError(string: "\(type): \(message)")
     }
 
     private func setErrorInformation() {
-        guard let errorInfo = errorInfo else { return }
+        guard let errorInfo = errorInfo.value else { return }
         span.setAttribute(key: DDTags.errorType, value: AttributeValue.string(errorInfo.type))
         span.setAttribute(key: DDTags.errorMessage, value: AttributeValue.string(errorInfo.message))
         if let callstack = errorInfo.callstack {
@@ -170,6 +164,8 @@ public final class Test: NSObject {
 
 extension Test: TestRun {
     var id: SpanId { span.context.spanId }
+    var startTime: Date { span.startTime }
+    var duration: UInt64 { span.endTime?.timeIntervalSince(span.startTime).toNanoseconds ?? 0 }
     
     var status: TestStatus {
         switch span.status {
@@ -198,8 +194,7 @@ extension Test: TestRun {
 extension Test {
     func internalEnd(status: TestStatus, endTime: Date? = nil) {
         let testEndTime = endTime ?? DDTestMonitor.clock.now
-        duration = testEndTime.timeIntervalSince(startTime).toNanoseconds
-        
+       
         switch status {
         case .pass:
             span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusPass)
@@ -219,10 +214,6 @@ extension Test {
         DDCrashes.setCurrent(spanData: nil)
         DDTestMonitor.instance?.currentTest = nil
     }
-}
-
-extension TestRun {
-    
 }
 
 private struct ErrorInfo {

@@ -155,6 +155,42 @@ internal class DDTracer {
         let span = spanBuilder.startSpan()
         return span
     }
+    
+    private func createSpanBuilder(name: String, attributes: [String: AttributeValue], startTime: Date? = nil) -> SpanBuilder {
+        let spanBuilder = tracerSdk.spanBuilder(spanName: name)
+        attributes.forEach {
+            spanBuilder.setAttribute(key: $0.key, value: $0.value)
+        }
+        if let startTime = startTime {
+            spanBuilder.setStartTime(time: startTime)
+        }
+        /// launchSpanContext will only be available when running in the app launched from UITest, so assign this as the parent
+        /// when there is no one
+        if let launchContext = launchSpanContext {
+            spanBuilder.setParent(launchContext)
+        } else {
+            spanBuilder.setNoParent()
+        }
+        return spanBuilder
+    }
+    
+    func withActiveSpan<T>(name: String, attributes: [String: AttributeValue], startTime: Date? = nil,
+                           _ body: @Sendable (SpanSdk) throws -> T) rethrows -> T
+    {
+        let spanBuilder = createSpanBuilder(name: name, attributes: attributes, startTime: startTime)
+        return try spanBuilder.withActiveSpan { span in
+            try body(span as! SpanSdk)
+        }
+    }
+    
+    func withActiveSpan<T>(name: String, attributes: [String: AttributeValue], startTime: Date? = nil,
+                           _ body: @Sendable (SpanSdk) async throws -> T) async rethrows -> T
+    {
+        let spanBuilder = createSpanBuilder(name: name, attributes: attributes, startTime: startTime)
+        return try await spanBuilder.withActiveSpan { span in
+            try await body(span as! SpanSdk)
+        }
+    }
 
     /// This method is called form the crash reporter if the previous run crashed while running a test. Then it recreates the span with the previous information
     /// and adds the error status and information

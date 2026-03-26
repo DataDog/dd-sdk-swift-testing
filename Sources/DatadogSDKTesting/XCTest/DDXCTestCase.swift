@@ -17,6 +17,19 @@ final class DDXCTestCaseRetryRun: XCTestCaseRun, DDXCTestSuppressedFailureRun {
     private(set) var suppressedFailures: [XCTIssue] = []
     private(set) var expectedFailuresCount: Int = 0
     
+    let ddTest: any TestRun
+    let group: DDXCTestRetryGroup
+    var context: DDXCTestObserver.GroupContext {
+        get { group.context }
+        set { group.context = newValue }
+    }
+    
+    init(xcTest: XCTest, test: any TestRun, group: DDXCTestRetryGroup) {
+        self.ddTest = test
+        self.group = group
+        super.init(test: xcTest)
+    }
+    
     var ddHasFailed: Bool {
         guard startDate != nil && stopDate != nil else {
             return false
@@ -184,6 +197,7 @@ final class DDXCTestRetryGroup: XCTest {
     var groupRun: DDXCTestRetryGroupRun? { testRun.map { $0 as! DDXCTestRetryGroupRun } }
     
     let testId: (suite: String, test: String)
+    var context: DDXCTestObserver.GroupContext!
     
     private let _name: String
     private let _testMethod: Selector
@@ -212,24 +226,35 @@ final class DDXCTestRetryGroup: XCTest {
     }
     
     override func perform(_ run: XCTestRun) {
-        guard let testRun = run as? DDXCTestRetryGroupRun else {
+        guard let groupRun = run as? DDXCTestRetryGroupRun else {
             fatalError("Wrong XCTestRun class. Expected DDXCTestRetryGroupRun")
         }
-        testRun.start()
-        while let test = currentTest {
-            let testCaseRun = DDXCTestCaseRetryRun(test: test)
-            test.setValue(testCaseRun, forKey: "testRun")
-            testRun.addTestRun(testCaseRun)
-            if let reason = _skipReason {
-                _skipReason = nil
-                DDXCSkippedTestCase().set(reason: reason).perform(testCaseRun)
-            } else {
-                test.perform(testCaseRun)
+        groupRun.start()
+        while let xcTest = currentTest {
+            let test = context.suite.withActiveTest(named: xcTest.name) { test in
+                let xcTestRun = DDXCTestCaseRetryRun(xcTest: xcTest, test: test, group: self)
+                xcTest.setValue(xcTestRun, forKey: "testRun")
+                groupRun.addTestRun(xcTestRun)
+                
+                if let reason = _skipReason {
+                    _skipReason = nil
+                    DDXCSkippedTestCase().set(reason: reason).perform(xcTestRun)
+                } else {
+                    xcTest.perform(xcTestRun)
+                }
+                return test
             }
+            // Run end hook. We can't run it in observer because test isn't ended yet
+            let info = TestRunInfoEnd(skip: context.skip,
+                                      retry: context.retry,
+                                      executions: (total: groupRun.executionCount,
+                                                   failed: groupRun.failedExecutionCount))
+            context.features.testDidFinish(test: test, info: info)
+            // setup next iteration
             currentTest = _nextTest
             _nextTest = nil
         }
-        testRun.stop()
+        groupRun.stop()
     }
     
     override var description: String { "\(name)[\(testRun?.executionCount ?? 0)]" }

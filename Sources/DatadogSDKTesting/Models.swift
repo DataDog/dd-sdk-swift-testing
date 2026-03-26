@@ -85,7 +85,8 @@ protocol TestSuiteProvider: Sendable {
 }
 
 protocol TestRunProvider: Sendable {
-    func startTest(named: String) -> any TestRun
+    func withActiveTest<T>(named name: String, _ action: @Sendable (any TestRun) async throws -> T) async rethrows -> T
+    func withActiveTest<T>(named name: String, _ action: (any TestRun) throws -> T) rethrows -> T
 }
 
 extension TestSuite {
@@ -108,15 +109,28 @@ protocol TestRun: TestModel {
     func add(error: TestError)
     func add(benchmark name: String, samples: [Double], info: String?)
     
-    func end(status: TestStatus)
-    func end(status: TestStatus, time: Date?)
+    func set(status: TestStatus)
+    
+    static var active: (any TestRun)? { get }
 }
 
 extension TestRun {
     var session: any TestSession { suite.session }
     var module: any TestModule { suite.module }
     
-    func end(status: TestStatus) { end(status: status, time: nil) }
+    static var active: (any TestRun)? { _activeTestRun }
+    
+    func withActive<T>(_ action: () throws -> T) rethrows -> T {
+        try $_activeTestRun.withValue(self) {
+            try action()
+        }
+    }
+    
+    func withActive<T>(_ action: @Sendable () async throws -> T) async rethrows -> T {
+        try await $_activeTestRun.withValue(self) {
+            try await action()
+        }
+    }
 }
 
 @objc(DDTestStatus)
@@ -246,3 +260,5 @@ extension TestRun {
         }
     }
 }
+
+@TaskLocal private var _activeTestRun: (any TestRun)? = nil

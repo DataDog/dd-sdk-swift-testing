@@ -11,11 +11,13 @@ internal import XCTest
 class DDXCTestObserver: NSObject, XCTestObservation {
     private(set) var state: State
     private var observers: [NSObjectProtocol]
+    private let log: Logger
 
-    init(session: any TestSessionManager) {
+    init(session: any TestSessionManager, log: Logger) {
         XCUIApplication.swizzleMethods
         state = .start(session)
         observers = []
+        self.log = log
         super.init()
     }
     
@@ -43,7 +45,7 @@ class DDXCTestObserver: NSObject, XCTestObservation {
 
     func testBundleWillStart(_ testBundle: Bundle) {
         guard case .start(let manager) = state else {
-            Log.print("testBundleWillStart: Bad observer state: \(state), expected: .none")
+            log.print("testBundleWillStart: Bad observer state: \(state), expected: .none")
             return
         }
         
@@ -54,9 +56,9 @@ class DDXCTestObserver: NSObject, XCTestObservation {
                 try await (session: manager.session, config: manager.sessionConfig)
             }
             state = .module(session.session.module(named: bundleName), config: session.config)
-            Log.debug("testBundleWillStart: \(bundleName)")
+            log.debug("testBundleWillStart: \(bundleName)")
         } catch {
-            Log.print("Session initialisation failed: \(error)")
+            log.print("Session initialisation failed: \(error)")
             state = .startError(error)
             return
         }
@@ -64,17 +66,17 @@ class DDXCTestObserver: NSObject, XCTestObservation {
 
     func testBundleDidFinish(_ testBundle: Bundle) {
         guard case .module(let module, _) = state else {
-            Log.print("testBundleDidFinish: Bad observer state: \(state), expected: .module")
+            log.print("testBundleDidFinish: Bad observer state: \(state), expected: .module")
             return
         }
         guard module.name == testBundle.name else {
-            Log.print("testBundleDidFinish: Bad module: \(testBundle.name), expected: \(module.name)")
+            log.print("testBundleDidFinish: Bad module: \(testBundle.name), expected: \(module.name)")
             state = .end
             return
         }
         module.end()
         state = .end
-        Log.debug("testBundleDidFinish: \(module.name)")
+        log.debug("testBundleDidFinish: \(module.name)")
     }
 
     func testSuiteWillStart(_ testSuite: XCTestSuite) {
@@ -92,16 +94,16 @@ class DDXCTestObserver: NSObject, XCTestObservation {
             parent = cont
             config = conf
         case .startError(let err):
-            Log.print("testSuiteWillStart: Failed, module config error \(err)")
+            log.print("testSuiteWillStart: Failed, module config error \(err)")
             testSuite.testRun?.stop()
             exit(1)
         default:
-            Log.print("testSuiteWillStart: Bad observer state: \(state), expected: .module or .container")
+            log.print("testSuiteWillStart: Bad observer state: \(state), expected: .module or .container")
             return
         }
 
         guard let tests = testSuite.tests as? [XCTestCase] else {
-            Log.debug("testSuiteWillStart: container \(testSuite.name)")
+            log.debug("testSuiteWillStart: container \(testSuite.name)")
             state = .container(suite: ContainerSuite(suite: testSuite, parent: parent), inside: module, config: config)
             return
         }
@@ -110,28 +112,26 @@ class DDXCTestObserver: NSObject, XCTestObservation {
         testSuite.setValue(wrappedTests, forKey: "_mutableTests")
         
         let suite = module.startSuite(named: testSuite.name, at: nil, framework: "XCTest")
-        
         config.activeFeatures.testSuiteWillStart(suite: suite, testsCount: UInt(wrappedTests.count))
         
         state = .suite(suite: suite, context: SuiteContext(parent: parent, config: config))
-        
-        Log.debug("testSuiteWillStart: \(testSuite.name)")
+        log.debug("testSuiteWillStart: \(testSuite.name)")
     }
 
     func testSuiteDidFinish(_ testSuite: XCTestSuite) {
         switch state {
         case .container(suite: let suite, inside: let module, config: let config):
             guard suite.suite.name == testSuite.name else {
-                Log.print("testSuiteDidFinish: Bad suite: \(testSuite.name), expected: \(suite.suite.name)")
+                log.print("testSuiteDidFinish: Bad suite: \(testSuite.name), expected: \(suite.suite.name)")
                 return
             }
             state = suite.parent == nil
                 ? .module(module, config: config)
                 : .container(suite: suite.parent!, inside: module, config: config)
-            Log.debug("testSuiteDidFinish: container \(testSuite.name)")
+            log.debug("testSuiteDidFinish: container \(testSuite.name)")
         case .suite(suite: let suite, context: let context):
             guard suite.name == testSuite.name else {
-                Log.print("testSuiteDidFinish: Bad suite: \(testSuite.name), expected: \(suite.name)")
+                log.print("testSuiteDidFinish: Bad suite: \(testSuite.name), expected: \(suite.name)")
                 return
             }
             // Set suite status based on it's test groups.
@@ -139,15 +139,15 @@ class DDXCTestObserver: NSObject, XCTestObservation {
             suite.set(status: testSuite.testRun?.status ?? .pass)
             suite.end()
             state = context.back(from: suite)
-            Log.debug("testSuiteDidFinish: \(testSuite.name)")
+            log.debug("testSuiteDidFinish: \(testSuite.name)")
         default:
-            Log.print("testSuiteDidFinish: Bad observer state: \(state), expected: .suite or .container")
+            log.print("testSuiteDidFinish: Bad observer state: \(state), expected: .suite or .container")
         }
     }
     
     func testRetryGroupWillStart(_ group: DDXCTestRetryGroup) {
         guard case .suite(suite: let suite, context: let context) = state else {
-            Log.print("testRetryGroupWillStart: Bad observer state: \(state), expected: .suite")
+            log.print("testRetryGroupWillStart: Bad observer state: \(state), expected: .suite")
             return
         }
         
@@ -165,84 +165,75 @@ class DDXCTestObserver: NSObject, XCTestObservation {
             skip.by = (feature.id, reason)
         }
         
+        group.context = GroupContext(skip: skip, suite: suite, suiteContext: context)
+        
         context.features.testGroupWillStart(for: testId.test, in: suite)
         
-        state = context.new(group: group, in: suite, skip: skip)
-        Log.debug("testRetryGroupWillStart: \(group.name)")
+        state = .group
+        log.debug("testRetryGroupWillStart: \(group.name)")
     }
     
     func testRetryGroupDidFinish(_ group: DDXCTestRetryGroup) {
-        guard case .group(group: let sgroup, context: let context) = state else {
-            Log.print("testRetryGroupDidFinish: Bad observer state: \(state), expected: .group")
+        guard case .group = state else {
+            log.print("testRetryGroupDidFinish: Bad observer state: \(state), expected: .group")
             return
         }
-        guard group.name == sgroup.name else {
-            Log.print("Bad group: \(group), expected: \(sgroup)")
-            return
-        }
-        state = context.back()
-        Log.debug("testRetryGroupDidFinish: \(group.name), " +
+        state = group.context.back()
+        log.debug("testRetryGroupDidFinish: \(group.name), " +
                   "executions: \(group.groupRun?.executionCount ?? 0), " +
                   "failed: \(group.groupRun?.failedExecutionCount ?? 0)")
     }
 
     func testCaseWillStart(_ testCase: XCTestCase) {
-        guard case .group(group: let group, context: let context) = state else {
-            Log.print("testCaseWillStart: Bad observer state: \(state), expected: .group")
+        guard case .group = state else {
+            log.print("testCaseWillStart: Bad observer state: \(state), expected: .group")
             return
         }
-        let test = context.suite.startTest(named: testCase.testId.test)
+        guard let testRun = testCase.testRun as? DDXCTestCaseRetryRun else {
+            log.print("testCaseWillStart: Unknown test run type: \(type(of: testCase.testRun)) for \(testCase)")
+            return
+        }
+        let test = testRun.ddTest
+        let info = TestRunInfoStart(skip: testRun.context.skip,
+                                    retry: testRun.context.retryStart,
+                                    executions: (total: testRun.group.groupRun?.executionCount ?? 0,
+                                                 failed: testRun.group.groupRun?.failedExecutionCount ?? 0))
+        testRun.context.features.testWillStart(test: test, info: info)
         
-        let info = TestRunInfoStart(skip: context.skip,
-                                    retry: context.retryStart,
-                                    executions: (total: group.groupRun?.executionCount ?? 0,
-                                                 failed: group.groupRun?.failedExecutionCount ?? 0))
-        context.features.testWillStart(test: test, info: info)
-        
-        state = context.new(test: test, in: group)
-        Log.debug("testCaseWillStart: \(testCase.name)")
+        state = .test
+        log.debug("testCaseWillStart: \(testCase.name)")
     }
 
     func testCaseDidFinish(_ testCase: XCTestCase) {
-        guard case .test(test: let test, group: let group, context: let context) = state else {
-            Log.print("testCaseDidFinish: Bad observer state: \(state), expected: .test")
+        guard case .test = state else {
+            log.print("testCaseDidFinish: Bad observer state: \(state), expected: .test")
             return
         }
-        guard testCase.name.contains(test.name) else {
-            Log.print("Bad test: \(testCase), expected: \(test.name)")
+        guard let testRun = testCase.testRun as? DDXCTestCaseRetryRun else {
+            log.print("testCaseDidFinish: Unknown test run type: \(type(of: testCase.testRun)) for \(testCase)")
             return
         }
+        let test = testRun.ddTest
         test.addBenchmarkTagsIfNeeded(from: testCase)
-        test.end(status: testCase.testRun?.status ?? .fail)
-        
-        // Run hook
-        let info = TestRunInfoEnd(skip: context.skip,
-                                  retry: context.retry,
-                                  executions: (total: group.groupRun?.executionCount ?? 0,
-                                               failed: group.groupRun?.failedExecutionCount ?? 0))
-        context.features.testDidFinish(test: test, info: info)
+        test.set(status: testCase.testRun?.status ?? .fail)
         
         // Switch state back
-        state = context.back(group: group)
-        Log.debug("testCaseDidFinish: \(testCase.name)")
+        state = .group
+        log.debug("testCaseDidFinish: \(testCase.name)")
     }
     
     func testCaseRetryWillFinish(_ testCase: XCTestCase) {
-        guard case .test(test: let test, group: let group, context: let context) = state else {
-            Log.print("testCaseRetryWillFinish: Bad observer state: \(state), expected: .test")
+        guard case .test = state else {
+            log.print("testCaseRetryWillFinish: Bad observer state: \(state), expected: .test")
             return
         }
-        guard testCase.name.contains(test.name) else {
-            Log.print("testCaseRetryWillFinish: Bad test: \(testCase), expected: \(test.name)")
-            return
-        }
-        Log.debug("testCaseRetryWillFinish: \(testCase)")
+        log.debug("testCaseRetryWillFinish: \(testCase)")
         guard let testRun = testCase.testRun as? DDXCTestCaseRetryRun else {
-            Log.print("Unknown test run type: \(type(of: testCase.testRun)) for \(testCase)")
+            log.print("testCaseRetryWillFinish: Unknown test run type: \(type(of: testCase.testRun)) for \(testCase)")
             return
         }
-        guard let groupRun = group.groupRun else {
-            Log.print("Bad observer state. Group run in nil")
+        guard let groupRun = testRun.group.groupRun else {
+            log.print("testCaseRetryWillFinish: Bad observer state. Group run in nil")
             testRun.recordSuppressedFailures()
             return
         }
@@ -251,21 +242,21 @@ class DDXCTestObserver: NSObject, XCTestObservation {
         let status: TestStatus = testRun.hasBeenSkipped ? .skip : testRun.canFail ? .fail : .pass
         
         // Test was skipped by developer / xcode / etc.
-        if testRun.hasBeenSkipped && context.skip.by == nil {
-            context.skip.by = (feature: .notFeature,
-                               reason: testRun.skipReason ?? "Skipped in the code")
+        if testRun.hasBeenSkipped && testRun.context.skip.by == nil {
+            testRun.context.skip.by = (feature: .notFeature,
+                                       reason: testRun.skipReason ?? "Skipped in the code")
         }
         
-        let startInfo = TestRunInfoStart(skip: context.skip,
-                                         retry: context.retryStart,
+        let startInfo = TestRunInfoStart(skip: testRun.context.skip,
+                                         retry: testRun.context.retryStart,
                                          executions: (total: groupRun.executionCount,
                                                       failed: groupRun.failedExecutionCount))
         
-        let (feature, retryStatus) = context.features.testGroupRetry(test: test, duration: duration,
-                                                                     withStatus: status, andInfo: startInfo)
+        let (feature, retryStatus) = testRun.context.features.testGroupRetry(test: testRun.ddTest, duration: duration,
+                                                                             withStatus: status, andInfo: startInfo)
         
         // save retry status
-        context.retry = (feature: feature?.id, status: retryStatus)
+        testRun.context.retry = (feature: feature?.id, status: retryStatus)
         
         // Restore errors if needed
         if testRun.suppressedFailures.count > 0 {
@@ -274,9 +265,9 @@ class DDXCTestObserver: NSObject, XCTestObservation {
                 testRun.recordSuppressedFailuresAsExpected(reason: reason)
             case .unsuppressed:
                 if let reason = feature?.id {
-                    Log.debug("\(reason) restores suppressed failures for \(test.name)")
+                    log.debug("\(reason) restores suppressed failures for \(testRun.ddTest.name)")
                 } else {
-                    Log.debug("restored suppressed failures for \(test.name)")
+                    log.debug("restored suppressed failures for \(testRun.ddTest.name)")
                 }
                 testRun.recordSuppressedFailures()
             }
@@ -284,31 +275,27 @@ class DDXCTestObserver: NSObject, XCTestObservation {
         
         // update info with the new retry status
         let endInfo = TestRunInfoEnd(skip: startInfo.skip,
-                                     retry: context.retry,
+                                     retry: testRun.context.retry,
                                      executions: startInfo.executions)
         // Run hook
-        context.features.testWillFinish(test: test, duration: duration, withStatus: status, andInfo: endInfo)
+        testRun.context.features.testWillFinish(test: testRun.ddTest, duration: duration, withStatus: status, andInfo: endInfo)
         
         // Start retry if needed
         if case .retry(let reason, _) = retryStatus {
-            Log.debug("will retry test \(test.name), reason: \(reason)")
-            group.retry()
+            log.debug("will retry test \(testRun.ddTest.name), reason: \(reason)")
+            testRun.group.retry()
         }
     }
     
     func testCaseRetry(_ testCase: XCTestCase, willRecord issue: XCTIssue) {
-        guard case .test(test: let test, group: let group, context: let context) = state else {
-            Log.print("testCaseRetry:willRecord: Bad observer state: \(state), expected: .test")
+        guard case .test = state else {
+            log.print("testCaseRetry:willRecord: Bad observer state: \(state), expected: .test")
             return
         }
-        guard testCase.name.contains(test.name) else {
-            Log.print("testCaseRetry:willRecord: Bad test: \(testCase), expected: \(test.name)")
-            return
-        }
-        Log.debug("testCaseRetry:willRecord: \(testCase), issue: \(issue)")
+        log.debug("testCaseRetry:willRecord: \(testCase), issue: \(issue)")
         
         guard let testRun = testCase.testRun as? DDXCTestCaseRetryRun else {
-            Log.print("Unknown test run type: \(type(of: testCase.testRun)) for \(testCase)")
+            log.print("testCaseRetry:willRecord: Unknown test run type: \(type(of: testCase.testRun)) for \(testCase)")
             return
         }
         
@@ -318,53 +305,53 @@ class DDXCTestObserver: NSObject, XCTestObservation {
             // We already registered failure for this test before.
             if testRun.suppressedFailures.count > 0 { // Check if it was suppressed
                 testRun.suppressFailure() // then suppress current error too
-                Log.debug("Suppressed one more issue: \(issue) for test: \(testCase)")
+                log.debug("Suppressed one more issue: \(issue) for test: \(testCase)")
             }
             return
         }
         
-        let info = TestRunInfoStart(skip: context.skip,
-                                    retry: context.retryStart,
-                                    executions: (total: group.groupRun?.executionCount ?? 0,
-                                                 failed: group.groupRun?.failedExecutionCount ?? 0))
+        let info = TestRunInfoStart(skip: testRun.context.skip,
+                                    retry: testRun.context.retryStart,
+                                    executions: (total: testRun.group.groupRun?.executionCount ?? 0,
+                                                 failed: testRun.group.groupRun?.failedExecutionCount ?? 0))
         
-        if let feature = context.features.shouldSuppressError(test: test, info: info) {
+        if let feature = testRun.context.features.shouldSuppressError(test: testRun.ddTest, info: info) {
             testRun.suppressFailure()
-            Log.debug("Suppressed issue \(issue) for test \(testCase) by feature \(feature.id)")
+            log.debug("Suppressed issue \(issue) for test \(testCase) by feature \(feature.id)")
         }
     }
     
     func testCase(_ testCase: XCTestCase, didRecord issue: XCTIssue) {
-        guard case .test(test: let test, group: _, context: _) = state else {
-            Log.print("testCase:didRecord: Bad observer state: \(state), expected: .test")
+        guard case .test = state else {
+            log.print("testCase:didRecord: Bad observer state: \(state), expected: .test")
             return
         }
-        guard testCase.name.contains(test.name) else {
-            Log.print("testCase:didRecord: Bad test: \(testCase), expected: \(test.name)")
+        guard let testRun = testCase.testRun as? DDXCTestCaseRetryRun else {
+            log.print("testCase:didRecord: Unknown test run type: \(type(of: testCase.testRun)) for \(testCase)")
             return
         }
-        Log.debug("testCase:didRecord: \(testCase), issue: \(issue)")
+        log.debug("testCase:didRecord: \(testCase), issue: \(issue)")
         
-        test.add(error: .init(type: issue.compactDescription.components(separatedBy: " ").first ?? "unknown",
-                              message: issue.description))
+        testRun.ddTest.add(error: .init(type: issue.compactDescription.components(separatedBy: " ").first ?? "unknown",
+                                        message: issue.description))
     }
     
     func testCase(_ testCase: XCTestCase, didRecord expectedFailure: XCTExpectedFailure) {
-        guard case .test(test: let test, group: _, context: _) = state else {
-            Log.print("testCase:didRecord: Bad observer state: \(state), expected: .test")
+        guard case .test = state else {
+            log.print("testCase:didRecord:expectedFailure: Bad observer state: \(state), expected: .test")
             return
         }
-        guard testCase.name.contains(test.name) else {
-            Log.print("testCase:didRecord: Bad test: \(testCase), expected: \(test.name)")
+        guard let testRun = testCase.testRun as? DDXCTestCaseRetryRun else {
+            log.print("testCase:didRecord:expectedFailure: Unknown test run type: \(type(of: testCase.testRun)) for \(testCase)")
             return
         }
-        Log.debug("testCase:didRecord:: \(testCase), expectedFailure: \(expectedFailure.issue.compactDescription)")
+        log.debug("testCase:didRecord: \(testCase), expectedFailure: \(expectedFailure.issue.compactDescription)")
         
         let reason = expectedFailure.failureReason ?? ""
         let type = expectedFailure.issue.compactDescription.components(separatedBy: " ").first ?? "unknown"
         
-        test.add(error: .init(type: "ExpectedFailure[\(reason)]: " + type,
-                              message: expectedFailure.issue.description))
+        testRun.ddTest.add(error: .init(type: "ExpectedFailure[\(reason)]: " + type,
+                                        message: expectedFailure.issue.description))
     }
 }
 
@@ -376,8 +363,8 @@ extension DDXCTestObserver {
         case module(any TestModule & TestSuiteProvider, config: SessionConfig)
         case container(suite: ContainerSuite, inside: any TestModule & TestSuiteProvider, config: SessionConfig)
         case suite(suite: any TestSuite & TestRunProvider, context: SuiteContext)
-        case group(group: DDXCTestRetryGroup, context: GroupContext)
-        case test(test: any TestRun, group: DDXCTestRetryGroup, context: GroupContext)
+        case group
+        case test
     }
     
     indirect enum ContainerSuite {
@@ -425,13 +412,6 @@ extension DDXCTestObserver {
                            inside: suite.module as! any TestModule & TestSuiteProvider,
                            config: config)
         }
-        
-        func new(group: DDXCTestRetryGroup,
-                 in suite: any TestSuite & TestRunProvider,
-                 skip: (by: (feature: FeatureId, reason: String)?, status: SkipStatus)) -> State
-        {
-            .group(group: group, context: GroupContext(skip: skip, suite: suite, suiteContext: self))
-        }
     }
     
     final class GroupContext {
@@ -461,14 +441,6 @@ extension DDXCTestObserver {
         
         func back() -> State {
             .suite(suite: suite, context: suiteContext)
-        }
-        
-        func new(test: any TestRun, in group: DDXCTestRetryGroup) -> State {
-            .test(test: test, group: group, context: self)
-        }
-        
-        func back(group: DDXCTestRetryGroup) -> State {
-            .group(group: group, context: self)
         }
     }
 }

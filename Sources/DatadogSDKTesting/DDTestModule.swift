@@ -65,6 +65,7 @@ public final class Module: NSObject, Encodable {
             if duration > state.duration {
                 state.duration = duration
             }
+            
             state.meta[DDGenericTags.type] = DDTagValues.typeModuleEnd
             state.meta[DDTestTags.testModule] = name
             state.meta[DDTestTags.testFramework] = state.testFrameworks.joined(separator: ",")

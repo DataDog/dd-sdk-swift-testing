@@ -54,6 +54,7 @@ public final class Suite: NSObject, Encodable {
         let duration = (endTime ?? configuration.clock.now).timeIntervalSince(startTime).toNanoseconds
         
         _state.update { state in
+            state.duration = duration
             state.meta[DDGenericTags.type] = DDTagValues.typeSuiteEnd
             state.meta[DDTestTags.testSuite] = name
             state.meta[DDTestTags.testModule] = module.name
@@ -86,17 +87,34 @@ public final class Suite: NSObject, Encodable {
     @objc public func setTag(key: String, value: Any) {
         trySet(tag: key, value: value)
     }
-
+    
     /// Starts a test in this suite
     /// - Parameters:
     ///   - name: name of the suite
-    ///   - startTime: Optional, the time where the test started
-    @objc public func testStart(name: String, startTime: Date? = nil) -> Test {
-        Test(name: name, suite: self, startTime: startTime)
+    ///   - action: callback with test. Test will be ended automatically after call end
+    @objc public func testStart(name: String, _ action: (Test) -> Any) -> Any {
+        testStart(named: name, action)
     }
-
-    @objc public func testStart(name: String) -> Test {
-        testStart(name: name, startTime: nil)
+    
+    /// Starts a test in this suite
+    /// - Parameters:
+    ///   - name: name of the suite
+    ///   - startTime: start time for the test
+    ///   - action: callback with test. Test will be ended automatically after call end
+    @objc public func testStart(name: String, startTime: Date, _ action: (Test) -> Any) -> Any {
+        testStart(named: name, at: startTime, action)
+    }
+    
+    public func testStart<T>(named name: String, at start: Date? = nil,
+                             _ action: (Test) throws -> T) rethrows -> T
+    {
+        try Test.withActiveTest(named: name, in: self, at: start, action)
+    }
+    
+    public func testStart<T>(named name: String, at start: Date? = nil,
+                             _ action: @Sendable (Test) async throws -> T) async rethrows -> T
+    {
+        try await Test.withActiveTest(named: name, in: self, at: start, action)
     }
 }
 
@@ -137,9 +155,13 @@ extension Suite: TestSuite {
     func end(time: Date?) { end(endTime: time) }
 }
 
-extension Suite: TestRunProvider {
-    func startTest(named: String) -> any TestRun {
-        testStart(name: named)
+extension Suite: TestRunProvider {    
+    func withActiveTest<T>(named name: String, _ action: @Sendable (any TestRun) async throws -> T) async rethrows -> T {
+        try await testStart(named: name, action)
+    }
+    
+    func withActiveTest<T>(named name: String, _ action: (any TestRun) throws -> T) rethrows -> T {
+        try testStart(named: name, action)
     }
 }
 

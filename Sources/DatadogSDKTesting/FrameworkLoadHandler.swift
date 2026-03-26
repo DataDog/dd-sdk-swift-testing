@@ -37,7 +37,7 @@ enum FrameworkLoadHandler {
                 let manager = SessionManager(log: Log.instance, provider: Session.Provider())
                 sessionManager = manager
                 
-                testObserver = DDXCTestObserver(session: manager)
+                testObserver = DDXCTestObserver(session: manager, log: Log.instance)
                 testObserver?.start()
                 
                 DatadogSwiftTestingTrait.sharedSuiteProvider = SwiftTestingSuiteProvider(session: manager,

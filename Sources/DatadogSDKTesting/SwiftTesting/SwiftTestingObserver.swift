@@ -24,7 +24,7 @@ protocol SwiftTestingObserverType: AnyObject, Sendable, TestSessionManagerObserv
     func didFinish(testRun test: borrowing SwiftTestingTestRunContext) async
 }
 
-final class NoopSwiftTestingObserver: SwiftTestingObserverType {
+final class SwiftTestingObserver: SwiftTestingObserverType {
     func willStart(session: any TestSession, with config: SessionConfig) async {
     }
     

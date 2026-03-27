@@ -150,7 +150,7 @@ class DDXCTestObserver: NSObject, XCTestObservation {
         }
     }
     
-    func testRetryGroupWillStart(_ group: DDXCTestRetryGroup) {
+    func testRetryGroupWillStart(_ group: any DDXCTestRetryGroupType) {
         guard case .suite(suite: let suite, context: let context) = state else {
             log.print("testRetryGroupWillStart: Bad observer state: \(state), expected: .suite")
             return
@@ -178,7 +178,7 @@ class DDXCTestObserver: NSObject, XCTestObservation {
         log.debug("testRetryGroupWillStart: \(group.name)")
     }
     
-    func testRetryGroupDidFinish(_ group: DDXCTestRetryGroup) {
+    func testRetryGroupDidFinish(_ group: any DDXCTestRetryGroupType) {
         guard case .group = state else {
             log.print("testRetryGroupDidFinish: Bad observer state: \(state), expected: .group")
             return
@@ -194,7 +194,7 @@ class DDXCTestObserver: NSObject, XCTestObservation {
             log.print("testCaseWillStart: Bad observer state: \(state), expected: .group")
             return
         }
-        guard let testRun = testCase.testRun as? DDXCTestCaseRetryRun else {
+        guard let testRun = testCase.testRun as? DDXCTestCaseRetryRunType else {
             log.print("testCaseWillStart: Unknown test run type: \(type(of: testCase.testRun)) for \(testCase)")
             return
         }
@@ -214,7 +214,7 @@ class DDXCTestObserver: NSObject, XCTestObservation {
             log.print("testCaseDidFinish: Bad observer state: \(state), expected: .test")
             return
         }
-        guard let testRun = testCase.testRun as? DDXCTestCaseRetryRun else {
+        guard let testRun = testCase.testRun as? DDXCTestCaseRetryRunType else {
             log.print("testCaseDidFinish: Unknown test run type: \(type(of: testCase.testRun)) for \(testCase)")
             return
         }
@@ -233,7 +233,7 @@ class DDXCTestObserver: NSObject, XCTestObservation {
             return
         }
         log.debug("testCaseRetryWillFinish: \(testCase)")
-        guard let testRun = testCase.testRun as? DDXCTestCaseRetryRun else {
+        guard let testRun = testCase.testRun as? DDXCTestCaseRetryRunType else {
             log.print("testCaseRetryWillFinish: Unknown test run type: \(type(of: testCase.testRun)) for \(testCase)")
             return
         }
@@ -299,7 +299,7 @@ class DDXCTestObserver: NSObject, XCTestObservation {
         }
         log.debug("testCaseRetry:willRecord: \(testCase), issue: \(issue)")
         
-        guard let testRun = testCase.testRun as? DDXCTestCaseRetryRun else {
+        guard let testRun = testCase.testRun as? DDXCTestCaseRetryRunType else {
             log.print("testCaseRetry:willRecord: Unknown test run type: \(type(of: testCase.testRun)) for \(testCase)")
             return
         }
@@ -331,7 +331,7 @@ class DDXCTestObserver: NSObject, XCTestObservation {
             log.print("testCase:didRecord: Bad observer state: \(state), expected: .test")
             return
         }
-        guard let testRun = testCase.testRun as? DDXCTestCaseRetryRun else {
+        guard let testRun = testCase.testRun as? DDXCTestCaseRetryRunType else {
             log.print("testCase:didRecord: Unknown test run type: \(type(of: testCase.testRun)) for \(testCase)")
             return
         }
@@ -346,7 +346,7 @@ class DDXCTestObserver: NSObject, XCTestObservation {
             log.print("testCase:didRecord:expectedFailure: Bad observer state: \(state), expected: .test")
             return
         }
-        guard let testRun = testCase.testRun as? DDXCTestCaseRetryRun else {
+        guard let testRun = testCase.testRun as? DDXCTestCaseRetryRunType else {
             log.print("testCase:didRecord:expectedFailure: Unknown test run type: \(type(of: testCase.testRun)) for \(testCase)")
             return
         }

@@ -257,8 +257,16 @@ enum Mocks {
             hasher.combine(_module)
         }
         
-        func startTest(named: String) -> any TestRun {
-            Mocks.Test(name: named, suite: self)
+        func withActiveTest<T>(named name: String, _ action: @Sendable (any TestRun) async throws -> T) async rethrows -> T {
+            let test = Mocks.Test(name: name, suite: self)
+            defer { test.end() }
+            return try await test.withActive { try await action(test) }
+        }
+
+        func withActiveTest<T>(named name: String, _ action: (any TestRun) throws -> T) rethrows -> T {
+            let test = Mocks.Test(name: name, suite: self)
+            defer { test.end() }
+            return try test.withActive { try action(test) }
         }
     }
     
@@ -399,6 +407,14 @@ enum Mocks {
             super.init(name: name)
         }
         
+        func set(status: TestStatus) {
+            switch status {
+            case .fail: set(failed: nil)
+            case .skip: set(skipped: nil)
+            case .pass: _state.update { $0.status = .pass }
+            }
+        }
+
         func add(error: TestError) {
             _state.update { state in
                 state.error = error

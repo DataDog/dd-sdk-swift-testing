@@ -9,6 +9,8 @@ import OpenTelemetryApi
 import OpenTelemetrySdk
 import XCTest
 
+// MARK: - Tests
+
 internal class DDXCTestObserverTests: XCTestCase {
     var testObserver: DDXCTestObserver!
     var session: SessionManager!
@@ -22,7 +24,7 @@ internal class DDXCTestObserverTests: XCTestCase {
                                           "DD_DISABLE_CRASH_HANDLER": "1"])
         session = SessionManager(log: Mocks.CatchLogger(isDebug: true),
                                  provider: Session.Provider())
-        testObserver = DDXCTestObserver(session: session)
+        testObserver = DDXCTestObserver(session: session, log: Mocks.CatchLogger(isDebug: true))
         theSuite.setValue([self], forKey: "_mutableTests")
     }
 
@@ -49,21 +51,29 @@ internal class DDXCTestObserverTests: XCTestCase {
         testObserver.testBundleWillStart(Bundle.main)
         testObserver.testSuiteWillStart(theSuite)
         testObserver.testRetryGroupWillStart(group)
-        testObserver.testCaseWillStart(self)
 
         let testName = "testWhenTestCaseWillStartIsCalled_testSpanIsCreated"
         let testSuite = "DDTestObserverTests"
-        //let testBundle = testObserver.module?.bundleName
-        let span = OpenTelemetry.instance.contextProvider.activeSpan as! SpanSdk
-        
-        let spanData = span.toSpanData()
 
-        testObserver.testCaseDidFinish(self)
+        let spanData = group.context.suite.withActiveTest(named: self.testId.test) { test in
+            let originalRun = self.testRun
+            let mockRun = MockXCTestCaseRetryRun(ddTest: test, group: group, xcTest: self)
+            self.setValue(mockRun, forKey: "testRun")
+
+            testObserver.testCaseWillStart(self)
+
+            let span = OpenTelemetry.instance.contextProvider.activeSpan as! SpanSdk
+
+            testObserver.testCaseDidFinish(self)
+            self.setValue(originalRun, forKey: "testRun")
+            return span.toSpanData()
+        }
+
         testObserver.testRetryGroupDidFinish(group)
         testObserver.testSuiteDidFinish(theSuite)
         testObserver.testBundleDidFinish(Bundle.main)
         destroyObserver()
-        
+
         XCTAssertEqual(spanData.name, "XCTest.test")
         XCTAssertEqual(spanData.attributes[DDGenericTags.type]?.description, DDTagValues.typeTest)
         XCTAssertEqual(spanData.attributes[DDGenericTags.resource]?.description, "\(testSuite).\(testName)")
@@ -79,41 +89,59 @@ internal class DDXCTestObserverTests: XCTestCase {
         testObserver.testBundleWillStart(Bundle.main)
         testObserver.testSuiteWillStart(theSuite)
         testObserver.testRetryGroupWillStart(group)
-        testObserver.testCaseWillStart(self)
 
-        let testSpan = OpenTelemetry.instance.contextProvider.activeSpan as! SpanSdk
-        
-        var spanData = testSpan.toSpanData()
-        let statusBefore = spanData.attributes[DDTestTags.testStatus]
-        
-        testObserver.testCaseDidFinish(self)
+        var statusBefore: AttributeValue? = nil
+     
+        let spanData = group.context.suite.withActiveTest(named: self.testId.test) { test in
+            let originalRun = self.testRun
+            let mockRun = MockXCTestCaseRetryRun(ddTest: test, group: group, xcTest: self)
+            self.setValue(mockRun, forKey: "testRun")
 
-        spanData = testSpan.toSpanData()
-        
+            testObserver.testCaseWillStart(self)
+
+            let testSpan = OpenTelemetry.instance.contextProvider.activeSpan as! SpanSdk
+            statusBefore = testSpan.toSpanData().attributes[DDTestTags.testStatus]
+
+            testObserver.testCaseDidFinish(self)
+            
+            self.setValue(originalRun, forKey: "testRun")
+            return testSpan.toSpanData()
+        }
+
         testObserver.testRetryGroupDidFinish(group)
         testObserver.testSuiteDidFinish(theSuite)
         testObserver.testBundleDidFinish(Bundle.main)
         destroyObserver()
-        
+
         XCTAssertNil(statusBefore)
         XCTAssertNotNil(spanData.attributes[DDTestTags.testStatus])
     }
 
-    
     func testWhenTestCaseDidRecordIssueIsCalled_testStatusIsSet() {
         let group = DDXCTestRetryGroup(for: self)
         testObserver.testBundleWillStart(Bundle.main)
         testObserver.testSuiteWillStart(theSuite)
         testObserver.testRetryGroupWillStart(group)
-        testObserver.testCaseWillStart(self)
-        let issue = XCTIssue(type: .assertionFailure, compactDescription: "descrip", detailedDescription: nil, sourceCodeContext: XCTSourceCodeContext(), associatedError: nil, attachments: [])
-        //testObserver.testCaseRetry(self, willRecord: issue)
-        testObserver.testCase(self, didRecord: issue)
 
-        let testSpan = OpenTelemetry.instance.contextProvider.activeSpan as! SpanSdk
-        testObserver.testCaseDidFinish(self)
-        let spanData = testSpan.toSpanData()
-        
+        let spanData = group.context.suite.withActiveTest(named: self.testId.test) { test in
+            let originalRun = self.testRun
+            let mockRun = MockXCTestCaseRetryRun(ddTest: test, group: group, xcTest: self)
+            self.setValue(mockRun, forKey: "testRun")
+
+            testObserver.testCaseWillStart(self)
+
+            let issue = XCTIssue(type: .assertionFailure, compactDescription: "descrip",
+                                 detailedDescription: nil, sourceCodeContext: XCTSourceCodeContext(),
+                                 associatedError: nil, attachments: [])
+            mockRun.addFailure(issue)
+            testObserver.testCase(self, didRecord: issue)
+
+            let testSpan = OpenTelemetry.instance.contextProvider.activeSpan as! SpanSdk
+            testObserver.testCaseDidFinish(self)
+            self.setValue(originalRun, forKey: "testRun")
+            return testSpan.toSpanData()
+        }
+
         testObserver.testRetryGroupDidFinish(group)
         testObserver.testSuiteDidFinish(theSuite)
         testObserver.testBundleDidFinish(Bundle.main)
@@ -129,24 +157,33 @@ internal class DDXCTestObserverTests: XCTestCase {
         testObserver.testBundleWillStart(Bundle.main)
         testObserver.testSuiteWillStart(theSuite)
         testObserver.testRetryGroupWillStart(group)
-        testObserver.testCaseWillStart(self)
-        let testSpan = OpenTelemetry.instance.contextProvider.activeSpan as! SpanSdk
-        let perfMetric = XCTPerformanceMetric.wallClockTime
-        self.setValue([perfMetric], forKey: "_activePerformanceMetricIDs")
-        self.setValue([perfMetric: ["measurements": [1, 2, 3, 4, 5]]], forKey: "_perfMetricsForID")
 
-        testObserver.testCaseDidFinish(self)
+        let spanData = group.context.suite.withActiveTest(named: self.testId.test) { test in
+            let originalRun = self.testRun
+            let mockRun = MockXCTestCaseRetryRun(ddTest: test, group: group, xcTest: self)
+            self.setValue(mockRun, forKey: "testRun")
 
-        let spanData = testSpan.toSpanData()
+            testObserver.testCaseWillStart(self)
 
-        self.setValue(nil, forKey: "_activePerformanceMetricIDs")
-        self.setValue(nil, forKey: "_perfMetricsForID")
+            let testSpan = OpenTelemetry.instance.contextProvider.activeSpan as! SpanSdk
+            let perfMetric = XCTPerformanceMetric.wallClockTime
+            self.setValue([perfMetric], forKey: "_activePerformanceMetricIDs")
+            self.setValue([perfMetric: ["measurements": [1, 2, 3, 4, 5]]], forKey: "_perfMetricsForID")
+
+            testObserver.testCaseDidFinish(self)
+            let data = testSpan.toSpanData()
+
+            self.setValue(nil, forKey: "_activePerformanceMetricIDs")
+            self.setValue(nil, forKey: "_perfMetricsForID")
+            self.setValue(originalRun, forKey: "testRun")
+            return data
+        }
 
         testObserver.testRetryGroupDidFinish(group)
         testObserver.testSuiteDidFinish(theSuite)
         testObserver.testBundleDidFinish(Bundle.main)
         destroyObserver()
-        
+
         XCTAssertEqual(spanData.attributes[DDTestTags.testType]?.description, DDTagValues.typeBenchmark)
 
         let measure = DDBenchmarkTags.benchmark + "." + DDBenchmarkMeasuresTags.duration + "."
@@ -157,37 +194,95 @@ internal class DDXCTestObserverTests: XCTestCase {
         XCTAssertEqual(spanData.attributes[measure + DDBenchmarkTags.statisticsMedian]?.description, "3000000000.0")
     }
 
-
     func testWhenTestCaseDidRecordIssueIsCalledTwice_twoErrorsAppear() {
         let group = DDXCTestRetryGroup(for: self)
         testObserver.testBundleWillStart(Bundle.main)
         testObserver.testSuiteWillStart(theSuite)
         testObserver.testRetryGroupWillStart(group)
-        testObserver.testCaseWillStart(self)
 
-        let error1Text = "error1"
-        let error2Text = "error2"
-        let issue = XCTIssue(type: .assertionFailure, compactDescription: error1Text, detailedDescription: nil, sourceCodeContext: XCTSourceCodeContext(), associatedError: nil, attachments: [])
-        testObserver.testCase(self, didRecord: issue)
+        let spanData = group.context.suite.withActiveTest(named: self.testId.test) { test in
+            let originalRun = self.testRun
+            let mockRun = MockXCTestCaseRetryRun(ddTest: test, group: group, xcTest: self)
+            self.setValue(mockRun, forKey: "testRun")
 
-        let issue2 = XCTIssue(type: .assertionFailure, compactDescription: error2Text, detailedDescription: nil, sourceCodeContext: XCTSourceCodeContext(), associatedError: nil, attachments: [])
-        testObserver.testCase(self, didRecord: issue2)
+            testObserver.testCaseWillStart(self)
 
-        let testSpan = OpenTelemetry.instance.contextProvider.activeSpan as! SpanSdk
-        testObserver.testCaseDidFinish(self)
-        let spanData = testSpan.toSpanData()
+            let error1Text = "error1"
+            let error2Text = "error2"
+            let issue1 = XCTIssue(type: .assertionFailure, compactDescription: error1Text,
+                                  detailedDescription: nil, sourceCodeContext: XCTSourceCodeContext(),
+                                  associatedError: nil, attachments: [])
+            mockRun.addFailure(issue1)
+            testObserver.testCase(self, didRecord: issue1)
+
+            let issue2 = XCTIssue(type: .assertionFailure, compactDescription: error2Text,
+                                  detailedDescription: nil, sourceCodeContext: XCTSourceCodeContext(),
+                                  associatedError: nil, attachments: [])
+            mockRun.addFailure(issue2)
+            testObserver.testCase(self, didRecord: issue2)
+
+            let testSpan = OpenTelemetry.instance.contextProvider.activeSpan as! SpanSdk
+            testObserver.testCaseDidFinish(self)
+            
+            self.setValue(originalRun, forKey: "testRun")
+            return testSpan.toSpanData()
+        }
 
         testObserver.testRetryGroupDidFinish(group)
         testObserver.testSuiteDidFinish(theSuite)
         testObserver.testBundleDidFinish(Bundle.main)
         destroyObserver()
-        
-        XCTAssertTrue(spanData.attributes[DDTags.errorMessage]?.description.contains(exactWord: error1Text) ?? false)
-        XCTAssertTrue(spanData.attributes[DDTags.errorMessage]?.description.contains(exactWord: error2Text) ?? false)
+
+        XCTAssertTrue(spanData.attributes[DDTags.errorMessage]?.description.contains(exactWord: "error1") ?? false)
+        XCTAssertTrue(spanData.attributes[DDTags.errorMessage]?.description.contains(exactWord: "error2") ?? false)
     }
-    
+
     private func destroyObserver() {
         waitForAsync { await self.session.stop() }
         testObserver = nil
+    }
+}
+
+// MARK: - Mock test run
+
+/// A lightweight XCTestRun subclass used in tests.
+/// Extends XCTestRun (not XCTestCaseRun) so start()/stop() don't notify XCTestObservationCenter.
+private final class MockXCTestCaseRetryRun: XCTestRun, DDXCTestCaseRetryRunType {
+    let ddTest: any TestRun
+    let group: any DDXCTestRetryGroupType
+
+    private(set) var suppressedFailures: [XCTIssue] = []
+    private(set) var skipReason: String? = nil
+    private var _failed: Bool = false
+    private var _suppressNext: Bool = false
+
+    init(ddTest: any TestRun, group: any DDXCTestRetryGroupType, xcTest: XCTest) {
+        self.ddTest = ddTest
+        self.group = group
+        super.init(test: xcTest)
+    }
+
+    var ddHasFailed: Bool { _failed || !suppressedFailures.isEmpty }
+    var ddTotalFailureCount: Int { (_failed ? 1 : 0) + suppressedFailures.count }
+
+    /// Call this to simulate a test failure without affecting the running XCTest.
+    func addFailure(_ issue: XCTIssue) {
+        if _suppressNext {
+            suppressedFailures.append(issue)
+            _suppressNext = false
+        } else {
+            _failed = true
+        }
+    }
+
+    func suppressFailure() { _suppressNext = true }
+
+    func recordSuppressedFailures() {
+        if !suppressedFailures.isEmpty { _failed = true }
+        suppressedFailures = []
+    }
+
+    func recordSuppressedFailuresAsExpected(reason: String) {
+        suppressedFailures = []
     }
 }

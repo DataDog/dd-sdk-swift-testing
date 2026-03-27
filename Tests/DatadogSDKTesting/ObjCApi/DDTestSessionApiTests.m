@@ -14,14 +14,16 @@
 
 @implementation DDTestModuleApiTests
 
-- (void)testApiIsAccessible{
+- (void)testApiIsAccessible {
     DDTestSession* session = [DDTestSession startWithName: @"ManualObjcTestingSession"];
     DDTestModule *module = [session moduleStartWithName:@"ManualObjcTestingModule" startTime:nil];
     DDTestSuite *suite = [module suiteStartWithName:@"ManualObjcTestingSuite" startTime:nil];
-    DDTest *test = [suite testStartWithName:@"ManualObjcTestingTest" startTime:nil];
-    [test setTagWithKey:@"key" value:@"value"];
-    [test setErrorInfoWithType:@"errorType" message:@"error Message" callstack:nil];
-    [test endWithStatus:DDTestStatusPass endTime:nil];
+    [suite testStartWithName:@"ManualObjcTestingTest" :^id(DDTest* test) {
+        [test setTagWithKey:@"key" value:@"value"];
+        [test setErrorInfoWithType:@"errorType" message:@"error Message" callstack:nil];
+        [test setWithStatus:DDTestStatusPass];
+        return nil;
+    }];
     [suite endWithTime:nil];
     [module endWithTime:nil];
     [session endWithTime:nil];

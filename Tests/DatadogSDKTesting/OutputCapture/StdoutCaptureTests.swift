@@ -22,11 +22,11 @@ class StdoutCaptureTests: XCTestCase {
         let stringToCapture = "This should be captured"
 
         StdoutCapture.startCapturing()
-        let span = tracer.startSpan(name: "Unnamed", attributes: [:]) as! SpanSdk
-        print(stringToCapture)
-        span.status = .ok
-        span.end()
-        let spanData = span.toSpanData()
+        let spanData = tracer.withActiveSpan(name: "Unnamed", attributes: [:]) { span in
+            print(stringToCapture)
+            span.status = .ok
+            return span.toSpanData()
+        }
         StdoutCapture.stopCapturing()
 
         XCTAssertTrue(StdoutCapture.stdoutBuffer.isEmpty)
@@ -40,12 +40,11 @@ class StdoutCaptureTests: XCTestCase {
 
         StdoutCapture.startCapturing()
         StdoutCapture.stopCapturing()
-        let span = tracer.startSpan(name: "Unnamed", attributes: [:]) as! SpanSdk
-        print(stringToCapture)
-        span.status = .ok
-        span.end()
-        let spanData = span.toSpanData()
-
+        let spanData = tracer.withActiveSpan(name: "Unnamed", attributes: [:]) { span in
+            print(stringToCapture)
+            span.status = .ok
+            return span.toSpanData()
+        }
         XCTAssertTrue(StdoutCapture.stdoutBuffer.isEmpty)
         XCTAssertEqual(spanData.events.count, 0)
     }
@@ -55,11 +54,12 @@ class StdoutCaptureTests: XCTestCase {
         let stringToCapture = "This should  not be captured"
 
         StdoutCapture.startCapturing()
-        let span = tracer.startSpan(name: "Unnamed", attributes: [:]) as! SpanSdk
-        fputs(stringToCapture, stdout)
-        let spanData = span.toSpanData()
-        span.status = .ok
-        span.end()
+        let spanData = tracer.withActiveSpan(name: "Unnamed", attributes: [:]) { span in
+            fputs(stringToCapture, stdout)
+            let spanData = span.toSpanData()
+            span.status = .ok
+            return spanData
+        }
         StdoutCapture.stopCapturing()
 
         XCTAssertFalse(StdoutCapture.stdoutBuffer.isEmpty)

@@ -20,7 +20,6 @@ public final class Session: NSObject, Encodable {
     
     public let name: String
     public let startTime: Date
-    public let resource: String
     public var testFrameworks: Set<String> { _state.value.testFrameworks }
     public var duration: UInt64 { _state.value.duration }
     public var tags: [String: String] { _state.value.meta }
@@ -36,7 +35,6 @@ public final class Session: NSObject, Encodable {
     
     init(name: String, config: SessionConfig, modules: any TestModuleManagerSession, startTime: Date? = nil) {
         self.name = name
-        self.resource = name
         self.configuration = config
         self._moduleManager = modules
         
@@ -143,6 +141,13 @@ public extension Session {
                                    service: DDTestMonitor.env.service,
                                    metrics: DDTestMonitor.env.baseMetrics,
                                    log: Log.instance)
+        waitForAsync {
+            do {
+                try await DDTestMonitor.clock.sync()
+            } catch {
+                DDTestMonitor.clock = DateClock()
+            }
+        }
         return Session(name: name, config: config, modules: Module.StatelessManager(), startTime: startTime)
     }
 
@@ -230,7 +235,7 @@ extension Session {
             } else {
                 try container.encode("Swift.session", forKey: .name)
             }
-            try container.encode(resource, forKey: .resource)
+            try container.encode(name, forKey: .resource)
             try container.encode(configuration.service, forKey: .service)
         }
     }

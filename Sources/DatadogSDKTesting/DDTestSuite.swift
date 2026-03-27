@@ -101,6 +101,7 @@ public final class Suite: NSObject, Encodable {
     /// - Parameters:
     ///   - name: name of the suite
     ///   - action: callback with test. Test will be ended automatically after call end
+    @discardableResult
     @objc public func testStart(name: String, _ action: (Test) -> Any) -> Any {
         testStart(named: name, action)
     }

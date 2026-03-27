@@ -11,7 +11,8 @@ import XCTest
 
 internal class SimpleSpanSerializerTests: XCTestCase {
     func testGivenASimpleSpan_ItSerializesAndDeserializesWithoutChanges() throws {
-        let original = SimpleSpanData(traceIdHi: 1, traceIdLo: 2, spanId: 3, name: "name", startTime: Date(timeIntervalSinceReferenceDate: 33), stringAttributes: [:])
+        let startTime = Date(timeIntervalSinceReferenceDate: 33)
+        let original = SimpleSpanData(traceIdHi: 1, traceIdLo: 2, spanId: 3, name: "name", startTime: startTime, stringAttributes: [:], sessionStartTime: startTime, moduleStartTime: startTime)
 
         let serialized = SimpleSpanSerializer.serializeSpan(simpleSpan: original)
         let deserialized = SimpleSpanSerializer.deserializeSpan(data: serialized)
@@ -20,7 +21,8 @@ internal class SimpleSpanSerializerTests: XCTestCase {
     }
 
     func testGivenASpanWithAttributes_ItSerializesAndDeserializes() throws {
-        let original = SimpleSpanData(traceIdHi: 1, traceIdLo: 2, spanId: 3, name: "name", startTime: Date(timeIntervalSinceReferenceDate: 33), stringAttributes: ["key1": "value1", "key2": "value2"])
+        let startTime = Date(timeIntervalSinceReferenceDate: 33)
+        let original = SimpleSpanData(traceIdHi: 1, traceIdLo: 2, spanId: 3, name: "name", startTime: startTime, stringAttributes: ["key1": "value1", "key2": "value2"], sessionStartTime: startTime, moduleStartTime: startTime)
 
         let serialized = SimpleSpanSerializer.serializeSpan(simpleSpan: original)
         let deserialized = SimpleSpanSerializer.deserializeSpan(data: serialized)

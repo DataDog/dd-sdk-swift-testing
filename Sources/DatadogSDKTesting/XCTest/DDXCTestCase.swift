@@ -11,12 +11,20 @@ protocol DDXCTestSuppressedFailureRun: AnyObject {
     var ddHasFailed: Bool { get }
 }
 
+protocol DDXCTestRetryDelegate: AnyObject {
+    func testRetryGroupWillStart(_ group: any DDXCTestRetryGroupType)
+    func testRetryGroupDidFinish(_ group: any DDXCTestRetryGroupType)
+    func testCaseRetryWillFinish(_ testCase: XCTestCase)
+    func testCaseRetry(_ testCase: XCTestCase, willRecord issue: XCTIssue)
+}
+
 protocol DDXCTestRetryGroupType: AnyObject {
     var name: String { get }
     var currentTest: XCTestCase? { get }
     var groupRun: (any DDXCTestRetryGroupRunType)? { get }
     var testId: (suite: String, test: String) { get }
     var context: DDXCTestObserver.GroupContext! { get set }
+    var observer: any DDXCTestRetryDelegate { get }
     func skip(reason: String)
     func retry()
 }
@@ -66,7 +74,7 @@ final class DDXCTestCaseRetryRun: XCTestCaseRun, DDXCTestCaseRetryRunType {
     let ddTest: any TestRun
     let group: any DDXCTestRetryGroupType
     
-    init(xcTest: XCTest, test: any TestRun, group: DDXCTestRetryGroup) {
+    init(xcTest: XCTest, test: any TestRun, group: any DDXCTestRetryGroupType) {
         self.ddTest = test
         self.group = group
         super.init(test: xcTest)
@@ -82,8 +90,6 @@ final class DDXCTestCaseRetryRun: XCTestCaseRun, DDXCTestCaseRetryRunType {
     var ddTotalFailureCount: Int {
         totalFailureCount + expectedFailuresCount + suppressedFailures.count
     }
-    
-    var canFail: Bool { ddTotalFailureCount > 0 }
     
     private(set) var skipReason: String? = nil
     
@@ -120,12 +126,12 @@ final class DDXCTestCaseRetryRun: XCTestCaseRun, DDXCTestCaseRetryRunType {
 #endif
     
     override func stop() {
-        NotificationCenter.test.postTestCaseRetryWillFinish(test as! XCTestCase)
+        group.observer.testCaseRetryWillFinish(test as! XCTestCase)
         super.stop()
     }
-    
+
     override func record(_ issue: XCTIssue) {
-        NotificationCenter.test.postTestCaseRetry(test as! XCTestCase, willRecord: issue)
+        group.observer.testCaseRetry(test as! XCTestCase, willRecord: issue)
         if _suppressFailure {
             suppressedFailures.append(issue)
             _suppressFailure = false
@@ -214,13 +220,13 @@ final class DDXCTestRetryGroupRun: XCTestRun, DDXCTestRetryGroupRunType {
     }
     
     override func start() {
-        NotificationCenter.test.postTestRetryGroupWillStart(group)
+        group.observer.testRetryGroupWillStart(group)
         super.start()
     }
-    
+
     override func stop() {
         super.stop()
-        NotificationCenter.test.postTestRetryGroupDidFinish(group)
+        group.observer.testRetryGroupDidFinish(group)
     }
     
     func addTestRun(_ run: DDXCTestCaseRetryRun) {
@@ -230,23 +236,24 @@ final class DDXCTestRetryGroupRun: XCTestRun, DDXCTestRetryGroupRunType {
 
 final class DDXCTestRetryGroup: XCTest, DDXCTestRetryGroupType {
     private(set) var currentTest: XCTestCase?
-    
+
     override var name: String { _name }
     override var testCaseCount: Int { testRun?.executionCount ?? 1 }
     override var testRunClass: AnyClass? { DDXCTestRetryGroupRun.self }
     let testClass: XCTestCase.Type
-    
+
     var groupRun: (any DDXCTestRetryGroupRunType)? { testRun.map { $0 as! DDXCTestRetryGroupRunType } }
-    
+
     let testId: (suite: String, test: String)
     var context: DDXCTestObserver.GroupContext!
-    
+    let observer: any DDXCTestRetryDelegate
+
     private let _name: String
     private let _testMethod: Selector
     private var _skipReason: String?
     private var _nextTest: XCTestCase?
-    
-    init(for test: XCTestCase) {
+
+    init(for test: XCTestCase, observer: any DDXCTestRetryDelegate) {
         self.currentTest = test
         self.testId = test.testId
         self._skipReason = nil
@@ -254,6 +261,7 @@ final class DDXCTestRetryGroup: XCTest, DDXCTestRetryGroupType {
         self._name = test.name
         self.testClass = type(of: test)
         self._testMethod = test.invocation!.selector
+        self.observer = observer
         super.init()
     }
     
@@ -350,56 +358,6 @@ extension DDXCTestRetryGroupRun {
     }
 }
 
-extension Notification.Name {
-    static var testRetryGroupWillStart: Self { .init("DDTestRetryGroupWillStart") }
-    static var testRetryGroupDidFinish: Self { .init("DDTestRetryGroupDidFinish") }
-    static var testCaseFromRetryGroupWillRecordIssue: Self { .init("DDTestCaseFromRetryGroupWillRecordIssue") }
-    static var testCaseFromRetryGroupWillFinish: Self { .init("DDTestCaseFromRetryGroupWillFinish") }
-}
-
-extension NotificationCenter {
-    static let test: NotificationCenter = NotificationCenter()
-    
-    func onTestRetryGroupWillStart(_ observer: @escaping (any DDXCTestRetryGroupType) -> Void) -> NSObjectProtocol {
-        addObserver(forName: .testRetryGroupWillStart, object: nil, queue: nil) { notification in
-            observer(notification.object as! DDXCTestRetryGroupType)
-        }
-    }
-    
-    func onTestRetryGroupDidFinish(_ observer: @escaping (any DDXCTestRetryGroupType) -> Void) -> NSObjectProtocol {
-        addObserver(forName: .testRetryGroupDidFinish, object: nil, queue: nil) { notification in
-            observer(notification.object as! DDXCTestRetryGroupType)
-        }
-    }
-    
-    func onTestCaseRetryWillRecordIssue(_ observer: @escaping (XCTestCase, XCTIssue) -> Void) -> NSObjectProtocol {
-        addObserver(forName: .testCaseFromRetryGroupWillRecordIssue, object: nil, queue: nil) { notification in
-            observer(notification.object as! XCTestCase, notification.userInfo!["issue"] as! XCTIssue)
-        }
-    }
-    
-    func onTestCaseRetryWillFinish(_ observer: @escaping (XCTestCase) -> Void) -> NSObjectProtocol {
-        addObserver(forName: .testCaseFromRetryGroupWillFinish, object: nil, queue: nil) { notification in
-            observer(notification.object as! XCTestCase)
-        }
-    }
-    
-    func postTestRetryGroupWillStart(_ group: DDXCTestRetryGroupType) {
-        post(name: .testRetryGroupWillStart, object: group)
-    }
-    
-    func postTestRetryGroupDidFinish(_ group: DDXCTestRetryGroupType) {
-        post(name: .testRetryGroupDidFinish, object: group)
-    }
-    
-    func postTestCaseRetry(_ testCase: XCTestCase, willRecord issue: XCTIssue) {
-        post(name: .testCaseFromRetryGroupWillRecordIssue, object: testCase, userInfo: ["issue": issue])
-    }
-    
-    func postTestCaseRetryWillFinish(_ testCase: XCTestCase) {
-        post(name: .testCaseFromRetryGroupWillFinish, object: testCase)
-    }
-}
 
 extension RetryGroupSuccessStrategy {
     var xcTest: DDXCTestRetryGroupRun.SuccessStrategy {

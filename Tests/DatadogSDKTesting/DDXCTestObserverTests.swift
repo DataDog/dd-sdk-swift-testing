@@ -47,7 +47,7 @@ internal class DDXCTestObserverTests: XCTestCase {
     }
 
     func testWhenTestCaseWillStartIsCalled_testSpanIsCreated() {
-        let group = DDXCTestRetryGroup(for: self)
+        let group = DDXCTestRetryGroup(for: self, observer: testObserver)
         testObserver.testBundleWillStart(Bundle.main)
         testObserver.testSuiteWillStart(theSuite)
         testObserver.testRetryGroupWillStart(group)
@@ -85,7 +85,7 @@ internal class DDXCTestObserverTests: XCTestCase {
     }
 
     func testWhenTestCaseDidFinishIsCalled_testStatusIsSet() {
-        let group = DDXCTestRetryGroup(for: self)
+        let group = DDXCTestRetryGroup(for: self, observer: testObserver)
         testObserver.testBundleWillStart(Bundle.main)
         testObserver.testSuiteWillStart(theSuite)
         testObserver.testRetryGroupWillStart(group)
@@ -118,7 +118,7 @@ internal class DDXCTestObserverTests: XCTestCase {
     }
 
     func testWhenTestCaseDidRecordIssueIsCalled_testStatusIsSet() {
-        let group = DDXCTestRetryGroup(for: self)
+        let group = DDXCTestRetryGroup(for: self, observer: testObserver)
         testObserver.testBundleWillStart(Bundle.main)
         testObserver.testSuiteWillStart(theSuite)
         testObserver.testRetryGroupWillStart(group)
@@ -153,7 +153,7 @@ internal class DDXCTestObserverTests: XCTestCase {
     }
 
     func testWhenTestCaseDidFinishIsCalledAndTheTestIsABenchmark_benchmarkTagsAreAdded() {
-        let group = DDXCTestRetryGroup(for: self)
+        let group = DDXCTestRetryGroup(for: self, observer: testObserver)
         testObserver.testBundleWillStart(Bundle.main)
         testObserver.testSuiteWillStart(theSuite)
         testObserver.testRetryGroupWillStart(group)
@@ -195,7 +195,7 @@ internal class DDXCTestObserverTests: XCTestCase {
     }
 
     func testWhenTestCaseDidRecordIssueIsCalledTwice_twoErrorsAppear() {
-        let group = DDXCTestRetryGroup(for: self)
+        let group = DDXCTestRetryGroup(for: self, observer: testObserver)
         testObserver.testBundleWillStart(Bundle.main)
         testObserver.testSuiteWillStart(theSuite)
         testObserver.testRetryGroupWillStart(group)

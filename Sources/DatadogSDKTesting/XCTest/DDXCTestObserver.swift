@@ -8,38 +8,22 @@ import Foundation
 internal import EventsExporter
 internal import XCTest
 
-class DDXCTestObserver: NSObject, XCTestObservation {
+class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate {
     private(set) var state: State
-    private var observers: [NSObjectProtocol]
     private let log: Logger
 
     init(session: any TestSessionManager, log: Logger) {
         XCUIApplication.swizzleMethods
         state = .start(session)
-        observers = []
         self.log = log
         super.init()
     }
-    
+
     func start() {
         XCTestObservationCenter.shared.addTestObserver(self)
-        observers.append(NotificationCenter.test.onTestRetryGroupWillStart { [weak self] group in
-            self?.testRetryGroupWillStart(group)
-        })
-        observers.append(NotificationCenter.test.onTestRetryGroupDidFinish { [weak self] group in
-            self?.testRetryGroupDidFinish(group)
-        })
-        observers.append(NotificationCenter.test.onTestCaseRetryWillFinish { [weak self] tc in
-            self?.testCaseRetryWillFinish(tc)
-        })
-        observers.append(NotificationCenter.test.onTestCaseRetryWillRecordIssue { [weak self] tc, issue in
-            self?.testCaseRetry(tc, willRecord: issue)
-        })
     }
-    
+
     func stop() {
-        observers.forEach { NotificationCenter.test.removeObserver($0) }
-        observers.removeAll()
         XCTestObservationCenter.shared.removeTestObserver(self)
     }
 
@@ -111,7 +95,7 @@ class DDXCTestObserver: NSObject, XCTestObservation {
             return
         }
         
-        let wrappedTests = tests.map { DDXCTestRetryGroup(for: $0) }
+        let wrappedTests = tests.map { DDXCTestRetryGroup(for: $0, observer: self) }
         testSuite.setValue(wrappedTests, forKey: "_mutableTests")
         
         let suite = module.startSuite(named: testSuite.name, at: nil, framework: "XCTest")

@@ -137,16 +137,6 @@ internal enum DDCrashes {
             spanURL.flatMap { try? FileManager.default.removeItem(at: $0) }
         }
         
-        guard let plCrashReporter = sharedPLCrashReporter,
-              plCrashReporter.hasPendingCrashReport()
-        else {
-            return
-        }
-
-        let crashData = plCrashReporter.loadPendingCrashReportData()
-        let purgeSuccess = plCrashReporter.purgePendingCrashReport()
-        Log.debug("Crash report loaded and purged with status: \(purgeSuccess)")
-        
         // Sanitizer info
         if FileManager.default.fileExists(atPath: sanitizerURL!.path),
            let content = try? String(contentsOf: sanitizerURL!)
@@ -154,7 +144,17 @@ internal enum DDCrashes {
             SanitizerHelper.setSaniziterInfo(info: content)
             Log.debug("Loaded Sanitizer Info from crash")
         }
-
+        
+        guard let plCrashReporter = sharedPLCrashReporter,
+              plCrashReporter.hasPendingCrashReport()
+        else {
+            return
+        }
+        
+        let crashData = plCrashReporter.loadPendingCrashReportData()
+        let purgeSuccess = plCrashReporter.purgePendingCrashReport()
+        Log.debug("Crash report loaded and purged with status: \(purgeSuccess)")
+        
         if let crashReport = try? PLCrashReport(data: crashData) {
             var crashLog = PLCrashReportTextFormatter.stringValue(for: crashReport, with: PLCrashReportTextFormatiOS) ?? ""
 

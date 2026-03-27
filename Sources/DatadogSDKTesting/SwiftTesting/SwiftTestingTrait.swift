@@ -20,7 +20,7 @@ public struct DatadogSwiftTestingTrait: TestTrait, SuiteTrait {
     }
     
     public func prepare(for test: Testing.Test) async throws {
-        try await prepare(test: test)
+        try await prepare(test: DatadogSwiftTestingScopeProvider.SwiftTest(test: test))
     }
     
     public func scopeProvider(for test: Testing.Test, testCase: Testing.Test.Case?) -> TestScopeProvider? {
@@ -57,10 +57,10 @@ public struct DatadogSwiftTestingScopeProvider: TestScoping {
                                    performing: function)
         } else if test.isSuite {
             // This is a suite
-            try await provideScope(suite: test, performing: function)
+            try await provideScope(suite: SwiftTest(test: test), performing: function)
         } else {
             // Test scope
-            try await provideScope(test: test, performing: function)
+            try await provideScope(test: SwiftTest(test: test), performing: function)
         }
     }
     
@@ -84,7 +84,7 @@ public struct DatadogSwiftTestingScopeProvider: TestScoping {
     }
     
     func provideScope(run: some SwiftTestingTestRunInfoType, performing function: @Sendable () async throws -> Void) async throws {
-        try await Self.datadogTest?.with(group: run) { group in
+        try await Self.datadogTest?.withGroup { group in
             nonisolated(unsafe) var shouldRetry: Bool = true
             while shouldRetry {
                 let issues: Synced<DatadogSwiftTestingTrait.TestIssues> = .init(.init())
@@ -141,35 +141,40 @@ extension Testing.Trait where Self == DatadogSwiftTestingTrait {
     public static var datadogTesting: Self { Self() }
 }
 
-extension Testing.Test: SwiftTestingTestInfoType {
-    var module: String { id.moduleName }
-    
-    var hasSuite: Bool {
-        let components = id.nameComponents
-        return components.count > 1 || components.first?.last != ")"
-    }
-    
-    var suite: String {
-        guard !isSuite else { return name }
-        if hasSuite {
-            return id.nameComponents.first!
-        } else {
-            return "[\(sourceLocation.fileName.replacingOccurrences(of: ".swift", with: ""))]"
-        }
-    }
-}
-
 extension DatadogSwiftTestingScopeProvider {
+    struct SwiftTest: SwiftTestingTestInfoType {
+        let test: Testing.Test
+        let name: String
+        let suite: String
+        
+        init(test: Testing.Test) {
+            self.test = test
+            self.name = test.ddName
+            self.suite = test.ddSuite
+        }
+        
+        var module: String { test.ddModule }
+        var isSuite: Bool { test.isSuite }
+        var hasSuite: Bool { test.ddHasSuite }
+        var isParameterized: Bool { test.isParameterized }
+    }
+    
     struct SwiftTestRun: SwiftTestingTestRunInfoType {
         let test: Testing.Test
         let testCase: Testing.Test.Case
+        let name: String
+        let suite: String
         
-        var name: String { test.name }
-        var module: String { test.module }
+        init(test: Testing.Test, testCase: Testing.Test.Case) {
+            self.test = test
+            self.testCase = testCase
+            self.name = test.ddName
+            self.suite = test.ddSuite
+        }
+        
+        var module: String { test.ddModule }
         var isSuite: Bool { test.isSuite }
-        var suite: String { test.suite }
-        var hasSuite: Bool { test.hasSuite }
-        
+        var hasSuite: Bool { test.ddHasSuite }
         var isParameterized: Bool { testCase.isParameterized }
         
 //        var parameters: [(name: String, value: String)] {
@@ -221,6 +226,31 @@ extension DatadogSwiftTestingTrait {
                     throw self
                 }
             }
+        }
+    }
+}
+
+extension Testing.Test {
+    var ddModule: String { id.moduleName }
+    
+    var ddHasSuite: Bool {
+        let components = id.nameComponents
+        return components.count > 1 || components.first?.last != ")"
+    }
+    
+    var ddName: String {
+        if name.hasSuffix("()") {
+            return String(name[..<name.index(name.endIndex, offsetBy: -2)])
+        }
+        return name
+    }
+    
+    var ddSuite: String {
+        guard !isSuite else { return name }
+        if ddHasSuite {
+            return id.nameComponents.first!
+        } else {
+            return "[\(sourceLocation.fileName.replacingOccurrences(of: ".swift", with: ""))]"
         }
     }
 }

@@ -115,8 +115,7 @@ struct SwiftTestingTestContext: Sendable {
         try await suite.withTestRun(named: name, action)
     }
     
-    func with(group forTest: some SwiftTestingTestRunInfoType,
-              performing function: @Sendable (borrowing SwiftTestingRetryGroupContext) async throws -> Void) async throws {
+    func withGroup(_ function: @Sendable (borrowing SwiftTestingRetryGroupContext) async throws -> Void) async throws {
         let config = await observer.runGroupConfiguration(test: self)
         let group = SwiftTestingRetryGroupContext(test: self, configuration: config)
         await observer.willStart(group: group)

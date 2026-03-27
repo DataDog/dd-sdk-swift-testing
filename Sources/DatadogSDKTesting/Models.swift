@@ -190,6 +190,9 @@ struct TestError {
 
 struct SessionConfig: Sendable {
     let activeFeatures: [any TestHooksFeature]
+    let workspacePath: String?
+    let codeOwners: CodeOwners?
+    let bundleFunctions: FunctionMap
     let platform: Environment.Platform
     let clock: Clock
     let crash: CrashInformation?
@@ -291,6 +294,23 @@ extension TestRun {
         case .date(let d): set(tag: name, value: JSONGeneric.formatter.string(from: d))
         case .bytes(let b): set(tag: name, value: b.base64EncodedString())
         default: set(tag: name, value: value.debugDescription)
+        }
+    }
+    
+    func set(source bundleFunctions: borrowing FunctionMap, owners: borrowing CodeOwners?, workspace: String?) {
+        if let functionInfo = bundleFunctions["\(suite.name).\(name)"] {
+            var filePath = functionInfo.file
+            if let workspacePath = workspace,
+               let workspaceRange = filePath.range(of: workspacePath + "/")
+            {
+                filePath.removeSubrange(workspaceRange)
+            }
+            set(tag: DDTestTags.testSourceFile, value: filePath)
+            set(tag: DDTestTags.testSourceStartLine, value: functionInfo.startLine)
+            set(tag: DDTestTags.testSourceEndLine, value: functionInfo.endLine)
+            if let owners = owners?.ownersForPath(filePath) {
+                set(tag: DDTestTags.testCodeowners, value: owners)
+            }
         }
     }
 }

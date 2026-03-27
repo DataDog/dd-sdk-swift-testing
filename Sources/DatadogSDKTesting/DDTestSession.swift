@@ -134,9 +134,12 @@ public extension Session {
     ///   - startTime: Optional, the time where the session started
     @objc static func start(name: String, command: String? = nil, startTime: Date? = nil) -> Session {
         let config = SessionConfig(activeFeatures: [],
+                                   workspacePath: DDTestMonitor.env.workspacePath,
+                                   codeOwners: DDTestMonitor.instance?.codeOwners,
+                                   bundleFunctions: DDTestMonitor.instance?.bundleFunctionInfo ?? .init(),
                                    platform: DDTestMonitor.env.platform,
                                    clock: DDTestMonitor.clock,
-                                   crash: nil,
+                                   crash: DDTestMonitor.instance?.crashInfo,
                                    command: command,
                                    service: DDTestMonitor.env.service,
                                    metrics: DDTestMonitor.env.baseMetrics,

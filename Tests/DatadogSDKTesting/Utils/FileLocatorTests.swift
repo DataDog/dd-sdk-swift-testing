@@ -18,7 +18,7 @@ internal class FileLocatorTests: XCTestCase {
         DDSymbolicator.dSYMFiles = []
         DDSymbolicator.createDSYMFileIfNeeded(forImageName: bundleName)
 
-        let bundleFunctionInfo = FileLocator.testFunctionsInModule(bundleName)
+        let bundleFunctionInfo = try FileLocator.testFunctionsInModule(bundleName)
         let functionInfo = bundleFunctionInfo[testName]
         XCTAssertEqual(#file, functionInfo?.file)
         XCTAssertEqual(12, functionInfo?.startLine)

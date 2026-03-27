@@ -6,10 +6,10 @@
 
 import Foundation
 
-struct FunctionInfo {
-    var file: String
-    var startLine: Int
-    var endLine: Int
+struct FunctionInfo: Sendable {
+    let file: String
+    let startLine: Int
+    private(set) var endLine: Int
 
     mutating func updateWithLine(_ line: Int) {
         if endLine < line {
@@ -22,92 +22,117 @@ typealias FunctionName = String
 typealias FunctionMap = [FunctionName: FunctionInfo]
 
 enum FileLocator {
-    internal static func extractedFunc(_ symbolsFile: URL) -> FunctionMap {
-        var functionMap = FunctionMap()
-        var currentFunctionName: String?
-
-        do {
-            let file = DDFileReader(fileURL: symbolsFile)
-            try file.open()
-            defer { file.close() }
-
-            // Find function region
-            while let line = try file.readLine() {
-                if line.contains(" __TEXT __text") {
-                    break
-                }
+    enum State {
+        case skipping
+        case started(function: FunctionName, module: String?)
+        case parsing(function: FunctionName, module: String, info: FunctionInfo)
+        
+        var isParsing: Bool {
+            switch self {
+            case .skipping: return false
+            case .parsing, .started: return true
             }
-
-            while let line = try file.readLine() {
-                if line.hasSuffix("] \n") {
-                    if let funcRange = line.range(of: "[FUNC, ")?.lowerBound {
-                        if line[line.index(funcRange, offsetBy: 7)...].hasPrefix("EXT") {
-                            //Swift
-                            let functionEndIndex = line.index(funcRange, offsetBy: -3)
-                            guard let dotIndex = line[...line.index(before: functionEndIndex)].lastIndex(of: "."),
-                                  line[line.index(after: dotIndex)...].hasPrefix("test"),
-                                  let moduleIndex = line[...line.index(before: dotIndex)].lastIndex(of: " "),
-                                  let startLineIndex = line[...moduleIndex].lastIndex(of: ")"),
-                                  line.distance(from: startLineIndex, to: moduleIndex) <= 1
-                            else {
-                                currentFunctionName = nil
-                                continue
-                            }
-                            currentFunctionName = String(line[line.index(after: moduleIndex)...line.index(before: functionEndIndex)])
-                        } else if line[line.index(funcRange, offsetBy: 7)...].hasPrefix("OBJC") {
-                            // ObjC exported functions
-                            let subline = line[...funcRange]
-                            guard let functionEndIndex = subline.lastIndex(of: "]"),
-                                  let spaceIndex = subline[...subline.index(before: functionEndIndex)].lastIndex(of: " "),
-                                  subline[subline.index(after: spaceIndex)...].hasPrefix("test"),
-                                  let functionStartIndex = subline[...subline.index(before: functionEndIndex)].lastIndex(of: "[")
-                            else {
-                                currentFunctionName = nil
-                                continue
-                            }
-                            currentFunctionName = String(subline[subline.index(after: functionStartIndex)...subline.index(before: spaceIndex)]) + "." +
-                                String(subline[subline.index(after: spaceIndex)...subline.index(before: functionEndIndex)])
-                        } else {
-                            currentFunctionName = nil
-                            continue
-                        }
-                        
-                    } else {
-                        // Other non exported functions
-                        currentFunctionName = nil
-                    }
-                } else if line.hasSuffix(":0\n") {
-                    continue
-                } else if let functionName = currentFunctionName {
-                    guard let colonIndex = line.lastIndex(of: ":"),
-                          let lineNumber = Int(line[line.index(after: colonIndex)...line.index(line.endIndex, offsetBy: -2)])
-                    else {
-                        continue
-                    }
-
-                    let file = line[line.index(line.startIndex, offsetBy: 50)...line.index(before: colonIndex)]
-                    if functionMap[functionName] == nil {
-                        functionMap[functionName] = FunctionInfo(file: String(file), startLine: lineNumber, endLine: lineNumber)
-                    } else if functionMap[functionName]!.file == file {
-                        functionMap[functionName]?.updateWithLine(lineNumber)
-                    }
-                } else if line.hasSuffix("__TEXT __stubs\n") {
-                    break
-                }
-            }
-        } catch {
-            return functionMap
         }
-
-        return functionMap
+    }
+    
+    static func extractFunctions(_ symbolsOutput: URL) throws -> FunctionMap {
+        var state: State = .skipping
+        var map = FunctionMap()
+        let file = DDFileReader(fileURL: symbolsOutput)
+        try file.open()
+        defer { file.close() }
+        
+        let funcRegex = try NSRegularExpression(pattern: #"^\s+[0-9a-fA-FxX]+\s+\([0-9a-fA-FxX\ ]+\)\s+(\S+)\s+\[FUNC,\s+((?:EXT)|(?:OBJC))[\w\s,]+] $"#)
+        let lineRegex = try NSRegularExpression(pattern: #"^\s+[0-9a-fA-FxX]+\s+\([0-9a-fA-FxX\ ]+\)\s+(.*?)\:(\d+)$"#)
+        let trimCharacters = CharacterSet(charactersIn: "-[]")
+        
+        // Find function region
+        while let line = try file.readLine() {
+            if line.contains(" __TEXT __text") {
+                break
+            }
+        }
+        
+        while let line = try file.readLine() {
+            if line.hasSuffix("] \n") {
+                switch state {
+                case .parsing(function: let name, module: let mod, info: let info):
+                    map["\(mod).\(name)"] = info
+                    state = .skipping
+                case .started: state = .skipping
+                case .skipping: break
+                }
+                guard let match = funcRegex.firstMatch(in: line, range: NSRange(line.startIndex..., in: line)) else {
+                    continue
+                }
+                let name = line[Range(match.range(at: 1), in: line)!]
+                let type = line[Range(match.range(at: 2), in: line)!]
+                switch type {
+                case "EXT":
+                    var function: String
+                    let module: String?
+                    if let dotPos = name.lastIndex(of: ".") {
+                        function = String(name[name.index(after: dotPos)...])
+                        module = String(name[..<dotPos])
+                    } else {
+                        function = String(name)
+                        module = nil
+                    }
+                    if function.hasSuffix("()") {
+                        function = String(function[..<function.index(function.endIndex, offsetBy: -2)])
+                    }
+                    state = .started(function: function, module: module)
+                case "OBJC":
+                    let parts = name.trimmingCharacters(in: trimCharacters).components(separatedBy: " ")
+                    guard parts.count == 2, parts[1].hasPrefix("test") else { continue }
+                    state = .started(function: parts[1], module: parts[0])
+                default: continue
+                }
+            } else if line.hasSuffix(":0\n") { // ignoring zero addresses
+                continue
+            } else if state.isParsing,
+                      let match = lineRegex.firstMatch(in: line, range: NSRange(line.startIndex..., in: line) )
+            {
+                let filePath = String(line[Range(match.range(at: 1), in: line)!])
+                guard let lineNumber = Int(line[Range(match.range(at: 2), in: line)!]) else {
+                    continue
+                }
+                switch state {
+                case .started(function: let name, module: var mod):
+                    if mod == nil {
+                        let url = URL(fileURLWithPath: filePath, isDirectory: false)
+                        mod = "[\(url.deletingPathExtension().lastPathComponent)]"
+                    }
+                    state = .parsing(function: name,
+                                     module: mod!,
+                                     info: FunctionInfo(file: filePath,
+                                                        startLine: lineNumber,
+                                                        endLine: lineNumber))
+                case .parsing(function: let name, module: let mod, info: var info):
+                    if info.file == filePath {
+                        info.updateWithLine(lineNumber)
+                    }
+                    state = .parsing(function: name, module: mod, info: info)
+                default: throw InternalError(description: "Function parsing failed. Parser in wrong state \(state)")
+                }
+            } else if line.hasSuffix("__TEXT __stubs\n") {
+                break
+            }
+        }
+        
+        if case .parsing(let function, let module, let info) = state {
+            map["\(module).\(function)"] = info
+        }
+        
+        return map
     }
 
-    static func testFunctionsInModule(_ module: String) -> FunctionMap {
+    static func testFunctionsInModule(_ module: String) throws -> FunctionMap {
         guard let symbolsFile = DDSymbolicator.symbolsInfo(forLibrary: module) else {
             return FunctionMap()
         }
         defer { try? FileManager.default.removeItem(at: symbolsFile) }
 
-        return extractedFunc(symbolsFile)
+        return try extractFunctions(symbolsFile)
     }
 }

@@ -505,7 +505,12 @@ internal class DDTestMonitor {
                     DDSymbolicator.createDSYMFileIfNeeded(forImageName: bundleName)
                 }
                 self.bundleFunctionInfo = Log.measure(name: "testFunctionsInModule") {
-                    FileLocator.testFunctionsInModule(bundleName)
+                    do {
+                        return try FileLocator.testFunctionsInModule(bundleName)
+                    } catch {
+                        Log.print("Functions parsing filed: \(error)")
+                        return .init()
+                    }
                 }
             }
         }

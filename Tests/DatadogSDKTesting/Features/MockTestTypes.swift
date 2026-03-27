@@ -61,7 +61,9 @@ enum Mocks {
         
         func end(time: Date?) {
             _state.update {
-                $0.duration = (time ?? Date()).timeIntervalSince(startTime).toNanoseconds
+                if $0.duration == 0 {
+                    $0.duration = (time ?? Date()).timeIntervalSince(startTime).toNanoseconds
+                }
             }
         }
         
@@ -257,16 +259,20 @@ enum Mocks {
             hasher.combine(_module)
         }
         
+        func withTest<T>(named name: String, _ action: @Sendable (Test) async throws -> T) async rethrows -> T {
+            try await Test.withActiveTest(name: name, suite: self, action)
+        }
+
+        func withTest<T>(named name: String, _ action: (Test) throws -> T) rethrows -> T {
+            try Test.withActiveTest(name: name, suite: self, action)
+        }
+        
         func withActiveTest<T>(named name: String, _ action: @Sendable (any TestRun) async throws -> T) async rethrows -> T {
-            let test = Mocks.Test(name: name, suite: self)
-            defer { test.end() }
-            return try await test.withActive { try await action(test) }
+            try await withTest(named: name, action)
         }
 
         func withActiveTest<T>(named name: String, _ action: (any TestRun) throws -> T) rethrows -> T {
-            let test = Mocks.Test(name: name, suite: self)
-            defer { test.end() }
-            return try test.withActive { try action(test) }
+            try withTest(named: name, action)
         }
     }
     
@@ -299,8 +305,6 @@ enum Mocks {
         }
         
         var runs: [Test] { _state.value.runs }
-        
-        
         
         init(name: String, suite: Suite, unskippable: Bool) {
             self.name = name
@@ -430,11 +434,6 @@ enum Mocks {
             }
         }
         
-        func end(status: TestStatus, time: Date?) {
-            super.end(time: time)
-            _state.update { $0.status = status }
-        }
-        
         var debugDescription: String {
             return "\(name)>\(status)"
         }
@@ -447,6 +446,18 @@ enum Mocks {
             hasher.combine(id)
             hasher.combine(name)
             hasher.combine(_suite)
+        }
+        
+        static func withActiveTest<T>(name: String, suite: Suite, _ body: (Self) throws -> T) rethrows -> T {
+            let test = Self(name: name, suite: suite)
+            defer { test.end() }
+            return try test.withActive { try body(test) }
+        }
+        
+        static func withActiveTest<T>(name: String, suite: Suite, _ body: @Sendable (Self) async throws -> T) async rethrows -> T {
+            let test = Self(name: name, suite: suite)
+            defer { test.end() }
+            return try await test.withActive { try await body(test) }
         }
     }
     

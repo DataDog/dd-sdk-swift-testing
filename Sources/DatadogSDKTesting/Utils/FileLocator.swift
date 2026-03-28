@@ -42,7 +42,8 @@ enum FileLocator {
         try file.open()
         defer { file.close() }
         
-        let funcRegex = try NSRegularExpression(pattern: #"^\s+[0-9a-fA-FxX]+\s+\([0-9a-fA-FxX\ ]+\)\s+(\S+)\s+\[FUNC,\s+((?:EXT)|(?:OBJC))[\w\s,]+] $"#)
+        let funcNamePattern = #"(?:-\[[\w \:\$]+\])|(?:\S+)"#
+        let funcRegex = try NSRegularExpression(pattern: #"^\s+[0-9a-fA-FxX]+\s+\([0-9a-fA-FxX\ ]+\)\s+(\#(funcNamePattern))\s+\[FUNC,\s+((?:EXT)|(?:OBJC))[\w\s,]+\] $"#)
         let lineRegex = try NSRegularExpression(pattern: #"^\s+[0-9a-fA-FxX]+\s+\([0-9a-fA-FxX\ ]+\)\s+(.*?)\:(\d+)$"#)
         let trimCharacters = CharacterSet(charactersIn: "-[]")
         

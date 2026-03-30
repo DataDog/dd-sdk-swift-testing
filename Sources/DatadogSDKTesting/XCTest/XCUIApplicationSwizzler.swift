@@ -25,10 +25,9 @@ extension XCUIApplication {
         method_exchangeImplementations(originalMethod, swizzledMethod)
     }()
 
-    @objc
-    func swizzled_launch() {
-        DDTestMonitor.instance?.currentTest?.setIsUITest(true)
-        if let testSpanContext = DDTracer.activeSpan?.context {
+    @objc func swizzled_launch() {
+        Test.current?.setIsUITest(true)
+        if let testSpanContext = DDTestMonitor.tracer.propagationContext {
             self.launchEnvironment[EnvironmentKey.tracerSpanId.rawValue] = testSpanContext.spanId.hexString
             self.launchEnvironment[EnvironmentKey.tracerTraceId.rawValue] = testSpanContext.traceId.hexString
         }

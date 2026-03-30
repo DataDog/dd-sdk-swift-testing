@@ -19,12 +19,12 @@ class StderrCaptureTests: XCTestCase {
         let tracer = DDTracer()
         let stringToCapture = "2020-10-22 12:01:33.161546+0200 xctest[91153:14310375] This should be captured"
 
-        let span = tracer.startSpan(name: "Unnamed", attributes: [:]) as! SpanSdk
-        StderrCapture.stderrMessage(string: stringToCapture)
-        Thread.sleep(forTimeInterval: 0.5)
-        span.status = .ok
-        span.end()
-        let spanData = span.toSpanData()
+        let spanData = tracer.withActiveSpan(name: "Unnamed", attributes: [:]) { span in
+            StderrCapture.stderrMessage(string: stringToCapture)
+            Thread.sleep(forTimeInterval: 0.5)
+            span.status = .ok
+            return span.toSpanData()
+        }
 
         XCTAssertEqual(spanData.events.count, 1)
         XCTAssertEqual(spanData.events.first?.attributes["message"]?.description, "This should be captured")
@@ -37,12 +37,13 @@ class StderrCaptureTests: XCTestCase {
         let tracer = DDTracer()
         let stringToCapture = "    t =     0.50s Open com.datadoghq.DemoSwift"
         let date = Date()
-        let span = tracer.startSpan(name: "Unnamed", attributes: [:], startTime: date) as! SpanSdk
-        StderrCapture.stderrMessage(string: stringToCapture)
-        Thread.sleep(forTimeInterval: 0.5)
-        span.status = .ok
-        span.end()
-        let spanData = span.toSpanData()
+
+        let spanData = tracer.withActiveSpan(name: "Unnamed", attributes: [:], startTime: date) { span in
+            StderrCapture.stderrMessage(string: stringToCapture)
+            Thread.sleep(forTimeInterval: 0.5)
+            span.status = .ok
+            return span.toSpanData()
+        }
 
         XCTAssertEqual(spanData.events.count, 1)
         XCTAssertEqual(spanData.events.first?.attributes["message"]?.description, "Open com.datadoghq.DemoSwift")

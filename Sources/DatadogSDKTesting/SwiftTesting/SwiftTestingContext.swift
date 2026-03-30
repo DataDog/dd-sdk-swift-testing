@@ -90,12 +90,14 @@ struct SwiftTestingRetryGroupContext: Sendable {
         run: some SwiftTestingTestRunInfoType,
         performing function: @Sendable (borrowing SwiftTestingTestRunContext) async -> SwiftTestingTestStatus
     ) async -> SwiftTestingTestRunRetry {
-        let test = test.createTestRun(named: run.name)
-        let context = SwiftTestingTestRunContext(test: test, group: self, info: run)
-        await observer.willStart(testRun: context)
-        let status = await function(context)
-        let config = await observer.willFinish(testRun: context, with: status)
-        test.end(status: status.testStatus)
+        let (context, config) = await test.withTestRun(named: run.name) { test in
+            let context = SwiftTestingTestRunContext(test: test, group: self, info: run)
+            await observer.willStart(testRun: context)
+            let status = await function(context)
+            let config = await observer.willFinish(testRun: context, with: status)
+            test.set(status: status.testStatus)
+            return (context, config)
+        }
         await observer.didFinish(testRun: context)
         return config
     }
@@ -109,8 +111,8 @@ struct SwiftTestingTestContext: Sendable {
         suite.observer
     }
     
-    func createTestRun(named: String) -> any TestRun {
-        suite.createTestRun(named: named)
+    func withTestRun<T>(named name: String, _ action: @Sendable (any TestRun) async throws -> T) async rethrows -> T {
+        try await suite.withTestRun(named: name, action)
     }
     
     func with(group forTest: some SwiftTestingTestRunInfoType,
@@ -177,8 +179,8 @@ struct SwiftTestingSuiteContext: Sendable {
         self.observer = observer
     }
     
-    func createTestRun(named: String) -> any TestRun {
-        _suite.startTest(named: named)
+    func withTestRun<T>(named name: String, _ action: @Sendable (any TestRun) async throws -> T) async rethrows -> T {
+        try await _suite.withActiveTest(named: name, action)
     }
     
     func end() async -> Bool {
@@ -374,9 +376,9 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
         try await doThrow {
             try await function(context)
         } finally: {
-            if await context.end() {
+            if await context.end() { // if suite ended (no tests left)
                 await observer.didFinish(suite: context)
-                if try await _state.didEnded(suite: context.suite) {
+                if try await _state.didEnded(suite: context.suite) { // if module ended (no suites left)
                     context.suite.module.end()
                     await observer.didFinish(module: context.suite.module)
                 }

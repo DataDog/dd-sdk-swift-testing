@@ -11,91 +11,32 @@ internal import SigmaSwiftStatistics
 
 @objc(DDTest)
 public final class Test: NSObject {
-    let currentTestExecutionOrder: UInt
-    let initialProcessId = Int(ProcessInfo.processInfo.processIdentifier)
-
     let name: String
     let span: SpanSdk
 
     let suite: TestSuite
 
     private let errorInfo: Synced<ErrorInfo?> = .init(nil)
-
-    init(name: String, suite: TestSuite, startTime: Date? = nil) {
-        let testStartTime = startTime ?? DDTestMonitor.clock.now
+    
+    init(name: String, suite: TestSuite, span: SpanSdk) {
         self.name = name
+        self.span = span
         self.suite = suite
-
-        currentTestExecutionOrder = suite.session.nextTestIndex()
-
-        let attributes: [String: String] = [
-            DDGenericTags.type: DDTagValues.typeTest,
-            DDGenericTags.resource: "\(suite.name).\(name)",
-            DDTestTags.testName: name,
-            DDTestTags.testSuite: suite.name,
-            DDTestTags.testModule: suite.module.name,
-            DDTestTags.testFramework: suite.testFramework,
-            DDTestTags.testType: DDTagValues.typeTest,
-            DDTestTags.testIsUITest: "false",
-            DDTestSuiteVisibilityTags.testSessionId: suite.session.id.hexString,
-            DDTestSuiteVisibilityTags.testModuleId: suite.module.id.hexString,
-            DDTestSuiteVisibilityTags.testSuiteId: suite.id.hexString,
-            DDUISettingsTags.uiSettingsSuiteLocalization: suite.localization,
-            DDUISettingsTags.uiSettingsModuleLocalization: suite.module.localization,
-        ]
-        
-        span = DDTestMonitor.tracer.startSpan(name: "\(suite.testFramework).test",
-                                              attributes: attributes,
-                                              startTime: testStartTime) as! SpanSdk
-        span.setAttribute(key: DDTestTags.testExecutionOrder, value: Int(currentTestExecutionOrder))
-        span.setAttribute(key: DDTestTags.testExecutionProcessId, value: initialProcessId)
-
-        super.init()
-        DDTestMonitor.instance?.currentTest = self
-
-        DDTestMonitor.tracer.addPropagationsHeadersToEnvironment()
-        
-        // Move to the global when we will support global metrics
-        for metric in DDTestMonitor.env.baseMetrics {
-            span.setAttribute(key: metric.key, value: metric.value)
-        }
-
-        let functionName = suite.name + "." + name
-        if let functionInfo = DDTestMonitor.instance?.bundleFunctionInfo[functionName] {
-            var filePath = functionInfo.file
-            if let workspacePath = DDTestMonitor.env.workspacePath,
-               let workspaceRange = filePath.range(of: workspacePath + "/")
-            {
-                filePath.removeSubrange(workspaceRange)
-            }
-            span.setAttribute(key: DDTestTags.testSourceFile, value: filePath)
-            span.setAttribute(key: DDTestTags.testSourceStartLine, value: functionInfo.startLine)
-            span.setAttribute(key: DDTestTags.testSourceEndLine, value: functionInfo.endLine)
-            if let owners = DDTestMonitor.instance?.codeOwners?.ownersForPath(filePath) {
-                span.setAttribute(key: DDTestTags.testCodeowners, value: owners)
-            }
-        }
-        
-        let simpleSpan = SimpleSpanData(spanData: span.toSpanData(), moduleStartTime: module.startTime, suiteStartTime: suite.startTime)
-        DDCrashes.setCurrent(spanData: simpleSpan)
     }
 
     func setIsUITest(_ value: Bool) {
         self.span.setAttribute(key: DDTestTags.testIsUITest, value: value ? "true" : "false")
 
-        // Set default UI values if nor previously set and update crash customData
-        
-        let spanData = span.toSpanData()
-        if spanData.attributes[DDUISettingsTags.uiSettingsAppearance] == nil {
+        // Set default UI values if nor previously set
+        let attributes = span.getAttributes()
+        if attributes[DDUISettingsTags.uiSettingsAppearance] == nil {
             setTag(key: DDUISettingsTags.uiSettingsAppearance, value: PlatformUtils.getAppearance())
         }
 #if os(iOS)
-        if spanData.attributes[DDUISettingsTags.uiSettingsOrientation] == nil {
+        if attributes[DDUISettingsTags.uiSettingsOrientation] == nil {
             setTag(key: DDUISettingsTags.uiSettingsOrientation, value: PlatformUtils.getOrientation())
         }
 #endif
-        let simpleSpan = SimpleSpanData(spanData: span.toSpanData(), sessionStertTine: session.startTime, moduleStartTime: module.startTime, suiteStartTime: suite.startTime)
-        DDCrashes.setCurrent(spanData: simpleSpan)
     }
 
     /// Adds a extra tag or attribute to the test, any number of tags can be reported
@@ -126,10 +67,10 @@ public final class Test: NSObject {
 
     private func setErrorInformation() {
         guard let errorInfo = errorInfo.value else { return }
-        span.setAttribute(key: DDTags.errorType, value: AttributeValue.string(errorInfo.type))
-        span.setAttribute(key: DDTags.errorMessage, value: AttributeValue.string(errorInfo.message))
+        span.setAttribute(key: DDTags.errorType, value: errorInfo.type)
+        span.setAttribute(key: DDTags.errorMessage, value: errorInfo.message)
         if let callstack = errorInfo.callstack {
-            span.setAttribute(key: DDTags.errorStack, value: AttributeValue.string(callstack))
+            span.setAttribute(key: DDTags.errorStack, value: callstack)
         }
     }
 
@@ -137,15 +78,27 @@ public final class Test: NSObject {
     /// - Parameters:
     ///   - status: the status reported for this test
     ///   - endTime: Optional, the time where the test ended
-    @objc public func end(status: TestStatus, endTime: Date?) {
-        internalEnd(status: status, endTime: endTime)
+    @objc public func end(status: TestStatus, endTime: Date) {
+        set(status: status)
+        internalEnd(endTime: endTime)
     }
 
-    /// Ends the test
+    /// Sets status for the test
     /// - Parameters:
     ///   - status: the status reported for this test
-    @objc public func end(status: TestStatus) {
-        end(status: status, endTime: nil)
+    @objc public func set(status: TestStatus) {
+        switch status {
+        case .pass:
+            span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusPass)
+            span.status = .ok
+        case .fail:
+            span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusFail)
+            setErrorInformation()
+            span.status = .error(description: "Test failed")
+        case .skip:
+            span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusSkip)
+            span.status = .ok
+        }
     }
 
     /// Adds benchmark information to the test, it also changes the test to be of type
@@ -159,7 +112,7 @@ public final class Test: NSObject {
     }
     
     /// Current active test
-    @objc public static var current: Test? { DDTestMonitor.instance?.currentTest }
+    @objc public static var current: Test? { Self.active as? Test }
 }
 
 extension Test: TestRun {
@@ -185,34 +138,73 @@ extension Test: TestRun {
     func add(error: TestError) {
         setErrorInfo(type: error.type, message: error.message ?? "", callstack: error.stack)
     }
-    
-    func end(status: TestStatus, time: Date?) {
-        end(status: status, endTime: time)
-    }
 }
 
 extension Test {
-    func internalEnd(status: TestStatus, endTime: Date? = nil) {
-        let testEndTime = endTime ?? DDTestMonitor.clock.now
-       
-        switch status {
-        case .pass:
-            span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusPass)
-            span.status = .ok
-        case .fail:
-            span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusFail)
-            setErrorInformation()
-            span.status = .error(description: "Test failed")
-        case .skip:
-            span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusSkip)
-            span.status = .ok
-        }
-
+    func internalEnd(endTime: Date) {
+        guard span.endTime == nil else { return }
         StderrCapture.syncData()
-        span.end(time: testEndTime)
+        span.end(time: endTime)
         DDTestMonitor.instance?.networkInstrumentation?.endAndCleanAliveSpans()
-        DDCrashes.setCurrent(spanData: nil)
-        DDTestMonitor.instance?.currentTest = nil
+    }
+    
+    static func withActiveTest<T>(named name: String, in suite: Suite, at start: Date? = nil,
+                               _ action: @Sendable (Self) async throws -> T) async rethrows -> T
+    {
+        let testStartTime = start ?? suite.configuration.clock.now
+        return try await DDTestMonitor.tracer.withActiveSpan(name: "\(suite.testFramework).test",
+                                                             attributes: attributes(test: name, in: suite),
+                                                             startTime: testStartTime) { span in
+            let test = Self(name: name, suite: suite, span: span)
+            let result = try await test.withActive {
+                try await action(test)
+            }
+            test.internalEnd(endTime: suite.configuration.clock.now)
+            return result
+        }
+    }
+    
+    static func withActiveTest<T>(named name: String, in suite: Suite, at start: Date? = nil,
+                               _ action: (Self) throws -> T) rethrows -> T
+    {
+        let testStartTime = start ?? suite.configuration.clock.now
+        return try DDTestMonitor.tracer.withActiveSpan(name: "\(suite.testFramework).test",
+                                                       attributes: attributes(test: name, in: suite),
+                                                       startTime: testStartTime) { span in
+            let test = Self(name: name, suite: suite, span: span)
+            let result = try test.withActive {
+                try action(test)
+            }
+            test.internalEnd(endTime: suite.configuration.clock.now)
+            return result
+        }
+    }
+    
+    static func attributes(test name: String, in suite: Suite) -> [String: AttributeValue] {
+        var attributes: [String: AttributeValue] = [
+            DDGenericTags.type: .string(DDTagValues.typeTest),
+            DDGenericTags.resource: .string("\(suite.name).\(name)"),
+            DDTestTags.testName: .string(name),
+            DDTestTags.testSuite: .string(suite.name),
+            DDTestTags.testModule: .string(suite.module.name),
+            DDTestTags.testFramework: .string(suite.testFramework),
+            DDTestTags.testType: .string(DDTagValues.typeTest),
+            DDTestTags.testIsUITest: .string("false"),
+            DDTestSuiteVisibilityTags.testSessionId: .string(suite.session.id.hexString),
+            DDTestSuiteVisibilityTags.testModuleId: .string(suite.module.id.hexString),
+            DDTestSuiteVisibilityTags.testSuiteId: .string(suite.id.hexString),
+            DDUISettingsTags.uiSettingsSuiteLocalization: .string(suite.localization),
+            DDUISettingsTags.uiSettingsModuleLocalization: .string(suite.module.localization),
+            DDTestTags.testExecutionOrder: .int(Int(suite.session.nextTestIndex())),
+            DDTestTags.testExecutionProcessId: .int(Int(ProcessInfo.processInfo.processIdentifier))
+        ]
+        
+        // TODO: Move to common medatada when we will have common metrics
+        for metric in suite.configuration.metrics {
+            attributes[metric.key] = .double(metric.value)
+        }
+        
+        return attributes
     }
 }
 

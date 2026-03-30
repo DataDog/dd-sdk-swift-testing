@@ -151,7 +151,7 @@ internal class SettingsService {
         testLevel: ITRTestLevel, configurations: [String: String], customConfigurations: [String: String]
     ) -> TracerSettings? {
         var configurations: [String: JSONGeneric] = configurations.mapValues { .string($0) }
-        configurations["custom"] = .stringDict(customConfigurations)
+        configurations["custom"] = .init(customConfigurations)
         
         let settingsPayload = SettingsRequest(service: service, env: env, repositoryURL: repositoryURL,
                                               branch: branch, sha: sha, configurations: configurations,

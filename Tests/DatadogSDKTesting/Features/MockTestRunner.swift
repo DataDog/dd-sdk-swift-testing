@@ -157,53 +157,58 @@ extension Mocks {
         }
         
         func _run(test name: String, method: TestMethod, info: TestRunInfoStart, group: Group) -> TestRunInfoEnd {
-            let test = Test(name: name, suite: group.suite)
-            var info = info
-            // To emulate how XCTest work. It's added before execution
-            // Group simply ignores it's results till it finished
-            group.add(run: test)
-            
-            features.testWillStart(test: test, info: info)
-            
-            let result = method.method()
-            let duration = method.duration ?? (Date().timeIntervalSince(test.startTime))
-            
-            switch result {
-            case .fail(let testError):
-                test.add(error: testError)
+            var (test, endInfo) = group.suite.withTest(named: name) { test in
+                let test = Test(name: name, suite: group.suite)
+                var info = info
+                // To emulate how XCTest work. It's added before execution
+                // Group simply ignores it's results till it finished
+                group.add(run: test)
                 
-                if !test.errorStatus.isSuppressed,
-                   let feature = features.shouldSuppressError(test: test, info: info)
-                {
-                    test.errorStatus = .suppressed(by: feature.id)
+                features.testWillStart(test: test, info: info)
+                
+                let result = method.method()
+                let duration = method.duration ?? (Date().timeIntervalSince(test.startTime))
+                
+                switch result {
+                case .fail(let testError):
+                    test.add(error: testError)
+                    
+                    if !test.errorStatus.isSuppressed,
+                       let feature = features.shouldSuppressError(test: test, info: info)
+                    {
+                        test.errorStatus = .suppressed(by: feature.id)
+                    }
+                case .skip(let reason):
+                    // we have skipped from code
+                    if info.skip.by == nil {
+                        info = TestRunInfoStart(skip: (by: (feature: .notFeature,
+                                                            reason: reason),
+                                                       status: info.skip.status),
+                                                retry: info.retry,
+                                                executions: info.executions)
+                    }
+                default: break
                 }
-            case .skip(let reason):
-                // we have skipped from code
-                if info.skip.by == nil {
-                    info = TestRunInfoStart(skip: (by: (feature: .notFeature,
-                                                        reason: reason),
-                                                   status: info.skip.status),
-                                            retry: info.retry,
-                                            executions: info.executions)
+                
+                let (feature, retryStatus) = features.testGroupRetry(test: test, duration: duration,
+                                                                     withStatus: result.status, andInfo: info)
+                
+                if !retryStatus.ignoreErrors {
+                    test.errorStatus = .unsuppressed(by: feature?.id ?? .notFeature)
                 }
-            default: break
+                
+                // update info with the new retry
+                let endInfo = TestRunInfoEnd(skip: info.skip,
+                                             retry: (feature: feature?.id,
+                                                     status: retryStatus),
+                                             executions: info.executions)
+                features.testWillFinish(test: test, duration: duration, withStatus: result.status, andInfo: endInfo)
+                
+                test.set(status: result.status)
+                test.end(time: test.startTime.addingTimeInterval(duration))
+                
+                return (test, endInfo)
             }
-            
-            let (feature, retryStatus) = features.testGroupRetry(test: test, duration: duration,
-                                                                 withStatus: result.status, andInfo: info)
-            
-            if !retryStatus.ignoreErrors {
-                test.errorStatus = .unsuppressed(by: feature?.id ?? .notFeature)
-            }
-            
-            // update info with the new retry
-            var endInfo = TestRunInfoEnd(skip: info.skip,
-                                         retry: (feature: feature?.id,
-                                                 status: retryStatus),
-                                         executions: info.executions)
-            features.testWillFinish(test: test, duration: duration, withStatus: result.status, andInfo: endInfo)
-            
-            test.end(status: result.status, time: test.startTime.addingTimeInterval(duration))
             
             // update info with the new run counts
             endInfo = TestRunInfoEnd(skip: endInfo.skip,

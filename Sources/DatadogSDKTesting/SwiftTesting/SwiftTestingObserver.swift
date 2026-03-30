@@ -24,7 +24,7 @@ protocol SwiftTestingObserverType: AnyObject, Sendable, TestSessionManagerObserv
     func didFinish(testRun test: borrowing SwiftTestingTestRunContext) async
 }
 
-final class NoopSwiftTestingObserver: SwiftTestingObserverType {
+final class SwiftTestingObserver: SwiftTestingObserverType {
     func willStart(session: any TestSession, with config: SessionConfig) async {
     }
     
@@ -32,15 +32,19 @@ final class NoopSwiftTestingObserver: SwiftTestingObserverType {
     }
     
     func willStart(module: any TestModule) async {
+        DDCrashes.setCurrent(spanData: module.toCrashData)
     }
     
     func didFinish(module: any TestModule) async {
+        DDCrashes.setCurrent(spanData: nil)
     }
     
     func willStart(suite: borrowing SwiftTestingSuiteContext) async {
+        DDCrashes.setCurrent(spanData: suite.suite.toCrashData)
     }
     
     func didFinish(suite: borrowing SwiftTestingSuiteContext) async {
+        DDCrashes.setCurrent(spanData: suite.suite.module.toCrashData)
     }
     
     func willStart(test: borrowing SwiftTestingTestContext) async {

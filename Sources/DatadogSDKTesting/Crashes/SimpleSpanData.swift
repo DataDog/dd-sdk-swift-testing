@@ -16,11 +16,11 @@ internal struct SimpleSpanData: Codable, Equatable {
     var name: String
     var startTime: Date
     var stringAttributes = [String: String]()
-    var sessionStartTime: Date?
-    var moduleStartTime: Date?
+    var sessionStartTime: Date
+    var moduleStartTime: Date
     var suiteStartTime: Date?
 
-    init(spanData: SpanData, sessionStertTine: Date? = nil, moduleStartTime: Date? = nil, suiteStartTime: Date? = nil) {
+    init(spanData: SpanData, sessionStartTime: Date, moduleStartTime: Date, suiteStartTime: Date? = nil) {
         self.traceIdHi = spanData.traceId.rawHigherLong
         self.traceIdLo = spanData.traceId.rawLowerLong
         self.spanId = spanData.spanId.rawValue
@@ -29,17 +29,64 @@ internal struct SimpleSpanData: Codable, Equatable {
         self.stringAttributes = spanData.attributes.mapValues { $0.description }
         self.moduleStartTime = moduleStartTime
         self.suiteStartTime = suiteStartTime
+        self.sessionStartTime = sessionStartTime
     }
 
-    internal init(traceIdHi: UInt64, traceIdLo: UInt64, spanId: UInt64, name: String, startTime: Date, stringAttributes: [String: String] = [String: String](), sessionStertTine: Date? = nil, moduleStartTime: Date? = nil, suiteStartTime: Date? = nil) {
+    internal init(traceIdHi: UInt64, traceIdLo: UInt64, spanId: UInt64, name: String, startTime: Date, stringAttributes: [String: String] = [String: String](), sessionStartTime: Date, moduleStartTime: Date, suiteStartTime: Date? = nil) {
         self.traceIdHi = traceIdHi
         self.traceIdLo = traceIdLo
         self.spanId = spanId
         self.name = name
         self.startTime = startTime
         self.stringAttributes = stringAttributes
-        self.sessionStartTime = sessionStertTine
+        self.sessionStartTime = sessionStartTime
         self.moduleStartTime = moduleStartTime
         self.suiteStartTime = suiteStartTime
+    }
+}
+
+
+extension TestModule {
+    var toCrashData: SimpleSpanData {
+        var attributes = tags
+        for metric in metrics {
+            attributes[metric.key] = String(metric.value)
+        }
+        return .init(traceIdHi: 0,
+                     traceIdLo: 0,
+                     spanId: id.rawValue,
+                     name: name,
+                     startTime: startTime,
+                     stringAttributes: attributes,
+                     sessionStartTime: session.startTime,
+                     moduleStartTime: startTime)
+    }
+}
+
+
+extension TestSuite {
+    var toCrashData: SimpleSpanData {
+        var attributes = tags
+        for metric in metrics {
+            attributes[metric.key] = String(metric.value)
+        }
+        return .init(traceIdHi: 0,
+                     traceIdLo: 0,
+                     spanId: id.rawValue,
+                     name: name,
+                     startTime: startTime,
+                     stringAttributes: attributes,
+                     sessionStartTime: session.startTime,
+                     moduleStartTime: module.startTime,
+                     suiteStartTime: startTime)
+    }
+}
+
+extension Test {
+    var toCrashData: SimpleSpanData {
+        .init(spanData: span.toSpanData(),
+              sessionStartTime: session.startTime,
+              moduleStartTime: module.startTime,
+              suiteStartTime: suite.startTime)
     }
 }

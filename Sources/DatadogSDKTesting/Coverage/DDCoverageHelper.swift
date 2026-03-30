@@ -145,7 +145,8 @@ final class DDCoverageHelper: TestCoverageCollector {
     
     static func getLineCodeCoverage() -> Double? {
         // Check do we have profiling enabled
-        guard let llvmProfilePath = try? CoverageCollector.currentCoverageFile else { return nil }
+        guard let llvmProfilePath = try? CoverageCollector.currentCoverageFile,
+              llvmProfilePath != "/dev/null" else { return nil }
         let binaries = CoveredBinary.currentProcessBinaries
         // if not continuous mode then save all data
         if !llvmProfilePath.contains(exactWord: "%c") {

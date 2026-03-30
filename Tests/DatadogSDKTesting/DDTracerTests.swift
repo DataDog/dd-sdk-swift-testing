@@ -23,31 +23,26 @@ class DDTracerTests: XCTestCase {
 
     func testWhenCalledStartSpanAttributes_spanIsCreatedWithAttributes() {
         let tracer = DDTracer()
-        let attributes = ["myKey": "myValue"]
+        let attributes = ["myKey": AttributeValue.string("myValue")]
         let spanName = "myName"
 
-        let span = tracer.startSpan(name: spanName, attributes: attributes) as! SpanSdk
-
-        let spanData = span.toSpanData()
+        let spanData = tracer.withActiveSpan(name: spanName, attributes: attributes) { span in
+             span.toSpanData()
+        }
         XCTAssertEqual(spanData.name, spanName)
         XCTAssertEqual(spanData.attributes.count, 1)
         XCTAssertEqual(spanData.attributes["myKey"]?.description, "myValue")
-
-        span.end()
     }
 
     func testTracePropagationHTTPHeadersCalledWithAnActiveSpan_returnTraceIdAndSpanId() {
         let tracer = DDTracer()
         let spanName = "myName"
 
-        let span = tracer.startSpan(name: spanName, attributes: [:]) as! SpanSdk
-        let spanData = span.toSpanData()
-        let headers = tracer.tracePropagationHTTPHeaders()
-
+        let (spanData, headers) = tracer.withActiveSpan(name: spanName, attributes: [:]) { span in
+            (span.toSpanData(), tracer.tracePropagationHTTPHeaders())
+        }
         XCTAssertEqual(headers[DDHeaders.traceIDField.rawValue], String(spanData.traceId.rawLowerLong))
         XCTAssertEqual(headers[DDHeaders.parentSpanIDField.rawValue], String(spanData.spanId.rawValue))
-
-        span.end()
     }
 
     func testTracePropagationHTTPHeadersCalledWithNoActiveSpan_returnsEmpty() {
@@ -59,7 +54,10 @@ class DDTracerTests: XCTestCase {
     }
 
     func testCreateSpanFromCrash() {
-        let simpleSpan = SimpleSpanData(traceIdHi: 1, traceIdLo: 2, spanId: 3, name: "name", startTime: Date(timeIntervalSinceReferenceDate: 33), stringAttributes: [:])
+        let startTime = Date(timeIntervalSinceReferenceDate: 33)
+        let simpleSpan = SimpleSpanData(traceIdHi: 1, traceIdLo: 2, spanId: 3, name: "name",
+                                        startTime: startTime, stringAttributes: [:],
+                                        sessionStartTime: startTime, moduleStartTime: startTime)
         let crashDate: Date? = nil
         let errorType = "errorType"
         let errorMessage = "errorMessage"
@@ -68,9 +66,9 @@ class DDTracerTests: XCTestCase {
         let tracer = DDTracer()
         let span = tracer.createSpanFromCrash(spanData: simpleSpan,
                                               crashDate: crashDate,
-                                              errorType: errorType,
-                                              errorMessage: errorMessage,
-                                              errorStack: errorStack)
+                                              error: TestError(type: errorType,
+                                                               message: errorMessage,
+                                                               stack: errorStack))
         let spanData = span.toSpanData()
 
         XCTAssertEqual(spanData.name, "name")
@@ -87,15 +85,14 @@ class DDTracerTests: XCTestCase {
     func testAddingTagsWithOpenTelemetry() {
         let tracer = DDTracer()
         let spanName = "myName"
-        let span = tracer.startSpan(name: spanName, attributes: [:]) as! SpanSdk
 
-        // Get active Span with OpentelemetryApi and set tags
-        OpenTelemetry.instance.contextProvider.activeSpan?.setAttribute(key: "OTTag", value: "OTValue")
+        let spanData = tracer.withActiveSpan(name: spanName, attributes: [:]) { span in
+            // Get active Span with OpentelemetryApi and set tags
+            OpenTelemetry.instance.contextProvider.activeSpan?.setAttribute(key: "OTTag", value: "OTValue")
 
-        let spanData = span.toSpanData()
-
+            return span.toSpanData()
+        }
         XCTAssertEqual(spanData.attributes["OTTag"], AttributeValue.string("OTValue"))
-        span.end()
     }
 
     func testEndpointIsUSByDefault() {
@@ -172,7 +169,10 @@ class DDTracerTests: XCTestCase {
         setEnv(env: ["ENVIRONMENT_TRACER_TRACEID": testTraceId.hexString,
                      "ENVIRONMENT_TRACER_SPANID": testSpanId.hexString])
 
-        let simpleSpan = SimpleSpanData(traceIdHi: testTraceId.idHi, traceIdLo: testTraceId.idLo, spanId: 3, name: "name", startTime: Date(timeIntervalSinceReferenceDate: 33), stringAttributes: [:])
+        let startTime = Date(timeIntervalSinceReferenceDate: 33)
+        let simpleSpan = SimpleSpanData(traceIdHi: testTraceId.idHi, traceIdLo: testTraceId.idLo,
+                                        spanId: 3, name: "name", startTime: startTime,
+                                        stringAttributes: [:], sessionStartTime: startTime, moduleStartTime: startTime)
         let crashDate: Date? = nil
         let errorType = "errorType"
         let errorMessage = "errorMessage"
@@ -181,9 +181,9 @@ class DDTracerTests: XCTestCase {
         let tracer = DDTracer()
         let span = tracer.createSpanFromCrash(spanData: simpleSpan,
                                               crashDate: crashDate,
-                                              errorType: errorType,
-                                              errorMessage: errorMessage,
-                                              errorStack: errorStack)
+                                              error: TestError(type: errorType,
+                                                               message: errorMessage,
+                                                               stack: errorStack))
         let spanData = span.toSpanData()
 
         XCTAssertEqual(spanData.name, "name")
@@ -219,10 +219,10 @@ class DDTracerTests: XCTestCase {
         let tracer = DDTracer()
         let spanName = "myName"
 
-        let span = tracer.startSpan(name: spanName, attributes: [:]) as! SpanSdk
-        let spanData = span.toSpanData()
-        let environmentValues = tracer.environmentPropagationHTTPHeaders()
-
+        let (spanData, environmentValues) = tracer.withActiveSpan(name: spanName, attributes: [:]) { span in
+            (span.toSpanData(), tracer.environmentPropagationHTTPHeaders())
+        }
+        
         XCTAssertNotNil(environmentValues["TRACEPARENT"])
         XCTAssert(environmentValues["TRACEPARENT"]?.contains(spanData.traceId.hexString) ?? false)
         XCTAssertTrue(environmentValues["TRACEPARENT"]?.contains(spanData.spanId.hexString) ?? false)
@@ -234,8 +234,6 @@ class DDTracerTests: XCTestCase {
         XCTAssertNotNil(environmentValues[EnvironmentKey.testExecutionId.rawValue])
         XCTAssertEqual(environmentValues[EnvironmentKey.testExecutionId.rawValue],
                        String(spanData.traceId.rawLowerLong))
-
-        span.end()
     }
 
     func testWhenNoContextActivePropagationAreEmpty() {
@@ -253,18 +251,15 @@ class DDTracerTests: XCTestCase {
         let tracer = DDTracer()
         let spanName = "myName"
 
-        let span = tracer.startSpan(name: spanName, attributes: [:]) as! SpanSdk
-        let spanData = span.toSpanData()
-        let environmentValues = tracer.environmentPropagationHTTPHeaders()
-
+        let (spanData, environmentValues) = tracer.withActiveSpan(name: spanName, attributes: [:]) { span in
+            (span.toSpanData(), tracer.environmentPropagationHTTPHeaders())
+        }
         XCTAssertNotNil(environmentValues["TRACEPARENT"])
         XCTAssert(environmentValues["TRACEPARENT"]?.contains(spanData.traceId.hexString) ?? false)
         XCTAssertTrue(environmentValues["TRACEPARENT"]?.contains(spanData.spanId.hexString) ?? false)
 
         XCTAssertNil(environmentValues[DDHeaders.traceIDField.rawValue])
         XCTAssertNil(environmentValues[DDHeaders.parentSpanIDField.rawValue])
-
-        span.end()
     }
     
     private func setEnv(env: [String: String]) {

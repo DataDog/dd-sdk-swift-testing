@@ -33,6 +33,7 @@ final class SwiftTestRunParametersParserTests: XCTestCase {
         XCTAssertEqual(result.count, 1)
         XCTAssertEqual(result[0].name, "p1")
         XCTAssertEqual(result[0].value, "2")
+        XCTAssertEqual(result[0].type, "Swift.Int")
     }
 
     func testSingleStringArgument_secondNameNil() {
@@ -45,6 +46,7 @@ final class SwiftTestRunParametersParserTests: XCTestCase {
         XCTAssertEqual(result.count, 1)
         XCTAssertEqual(result[0].name, "label")
         XCTAssertEqual(result[0].value, #""hello""#)
+        XCTAssertEqual(result[0].type, "Swift.String")
     }
 
     // MARK: - Single argument, secondName present
@@ -58,6 +60,7 @@ final class SwiftTestRunParametersParserTests: XCTestCase {
         XCTAssertEqual(result.count, 1)
         XCTAssertEqual(result[0].name, "for count")
         XCTAssertEqual(result[0].value, "42")
+        XCTAssertEqual(result[0].type, "Swift.Int")
     }
 
     // MARK: - Multiple arguments
@@ -73,8 +76,10 @@ final class SwiftTestRunParametersParserTests: XCTestCase {
         XCTAssertEqual(result.count, 2)
         XCTAssertEqual(result[0].name, "p1")
         XCTAssertEqual(result[0].value, "2")
+        XCTAssertEqual(result[0].type, "Swift.Int")
         XCTAssertEqual(result[1].name, "p2")
         XCTAssertEqual(result[1].value, #""2""#)
+        XCTAssertEqual(result[1].type, "Swift.String")
     }
 
     func testTwoArguments_mixedSecondName() {
@@ -88,21 +93,39 @@ final class SwiftTestRunParametersParserTests: XCTestCase {
         XCTAssertEqual(result.count, 2)
         XCTAssertEqual(result[0].name, "for x")
         XCTAssertEqual(result[0].value, "1")
+        XCTAssertEqual(result[0].type, "Swift.Int")
         XCTAssertEqual(result[1].name, "p2")
         XCTAssertEqual(result[1].value, #""abc""#)
+        XCTAssertEqual(result[1].type, "Swift.String")
     }
 
     // MARK: - Full example from spec
 
     func testFullSpecExample() {
-        // The description from the original specification comment.
-        let description = #"Case(_kind: Testing.Test.Case.(unknown context at $101efe768)._Kind.parameterized(arguments: [Testing.Test.Case.Argument(value: 2, id: Testing.Test.Case.Argument.ID(bytes: [50]), parameter: Testing.Test.Parameter(index: 0, firstName: "_", secondName: "p1", typeInfo: Swift.Int)), Testing.Test.Case.Argument(value: "2", id: Testing.Test.Case.Argument.ID(bytes: [34, 50, 34]), parameter: Testing.Test.Parameter(index: 1, firstName: "str", secondName: "p2", typeInfo: Swift.String))], discriminator: 0, isStable: true), body: (Function))"#
+        let description = #"Case(_kind: Testing.Test.Case.(unknown context at $101efe768)._Kind.parameterized(arguments: [Testing.Test.Case.Argument(value: 2, id: Testing.Test.Case.Argument.ID(bytes: [50]), parameter: Testing.Test.Parameter(index: 0, firstName: "_", secondName: Optional("p1"), typeInfo: Swift.Int)), Testing.Test.Case.Argument(value: "2", id: Testing.Test.Case.Argument.ID(bytes: [34, 50, 34]), parameter: Testing.Test.Parameter(index: 1, firstName: "str", secondName: Optional("p2"), typeInfo: Swift.String))], discriminator: 0, isStable: true), body: (Function))"#
         let result = Run.parseSwiftTestCaseParameters(from: description)
         XCTAssertEqual(result.count, 2)
         XCTAssertEqual(result[0].name, "_ p1")
         XCTAssertEqual(result[0].value, "2")
+        XCTAssertEqual(result[0].type, "Swift.Int")
         XCTAssertEqual(result[1].name, "str p2")
         XCTAssertEqual(result[1].value, #""2""#)
+        XCTAssertEqual(result[1].type, "Swift.String")
+    }
+
+    // MARK: - Optional secondName wrapping
+
+    func testOptionalSecondName() {
+        // secondName appears as Optional("p1") in some Swift versions.
+        let description = #"Case(_kind: Testing.Test.Case.(unknown context at $101efe768)._Kind.parameterized(arguments: [Testing.Test.Case.Argument(value: 1, id: Testing.Test.Case.Argument.ID(bytes: [49]), parameter: Testing.Test.Parameter(index: 0, firstName: "_", secondName: Optional("p1"), typeInfo: Swift.Int)), Testing.Test.Case.Argument(value: "1", id: Testing.Test.Case.Argument.ID(bytes: [34, 49, 34]), parameter: Testing.Test.Parameter(index: 1, firstName: "p2", secondName: nil, typeInfo: Swift.String))], discriminator: 0, isStable: true), body: (Function))"#
+        let result = Run.parseSwiftTestCaseParameters(from: description)
+        XCTAssertEqual(result.count, 2)
+        XCTAssertEqual(result[0].name, "_ p1")
+        XCTAssertEqual(result[0].value, "1")
+        XCTAssertEqual(result[0].type, "Swift.Int")
+        XCTAssertEqual(result[1].name, "p2")
+        XCTAssertEqual(result[1].value, #""1""#)
+        XCTAssertEqual(result[1].type, "Swift.String")
     }
 
     // MARK: - Helpers
@@ -111,7 +134,7 @@ final class SwiftTestRunParametersParserTests: XCTestCase {
                                index: Int, firstName: String, secondName: String?,
                                typeInfo: String) -> String
     {
-        let second = secondName.map { #""\#($0)""# } ?? "nil"
+        let second = secondName.map { #"Optional("\#($0)")"# } ?? "nil"
         return #"Testing.Test.Case.Argument(value: \#(value), id: Testing.Test.Case.Argument.ID(bytes: [\#(bytes)]), parameter: Testing.Test.Parameter(index: \#(index), firstName: "\#(firstName)", secondName: \#(second), typeInfo: \#(typeInfo)))"#
     }
 

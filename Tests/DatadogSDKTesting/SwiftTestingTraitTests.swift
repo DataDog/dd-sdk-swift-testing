@@ -268,9 +268,9 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
             // Arguments are zip([1,2,3], ["1","2","3"]); the String value appears
             // with its surrounding quotes in the description, so it is JSON-escaped.
             let expectedParams = [
-                try decoder.decode(JSONGeneric.self, from: #"{"arguments":[{"name":"p1","value":"1"},{"name":"p2","value":"\"1\""}]}"#.utf8Data),
-                try decoder.decode(JSONGeneric.self, from: #"{"arguments":[{"name":"p1","value":"2"},{"name":"p2","value":"\"2\""}]}"#.utf8Data),
-                try decoder.decode(JSONGeneric.self, from: #"{"arguments":[{"name":"p1","value":"3"},{"name":"p2","value":"\"3\""}]}"#.utf8Data)
+                try decoder.decode(JSONGeneric.self, from: #"{"arguments":[{"name":"p1","value":"1","type":"Swift.Int"},{"name":"p2","value":"\"1\"","type":"Swift.String"}]}"#.utf8Data),
+                try decoder.decode(JSONGeneric.self, from: #"{"arguments":[{"name":"p1","value":"2","type":"Swift.Int"},{"name":"p2","value":"\"2\"","type":"Swift.String"}]}"#.utf8Data),
+                try decoder.decode(JSONGeneric.self, from: #"{"arguments":[{"name":"p1","value":"3","type":"Swift.Int"},{"name":"p2","value":"\"3\"","type":"Swift.String"}]}"#.utf8Data)
             ]
             for (run, expected) in zip(paramGroup.runs, expectedParams) {
                 let runParams = try run.tags[DDTestTags.testParameters].map { try decoder.decode(JSONGeneric.self, from: $0.utf8Data) }

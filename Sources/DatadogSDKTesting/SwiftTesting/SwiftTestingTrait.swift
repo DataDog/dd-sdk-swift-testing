@@ -182,7 +182,7 @@ extension DatadogSwiftTestingScopeProvider {
             guard isParameterized else { return .init(arguments: .nil, metadata: nil) }
             let parameters = Self.parseSwiftTestCaseParameters(from: String(describing: testCase))
             let args: [JSONGeneric] = parameters.map {
-                .object(["name": .string($0.name), "value": .string($0.value)])
+                .object(["name": .string($0.name), "value": .string($0.value), "type": .string($0.type)])
             }
             return .init(arguments: .array(args), metadata: nil)
         }
@@ -252,11 +252,11 @@ extension Testing.Test {
 }
 
 extension DatadogSwiftTestingScopeProvider.SwiftTestRun {
-    // Parses a Testing.Test.Case description string into (name, value) pairs.
+    // Parses a Testing.Test.Case description string into (name, value, type) triples.
     // name = firstName joined with secondName (when present) using a space.
     // Exposed as `internal` so unit tests can exercise it directly without
     // requiring the Swift Testing runtime.
-    static func parseSwiftTestCaseParameters(from description: String) -> [(name: String, value: String)] {
+    static func parseSwiftTestCaseParameters(from description: String) -> [(name: String, value: String, type: String)] {
         _swiftTestCaseParametersRegex
             .matches(in: description, range: NSRange(description.startIndex..., in: description))
             .compactMap { match in
@@ -265,19 +265,27 @@ extension DatadogSwiftTestingScopeProvider.SwiftTestRun {
                     return nil
                 }
                 var name = String(description[firstNameRange])
-                if match.numberOfRanges > 3, let secondNameRange = Range(match.range(at: 3), in: description) {
+                if let secondNameRange = Range(match.range(at: 3), in: description) {
                     name += " " + description[secondNameRange]
                 }
-                return (name: name, value: String(description[valueRange]))
+                let type: String
+                if let typeRange = Range(match.range(at: 4), in: description) {
+                    type = String(description[typeRange])
+                } else {
+                    type = "<unknown>"
+                }
+                return (name: name, value: String(description[valueRange]), type: type)
             }
     }
 
     // Matches each Testing.Test.Case.Argument, capturing:
     //   group 1 — argument value (up to ", id: Testing.Test.Case.Argument.ID")
     //   group 2 — parameter firstName
-    //   group 3 — parameter secondName (absent when secondName is nil)
+    //   group 3 — parameter secondName (absent when secondName is nil);
+    //             handles `Optional("name")` form only (nil = absent)
+    //   group 4 — parameter typeInfo (absent when not present)
     private static let _swiftTestCaseParametersRegex = try! NSRegularExpression(
-        pattern: #"Argument\(value: (.*?), id: (?:.*?), parameter: \S*Parameter\(index: \d+, firstName: "([^"]*)", secondName: (?:nil|"([^"]*)")"#,
+        pattern: #"Argument\(value: (.*?), id: (?:.*?), parameter: \S*Parameter\(index: \d+, firstName: "([^"]*)", secondName: (?:nil|Optional\("([^"]*)"\))[^)]*?(?:, typeInfo: ([^)]+))?\)"#,
         options: []
     )
 }

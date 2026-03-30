@@ -48,6 +48,7 @@ public final class Suite: NSObject, Encodable {
             self.startTime = startTime ?? module.configuration.clock.now
         }
         
+        state.meta[DDGenericTags.type] = DDTagValues.typeSuiteEnd
         state.meta[DDTestTags.testSuite] = name
         state.meta[DDTestTags.testModule] = module.name
         state.meta[DDTestTags.testFramework] = testFramework
@@ -75,7 +76,6 @@ public final class Suite: NSObject, Encodable {
         let duration = (endTime ?? configuration.clock.now).timeIntervalSince(startTime).toNanoseconds
         _state.update { state in
             state.duration = duration
-            state.meta[DDGenericTags.type] = DDTagValues.typeSuiteEnd
             state.meta[DDTestTags.testStatus] = state.status.spanAttribute
         }
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: SuiteEnvelope(self))

@@ -49,6 +49,16 @@ public final class Module: NSObject, Encodable {
             self.startTime = moduleStartTime
         }
         self.localization = PlatformUtils.getLocalization()
+        
+        state.meta[DDGenericTags.type] = DDTagValues.typeModuleEnd
+        state.meta[DDTestTags.testModule] = name
+        state.meta[DDTestSuiteVisibilityTags.testModuleId] = String(id.rawValue)
+        state.meta[DDTestSuiteVisibilityTags.testSessionId] = String(session.id.rawValue)
+        state.meta[DDUISettingsTags.uiSettingsModuleLocalization] = localization
+        
+        // Move to the global when we will support global metrics
+        state.metrics.merge(session.configuration.metrics) { _, new in new }
+        
         self._state = .init(state)
         super.init()
         
@@ -69,17 +79,8 @@ public final class Module: NSObject, Encodable {
             if duration > state.duration {
                 state.duration = duration
             }
-            
-            state.meta[DDGenericTags.type] = DDTagValues.typeModuleEnd
-            state.meta[DDTestTags.testModule] = name
             state.meta[DDTestTags.testFramework] = state.testFrameworks.joined(separator: ",")
             state.meta[DDTestTags.testStatus] = state.status.spanAttribute
-            state.meta[DDTestSuiteVisibilityTags.testModuleId] = String(id.rawValue)
-            state.meta[DDTestSuiteVisibilityTags.testSessionId] = String(session.id.rawValue)
-            state.meta[DDUISettingsTags.uiSettingsModuleLocalization] = localization
-            
-            // Move to the global when we will support global metrics
-            state.metrics.merge(configuration.metrics) { _, new in new }
             
             addFeatureTags(meta: &state.meta, metrics: &state.metrics)
             

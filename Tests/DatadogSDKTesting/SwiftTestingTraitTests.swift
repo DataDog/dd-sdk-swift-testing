@@ -6,6 +6,7 @@
 
 import Foundation
 @testable import DatadogSDKTesting
+import EventsExporter
 
 #if canImport(Testing)
 import Testing
@@ -255,6 +256,26 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
             let status = try #require(statuses[test]).runs.map { $0.status }
             #expect(status == expect.status.map { $0.testStatus })
             #expect(errors[test] == expect.errors)
+        }
+        
+        let decoder = JSONDecoder()
+
+        // Verify parameter tags on every run of the parameterized test.
+        if test.isSuite, let paramGroup = statuses["testParameterized(p1:p2:)"] {
+            for run in paramGroup.runs {
+                #expect(run.tags[DDTestTags.testParameters] != nil)
+            }
+            // Arguments are zip([1,2,3], ["1","2","3"]); the String value appears
+            // with its surrounding quotes in the description, so it is JSON-escaped.
+            let expectedParams = [
+                try decoder.decode(JSONGeneric.self, from: #"{"arguments":[{"name":"p1","value":"1"},{"name":"p2","value":"\"1\""}]}"#.utf8Data),
+                try decoder.decode(JSONGeneric.self, from: #"{"arguments":[{"name":"p1","value":"2"},{"name":"p2","value":"\"2\""}]}"#.utf8Data),
+                try decoder.decode(JSONGeneric.self, from: #"{"arguments":[{"name":"p1","value":"3"},{"name":"p2","value":"\"3\""}]}"#.utf8Data)
+            ]
+            for (run, expected) in zip(paramGroup.runs, expectedParams) {
+                let runParams = try run.tags[DDTestTags.testParameters].map { try decoder.decode(JSONGeneric.self, from: $0.utf8Data) }
+                #expect(runParams == expected)
+            }
         }
     }
 }

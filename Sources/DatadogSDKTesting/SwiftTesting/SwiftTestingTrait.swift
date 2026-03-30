@@ -5,6 +5,7 @@
  */
 
 import Foundation
+internal import EventsExporter
 
 #if canImport(Testing)
 import Testing
@@ -115,8 +116,8 @@ public struct DatadogSwiftTestingScopeProvider: TestScoping {
                 }
                 switch retry {
                 case .skipped(reason: _):
-                    // Add Test.cancel for Xcode 26.4
                     shouldRetry = false
+                    //try Testing.Test.cancel(Comment(rawValue: reason))
                 case .retry(.end(let errors)):
                     shouldRetry = false
                     if !errors.ignore {
@@ -176,20 +177,15 @@ extension DatadogSwiftTestingScopeProvider {
         var isSuite: Bool { test.isSuite }
         var hasSuite: Bool { test.ddHasSuite }
         var isParameterized: Bool { testCase.isParameterized }
-        
-//        var parameters: [(name: String, value: String)] {
-//            guard isParametrised else { return [] }
-//            let description = String(describing: testCase)
-//            return Self.parametersRegex.matches(
-//                in: description, range: NSRange(description.startIndex..., in: description)
-//            ).map { (String(description[Range($0.range(at: 1), in: description)!]),
-//                     String(description[Range($0.range(at: 2), in: description)!])) }
-//        }
-//        
-//        static let parametersRegex = try! NSRegularExpression(
-//            pattern: #"\(arguments:\w\[\w+)"#,
-//            options: []
-//        )
+
+        var parameters: TestRunParameters {
+            guard isParameterized else { return .init(arguments: .nil, metadata: nil) }
+            let parameters = Self.parseSwiftTestCaseParameters(from: String(describing: testCase))
+            let args: [JSONGeneric] = parameters.map {
+                .object(["name": .string($0.name), "value": .string($0.value)])
+            }
+            return .init(arguments: .array(args), metadata: nil)
+        }
     }
 }
 
@@ -254,4 +250,36 @@ extension Testing.Test {
         }
     }
 }
+
+extension DatadogSwiftTestingScopeProvider.SwiftTestRun {
+    // Parses a Testing.Test.Case description string into (name, value) pairs.
+    // name = firstName joined with secondName (when present) using a space.
+    // Exposed as `internal` so unit tests can exercise it directly without
+    // requiring the Swift Testing runtime.
+    static func parseSwiftTestCaseParameters(from description: String) -> [(name: String, value: String)] {
+        _swiftTestCaseParametersRegex
+            .matches(in: description, range: NSRange(description.startIndex..., in: description))
+            .compactMap { match in
+                guard let valueRange     = Range(match.range(at: 1), in: description),
+                      let firstNameRange = Range(match.range(at: 2), in: description) else {
+                    return nil
+                }
+                var name = String(description[firstNameRange])
+                if match.numberOfRanges > 3, let secondNameRange = Range(match.range(at: 3), in: description) {
+                    name += " " + description[secondNameRange]
+                }
+                return (name: name, value: String(description[valueRange]))
+            }
+    }
+
+    // Matches each Testing.Test.Case.Argument, capturing:
+    //   group 1 — argument value (up to ", id: Testing.Test.Case.Argument.ID")
+    //   group 2 — parameter firstName
+    //   group 3 — parameter secondName (absent when secondName is nil)
+    private static let _swiftTestCaseParametersRegex = try! NSRegularExpression(
+        pattern: #"Argument\(value: (.*?), id: (?:.*?), parameter: \S*Parameter\(index: \d+, firstName: "([^"]*)", secondName: (?:nil|"([^"]*)")"#,
+        options: []
+    )
+}
+
 #endif

@@ -50,7 +50,7 @@ internal enum DDTestTags {
     static let testModule = "test.module"
     static let testFramework = "test.framework"
     static let testType = "test.type"
-    static let testHasParameters = "test.has_parameters"
+    static let testParameters = "test.parameters"
     static let testStatus = "test.status"
     static let testFinalStatus = "test.final_status"
     static let testSourceFile = "test.source.file"

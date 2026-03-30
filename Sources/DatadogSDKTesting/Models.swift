@@ -202,6 +202,16 @@ struct SessionConfig: Sendable {
     let log: Logger
 }
 
+struct TestRunParameters: Encodable {
+    let arguments: JSONGeneric
+    let metadata: JSONGeneric?
+    
+    init(arguments: JSONGeneric, metadata: JSONGeneric?) {
+        self.arguments = arguments
+        self.metadata = metadata
+    }
+}
+
 extension TestModel {
     internal var endTime: Date {
         startTime.addingTimeInterval(.fromNanoseconds(Int64(duration)))
@@ -295,6 +305,11 @@ extension TestRun {
         case .bytes(let b): set(tag: name, value: b.base64EncodedString())
         default: set(tag: name, value: value.debugDescription)
         }
+    }
+    
+    func set(parameters: TestRunParameters) {
+        guard let value = try? String(data: JSONEncoder().encode(parameters), encoding: .utf8) else { return }
+        self.set(tag: DDTestTags.testParameters, value: value)
     }
     
     func set(source bundleFunctions: borrowing FunctionMap, owners: borrowing CodeOwners?, workspace: String?) {

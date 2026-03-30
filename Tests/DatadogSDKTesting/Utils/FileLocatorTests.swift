@@ -23,7 +23,7 @@ internal class FileLocatorTests: XCTestCase {
         let functionInfo = bundleFunctionInfo[testName]
         XCTAssertEqual(#file, functionInfo?.file)
         XCTAssertEqual(12, functionInfo?.startLine)
-        XCTAssertEqual(26, functionInfo?.endLine)
+        XCTAssertEqual(27, functionInfo?.endLine)
     }
 }
 

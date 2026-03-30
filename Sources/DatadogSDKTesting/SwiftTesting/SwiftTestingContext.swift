@@ -92,6 +92,9 @@ struct SwiftTestingRetryGroupContext: Sendable {
     ) async -> SwiftTestingTestRunRetry {
         let (context, config) = await test.withTestRun(named: run.name) { test in
             let context = SwiftTestingTestRunContext(test: test, group: self, info: run)
+            if context.info.isParameterized {
+                test.set(tag: DDTestTags.testHasParameters, value: true)
+            }
             await observer.willStart(testRun: context)
             let status = await function(context)
             let config = await observer.willFinish(testRun: context, with: status)

@@ -50,6 +50,7 @@ internal enum DDTestTags {
     static let testModule = "test.module"
     static let testFramework = "test.framework"
     static let testType = "test.type"
+    static let testHasParameters = "test.has_parameters"
     static let testStatus = "test.status"
     static let testFinalStatus = "test.final_status"
     static let testSourceFile = "test.source.file"
@@ -66,6 +67,7 @@ internal enum DDTestTags {
     static let testSkippedByITR = "test.skipped_by_itr"
     static let testHasFailedAllRetries = "test.has_failed_all_retries"
     static let testFailureSuppressionReason = "test.failure_suppression_reason"
+   
 }
 
 internal enum DDHostTags {

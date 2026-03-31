@@ -149,9 +149,9 @@ class IntegrationTestsRunner: XCTestCase {
 
         let durationBenchmark = DDBenchmarkTags.benchmark + "." + DDBenchmarkMeasuresTags.duration + "."
 
-        XCTAssertGreaterThan(Int(attrib[durationBenchmark + DDBenchmarkTags.benchmarkRun] ?? "0") ?? 0, 0)
+        XCTAssertGreaterThan(Double(attrib[durationBenchmark + DDBenchmarkTags.benchmarkRun] ?? "0") ?? 0, 0)
         XCTAssertNotNil(attrib[durationBenchmark + DDBenchmarkTags.benchmarkMean])
-        XCTAssertGreaterThan(Int(attrib[durationBenchmark + DDBenchmarkTags.statisticsN] ?? "0") ?? 0, 0)
+        XCTAssertGreaterThan(Double(attrib[durationBenchmark + DDBenchmarkTags.statisticsN] ?? "0") ?? 0, 0)
         XCTAssertNotNil(attrib[durationBenchmark + DDBenchmarkTags.statisticsMax])
         XCTAssertNotNil(attrib[durationBenchmark + DDBenchmarkTags.statisticsMin])
         XCTAssertNotNil(attrib[durationBenchmark + DDBenchmarkTags.statisticsMean])

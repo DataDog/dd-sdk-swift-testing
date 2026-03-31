@@ -232,6 +232,8 @@
 		A7FC26B92BA20C8F00067E26 /* FileTraceExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F42083264D6B7500233B75 /* FileTraceExporter.swift */; };
 		A7FC26BA2BA20C8F00067E26 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1224A43264ABCCE00305968 /* main.swift */; };
 		A7FC26BB2BA20C8F00067E26 /* IntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1224A7D264AC06900305968 /* IntegrationTests.swift */; };
+		A7FC26E12BA321AB00067E26 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7FC26E02BA321AB00067E26 /* AppDelegate.swift */; };
+		A7FC26E32BA321AB00067E26 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7FC26E22BA321AB00067E26 /* SceneDelegate.swift */; };
 		A7FC26CB2BA20D3700067E26 /* IntegrationTestsRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1224A5D264ABCD000305968 /* IntegrationTestsRunner.swift */; };
 		A7FC26CC2BA20D3700067E26 /* UIIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1193F8C272C24F900E4154E /* UIIntegrationTests.swift */; };
 		A7FC26CF2BA214AC00067E26 /* SimpleSpanData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7FC26CE2BA214AC00067E26 /* SimpleSpanData.swift */; };
@@ -439,6 +441,8 @@
 		A7FC26CE2BA214AC00067E26 /* SimpleSpanData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleSpanData.swift; sourceTree = "<group>"; };
 		A7FC26D02BA214CE00067E26 /* SimpleSpanData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleSpanData.swift; sourceTree = "<group>"; };
 		A7FC26D92BA2181A00067E26 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A7FC26E02BA321AB00067E26 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		A7FC26E22BA321AB00067E26 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		A7FC26E42BA8648300067E26 /* EventsExporter.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = EventsExporter.xctestplan; sourceTree = "<group>"; };
 		E10034D92703599D00439C9C /* DDTestModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTestModule.swift; sourceTree = "<group>"; };
 		E10A7E0D2806D68F00B464C9 /* LLVMSimpleCoverageFormat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LLVMSimpleCoverageFormat.swift; sourceTree = "<group>"; };
@@ -781,6 +785,8 @@
 				E1F42083264D6B7500233B75 /* FileTraceExporter.swift */,
 				E1224A7D264AC06900305968 /* IntegrationTests.swift */,
 				E1224A43264ABCCE00305968 /* main.swift */,
+				A7FC26E02BA321AB00067E26 /* AppDelegate.swift */,
+				A7FC26E22BA321AB00067E26 /* SceneDelegate.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -1880,6 +1886,8 @@
 				A7FC26CF2BA214AC00067E26 /* SimpleSpanData.swift in Sources */,
 				A7FC26B92BA20C8F00067E26 /* FileTraceExporter.swift in Sources */,
 				A7FC26BB2BA20C8F00067E26 /* IntegrationTests.swift in Sources */,
+				A7FC26E12BA321AB00067E26 /* AppDelegate.swift in Sources */,
+				A7FC26E32BA321AB00067E26 /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

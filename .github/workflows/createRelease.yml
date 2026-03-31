@@ -14,14 +14,14 @@ permissions:
 jobs:
   test:
     name: Run Tests
-    runs-on: macos-14
+    runs-on: macos-26
     steps:
     - name: Checkout
       uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-    - name: Select Xcode 16.2
-      run: sudo xcode-select --switch /Applications/Xcode_16.2.app
+    - name: Select Xcode 26.0
+      run: sudo xcode-select --switch /Applications/Xcode_26.0.app
     - name: Test
-      run: make XC_LOG=tests IOS_SIMULATOR="iPhone 16" TVOS_SIMULATOR="Apple TV" tests
+      run: make XC_LOG=tests IOS_SIMULATOR="iPhone 17" TVOS_SIMULATOR="Apple TV" tests
     - name: Attach Xcode logs
       if: '!cancelled()'
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -32,7 +32,7 @@ jobs:
   release:
     name: Publish Release
     needs: [test]
-    runs-on: macos-14
+    runs-on: macos-26
     permissions:
       contents: read
       id-token: write
@@ -45,8 +45,8 @@ jobs:
       with:
         scope: DataDog/dd-sdk-swift-testing
         policy: self.github.create-release.workflow-dispatch
-    - name: Select Xcode 16.2
-      run: sudo xcode-select --switch /Applications/Xcode_16.2.app
+    - name: Select Xcode 26.0
+      run: sudo xcode-select --switch /Applications/Xcode_26.0.app
     - name: Build and upload XCFrameworks, create draft release
       env:
         GH_TOKEN: ${{ steps.octo-sts.outputs.token }}

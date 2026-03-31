@@ -1,0 +1,175 @@
+/*
+ * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
+ * This product includes software developed at Datadog (https://www.datadoghq.com/).
+ * Copyright 2020-Present Datadog, Inc.
+ */
+
+@testable import DatadogSDKTesting
+import XCTest
+
+final class SessionManagerTests: XCTestCase {
+    override func setUp() {
+        super.setUp()
+        DDTestMonitor._env_recreate(env: [
+            "DD_API_KEY": "fakeToken",
+            "DD_DISABLE_TEST_INSTRUMENTING": "1",
+            "DD_DISABLE_CRASH_HANDLER": "1"
+        ])
+    }
+
+    override func tearDown() {
+        DDTestMonitor.removeTestMonitor()
+        DDTestMonitor._env_recreate()
+        super.tearDown()
+    }
+
+    // MARK: - Session bootstrapping
+
+    func testSessionIsLazilyInitialized() async throws {
+        let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider())
+        let session1 = try await manager.session
+        let session2 = try await manager.session
+        XCTAssertTrue(session1.id == session2.id)
+        await manager.stop()
+    }
+
+    func testSessionConfigIsAvailableAfterBootstrap() async throws {
+        let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider())
+        let config1 = try await manager.sessionConfig
+        let config2 = try await manager.sessionConfig
+        XCTAssertEqual(config1.service, config2.service)
+        await manager.stop()
+    }
+
+    // MARK: - Observer management
+
+    func testObserverIsNotifiedWhenSessionStarts() async throws {
+        let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider())
+        let observer = MockObserver()
+        await manager.add(observer: observer)
+
+        _ = try await manager.session
+
+        XCTAssertEqual(observer.willStartCount, 1)
+        XCTAssertEqual(observer.didFinishCount, 0)
+        await manager.stop()
+    }
+
+    func testObserverAddedAfterBootstrapIsRetroactivelyNotified() async throws {
+        let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider())
+        _ = try await manager.session
+
+        let observer = MockObserver()
+        await manager.add(observer: observer)
+
+        XCTAssertEqual(observer.willStartCount, 1)
+        await manager.stop()
+    }
+
+    func testRemovedObserverIsNotNotified() async throws {
+        let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider())
+        let observer = MockObserver()
+        await manager.add(observer: observer)
+        await manager.remove(observer: observer)
+
+        _ = try await manager.session
+        await manager.stop()
+
+        XCTAssertEqual(observer.willStartCount, 0)
+        XCTAssertEqual(observer.didFinishCount, 0)
+    }
+
+    func testMultipleObserversAreAllNotified() async throws {
+        let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider())
+        let observer1 = MockObserver()
+        let observer2 = MockObserver()
+        await manager.add(observer: observer1)
+        await manager.add(observer: observer2)
+
+        _ = try await manager.session
+        await manager.stop()
+
+        XCTAssertEqual(observer1.willStartCount, 1)
+        XCTAssertEqual(observer2.willStartCount, 1)
+        XCTAssertEqual(observer1.didFinishCount, 1)
+        XCTAssertEqual(observer2.didFinishCount, 1)
+    }
+
+    func testObserverIsNotifiedWithCorrectSession() async throws {
+        let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider())
+        let observer = MockObserver()
+        await manager.add(observer: observer)
+
+        let session = try await manager.session
+        await manager.stop()
+
+        XCTAssertEqual(observer.lastStartedSession?.id, session.id)
+        XCTAssertEqual(observer.lastFinishedSession?.id, session.id)
+    }
+
+    // MARK: - Stop behaviour
+
+    func testStopWithNoBootstrappedSessionDoesNothing() async {
+        let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider())
+        // Must not crash and observers must not be notified
+        let observer = MockObserver()
+        await manager.add(observer: observer)
+        await manager.stop()
+        XCTAssertEqual(observer.didFinishCount, 0)
+    }
+
+    func testStopNotifiesObserversOfFinish() async throws {
+        let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider())
+        let observer = MockObserver()
+        await manager.add(observer: observer)
+        _ = try await manager.session
+
+        await manager.stop()
+
+        XCTAssertEqual(observer.didFinishCount, 1)
+    }
+
+    func testStopClearsSessionSoNextAccessCreatesNewOne() async throws {
+        let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider())
+        let session1 = try await manager.session
+        await manager.stop()
+
+        let session2 = try await manager.session
+        XCTAssertFalse(session1.id == session2.id)
+        await manager.stop()
+    }
+}
+
+// MARK: - Test helpers
+
+private final class MockObserver: TestSessionManagerObserver, @unchecked Sendable {
+    var id: ObjectIdentifier { ObjectIdentifier(self) }
+
+    private let _state: Synced<State> = .init(.init())
+
+    struct State {
+        var willStartCount: Int = 0
+        var didFinishCount: Int = 0
+        var lastStartedSession: (any TestSession)?
+        var lastFinishedSession: (any TestSession)?
+    }
+
+    var willStartCount: Int { _state.value.willStartCount }
+    var didFinishCount: Int { _state.value.didFinishCount }
+    var lastStartedSession: (any TestSession)? { _state.value.lastStartedSession }
+    var lastFinishedSession: (any TestSession)? { _state.value.lastFinishedSession }
+
+    func willStart(session: any TestSession, with config: SessionConfig) async {
+        _state.update {
+            $0.willStartCount += 1
+            $0.lastStartedSession = session
+        }
+    }
+
+    func didFinish(session: any TestSession, with config: SessionConfig) async {
+        _state.update {
+            $0.didFinishCount += 1
+            $0.lastFinishedSession = session
+        }
+    }
+}

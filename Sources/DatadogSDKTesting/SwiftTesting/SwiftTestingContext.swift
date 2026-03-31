@@ -16,8 +16,7 @@ protocol SwiftTestingTestInfoType: Sendable {
 }
 
 protocol SwiftTestingTestRunInfoType: SwiftTestingTestInfoType {
-    // This is a private API for now in the swift testing
-    // var parameters: [(name: String, value: String)] { get }
+    var parameters: TestRunParameters { get }
 }
 
 enum SwiftTestingTestStatus: Equatable, Hashable, Sendable {
@@ -92,6 +91,9 @@ struct SwiftTestingRetryGroupContext: Sendable {
     ) async -> SwiftTestingTestRunRetry {
         let (context, config) = await test.withTestRun(named: run.name) { test in
             let context = SwiftTestingTestRunContext(test: test, group: self, info: run)
+            if context.info.isParameterized {
+                test.set(parameters: run.parameters)
+            }
             await observer.willStart(testRun: context)
             let status = await function(context)
             let config = await observer.willFinish(testRun: context, with: status)
@@ -115,8 +117,7 @@ struct SwiftTestingTestContext: Sendable {
         try await suite.withTestRun(named: name, action)
     }
     
-    func with(group forTest: some SwiftTestingTestRunInfoType,
-              performing function: @Sendable (borrowing SwiftTestingRetryGroupContext) async throws -> Void) async throws {
+    func withGroup(_ function: @Sendable (borrowing SwiftTestingRetryGroupContext) async throws -> Void) async throws {
         let config = await observer.runGroupConfiguration(test: self)
         let group = SwiftTestingRetryGroupContext(test: self, configuration: config)
         await observer.willStart(group: group)

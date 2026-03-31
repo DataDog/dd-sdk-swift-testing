@@ -5,6 +5,7 @@
  */
 
 import Foundation
+internal import EventsExporter
 
 #if canImport(Testing)
 import Testing
@@ -20,7 +21,7 @@ public struct DatadogSwiftTestingTrait: TestTrait, SuiteTrait {
     }
     
     public func prepare(for test: Testing.Test) async throws {
-        try await prepare(test: test)
+        try await prepare(test: DatadogSwiftTestingScopeProvider.SwiftTest(test: test))
     }
     
     public func scopeProvider(for test: Testing.Test, testCase: Testing.Test.Case?) -> TestScopeProvider? {
@@ -57,10 +58,10 @@ public struct DatadogSwiftTestingScopeProvider: TestScoping {
                                    performing: function)
         } else if test.isSuite {
             // This is a suite
-            try await provideScope(suite: test, performing: function)
+            try await provideScope(suite: SwiftTest(test: test), performing: function)
         } else {
             // Test scope
-            try await provideScope(test: test, performing: function)
+            try await provideScope(test: SwiftTest(test: test), performing: function)
         }
     }
     
@@ -84,7 +85,7 @@ public struct DatadogSwiftTestingScopeProvider: TestScoping {
     }
     
     func provideScope(run: some SwiftTestingTestRunInfoType, performing function: @Sendable () async throws -> Void) async throws {
-        try await Self.datadogTest?.with(group: run) { group in
+        try await Self.datadogTest?.withGroup { group in
             nonisolated(unsafe) var shouldRetry: Bool = true
             while shouldRetry {
                 let issues: Synced<DatadogSwiftTestingTrait.TestIssues> = .init(.init())
@@ -115,8 +116,8 @@ public struct DatadogSwiftTestingScopeProvider: TestScoping {
                 }
                 switch retry {
                 case .skipped(reason: _):
-                    // Add Test.cancel for Xcode 26.4
                     shouldRetry = false
+                    //try Testing.Test.cancel(Comment(rawValue: reason))
                 case .retry(.end(let errors)):
                     shouldRetry = false
                     if !errors.ignore {
@@ -141,50 +142,50 @@ extension Testing.Trait where Self == DatadogSwiftTestingTrait {
     public static var datadogTesting: Self { Self() }
 }
 
-extension Testing.Test: SwiftTestingTestInfoType {
-    var module: String { id.moduleName }
-    
-    var hasSuite: Bool {
-        let components = id.nameComponents
-        return components.count > 1 || components.first?.last != ")"
-    }
-    
-    var suite: String {
-        guard !isSuite else { return name }
-        if hasSuite {
-            return id.nameComponents.first!
-        } else {
-            return "[\(sourceLocation.fileName.replacingOccurrences(of: ".swift", with: ""))]"
-        }
-    }
-}
-
 extension DatadogSwiftTestingScopeProvider {
+    struct SwiftTest: SwiftTestingTestInfoType {
+        let test: Testing.Test
+        let name: String
+        let suite: String
+        
+        init(test: Testing.Test) {
+            self.test = test
+            self.name = test.ddName
+            self.suite = test.ddSuite
+        }
+        
+        var module: String { test.ddModule }
+        var isSuite: Bool { test.isSuite }
+        var hasSuite: Bool { test.ddHasSuite }
+        var isParameterized: Bool { test.isParameterized }
+    }
+    
     struct SwiftTestRun: SwiftTestingTestRunInfoType {
         let test: Testing.Test
         let testCase: Testing.Test.Case
+        let name: String
+        let suite: String
         
-        var name: String { test.name }
-        var module: String { test.module }
+        init(test: Testing.Test, testCase: Testing.Test.Case) {
+            self.test = test
+            self.testCase = testCase
+            self.name = test.ddName
+            self.suite = test.ddSuite
+        }
+        
+        var module: String { test.ddModule }
         var isSuite: Bool { test.isSuite }
-        var suite: String { test.suite }
-        var hasSuite: Bool { test.hasSuite }
-        
+        var hasSuite: Bool { test.ddHasSuite }
         var isParameterized: Bool { testCase.isParameterized }
-        
-//        var parameters: [(name: String, value: String)] {
-//            guard isParametrised else { return [] }
-//            let description = String(describing: testCase)
-//            return Self.parametersRegex.matches(
-//                in: description, range: NSRange(description.startIndex..., in: description)
-//            ).map { (String(description[Range($0.range(at: 1), in: description)!]),
-//                     String(description[Range($0.range(at: 2), in: description)!])) }
-//        }
-//        
-//        static let parametersRegex = try! NSRegularExpression(
-//            pattern: #"\(arguments:\w\[\w+)"#,
-//            options: []
-//        )
+
+        var parameters: TestRunParameters {
+            guard isParameterized else { return .init(arguments: .nil, metadata: nil) }
+            let parameters = Self.parseSwiftTestCaseParameters(from: String(describing: testCase))
+            let args: [JSONGeneric] = parameters.map {
+                .object(["name": .string($0.name), "value": .string($0.value), "type": .string($0.type)])
+            }
+            return .init(arguments: .array(args), metadata: nil)
+        }
     }
 }
 
@@ -224,4 +225,69 @@ extension DatadogSwiftTestingTrait {
         }
     }
 }
+
+extension Testing.Test {
+    var ddModule: String { id.moduleName }
+    
+    var ddHasSuite: Bool {
+        let components = id.nameComponents
+        return components.count > 1 || components.first?.last != ")"
+    }
+    
+    var ddName: String {
+        if name.hasSuffix("()") {
+            return String(name[..<name.index(name.endIndex, offsetBy: -2)])
+        }
+        return name
+    }
+    
+    var ddSuite: String {
+        guard !isSuite else { return name }
+        if ddHasSuite {
+            return id.nameComponents.first!
+        } else {
+            return "[\(sourceLocation.fileName.replacingOccurrences(of: ".swift", with: ""))]"
+        }
+    }
+}
+
+extension DatadogSwiftTestingScopeProvider.SwiftTestRun {
+    // Parses a Testing.Test.Case description string into (name, value, type) triples.
+    // name = firstName joined with secondName (when present) using a space.
+    // Exposed as `internal` so unit tests can exercise it directly without
+    // requiring the Swift Testing runtime.
+    static func parseSwiftTestCaseParameters(from description: String) -> [(name: String, value: String, type: String)] {
+        _swiftTestCaseParametersRegex
+            .matches(in: description, range: NSRange(description.startIndex..., in: description))
+            .compactMap { match in
+                guard let valueRange     = Range(match.range(at: 1), in: description),
+                      let firstNameRange = Range(match.range(at: 2), in: description) else {
+                    return nil
+                }
+                var name = String(description[firstNameRange])
+                if let secondNameRange = Range(match.range(at: 3), in: description) {
+                    name += " " + description[secondNameRange]
+                }
+                let type: String
+                if let typeRange = Range(match.range(at: 4), in: description) {
+                    type = String(description[typeRange])
+                } else {
+                    type = "<unknown>"
+                }
+                return (name: name, value: String(description[valueRange]), type: type)
+            }
+    }
+
+    // Matches each Testing.Test.Case.Argument, capturing:
+    //   group 1 — argument value (up to ", id: Testing.Test.Case.Argument.ID")
+    //   group 2 — parameter firstName
+    //   group 3 — parameter secondName (absent when secondName is nil);
+    //             handles `Optional("name")` form only (nil = absent)
+    //   group 4 — parameter typeInfo (absent when not present)
+    private static let _swiftTestCaseParametersRegex = try! NSRegularExpression(
+        pattern: #"Argument\(value: (.*?), id: (?:.*?), parameter: \S*Parameter\(index: \d+, firstName: "([^"]*)", secondName: (?:nil|Optional\("([^"]*)"\))[^)]*?(?:, typeInfo: ([^)]+))?\)"#,
+        options: []
+    )
+}
+
 #endif

@@ -50,6 +50,14 @@ public final class Session: NSObject, Encodable {
             self.id = SpanId.random()
             self.startTime = sessionStartTime
         }
+        
+        state.meta[DDGenericTags.type] = DDTagValues.typeSessionEnd
+        state.meta[DDTestSuiteVisibilityTags.testSessionId] = String(id.rawValue)
+        state.meta[DDTestSessionTags.testToolchain] = configuration.platform.runtimeName.lowercased() + "-" + configuration.platform.runtimeVersion
+        
+        // Move to the global when we will support global metrics
+        state.metrics.merge(configuration.metrics) { _, new in new }
+        
         self._state = .init(state)
     }
     
@@ -61,19 +69,15 @@ public final class Session: NSObject, Encodable {
             self.set(failed: .init(type: "Sanitizer Error", stack: sanitizerInfo))
         }
         
+        // Update meta tags to the latest state
         _state.update { state in
             state.duration = duration
-            state.meta[DDGenericTags.type] = DDTagValues.typeSessionEnd
             state.meta[DDTestTags.testFramework] = state.testFrameworks.joined(separator: ",")
             state.meta[DDTestTags.testStatus] = state.status.spanAttribute
-            state.meta[DDTestSuiteVisibilityTags.testSessionId] = String(id.rawValue)
-            state.meta[DDTestSessionTags.testToolchain] = configuration.platform.runtimeName.lowercased() + "-" + configuration.platform.runtimeVersion
-            
-            // Move to the global when we will support global metrics
-            state.metrics.merge(configuration.metrics) { _, new in new }
             
             addFeatureTags(meta: &state.meta, metrics: &state.metrics)
         }
+        // export it
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: SessionEnvelope(self))
         configuration.log.debug("Exported session_end event sessionId: \(self.id)")
         DDTestMonitor.tracer.flush()
@@ -134,9 +138,12 @@ public extension Session {
     ///   - startTime: Optional, the time where the session started
     @objc static func start(name: String, command: String? = nil, startTime: Date? = nil) -> Session {
         let config = SessionConfig(activeFeatures: [],
+                                   workspacePath: DDTestMonitor.env.workspacePath,
+                                   codeOwners: DDTestMonitor.instance?.codeOwners,
+                                   bundleFunctions: DDTestMonitor.instance?.bundleFunctionInfo ?? .init(),
                                    platform: DDTestMonitor.env.platform,
                                    clock: DDTestMonitor.clock,
-                                   crash: nil,
+                                   crash: DDTestMonitor.instance?.crashInfo,
                                    command: command,
                                    service: DDTestMonitor.env.service,
                                    metrics: DDTestMonitor.env.baseMetrics,

@@ -6,6 +6,7 @@
 
 import Foundation
 @testable import DatadogSDKTesting
+import EventsExporter
 
 #if canImport(Testing)
 import Testing
@@ -24,52 +25,52 @@ struct SwiftTestingTraitTests {
     
     @Test
     func scopingTraitIsApplied() async throws {
-        #expect(Testing.Test.current?.suite == "\(type(of: self))")
+        #expect(Testing.Test.current?.ddSuite == "\(type(of: self))")
     }
     
     @Test
     func testSkip() async throws {
-        #expect(1 == 0, Comment(rawValue: Testing.Test.current!.name))
+        #expect(1 == 0, Comment(rawValue: Testing.Test.current!.ddName))
     }
     
     @Test()
     func testRetryIgnore() async throws {
-        #expect(1 == 0, Comment(rawValue: Testing.Test.current!.name))
+        #expect(1 == 0, Comment(rawValue: Testing.Test.current!.ddName))
     }
     
     @Test
     func testRetryFail() async throws {
-        #expect(1 == 0, Comment(rawValue: Testing.Test.current!.name))
+        #expect(1 == 0, Comment(rawValue: Testing.Test.current!.ddName))
     }
     
     @Test
     func testRetryErrorIgnore() async throws {
-        throw TestError.test(Testing.Test.current!.name)
+        throw TestError.test(Testing.Test.current!.ddName)
     }
     
     @Test
     func testRetryErrorFail() async throws {
-        throw TestError.test(Testing.Test.current!.name)
+        throw TestError.test(Testing.Test.current!.ddName)
     }
     
     @Test
     func testPass() async throws {
-        #expect(1 == 1, Comment(rawValue: Testing.Test.current!.name))
+        #expect(1 == 1, Comment(rawValue: Testing.Test.current!.ddName))
     }
     
     @Test
     func testFail() async throws {
-        #expect(1 == 0, Comment(rawValue: Testing.Test.current!.name))
+        #expect(1 == 0, Comment(rawValue: Testing.Test.current!.ddName))
     }
     
     @Test
     func testError() async throws {
-        throw TestError.test(Testing.Test.current!.name)
+        throw TestError.test(Testing.Test.current!.ddName)
     }
     
     @Test
     func testErrorIgnore() async throws {
-        throw TestError.test(Testing.Test.current!.name)
+        throw TestError.test(Testing.Test.current!.ddName)
     }
     
     @Test(arguments: zip([1, 2, 3], ["1", "2", "3"]))
@@ -80,15 +81,17 @@ struct SwiftTestingTraitTests {
 
 @Test(.observerTester, .datadogTesting)
 func testFuncRetryErrorFail() async throws {
-    throw SwiftTestingTraitTests.TestError.test(Testing.Test.current!.name)
+    throw SwiftTestingTraitTests.TestError.test(Testing.Test.current!.ddName)
 }
 
 @Test(.observerTester, .datadogTesting)
 func testFuncRegistration() async throws {
-    #expect(Testing.Test.current?.suite == "[\(URL(string: #file)!.deletingPathExtension().lastPathComponent)]")
+    #expect(Testing.Test.current?.ddSuite == "[\(URL(string: #file)!.deletingPathExtension().lastPathComponent)]")
 }
 
 private final class MockSwiftTestingObserver: SwiftTestingObserverType {
+    nonisolated(unsafe) var isModuleEnded: Bool = false
+    
     func willStart(session: any TestSession, with config: SessionConfig) async {}
     
     func didFinish(session: any TestSession, with config: SessionConfig) async {
@@ -99,10 +102,7 @@ private final class MockSwiftTestingObserver: SwiftTestingObserverType {
     func willStart(module: any TestModule) async {}
     
     func didFinish(module: any TestModule) async {
-        // Cleanup
-        if let provider = DatadogSwiftTestingTrait.sharedSuiteProvider as? SwiftTestingSuiteProvider {
-            Task.detached { await provider.session.stop() }
-        }
+        isModuleEnded = true
     }
     
     func willStart(suite: borrowing SwiftTestingSuiteContext) async {
@@ -169,6 +169,9 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
     func prepare(for test: Testing.Test) async throws {
         if DatadogSwiftTestingTrait.sharedSuiteProvider == nil {
             let session = Mocks.SessionManager(provider: Mocks.Session.Provider(), config: .init(activeFeatures: [],
+                                                                                                 workspacePath: DDTestMonitor.env.workspacePath,
+                                                                                                 codeOwners: nil,
+                                                                                                 bundleFunctions: .init(),
                                                                                                  platform: DDTestMonitor.env.platform,
                                                                                                  clock: DateClock(),
                                                                                                  crash: nil,
@@ -217,38 +220,62 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
         
         let suiteProvider = try #require(DatadogSwiftTestingTrait.sharedSuiteProvider as? SwiftTestingSuiteProvider)
         
+        let observer = try #require(suiteProvider.observer as? MockSwiftTestingObserver)
         let tests = await suiteProvider.registry.registeredTests
-        let suite = try #require(tests[test.module]?[test.suite])
-        
+        let suite = try #require(tests[test.ddModule]?[test.ddSuite])
         let session = try await #require(suiteProvider.session.session as? Mocks.Session)
         
-        let statuses = try #require(session.modules[test.module]?.suites[test.suite])
+        if observer.isModuleEnded {
+            await suiteProvider.session.stop()
+        }
+        
+        let statuses = try #require(session.modules[test.ddModule]?.suites[test.ddSuite])
         let errors = issues.value
         
         let expected: [String: (status: [SwiftTestingTestStatus], errors: Int?)] = [
-            "scopingTraitIsApplied()": ([.passed], nil),
-            "testSkip()": ([.skipped(reason: "skip_test")], nil),
-            "testRetryIgnore()": (Array(repeating: .failed, count: 5), nil),
-            "testRetryFail()": (Array(repeating: .failed, count: 5), 1),
-            "testRetryErrorIgnore()": (Array(repeating: .failed, count: 5), nil),
-            "testRetryErrorFail()": (Array(repeating: .failed, count: 5), 1),
-            "testPass()": ([.passed], nil),
-            "testFail()": ([.failed], 1),
-            "testError()": ([.failed], 1),
-            "testErrorIgnore()": ([.failed], nil),
-            "testFuncRetryErrorFail()": (Array(repeating: .failed, count: 5), 1),
-            "testFuncRegistration()": ([.passed], nil),
+            "scopingTraitIsApplied": ([.passed], nil),
+            "testSkip": ([.skipped(reason: "skip_test")], nil),
+            "testRetryIgnore": (Array(repeating: .failed, count: 5), nil),
+            "testRetryFail": (Array(repeating: .failed, count: 5), 1),
+            "testRetryErrorIgnore": (Array(repeating: .failed, count: 5), nil),
+            "testRetryErrorFail": (Array(repeating: .failed, count: 5), 1),
+            "testPass": ([.passed], nil),
+            "testFail": ([.failed], 1),
+            "testError": ([.failed], 1),
+            "testErrorIgnore": ([.failed], nil),
+            "testFuncRetryErrorFail": (Array(repeating: .failed, count: 5), 1),
+            "testFuncRegistration": ([.passed], nil),
             "testParameterized(p1:p2:)": (Array(repeating: .passed, count: 3), nil)
         ]
         
         // If we have a suite we should check for all tests.
         // If we have function we need check only for function, scope will be called for each
-        let testsList = test.isSuite ? suite : [test.name]
+        let testsList = test.isSuite ? suite : [test.ddName]
         for test in testsList {
             let expect = try #require(expected[test])
             let status = try #require(statuses[test]).runs.map { $0.status }
             #expect(status == expect.status.map { $0.testStatus })
             #expect(errors[test] == expect.errors)
+        }
+        
+        let decoder = JSONDecoder()
+
+        // Verify parameter tags on every run of the parameterized test.
+        if test.isSuite, let paramGroup = statuses["testParameterized(p1:p2:)"] {
+            for run in paramGroup.runs {
+                #expect(run.tags[DDTestTags.testParameters] != nil)
+            }
+            // Arguments are zip([1,2,3], ["1","2","3"]); the String value appears
+            // with its surrounding quotes in the description, so it is JSON-escaped.
+            let expectedParams = [
+                try decoder.decode(JSONGeneric.self, from: #"{"arguments":[{"name":"p1","value":"1","type":"Swift.Int"},{"name":"p2","value":"\"1\"","type":"Swift.String"}]}"#.utf8Data),
+                try decoder.decode(JSONGeneric.self, from: #"{"arguments":[{"name":"p1","value":"2","type":"Swift.Int"},{"name":"p2","value":"\"2\"","type":"Swift.String"}]}"#.utf8Data),
+                try decoder.decode(JSONGeneric.self, from: #"{"arguments":[{"name":"p1","value":"3","type":"Swift.Int"},{"name":"p2","value":"\"3\"","type":"Swift.String"}]}"#.utf8Data)
+            ]
+            for (run, expected) in zip(paramGroup.runs, expectedParams) {
+                let runParams = try run.tags[DDTestTags.testParameters].map { try decoder.decode(JSONGeneric.self, from: $0.utf8Data) }
+                #expect(runParams == expected)
+            }
         }
     }
 }

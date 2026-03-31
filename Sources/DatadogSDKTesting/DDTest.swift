@@ -149,13 +149,13 @@ extension Test {
     }
     
     static func withActiveTest<T>(named name: String, in suite: Suite, at start: Date? = nil,
-                               _ action: @Sendable (Self) async throws -> T) async rethrows -> T
+                               _ action: @Sendable (Test) async throws -> T) async rethrows -> T
     {
         let testStartTime = start ?? suite.configuration.clock.now
         return try await DDTestMonitor.tracer.withActiveSpan(name: "\(suite.testFramework).test",
                                                              attributes: attributes(test: name, in: suite),
                                                              startTime: testStartTime) { span in
-            let test = Self(name: name, suite: suite, span: span)
+            let test = createTest(name: name, suite: suite, span: span)
             let result = try await test.withActive {
                 try await action(test)
             }
@@ -165,13 +165,13 @@ extension Test {
     }
     
     static func withActiveTest<T>(named name: String, in suite: Suite, at start: Date? = nil,
-                               _ action: (Self) throws -> T) rethrows -> T
+                               _ action: (Test) throws -> T) rethrows -> T
     {
         let testStartTime = start ?? suite.configuration.clock.now
         return try DDTestMonitor.tracer.withActiveSpan(name: "\(suite.testFramework).test",
                                                        attributes: attributes(test: name, in: suite),
                                                        startTime: testStartTime) { span in
-            let test = Self(name: name, suite: suite, span: span)
+            let test = createTest(name: name, suite: suite, span: span)
             let result = try test.withActive {
                 try action(test)
             }
@@ -205,6 +205,14 @@ extension Test {
         }
         
         return attributes
+    }
+    
+    static func createTest(name: String, suite: Suite, span: SpanSdk) -> Test {
+        let test = Self(name: name, suite: suite, span: span)
+        test.set(source: suite.configuration.bundleFunctions,
+                 owners: suite.configuration.codeOwners,
+                 workspace: suite.configuration.workspacePath)
+        return test
     }
 }
 

@@ -34,7 +34,6 @@ jobs:
     needs: [test]
     runs-on: macos-26
     permissions:
-      contents: read
       id-token: write
     steps:
     - name: Checkout
@@ -47,9 +46,12 @@ jobs:
         policy: self.github.create-release.workflow-dispatch
     - name: Select Xcode 26.0
       run: sudo xcode-select --switch /Applications/Xcode_26.0.app
+    - name: Print git remote info
+      run: git remote -v
     - name: Build and upload XCFrameworks, create draft release
       env:
         GH_TOKEN: ${{ steps.octo-sts.outputs.token }}
+        GITHUB_TOKEN: ${{ steps.octo-sts.outputs.token }}
       run: make XC_LOG=archive version=${{ github.event.inputs.version }} github_release
     - name: Attach Xcode logs
       if: '!cancelled()'

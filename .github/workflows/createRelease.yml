@@ -17,14 +17,14 @@ jobs:
     runs-on: macos-26
     steps:
     - name: Checkout
-      uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
     - name: Select Xcode 26.0
       run: sudo xcode-select --switch /Applications/Xcode_26.0.app
     - name: Test
       run: make XC_LOG=tests IOS_SIMULATOR="iPhone 17" TVOS_SIMULATOR="Apple TV" tests
     - name: Attach Xcode logs
       if: '!cancelled()'
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
       with:
         name: xcode-tests-logs
         path: "*-tests.log"
@@ -37,7 +37,9 @@ jobs:
       id-token: write
     steps:
     - name: Checkout
-      uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        persist-credentials: false
     - name: Get GitHub token via dd-octo-sts
       uses: DataDog/dd-octo-sts-action@acaa02eee7e3bb0839e4272dacb37b8f3b58ba80 # v1.0.3
       id: octo-sts
@@ -46,16 +48,17 @@ jobs:
         policy: self.github.create-release.workflow-dispatch
     - name: Select Xcode 26.0
       run: sudo xcode-select --switch /Applications/Xcode_26.0.app
-    - name: Print git remote info
-      run: git remote -v
+    - name: Fix git repo url with obtained token
+      env:
+        GH_TOKEN: ${{ steps.octo-sts.outputs.token }}
+      run: git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
     - name: Build and upload XCFrameworks, create draft release
       env:
         GH_TOKEN: ${{ steps.octo-sts.outputs.token }}
-        GITHUB_TOKEN: ${{ steps.octo-sts.outputs.token }}
       run: make XC_LOG=archive version=${{ github.event.inputs.version }} github_release
     - name: Attach Xcode logs
       if: '!cancelled()'
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
       with:
         name: xcode-archive-logs
         path: "*-archive.log"
@@ -66,7 +69,7 @@ jobs:
     runs-on: macos-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
         ref: "${{ github.event.inputs.version }}"
     - name: Publish

@@ -12,15 +12,15 @@ jobs:
       fail-fast: false
       matrix:
         env:
-          - xcode: "Xcode_16.4"
-            os: "macos-15"
-            iossim: "iPhone 16"
-            tvossim: "Apple TV"
           - xcode: "Xcode_26.0"
             os: "macos-26"
             iossim: "iPhone 17"
             tvossim: "Apple TV"
           - xcode: "Xcode_26.2"
+            os: "macos-26"
+            iossim: "iPhone 17"
+            tvossim: "Apple TV"
+          - xcode: "Xcode_26.3"
             os: "macos-26"
             iossim: "iPhone 17"
             tvossim: "Apple TV"
@@ -45,15 +45,15 @@ jobs:
       fail-fast: false
       matrix:
         env:
-          - xcode: "Xcode_16.4"
-            os: "macos-15"
-            iossim: "iPhone 16"
-            tvossim: "Apple TV"
           - xcode: "Xcode_26.0"
             os: "macos-26"
             iossim: "iPhone 17"
             tvossim: "Apple TV"
           - xcode: "Xcode_26.2"
+            os: "macos-26"
+            iossim: "iPhone 17"
+            tvossim: "Apple TV"
+          - xcode: "Xcode_26.3"
             os: "macos-26"
             iossim: "iPhone 17"
             tvossim: "Apple TV"

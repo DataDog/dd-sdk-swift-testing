@@ -56,7 +56,7 @@ func startApp() {
     UIApplicationMain(CommandLine.argc,
                       CommandLine.unsafeArgv,
                       nil,
-                      nil)
+                      NSStringFromClass(AppDelegate.self))
 }
 #endif
 

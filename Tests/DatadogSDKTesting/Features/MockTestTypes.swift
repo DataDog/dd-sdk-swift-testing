@@ -150,7 +150,12 @@ enum Mocks {
             var localization: String = ""
         }
         
+#if compiler(>=6.3)
         weak let _session: Session!
+#else
+        weak var _session: Session!
+#endif
+        
         var session: any TestSession { _session }
         var testFrameworks: Set<String> { _state.value.testFrameworks }
         var suites: [String: Suite] { _state.value.suites }
@@ -212,8 +217,13 @@ enum Mocks {
             var localization: String = ""
             var unskippable: Bool = false
         }
-        
+
+#if compiler(>=6.3)
         weak let _module: Module!
+#else
+        weak var _module: Module!
+#endif
+        
         let testFramework: String
         
         var module: any TestModule { _module }
@@ -286,7 +296,13 @@ enum Mocks {
         }
         
         let name: String
+
+#if compiler(>=6.3)
         weak let suite: Suite!
+#else
+        weak var suite: Suite!
+#endif
+
         let _state: Synced<GroupInfo> = .init(.init())
         
         
@@ -391,8 +407,13 @@ enum Mocks {
             var error: TestError? = nil
             var errorStatus: ErrorSuppressionStatus = .normal
         }
-        
+
+#if compiler(>=6.3)
         weak let _suite: Suite?
+#else
+        weak var _suite: Suite?
+#endif
+        
         var suite: any TestSuite { _suite! }
         
         var error: TestError? { _state.value.error }

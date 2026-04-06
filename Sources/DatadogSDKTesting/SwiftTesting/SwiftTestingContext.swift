@@ -186,10 +186,9 @@ struct SwiftTestingRetryGroupContext: Sendable {
         let issues: [SwiftTestingIssue]
     }
     
-    enum Action {
+    enum EndAction {
         case skip(reason: String, location: SwiftTestingSourceLocation?)
         case fail
-        case none
     }
     
     let test: SwiftTestingTestContext
@@ -224,7 +223,7 @@ struct SwiftTestingRetryGroupContext: Sendable {
         test.observer
     }
     
-    var action: Action {
+    var endAction: EndAction? {
         guard !_cancelledByUser else { // special case. User cancelled, we can't recover with logic
             return .none
         }
@@ -339,7 +338,7 @@ struct SwiftTestingTestContext: Sendable {
     
     func withGroup(
         _ function: @Sendable (inout SwiftTestingRetryGroupContext) async -> Void
-    ) async -> SwiftTestingRetryGroupContext.Action {
+    ) async -> SwiftTestingRetryGroupContext.EndAction? {
         let (feature, config) = await observer.runGroupConfiguration(test: self)
         var skip: SwiftTestingRetryGroupContext.Skip = (nil, config.skipStatus)
         if let feature = feature, case .skip(let reason, _) = config {
@@ -351,7 +350,7 @@ struct SwiftTestingTestContext: Sendable {
         await observer.willStart(group: group)
         await function(&group)
         await observer.didFinish(group: group)
-        return group.action
+        return group.endAction
     }
 }
 

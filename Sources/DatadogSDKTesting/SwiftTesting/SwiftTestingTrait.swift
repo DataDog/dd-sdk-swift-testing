@@ -130,10 +130,10 @@ public struct DatadogSwiftTestingScopeProvider: TestScoping {
             } while group.info.retry.status.isRetry
         }
         switch action {
-        case .skip(reason: _, location: _):
+        case .some(.skip(reason: _, location: _)):
             // try Test.cancel(Comment(rawValue: reason), soruceLocation: location)
             break
-        case .fail:
+        case .some(.fail):
             Issue.record("\(run.suite).\(run.name) failed", sourceLocation: run.location.asSwift)
         case .none: break
         }

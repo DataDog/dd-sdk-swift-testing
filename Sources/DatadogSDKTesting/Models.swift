@@ -138,7 +138,7 @@ extension TestRun {
 }
 
 @objc(DDTestStatus)
-public enum TestStatus: Int {
+public enum TestStatus: Int, Sendable {
     case pass
     case fail
     case skip

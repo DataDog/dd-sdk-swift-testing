@@ -125,9 +125,11 @@ class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate {
             // Set suite status based on it's test groups.
             // Features will setup proper skip and fail strategies for the groups.
             suite.set(status: testSuite.testRun?.status ?? .pass)
+            context.features.testSuiteWillEnd(suite: suite)
             suite.end()
             state = context.back(from: suite)
             DDCrashes.setCurrent(spanData: context.module.toCrashData)
+            context.features.testSuiteDidEnd(suite: suite)
             log.debug("testSuiteDidFinish: \(testSuite.name)")
         default:
             log.print("testSuiteDidFinish: Bad observer state: \(state), expected: .suite or .container")

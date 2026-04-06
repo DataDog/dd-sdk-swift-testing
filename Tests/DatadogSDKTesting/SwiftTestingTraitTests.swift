@@ -89,6 +89,13 @@ func testFuncRegistration() async throws {
     #expect(Testing.Test.current?.ddSuite == "[\(URL(string: #file)!.deletingPathExtension().lastPathComponent)]")
 }
 
+#if compiler(>=6.3)
+@Test(.observerTester, .datadogTesting)
+func zzzzFuncCancel() async throws {
+    try Testing.Test.cancel(Comment(rawValue: Testing.Test.current!.ddName))
+}
+#endif
+
 private final class MockSwiftTestingObserver: SwiftTestingObserverType {
     nonisolated(unsafe) var isModuleEnded: Bool = false
     
@@ -200,18 +207,29 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
     
     func provideScope(for test: Testing.Test, testCase: Testing.Test.Case?, performing function: @Sendable () async throws -> Void) async throws {
         let issues: Synced<[String: Int]> = .init([:])
-        try await withKnownIssue(isIntermittent: true) {
-            try await function()
-        } matching: { issue in
-            if let err = issue.error as? SwiftTestingTraitTests.TestError {
-                issues.update { $0[err.name, default: 0] += 1 }
-                return true
+        let cancelled: Synced<[String: Bool]> = .init([:])
+        
+        do {
+            try await withKnownIssue(isIntermittent: true) {
+                try await function()
+            } matching: { issue in
+                if let err = issue.error as? SwiftTestingTraitTests.TestError {
+                    issues.update { $0[err.name, default: 0] += 1 }
+                    return true
+                }
+                if issue.comments.first?.rawValue.lowercased().contains("fail") ?? false {
+                    issues.update { $0[issue.comments.first!.rawValue, default: 0] += 1 }
+                    return true
+                }
+                return false
             }
-            if issue.comments.first?.rawValue.lowercased().contains("fail") ?? false {
-                issues.update { $0[issue.comments.first!.rawValue, default: 0] += 1 }
-                return true
+        } catch {
+            if error.isSwiftTestingSkip {
+                let comment = try #require(Mirror(reflecting: error).descendant("comment") as? Comment).rawValue
+                cancelled.update { $0[comment] = true }
+            } else {
+                throw error
             }
-            return false
         }
         
         let suiteProvider = try #require(DatadogSwiftTestingTrait.sharedSuiteProvider as? SwiftTestingSuiteProvider)
@@ -227,21 +245,23 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
         
         let statuses = try #require(session.modules[test.ddModule]?.suites[test.ddSuite])
         let errors = issues.value
+        let cancels = cancelled.value
         
-        let expected: [String: (status: [TestStatus], errors: Int?)] = [
-            "scopingTraitIsApplied": ([.pass], nil),
-            "testSkip": ([.skip], nil),
-            "testRetryIgnore": (Array(repeating: .fail, count: 5), nil),
-            "testRetryFail": (Array(repeating: .fail, count: 5), 1),
-            "testRetryErrorIgnore": (Array(repeating: .fail, count: 5), nil),
-            "testRetryErrorFail": (Array(repeating: .fail, count: 5), 1),
-            "testPass": ([.pass], nil),
-            "testFail": ([.fail], 1),
-            "testError": ([.fail], 1),
-            "testErrorIgnore": ([.fail], nil),
-            "testFuncRetryErrorFail": (Array(repeating: .fail, count: 5), 1),
-            "testFuncRegistration": ([.pass], nil),
-            "testParameterized(p1:p2:)": (Array(repeating: .pass, count: 3), nil)
+        let expected: [String: (status: [TestStatus], errors: Int?, cancelled: Bool?)] = [
+            "scopingTraitIsApplied": ([.pass], nil, nil),
+            "testSkip": ([.skip], nil, nil),
+            "testRetryIgnore": (Array(repeating: .fail, count: 5), nil, nil),
+            "testRetryFail": (Array(repeating: .fail, count: 5), 1, nil),
+            "testRetryErrorIgnore": (Array(repeating: .fail, count: 5), nil, nil),
+            "testRetryErrorFail": (Array(repeating: .fail, count: 5), 1, nil),
+            "testPass": ([.pass], nil, nil),
+            "testFail": ([.fail], 1, nil),
+            "testError": ([.fail], 1, nil),
+            "testErrorIgnore": ([.fail], nil, nil),
+            "testFuncRetryErrorFail": (Array(repeating: .fail, count: 5), 1, nil),
+            "testFuncRegistration": ([.pass], nil, nil),
+            "testParameterized(p1:p2:)": (Array(repeating: .pass, count: 3), nil, nil),
+            "zzzzFuncCancel": ([.skip], nil, true)
         ]
         
         // If we have a suite we should check for all tests.
@@ -252,6 +272,7 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
             let status = try #require(statuses[test]).runs.map { $0.status }
             #expect(status == expect.status)
             #expect(errors[test] == expect.errors)
+            #expect(cancels[test] == expect.cancelled)
         }
         
         let decoder = JSONDecoder()

@@ -5,6 +5,7 @@
  */
 
 import Foundation
+import Testing
 
 protocol SwiftTestingTestInfoType: Sendable {
     var name: String { get }
@@ -45,6 +46,16 @@ enum SwiftTestingTestStatus: Sendable {
         case catched(error: any Error, suppressed: Bool, issues: [SwiftTestingIssue])
         case issues(Issues)
         
+        var issues: Issues {
+            switch self {
+            case .issues(let issues): return issues
+            case .catched(error: _, suppressed: true, issues: let issues):
+                return .suppressed(issues)
+            case .catched(error: _, suppressed: false, issues: let issues):
+                return .unsuppressed(issues)
+            }
+        }
+        
         mutating func add(issue: SwiftTestingIssue) -> Bool {
             switch self {
             case .catched(error: let err, suppressed: let sup, issues: var issues):
@@ -80,12 +91,13 @@ enum SwiftTestingTestStatus: Sendable {
     }
     
     case skipped(feature: FeatureId, reason: String, issues: Issues?)
+    case cancelled(error: any Error, issues: Issues?)
     case failed(Errors)
     case passed
     
     var testStatus: TestStatus {
         switch self {
-        case .skipped: return .skip
+        case .skipped, .cancelled: return .skip
         case .failed: return .fail
         case .passed: return .pass
         }
@@ -100,7 +112,7 @@ enum SwiftTestingTestStatus: Sendable {
     
     var isSkipped: Bool {
         switch self {
-        case .skipped: return true
+        case .skipped, .cancelled: return true
         default: return false
         }
     }
@@ -108,7 +120,9 @@ enum SwiftTestingTestStatus: Sendable {
     var errors: Errors? {
         switch self {
         case .failed(let errors): return errors
-        case .skipped(feature: _, reason: _, issues: let issues): return issues.map { .issues($0) }
+        case .skipped(feature: _, reason: _, issues: let issues),
+             .cancelled(error: _, issues: let issues):
+            return issues.map { .issues($0) }
         default: return nil
         }
     }
@@ -118,6 +132,7 @@ enum SwiftTestingTestStatus: Sendable {
         case .failed(.catched(error: _, suppressed: false, issues: _)): return true
         case .failed(.issues(.unsuppressed(_))): return true
         case .skipped(feature: _, reason: _, issues: .unsuppressed(_)): return true
+        case .cancelled(error: _, issues: .unsuppressed(_)): return true
         default: return false
         }
     }
@@ -130,6 +145,8 @@ enum SwiftTestingTestStatus: Sendable {
             return .failed(.issues(.unsuppressed(issues)))
         case .skipped(feature: let feat, reason: let reas, issues: .suppressed(let issues)):
             return .skipped(feature: feat, reason: reas, issues: .unsuppressed(issues))
+        case .cancelled(error: let error, issues: .suppressed(let issues)):
+            return .cancelled(error: error, issues: .unsuppressed(issues))
         default: return self
         }
     }
@@ -188,16 +205,16 @@ struct SwiftTestingRetryGroupContext: Sendable {
     
     enum EndAction {
         case skip(reason: String, location: SwiftTestingSourceLocation?)
+        case cancel(error: any Error)
         case fail
     }
     
     let test: SwiftTestingTestContext
-    let skipStrategy: RetryGroupSkipStrategy
     let successStrategy: RetryGroupSuccessStrategy
     
+    private(set) var skipStrategy: RetryGroupSkipStrategy
     private(set) var info: TestRunInfoEnd
     private(set) var executions: [(run: SwiftTestingTestRunContext, status: SwiftTestingTestStatus)]
-    private var _cancelledByUser: Bool = false
     
     init(test: SwiftTestingTestContext, skip: Skip,
          skipStrategy: RetryGroupSkipStrategy, successStrategy: RetryGroupSuccessStrategy)
@@ -224,40 +241,42 @@ struct SwiftTestingRetryGroupContext: Sendable {
     }
     
     var endAction: EndAction? {
-        guard !_cancelledByUser else { // special case. User cancelled, we can't recover with logic
-            return .none
-        }
-        guard !_isSkipped else {
+        guard !isSkipped else {
             // Find the reason to skip
             switch executions.last(where: { $0.status.isSkipped })?.status {
+            case .cancelled(error: let error, issues: _):
+                return .cancel(error: error)
             case .skipped(feature: _, reason: let reason, issues: _):
                 return .skip(reason: reason, location: nil)
             default: return .skip(reason: "unknown skip reason", location: nil)
             }
         }
-        guard !_isSucceeded else {
+        guard !isSucceeded else {
             return .none
         }
-        // Check should we fail this group or it already failed by some run.
+        // Check should we fail this group or it is already failed by some run.
         return executions.last { $0.status.errorsWereRecorded } == nil ? .fail : .none
     }
     
-    private var _isSkipped: Bool {
+    var isSkipped: Bool {
         switch skipStrategy {
-        case .atLeastOneSkipped: return executions.first { $0.status.isSkipped } != nil
+        case .atLeastOneSkipped: return executions.last { $0.status.isSkipped } != nil
         case .allSkipped: return executions.allSatisfy { $0.status.isSkipped }
         }
     }
     
-    private var _isSucceeded: Bool {
+    var isSucceeded: Bool {
         switch successStrategy {
         case .alwaysSucceeded: return true
-        case .atLeastOneSucceeded: return executions.first { !$0.status.isFailed } != nil
+        case .atLeastOneSucceeded: return executions.last { !$0.status.isFailed } != nil
         case .atMostOneFailed: return executions.filter { $0.status.isFailed }.count <= 1
         case .allSucceeded: return executions.filter { $0.status.isFailed }.isEmpty
         }
     }
-        
+    
+    var status: TestStatus {
+        isSkipped ? .skip : isSucceeded ? .pass : .fail
+    }
     
     mutating func with(
         run: some SwiftTestingTestRunInfoType,
@@ -281,9 +300,10 @@ struct SwiftTestingRetryGroupContext: Sendable {
             return (context, retry, status)
         }
         // We can't end after Test.cancel in Testing so we ensure that retries are stopped
-        if case .skipped(feature: let feature, reason: _, issues: _) = status, feature == .notFeature {
+        if case .cancelled = status {
             info.retry = (.notFeature, .end(errors: retry.status.errorsStatus))
-            _cancelledByUser = true
+            // enforce skip by changing strategy
+            skipStrategy = .atLeastOneSkipped
         } else {
             info.retry = retry
         }
@@ -317,12 +337,14 @@ struct SwiftTestingRetryGroupContext: Sendable {
     }
 }
 
-struct SwiftTestingTestContext: Sendable {
+final class SwiftTestingTestContext: Sendable {
     typealias GroupResult = (status: SwiftTestingTestStatus,
                              executions: (total: Int, failed: Int))
     
     let suite: SwiftTestingSuiteContext
     let info: any SwiftTestingTestInfoType
+    // It's ok to be unsafe. We update it once and it's a serial access
+    nonisolated(unsafe) var status: TestStatus
     
     var configuration: SessionConfig {
         suite.configuration
@@ -330,6 +352,12 @@ struct SwiftTestingTestContext: Sendable {
     
     var observer: any SwiftTestingObserverType {
         suite.observer
+    }
+    
+    init(suite: SwiftTestingSuiteContext, info: any SwiftTestingTestInfoType) {
+        self.suite = suite
+        self.info = info
+        self.status = .pass
     }
     
     func withTestRun<T>(named name: String, _ action: @Sendable (any TestRun) async throws -> T) async rethrows -> T {
@@ -350,26 +378,34 @@ struct SwiftTestingTestContext: Sendable {
         await observer.willStart(group: group)
         await function(&group)
         await observer.didFinish(group: group)
+        status = group.status
         return group.endAction
     }
 }
 
 struct SwiftTestingSuiteContext: Sendable {
     final actor State {
-        private var _tests: Set<String>
+        private var _statuses: [String: TestStatus]
+        private var _left: Set<String>
         
-        var isEnded: Bool { _tests.isEmpty }
+        var isEnded: Bool { _left.isEmpty }
         
         init(tests: Set<String>) {
-            self._tests = tests
+            self._left = tests
+            self._statuses = [:]
         }
         
-        func end(test: some SwiftTestingTestInfoType) {
-            _tests.remove(test.name)
+        var statuses: [String: TestStatus]? {
+            isEnded ? _statuses : nil
+        }
+        
+        func end(test: some SwiftTestingTestInfoType, status: TestStatus) {
+            _left.remove(test.name)
+            _statuses[test.name] = status
         }
     }
     
-    private let _state: State?
+    private let _state: State
     private let _suite: any TestSuite & TestRunProvider
     
     var suite: any TestSuite { _suite }
@@ -384,7 +420,7 @@ struct SwiftTestingSuiteContext: Sendable {
          observer: any SwiftTestingObserverType)
     {
         self.init(suite: suite, configuration: configuration,
-                  testsCount: testsCount, state: nil,
+                  testsCount: testsCount, state: .init(tests: []),
                   info: info, observer: observer)
     }
    
@@ -401,7 +437,7 @@ struct SwiftTestingSuiteContext: Sendable {
     
     private init(suite: any TestSuite & TestRunProvider,
                  configuration: SessionConfig,
-                 testsCount: Int, state: State?,
+                 testsCount: Int, state: State,
                  info: any SwiftTestingTestInfoType,
                  observer: any SwiftTestingObserverType)
     {
@@ -418,15 +454,17 @@ struct SwiftTestingSuiteContext: Sendable {
     }
     
     func end() async -> Bool {
-        guard let state = _state else { // Normal suite
-            _suite.end()
-            return true
-        }
-        // Virtual suite
-        guard await state.isEnded else { // we have more tests
+        guard let statuses = await _state.statuses else {
+            // we have more tests to run
             return false
         }
         // no more tests. we can end
+        if statuses.values.allSatisfy({ $0 == .skip }) {
+            _suite.set(skipped: nil)
+        } else if statuses.values.contains(where: { $0 == .fail }) {
+            _suite.set(failed: nil)
+        }
+        await observer.willFinish(suite: self)
         _suite.end()
         return true
     }
@@ -436,12 +474,20 @@ struct SwiftTestingSuiteContext: Sendable {
     {
         let context = SwiftTestingTestContext(suite: self, info: test)
         await observer.willStart(test: context)
-        try await doThrow {
+        var catched: (any Error)? = nil
+        do {
             try await function(context)
-        } finally: {
-            await observer.didFinish(test: context)
-            await _state?.end(test: test)
+        } catch {
+            catched = error
+            // Fail it if we got an error on top of the test (from some scope provider)
+            if context.status == .pass {
+                context.status = error.isSwiftTestingSkip ? .skip : .fail
+            }
         }
+        await observer.didFinish(test: context)
+        await _state.end(test: test, status: context.status)
+        // rethrow error
+        if let catched { throw catched }
     }
 }
 

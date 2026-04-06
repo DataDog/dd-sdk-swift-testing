@@ -282,7 +282,7 @@ final class DDXCTestRetryGroup: XCTest, DDXCTestRetryGroupType {
         }
         groupRun.start()
         while let xcTest = currentTest {
-            let test = context.suite.withActiveTest(named: xcTest.testId.test) { test in
+            context.suite.withActiveTest(named: xcTest.testId.test) { test in
                 let xcTestRun = DDXCTestCaseRetryRun(xcTest: xcTest, test: test, group: self)
                 xcTest.setValue(xcTestRun, forKey: "testRun")
                 groupRun.addTestRun(xcTestRun)
@@ -293,7 +293,6 @@ final class DDXCTestRetryGroup: XCTest, DDXCTestRetryGroupType {
                 } else {
                     xcTest.perform(xcTestRun)
                 }
-                return test
             }
             // Call didFinish callback
             observer.testCaseRetryDidFinish(xcTest)

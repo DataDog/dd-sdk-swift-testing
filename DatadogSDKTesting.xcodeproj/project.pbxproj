@@ -54,11 +54,12 @@
 		A7675D492F631DF400A05B5F /* SwiftTestingTrait.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7675D482F631DDB00A05B5F /* SwiftTestingTrait.swift */; };
 		A7675D4B2F64742C00A05B5F /* SwiftTestingContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7675D4A2F64742500A05B5F /* SwiftTestingContext.swift */; };
 		A7675D4D2F64847300A05B5F /* SwiftTestingTraitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7675D4C2F64846500A05B5F /* SwiftTestingTraitTests.swift */; };
-		A7675D722F6CA00000A05B5F /* SwiftTestRunParametersParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7675D712F6CA00000A05B5F /* SwiftTestRunParametersParserTests.swift */; };
 		A7675D4F2F6980D600A05B5F /* SwiftTestingObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7675D4E2F6980D000A05B5F /* SwiftTestingObserver.swift */; };
 		A7675D682F6B207F00A05B5F /* DDTags.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA07125231F4700ED8AEF /* DDTags.swift */; };
 		A7675D6C2F6C58C100A05B5F /* SessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7675D6B2F6C58BB00A05B5F /* SessionManager.swift */; };
 		A7675D6E2F6C70C100A05B5F /* Task+Sync.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7675D6D2F6C70BD00A05B5F /* Task+Sync.swift */; };
+		A7675D722F6CA00000A05B5F /* SwiftTestRunParametersParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7675D712F6CA00000A05B5F /* SwiftTestRunParametersParserTests.swift */; };
+		A7675D742F6CA00000A05B5F /* SessionManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7675D732F6CA00000A05B5F /* SessionManagerTests.swift */; };
 		A76F0F992E2A9F0D009ACD06 /* TestImpactAnalysisTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A76F0F982E2A9F02009ACD06 /* TestImpactAnalysisTests.swift */; };
 		A77C122F2D89CFC2009C2BA1 /* SDKCapabilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77C122E2D89CFC2009C2BA1 /* SDKCapabilities.swift */; };
 		A77C12312D8C976B009C2BA1 /* TestManagementService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77C12302D8C976B009C2BA1 /* TestManagementService.swift */; };
@@ -197,7 +198,6 @@
 		A7FC266C2BA1F70200067E26 /* FrameworkLoadHandlerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1AD0757252F01F0003705C1 /* FrameworkLoadHandlerTests.swift */; };
 		A7FC266D2BA1F70200067E26 /* DDTracerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1AD075C252F206D003705C1 /* DDTracerTests.swift */; };
 		A7FC266E2BA1F70200067E26 /* DDXCTestObserverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1AD0761252F2F7E003705C1 /* DDXCTestObserverTests.swift */; };
-		A7675D742F6CA00000A05B5F /* SessionManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7675D732F6CA00000A05B5F /* SessionManagerTests.swift */; };
 		A7FC266F2BA1F7FA00067E26 /* SpanSanitizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EBBD4E27F200A50059BC3E /* SpanSanitizerTests.swift */; };
 		A7FC26702BA1F7FA00067E26 /* SpansExporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EADD27EB3B9E0057D747 /* SpansExporterTests.swift */; };
 		A7FC26712BA1F80000067E26 /* DateFormattingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAE327EB3B9E0057D747 /* DateFormattingTests.swift */; };
@@ -232,14 +232,14 @@
 		A7FC26B92BA20C8F00067E26 /* FileTraceExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F42083264D6B7500233B75 /* FileTraceExporter.swift */; };
 		A7FC26BA2BA20C8F00067E26 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1224A43264ABCCE00305968 /* main.swift */; };
 		A7FC26BB2BA20C8F00067E26 /* IntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1224A7D264AC06900305968 /* IntegrationTests.swift */; };
-		A7FC26E12BA321AB00067E26 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7FC26E02BA321AB00067E26 /* AppDelegate.swift */; };
-		A7FC26E32BA321AB00067E26 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7FC26E22BA321AB00067E26 /* SceneDelegate.swift */; };
 		A7FC26CB2BA20D3700067E26 /* IntegrationTestsRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1224A5D264ABCD000305968 /* IntegrationTestsRunner.swift */; };
 		A7FC26CC2BA20D3700067E26 /* UIIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1193F8C272C24F900E4154E /* UIIntegrationTests.swift */; };
 		A7FC26CF2BA214AC00067E26 /* SimpleSpanData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7FC26CE2BA214AC00067E26 /* SimpleSpanData.swift */; };
 		A7FC26D12BA214CE00067E26 /* SimpleSpanData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7FC26D02BA214CE00067E26 /* SimpleSpanData.swift */; };
 		A7FC26DE2BA21B7D00067E26 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */; };
 		A7FC26DF2BA21B7D00067E26 /* DatadogSDKTesting.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		A7FC26E12BA321AB00067E26 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7FC26E02BA321AB00067E26 /* AppDelegate.swift */; };
+		A7FC26E32BA321AB00067E26 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7FC26E22BA321AB00067E26 /* SceneDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -387,10 +387,11 @@
 		A7675D482F631DDB00A05B5F /* SwiftTestingTrait.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftTestingTrait.swift; sourceTree = "<group>"; };
 		A7675D4A2F64742500A05B5F /* SwiftTestingContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftTestingContext.swift; sourceTree = "<group>"; };
 		A7675D4C2F64846500A05B5F /* SwiftTestingTraitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftTestingTraitTests.swift; sourceTree = "<group>"; };
-		A7675D712F6CA00000A05B5F /* SwiftTestRunParametersParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftTestRunParametersParserTests.swift; sourceTree = "<group>"; };
 		A7675D4E2F6980D000A05B5F /* SwiftTestingObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftTestingObserver.swift; sourceTree = "<group>"; };
 		A7675D6B2F6C58BB00A05B5F /* SessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionManager.swift; sourceTree = "<group>"; };
 		A7675D6D2F6C70BD00A05B5F /* Task+Sync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Task+Sync.swift"; sourceTree = "<group>"; };
+		A7675D712F6CA00000A05B5F /* SwiftTestRunParametersParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftTestRunParametersParserTests.swift; sourceTree = "<group>"; };
+		A7675D732F6CA00000A05B5F /* SessionManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionManagerTests.swift; sourceTree = "<group>"; };
 		A76F0F982E2A9F02009ACD06 /* TestImpactAnalysisTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestImpactAnalysisTests.swift; sourceTree = "<group>"; };
 		A77C122E2D89CFC2009C2BA1 /* SDKCapabilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SDKCapabilities.swift; sourceTree = "<group>"; };
 		A77C12302D8C976B009C2BA1 /* TestManagementService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TestManagementService.swift; sourceTree = "<group>"; };
@@ -552,7 +553,6 @@
 		E1AD0757252F01F0003705C1 /* FrameworkLoadHandlerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FrameworkLoadHandlerTests.swift; sourceTree = "<group>"; };
 		E1AD075C252F206D003705C1 /* DDTracerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTracerTests.swift; sourceTree = "<group>"; };
 		E1AD0761252F2F7E003705C1 /* DDXCTestObserverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDXCTestObserverTests.swift; sourceTree = "<group>"; };
-		A7675D732F6CA00000A05B5F /* SessionManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionManagerTests.swift; sourceTree = "<group>"; };
 		E1AD07A1252F5B02003705C1 /* SwiftExtensionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftExtensionsTests.swift; sourceTree = "<group>"; };
 		E1AD07A8252F5CB8003705C1 /* InternalError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InternalError.swift; sourceTree = "<group>"; };
 		E1BB54AC25401E85007C2D93 /* StdoutCaptureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StdoutCaptureTests.swift; sourceTree = "<group>"; };
@@ -2583,8 +2583,8 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
-				MACOSX_DEPLOYMENT_TARGET = 11.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				MARKETING_VERSION = 2.6.7;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -2593,7 +2593,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,6";
-				TVOS_DEPLOYMENT_TARGET = 15.6;
+				TVOS_DEPLOYMENT_TARGET = 15.0;
 				USE_HEADERMAP = NO;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
@@ -2655,9 +2655,9 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LLVM_LTO = YES_THIN;
-				MACOSX_DEPLOYMENT_TARGET = 11.5;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				MARKETING_VERSION = 2.6.7;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -2665,7 +2665,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,6";
-				TVOS_DEPLOYMENT_TARGET = 15.6;
+				TVOS_DEPLOYMENT_TARGET = 15.0;
 				USE_HEADERMAP = NO;
 				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";

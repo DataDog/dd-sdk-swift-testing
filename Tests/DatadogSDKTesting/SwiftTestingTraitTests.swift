@@ -93,18 +93,22 @@ private final class MockSwiftTestingObserver: SwiftTestingObserverType {
     nonisolated(unsafe) var isModuleEnded: Bool = false
     
     func willStart(session: any TestSession, with config: SessionConfig) async {}
-    
+
+    func willFinish(session: any TestSession, with config: SessionConfig) async {}
+
     func didFinish(session: any TestSession, with config: SessionConfig) async {
         // Cleanup
         DatadogSwiftTestingTrait.sharedSuiteProvider = nil
     }
     
-    func willStart(module: any TestModule) async {}
-    
-    func didFinish(module: any TestModule) async {
+    func willStart(module: any TestModule, with configuration: SessionConfig) async {}
+
+    func willFinish(module: any TestModule, with configuration: SessionConfig) async {}
+
+    func didFinish(module: any TestModule, with configuration: SessionConfig) async {
         isModuleEnded = true
     }
-    
+
     func willStart(suite: borrowing SwiftTestingSuiteContext) async {
         let session = suite.suite.session as! Mocks.Session
         let module = suite.suite.module as! Mocks.Module
@@ -112,17 +116,25 @@ private final class MockSwiftTestingObserver: SwiftTestingObserverType {
         module.add(suite: suite.suite as! Mocks.Suite)
     }
 
-    func didFinish(suite: borrowing SwiftTestingSuiteContext) async {}
+    func willFinish(suite: borrowing SwiftTestingSuiteContext) async {}
+
+    func didFinish(suite: borrowing SwiftTestingSuiteContext, active: borrowing SwiftTestingSuiteContext?) async {}
 
     func willStart(test: borrowing SwiftTestingTestContext) async {}
 
     func didFinish(test: borrowing SwiftTestingTestContext) async {}
 
-    func runGroupConfiguration(test: borrowing SwiftTestingTestContext) async -> RetryGroupConfiguration {
+    func runGroupConfiguration(test: borrowing SwiftTestingTestContext) async -> (feature: FeatureId?, configuration: RetryGroupConfiguration) {
         if test.info.name.lowercased().contains("skip") {
-            return .skip(reason: "skip_test", configuration: .init(skipStatus: .init(canBeSkipped: true, markedUnskippable: false)))
+            return ("skip_test", .skip(reason: "skip_test",
+                                       configuration: .init(skipStatus: .init(canBeSkipped: true,
+                                                                              markedUnskippable: false))))
         }
-        return .retry(.init(skipStatus: .init(canBeSkipped: false, markedUnskippable: false)))
+        if test.info.name.lowercased().contains("ignore") {
+            return ("ignore_test", .retry(.init(skipStatus: .init(canBeSkipped: false, markedUnskippable: false),
+                                                successStrategy: .alwaysSucceeded)))
+        }
+        return (nil, .retry(.init(skipStatus: .init(canBeSkipped: false, markedUnskippable: false))))
     }
 
     func willStart(group: borrowing SwiftTestingRetryGroupContext) async {
@@ -134,13 +146,13 @@ private final class MockSwiftTestingObserver: SwiftTestingObserverType {
 
     func didFinish(group: borrowing SwiftTestingRetryGroupContext) async {}
 
-    func willStart(testRun test: borrowing SwiftTestingTestRunContext) async {
-        let suite = test.test.suite as! Mocks.Suite
-        let group = suite.tests[test.test.name]!
-        group.add(run: test.test as! Mocks.Test)
+    func willStart(testRun test: borrowing SwiftTestingTestRunContext, with info: TestRunInfoStart) async {
+        let suite = test.test.suite.suite as! Mocks.Suite
+        let group = suite.tests[test.test.info.name]!
+        group.add(run: test.testRun as! Mocks.Test)
     }
 
-    func shouldSuppressError(for testRun: borrowing SwiftTestingTestRunContext) -> Bool {
+    func shouldSuppressError(for testRun: borrowing SwiftTestingTestRunContext, with info: TestRunInfoStart) -> Bool {
         let name = testRun.info.name.lowercased()
         if name.contains("ignore") || name.contains("retry") {
             return true
@@ -148,19 +160,21 @@ private final class MockSwiftTestingObserver: SwiftTestingObserverType {
         return false
     }
 
-    func willFinish(testRun test: borrowing SwiftTestingTestRunContext, with status: SwiftTestingTestStatus) async -> SwiftTestingTestRunRetry {
-        let suite = test.test.suite as! Mocks.Suite
-        let group = suite.tests[test.test.name]!
+    func willFinish(testRun test: borrowing SwiftTestingTestRunContext,
+                    withStatus status: SwiftTestingTestStatus,
+                    andInfo info: TestRunInfoEnd) async -> (feature: FeatureId?, status: RetryStatus) {
+        let suite = test.test.suite.suite as! Mocks.Suite
+        let group = suite.tests[test.test.info.name]!
         let count = group.runs.count
         let name = test.info.name.lowercased()
         let ignore: RetryStatus.ErrorsStatus = name.contains("ignore") ? .suppressed(reason: "suppress_test") : .unsuppressed
         guard name.contains("retry") else {
-            return .retry(.end(errors: ignore))
+            return (nil, .end(errors: ignore))
         }
-        return count < 5 ? .retry(.retry(reason: "retry_test", errors: .suppressed(reason: "retry_test"))) : .retry(.end(errors: ignore))
+        return count < 5 ? ("retry", .retry(reason: "retry_test", errors: .suppressed(reason: "retry_test"))) : (nil, .end(errors: ignore))
     }
 
-    func didFinish(testRun test: borrowing SwiftTestingTestRunContext) async {}
+    func didFinish(testRun test: borrowing SwiftTestingTestRunContext, with info: TestRunInfoEnd) async {}
 }
 
 private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
@@ -190,29 +204,11 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
             try await function()
         } matching: { issue in
             if let err = issue.error as? SwiftTestingTraitTests.TestError {
-                issues.update { $0.get(key: err.name, or: 0) { $0 += 1 } }
-                return true
-            } else if let err = issue.error as? DatadogSwiftTestingTrait.TestIssue {
-                let test: String
-                if let err = err.error as? SwiftTestingTraitTests.TestError {
-                    test = err.name
-                } else {
-                    test = err.comments.first!.rawValue
-                }
-                issues.update { $0.get(key: test, or: 0) { $0 += 1 } }
-                return true
-            } else if let err = issue.error as? DatadogSwiftTestingTrait.TestIssues {
-                let test: String
-                if let err = err.issues.first!.error as? SwiftTestingTraitTests.TestError {
-                    test = err.name
-                } else {
-                    test = err.issues.first!.comments.first!.rawValue
-                }
-                issues.update { $0.get(key: test, or: 0) { $0 += 1 } }
+                issues.update { $0[err.name, default: 0] += 1 }
                 return true
             }
             if issue.comments.first?.rawValue.lowercased().contains("fail") ?? false {
-                issues.update { $0.get(key: issue.comments.first!.rawValue, or: 0) { $0 += 1 } }
+                issues.update { $0[issue.comments.first!.rawValue, default: 0] += 1 }
                 return true
             }
             return false
@@ -232,20 +228,20 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
         let statuses = try #require(session.modules[test.ddModule]?.suites[test.ddSuite])
         let errors = issues.value
         
-        let expected: [String: (status: [SwiftTestingTestStatus], errors: Int?)] = [
-            "scopingTraitIsApplied": ([.passed], nil),
-            "testSkip": ([.skipped(reason: "skip_test")], nil),
-            "testRetryIgnore": (Array(repeating: .failed, count: 5), nil),
-            "testRetryFail": (Array(repeating: .failed, count: 5), 1),
-            "testRetryErrorIgnore": (Array(repeating: .failed, count: 5), nil),
-            "testRetryErrorFail": (Array(repeating: .failed, count: 5), 1),
-            "testPass": ([.passed], nil),
-            "testFail": ([.failed], 1),
-            "testError": ([.failed], 1),
-            "testErrorIgnore": ([.failed], nil),
-            "testFuncRetryErrorFail": (Array(repeating: .failed, count: 5), 1),
-            "testFuncRegistration": ([.passed], nil),
-            "testParameterized(p1:p2:)": (Array(repeating: .passed, count: 3), nil)
+        let expected: [String: (status: [TestStatus], errors: Int?)] = [
+            "scopingTraitIsApplied": ([.pass], nil),
+            "testSkip": ([.skip], nil),
+            "testRetryIgnore": (Array(repeating: .fail, count: 5), nil),
+            "testRetryFail": (Array(repeating: .fail, count: 5), 1),
+            "testRetryErrorIgnore": (Array(repeating: .fail, count: 5), nil),
+            "testRetryErrorFail": (Array(repeating: .fail, count: 5), 1),
+            "testPass": ([.pass], nil),
+            "testFail": ([.fail], 1),
+            "testError": ([.fail], 1),
+            "testErrorIgnore": ([.fail], nil),
+            "testFuncRetryErrorFail": (Array(repeating: .fail, count: 5), 1),
+            "testFuncRegistration": ([.pass], nil),
+            "testParameterized(p1:p2:)": (Array(repeating: .pass, count: 3), nil)
         ]
         
         // If we have a suite we should check for all tests.
@@ -254,7 +250,7 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
         for test in testsList {
             let expect = try #require(expected[test])
             let status = try #require(statuses[test]).runs.map { $0.status }
-            #expect(status == expect.status.map { $0.testStatus })
+            #expect(status == expect.status)
             #expect(errors[test] == expect.errors)
         }
         

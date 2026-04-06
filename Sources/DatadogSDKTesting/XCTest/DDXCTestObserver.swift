@@ -205,9 +205,6 @@ class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate {
         let test = testRun.ddTest
         test.addBenchmarkTagsIfNeeded(from: testCase)
         test.set(status: testCase.testRun?.status ?? .fail)
-        
-        // Switch state back
-        state = .group
         log.debug("testCaseDidFinish: \(testCase.name)")
     }
     
@@ -274,6 +271,30 @@ class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate {
             log.debug("will retry test \(testRun.ddTest.name), reason: \(reason)")
             testRun.group.retry()
         }
+    }
+    
+    func testCaseRetryDidFinish(_ testCase: XCTestCase) {
+        guard case .test = state else {
+            log.print("testCaseRetryDidFinish: Bad observer state: \(state), expected: .test")
+            return
+        }
+        guard let testRun = testCase.testRun as? DDXCTestCaseRetryRunType else {
+            log.print("testCaseRetryDidFinish: Unknown test run type: \(type(of: testCase.testRun)) for \(testCase)")
+            return
+        }
+        guard let groupRun = testRun.group.groupRun else {
+            log.print("testCaseRetryDidFinish: Bad observer state. Group run in nil")
+            return
+        }
+        // Run end hook. We can't run it in testCaseDidFinish because test isn't ended yet
+        let info = TestRunInfoEnd(skip: testRun.context.skip,
+                                  retry: testRun.context.retry,
+                                  executions: (total: groupRun.executionCount,
+                                               failed: groupRun.failedExecutionCount))
+        testRun.context.features.testDidFinish(test: testRun.ddTest, info: info)
+        // Switch state back
+        state = .group
+        log.debug("testCaseRetryDidFinish: \(testCase.name)")
     }
     
     func testCaseRetry(_ testCase: XCTestCase, willRecord issue: XCTIssue) {

@@ -345,13 +345,24 @@ extension RetryStatus {
 
 
 struct TestRunInfo<RetryInfo> {
-    let skip: (by: (feature: FeatureId, reason: String)?, status: SkipStatus)
-    let retry: RetryInfo
-    let executions: (total: Int, failed: Int)
+    var skip: (by: (feature: FeatureId, reason: String)?, status: SkipStatus)
+    var retry: RetryInfo
+    var executions: (total: Int, failed: Int)
 }
 
 typealias TestRunInfoStart = TestRunInfo<(feature: FeatureId, reason: String, errors: RetryStatus.ErrorsStatus)?>
 typealias TestRunInfoEnd = TestRunInfo<(feature: FeatureId?, status: RetryStatus)>
+
+extension TestRunInfoEnd {
+    var toStart: TestRunInfoStart {
+        let retryStart = retry.feature.flatMap { id in
+            retry.status.retryReason.map { (id, $0) }
+        }.map {
+            (feature: $0, reason: $1, errors: retry.status.errorsStatus)
+        }
+        return .init(skip: skip, retry: retryStart, executions: executions)
+    }
+}
 
 // Default hooks implementation
 extension TestHooksFeature {

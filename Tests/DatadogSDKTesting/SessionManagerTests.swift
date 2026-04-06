@@ -166,6 +166,8 @@ private final class MockObserver: TestSessionManagerObserver, @unchecked Sendabl
         }
     }
 
+    func willFinish(session: any TestSession, with config: SessionConfig) async {}
+
     func didFinish(session: any TestSession, with config: SessionConfig) async {
         _state.update {
             $0.didFinishCount += 1

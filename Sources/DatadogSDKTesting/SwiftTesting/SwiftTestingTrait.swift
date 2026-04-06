@@ -196,43 +196,6 @@ extension DatadogSwiftTestingScopeProvider {
     }
 }
 
-extension DatadogSwiftTestingTrait {
-    public struct TestIssue: Error, Sendable {
-        public let kind: Issue.Kind
-        public let comments: [Comment]
-        public let error: (any Error)?
-        public let sourceLocation: SourceLocation?
-        
-        public init(issue: Testing.Issue) {
-            self.kind = issue.kind
-            self.comments = issue.comments
-            self.error = issue.error
-            self.sourceLocation = issue.sourceLocation
-        }
-    }
-    
-    public struct TestIssues: Error, Sendable {
-        public fileprivate(set) var issues: [Testing.Issue] = []
-        public fileprivate(set) var error: (any Error)? = nil
-        
-        public var isFailed: Bool { !issues.isEmpty || error != nil }
-        
-        fileprivate func throwIfNeeded() throws {
-            if isFailed {
-                if let error, issues.isEmpty {
-                    throw error
-                }
-                if issues.count == 1 {
-                    throw TestIssue(issue: issues.first!)
-                }
-                if issues.count > 1 {
-                    throw self
-                }
-            }
-        }
-    }
-}
-
 extension Testing.Test {
     var ddModule: String { id.moduleName }
     

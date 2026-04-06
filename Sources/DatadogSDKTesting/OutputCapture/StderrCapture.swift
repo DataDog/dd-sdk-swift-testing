@@ -24,6 +24,7 @@ enum StderrCapture {
         guard !isCapturing else {
             return
         }
+        isCapturing = true
         inputPipe.fileHandleForReading.readabilityHandler = { fileHandle in
             let data = fileHandle.availableData
             if let string = String(data: data, encoding: String.Encoding.utf8) {
@@ -40,8 +41,6 @@ enum StderrCapture {
 
         // Intercept STDERR with inputPipe
         dup2(inputPipe.fileHandleForWriting.fileDescriptor, FileHandle.standardError.fileDescriptor)
-
-        isCapturing = true
     }
 
     static func syncData() {
@@ -69,7 +68,8 @@ enum StderrCapture {
             return
         }
         isCapturing = false
-        freopen("/dev/stderr", "a", stderr)
+        // Restore STDERR file descriptor from the outputPipe
+        dup2(outputPipe.fileHandleForWriting.fileDescriptor, FileHandle.standardError.fileDescriptor)
     }
 
     static func stderrMessage(string: String) {

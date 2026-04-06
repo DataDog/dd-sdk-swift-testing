@@ -1,4 +1,4 @@
-// swift-tools-version:5.9
+// swift-tools-version:6.2
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -9,7 +9,7 @@ let url = "https://github.com/DataDog/dd-sdk-swift-testing/releases/download/\(r
 
 let package = Package(
     name: "dd-sdk-swift-testing",
-    platforms: [.macOS(.v10_13), .macCatalyst(.v13), .iOS(.v12), .tvOS(.v12)],
+    platforms: [.macOS(.v11), .macCatalyst(.v13), .iOS(.v15), .tvOS(.v15)],
     products: [
         .library(name: "DatadogSDKTesting",
                  targets: ["DatadogSDKTesting"]),

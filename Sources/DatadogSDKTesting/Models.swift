@@ -42,6 +42,7 @@ protocol TestSession: TestContainer {
 
 protocol TestSessionManagerObserver: Sendable, Identifiable<ObjectIdentifier> {
     func willStart(session: any TestSession, with config: SessionConfig) async
+    func willFinish(session: any TestSession, with config: SessionConfig) async
     func didFinish(session: any TestSession, with config: SessionConfig) async
 }
 

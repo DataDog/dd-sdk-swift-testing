@@ -15,20 +15,122 @@ protocol SwiftTestingTestInfoType: Sendable {
     var isParameterized: Bool { get }
 }
 
-protocol SwiftTestingTestRunInfoType: SwiftTestingTestInfoType {
-    var parameters: TestRunParameters { get }
+struct SwiftTestingSourceLocation {
+    let fileID: String
+    let filePath: String
+    let line: Int
+    let column: Int
 }
 
-enum SwiftTestingTestStatus: Equatable, Hashable, Sendable {
-    case skipped(reason: String)
-    case failed
+protocol SwiftTestingTestRunInfoType: SwiftTestingTestInfoType {
+    var parameters: TestRunParameters { get }
+    var location: SwiftTestingSourceLocation { get }
+}
+
+protocol SwiftTestingIssue: Sendable {
+    var comment: String? { get }
+    var isWarning: Bool { get }
+    var error: (any Error)? { get }
+    var location: SwiftTestingSourceLocation? { get }
+    func record(test location: SwiftTestingSourceLocation)
+}
+
+enum SwiftTestingTestStatus: Sendable {
+    enum Issues {
+        case suppressed([SwiftTestingIssue])
+        case unsuppressed([SwiftTestingIssue])
+    }
+    
+    enum Errors {
+        case catched(error: any Error, suppressed: Bool, issues: [SwiftTestingIssue])
+        case issues(Issues)
+        
+        mutating func add(issue: SwiftTestingIssue) -> Bool {
+            switch self {
+            case .catched(error: let err, suppressed: let sup, issues: var issues):
+                issues.append(issue)
+                self = .catched(error: err, suppressed: sup, issues: issues)
+                return sup
+            case .issues(let issues):
+                switch issues {
+                case .suppressed(var sup):
+                    sup.append(issue)
+                    self = .issues(.suppressed(sup))
+                    return true
+                case .unsuppressed(var unsup):
+                    unsup.append(issue)
+                    self = .issues(.unsuppressed(unsup))
+                    return false
+                }
+            }
+        }
+        
+        mutating func catched(error: any Error) {
+            guard case .issues(let issues) = self else {
+                // can't happen. We can't have double throw
+                return
+            }
+            switch issues {
+            case .suppressed(let issues):
+                self = .catched(error: error, suppressed: true, issues: issues)
+            case .unsuppressed(let issues):
+                self = .catched(error: error, suppressed: false, issues: issues)
+            }
+        }
+    }
+    
+    case skipped(feature: FeatureId, reason: String, issues: Issues?)
+    case failed(Errors)
     case passed
     
     var testStatus: TestStatus {
         switch self {
-        case .skipped(_): return .skip
+        case .skipped: return .skip
         case .failed: return .fail
         case .passed: return .pass
+        }
+    }
+    
+    var isFailed: Bool {
+        switch self {
+        case .failed: return true
+        default: return false
+        }
+    }
+    
+    var isSkipped: Bool {
+        switch self {
+        case .skipped: return true
+        default: return false
+        }
+    }
+    
+    var errors: Errors? {
+        switch self {
+        case .failed(let errors): return errors
+        case .skipped(feature: _, reason: _, issues: let issues): return issues.map { .issues($0) }
+        default: return nil
+        }
+    }
+    
+    var errorsWereRecorded: Bool {
+        switch self {
+        case .failed(.catched(error: _, suppressed: false, issues: _)): return true
+        case .failed(.issues(.unsuppressed(_))): return true
+        case .skipped(feature: _, reason: _, issues: .unsuppressed(_)): return true
+        default: return false
+        }
+    }
+    
+    var asUnsuppressed: Self {
+        switch self {
+        case .failed(.catched(error: let err, suppressed: true, issues: let isues)):
+            return .failed(.catched(error: err, suppressed: false, issues: isues))
+        case .failed(.issues(.suppressed(let issues))):
+            return .failed(.issues(.unsuppressed(issues)))
+        case .skipped(feature: let feat, reason: let reas, issues: .suppressed(let issues)):
+            return .skipped(feature: feat, reason: reas, issues: .unsuppressed(issues))
+        default: return self
         }
     }
 }
@@ -37,11 +139,6 @@ public enum SwiftTestingRegistryError: Error {
     case unknownSuite(name: String, module: String)
     case moduleAlreadyEnded(name: String)
     case moduleNotFound(name: String)
-}
-
-enum SwiftTestingTestRunRetry: Equatable, Hashable, Sendable {
-    case skipped(reason: String)
-    case retry(RetryStatus)
 }
 
 protocol SwiftTestingTestRegistryType: AnyObject, Sendable {
@@ -64,50 +161,173 @@ protocol SwiftTestingSuiteProviderType: Sendable {
 }
 
 struct SwiftTestingTestRunContext: Sendable {
-    let test: any TestRun
-    let group: SwiftTestingRetryGroupContext
+    let testRun: any TestRun
+    let test: SwiftTestingTestContext
     let info: any SwiftTestingTestRunInfoType
     
-    var observer: any SwiftTestingObserverType {
-        group.test.suite.observer
+    var configuration: SessionConfig {
+        test.configuration
     }
     
-    var shouldSuppressError: Bool {
-        group.observer.shouldSuppressError(for: self)
+    var observer: any SwiftTestingObserverType {
+        test.observer
+    }
+    
+    func shouldSuppressError(info: TestRunInfoStart) -> Bool {
+        observer.shouldSuppressError(for: self, with: info)
     }
 }
 
 struct SwiftTestingRetryGroupContext: Sendable {
-    let test: SwiftTestingTestContext
-    let configuration: RetryGroupConfiguration
+    typealias Skip = (by: (feature: FeatureId, reason: String)?, status: SkipStatus)
     
-    var observer: any SwiftTestingObserverType {
-        test.suite.observer
+    struct Errors {
+        let catched: (any Error)?
+        let issues: [SwiftTestingIssue]
     }
     
-    func with(
-        run: some SwiftTestingTestRunInfoType,
-        performing function: @Sendable (borrowing SwiftTestingTestRunContext) async -> SwiftTestingTestStatus
-    ) async -> SwiftTestingTestRunRetry {
-        let (context, config) = await test.withTestRun(named: run.name) { test in
-            let context = SwiftTestingTestRunContext(test: test, group: self, info: run)
-            if context.info.isParameterized {
-                test.set(parameters: run.parameters)
-            }
-            await observer.willStart(testRun: context)
-            let status = await function(context)
-            let config = await observer.willFinish(testRun: context, with: status)
-            test.set(status: status.testStatus)
-            return (context, config)
+    enum Action {
+        case skip(reason: String, location: SwiftTestingSourceLocation?)
+        case fail
+        case none
+    }
+    
+    let test: SwiftTestingTestContext
+    let skipStrategy: RetryGroupSkipStrategy
+    let successStrategy: RetryGroupSuccessStrategy
+    
+    private(set) var info: TestRunInfoEnd
+    private(set) var executions: [(run: SwiftTestingTestRunContext, status: SwiftTestingTestStatus)]
+    private var _cancelledByUser: Bool = false
+    
+    init(test: SwiftTestingTestContext, skip: Skip,
+         skipStrategy: RetryGroupSkipStrategy, successStrategy: RetryGroupSuccessStrategy)
+    {
+        self.test = test
+        self.info = .init(skip: skip,
+                          retry: (nil, .end(errors: .unsuppressed)),
+                          executions: (0, 0))
+        self.executions = []
+        self.skipStrategy = skipStrategy
+        self.successStrategy = successStrategy
+    }
+    
+    var suite: SwiftTestingSuiteContext {
+        test.suite
+    }
+    
+    var configuration: SessionConfig {
+        test.configuration
+    }
+    
+    var observer: any SwiftTestingObserverType {
+        test.observer
+    }
+    
+    var action: Action {
+        guard !_cancelledByUser else { // special case. User cancelled, we can't recover with logic
+            return .none
         }
-        await observer.didFinish(testRun: context)
-        return config
+        guard !_isSkipped else {
+            // Find the reason to skip
+            switch executions.last(where: { $0.status.isSkipped })?.status {
+            case .skipped(feature: _, reason: let reason, issues: _):
+                return .skip(reason: reason, location: nil)
+            default: return .skip(reason: "unknown skip reason", location: nil)
+            }
+        }
+        guard !_isSucceeded else {
+            return .none
+        }
+        // Check should we fail this group or it already failed by some run.
+        return executions.last { $0.status.errorsWereRecorded } == nil ? .fail : .none
+    }
+    
+    private var _isSkipped: Bool {
+        switch skipStrategy {
+        case .atLeastOneSkipped: return executions.first { $0.status.isSkipped } != nil
+        case .allSkipped: return executions.allSatisfy { $0.status.isSkipped }
+        }
+    }
+    
+    private var _isSucceeded: Bool {
+        switch successStrategy {
+        case .alwaysSucceeded: return true
+        case .atLeastOneSucceeded: return executions.first { !$0.status.isFailed } != nil
+        case .atMostOneFailed: return executions.filter { $0.status.isFailed }.count <= 1
+        case .allSucceeded: return executions.filter { $0.status.isFailed }.isEmpty
+        }
+    }
+        
+    
+    mutating func with(
+        run: some SwiftTestingTestRunInfoType,
+        performing function: @Sendable (borrowing SwiftTestingTestRunContext, TestRunInfoStart) async -> SwiftTestingTestStatus
+    ) async -> Errors? {
+        let runInfo = self.info
+        let test = self.test
+        // Run test
+        var (context, retry, status) = await test.withTestRun(named: run.name) { testRun in
+            let context = SwiftTestingTestRunContext(testRun: testRun, test: test, info: run)
+            if context.info.isParameterized {
+                testRun.set(parameters: run.parameters)
+            }
+            let startInfo = runInfo.toStart
+            await test.observer.willStart(testRun: context, with: startInfo)
+            let status = await function(context, startInfo)
+            let retry = await test.observer.willFinish(testRun: context,
+                                                       withStatus: status,
+                                                       andInfo: runInfo)
+            testRun.set(status: status.testStatus)
+            return (context, retry, status)
+        }
+        // We can't end after Test.cancel in Testing so we ensure that retries are stopped
+        if case .skipped(feature: let feature, reason: _, issues: _) = status, feature == .notFeature {
+            info.retry = (.notFeature, .end(errors: retry.status.errorsStatus))
+            _cancelledByUser = true
+        } else {
+            info.retry = retry
+        }
+        
+        // Increase executions counts
+        info.executions = (total: info.executions.total + 1,
+                           failed: status.isFailed ? info.executions.failed + 1 : info.executions.failed)
+        
+        // Unsuppress errors if asked to do so
+        let errors: Errors?
+        if !info.retry.status.ignoreErrors {
+            switch status.errors {
+            case .catched(error: let err, suppressed: true, issues: let issues):
+                errors = .init(catched: err, issues: issues)
+                status = status.asUnsuppressed
+            case .issues(.suppressed(let issues)):
+                errors = .init(catched: nil, issues: issues)
+                status = status.asUnsuppressed
+            default: errors = nil
+            }
+        } else {
+            errors = nil
+        }
+        
+        // Save result
+        executions.append((run: context, status: status))
+        // Call didFinish with updated info
+        await observer.didFinish(testRun: context, with: info)
+        // return errors to runner to record them
+        return errors
     }
 }
 
 struct SwiftTestingTestContext: Sendable {
+    typealias GroupResult = (status: SwiftTestingTestStatus,
+                             executions: (total: Int, failed: Int))
+    
     let suite: SwiftTestingSuiteContext
     let info: any SwiftTestingTestInfoType
+    
+    var configuration: SessionConfig {
+        suite.configuration
+    }
     
     var observer: any SwiftTestingObserverType {
         suite.observer
@@ -117,15 +337,21 @@ struct SwiftTestingTestContext: Sendable {
         try await suite.withTestRun(named: name, action)
     }
     
-    func withGroup(_ function: @Sendable (borrowing SwiftTestingRetryGroupContext) async throws -> Void) async throws {
-        let config = await observer.runGroupConfiguration(test: self)
-        let group = SwiftTestingRetryGroupContext(test: self, configuration: config)
-        await observer.willStart(group: group)
-        try await doThrow {
-            try await function(group)
-        } finally: {
-            await observer.didFinish(group: group)
+    func withGroup(
+        _ function: @Sendable (inout SwiftTestingRetryGroupContext) async -> Void
+    ) async -> SwiftTestingRetryGroupContext.Action {
+        let (feature, config) = await observer.runGroupConfiguration(test: self)
+        var skip: SwiftTestingRetryGroupContext.Skip = (nil, config.skipStatus)
+        if let feature = feature, case .skip(let reason, _) = config {
+            skip.by = (feature, reason)
         }
+        var group = SwiftTestingRetryGroupContext(test: self, skip: skip,
+                                                  skipStrategy: config.skipStrategy,
+                                                  successStrategy: config.successStrategy)
+        await observer.willStart(group: group)
+        await function(&group)
+        await observer.didFinish(group: group)
+        return group.action
     }
 }
 
@@ -148,27 +374,34 @@ struct SwiftTestingSuiteContext: Sendable {
     private let _suite: any TestSuite & TestRunProvider
     
     var suite: any TestSuite { _suite }
+    let configuration: SessionConfig
     let info: any SwiftTestingTestInfoType
     let observer: any SwiftTestingObserverType
     let testsCount: Int
     
     init(suite: any TestSuite & TestRunProvider,
+         configuration: SessionConfig,
          info: any SwiftTestingTestInfoType, testsCount: Int,
          observer: any SwiftTestingObserverType)
     {
-        self.init(suite: suite, testsCount: testsCount,
-                  state: nil, info: info, observer: observer)
+        self.init(suite: suite, configuration: configuration,
+                  testsCount: testsCount, state: nil,
+                  info: info, observer: observer)
     }
    
-    init(suite: any TestSuite & TestRunProvider, tests: Set<String>,
+    init(suite: any TestSuite & TestRunProvider,
+         configuration: SessionConfig,
+         tests: Set<String>,
          info: any SwiftTestingTestInfoType,
          observer: any SwiftTestingObserverType)
     {
-        self.init(suite: suite, testsCount: tests.count,
-                  state: .init(tests: tests), info: info, observer: observer)
+        self.init(suite: suite, configuration: configuration,
+                  testsCount: tests.count, state: .init(tests: tests),
+                  info: info, observer: observer)
     }
     
     private init(suite: any TestSuite & TestRunProvider,
+                 configuration: SessionConfig,
                  testsCount: Int, state: State?,
                  info: any SwiftTestingTestInfoType,
                  observer: any SwiftTestingObserverType)
@@ -178,6 +411,7 @@ struct SwiftTestingSuiteContext: Sendable {
         self._suite = suite
         self.info = info
         self.observer = observer
+        self.configuration = configuration
     }
     
     func withTestRun<T>(named name: String, _ action: @Sendable (any TestRun) async throws -> T) async rethrows -> T {
@@ -250,14 +484,16 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
     
     final actor State {
         final class ModuleContext {
-            var module: any TestModule & TestSuiteProvider
+            let module: any TestModule & TestSuiteProvider
+            let config: SessionConfig
             var active: [String: Task<SwiftTestingSuiteContext, any Error>]
             var left: Set<String>
             
-            init(module: any TestModule & TestSuiteProvider, left: Set<String>) {
+            init(module: any TestModule & TestSuiteProvider, config: SessionConfig, left: Set<String>) {
                 self.module = module
                 self.active = [:]
                 self.left = left
+                self.config = config
             }
         }
         
@@ -289,42 +525,43 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
             }
             await self._ensureSessionObserver()
             let session = try await self.session.session
+            let config = try await self.session.sessionConfig
             let suites = try await self.registry.suites(for: name)
             if case .active(let context) = _modules[name] {
                 // other thread created it
                 return context
             }
             let module = session.module(named: name)
-            let context = ModuleContext(module: module, left: suites)
+            let context = ModuleContext(module: module, config: config, left: suites)
             _modules[name] = .active(context)
-            await observer.willStart(module: context.module)
+            await observer.willStart(module: context.module, with: context.config)
             return context
         }
         
         func suite(named suite: String, in module: String,
-                   factory: @Sendable @escaping (any TestModule & TestSuiteProvider) async throws ->  SwiftTestingSuiteContext) async throws -> (suite: SwiftTestingSuiteContext, isNew: Bool)
-        {
+                   factory: @Sendable @escaping (any TestModule & TestSuiteProvider,
+                                                 SessionConfig) async throws ->  SwiftTestingSuiteContext
+        ) async throws -> (suite: SwiftTestingSuiteContext, isNew: Bool) {
             let module = try await self.module(name: module)
             if let suite = module.active[suite] {
                 return try await (suite.value, false)
             }
-            let task = Task { try await factory(module.module) }
+            let task = Task { try await factory(module.module, module.config) }
             module.active[suite] = task
             module.left.remove(suite)
             return try await (task.value, true)
         }
         
-        func didEnded(suite: any TestSuite) throws -> Bool {
+        func didEnded(suite: any TestSuite) async throws -> (Bool, SwiftTestingSuiteContext?) {
             guard case .active(let context) = _modules[suite.module.name] else {
                 throw SwiftTestingRegistryError.moduleAlreadyEnded(name: suite.module.name)
             }
             context.active.removeValue(forKey: suite.name)
             if context.left.isEmpty && context.active.isEmpty {
                 _modules[suite.module.name] = .ended
-                return true
+                return (true, nil)
             }
-            _modules[suite.module.name] = .active(context)
-            return false
+            return try await (false, context.active.first?.value.value)
         }
         
         private func _ensureSessionObserver() async {
@@ -346,10 +583,11 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
     func with(suite info: some SwiftTestingTestInfoType,
               performing function: @Sendable (borrowing SwiftTestingSuiteContext) async throws -> Void) async throws
     {
-        let suite = try await self._state.suite(named: info.suite, in: info.module) { mod in
+        let suite = try await self._state.suite(named: info.suite, in: info.module) { (mod, config) in
             let count = try await self.registry.count(for: info)
             let suite = mod.startSuite(named: info.suite, at: nil, framework: "Testing")
-            return .init(suite: suite, info: info, testsCount: count, observer: self.observer)
+            return .init(suite: suite, configuration: config, info: info,
+                         testsCount: count, observer: self.observer)
         }
         if suite.isNew {
             await observer.willStart(suite: suite.suite)
@@ -360,10 +598,11 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
     func with(virtual test: some SwiftTestingTestInfoType,
               performing function: @Sendable (borrowing SwiftTestingSuiteContext) async throws -> Void) async throws
     {
-        let suite = try await self._state.suite(named: test.suite, in: test.module) { mod in
+        let suite = try await self._state.suite(named: test.suite, in: test.module) { (mod, config) in
             let tests = try await self.registry.tests(for: test)
             let suite = mod.startSuite(named: test.suite, at: nil, framework: "Testing")
-            return SwiftTestingSuiteContext(suite: suite, tests: tests, info: test, observer: self.observer)
+            return SwiftTestingSuiteContext(suite: suite, configuration: config,
+                                            tests: tests, info: test, observer: self.observer)
         }
         if suite.isNew {
             await observer.willStart(suite: suite.suite)
@@ -378,10 +617,11 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
             try await function(context)
         } finally: {
             if await context.end() { // if suite ended (no tests left)
-                await observer.didFinish(suite: context)
-                if try await _state.didEnded(suite: context.suite) { // if module ended (no suites left)
+                let (ended, active) = try await _state.didEnded(suite: context.suite)
+                await observer.didFinish(suite: context, active: active)
+                if ended { // if module ended (no suites left)
                     context.suite.module.end()
-                    await observer.didFinish(module: context.suite.module)
+                    await observer.didFinish(module: context.suite.module, with: context.configuration)
                 }
             }
         }
@@ -389,6 +629,49 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
     
     var session: any TestSessionManager {
         _state.session
+    }
+}
+
+extension SwiftTestingTestStatus {
+    var suppressedErrors: SwiftTestingRetryGroupContext.Errors? {
+        switch self.errors {
+        case .catched(error: let error, suppressed: true, issues: let issues):
+            return .init(catched: error, issues: issues)
+        case .issues(.suppressed(let issues)):
+            return .init(catched: nil, issues: issues)
+        default: return nil
+        }
+    }
+}
+
+extension Optional where Wrapped == SwiftTestingTestStatus.Errors {
+    mutating func add(issue: SwiftTestingIssue, suppress: @autoclosure () -> Bool) -> Bool {
+        switch self {
+        case .none:
+            let res = suppress()
+            self = .some(.issues(res ? .suppressed([issue]) : .unsuppressed([issue])))
+            return res
+        case .some(var errors):
+            let res = errors.add(issue: issue)
+            self = .some(errors)
+            return res
+        }
+    }
+    
+    mutating func catched(error: any Error, suppress: @autoclosure () -> Bool) {
+        switch self {
+        case .none:
+            self = .some(.catched(error: error, suppressed: suppress(), issues: []))
+        case .some(var errors):
+            errors.catched(error: error)
+            self = .some(errors)
+        }
+    }
+}
+
+extension Array where Element == SwiftTestingIssue {
+    func recordAll(test location: SwiftTestingSourceLocation) {
+        forEach { $0.record(test: location) }
     }
 }
 

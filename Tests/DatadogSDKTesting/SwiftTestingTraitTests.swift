@@ -97,25 +97,6 @@ func zzzzFuncCancel() async throws {
 #endif
 
 private final class MockSwiftTestingObserver: SwiftTestingObserverType {
-    nonisolated(unsafe) var isModuleEnded: Bool = false
-    
-    func willStart(session: any TestSession, with config: SessionConfig) async {}
-
-    func willFinish(session: any TestSession, with config: SessionConfig) async {}
-
-    func didFinish(session: any TestSession, with config: SessionConfig) async {
-        // Cleanup
-        DatadogSwiftTestingTrait.sharedSuiteProvider = nil
-    }
-    
-    func willStart(module: any TestModule, with configuration: SessionConfig) async {}
-
-    func willFinish(module: any TestModule, with configuration: SessionConfig) async {}
-
-    func didFinish(module: any TestModule, with configuration: SessionConfig) async {
-        isModuleEnded = true
-    }
-
     func willStart(suite: borrowing SwiftTestingSuiteContext) async {
         let session = suite.suite.session as! Mocks.Session
         let module = suite.suite.module as! Mocks.Module
@@ -189,17 +170,19 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
     
     func prepare(for test: Testing.Test) async throws {
         if DatadogSwiftTestingTrait.sharedSuiteProvider == nil {
-            let session = Mocks.SessionManager(provider: Mocks.Session.Provider(), config: .init(activeFeatures: [],
-                                                                                                 workspacePath: DDTestMonitor.env.workspacePath,
-                                                                                                 codeOwners: nil,
-                                                                                                 bundleFunctions: .init(),
-                                                                                                 platform: DDTestMonitor.env.platform,
-                                                                                                 clock: DateClock(),
-                                                                                                 crash: nil,
-                                                                                                 command: nil,
-                                                                                                 service: "test-service",
-                                                                                                 metrics: [:],
-                                                                                                 log: Mocks.CatchLogger()))
+            let session = Mocks.SessionManager(provider: Mocks.Session.Provider(),
+                                               config: .init(activeFeatures: [],
+                                                             workspacePath: DDTestMonitor.env.workspacePath,
+                                                             codeOwners: nil,
+                                                             bundleFunctions: .init(),
+                                                             platform: DDTestMonitor.env.platform,
+                                                             clock: DateClock(),
+                                                             crash: nil,
+                                                             command: nil,
+                                                             service: "test-service",
+                                                             metrics: [:],
+                                                             log: Mocks.CatchLogger()),
+                                               observer: SessionAndModuleObserver())
             DatadogSwiftTestingTrait.sharedSuiteProvider = SwiftTestingSuiteProvider(session: session,
                                                                                      observer: MockSwiftTestingObserver())
         }
@@ -234,12 +217,12 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
         
         let suiteProvider = try #require(DatadogSwiftTestingTrait.sharedSuiteProvider as? SwiftTestingSuiteProvider)
         
-        let observer = try #require(suiteProvider.observer as? MockSwiftTestingObserver)
         let tests = await suiteProvider.registry.registeredTests
         let suite = try #require(tests[test.ddModule]?[test.ddSuite])
         let session = try await #require(suiteProvider.session.session as? Mocks.Session)
         
-        if observer.isModuleEnded {
+        // check is module ended and if ended - stop the test session. This is the last test
+        if session.modules.first?.value.duration ?? 0 > 0 {
             await suiteProvider.session.stop()
         }
         

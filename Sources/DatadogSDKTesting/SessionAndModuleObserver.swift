@@ -17,6 +17,9 @@ struct SessionAndModuleObserver: TestSessionManagerObserver, TestModuleManagerOb
     
     func didFinish(session: any TestSession, with config: SessionConfig) async {
         config.activeFeatures.testSessionDidEnd(session: session)
+        #if canImport(Testing)
+            DatadogSwiftTestingTrait.sharedSuiteProvider = nil
+        #endif
     }
     
     func didStart(module: any TestModule, with config: SessionConfig) {

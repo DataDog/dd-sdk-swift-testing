@@ -335,7 +335,7 @@ class TestImpactAnalysisTests: XCTestCase {
                                                         configuration: ["test.bundle": "TIAModule"]) })
         let collector = Mocks.CoverageCollector()
         let tia = TestImpactAnalysis(tests: skipped, coverage: Mocks.CoverageCollector())
-        return (Mocks.Runner(features: [tia, RetryAndSkipTags()], tests: ["TIAModule": ["TIASuite": tests]]), tia, collector)
+        return (Mocks.Runner(features: [tia, AdditionalTags(codeCoverage: false)], tests: ["TIAModule": ["TIASuite": tests]]), tia, collector)
     }
     
     func tiaAndEfdRunner(skip: [String], known: [String], tests: KeyValuePairs<String, Mocks.Runner.TestMethod>) -> (Mocks.Runner, TestImpactAnalysis, Mocks.CoverageCollector) {

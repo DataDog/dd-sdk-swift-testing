@@ -58,6 +58,20 @@ final class EarlyFlakeDetection: TestHooksFeature {
         return isNotFailed && knownTests.isNew(test: test, in: suite.name, and: suite.module.name)
     }
     
+    func testSessionWillEnd(session: any TestSession) {
+        session.set(tag: DDEfdTags.testEfdEnabled, value: "true")
+        if sessionFailed {
+            session.set(tag: DDEfdTags.testEfdAbortReason, value: DDTagValues.efdAbortFaulty)
+        }
+    }
+
+    func testModuleWillEnd(module: any TestModule) {
+        module.set(tag: DDEfdTags.testEfdEnabled, value: "true")
+        if sessionFailed {
+            module.set(tag: DDEfdTags.testEfdAbortReason, value: DDTagValues.efdAbortFaulty)
+        }
+    }
+
     func testSuiteWillStart(suite: any TestSuite, testsCount: UInt) {
         _counters.update { $0.knownTests += testsCount }
     }

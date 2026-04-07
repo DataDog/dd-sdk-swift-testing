@@ -20,11 +20,20 @@ final class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate
     }
 
     func start() {
-        XCTestObservationCenter.shared.addTestObserver(self)
+        switch state {
+        case .start, .stopped:
+            XCTestObservationCenter.shared.addTestObserver(self)
+        default: break
+        }
     }
 
     func stop() {
-        XCTestObservationCenter.shared.removeTestObserver(self)
+        switch state {
+        case .stopping, .start:
+            XCTestObservationCenter.shared.removeTestObserver(self)
+            state = .stopped
+        default: break
+        }
     }
 
     func testBundleWillStart(_ testBundle: Bundle) {
@@ -49,18 +58,17 @@ final class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate
     }
 
     func testBundleDidFinish(_ testBundle: Bundle) {
-        stop()
         guard case .module(module: let module, context: let context) = state else {
             log.print("testBundleDidFinish: Bad observer state: \(state), expected: .module")
             return
         }
+        state = .stopping
+        stop()
         guard module.name == testBundle.name else {
             log.print("testBundleDidFinish: Bad module: \(testBundle.name), expected: \(module.name)")
-            state = .end
             return
         }
         context.session.end(module: module)
-        state = .end
         log.debug("testBundleDidFinish: \(module.name)")
     }
 
@@ -369,7 +377,8 @@ extension DDXCTestObserver {
     enum State {
         case start(any TestSessionManager)
         case startError(any Error)
-        case end
+        case stopping
+        case stopped
         case module(module: any TestModule & TestSuiteProvider, context: ModuleContext)
         case container(suite: ContainerSuite, inside: any TestModule & TestSuiteProvider, context: ModuleContext)
         case suite(suite: any TestSuite & TestRunProvider, context: SuiteContext)

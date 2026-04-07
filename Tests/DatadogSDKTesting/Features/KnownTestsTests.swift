@@ -20,7 +20,7 @@ final class KnownTestsLogicTests: XCTestCase {
         let knownTestsMap = [module: [knownSuite: [knownSuiteKnownTest]]]
         
         let feature: TestHooksFeature = KnownTests(tests: knownTestsMap)
-        let retryAndSkipTags = RetryAndSkipTags()
+        let additionalTags = AdditionalTags(codeCoverage: false)
         
         let testsToRun: Mocks.Runner.Tests = [module: [
             knownSuite: [
@@ -30,7 +30,7 @@ final class KnownTestsLogicTests: XCTestCase {
             unknownSuite: [unknownSuiteUnknownTest: .fail("SomeERROR")]
         ]]
         
-        let results = Mocks.Runner(features: [feature, retryAndSkipTags], tests: testsToRun).run()
+        let results = Mocks.Runner(features: [feature, additionalTags], tests: testsToRun).run()
         
         let knownSuiteResult = results[module]![knownSuite]!
         let unknownSuiteResult = results[module]![unknownSuite]!

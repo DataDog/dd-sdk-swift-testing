@@ -112,6 +112,14 @@ final class TestManagement: TestHooksFeature {
             : retryStatus.next(errors: errors)
     }
     
+    func testSessionWillEnd(session: any TestSession) {
+        session.set(tag: DDTestSessionTags.testTestManagementEnabled, value: "true")
+    }
+
+    func testModuleWillEnd(module: any TestModule) {
+        module.set(tag: DDTestSessionTags.testTestManagementEnabled, value: "true")
+    }
+
     func shouldSuppressError(test: any TestRun, info: TestRunInfoStart) -> Bool {
         guard let testInfo = module.suites[test.suite.name]?.tests[test.name] else {
             return false
@@ -120,7 +128,7 @@ final class TestManagement: TestHooksFeature {
             testInfo.attemptToFix && info.executions.total < attemptToFixRetries
         )
     }
-    
+
     func stop() {}
 }
 

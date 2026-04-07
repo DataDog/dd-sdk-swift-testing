@@ -6,16 +6,41 @@
 
 import Foundation
 
-final class RetryAndSkipTags: TestHooksFeature {
-    static let id: FeatureId = "Add Retry and Skip Tags"
-    
+final class AdditionalTags: TestHooksFeature {
+    static let id: FeatureId = "Test Observability Tags"
+
+    let codeCoverage: Bool
+
+    init(codeCoverage: Bool) {
+        self.codeCoverage = codeCoverage
+    }
+
+    func testSessionWillEnd(session: any TestSession) {
+        // Coverage lines when TIA is not active (TIA handles this in its hook otherwise)
+        if codeCoverage, session.metrics[DDTestSessionTags.testCoverageLines] == nil,
+           let linesCovered = DDCoverageHelper.getLineCodeCoverage()
+        {
+            session.set(metric: DDTestSessionTags.testCoverageLines, value: linesCovered)
+        }
+    }
+
+    func testModuleWillEnd(module: any TestModule) {
+        // Coverage lines when TIA is not active (TIA handles this in its hook otherwise)
+        if codeCoverage, module.metrics[DDTestSessionTags.testCoverageLines] == nil,
+           let linesCovered = DDCoverageHelper.getLineCodeCoverage()
+        {
+            module.set(metric: DDTestSessionTags.testCoverageLines, value: linesCovered)
+            module.session.set(metric: DDTestSessionTags.testCoverageLines, value: linesCovered)
+        }
+    }
+
     func testWillStart(test: any TestRun, info: TestRunInfoStart) {
         if let retry = info.retry {
             test.set(tag: DDEfdTags.testIsRetry, value: "true")
             test.set(tag: DDEfdTags.testRetryReason, value: retry.reason)
         }
     }
-    
+
     func testWillFinish(test: any TestRun, duration: TimeInterval,
                         withStatus status: TestStatus, andInfo info: TestRunInfoEnd)
     {
@@ -41,6 +66,6 @@ final class RetryAndSkipTags: TestHooksFeature {
                      value: status.final(ignoreErrors: info.retry.status.ignoreErrors))
         }
     }
-    
+
     func stop() {}
 }

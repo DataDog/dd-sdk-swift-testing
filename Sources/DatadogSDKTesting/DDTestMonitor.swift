@@ -626,7 +626,7 @@ internal class DDTestMonitor {
         testOptimizationSetupQueue.waitUntilAllOperationsAreFinished()
         let features: [(any TestHooksFeature)?] = [
             testManagement, tia, efd, atr, knownTests,
-            RetryAndSkipTags()
+            AdditionalTags(codeCoverage: tia == nil)
         ]
         return features.compactMap { $0 }
     }

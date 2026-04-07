@@ -27,14 +27,14 @@ jobs:
     runs-on: ${{ matrix.env.os }}
     steps:
     - name: Checkout
-      uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
     - name: Select ${{ matrix.env.xcode }}
       run: sudo xcode-select --switch /Applications/${{ matrix.env.xcode }}.app
     - name: Unit tests
       run: make XC_LOG=unit IOS_SIMULATOR="${{ matrix.env.iossim }}" TVOS_SIMULATOR="${{ matrix.env.tvossim }}" tests/unit
     - name: Attach Xcode logs
       if: '!cancelled()'
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
       with:
         name: ${{ matrix.env.xcode }}-unit-logs
         path: "*-unit.log"
@@ -63,14 +63,14 @@ jobs:
       DD_API_KEY: '${{ secrets.DD_API_KEY }}'
     steps:
     - name: Checkout
-      uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
     - name: Select ${{ matrix.env.xcode }}
       run: sudo xcode-select --switch /Applications/${{ matrix.env.xcode }}.app
     - name: Run tests for ${{ matrix.platform }}
       run: make XC_LOG=integration IOS_SIMULATOR="${{ matrix.env.iossim }}" TVOS_SIMULATOR="${{ matrix.env.tvossim }}" tests/integration/${{ matrix.platform }}
     - name: Attach Xcode logs
       if: '!cancelled()'
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
       with:
         name: ${{ matrix.env.xcode }}-${{ matrix.platform }}-integration-log
         path: "*-integration.log"

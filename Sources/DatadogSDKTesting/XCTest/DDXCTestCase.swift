@@ -16,6 +16,7 @@ protocol DDXCTestRetryDelegate: AnyObject {
     func testRetryGroupDidFinish(_ group: any DDXCTestRetryGroupType)
     func testCaseRetryWillFinish(_ testCase: XCTestCase)
     func testCaseRetry(_ testCase: XCTestCase, willRecord issue: XCTIssue)
+    func testCaseRetryDidFinish(_ testCase: XCTestCase)
 }
 
 protocol DDXCTestRetryGroupType: AnyObject {
@@ -294,12 +295,8 @@ final class DDXCTestRetryGroup: XCTest, DDXCTestRetryGroupType {
                 }
                 return test
             }
-            // Run end hook. We can't run it in observer because test isn't ended yet
-            let info = TestRunInfoEnd(skip: context.skip,
-                                      retry: context.retry,
-                                      executions: (total: groupRun.executionCount,
-                                                   failed: groupRun.failedExecutionCount))
-            context.features.testDidFinish(test: test, info: info)
+            // Call didFinish callback
+            observer.testCaseRetryDidFinish(xcTest)
             // setup next iteration
             currentTest = _nextTest
             _nextTest = nil

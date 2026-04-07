@@ -4,47 +4,64 @@
  * Copyright 2020-Present Datadog, Inc.
  */
 
+import Foundation
+
 protocol SwiftTestingObserverType: AnyObject, Sendable, TestSessionManagerObserver {
-    func willStart(module: any TestModule) async
-    func didFinish(module: any TestModule) async
+    func willStart(module: any TestModule, with configuration: SessionConfig) async
+    func willFinish(module: any TestModule, with configuration: SessionConfig) async
+    func didFinish(module: any TestModule, with configuration: SessionConfig) async
     
     func willStart(suite: borrowing SwiftTestingSuiteContext) async
-    func didFinish(suite: borrowing SwiftTestingSuiteContext) async
+    func willFinish(suite: borrowing SwiftTestingSuiteContext) async
+    func didFinish(suite: borrowing SwiftTestingSuiteContext,
+                   active: borrowing SwiftTestingSuiteContext?) async
     
     func willStart(test: borrowing SwiftTestingTestContext) async
     func didFinish(test: borrowing SwiftTestingTestContext) async
     
-    func runGroupConfiguration(test: borrowing SwiftTestingTestContext) async -> RetryGroupConfiguration
+    func runGroupConfiguration(
+        test: borrowing SwiftTestingTestContext
+    ) async -> (feature: FeatureId?, configuration: RetryGroupConfiguration)
     func willStart(group: borrowing SwiftTestingRetryGroupContext) async
     func didFinish(group: borrowing SwiftTestingRetryGroupContext) async
     
-    func willStart(testRun test: borrowing SwiftTestingTestRunContext) async
-    func shouldSuppressError(for testRun: borrowing SwiftTestingTestRunContext) -> Bool
-    func willFinish(testRun test: borrowing SwiftTestingTestRunContext, with status: SwiftTestingTestStatus) async -> SwiftTestingTestRunRetry
-    func didFinish(testRun test: borrowing SwiftTestingTestRunContext) async
+    func willStart(testRun test: borrowing SwiftTestingTestRunContext,
+                   with info: TestRunInfoStart) async
+    func shouldSuppressError(for testRun: borrowing SwiftTestingTestRunContext,
+                             with info: TestRunInfoStart) -> Bool
+    func willFinish(testRun test: borrowing SwiftTestingTestRunContext,
+                    withStatus status: SwiftTestingTestStatus,
+                    andInfo info: TestRunInfoEnd) async -> (feature: FeatureId?, status: RetryStatus)
+    func didFinish(testRun test: borrowing SwiftTestingTestRunContext, with info: TestRunInfoEnd) async
 }
 
 final class SwiftTestingObserver: SwiftTestingObserverType {
-    func willStart(session: any TestSession, with config: SessionConfig) async {
-    }
+    func willStart(session: any TestSession, with config: SessionConfig) async {}
+    func willFinish(session: any TestSession, with config: SessionConfig) async {}
+    func didFinish(session: any TestSession, with config: SessionConfig) async {}
     
-    func didFinish(session: any TestSession, with config: SessionConfig) async {
-    }
-    
-    func willStart(module: any TestModule) async {
+    func willStart(module: any TestModule, with config: SessionConfig) async {
         DDCrashes.setCurrent(spanData: module.toCrashData)
     }
     
-    func didFinish(module: any TestModule) async {
+    func willFinish(module: any TestModule, with config: SessionConfig) async {}
+    
+    func didFinish(module: any TestModule, with config: SessionConfig) async {
         DDCrashes.setCurrent(spanData: nil)
     }
     
     func willStart(suite: borrowing SwiftTestingSuiteContext) async {
         DDCrashes.setCurrent(spanData: suite.suite.toCrashData)
+        suite.configuration.activeFeatures.testSuiteWillStart(suite: suite.suite,
+                                                              testsCount: UInt(suite.testsCount))
     }
     
-    func didFinish(suite: borrowing SwiftTestingSuiteContext) async {
-        DDCrashes.setCurrent(spanData: suite.suite.module.toCrashData)
+    func willFinish(suite: borrowing SwiftTestingSuiteContext) async {}
+    
+    func didFinish(suite: borrowing SwiftTestingSuiteContext, active: borrowing SwiftTestingSuiteContext?) async {
+        let data1 = active.map { $0.suite.toCrashData }
+        let data2 = suite.suite.toCrashData
+        DDCrashes.setCurrent(spanData: data1 ?? data2)
     }
     
     func willStart(test: borrowing SwiftTestingTestContext) async {
@@ -53,27 +70,65 @@ final class SwiftTestingObserver: SwiftTestingObserverType {
     func didFinish(test: borrowing SwiftTestingTestContext) async {
     }
     
-    func runGroupConfiguration(test: borrowing SwiftTestingTestContext) async -> RetryGroupConfiguration {
-        .retry(.init())
+    func runGroupConfiguration(
+        test: borrowing SwiftTestingTestContext
+    ) async -> (feature: FeatureId?, configuration: RetryGroupConfiguration) {
+        let (feautre, config) = test.configuration.activeFeatures.testGroupConfiguration(for: test.info.name,
+                                                                                         meta: Self.dummyChecker,
+                                                                                         in: test.suite.suite)
+        return (feautre?.id, config)
     }
     
     func willStart(group: borrowing SwiftTestingRetryGroupContext) async {
+        group.configuration.activeFeatures.testGroupWillStart(for: group.test.info.name,
+                                                              in: group.suite.suite)
     }
     
     func didFinish(group: borrowing SwiftTestingRetryGroupContext) async {
     }
     
-    func willStart(testRun test: borrowing SwiftTestingTestRunContext) async {
+    func willStart(testRun test: borrowing SwiftTestingTestRunContext, with info: TestRunInfoStart) async {
+        test.configuration.activeFeatures.testWillStart(test: test.testRun, info: info)
     }
     
-    func shouldSuppressError(for testRun: borrowing SwiftTestingTestRunContext) -> Bool {
-        false
+    func shouldSuppressError(for testRun: borrowing SwiftTestingTestRunContext, with info: TestRunInfoStart) -> Bool {
+        if let feature = testRun.configuration.activeFeatures.shouldSuppressError(test: testRun.testRun, info: info) {
+            let name = testRun.info.name
+            testRun.configuration.log.debug("\(feature) suppressed error in \(name)")
+            return true
+        }
+        return false
     }
     
-    func willFinish(testRun test: borrowing SwiftTestingTestRunContext, with status: SwiftTestingTestStatus) async -> SwiftTestingTestRunRetry {
-        .retry(.end(errors: .unsuppressed))
+    func willFinish(testRun test: borrowing SwiftTestingTestRunContext,
+                    withStatus status: SwiftTestingTestStatus,
+                    andInfo info: TestRunInfoEnd) async -> (feature: FeatureId?, status: RetryStatus)
+    {
+        var info = info
+        let duration = test.configuration.clock.now.timeIntervalSince(test.testRun.startTime)
+        let (feature, retryStatus) = test.configuration.activeFeatures.testGroupRetry(test: test.testRun,
+                                                                                      duration: duration,
+                                                                                      withStatus: status.testStatus,
+                                                                                      andInfo: info.toStart)
+        info.retry = (feature?.id, retryStatus)
+        test.configuration.activeFeatures.testWillFinish(test: test.testRun,
+                                                         duration: duration,
+                                                         withStatus: status.testStatus,
+                                                         andInfo: info)
+        return info.retry
     }
     
-    func didFinish(testRun test: borrowing SwiftTestingTestRunContext) async {
+    func didFinish(testRun test: borrowing SwiftTestingTestRunContext, with info: TestRunInfoEnd) async {
+        
     }
+}
+
+extension SwiftTestingObserver {
+    final class DummyUnskippableCheckerFactory: UnskippableMethodCheckerFactory {
+        let classId: ObjectIdentifier = .init(DummyUnskippableCheckerFactory.self)
+        let unskippableMethods: UnskippableMethodChecker = .init(isSuiteUnskippable: false,
+                                                                 skippableMethods: [:])
+    }
+    
+    static let dummyChecker = DummyUnskippableCheckerFactory()
 }

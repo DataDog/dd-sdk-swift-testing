@@ -85,51 +85,57 @@ public struct DatadogSwiftTestingScopeProvider: TestScoping {
     }
     
     func provideScope(run: some SwiftTestingTestRunInfoType, performing function: @Sendable () async throws -> Void) async throws {
-        try await Self.datadogTest?.withGroup { group in
-            nonisolated(unsafe) var shouldRetry: Bool = true
-            while shouldRetry {
-                let issues: Synced<DatadogSwiftTestingTrait.TestIssues> = .init(.init())
-                
-                let retry = await group.with(run: run) { run in
-                    if let reason = run.group.configuration.skipReason {
-                        return .skipped(reason: reason)
+        guard let test = Self.datadogTest else {
+            return try await function()
+        }
+        let action = await test.withGroup { group in
+            // Thread safe structure to collect errors.
+            // Put it here so mutex will not be recreated every run
+            let errors: Synced<SwiftTestingTestStatus.Errors?> = .init(nil)
+            repeat {
+                let restoredErrors = await group.with(run: run) { run, runInfo in
+                    // Skip logic. We need it to create skipped test run
+                    if let skip = runInfo.skip.by {
+                        return .skipped(feature: skip.feature,
+                                        reason: skip.reason,
+                                        issues: nil)
                     }
-                    // Normal logic
-                    nonisolated(unsafe) var isFailed: Bool = false
-                    
+                    // Normal logic. Run test, suppress errors if needed
                     do {
                         try await withKnownIssue(isIntermittent: true) {
                             try await function()
                         } matching: { issue in
-                            if run.shouldSuppressError {
-                                issues.update { $0.issues.append(issue) }
-                                return true
+                            errors.update {
+                                $0.add(issue: issue,
+                                       suppress: run.shouldSuppressError(info: runInfo))
                             }
-                            isFailed = true
-                            return false
                         }
                     } catch {
-                        issues.update { $0.error = error }
+                        errors.update {
+                            $0.catched(error: error,
+                                       suppress: run.shouldSuppressError(info: runInfo))
+                        }
+                    } // we need to catch SkipInfo for cancel too, but it will be supported later
+                    if let errorsValue = errors.value {
+                        return .failed(errorsValue)
                     }
-                    
-                    return issues.value.isFailed || isFailed ? .failed : .passed
+                    return .passed
                 }
-                switch retry {
-                case .skipped(reason: _):
-                    shouldRetry = false
-                    //try Testing.Test.cancel(Comment(rawValue: reason))
-                case .retry(.end(let errors)):
-                    shouldRetry = false
-                    if !errors.ignore {
-                        try issues.value.throwIfNeeded()
-                    }
-                case .retry(.retry(_, let errors)):
-                    shouldRetry = true
-                    if !errors.ignore {
-                        try issues.value.throwIfNeeded()
-                    }
+                // clear issues. They are added to the status
+                errors.update { $0 = nil }
+                // Restore errors if needed
+                if let restoredErrors {
+                    restoredErrors.recordAll(test: run.location)
                 }
-            }
+            } while group.info.retry.status.isRetry
+        }
+        switch action {
+        case .some(.skip(reason: _, location: _)):
+            // try Test.cancel(Comment(rawValue: reason), soruceLocation: location)
+            break
+        case .some(.fail):
+            Issue.record("\(run.suite).\(run.name) failed", sourceLocation: run.location.asSwift)
+        case .none: break
         }
     }
     
@@ -177,6 +183,7 @@ extension DatadogSwiftTestingScopeProvider {
         var isSuite: Bool { test.isSuite }
         var hasSuite: Bool { test.ddHasSuite }
         var isParameterized: Bool { testCase.isParameterized }
+        var location: SwiftTestingSourceLocation { test.sourceLocation.asDD }
 
         var parameters: TestRunParameters {
             guard isParameterized else { return .init(arguments: .nil, metadata: nil) }
@@ -185,43 +192,6 @@ extension DatadogSwiftTestingScopeProvider {
                 .object(["name": .string($0.name), "value": .string($0.value), "type": .string($0.type)])
             }
             return .init(arguments: .array(args), metadata: nil)
-        }
-    }
-}
-
-extension DatadogSwiftTestingTrait {
-    public struct TestIssue: Error, Sendable {
-        public let kind: Issue.Kind
-        public let comments: [Comment]
-        public let error: (any Error)?
-        public let sourceLocation: SourceLocation?
-        
-        public init(issue: Testing.Issue) {
-            self.kind = issue.kind
-            self.comments = issue.comments
-            self.error = issue.error
-            self.sourceLocation = issue.sourceLocation
-        }
-    }
-    
-    public struct TestIssues: Error, Sendable {
-        public fileprivate(set) var issues: [Testing.Issue] = []
-        public fileprivate(set) var error: (any Error)? = nil
-        
-        public var isFailed: Bool { !issues.isEmpty || error != nil }
-        
-        fileprivate func throwIfNeeded() throws {
-            if isFailed {
-                if let error, issues.isEmpty {
-                    throw error
-                }
-                if issues.count == 1 {
-                    throw TestIssue(issue: issues.first!)
-                }
-                if issues.count > 1 {
-                    throw self
-                }
-            }
         }
     }
 }
@@ -247,6 +217,52 @@ extension Testing.Test {
             return id.nameComponents.first!
         } else {
             return "[\(sourceLocation.fileName.replacingOccurrences(of: ".swift", with: ""))]"
+        }
+    }
+}
+
+extension Issue: SwiftTestingIssue {
+    var comment: String? {
+        guard !comments.isEmpty else { return nil }
+        return comments.map { $0.rawValue }.joined(separator: "\n")
+    }
+    
+    var isWarning: Bool {
+        switch severity {
+        case .warning: return true
+        default: return false
+        }
+    }
+    
+    var location: SwiftTestingSourceLocation? { sourceLocation?.asDD }
+    
+    func record(test location: SwiftTestingSourceLocation) {
+        let comment = comment.map(Comment.init(rawValue:))
+        if let error = error {
+            Issue.record(error, comment, sourceLocation: sourceLocation ?? location.asSwift)
+        } else {
+            Issue.record(comment, severity: severity, sourceLocation: sourceLocation ?? location.asSwift)
+        }
+    }
+}
+
+extension SourceLocation {
+    var asDD: SwiftTestingSourceLocation {
+        .init(fileID: fileID, filePath: filePath, line: line, column: column)
+    }
+}
+
+extension SwiftTestingSourceLocation {
+    var asSwift: SourceLocation {
+        .init(fileID: fileID, filePath: filePath, line: line, column: column)
+    }
+}
+
+extension SwiftTestingRetryGroupContext.Errors {
+    func recordAll(test location: SwiftTestingSourceLocation) {
+        self.issues.recordAll(test: location)
+        if let catched {
+            Issue.record(catched, sourceLocation: location.asSwift)
         }
     }
 }

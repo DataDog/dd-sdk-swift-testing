@@ -26,7 +26,7 @@ final class SessionManagerTests: XCTestCase {
     // MARK: - Session bootstrapping
 
     func testSessionIsLazilyInitialized() async throws {
-        let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider())
+        let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider(), observer: nil)
         let session1 = try await manager.session
         let session2 = try await manager.session
         XCTAssertTrue(session1.id == session2.id)
@@ -34,9 +34,9 @@ final class SessionManagerTests: XCTestCase {
     }
 
     func testSessionConfigIsAvailableAfterBootstrap() async throws {
-        let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider())
-        let config1 = try await manager.sessionConfig
-        let config2 = try await manager.sessionConfig
+        let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider(), observer: nil)
+        let config1 = try await manager.config
+        let config2 = try await manager.config
         XCTAssertEqual(config1.service, config2.service)
         await manager.stop()
     }
@@ -44,61 +44,19 @@ final class SessionManagerTests: XCTestCase {
     // MARK: - Observer management
 
     func testObserverIsNotifiedWhenSessionStarts() async throws {
-        let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider())
         let observer = MockObserver()
-        await manager.add(observer: observer)
+        let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider(), observer: observer)
 
         _ = try await manager.session
 
-        XCTAssertEqual(observer.willStartCount, 1)
+        XCTAssertEqual(observer.didStartCount, 1)
         XCTAssertEqual(observer.didFinishCount, 0)
         await manager.stop()
-    }
-
-    func testObserverAddedAfterBootstrapIsRetroactivelyNotified() async throws {
-        let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider())
-        _ = try await manager.session
-
-        let observer = MockObserver()
-        await manager.add(observer: observer)
-
-        XCTAssertEqual(observer.willStartCount, 1)
-        await manager.stop()
-    }
-
-    func testRemovedObserverIsNotNotified() async throws {
-        let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider())
-        let observer = MockObserver()
-        await manager.add(observer: observer)
-        await manager.remove(observer: observer)
-
-        _ = try await manager.session
-        await manager.stop()
-
-        XCTAssertEqual(observer.willStartCount, 0)
-        XCTAssertEqual(observer.didFinishCount, 0)
-    }
-
-    func testMultipleObserversAreAllNotified() async throws {
-        let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider())
-        let observer1 = MockObserver()
-        let observer2 = MockObserver()
-        await manager.add(observer: observer1)
-        await manager.add(observer: observer2)
-
-        _ = try await manager.session
-        await manager.stop()
-
-        XCTAssertEqual(observer1.willStartCount, 1)
-        XCTAssertEqual(observer2.willStartCount, 1)
-        XCTAssertEqual(observer1.didFinishCount, 1)
-        XCTAssertEqual(observer2.didFinishCount, 1)
     }
 
     func testObserverIsNotifiedWithCorrectSession() async throws {
-        let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider())
         let observer = MockObserver()
-        await manager.add(observer: observer)
+        let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider(), observer: observer)
 
         let session = try await manager.session
         await manager.stop()
@@ -110,18 +68,16 @@ final class SessionManagerTests: XCTestCase {
     // MARK: - Stop behaviour
 
     func testStopWithNoBootstrappedSessionDoesNothing() async {
-        let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider())
-        // Must not crash and observers must not be notified
         let observer = MockObserver()
-        await manager.add(observer: observer)
+        let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider(), observer: observer)
+        // Must not crash and observer must not be notified
         await manager.stop()
         XCTAssertEqual(observer.didFinishCount, 0)
     }
 
     func testStopNotifiesObserversOfFinish() async throws {
-        let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider())
         let observer = MockObserver()
-        await manager.add(observer: observer)
+        let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider(), observer: observer)
         _ = try await manager.session
 
         await manager.stop()
@@ -130,7 +86,7 @@ final class SessionManagerTests: XCTestCase {
     }
 
     func testStopClearsSessionSoNextAccessCreatesNewOne() async throws {
-        let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider())
+        let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider(), observer: nil)
         let session1 = try await manager.session
         await manager.stop()
 
@@ -142,26 +98,24 @@ final class SessionManagerTests: XCTestCase {
 
 // MARK: - Test helpers
 
-private final class MockObserver: TestSessionManagerObserver, @unchecked Sendable {
-    var id: ObjectIdentifier { ObjectIdentifier(self) }
-
+private final class MockObserver: TestSessionManagerObserver, TestModuleManagerObserver, @unchecked Sendable {
     private let _state: Synced<State> = .init(.init())
 
     struct State {
-        var willStartCount: Int = 0
+        var didStartCount: Int = 0
         var didFinishCount: Int = 0
         var lastStartedSession: (any TestSession)?
         var lastFinishedSession: (any TestSession)?
     }
 
-    var willStartCount: Int { _state.value.willStartCount }
+    var didStartCount: Int { _state.value.didStartCount }
     var didFinishCount: Int { _state.value.didFinishCount }
     var lastStartedSession: (any TestSession)? { _state.value.lastStartedSession }
     var lastFinishedSession: (any TestSession)? { _state.value.lastFinishedSession }
 
-    func willStart(session: any TestSession, with config: SessionConfig) async {
+    func didStart(session: any TestSession, with config: SessionConfig) async {
         _state.update {
-            $0.willStartCount += 1
+            $0.didStartCount += 1
             $0.lastStartedSession = session
         }
     }
@@ -174,4 +128,8 @@ private final class MockObserver: TestSessionManagerObserver, @unchecked Sendabl
             $0.lastFinishedSession = session
         }
     }
+
+    func didStart(module: any TestModule, with config: SessionConfig) {}
+    func willFinish(module: any TestModule, with config: SessionConfig) {}
+    func didFinish(module: any TestModule, with config: SessionConfig) {}
 }

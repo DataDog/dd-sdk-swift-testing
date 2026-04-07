@@ -63,6 +63,7 @@ public final class Session: NSObject, Encodable {
     
     private func internalEnd(endTime: Date? = nil) {
         let duration = (endTime ?? configuration.clock.now).timeIntervalSince(startTime).toNanoseconds
+        _moduleManager.stop()
         
         // If there is a Sanitizer message, we fail the session so error can be shown
         if let sanitizerInfo = SanitizerHelper.getSaniziterInfo() {
@@ -155,7 +156,10 @@ public extension Session {
                 DDTestMonitor.clock = DateClock()
             }
         }
-        return Session(name: name, config: config, modules: Module.StatelessManager(), startTime: startTime)
+        return Session(name: name, config: config,
+                       modules: Module.StatelessManager(config: config,
+                                                        observer: SessionAndModuleObserver()),
+                       startTime: startTime)
     }
 
     @objc static func start(name: String) -> Session {
@@ -202,16 +206,12 @@ extension Session: TestModuleProvider {
 }
 
 extension Session: TestModuleManager {
-    var moduleShouldEnd: Bool {
-        _moduleManager.moduleShouldEnd
-    }
-    
     func module(named name: String) -> any TestModule & TestSuiteProvider {
-        moduleStart(name: name)
+        moduleStart(name: name, startTime: configuration.clock.now)
     }
     
-    func stopModules() {
-        _moduleManager.stopModules()
+    func end(module: any TestModule) {
+        _moduleManager.end(module: module, at: configuration.clock.now)
     }
 }
 

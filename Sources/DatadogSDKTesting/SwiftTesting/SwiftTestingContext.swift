@@ -412,34 +412,39 @@ struct SwiftTestingSuiteContext: Sendable {
     let configuration: SessionConfig
     let info: any SwiftTestingTestInfoType
     let observer: any SwiftTestingObserverType
+    let moduleManager: any TestModuleManager
     let testsCount: Int
     
     init(suite: any TestSuite & TestRunProvider,
          configuration: SessionConfig,
-         info: any SwiftTestingTestInfoType, testsCount: Int,
-         observer: any SwiftTestingObserverType)
+         info: any SwiftTestingTestInfoType,
+         testsCount: Int,
+         observer: any SwiftTestingObserverType,
+         moduleManager: any TestModuleManager)
     {
         self.init(suite: suite, configuration: configuration,
                   testsCount: testsCount, state: .init(tests: []),
-                  info: info, observer: observer)
+                  info: info, observer: observer, moduleManager: moduleManager)
     }
    
     init(suite: any TestSuite & TestRunProvider,
          configuration: SessionConfig,
          tests: Set<String>,
          info: any SwiftTestingTestInfoType,
-         observer: any SwiftTestingObserverType)
+         observer: any SwiftTestingObserverType,
+         moduleManager: any TestModuleManager)
     {
         self.init(suite: suite, configuration: configuration,
                   testsCount: tests.count, state: .init(tests: tests),
-                  info: info, observer: observer)
+                  info: info, observer: observer, moduleManager: moduleManager)
     }
     
     private init(suite: any TestSuite & TestRunProvider,
                  configuration: SessionConfig,
                  testsCount: Int, state: State,
                  info: any SwiftTestingTestInfoType,
-                 observer: any SwiftTestingObserverType)
+                 observer: any SwiftTestingObserverType,
+                 moduleManager: any TestModuleManager)
     {
         self.testsCount = testsCount
         self._state = state
@@ -447,6 +452,7 @@ struct SwiftTestingSuiteContext: Sendable {
         self.info = info
         self.observer = observer
         self.configuration = configuration
+        self.moduleManager = moduleManager
     }
     
     func withTestRun<T>(named name: String, _ action: @Sendable (any TestRun) async throws -> T) async rethrows -> T {
@@ -530,15 +536,20 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
     final actor State {
         final class ModuleContext {
             let module: any TestModule & TestSuiteProvider
+            let manager: any TestModuleManager
             let config: SessionConfig
             var active: [String: Task<SwiftTestingSuiteContext, any Error>]
             var left: Set<String>
             
-            init(module: any TestModule & TestSuiteProvider, config: SessionConfig, left: Set<String>) {
+            init(module: any TestModule & TestSuiteProvider,
+                 manager: any TestModuleManager,
+                 config: SessionConfig, left: Set<String>)
+            {
                 self.module = module
                 self.active = [:]
                 self.left = left
                 self.config = config
+                self.manager = manager
             }
         }
         
@@ -568,30 +579,28 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
             case .ended: throw SwiftTestingRegistryError.moduleAlreadyEnded(name: name)
             case .notStarted: break
             }
-            await self._ensureSessionObserver()
-            let session = try await self.session.session
-            let config = try await self.session.sessionConfig
+            let (session, config) = try await self.session.sessionAndConfig
             let suites = try await self.registry.suites(for: name)
             if case .active(let context) = _modules[name] {
                 // other thread created it
                 return context
             }
             let module = session.module(named: name)
-            let context = ModuleContext(module: module, config: config, left: suites)
+            let context = ModuleContext(module: module, manager: session, config: config, left: suites)
             _modules[name] = .active(context)
-            await observer.willStart(module: context.module, with: context.config)
             return context
         }
         
         func suite(named suite: String, in module: String,
                    factory: @Sendable @escaping (any TestModule & TestSuiteProvider,
+                                                 any TestModuleManager,
                                                  SessionConfig) async throws ->  SwiftTestingSuiteContext
         ) async throws -> (suite: SwiftTestingSuiteContext, isNew: Bool) {
             let module = try await self.module(name: module)
             if let suite = module.active[suite] {
                 return try await (suite.value, false)
             }
-            let task = Task { try await factory(module.module, module.config) }
+            let task = Task { try await factory(module.module, module.manager, module.config) }
             module.active[suite] = task
             module.left.remove(suite)
             return try await (task.value, true)
@@ -608,13 +617,6 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
             }
             return try await (false, context.active.first?.value.value)
         }
-        
-        private func _ensureSessionObserver() async {
-            if !_observerAdded {
-                _observerAdded = true
-                await self.session.add(observer: observer)
-            }
-        }
     }
     
     var registry: any SwiftTestingTestRegistryType { _state.registry }
@@ -628,11 +630,11 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
     func with(suite info: some SwiftTestingTestInfoType,
               performing function: @Sendable (borrowing SwiftTestingSuiteContext) async throws -> Void) async throws
     {
-        let suite = try await self._state.suite(named: info.suite, in: info.module) { (mod, config) in
+        let suite = try await self._state.suite(named: info.suite, in: info.module) { (mod, manager, config) in
             let count = try await self.registry.count(for: info)
             let suite = mod.startSuite(named: info.suite, at: nil, framework: "Testing")
             return .init(suite: suite, configuration: config, info: info,
-                         testsCount: count, observer: self.observer)
+                         testsCount: count, observer: self.observer, moduleManager: manager)
         }
         if suite.isNew {
             await observer.willStart(suite: suite.suite)
@@ -643,11 +645,12 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
     func with(virtual test: some SwiftTestingTestInfoType,
               performing function: @Sendable (borrowing SwiftTestingSuiteContext) async throws -> Void) async throws
     {
-        let suite = try await self._state.suite(named: test.suite, in: test.module) { (mod, config) in
+        let suite = try await self._state.suite(named: test.suite, in: test.module) { (mod, manager, config) in
             let tests = try await self.registry.tests(for: test)
             let suite = mod.startSuite(named: test.suite, at: nil, framework: "Testing")
             return SwiftTestingSuiteContext(suite: suite, configuration: config,
-                                            tests: tests, info: test, observer: self.observer)
+                                            tests: tests, info: test, observer: self.observer,
+                                            moduleManager: manager)
         }
         if suite.isNew {
             await observer.willStart(suite: suite.suite)
@@ -662,11 +665,10 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
             try await function(context)
         } finally: {
             if await context.end() { // if suite ended (no tests left)
-                let (ended, active) = try await _state.didEnded(suite: context.suite)
+                let (modEnded, active) = try await _state.didEnded(suite: context.suite)
                 await observer.didFinish(suite: context, active: active)
-                if ended { // if module ended (no suites left)
-                    context.suite.module.end()
-                    await observer.didFinish(module: context.suite.module, with: context.configuration)
+                if modEnded { // if module ended (no suites left)
+                    context.moduleManager.end(module: context.suite.module)
                 }
             }
         }

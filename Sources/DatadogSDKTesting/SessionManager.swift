@@ -12,55 +12,18 @@ final actor SessionManager: TestSessionManager {
                                    config: SessionConfig)
     
     private var _session: Task<SessionWithConfig, any Error>?
-    private var _observers: [any TestSessionManagerObserver]
+    let observer: (any TestSessionManagerObserver & TestModuleManagerObserver)?
     let provider: any TestSessionProvider
     let log: Logger
     
-    init(log: Logger, provider: any TestSessionProvider) {
+    init(log: Logger, provider: any TestSessionProvider, observer: (any TestSessionManagerObserver & TestModuleManagerObserver)?) {
         self._session = nil
         self.log = log
         self.provider = provider
-        self._observers = []
+        self.observer = observer
     }
     
-    var session: any TestModuleManager & TestSession {
-        get async throws {
-            try await _bootstrappedSession.session
-        }
-    }
-    
-    var sessionConfig: SessionConfig {
-        get async throws {
-            try await _bootstrappedSession.config
-        }
-    }
-    
-    func add(observer: any TestSessionManagerObserver) async {
-        _observers.append(observer)
-        if let session = try? await _session?.value {
-            await observer.willStart(session: session.session, with: session.config)
-        }
-    }
-    
-    func remove(observer: any TestSessionManagerObserver) {
-        _observers.removeAll { $0.id == observer.id }
-    }
-    
-    func stop() async {
-        guard let session = try? await _session?.value else {
-            return
-        }
-        session.session.stopModules()
-        session.session.end()
-        _session = nil
-        for observer in _observers {
-            await observer.didFinish(session: session.session, with: session.config)
-        }
-        DDTestMonitor.removeTestMonitor()
-        DDTestMonitor.tracer.flush()
-    }
-    
-    private var _bootstrappedSession: SessionWithConfig {
+    var sessionAndConfig: SessionWithConfig {
         get async throws {
             if let session = _session {
                 return try await session.value
@@ -68,6 +31,18 @@ final actor SessionManager: TestSessionManager {
             _session = Task.detached { try await self.bootstrapSession() }
             return try await _session!.value
         }
+    }
+    
+    func stop() async {
+        guard let session = try? await _session?.value else {
+            return
+        }
+        await observer?.willFinish(session: session.session, with: session.config)
+        _session = nil
+        session.session.end()
+        await observer?.didFinish(session: session.session, with: session.config)
+        DDTestMonitor.removeTestMonitor()
+        DDTestMonitor.tracer.flush()
     }
     
     private func bootstrapSession() async throws -> SessionWithConfig {
@@ -110,10 +85,9 @@ final actor SessionManager: TestSessionManager {
             log: log
         )
         
-        let session = try await provider.startSession(named: "Swift.session", config: config, startTime: startTime)
-        for observer in _observers {
-            await observer.willStart(session: session, with: config)
-        }
+        let session = try await provider.startSession(named: "Swift.session", config: config,
+                                                      startTime: startTime, observer: observer)
+        await observer?.didStart(session: session, with: config)
         return (session, config)
     }
 }
@@ -127,70 +101,99 @@ extension SessionManager {
 
 extension Session {
     struct Provider: TestSessionProvider {
-        func startSession(named name: String, config: SessionConfig, startTime: Date) async throws -> any TestModuleManager & TestSession {
+        func startSession(named name: String, config: SessionConfig, startTime: Date,
+                          observer: (any TestModuleManagerObserver)?) async throws -> any TestModuleManager & TestSession
+        {
             Session(name: name, config: config,
-                    modules: Module.StatefulManager(),
+                    modules: Module.StatefulManager(config: config,
+                                                    observer: observer),
                     startTime: startTime)
         }
     }
 }
 
 protocol TestModuleManagerSession: Sendable {
-    var moduleShouldEnd: Bool { get }
-    
     func module(named: String, at: Date?, provider: any TestModuleProvider) -> any TestModule & TestSuiteProvider
-    func stopModules()
+    func end(module: any TestModule, at: Date?)
+    func stop()
 }
 
 extension Module {
     struct StatelessManager: TestModuleManagerSession, Sendable {
-        let moduleShouldEnd: Bool = true
+        let config: SessionConfig
+        let observer: (any TestModuleManagerObserver)?
+        
+        init(config: SessionConfig, observer: (any TestModuleManagerObserver)?) {
+            self.config = config
+            self.observer = observer
+        }
         
         func module(named name: String,
                     at start: Date?,
                     provider: any TestModuleProvider) -> any TestModule & TestSuiteProvider
         {
-            provider.startModule(named: name, at: start)
+            let module = provider.startModule(named: name, at: start)
+            observer?.didStart(module: module, with: config)
+            return module
         }
         
-        func stopModules() {}
+        func end(module: any TestModule, at end: Date?) {
+            observer?.willFinish(module: module, with: config)
+            module.end(time: end)
+            observer?.didFinish(module: module, with: config)
+        }
+        
+        func stop() {}
     }
     
     struct StatefulManager: TestModuleManagerSession, @unchecked Sendable {
-        struct State {
-            var modules: [String: any TestModule & TestSuiteProvider]
-            var moduleShouldEnd: Bool
-        }
-        private let _state: Synced<State>
-        var moduleShouldEnd: Bool { _state.value.moduleShouldEnd }
+        private let _state: Synced<[String: (module: any TestModule & TestSuiteProvider, end: Date?)]>
+        let config: SessionConfig
+        let observer: (any TestModuleManagerObserver)?
         
-        init() {
-            self._state = .init(.init(modules: [:], moduleShouldEnd: false))
+        init(config: SessionConfig, observer: (any TestModuleManagerObserver)?) {
+            self._state = .init([:])
+            self.config = config
+            self.observer = observer
         }
         
         func module(named name: String,
                     at start: Date?,
                     provider: any TestModuleProvider) -> any TestModule & TestSuiteProvider
         {
-            _state.update { state in
-                if let module = state.modules[name] {
-                    return module
+            let (module, started) = _state.update { state in
+                if let module = state[name] {
+                    return (module.module, false)
                 }
                 let module = provider.startModule(named: name, at: start)
-                state.modules[name] = module
-                return module
+                state[name] = (module, nil)
+                return (module, true)
+            }
+            if started {
+                observer?.didStart(module: module, with: config)
+            }
+            return module
+        }
+        
+        func end(module: any TestModule, at end: Date?) {
+            guard let end else { return }
+            _state.update {
+                if ($0[module.name]?.end ?? .distantPast) < end {
+                    $0[module.name]?.end = end
+                }
             }
         }
         
-        func stopModules() {
+        func stop() {
             let modules = _state.update { state in
-                state.moduleShouldEnd = true
-                let modules = state.modules
-                state.modules = [:]
+                let modules = state
+                state = [:]
                 return modules
             }
             for module in modules.values {
-                module.end(time: module.duration > 0 ? module.endTime : nil)
+                observer?.willFinish(module: module.module, with: config)
+                module.module.end(time: module.end)
+                observer?.didFinish(module: module.module, with: config)
             }
         }
     }

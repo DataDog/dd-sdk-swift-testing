@@ -70,15 +70,9 @@ public final class Module: NSObject, Encodable {
     }
     
     private func internalEnd(endTime: Date? = nil) {
-        let shouldEnd = _session.moduleShouldEnd
         let duration = (endTime ?? configuration.clock.now).timeIntervalSince(startTime).toNanoseconds
-        
-        guard shouldEnd else { return }
-        
         let linesCovered = _state.update { state in
-            if duration > state.duration {
-                state.duration = duration
-            }
+            state.duration = duration
             state.meta[DDTestTags.testFramework] = state.testFrameworks.joined(separator: ",")
             state.meta[DDTestTags.testStatus] = state.status.spanAttribute
             

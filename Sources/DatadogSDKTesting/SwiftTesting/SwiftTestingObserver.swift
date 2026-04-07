@@ -6,11 +6,7 @@
 
 import Foundation
 
-protocol SwiftTestingObserverType: AnyObject, Sendable, TestSessionManagerObserver {
-    func willStart(module: any TestModule, with configuration: SessionConfig) async
-    func willFinish(module: any TestModule, with configuration: SessionConfig) async
-    func didFinish(module: any TestModule, with configuration: SessionConfig) async
-    
+protocol SwiftTestingObserverType: Sendable {
     func willStart(suite: borrowing SwiftTestingSuiteContext) async
     func willFinish(suite: borrowing SwiftTestingSuiteContext) async
     func didFinish(suite: borrowing SwiftTestingSuiteContext,
@@ -35,21 +31,7 @@ protocol SwiftTestingObserverType: AnyObject, Sendable, TestSessionManagerObserv
     func didFinish(testRun test: borrowing SwiftTestingTestRunContext, with info: TestRunInfoEnd) async
 }
 
-final class SwiftTestingObserver: SwiftTestingObserverType {
-    func willStart(session: any TestSession, with config: SessionConfig) async {}
-    func willFinish(session: any TestSession, with config: SessionConfig) async {}
-    func didFinish(session: any TestSession, with config: SessionConfig) async {}
-    
-    func willStart(module: any TestModule, with config: SessionConfig) async {
-        DDCrashes.setCurrent(spanData: module.toCrashData)
-    }
-    
-    func willFinish(module: any TestModule, with config: SessionConfig) async {}
-    
-    func didFinish(module: any TestModule, with config: SessionConfig) async {
-        DDCrashes.setCurrent(spanData: nil)
-    }
-    
+struct SwiftTestingObserver: SwiftTestingObserverType {
     func willStart(suite: borrowing SwiftTestingSuiteContext) async {
         DDCrashes.setCurrent(spanData: suite.suite.toCrashData)
         suite.configuration.activeFeatures.testSuiteWillStart(suite: suite.suite,
@@ -119,7 +101,7 @@ final class SwiftTestingObserver: SwiftTestingObserverType {
     }
     
     func didFinish(testRun test: borrowing SwiftTestingTestRunContext, with info: TestRunInfoEnd) async {
-        
+        test.configuration.activeFeatures.testDidFinish(test: test.testRun, info: info)
     }
 }
 

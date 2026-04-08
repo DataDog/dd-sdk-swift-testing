@@ -6,11 +6,7 @@
 
 import Foundation
 
-protocol SwiftTestingObserverType: AnyObject, Sendable, TestSessionManagerObserver {
-    func willStart(module: any TestModule, with configuration: SessionConfig) async
-    func willFinish(module: any TestModule, with configuration: SessionConfig) async
-    func didFinish(module: any TestModule, with configuration: SessionConfig) async
-    
+protocol SwiftTestingObserverType: Sendable {
     func willStart(suite: borrowing SwiftTestingSuiteContext) async
     func willFinish(suite: borrowing SwiftTestingSuiteContext) async
     func didFinish(suite: borrowing SwiftTestingSuiteContext,
@@ -35,40 +31,27 @@ protocol SwiftTestingObserverType: AnyObject, Sendable, TestSessionManagerObserv
     func didFinish(testRun test: borrowing SwiftTestingTestRunContext, with info: TestRunInfoEnd) async
 }
 
-final class SwiftTestingObserver: SwiftTestingObserverType {
-    func willStart(session: any TestSession, with config: SessionConfig) async {}
-    func willFinish(session: any TestSession, with config: SessionConfig) async {}
-    func didFinish(session: any TestSession, with config: SessionConfig) async {}
-    
-    func willStart(module: any TestModule, with config: SessionConfig) async {
-        DDCrashes.setCurrent(spanData: module.toCrashData)
-    }
-    
-    func willFinish(module: any TestModule, with config: SessionConfig) async {}
-    
-    func didFinish(module: any TestModule, with config: SessionConfig) async {
-        DDCrashes.setCurrent(spanData: nil)
-    }
-    
+struct SwiftTestingObserver: SwiftTestingObserverType {
     func willStart(suite: borrowing SwiftTestingSuiteContext) async {
         DDCrashes.setCurrent(spanData: suite.suite.toCrashData)
         suite.configuration.activeFeatures.testSuiteWillStart(suite: suite.suite,
                                                               testsCount: UInt(suite.testsCount))
     }
     
-    func willFinish(suite: borrowing SwiftTestingSuiteContext) async {}
+    func willFinish(suite: borrowing SwiftTestingSuiteContext) async {
+        suite.configuration.activeFeatures.testSuiteWillEnd(suite: suite.suite)
+    }
     
     func didFinish(suite: borrowing SwiftTestingSuiteContext, active: borrowing SwiftTestingSuiteContext?) async {
         let data1 = active.map { $0.suite.toCrashData }
         let data2 = suite.suite.toCrashData
         DDCrashes.setCurrent(spanData: data1 ?? data2)
+        suite.configuration.activeFeatures.testSuiteDidEnd(suite: suite.suite)
     }
     
-    func willStart(test: borrowing SwiftTestingTestContext) async {
-    }
+    func willStart(test: borrowing SwiftTestingTestContext) async {}
     
-    func didFinish(test: borrowing SwiftTestingTestContext) async {
-    }
+    func didFinish(test: borrowing SwiftTestingTestContext) async {}
     
     func runGroupConfiguration(
         test: borrowing SwiftTestingTestContext
@@ -84,8 +67,7 @@ final class SwiftTestingObserver: SwiftTestingObserverType {
                                                               in: group.suite.suite)
     }
     
-    func didFinish(group: borrowing SwiftTestingRetryGroupContext) async {
-    }
+    func didFinish(group: borrowing SwiftTestingRetryGroupContext) async {}
     
     func willStart(testRun test: borrowing SwiftTestingTestRunContext, with info: TestRunInfoStart) async {
         test.configuration.activeFeatures.testWillStart(test: test.testRun, info: info)
@@ -119,7 +101,7 @@ final class SwiftTestingObserver: SwiftTestingObserverType {
     }
     
     func didFinish(testRun test: borrowing SwiftTestingTestRunContext, with info: TestRunInfoEnd) async {
-        
+        test.configuration.activeFeatures.testDidFinish(test: test.testRun, info: info)
     }
 }
 

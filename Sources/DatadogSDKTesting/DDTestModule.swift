@@ -70,29 +70,11 @@ public final class Module: NSObject, Encodable {
     }
     
     private func internalEnd(endTime: Date? = nil) {
-        let shouldEnd = _session.moduleShouldEnd
         let duration = (endTime ?? configuration.clock.now).timeIntervalSince(startTime).toNanoseconds
-        
-        guard shouldEnd else { return }
-        
-        let linesCovered = _state.update { state in
-            if duration > state.duration {
-                state.duration = duration
-            }
+        _state.update { state in
+            state.duration = duration
             state.meta[DDTestTags.testFramework] = state.testFrameworks.joined(separator: ",")
             state.meta[DDTestTags.testStatus] = state.status.spanAttribute
-            
-            addFeatureTags(meta: &state.meta, metrics: &state.metrics)
-            
-            // To cache result of command call and not to process it twice
-            // Hack for XCTest. Should be handled better
-            return state.metrics[DDTestSessionTags.testCoverageLines]
-        }
-        
-        // To cache result of command call and not to process it twice
-        // Hack for XCTest. Should be handled better
-        if let linesCovered {
-            session.set(metric: DDTestSessionTags.testCoverageLines, value: linesCovered)
         }
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: ModuleEnvelope(self))
         configuration.log.debug("Exported module_end event moduleId: \(self.id)")
@@ -232,11 +214,5 @@ extension Module {
         init(_ content: Module) {
             self.content = content
         }
-    }
-}
-
-extension Module: ModuleFeatureTagsHelper {
-    var activeFeatures: [any TestHooksFeature] {
-        configuration.activeFeatures
     }
 }

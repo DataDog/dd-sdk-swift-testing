@@ -70,8 +70,9 @@
 		A77C123C2D9425C7009C2BA1 /* KnownTestsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77C123B2D9425C7009C2BA1 /* KnownTestsTests.swift */; };
 		A77C123E2D9474E6009C2BA1 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77C123D2D9474E6009C2BA1 /* Models.swift */; };
 		A794A8FF2E7990D20044FE3C /* TestManagementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A794A8FE2E7990C40044FE3C /* TestManagementTests.swift */; };
+		A79FAD992F8548780080C3F6 /* SessionAndModuleObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A79FAD982F8548700080C3F6 /* SessionAndModuleObserver.swift */; };
+		A79FAD9B2F8559530080C3F6 /* AdditionalTagsFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = A79FAD9A2F8559530080C3F6 /* AdditionalTagsFeature.swift */; };
 		A7A98C202C8F44BC00C93E59 /* CoverageSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7A98C1F2C8F44BC00C93E59 /* CoverageSettings.swift */; };
-		A7AE65992E7D901D00EA568B /* RetryAndSkipTags.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AE65982E7D901600EA568B /* RetryAndSkipTags.swift */; };
 		A7B0120F2F364B97000270A4 /* InstrumentationUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B0120E2F364B8A000270A4 /* InstrumentationUtils.swift */; };
 		A7B012112F364BCE000270A4 /* URLSessionInstrumentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B012102F364BC2000270A4 /* URLSessionInstrumentation.swift */; };
 		A7B012132F364C04000270A4 /* URLSessionInstrumentationConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B012122F364C02000270A4 /* URLSessionInstrumentationConfiguration.swift */; };
@@ -402,8 +403,9 @@
 		A77C123B2D9425C7009C2BA1 /* KnownTestsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnownTestsTests.swift; sourceTree = "<group>"; };
 		A77C123D2D9474E6009C2BA1 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		A794A8FE2E7990C40044FE3C /* TestManagementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestManagementTests.swift; sourceTree = "<group>"; };
+		A79FAD982F8548700080C3F6 /* SessionAndModuleObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionAndModuleObserver.swift; sourceTree = "<group>"; };
+		A79FAD9A2F8559530080C3F6 /* AdditionalTagsFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdditionalTagsFeature.swift; sourceTree = "<group>"; };
 		A7A98C1F2C8F44BC00C93E59 /* CoverageSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoverageSettings.swift; sourceTree = "<group>"; };
-		A7AE65982E7D901600EA568B /* RetryAndSkipTags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetryAndSkipTags.swift; sourceTree = "<group>"; };
 		A7B0120E2F364B8A000270A4 /* InstrumentationUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstrumentationUtils.swift; sourceTree = "<group>"; };
 		A7B012102F364BC2000270A4 /* URLSessionInstrumentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLSessionInstrumentation.swift; sourceTree = "<group>"; };
 		A7B012122F364C02000270A4 /* URLSessionInstrumentationConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLSessionInstrumentationConfiguration.swift; sourceTree = "<group>"; };
@@ -1107,11 +1109,12 @@
 				A77C123D2D9474E6009C2BA1 /* Models.swift */,
 				A7B70E3B2C5CDE8B00E4AE09 /* Endpoint.swift */,
 				A718EC2C2CBD5DCE00C5F0D9 /* EarlyFlakeDetection.swift */,
-				A7AE65982E7D901600EA568B /* RetryAndSkipTags.swift */,
 				A77C12362D8DCB87009C2BA1 /* AutomaticTestRetries.swift */,
 				A77C12322D8C9798009C2BA1 /* KnownTests.swift */,
 				A7675D6B2F6C58BB00A05B5F /* SessionManager.swift */,
+				A79FAD982F8548700080C3F6 /* SessionAndModuleObserver.swift */,
 				A77C12342D8C9F5D009C2BA1 /* TestManagement.swift */,
+				A79FAD9A2F8559530080C3F6 /* AdditionalTagsFeature.swift */,
 				E158E2DB25471DA000DBCD6C /* DDInstrumentationControl.swift */,
 				8194A2242940B33100B4B592 /* DDTestSession.swift */,
 				E10034D92703599D00439C9C /* DDTestModule.swift */,
@@ -1717,6 +1720,8 @@
 				A7675D6E2F6C70C100A05B5F /* Task+Sync.swift in Sources */,
 				A7675D6C2F6C58C100A05B5F /* SessionManager.swift in Sources */,
 				A718EC2D2CBD5DCE00C5F0D9 /* EarlyFlakeDetection.swift in Sources */,
+				A79FAD9B2F8559530080C3F6 /* AdditionalTagsFeature.swift in Sources */,
+				A79FAD992F8548780080C3F6 /* SessionAndModuleObserver.swift in Sources */,
 				A7FC25C12BA1EAF500067E26 /* GitUploader.swift in Sources */,
 				A71E646B2BAA0AA100F2ACA5 /* Span+Environment.swift in Sources */,
 				A76174BF2CB45F9B0098CE99 /* XCTestExtensions.swift in Sources */,
@@ -1730,7 +1735,6 @@
 				A74C91CA2E67278800B10681 /* DroneCI.swift in Sources */,
 				A7FC25D12BA1EB2900067E26 /* DDCrashes.swift in Sources */,
 				A71E64762BAA0AA100F2ACA5 /* XcodeCI.swift in Sources */,
-				A7AE65992E7D901D00EA568B /* RetryAndSkipTags.swift in Sources */,
 				A7FC25D02BA1EB2900067E26 /* SimpleSpanData.swift in Sources */,
 				A7FC25BE2BA1EADF00067E26 /* DDTest.swift in Sources */,
 				A7FC260F2BA1EC0500067E26 /* BinaryParser.swift in Sources */,

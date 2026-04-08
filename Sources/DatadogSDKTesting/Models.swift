@@ -40,24 +40,32 @@ protocol TestSession: TestContainer {
     func nextTestIndex() -> UInt
 }
 
-protocol TestSessionManagerObserver: Sendable, Identifiable<ObjectIdentifier> {
-    func willStart(session: any TestSession, with config: SessionConfig) async
+protocol TestSessionManagerObserver: Sendable {
+    func didStart(session: any TestSession, with config: SessionConfig) async
     func willFinish(session: any TestSession, with config: SessionConfig) async
     func didFinish(session: any TestSession, with config: SessionConfig) async
 }
 
 protocol TestSessionProvider: Sendable {
-    func startSession(named: String, config: SessionConfig, startTime: Date) async throws -> any TestSession & TestModuleManager
+    func startSession(named: String, config: SessionConfig, startTime: Date,
+                      observer: (any TestModuleManagerObserver)?) async throws -> any TestSession & TestModuleManager
 }
 
 protocol TestSessionManager: Sendable {
     var session: any TestSession & TestModuleManager { get async throws }
-    var sessionConfig: SessionConfig { get async throws }
-    
-    func add(observer: any TestSessionManagerObserver) async
-    func remove(observer: any TestSessionManagerObserver) async
+    var config: SessionConfig { get async throws }
+    var sessionAndConfig: (session: any TestSession & TestModuleManager, config: SessionConfig) { get async throws }
     
     func stop() async
+}
+
+extension TestSessionManager {
+    var session: any TestSession & TestModuleManager {
+        get async throws { try await sessionAndConfig.session }
+    }
+    var config: SessionConfig {
+        get async throws { try await sessionAndConfig.config }
+    }
 }
 
 protocol TestModule: TestContainer {
@@ -70,11 +78,15 @@ protocol TestModuleProvider: Sendable {
     func startModule(named: String, at: Date?) -> any TestModule & TestSuiteProvider
 }
 
+protocol TestModuleManagerObserver: Sendable {
+    func didStart(module: any TestModule, with config: SessionConfig)
+    func willFinish(module: any TestModule, with config: SessionConfig)
+    func didFinish(module: any TestModule, with config: SessionConfig)
+}
+
 protocol TestModuleManager: Sendable {
-    var moduleShouldEnd: Bool { get }
-    
     func module(named: String) -> any TestModule & TestSuiteProvider
-    func stopModules()
+    func end(module: any TestModule)
 }
 
 protocol TestSuite: TestContainer {
@@ -138,7 +150,7 @@ extension TestRun {
 }
 
 @objc(DDTestStatus)
-public enum TestStatus: Int {
+public enum TestStatus: Int, Sendable {
     case pass
     case fail
     case skip

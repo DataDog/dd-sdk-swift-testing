@@ -23,7 +23,7 @@ internal class DDXCTestObserverTests: XCTestCase {
                                           "DD_DISABLE_TEST_INSTRUMENTING": "1",
                                           "DD_DISABLE_CRASH_HANDLER": "1"])
         session = SessionManager(log: Mocks.CatchLogger(isDebug: true),
-                                 provider: Session.Provider())
+                                 provider: Session.Provider(), observer: nil)
         testObserver = DDXCTestObserver(session: session, log: Mocks.CatchLogger(isDebug: true))
         theSuite.setValue([self], forKey: "_mutableTests")
     }

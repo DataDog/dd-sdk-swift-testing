@@ -63,6 +63,7 @@ public final class Session: NSObject, Encodable {
     
     private func internalEnd(endTime: Date? = nil) {
         let duration = (endTime ?? configuration.clock.now).timeIntervalSince(startTime).toNanoseconds
+        _moduleManager.stop()
         
         // If there is a Sanitizer message, we fail the session so error can be shown
         if let sanitizerInfo = SanitizerHelper.getSaniziterInfo() {
@@ -74,8 +75,6 @@ public final class Session: NSObject, Encodable {
             state.duration = duration
             state.meta[DDTestTags.testFramework] = state.testFrameworks.joined(separator: ",")
             state.meta[DDTestTags.testStatus] = state.status.spanAttribute
-            
-            addFeatureTags(meta: &state.meta, metrics: &state.metrics)
         }
         // export it
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: SessionEnvelope(self))
@@ -155,7 +154,10 @@ public extension Session {
                 DDTestMonitor.clock = DateClock()
             }
         }
-        return Session(name: name, config: config, modules: Module.StatelessManager(), startTime: startTime)
+        return Session(name: name, config: config,
+                       modules: Module.StatelessManager(config: config,
+                                                        observer: SessionAndModuleObserver()),
+                       startTime: startTime)
     }
 
     @objc static func start(name: String) -> Session {
@@ -202,16 +204,12 @@ extension Session: TestModuleProvider {
 }
 
 extension Session: TestModuleManager {
-    var moduleShouldEnd: Bool {
-        _moduleManager.moduleShouldEnd
-    }
-    
     func module(named name: String) -> any TestModule & TestSuiteProvider {
-        moduleStart(name: name)
+        moduleStart(name: name, startTime: configuration.clock.now)
     }
     
-    func stopModules() {
-        _moduleManager.stopModules()
+    func end(module: any TestModule) {
+        _moduleManager.end(module: module, at: configuration.clock.now)
     }
 }
 
@@ -265,48 +263,3 @@ extension Session {
     }
 }
 
-protocol ModuleFeatureTagsHelper: AnyObject {
-    var activeFeatures: [any TestHooksFeature] { get }
-    func addFeatureTags(meta: inout [String: String], metrics: inout [String: Double])
-}
-
-extension Session: ModuleFeatureTagsHelper {
-    var activeFeatures: [any TestHooksFeature] { configuration.activeFeatures }
-}
-
-extension ModuleFeatureTagsHelper {
-    func addFeatureTags(meta: inout [String: String], metrics: inout [String: Double]) {
-        var itrSkipped: UInt = 0
-        
-        if let tia = activeFeatures.first(where: { $0 is TestImpactAnalysis }) as? TestImpactAnalysis {
-            meta[DDTestSessionTags.testCodeCoverageEnabled] = tia.isCoverageEnabled.spanAttribute
-            meta[DDTestSessionTags.testSkippingEnabled] = tia.isSkippingEnabled.spanAttribute
-            
-            if tia.isSkippingEnabled {
-                itrSkipped = tia.skippedCount
-                meta[DDTestSessionTags.testItrSkippingType] = DDTagValues.typeTest
-                meta[DDItrTags.itrSkippedTests] = (itrSkipped > 0).spanAttribute
-                meta[DDTestSessionTags.testItrSkipped] = (itrSkipped > 0).spanAttribute
-                metrics[DDTestSessionTags.testItrSkippingCount] = Double(itrSkipped)
-            }
-        }
-        
-        if activeFeatures.first(where: { $0 is TestManagement }) != nil {
-            meta[DDTestSessionTags.testTestManagementEnabled] = "true"
-        }
-        
-        if metrics[DDTestSessionTags.testCoverageLines] == nil,
-           itrSkipped == 0,
-           let linesCovered = DDCoverageHelper.getLineCodeCoverage()
-        {
-            metrics[DDTestSessionTags.testCoverageLines] = linesCovered
-        }
-        
-        if let efd = activeFeatures.first(where: { $0 is EarlyFlakeDetection }) as? EarlyFlakeDetection {
-            meta[DDEfdTags.testEfdEnabled] = "true"
-            if efd.sessionFailed {
-                meta[DDEfdTags.testEfdAbortReason] = DDTagValues.efdAbortFaulty
-            }
-        }
-    }
-}

@@ -84,57 +84,79 @@ enum Mocks {
             var testFrameworks: Set<String> = []
             var modules: [String: Module] = [:]
         }
-        
+
+        let _sessionConfig: SessionConfig?
+        let _moduleObserver: (any TestModuleManagerObserver)?
+
+        init(name: String, startTime: Date = Date(),
+             config: SessionConfig? = nil,
+             observer: (any TestModuleManagerObserver)? = nil) {
+            self._sessionConfig = config
+            self._moduleObserver = observer
+            super.init(name: name, startTime: startTime)
+        }
+
         var modules: [String: Module] { _state.value.modules }
         var testFrameworks: Set<String> { _state.value.testFrameworks }
-        
+
         func nextTestIndex() -> UInt {
             _state.update { state in
                 defer { state.testIndex += 1 }
                 return state.testIndex
             }
         }
-        
+
         func add(module: Module) {
             guard module.session.id == self.id else { return }
             _state.update { state in
                 state.modules[module.name] = module
             }
         }
-        
+
         subscript(_ module: String) -> Module? {
             _state.value.modules[module]
         }
-        
+
         var debugDescription: String {
             let mods = _state.value.modules.values.map{ $0.debugDescription }
             return "[\(mods.joined(separator: ", "))]"
         }
-        
+
         static func == (lhs: Mocks.Session, rhs: Mocks.Session) -> Bool {
             lhs.id == rhs.id && lhs.name == rhs.name
         }
-        
+
         func hash(into hasher: inout Hasher) {
             hasher.combine(id)
             hasher.combine(name)
         }
-        
+
         func startModule(named name: String, at start: Date?) -> any TestModule & TestSuiteProvider {
             return Mocks.Module(name: name, session: self, startTime: start ?? Date())
         }
-        
-        var moduleShouldEnd: Bool { true }
-        
+
         func module(named name: String) -> any DatadogSDKTesting.TestModule & DatadogSDKTesting.TestSuiteProvider {
-            startModule(named: name, at: nil)
+            let module = startModule(named: name, at: nil)
+            if let config = _sessionConfig {
+                _moduleObserver?.didStart(module: module, with: config)
+            }
+            return module
         }
-        
-        func stopModules() {}
-        
+
+        func end(module: any TestModule) {
+            if let config = _sessionConfig {
+                _moduleObserver?.willFinish(module: module, with: config)
+                module.end()
+                _moduleObserver?.didFinish(module: module, with: config)
+            } else {
+                module.end()
+            }
+        }
+
         final class Provider: TestSessionProvider {
-            func startSession(named name: String, config: SessionConfig, startTime: Date) async throws -> any TestModuleManager & TestSession {
-                return Session(name: name, startTime: startTime)
+            func startSession(named name: String, config: SessionConfig, startTime: Date,
+                              observer: (any TestModuleManagerObserver)?) async throws -> any TestModuleManager & TestSession {
+                return Session(name: name, startTime: startTime, config: config, observer: observer)
             }
         }
     }
@@ -549,71 +571,47 @@ enum Mocks {
     final actor SessionManager: TestSessionManager {
         typealias SessionWithConfig = (session: any TestModuleManager & TestSession,
                                        config: SessionConfig)
-        
+
         private var _session: Task<SessionWithConfig, any Error>?
-        private var _observers: [any TestSessionManagerObserver]
         let provider: any TestSessionProvider
-        let config: SessionConfig
-        
-        init(provider: any TestSessionProvider, config: SessionConfig) {
+        let _config: SessionConfig
+        let _observer: (any TestSessionManagerObserver & TestModuleManagerObserver)?
+
+        init(provider: any TestSessionProvider, config: SessionConfig,
+             observer: (any TestSessionManagerObserver & TestModuleManagerObserver)? = nil) {
             self._session = nil
             self.provider = provider
-            self._observers = []
-            self.config = config
+            self._config = config
+            self._observer = observer
         }
-        
-        var session: any TestModuleManager & TestSession {
-            get async throws {
-                try await _bootstrappedSession.session
-            }
-        }
-        
-        var sessionConfig: SessionConfig {
-            get async throws {
-                try await _bootstrappedSession.config
-            }
-        }
-        
-        func add(observer: any TestSessionManagerObserver) async {
-            _observers.append(observer)
-            if let session = try? await _session?.value {
-                await observer.willStart(session: session.session, with: session.config)
-            }
-        }
-        
-        func remove(observer: any TestSessionManagerObserver) {
-            _observers.removeAll { $0.id == observer.id }
-        }
-        
-        func stop() async {
-            guard let session = try? await _session?.value else {
-                return
-            }
-            session.session.end()
-            _session = nil
-            for observer in _observers {
-                await observer.didFinish(session: session.session, with: session.config)
-            }
-        }
-        
-        private var _bootstrappedSession: SessionWithConfig {
+
+        var sessionAndConfig: SessionWithConfig {
             get async throws {
                 if let session = _session {
                     return try await session.value
                 }
-                _session = Task.detached { try await self.bootstrapSession() }
+                let config = _config
+                let provider = self.provider
+                let observer = _observer
+                _session = Task.detached {
+                    let startTime = config.clock.now
+                    let session = try await provider.startSession(named: "Mock.session", config: config,
+                                                                  startTime: startTime, observer: observer)
+                    await observer?.didStart(session: session, with: config)
+                    return (session, config) as SessionWithConfig
+                }
                 return try await _session!.value
             }
         }
-        
-        private func bootstrapSession() async throws -> SessionWithConfig {
-            let startTime = config.clock.now
-            
-            let session = try await provider.startSession(named: "Mock.session", config: config, startTime: startTime)
-            for observer in _observers {
-                await observer.willStart(session: session, with: config)
+
+        func stop() async {
+            guard let sc = try? await _session?.value else {
+                return
             }
-            return (session, config)
+            await _observer?.willFinish(session: sc.session, with: sc.config)
+            _session = nil
+            sc.session.end()
+            await _observer?.didFinish(session: sc.session, with: sc.config)
         }
     }
 }

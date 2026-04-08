@@ -98,7 +98,7 @@ public struct DatadogSwiftTestingScopeProvider: TestScoping {
                     if let skip = runInfo.skip.by {
                         return .skipped(feature: skip.feature,
                                         reason: skip.reason,
-                                        issues: nil)
+                                        issues: errors.value?.issues)
                     }
                     // Normal logic. Run test, suppress errors if needed
                     do {
@@ -111,9 +111,14 @@ public struct DatadogSwiftTestingScopeProvider: TestScoping {
                             }
                         }
                     } catch {
-                        errors.update {
-                            $0.catched(error: error,
-                                       suppress: run.shouldSuppressError(info: runInfo))
+                        // we can't use Testing.SkipInfo directly so we will use runtime to detect it
+                        if error.isSwiftTestingSkip {
+                            return .cancelled(error: error, issues: errors.value?.issues)
+                        } else {
+                            errors.update {
+                                $0.catched(error: error,
+                                           suppress: run.shouldSuppressError(info: runInfo))
+                            }
                         }
                     } // we need to catch SkipInfo for cancel too, but it will be supported later
                     if let errorsValue = errors.value {
@@ -130,9 +135,14 @@ public struct DatadogSwiftTestingScopeProvider: TestScoping {
             } while group.info.retry.status.isRetry
         }
         switch action {
-        case .some(.skip(reason: _, location: _)):
-            // try Test.cancel(Comment(rawValue: reason), soruceLocation: location)
-            break
+#if compiler(>=6.3)
+        case .some(.skip(reason: let reason, location: let location)):
+            try Testing.Test.cancel(Comment(rawValue: reason),
+                                    sourceLocation: location?.asSwift ?? run.location.asSwift)
+#else
+        case .some(.skip): break
+#endif
+        case .some(.cancel(error: let error)): throw error
         case .some(.fail):
             Issue.record("\(run.suite).\(run.name) failed", sourceLocation: run.location.asSwift)
         case .none: break
@@ -264,6 +274,12 @@ extension SwiftTestingRetryGroupContext.Errors {
         if let catched {
             Issue.record(catched, sourceLocation: location.asSwift)
         }
+    }
+}
+
+extension Error {
+    var isSwiftTestingSkip: Bool {
+        String(reflecting: type(of: self)) == "Testing.SkipInfo"
     }
 }
 

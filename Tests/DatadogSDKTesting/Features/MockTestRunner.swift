@@ -95,11 +95,24 @@ extension Mocks {
         }
         
         func run() -> Session {
-            let session = Session(name: "MockTestSession")
+            let session = Session(name: "MockTestSession",
+                                  config: .init(activeFeatures: features,
+                                                workspacePath: DDTestMonitor.env.workspacePath,
+                                                codeOwners: nil,
+                                                bundleFunctions: [:],
+                                                platform: DDTestMonitor.env.platform,
+                                                clock: DateClock(),
+                                                crash: nil,
+                                                command: "test command",
+                                                service: "test-runner",
+                                                metrics: [:],
+                                                log: Mocks.CatchLogger(isDebug: false)),
+                                  observer: SessionAndModuleObserver())
             for (module, suites) in tests {
                 let mod = _run(module: module, suites: suites, session: session)
                 session.add(module: mod)
             }
+            session.end()
             return session
         }
         
@@ -109,7 +122,7 @@ extension Mocks {
                 let st = _run(suite: suite, tests: tests, module: module)
                 module.add(suite: st)
             }
-            module.end()
+            session.end(module: module)
             return module
         }
         

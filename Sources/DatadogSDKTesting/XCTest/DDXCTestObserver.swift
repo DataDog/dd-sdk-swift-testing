@@ -8,7 +8,7 @@ import Foundation
 internal import EventsExporter
 internal import XCTest
 
-class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate {
+final class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate {
     private(set) var state: State
     private let log: Logger
 
@@ -20,11 +20,20 @@ class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate {
     }
 
     func start() {
-        XCTestObservationCenter.shared.addTestObserver(self)
+        switch state {
+        case .start, .stopped:
+            XCTestObservationCenter.shared.addTestObserver(self)
+        default: break
+        }
     }
 
     func stop() {
-        XCTestObservationCenter.shared.removeTestObserver(self)
+        switch state {
+        case .stopping, .start:
+            XCTestObservationCenter.shared.removeTestObserver(self)
+            state = .stopped
+        default: break
+        }
     }
 
     func testBundleWillStart(_ testBundle: Bundle) {
@@ -36,12 +45,10 @@ class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate {
         let bundleName = testBundle.name
         
         do {
-            let session = try waitForAsync {
-                try await (session: manager.session, config: manager.sessionConfig)
-            }
+            let session = try waitForAsync { try await manager.sessionAndConfig }
             let module = session.session.module(named: bundleName)
-            state = .module(module, config: session.config)
-            DDCrashes.setCurrent(spanData: module.toCrashData)
+            state = .module(module: module, context: ModuleContext(session: session.session,
+                                                                   config: session.config))
             log.debug("testBundleWillStart: \(bundleName)")
         } catch {
             log.print("Session initialisation failed: \(error)")
@@ -51,35 +58,34 @@ class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate {
     }
 
     func testBundleDidFinish(_ testBundle: Bundle) {
-        guard case .module(let module, _) = state else {
+        guard case .module(module: let module, context: let context) = state else {
             log.print("testBundleDidFinish: Bad observer state: \(state), expected: .module")
             return
         }
+        state = .stopping
+        stop()
         guard module.name == testBundle.name else {
             log.print("testBundleDidFinish: Bad module: \(testBundle.name), expected: \(module.name)")
-            state = .end
             return
         }
-        module.end()
-        state = .end
-        DDCrashes.setCurrent(spanData: nil)
+        context.session.end(module: module)
         log.debug("testBundleDidFinish: \(module.name)")
     }
 
     func testSuiteWillStart(_ testSuite: XCTestSuite) {
         let module: any TestModule & TestSuiteProvider
         let parent: ContainerSuite?
-        let config: SessionConfig
+        let context: ModuleContext
         
         switch state {
-        case .module(let mod, let conf):
+        case .module(module: let mod, context: let cont):
             module = mod
             parent = nil
-            config = conf
-        case .container(suite: let cont, inside: let mod, config: let conf):
+            context = cont
+        case .container(suite: let contr, inside: let mod, context: let contxt):
             module = mod
-            parent = cont
-            config = conf
+            parent = contr
+            context = contxt
         case .startError(let err):
             log.print("testSuiteWillStart: Failed, module config error \(err)")
             testSuite.testRun?.stop()
@@ -91,7 +97,7 @@ class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate {
 
         guard let tests = testSuite.tests as? [XCTestCase] else {
             log.debug("testSuiteWillStart: container \(testSuite.name)")
-            state = .container(suite: ContainerSuite(suite: testSuite, parent: parent), inside: module, config: config)
+            state = .container(suite: ContainerSuite(suite: testSuite, parent: parent), inside: module, context: context)
             return
         }
         
@@ -100,22 +106,22 @@ class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate {
         
         let suite = module.startSuite(named: testSuite.name, at: nil, framework: "XCTest")
         DDCrashes.setCurrent(spanData: suite.toCrashData)
-        config.activeFeatures.testSuiteWillStart(suite: suite, testsCount: UInt(wrappedTests.count))
+        context.features.testSuiteWillStart(suite: suite, testsCount: UInt(wrappedTests.count))
         
-        state = .suite(suite: suite, context: SuiteContext(parent: parent, module: module, config: config))
+        state = .suite(suite: suite, context: SuiteContext(parent: parent, module: module, context: context))
         log.debug("testSuiteWillStart: \(testSuite.name)")
     }
 
     func testSuiteDidFinish(_ testSuite: XCTestSuite) {
         switch state {
-        case .container(suite: let suite, inside: let module, config: let config):
+        case .container(suite: let suite, inside: let module, context: let context):
             guard suite.suite.name == testSuite.name else {
                 log.print("testSuiteDidFinish: Bad suite: \(testSuite.name), expected: \(suite.suite.name)")
                 return
             }
             state = suite.parent == nil
-                ? .module(module, config: config)
-                : .container(suite: suite.parent!, inside: module, config: config)
+                ? .module(module: module, context: context)
+                : .container(suite: suite.parent!, inside: module, context: context)
             log.debug("testSuiteDidFinish: container \(testSuite.name)")
         case .suite(suite: let suite, context: let context):
             guard suite.name == testSuite.name else {
@@ -125,9 +131,11 @@ class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate {
             // Set suite status based on it's test groups.
             // Features will setup proper skip and fail strategies for the groups.
             suite.set(status: testSuite.testRun?.status ?? .pass)
+            context.features.testSuiteWillEnd(suite: suite)
             suite.end()
             state = context.back(from: suite)
             DDCrashes.setCurrent(spanData: context.module.toCrashData)
+            context.features.testSuiteDidEnd(suite: suite)
             log.debug("testSuiteDidFinish: \(testSuite.name)")
         default:
             log.print("testSuiteDidFinish: Bad observer state: \(state), expected: .suite or .container")
@@ -369,9 +377,10 @@ extension DDXCTestObserver {
     enum State {
         case start(any TestSessionManager)
         case startError(any Error)
-        case end
-        case module(any TestModule & TestSuiteProvider, config: SessionConfig)
-        case container(suite: ContainerSuite, inside: any TestModule & TestSuiteProvider, config: SessionConfig)
+        case stopping
+        case stopped
+        case module(module: any TestModule & TestSuiteProvider, context: ModuleContext)
+        case container(suite: ContainerSuite, inside: any TestModule & TestSuiteProvider, context: ModuleContext)
         case suite(suite: any TestSuite & TestRunProvider, context: SuiteContext)
         case group
         case test
@@ -404,25 +413,37 @@ extension DDXCTestObserver {
         }
     }
     
+    final class ModuleContext {
+        let session: any TestSession & TestModuleManager
+        let config: SessionConfig
+        
+        var features: [any TestHooksFeature] { config.activeFeatures }
+        
+        init(session: any TestSession & TestModuleManager, config: SessionConfig) {
+            self.session = session
+            self.config = config
+        }
+    }
+    
     final class SuiteContext {
         let parent: ContainerSuite?
         let module: any TestModule & TestSuiteProvider
-        let config: SessionConfig
-        var features: [any TestHooksFeature] { config.activeFeatures }
+        let moduleContext: ModuleContext
+        var features: [any TestHooksFeature] { moduleContext.features }
         
-        init(parent: ContainerSuite?, module: any TestModule & TestSuiteProvider, config: SessionConfig)
+        init(parent: ContainerSuite?, module: any TestModule & TestSuiteProvider, context: ModuleContext)
         {
             self.parent = parent
-            self.config = config
             self.module = module
+            self.moduleContext = context
         }
         
         func back(from suite: any TestSuite) -> State {
             parent == nil ?
-                .module(module, config: config) :
+                .module(module: module, context: moduleContext) :
                 .container(suite: parent!,
                            inside: module,
-                           config: config)
+                           context: moduleContext)
         }
     }
     

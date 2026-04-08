@@ -33,8 +33,25 @@ extension Feature {
 }
 
 protocol TestHooksFeature: Feature, Sendable {
+    /// Start of the session
+    func testSessionWillStart(session: any TestSession) -> Void
+    /// End of the session
+    func testSessionWillEnd(session: any TestSession) -> Void
+    func testSessionDidEnd(session: any TestSession) -> Void
+    
+    /// Start of the module
+    func testModuleWillStart(module: any TestModule) -> Void
+    /// End of the module
+    func testModuleWillEnd(module: any TestModule) -> Void
+    func testModuleDidEnd(module: any TestModule) -> Void
+    
     /// Start of the suite
     func testSuiteWillStart(suite: any TestSuite, testsCount: UInt) -> Void
+    /// End of the suite
+    func testSuiteWillEnd(suite: any TestSuite) -> Void
+    func testSuiteDidEnd(suite: any TestSuite) -> Void
+    
+    // Test related callbacks
     /// Configuration for retry group. Feature can interrupt iteration or send it to the next feature with updated config.
     func testGroupConfiguration(for test: String,
                                 meta: UnskippableMethodCheckerFactory,
@@ -366,7 +383,18 @@ extension TestRunInfoEnd {
 
 // Default hooks implementation
 extension TestHooksFeature {
+    func testSessionWillStart(session: any TestSession) -> Void {}
+    func testSessionWillEnd(session: any TestSession) -> Void {}
+    func testSessionDidEnd(session: any TestSession) -> Void {}
+    
+    func testModuleWillStart(module: any TestModule) -> Void {}
+    func testModuleWillEnd(module: any TestModule) -> Void {}
+    func testModuleDidEnd(module: any TestModule) -> Void {}
+    
     func testSuiteWillStart(suite: any TestSuite, testsCount: UInt) {}
+    func testSuiteWillEnd(suite: any TestSuite) -> Void {}
+    func testSuiteDidEnd(suite: any TestSuite) -> Void {}
+    
     func testGroupConfiguration(for test: String, meta: UnskippableMethodCheckerFactory,
                                 in suite: any TestSuite,
                                 configuration: RetryGroupConfiguration.Iterator) -> RetryGroupConfiguration.Iterator
@@ -394,9 +422,57 @@ extension TestHooksFeature {
 
 // Iteration helpers for hooks
 extension Array where Element == (any TestHooksFeature) {
+    func testSessionWillStart(session: any TestSession) -> Void {
+        for feature in self {
+            feature.testSessionWillStart(session: session)
+        }
+    }
+    
+    func testSessionWillEnd(session: any TestSession) -> Void {
+        for feature in self {
+            feature.testSessionWillEnd(session: session)
+        }
+    }
+    
+    func testSessionDidEnd(session: any TestSession) -> Void {
+        for feature in self {
+            feature.testSessionDidEnd(session: session)
+        }
+    }
+    
+    func testModuleWillStart(module: any TestModule) -> Void {
+        for feature in self {
+            feature.testModuleWillStart(module: module)
+        }
+    }
+    
+    func testModuleWillEnd(module: any TestModule) -> Void {
+        for feature in self {
+            feature.testModuleWillEnd(module: module)
+        }
+    }
+    
+    func testModuleDidEnd(module: any TestModule) -> Void {
+        for feature in self {
+            feature.testModuleDidEnd(module: module)
+        }
+    }
+    
     func testSuiteWillStart(suite: any TestSuite, testsCount: UInt) {
         for feature in self {
             feature.testSuiteWillStart(suite: suite, testsCount: testsCount)
+        }
+    }
+    
+    func testSuiteWillEnd(suite: any TestSuite) -> Void {
+        for feature in self {
+            feature.testSuiteWillEnd(suite: suite)
+        }
+    }
+    
+    func testSuiteDidEnd(suite: any TestSuite) -> Void {
+        for feature in self {
+            feature.testSuiteDidEnd(suite: suite)
         }
     }
     

@@ -56,6 +56,44 @@ final class TestImpactAnalysis: TestHooksFeature {
                      markedUnskippable: !checker.canSkip(method: test))
     }
     
+    func testSessionWillEnd(session: any TestSession) {
+        session.set(tag: DDTestSessionTags.testCodeCoverageEnabled, value: isCoverageEnabled)
+        session.set(tag: DDTestSessionTags.testSkippingEnabled, value: isSkippingEnabled)
+        if isSkippingEnabled {
+            let itrSkipped = skippedCount
+            session.set(tag: DDTestSessionTags.testItrSkippingType, value: DDTagValues.typeTest)
+            session.set(tag: DDItrTags.itrSkippedTests, value: itrSkipped > 0)
+            session.set(tag: DDTestSessionTags.testItrSkipped, value: itrSkipped > 0)
+            session.set(metric: DDTestSessionTags.testItrSkippingCount, value: Double(itrSkipped))
+        }
+        if skippedCount == 0,
+           session.metrics[DDTestSessionTags.testCoverageLines] == nil,
+           let linesCovered = DDCoverageHelper.getLineCodeCoverage()
+        {
+            session.set(metric: DDTestSessionTags.testCoverageLines, value: linesCovered)
+        }
+    }
+
+    func testModuleWillEnd(module: any TestModule) {
+        module.set(tag: DDTestSessionTags.testCodeCoverageEnabled, value: isCoverageEnabled)
+        module.set(tag: DDTestSessionTags.testSkippingEnabled, value: isSkippingEnabled)
+        if isSkippingEnabled {
+            let itrSkipped = skippedCount
+            module.set(tag: DDTestSessionTags.testItrSkippingType, value: DDTagValues.typeTest)
+            module.set(tag: DDItrTags.itrSkippedTests, value: itrSkipped > 0)
+            module.set(tag: DDTestSessionTags.testItrSkipped, value: itrSkipped > 0)
+            module.set(metric: DDTestSessionTags.testItrSkippingCount, value: Double(itrSkipped))
+        }
+        // Coverage lines: set on both module and session when no tests were skipped (XCTest hack)
+        if skippedCount == 0,
+           module.metrics[DDTestSessionTags.testCoverageLines] == nil,
+           let linesCovered = DDCoverageHelper.getLineCodeCoverage()
+        {
+            module.set(metric: DDTestSessionTags.testCoverageLines, value: linesCovered)
+            module.session.set(metric: DDTestSessionTags.testCoverageLines, value: linesCovered)
+        }
+    }
+
     func testGroupConfiguration(for test: String, meta: UnskippableMethodCheckerFactory,
                                 in suite: any TestSuite,
                                 configuration: RetryGroupConfiguration.Iterator) -> RetryGroupConfiguration.Iterator

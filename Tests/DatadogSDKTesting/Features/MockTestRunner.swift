@@ -97,9 +97,6 @@ extension Mocks {
         func run() -> Session {
             let session = Session(name: "MockTestSession",
                                   config: .init(activeFeatures: features,
-                                                workspacePath: DDTestMonitor.env.workspacePath,
-                                                codeOwners: nil,
-                                                bundleFunctions: [:],
                                                 platform: DDTestMonitor.env.platform,
                                                 clock: DateClock(),
                                                 crash: nil,

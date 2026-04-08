@@ -203,9 +203,6 @@ struct TestError {
 
 struct SessionConfig: Sendable {
     let activeFeatures: [any TestHooksFeature]
-    let workspacePath: String?
-    let codeOwners: CodeOwners?
-    let bundleFunctions: FunctionMap
     let platform: Environment.Platform
     let clock: Clock
     let crash: CrashInformation?
@@ -325,22 +322,6 @@ extension TestRun {
         self.set(tag: DDTestTags.testParameters, value: value)
     }
     
-    func set(source bundleFunctions: borrowing FunctionMap, owners: borrowing CodeOwners?, workspace: String?) {
-        if let functionInfo = bundleFunctions["\(suite.name).\(name)"] {
-            var filePath = functionInfo.file
-            if let workspacePath = workspace,
-               let workspaceRange = filePath.range(of: workspacePath + "/")
-            {
-                filePath.removeSubrange(workspaceRange)
-            }
-            set(tag: DDTestTags.testSourceFile, value: filePath)
-            set(tag: DDTestTags.testSourceStartLine, value: functionInfo.startLine)
-            set(tag: DDTestTags.testSourceEndLine, value: functionInfo.endLine)
-            if let owners = owners?.ownersForPath(filePath) {
-                set(tag: DDTestTags.testCodeowners, value: owners)
-            }
-        }
-    }
 }
 
 @TaskLocal private var _activeTestRun: (any TestRun)? = nil

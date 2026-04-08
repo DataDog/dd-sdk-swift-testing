@@ -220,7 +220,7 @@ final class EarlyFlakeDetectionLogicTests: XCTestCase {
             log: Mocks.CatchLogger(isDebug: false)
         )
         let knownFeature = KnownTests(tests: ["EFDModule": ["EFDSuite": known]])
-        return (Mocks.Runner(features: [efd, knownFeature, AdditionalTags(codeCoverage: false)],
+        return (Mocks.Runner(features: [efd, knownFeature, AdditionalTags()],
                              tests: ["EFDModule": ["EFDSuite": tests]]), efd)
     }
     

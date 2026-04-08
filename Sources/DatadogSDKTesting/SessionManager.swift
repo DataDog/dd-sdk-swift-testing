@@ -73,9 +73,6 @@ final actor SessionManager: TestSessionManager {
         
         let config = SessionConfig(
             activeFeatures: monitor.activeFeatures,
-            workspacePath: DDTestMonitor.env.workspacePath,
-            codeOwners: monitor.codeOwners,
-            bundleFunctions: monitor.bundleFunctionInfo,
             platform: DDTestMonitor.env.platform,
             clock: DDTestMonitor.clock,
             crash: monitor.crashInfo,

@@ -136,10 +136,10 @@ public extension Session {
     ///   - command: Optional, test command that started this session
     ///   - startTime: Optional, the time where the session started
     @objc static func start(name: String, command: String? = nil, startTime: Date? = nil) -> Session {
-        let config = SessionConfig(activeFeatures: [],
-                                   workspacePath: DDTestMonitor.env.workspacePath,
-                                   codeOwners: DDTestMonitor.instance?.codeOwners,
-                                   bundleFunctions: DDTestMonitor.instance?.bundleFunctionInfo ?? .init(),
+        if DDTestMonitor.instance == nil  {
+            let _ = DDTestMonitor.installTestMonitor()
+        }
+        let config = SessionConfig(activeFeatures: DDTestMonitor.instance?.activeFeatures ?? [],
                                    platform: DDTestMonitor.env.platform,
                                    clock: DDTestMonitor.clock,
                                    crash: DDTestMonitor.instance?.crashInfo,

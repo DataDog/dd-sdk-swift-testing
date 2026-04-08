@@ -155,7 +155,7 @@ extension Test {
         return try await DDTestMonitor.tracer.withActiveSpan(name: "\(suite.testFramework).test",
                                                              attributes: attributes(test: name, in: suite),
                                                              startTime: testStartTime) { span in
-            let test = createTest(name: name, suite: suite, span: span)
+            let test = Self(name: name, suite: suite, span: span)
             let result = try await test.withActive {
                 try await action(test)
             }
@@ -171,7 +171,7 @@ extension Test {
         return try DDTestMonitor.tracer.withActiveSpan(name: "\(suite.testFramework).test",
                                                        attributes: attributes(test: name, in: suite),
                                                        startTime: testStartTime) { span in
-            let test = createTest(name: name, suite: suite, span: span)
+            let test = Self(name: name, suite: suite, span: span)
             let result = try test.withActive {
                 try action(test)
             }
@@ -205,14 +205,6 @@ extension Test {
         }
         
         return attributes
-    }
-    
-    static func createTest(name: String, suite: Suite, span: SpanSdk) -> Test {
-        let test = Self(name: name, suite: suite, span: span)
-        test.set(source: suite.configuration.bundleFunctions,
-                 owners: suite.configuration.codeOwners,
-                 workspace: suite.configuration.workspacePath)
-        return test
     }
 }
 

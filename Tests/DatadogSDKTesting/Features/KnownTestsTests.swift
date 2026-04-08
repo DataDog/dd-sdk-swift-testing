@@ -20,7 +20,7 @@ final class KnownTestsLogicTests: XCTestCase {
         let knownTestsMap = [module: [knownSuite: [knownSuiteKnownTest]]]
         
         let feature: TestHooksFeature = KnownTests(tests: knownTestsMap)
-        let additionalTags = AdditionalTags(codeCoverage: false)
+        let additionalTags = AdditionalTags()
         
         let testsToRun: Mocks.Runner.Tests = [module: [
             knownSuite: [

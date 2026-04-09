@@ -5,21 +5,30 @@
  */
 
 import Foundation
-internal import EventsExporter
+@preconcurrency internal import EventsExporter
 
 final class EarlyFlakeDetection: TestHooksFeature {
     static var id: FeatureId = "Early Flake Detection"
+    
+    struct State {
+        var newTests: UInt = 0
+        var knownTests: UInt = 0
+        var sessionFailed: Bool = false
+    }
     
     let knownTests: KnownTests
     let knownTestsCount: Double
     let slowTestRetries: TracerSettings.EFD.TimeTable
     let faultySessionThreshold: Double
-    private(set) var sessionFailed: Bool
     
     let log: Logger
-    private var _counters: Synced<Counters>
+    private let _state: Synced<State>
     
-    var testCounters: Counters { _counters.value }
+    // used in tests
+    var testCounters: (newTests: UInt, knownTests: UInt) {
+        let state = _state.value
+        return (state.newTests, state.knownTests)
+    }
     
     init(knownTests: KnownTests,
          slowTestRetries: TracerSettings.EFD.TimeTable,
@@ -33,8 +42,7 @@ final class EarlyFlakeDetection: TestHooksFeature {
             acc + suite.suites.values.reduce(0) { $0 + $1.tests.count }
         }
         self.knownTestsCount = Double(count)
-        self.sessionFailed = false
-        self._counters = Synced(.init())
+        self._state = Synced(.init())
         self.log = log
     }
     
@@ -44,13 +52,13 @@ final class EarlyFlakeDetection: TestHooksFeature {
     
     private func checkStatus(for test: String, in suite: any TestSuite) -> Bool {
         // Calculate threshold
-        let isNotFailed = _counters.use { counts in
-            guard !self.sessionFailed else { return false }
-            let testsCount = max(self.knownTestsCount, Double(counts.knownTests))
-            let newTests = Double(counts.newTests)
+        let isNotFailed = _state.update { state in
+            guard !state.sessionFailed else { return false }
+            let testsCount = max(self.knownTestsCount, Double(state.knownTests))
+            let newTests = Double(state.newTests)
             guard newTests <= self.faultySessionThreshold || ((newTests / testsCount) * 100.0) < self.faultySessionThreshold else {
                 self.log.print("Early Flake Detection Faulty Session detected!")
-                self.sessionFailed = true
+                state.sessionFailed = true
                 return false
             }
             return true
@@ -60,26 +68,26 @@ final class EarlyFlakeDetection: TestHooksFeature {
     
     func testSessionWillEnd(session: any TestSession) {
         session.set(tag: DDEfdTags.testEfdEnabled, value: "true")
-        if sessionFailed {
+        if _state.value.sessionFailed {
             session.set(tag: DDEfdTags.testEfdAbortReason, value: DDTagValues.efdAbortFaulty)
         }
     }
 
     func testModuleWillEnd(module: any TestModule) {
         module.set(tag: DDEfdTags.testEfdEnabled, value: "true")
-        if sessionFailed {
+        if _state.value.sessionFailed {
             module.set(tag: DDEfdTags.testEfdAbortReason, value: DDTagValues.efdAbortFaulty)
         }
     }
 
     func testSuiteWillStart(suite: any TestSuite, testsCount: UInt) {
-        _counters.update { $0.knownTests += testsCount }
+        _state.update { $0.knownTests += testsCount }
     }
     
     func testGroupWillStart(for test: String, in suite: any TestSuite) {
         // Increase tests counter
         if knownTests.isNew(test: test, in: suite.name, and: suite.module.name) {
-            _counters.update { $0.newTests += 1 }
+            _state.update { $0.newTests += 1 }
         }
     }
     
@@ -164,12 +172,5 @@ struct EarlyFlakeDetectionFactory: FeatureFactory {
                                    slowTestRetries: settings.slowTestRetries,
                                    faultySessionThreshold: settings.faultySessionThreshold,
                                    log: log)
-    }
-}
-
-extension EarlyFlakeDetection {
-    struct Counters {
-        var newTests: UInt = 0
-        var knownTests: UInt = 0
     }
 }

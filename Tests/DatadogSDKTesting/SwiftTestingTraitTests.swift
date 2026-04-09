@@ -39,7 +39,7 @@ struct SwiftTestingTraitTests {
     }
     
     @Test
-    func testRetryFail() async throws {
+    func testRetryShouldFail() async throws {
         #expect(1 == 0, Comment(rawValue: Testing.Test.current!.ddName))
     }
     
@@ -49,7 +49,7 @@ struct SwiftTestingTraitTests {
     }
     
     @Test
-    func testRetryErrorFail() async throws {
+    func testRetryErrorShouldFail() async throws {
         throw TestError.test(Testing.Test.current!.ddName)
     }
     
@@ -59,7 +59,7 @@ struct SwiftTestingTraitTests {
     }
     
     @Test
-    func testFail() async throws {
+    func testShouldFail() async throws {
         #expect(1 == 0, Comment(rawValue: Testing.Test.current!.ddName))
     }
     
@@ -80,7 +80,7 @@ struct SwiftTestingTraitTests {
 }
 
 @Test(.observerTester, .datadogTesting)
-func testFuncRetryErrorFail() async throws {
+func testFuncRetryErrorShouldFail() async throws {
     throw SwiftTestingTraitTests.TestError.test(Testing.Test.current!.ddName)
 }
 
@@ -97,12 +97,7 @@ func zzzzFuncCancel() async throws {
 #endif
 
 private final class MockSwiftTestingObserver: SwiftTestingObserverType {
-    func willStart(suite: borrowing SwiftTestingSuiteContext) async {
-        let session = suite.suite.session as! Mocks.Session
-        let module = suite.suite.module as! Mocks.Module
-        session.add(module: module)
-        module.add(suite: suite.suite as! Mocks.Suite)
-    }
+    func willStart(suite: borrowing SwiftTestingSuiteContext) async {}
 
     func willFinish(suite: borrowing SwiftTestingSuiteContext) async {}
 
@@ -125,20 +120,11 @@ private final class MockSwiftTestingObserver: SwiftTestingObserverType {
         return (nil, .retry(.init(skipStatus: .init(canBeSkipped: false, markedUnskippable: false))))
     }
 
-    func willStart(group: borrowing SwiftTestingRetryGroupContext) async {
-        let suite = group.test.suite.suite as! Mocks.Suite
-        let testName = group.test.info.name
-        let testGroup = suite.tests[testName] ?? .init(name: testName, suite: suite, unskippable: false)
-        suite.add(group: testGroup)
-    }
+    func willStart(group: borrowing SwiftTestingRetryGroupContext) async {}
 
     func didFinish(group: borrowing SwiftTestingRetryGroupContext) async {}
 
-    func willStart(testRun test: borrowing SwiftTestingTestRunContext, with info: TestRunInfoStart) async {
-        let suite = test.test.suite.suite as! Mocks.Suite
-        let group = suite.tests[test.test.info.name]!
-        group.add(run: test.testRun as! Mocks.Test)
-    }
+    func willStart(testRun test: borrowing SwiftTestingTestRunContext, with info: TestRunInfoStart) async {}
 
     func shouldSuppressError(for testRun: borrowing SwiftTestingTestRunContext, with info: TestRunInfoStart) -> Bool {
         let name = testRun.info.name.lowercased()
@@ -197,8 +183,9 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
                     issues.update { $0[err.name, default: 0] += 1 }
                     return true
                 }
-                if issue.comments.first?.rawValue.lowercased().contains("fail") ?? false {
-                    issues.update { $0[issue.comments.first!.rawValue, default: 0] += 1 }
+                if issue.comments.first?.rawValue.lowercased().contains("shouldfail") ?? false {
+                    let name = issue.comments.first!.rawValue.components(separatedBy: " ").last!
+                    issues.update { $0[name, default: 0] += 1 }
                     return true
                 }
                 return false
@@ -231,14 +218,14 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
             "scopingTraitIsApplied": ([.pass], nil, nil),
             "testSkip": ([.skip], nil, nil),
             "testRetryIgnore": (Array(repeating: .fail, count: 5), nil, nil),
-            "testRetryFail": (Array(repeating: .fail, count: 5), 1, nil),
+            "testRetryShouldFail": (Array(repeating: .fail, count: 5), 1, nil),
             "testRetryErrorIgnore": (Array(repeating: .fail, count: 5), nil, nil),
-            "testRetryErrorFail": (Array(repeating: .fail, count: 5), 1, nil),
+            "testRetryErrorShouldFail": (Array(repeating: .fail, count: 5), 1, nil),
             "testPass": ([.pass], nil, nil),
-            "testFail": ([.fail], 1, nil),
+            "testShouldFail": ([.fail], 1, nil),
             "testError": ([.fail], 1, nil),
             "testErrorIgnore": ([.fail], nil, nil),
-            "testFuncRetryErrorFail": (Array(repeating: .fail, count: 5), 1, nil),
+            "testFuncRetryErrorShouldFail": (Array(repeating: .fail, count: 5), 1, nil),
             "testFuncRegistration": ([.pass], nil, nil),
             "testParameterized(p1:p2:)": (Array(repeating: .pass, count: 3), nil, nil),
             "zzzzFuncCancel": ([.skip], nil, true)

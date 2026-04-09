@@ -35,7 +35,7 @@ internal class DDXCTestObserverTests: XCTestCase {
         XCTAssertNil(DDTracer.activeSpan)
     }
 
-    func testWhenTestBundleWillStartIsCalled_testBundleNameIsSet() throws {
+    func testWhenTestBundleWillStartIsCalled_testBundleNameIsSet() async throws {
         testObserver.testBundleWillStart(Bundle.main)
         guard case .module(let module, _) = testObserver.state else {
             XCTFail("Bad observer state: \(testObserver.state)")
@@ -43,10 +43,10 @@ internal class DDXCTestObserverTests: XCTestCase {
         }
         XCTAssertFalse(module.name.isEmpty)
         testObserver.testBundleDidFinish(Bundle.main)
-        destroyObserver()
+        await destroyObserver()
     }
 
-    func testWhenTestCaseWillStartIsCalled_testSpanIsCreated() {
+    func testWhenTestCaseWillStartIsCalled_testSpanIsCreated() async {
         let group = DDXCTestRetryGroup(for: self, observer: testObserver)
         testObserver.testBundleWillStart(Bundle.main)
         testObserver.testSuiteWillStart(theSuite)
@@ -72,7 +72,7 @@ internal class DDXCTestObserverTests: XCTestCase {
         testObserver.testRetryGroupDidFinish(group)
         testObserver.testSuiteDidFinish(theSuite)
         testObserver.testBundleDidFinish(Bundle.main)
-        destroyObserver()
+        await destroyObserver()
 
         XCTAssertEqual(spanData.name, "XCTest.test")
         XCTAssertEqual(spanData.attributes[DDGenericTags.type]?.description, DDTagValues.typeTest)
@@ -84,7 +84,7 @@ internal class DDXCTestObserverTests: XCTestCase {
         XCTAssertEqual(spanData.attributes[DDHostTags.hostVCPUCount]?.description, String(Double(PlatformUtils.getCpuCount())))
     }
 
-    func testWhenTestCaseDidFinishIsCalled_testStatusIsSet() {
+    func testWhenTestCaseDidFinishIsCalled_testStatusIsSet() async {
         let group = DDXCTestRetryGroup(for: self, observer: testObserver)
         testObserver.testBundleWillStart(Bundle.main)
         testObserver.testSuiteWillStart(theSuite)
@@ -111,13 +111,13 @@ internal class DDXCTestObserverTests: XCTestCase {
         testObserver.testRetryGroupDidFinish(group)
         testObserver.testSuiteDidFinish(theSuite)
         testObserver.testBundleDidFinish(Bundle.main)
-        destroyObserver()
+        await destroyObserver()
 
         XCTAssertNil(statusBefore)
         XCTAssertNotNil(spanData.attributes[DDTestTags.testStatus])
     }
 
-    func testWhenTestCaseDidRecordIssueIsCalled_testStatusIsSet() {
+    func testWhenTestCaseDidRecordIssueIsCalled_testStatusIsSet() async {
         let group = DDXCTestRetryGroup(for: self, observer: testObserver)
         testObserver.testBundleWillStart(Bundle.main)
         testObserver.testSuiteWillStart(theSuite)
@@ -145,14 +145,14 @@ internal class DDXCTestObserverTests: XCTestCase {
         testObserver.testRetryGroupDidFinish(group)
         testObserver.testSuiteDidFinish(theSuite)
         testObserver.testBundleDidFinish(Bundle.main)
-        destroyObserver()
+        await destroyObserver()
 
         XCTAssertNotNil(spanData.attributes[DDTags.errorType])
         XCTAssertNotNil(spanData.attributes[DDTags.errorMessage])
         XCTAssertNil(spanData.attributes[DDTags.errorStack])
     }
 
-    func testWhenTestCaseDidFinishIsCalledAndTheTestIsABenchmark_benchmarkTagsAreAdded() {
+    func testWhenTestCaseDidFinishIsCalledAndTheTestIsABenchmark_benchmarkTagsAreAdded() async {
         let group = DDXCTestRetryGroup(for: self, observer: testObserver)
         testObserver.testBundleWillStart(Bundle.main)
         testObserver.testSuiteWillStart(theSuite)
@@ -182,7 +182,7 @@ internal class DDXCTestObserverTests: XCTestCase {
         testObserver.testRetryGroupDidFinish(group)
         testObserver.testSuiteDidFinish(theSuite)
         testObserver.testBundleDidFinish(Bundle.main)
-        destroyObserver()
+        await destroyObserver()
 
         XCTAssertEqual(spanData.attributes[DDTestTags.testType]?.description, DDTagValues.typeBenchmark)
 
@@ -194,7 +194,7 @@ internal class DDXCTestObserverTests: XCTestCase {
         XCTAssertEqual(spanData.attributes[measure + DDBenchmarkTags.statisticsMedian]?.description, "3000000000.0")
     }
 
-    func testWhenTestCaseDidRecordIssueIsCalledTwice_twoErrorsAppear() {
+    func testWhenTestCaseDidRecordIssueIsCalledTwice_twoErrorsAppear() async {
         let group = DDXCTestRetryGroup(for: self, observer: testObserver)
         testObserver.testBundleWillStart(Bundle.main)
         testObserver.testSuiteWillStart(theSuite)
@@ -231,14 +231,14 @@ internal class DDXCTestObserverTests: XCTestCase {
         testObserver.testRetryGroupDidFinish(group)
         testObserver.testSuiteDidFinish(theSuite)
         testObserver.testBundleDidFinish(Bundle.main)
-        destroyObserver()
+        await destroyObserver()
 
         XCTAssertTrue(spanData.attributes[DDTags.errorMessage]?.description.contains(exactWord: "error1") ?? false)
         XCTAssertTrue(spanData.attributes[DDTags.errorMessage]?.description.contains(exactWord: "error2") ?? false)
     }
 
-    private func destroyObserver() {
-        waitForAsync { await self.session.stop() }
+    private func destroyObserver() async {
+        await self.session.stop()
         testObserver = nil
     }
 }

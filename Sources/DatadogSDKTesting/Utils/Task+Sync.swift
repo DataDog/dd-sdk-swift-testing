@@ -28,7 +28,7 @@ private final class RunLoopWaiter: @unchecked Sendable {
 func waitForAsync<V, E>(_ function: @Sendable @escaping () async throws(E) -> V) throws(E) -> V {
     let waiter = RunLoopWaiter()
     var result: Result<V, E>! = nil
-    Task<Void, Never>.detached {
+    Task<Void, Never> {
         do {
             result = .success(try await function())
         } catch {

@@ -174,7 +174,7 @@ extension TestStatus: CustomDebugStringConvertible {
     public var debugDescription: String { spanAttribute }
 }
 
-struct TestError {
+struct TestError: Error, CustomDebugStringConvertible {
     let type: String
     let message: String?
     let stack: String?
@@ -199,10 +199,51 @@ struct TestError {
             self.crashLog = stack.split(by: 5000)
         }
     }
+    
+    func joined(other error: Self) -> Self {
+        var newMessage: String
+        var newStack: String? = nil
+        if let message {
+            newMessage = message[message.startIndex] == "\n" ? message : "\n\(message)"
+            newMessage += "\n>>> \(error.type)"
+        } else {
+            newMessage = "\n\n>>> \(error.type)"
+        }
+        if let message = error.message {
+            newMessage += ": \(message)"
+        }
+        if let crashLog {
+            newStack = crashLog.joined()
+        } else {
+            newStack = self.stack
+        }
+        if let log = error.crashLog {
+            if newStack != nil {
+                newStack! += "\n\n\(log.joined())"
+            } else {
+                newStack = "\(log.joined())"
+            }
+        } else if let stack = error.stack {
+            if newStack != nil {
+                newStack! += "\n\n\(stack)"
+            } else {
+                newStack = stack
+            }
+        }
+        return .init(type: type, message: newMessage, stack: newStack)
+    }
+    
+    var debugDescription: String {
+        var text = type
+        if let message { text += ": \(message)" }
+        if let stack { text += "\n\(stack)" }
+        if let crashLog { text += "\n\n" + crashLog.joined(separator: "\n") }
+        return text
+    }
 }
 
 struct SessionConfig: Sendable {
-    let activeFeatures: [any TestHooksFeature]
+    let activeFeatures: TestHooksFeatures
     let platform: Environment.Platform
     let clock: Clock
     let crash: CrashInformation?

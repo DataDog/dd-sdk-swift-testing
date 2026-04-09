@@ -63,7 +63,6 @@ final class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate
             return
         }
         state = .stopping
-        stop()
         guard module.name == testBundle.name else {
             log.print("testBundleDidFinish: Bad module: \(testBundle.name), expected: \(module.name)")
             return
@@ -417,7 +416,7 @@ extension DDXCTestObserver {
         let session: any TestSession & TestModuleManager
         let config: SessionConfig
         
-        var features: [any TestHooksFeature] { config.activeFeatures }
+        var features: any TestHooksFeatures { config.activeFeatures }
         
         init(session: any TestSession & TestModuleManager, config: SessionConfig) {
             self.session = session
@@ -429,7 +428,7 @@ extension DDXCTestObserver {
         let parent: ContainerSuite?
         let module: any TestModule & TestSuiteProvider
         let moduleContext: ModuleContext
-        var features: [any TestHooksFeature] { moduleContext.features }
+        var features: any TestHooksFeatures { moduleContext.features }
         
         init(parent: ContainerSuite?, module: any TestModule & TestSuiteProvider, context: ModuleContext)
         {
@@ -454,7 +453,7 @@ extension DDXCTestObserver {
         var skip: (by: (feature: FeatureId, reason: String)?, status: SkipStatus)
         var retry: (feature: FeatureId?, status: RetryStatus)
         
-        var features: [any TestHooksFeature] { suiteContext.features }
+        var features: any TestHooksFeatures { suiteContext.features }
         
         var retryStart: (feature: FeatureId, reason: String, errors: RetryStatus.ErrorsStatus)? {
             retry.feature.flatMap { id in retry.status.retryReason.map { (id, $0) } }.map {

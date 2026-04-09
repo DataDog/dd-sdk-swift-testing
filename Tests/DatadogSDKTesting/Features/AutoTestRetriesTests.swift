@@ -8,10 +8,10 @@ import XCTest
 @testable import DatadogSDKTesting
 
 final class AutoTestRetriesLogicTests: XCTestCase {
-    func testAtrRetriesFailedTest() throws {
+    func testAtrRetriesFailedTest() async throws {
         let (runner, atr) = runner(tests: ["someTest": .fail(first: 4)])
         
-        let tests = try extractTests(runner.run())
+        let tests = try await extractTests(runner.run())
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 5)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 4)
@@ -27,10 +27,10 @@ final class AutoTestRetriesLogicTests: XCTestCase {
         XCTAssertNil(tests["someTest"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries])
     }
     
-    func testAtrDoesntRetryPassedTest() throws {
+    func testAtrDoesntRetryPassedTest() async throws {
         let (runner, atr) = runner(tests: ["someTest": .pass()])
         
-        let tests = try extractTests(runner.run())
+        let tests = try await extractTests(runner.run())
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .pass }.count, 1)
@@ -44,10 +44,10 @@ final class AutoTestRetriesLogicTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
     }
     
-    func testAtrRetriesFailedTestAndFailsLastIfAllFailed() throws {
+    func testAtrRetriesFailedTestAndFailsLastIfAllFailed() async throws {
         let (runner, atr) = runner(tests: ["someTest": .fail("Should fail")])
         
-        let tests = try extractTests(runner.run())
+        let tests = try await extractTests(runner.run())
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 6)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 6)
@@ -65,10 +65,10 @@ final class AutoTestRetriesLogicTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
     }
     
-    func testAtrRetriesFailedTestAndPassesIfLastPassed() throws {
+    func testAtrRetriesFailedTestAndPassesIfLastPassed() async throws {
         let (runner, atr) = runner(tests: ["someTest": .fail(first: 5)])
         
-        let tests = try extractTests(runner.run())
+        let tests = try await extractTests(runner.run())
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 6)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 5)
@@ -86,13 +86,13 @@ final class AutoTestRetriesLogicTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
     }
     
-    func testAtrStopRetryingAfterGlobalMaxReached() throws {
+    func testAtrStopRetryingAfterGlobalMaxReached() async throws {
         let (runner, atr) = runner(tests: ["someTest": .fail(first: 5),
                                            "someTest2": .fail("Should fail")],
                                    failedTestRetriesCount: 5,
                                    failedTestTotalRetriesMax: 8)
         
-        let tests = try extractTests(runner.run())
+        let tests = try await extractTests(runner.run())
         
         // "someTest" should have all 6 runs (main + 5 retries), last is successful
         XCTAssertNotNil(tests["someTest"])
@@ -129,11 +129,13 @@ final class AutoTestRetriesLogicTests: XCTestCase {
         XCTAssertEqual(atr.failedTestTotalRetries, 8)
     }
     
-    func testAtrRetriesFailedTestAndKnownTestsWork() throws {
+    func testAtrRetriesFailedTestAndKnownTestsWork() async throws {
         let (runner, atr) = runner(tests: ["someTest": .fail(first: 4)])
-        runner.features.append(KnownTests(tests: [:]))
+        var features = runner.features.features
+        features.append(KnownTests(tests: [:]))
+        runner.features = features
         
-        let tests = try extractTests(runner.run())
+        let tests = try await extractTests(runner.run())
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 5)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 4)

@@ -87,55 +87,71 @@ extension Mocks {
         typealias Tests = KeyValuePairs<String, KeyValuePairs<String, KeyValuePairs<String, TestMethod>>>
         
         var tests: Tests
-        var features: [any TestHooksFeature]
+        var features: any TestHooksFeatures
         
         init(features: [any TestHooksFeature], tests: Tests = [:]) {
             self.tests = tests
             self.features = features
         }
         
-        func run() -> Session {
-            let session = Session(name: "MockTestSession",
-                                  config: .init(activeFeatures: features,
-                                                platform: DDTestMonitor.env.platform,
-                                                clock: DateClock(),
-                                                crash: nil,
-                                                command: "test command",
-                                                service: "test-runner",
-                                                metrics: [:],
-                                                log: Mocks.CatchLogger(isDebug: false)),
-                                  observer: SessionAndModuleObserver())
-            for (module, suites) in tests {
-                let mod = _run(module: module, suites: suites, session: session)
-                session.add(module: mod)
+        func run() async -> Session {
+            let unskippable = tests.map { module in
+                let suites = module.value.map { suite in
+                    let tests = Dictionary(uniqueKeysWithValues: suite.value.map { ($0.key, $0.value.unskippable) })
+                    return (suite.key, (false, tests))
+                }
+                return (module.key, Dictionary(uniqueKeysWithValues: suites))
             }
+            let observer = SessionAndModuleObserver()
+            let config = SessionConfig(activeFeatures: features,
+                                       platform: DDTestMonitor.env.platform,
+                                       clock: DateClock(),
+                                       crash: nil,
+                                       command: "test command",
+                                       service: "test-runner",
+                                       metrics: [:],
+                                       log: Mocks.CatchLogger(isDebug: false))
+            let session = Session(name: "MockTestSession",
+                                  unskippable: Dictionary(uniqueKeysWithValues: unskippable),
+                                  config: config,
+                                  observer: observer)
+            await observer.didStart(session: session, with: config)
+            for (module, suites) in tests {
+                _run(module: module, suites: suites, session: session)
+            }
+            await observer.willFinish(session: session, with: config)
             session.end()
+            await observer.didFinish(session: session, with: config)
             return session
         }
         
-        func _run(module name: String, suites: KeyValuePairs<String, KeyValuePairs<String, TestMethod>>, session: Session) -> Module {
-            let module = Module(name: name, session: session)
+        func _run(module name: String, suites: KeyValuePairs<String, KeyValuePairs<String, TestMethod>>, session: Session) {
+            let module = session.module(named: name) as! Mocks.Module
             for (suite, tests) in suites {
-                let st = _run(suite: suite, tests: tests, module: module)
-                module.add(suite: st)
+                _run(suite: suite, tests: tests, module: module)
+            }
+            if let config = session._sessionConfig {
+                session._moduleObserver?.willFinish(module: module, with: config)
             }
             session.end(module: module)
-            return module
+            if let config = session._sessionConfig {
+                session._moduleObserver?.didFinish(module: module, with: config)
+            }
         }
         
-        func _run(suite name: String, tests: KeyValuePairs<String, TestMethod>, module: Module) -> Suite {
-            let suite = Suite(name: name, module: module, framework: "MockRunner")
+        func _run(suite name: String, tests: KeyValuePairs<String, TestMethod>, module: Module) {
+            let suite = module.startSuite(named: name, at: nil, framework: "MockRunner") as! Mocks.Suite
             features.testSuiteWillStart(suite: suite, testsCount: UInt(tests.count))
             for (test, method) in tests {
-                let group = _run(group: test, method: method, suite: suite)
-                suite.add(group: group)
+                _run(group: test, method: method, suite: suite)
             }
+            features.testSuiteWillEnd(suite: suite)
             suite.end()
-            return suite
+            features.testSuiteDidEnd(suite: suite)
         }
         
-        func _run(group name: String, method: TestMethod, suite: Suite) -> Group {
-            let group = Group(name: name, suite: suite, unskippable: method.unskippable)
+        func _run(group name: String, method: TestMethod, suite: Suite) {
+            let group = suite.startGroup(named: name)
             
             let (feature, config) = features.testGroupConfiguration(for: group.name, meta: group, in: suite)
             
@@ -162,17 +178,11 @@ extension Mocks {
             while info.retry.status.isRetry {
                 info = _run(test: name, method: method, info: info.startInfo, group: group)
             }
-            
-            return group
         }
         
         func _run(test name: String, method: TestMethod, info: TestRunInfoStart, group: Group) -> TestRunInfoEnd {
-            var (test, endInfo) = group.suite.withTest(named: name) { test in
-                let test = Test(name: name, suite: group.suite)
+            var (test, endInfo) = group.withTest(named: name) { test in
                 var info = info
-                // To emulate how XCTest work. It's added before execution
-                // Group simply ignores it's results till it finished
-                group.add(run: test)
                 
                 features.testWillStart(test: test, info: info)
                 
@@ -182,7 +192,6 @@ extension Mocks {
                 switch result {
                 case .fail(let testError):
                     test.add(error: testError)
-                    
                     if !test.errorStatus.isSuppressed,
                        let feature = features.shouldSuppressError(test: test, info: info)
                     {

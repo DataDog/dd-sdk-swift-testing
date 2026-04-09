@@ -7,12 +7,18 @@
 import Foundation
 
 final class AdditionalTags: TestHooksFeature {
-    static let id: FeatureId = "Test Observability Tags"
+    static let id: FeatureId = "Additional Test Tags"
 
     let codeCoverage: Bool
+    let bundleFunctions: FunctionMap
+    let codeOwners: CodeOwners?
+    let workspacePath: String?
 
-    init(codeCoverage: Bool) {
+    init(codeCoverage: Bool = false, bundleFunctions: FunctionMap = [:], codeOwners: CodeOwners? = nil, workspacePath: String? = nil) {
         self.codeCoverage = codeCoverage
+        self.bundleFunctions = bundleFunctions
+        self.codeOwners = codeOwners
+        self.workspacePath = workspacePath
     }
 
     func testSessionWillEnd(session: any TestSession) {
@@ -35,6 +41,20 @@ final class AdditionalTags: TestHooksFeature {
     }
 
     func testWillStart(test: any TestRun, info: TestRunInfoStart) {
+        if let functionInfo = bundleFunctions["\(test.suite.name).\(test.name)"] {
+            var filePath = functionInfo.file
+            if let workspacePath,
+               let workspaceRange = filePath.range(of: workspacePath + "/")
+            {
+                filePath.removeSubrange(workspaceRange)
+            }
+            test.set(tag: DDTestTags.testSourceFile, value: filePath)
+            test.set(tag: DDTestTags.testSourceStartLine, value: functionInfo.startLine)
+            test.set(tag: DDTestTags.testSourceEndLine, value: functionInfo.endLine)
+            if let owners = codeOwners?.ownersForPath(filePath) {
+                test.set(tag: DDTestTags.testCodeowners, value: owners)
+            }
+        }
         if let retry = info.retry {
             test.set(tag: DDEfdTags.testIsRetry, value: "true")
             test.set(tag: DDEfdTags.testRetryReason, value: retry.reason)

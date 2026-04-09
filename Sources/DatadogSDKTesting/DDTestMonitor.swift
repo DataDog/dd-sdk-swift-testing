@@ -626,7 +626,10 @@ internal class DDTestMonitor {
         testOptimizationSetupQueue.waitUntilAllOperationsAreFinished()
         let features: [(any TestHooksFeature)?] = [
             testManagement, tia, efd, atr, knownTests,
-            AdditionalTags(codeCoverage: tia == nil)
+            AdditionalTags(codeCoverage: tia == nil,
+                           bundleFunctions: bundleFunctionInfo,
+                           codeOwners: codeOwners,
+                           workspacePath: DDTestMonitor.env.workspacePath)
         ]
         return features.compactMap { $0 }
     }

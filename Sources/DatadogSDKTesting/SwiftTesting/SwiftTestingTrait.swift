@@ -302,13 +302,17 @@ extension Issue: SwiftTestingIssue {
 
 extension SourceLocation {
     var asDD: SwiftTestingSourceLocation {
-        .init(fileID: fileID, filePath: filePath, line: line, column: column)
+#if compiler(>=6.3)
+        .init(fileID: self.fileID, filePath: self.filePath, line: self.line, column: self.column)
+#else
+        .init(fileID: self.fileID, filePath: self._filePath, line: self.line, column: self.column)
+#endif
     }
 }
 
 extension SwiftTestingSourceLocation {
     var asSwift: SourceLocation {
-        .init(fileID: fileID, filePath: filePath, line: line, column: column)
+        .init(fileID: self.fileID, filePath: self.filePath, line: self.line, column: self.column)
     }
 }
 

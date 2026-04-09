@@ -381,6 +381,71 @@ extension TestRunInfoEnd {
     }
 }
 
+protocol TestHooksFeatures: Sendable {
+    var features: [any TestHooksFeature] { get }
+    
+    func testSessionWillStart(session: any TestSession) -> Void
+    func testSessionWillEnd(session: any TestSession) -> Void
+    func testSessionDidEnd(session: any TestSession) -> Void
+    
+    func testModuleWillStart(module: any TestModule) -> Void
+    func testModuleWillEnd(module: any TestModule) -> Void
+    func testModuleDidEnd(module: any TestModule) -> Void
+    
+    func testSuiteWillStart(suite: any TestSuite, testsCount: UInt)
+    func testSuiteWillEnd(suite: any TestSuite) -> Void
+    func testSuiteDidEnd(suite: any TestSuite) -> Void
+    
+    func testGroupWillStart(for test: String, in suite: any TestSuite)
+    
+    func testGroupConfiguration(
+        for test: String, meta: UnskippableMethodCheckerFactory, in suite: any TestSuite,
+        configuration: RetryGroupConfiguration.Iterator
+    ) -> (feature: (any TestHooksFeature)?, configuration: RetryGroupConfiguration)
+    
+    func testGroupConfiguration(
+        for test: String, meta: UnskippableMethodCheckerFactory, in suite: any TestSuite
+    ) -> (feature: (any TestHooksFeature)?, configuration: RetryGroupConfiguration)
+    
+    func testWillStart(test: any TestRun, info: TestRunInfoStart)
+    
+    func shouldSuppressError(test: any TestRun, info: TestRunInfoStart) -> (any TestHooksFeature)?
+    
+    func testGroupRetry(
+        test: any TestRun, duration: TimeInterval,
+        withStatus status: TestStatus, andInfo info: TestRunInfoStart,
+        retryStatus retry: RetryStatus.Iterator
+    ) -> (feature: (any TestHooksFeature)?, retryStatus: RetryStatus)
+    
+    func testGroupRetry(
+        test: any TestRun, duration: TimeInterval,
+        withStatus status: TestStatus, andInfo info: TestRunInfoStart
+    ) -> (feature: (any TestHooksFeature)?, retryStatus: RetryStatus)
+    
+    func testWillFinish(test: any TestRun, duration: TimeInterval,
+                        withStatus status: TestStatus, andInfo info: TestRunInfoEnd)
+    
+    func testDidFinish(test: any TestRun, info: TestRunInfoEnd)
+}
+
+extension TestHooksFeatures {
+    func testGroupConfiguration(
+        for test: String, meta: UnskippableMethodCheckerFactory, in suite: any TestSuite
+    ) -> (feature: (any TestHooksFeature)?, configuration: RetryGroupConfiguration) {
+        testGroupConfiguration(for: test, meta: meta,
+                               in: suite, configuration: .init())
+    }
+    
+    func testGroupRetry(
+        test: any TestRun, duration: TimeInterval,
+        withStatus status: TestStatus, andInfo info: TestRunInfoStart
+    ) -> (feature: (any TestHooksFeature)?, retryStatus: RetryStatus) {
+        testGroupRetry(test: test, duration: duration,
+                       withStatus: status, andInfo: info,
+                       retryStatus: .init())
+    }
+}
+
 // Default hooks implementation
 extension TestHooksFeature {
     func testSessionWillStart(session: any TestSession) -> Void {}
@@ -421,7 +486,9 @@ extension TestHooksFeature {
 
 
 // Iteration helpers for hooks
-extension Array where Element == (any TestHooksFeature) {
+extension Array: TestHooksFeatures where Element == (any TestHooksFeature) {
+    var features: [any TestHooksFeature] { self }
+    
     func testSessionWillStart(session: any TestSession) -> Void {
         for feature in self {
             feature.testSessionWillStart(session: session)
@@ -484,7 +551,7 @@ extension Array where Element == (any TestHooksFeature) {
     
     func testGroupConfiguration(
         for test: String, meta: UnskippableMethodCheckerFactory, in suite: any TestSuite,
-        configuration: RetryGroupConfiguration.Iterator = .init()
+        configuration: RetryGroupConfiguration.Iterator
     ) -> (feature: (any TestHooksFeature)?, configuration: RetryGroupConfiguration) {
         var configuration = configuration
         for feature in self {
@@ -519,7 +586,7 @@ extension Array where Element == (any TestHooksFeature) {
     func testGroupRetry(
         test: any TestRun, duration: TimeInterval,
         withStatus status: TestStatus, andInfo info: TestRunInfoStart,
-        retryStatus retry: RetryStatus.Iterator = .init()
+        retryStatus retry: RetryStatus.Iterator
     ) -> (feature: (any TestHooksFeature)?, retryStatus: RetryStatus) {
         var retry = retry
         for feature in self {

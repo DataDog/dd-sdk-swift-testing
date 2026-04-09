@@ -16,7 +16,7 @@ public final class Test: NSObject {
 
     let suite: TestSuite
 
-    private let errorInfo: Synced<ErrorInfo?> = .init(nil)
+    private let errorInfo: Synced<TestError?> = .init(nil)
     
     init(name: String, suite: TestSuite, span: SpanSdk) {
         self.name = name
@@ -56,22 +56,11 @@ public final class Test: NSObject {
     ///   - callstack: (Optional) The callstack associated with the error
     @objc public func setErrorInfo(type: String, message: String, callstack: String? = nil) {
         errorInfo.update { errorInfo in
-            if errorInfo == nil {
-                errorInfo = ErrorInfo(type: type, message: message, callstack: callstack)
-            } else {
-                errorInfo?.addExtraError(message: message)
-            }
+            errorInfo = errorInfo.joined(other: .init(type: type,
+                                                      message: message,
+                                                      stack: callstack))
         }
         DDTestMonitor.tracer.logError(string: "\(type): \(message)")
-    }
-
-    private func setErrorInformation() {
-        guard let errorInfo = errorInfo.value else { return }
-        span.setAttribute(key: DDTags.errorType, value: errorInfo.type)
-        span.setAttribute(key: DDTags.errorMessage, value: errorInfo.message)
-        if let callstack = errorInfo.callstack {
-            span.setAttribute(key: DDTags.errorStack, value: callstack)
-        }
     }
 
     /// Ends the test
@@ -93,7 +82,9 @@ public final class Test: NSObject {
             span.status = .ok
         case .fail:
             span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusFail)
-            setErrorInformation()
+            if let error = errorInfo.value {
+                set(errorTags: error)
+            }
             span.status = .error(description: "Test failed")
         case .skip:
             span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusSkip)
@@ -208,17 +199,11 @@ extension Test {
     }
 }
 
-private struct ErrorInfo {
-    var type: String
-    var message: String
-    var callstack: String?
-    var errorCount = 1
-
-    mutating func addExtraError(message newMessage: String) {
-        if errorCount == 1 {
-            message.insert("\n", at: message.startIndex)
+extension Optional where Wrapped == TestError {
+    func joined(other error: TestError) -> Self {
+        switch self {
+        case .none: return error
+        case .some(let err): return err.joined(other: error)
         }
-        message.append("\n" + newMessage)
-        errorCount += 1
     }
 }

@@ -30,7 +30,10 @@ enum Mocks {
         let id: SpanId = .random()
         let name: String
         let startTime: Date
-        var duration: UInt64 { _state.value.duration }
+        var duration: UInt64 {
+            get { _state.value.duration }
+            set { _state.update { $0.duration = newValue } }
+        }
         var status: TestStatus { _state.value.status }
         var tags: [String: String] { _state.value.tags }
         var metrics: [String: Double] { _state.value.metrics }
@@ -87,12 +90,16 @@ enum Mocks {
 
         let _sessionConfig: SessionConfig?
         let _moduleObserver: (any TestModuleManagerObserver)?
+        
+        let unskippable: [String: [String: (Bool, [String: Bool])]]
 
         init(name: String, startTime: Date = Date(),
+             unskippable: [String: [String: (Bool, [String: Bool])]],
              config: SessionConfig? = nil,
              observer: (any TestModuleManagerObserver)? = nil) {
             self._sessionConfig = config
             self._moduleObserver = observer
+            self.unskippable = unskippable
             super.init(name: name, startTime: startTime)
         }
 
@@ -103,13 +110,6 @@ enum Mocks {
             _state.update { state in
                 defer { state.testIndex += 1 }
                 return state.testIndex
-            }
-        }
-
-        func add(module: Module) {
-            guard module.session.id == self.id else { return }
-            _state.update { state in
-                state.modules[module.name] = module
             }
         }
 
@@ -130,14 +130,27 @@ enum Mocks {
             hasher.combine(id)
             hasher.combine(name)
         }
+        
+        func newModule(named name: String, at start: Date?) -> Mocks.Module {
+            Mocks.Module(name: name, session: self,
+                         unskippable: unskippable[name] ?? [:],
+                         startTime: start ?? Date())
+        }
 
         func startModule(named name: String, at start: Date?) -> any TestModule & TestSuiteProvider {
-            return Mocks.Module(name: name, session: self, startTime: start ?? Date())
+            newModule(named: name, at: start)
         }
 
         func module(named name: String) -> any DatadogSDKTesting.TestModule & DatadogSDKTesting.TestSuiteProvider {
-            let module = startModule(named: name, at: nil)
-            if let config = _sessionConfig {
+            let (module, started) = _state.update { state in
+                if let module = state.modules[name] {
+                    return (module, false)
+                }
+                let module = newModule(named: name, at: nil)
+                state.modules[name] = module
+                return (module, true)
+            }
+            if let config = _sessionConfig, started {
                 _moduleObserver?.didStart(module: module, with: config)
             }
             return module
@@ -154,9 +167,19 @@ enum Mocks {
         }
 
         final class Provider: TestSessionProvider {
+            nonisolated(unsafe) var session: Session? = nil
+            
+            let unskippable: [String: [String: (Bool, [String: Bool])]]
+            
+            init(unskippable: [String : [String : (Bool, [String : Bool])]] = [:]) {
+                self.unskippable = unskippable
+            }
+            
             func startSession(named name: String, config: SessionConfig, startTime: Date,
                               observer: (any TestModuleManagerObserver)?) async throws -> any TestModuleManager & TestSession {
-                return Session(name: name, startTime: startTime, config: config, observer: observer)
+                self.session = Session(name: name, startTime: startTime, unskippable: unskippable,
+                                       config: config, observer: observer)
+                return self.session!
             }
         }
     }
@@ -178,6 +201,7 @@ enum Mocks {
         weak var _session: Session!
 #endif
         
+        let unskippable: [String: (Bool, [String: Bool])]
         var session: any TestSession { _session }
         var testFrameworks: Set<String> { _state.value.testFrameworks }
         var suites: [String: Suite] { _state.value.suites }
@@ -186,17 +210,10 @@ enum Mocks {
             set { _state.update { $0.localization = newValue } }
         }
         
-        init(name: String, session: Session, startTime: Date = Date()) {
+        init(name: String, session: Session, unskippable: [String: (Bool, [String: Bool])], startTime: Date = Date()) {
             self._session = session
+            self.unskippable = unskippable
             super.init(name: name, startTime: startTime)
-        }
-        
-        func add(suite: Suite) {
-            guard suite.module.id == self.id else { return }
-            _state.update {
-                $0.suites[suite.name] = suite
-            }
-            
         }
         
         subscript(_ suite: String) -> Suite? {
@@ -219,13 +236,20 @@ enum Mocks {
         }
         
         func startSuite(named name: String, at start: Date?, framework: String) -> any DatadogSDKTesting.TestRunProvider & DatadogSDKTesting.TestSuite {
-            let _ = _state.update {
-                $0.testFrameworks.insert(framework)
+            let suite = _state.update { state in
+                let suite = Mocks.Suite(name: name, module: self,
+                                        framework: framework,
+                                        unskippable: unskippable[name]?.0 ?? false,
+                                        unskippableTests: unskippable[name]?.1 ?? [:],
+                                        startTime: start ?? Date())
+                state.suites[name] = suite
+                state.testFrameworks.insert(framework)
+                return suite
             }
             let _ = _session?._state.update {
                 $0.testFrameworks.insert(framework)
             }
-            return Mocks.Suite(name: name, module: self, framework: framework, startTime: start ?? Date())
+            return suite
         }
     }
     
@@ -247,6 +271,7 @@ enum Mocks {
 #endif
         
         let testFramework: String
+        let unskippableTests: [String: Bool]
         
         var module: any TestModule { _module }
         var localization: String {
@@ -259,20 +284,15 @@ enum Mocks {
         }
         var tests: [String: Group] { _state.value.tests }
         
-        init(name: String, module: Module, framework: String, startTime: Date = Date()) {
+        init(name: String, module: Module, framework: String, unskippable: Bool, unskippableTests: [String: Bool], startTime: Date = Date()) {
             self._module = module
             self.testFramework = framework
+            self.unskippableTests = unskippableTests
             super.init(name: name, startTime: startTime)
+            self.unskippable = unskippable
         }
         
-        func add(group: Group) {
-            guard group.suite == nil || group.suite?.id == self.id else { return }
-            _state.update {
-                $0.tests[group.name] = group
-            }
-        }
-        
-        subscript(_ test: String) -> Group? {
+        subscript(_ test: String) -> Mocks.Group? {
             tests[test]
         }
         
@@ -291,12 +311,39 @@ enum Mocks {
             hasher.combine(_module)
         }
         
+        func startGroup(named name: String) -> Mocks.Group {
+            _state.update { state in
+                let group = Group(name: name, suite: self,
+                                  unskippable: unskippableTests[name] ?? false)
+                state.tests[name] = group
+                return group
+            }
+        }
+        
         func withTest<T>(named name: String, _ action: @Sendable (Test) async throws -> T) async rethrows -> T {
-            try await Test.withActiveTest(name: name, suite: self, action)
+            let group = _state.update {
+                if let group = $0.tests[name] {
+                    return group
+                }
+                let group = Group(name: name, suite: self,
+                                  unskippable: unskippableTests[name] ?? false)
+                $0.tests[name] = group
+                return group
+            }
+            return try await group.withTest(named: name, action)
         }
 
         func withTest<T>(named name: String, _ action: (Test) throws -> T) rethrows -> T {
-            try Test.withActiveTest(name: name, suite: self, action)
+            let group = _state.update {
+                if let group = $0.tests[name] {
+                    return group
+                }
+                let group = Group(name: name, suite: self, unskippable:
+                                    unskippableTests[name] ?? false)
+                $0.tests[name] = group
+                return group
+            }
+            return try group.withTest(named: name, action)
         }
         
         func withActiveTest<T>(named name: String, _ action: @Sendable (any TestRun) async throws -> T) async rethrows -> T {
@@ -327,7 +374,6 @@ enum Mocks {
 
         let _state: Synced<GroupInfo> = .init(.init())
         
-        
         var unskippable: Bool {
             get { _state.value.unskippable }
             set { _state.update { $0.unskippable = newValue } }
@@ -350,9 +396,17 @@ enum Mocks {
             self.unskippable = unskippable
         }
         
-        func add(run: Test) {
-            _state.update {
-                $0.runs.append(run)
+        func withTest<T>(named name: String, _ action: (Mocks.Test) throws -> T) rethrows -> T {
+            try Test.withActiveTest(name: name, group: self) { run in
+                self._state.update { $0.runs.append(run) }
+                return try action(run)
+            }
+        }
+        
+        func withTest<T>(named name: String, _ action: @Sendable (Test) async throws -> T) async rethrows -> T {
+            try await Test.withActiveTest(name: name, group: self) { run in
+                self._state.update { $0.runs.append(run) }
+                return try await action(run)
             }
         }
         
@@ -431,12 +485,12 @@ enum Mocks {
         }
 
 #if compiler(>=6.3)
-        weak let _suite: Suite?
+        weak let _group: Group?
 #else
-        weak var _suite: Suite?
+        weak var _group: Group?
 #endif
         
-        var suite: any TestSuite { _suite! }
+        var suite: any TestSuite { _group!.suite }
         
         var error: TestError? { _state.value.error }
         var errorStatus: ErrorSuppressionStatus {
@@ -449,8 +503,8 @@ enum Mocks {
             return errorStatus.isSuppressed ? .pass : .fail
         }
         
-        init(name: String, suite: Suite) {
-            self._suite = suite
+        init(name: String, group: Group) {
+            self._group = group
             super.init(name: name)
         }
         
@@ -482,23 +536,23 @@ enum Mocks {
         }
         
         static func == (lhs: Mocks.Test, rhs: Mocks.Test) -> Bool {
-            lhs.id == rhs.id && lhs.name == rhs.name && lhs._suite == rhs._suite
+            lhs.id == rhs.id && lhs.name == rhs.name && lhs._group == rhs._group
         }
         
         func hash(into hasher: inout Hasher) {
             hasher.combine(id)
             hasher.combine(name)
-            hasher.combine(_suite)
+            hasher.combine(_group)
         }
         
-        static func withActiveTest<T>(name: String, suite: Suite, _ body: (Self) throws -> T) rethrows -> T {
-            let test = Self(name: name, suite: suite)
+        static func withActiveTest<T>(name: String, group: Group, _ body: (Self) throws -> T) rethrows -> T {
+            let test = Self(name: name, group: group)
             defer { test.end() }
             return try test.withActive { try body(test) }
         }
         
-        static func withActiveTest<T>(name: String, suite: Suite, _ body: @Sendable (Self) async throws -> T) async rethrows -> T {
-            let test = Self(name: name, suite: suite)
+        static func withActiveTest<T>(name: String, group: Group, _ body: @Sendable (Self) async throws -> T) async rethrows -> T {
+            let test = Self(name: name, group: group)
             defer { test.end() }
             return try await test.withActive { try await body(test) }
         }

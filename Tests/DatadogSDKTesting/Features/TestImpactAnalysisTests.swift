@@ -9,11 +9,11 @@ import XCTest
 @testable import EventsExporter
 
 class TestImpactAnalysisTests: XCTestCase {
-    func testTestImpactAnalysisSkipsTest() throws {
+    func testTestImpactAnalysisSkipsTest() async throws {
         let (runner, tia, _) = tiaRunner(skip: ["skipTest"],
                                          tests: ["someTest": .fail("Always fails"),
                                                  "skipTest": .fail("Always fails")])
-        let tests = try extractTests(runner.run())
+        let tests = try await extractTests(runner.run())
         XCTAssertNotNil(tests["skipTest"])
         XCTAssertEqual(tests["skipTest"]?.runs.count, 1)
         XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.status == .skip }.count, 1)
@@ -42,11 +42,11 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
     }
     
-    func testTestImpactAnalysisDoesntSkipUnskippable() throws {
+    func testTestImpactAnalysisDoesntSkipUnskippable() async throws {
         let (runner, tia, _) = tiaRunner(skip: ["skipTest"],
                                          tests: ["someTest": .fail("Always fails"),
                                                  "skipTest": .fail("Always fails", unskippable: true)])
-        let tests = try extractTests(runner.run())
+        let tests = try await extractTests(runner.run())
         XCTAssertNotNil(tests["skipTest"])
         XCTAssertEqual(tests["skipTest"]?.runs.count, 1)
         XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.status == .fail }.count, 1)
@@ -76,11 +76,11 @@ class TestImpactAnalysisTests: XCTestCase {
     }
     
     // TIA + EFD
-    func testTestImpactAnalysisSkipsEFDKnownTest() throws {
+    func testTestImpactAnalysisSkipsEFDKnownTest() async throws {
         let (runner, tia, _) = tiaAndEfdRunner(skip: ["skipTest"], known: ["skipTest"],
                                                tests: ["someTest": .failOddRuns(),
                                                        "skipTest": .fail("Always fails")])
-        let tests = try extractTests(runner.run())
+        let tests = try await extractTests(runner.run())
         XCTAssertNotNil(tests["skipTest"])
         XCTAssertEqual(tests["skipTest"]?.runs.count, 1)
         XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.status == .skip }.count, 1)
@@ -115,11 +115,11 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
     }
     
-    func testTestImpactAnalysisSkipsEFDUnknownTest() throws {
+    func testTestImpactAnalysisSkipsEFDUnknownTest() async throws {
         let (runner, tia, _) = tiaAndEfdRunner(skip: ["skipTest"], known: [],
                                                tests: ["someTest": .failOddRuns(),
                                                        "skipTest": .fail("Always fails")])
-        let tests = try extractTests(runner.run())
+        let tests = try await extractTests(runner.run())
         XCTAssertNotNil(tests["skipTest"])
         XCTAssertEqual(tests["skipTest"]?.runs.count, 1)
         XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.status == .skip }.count, 1)
@@ -154,11 +154,11 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
     }
     
-    func testTestImpactAnalysisUnskippableEFDWorks() throws {
+    func testTestImpactAnalysisUnskippableEFDWorks() async throws {
         let (runner, tia, _) = tiaAndEfdRunner(skip: ["skipTest"], known: [],
                                                tests: ["someTest": .failOddRuns(),
                                                        "skipTest": .failEvenRuns(unskippable: true)])
-        let tests = try extractTests(runner.run())
+        let tests = try await extractTests(runner.run())
         XCTAssertNotNil(tests["skipTest"])
         XCTAssertEqual(tests["skipTest"]?.runs.count, 10)
         XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.status == .fail }.count, 5)
@@ -194,11 +194,11 @@ class TestImpactAnalysisTests: XCTestCase {
     }
     
     // TIA + ATR
-    func testTestImpactAnalysisAndATRWorksTogether() throws {
+    func testTestImpactAnalysisAndATRWorksTogether() async throws {
         let (runner, tia, _) = tiaAndAtrRunner(skip: ["skipTest"],
                                                tests: ["someTest": .fail(first: 3),
                                                        "skipTest": .fail("Always fails")])
-        let tests = try extractTests(runner.run())
+        let tests = try await extractTests(runner.run())
         XCTAssertNotNil(tests["skipTest"])
         XCTAssertEqual(tests["skipTest"]?.runs.count, 1)
         XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.status == .skip }.count, 1)
@@ -232,11 +232,11 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
     }
     
-    func testTestImpactAnalysisAndATRWorksTogetherUnskippable() throws {
+    func testTestImpactAnalysisAndATRWorksTogetherUnskippable() async throws {
         let (runner, tia, _) = tiaAndAtrRunner(skip: ["skipTest"],
                                                tests: ["someTest": .fail(first: 3),
                                                        "skipTest": .fail(first: 4, unskippable: true)])
-        let tests = try extractTests(runner.run())
+        let tests = try await extractTests(runner.run())
         XCTAssertNotNil(tests["skipTest"])
         XCTAssertEqual(tests["skipTest"]?.runs.count, 5)
         XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.status == .fail }.count, 4)
@@ -270,12 +270,12 @@ class TestImpactAnalysisTests: XCTestCase {
     }
     
     // TIA + EFD + ATR
-    func testTestImpactAnalysisSkipsEFDKnownTestAndATRRuns() throws {
+    func testTestImpactAnalysisSkipsEFDKnownTestAndATRRuns() async throws {
         let (runner, tia, _) = tiaEfdAndAtrRunner(skip: ["skipTest"], known: ["skipTest", "knownTest"],
                                                   tests: ["unknownTest": .failOddRuns(),
                                                           "knownTest": .fail(first: 3),
                                                           "skipTest": .fail("Always fails")])
-        let tests = try extractTests(runner.run())
+        let tests = try await extractTests(runner.run())
         XCTAssertNotNil(tests["skipTest"])
         XCTAssertEqual(tests["skipTest"]?.runs.count, 1)
         XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.status == .skip }.count, 1)
@@ -347,22 +347,28 @@ class TestImpactAnalysisTests: XCTestCase {
             log: Mocks.CatchLogger(isDebug: false)
         )
         let knownFeature = KnownTests(tests: ["TIAModule": ["TIASuite": known]])
-        runner.0.features.insert(efd, at: runner.0.features.count - 1)
-        runner.0.features.insert(knownFeature, at: runner.0.features.count - 1)
+        var features = runner.0.features.features
+        features.insert(efd, at: features.count - 1)
+        features.insert(knownFeature, at: features.count - 1)
+        runner.0.features = features
         return runner
     }
     
     func tiaAndAtrRunner(skip: [String], tests: KeyValuePairs<String, Mocks.Runner.TestMethod>) -> (Mocks.Runner, TestImpactAnalysis, Mocks.CoverageCollector) {
         let runner = tiaRunner(skip: skip, tests: tests)
         let atr = AutomaticTestRetries(failedTestRetriesCount: 5, failedTestTotalRetriesMax: 1000)
-        runner.0.features.insert(atr, at: runner.0.features.count - 1)
+        var features = runner.0.features.features
+        features.insert(atr, at: features.count - 1)
+        runner.0.features = features
         return runner
     }
     
     func tiaEfdAndAtrRunner(skip: [String], known: [String], tests: KeyValuePairs<String, Mocks.Runner.TestMethod>) -> (Mocks.Runner, TestImpactAnalysis, Mocks.CoverageCollector) {
         let runner = tiaAndEfdRunner(skip: skip, known: known, tests: tests)
         let atr = AutomaticTestRetries(failedTestRetriesCount: 5, failedTestTotalRetriesMax: 1000)
-        runner.0.features.insert(atr, at: runner.0.features.count - 2)
+        var features = runner.0.features.features
+        features.insert(atr, at: features.count - 2)
+        runner.0.features = features
         return runner
     }
     

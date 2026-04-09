@@ -7,11 +7,11 @@
 import XCTest
 @testable import DatadogSDKTesting
 
-final class AutoTestRetriesLogicTests: XCTestCase {
+final class AutoTestRetriesSwiftTestingTests: XCTestCase {
     func testAtrRetriesFailedTest() async throws {
         let (runner, atr) = runner(tests: ["someTest": .fail(first: 4)])
-        
-        let tests = try await extractTests(runner.run())
+
+        let tests = try extractTests(try await runner.run())
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 5)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 4)
@@ -26,11 +26,11 @@ final class AutoTestRetriesLogicTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
         XCTAssertNil(tests["someTest"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries])
     }
-    
+
     func testAtrDoesntRetryPassedTest() async throws {
         let (runner, atr) = runner(tests: ["someTest": .pass()])
-        
-        let tests = try await extractTests(runner.run())
+
+        let tests = try extractTests(try await runner.run())
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .pass }.count, 1)
@@ -43,11 +43,11 @@ final class AutoTestRetriesLogicTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
     }
-    
+
     func testAtrRetriesFailedTestAndFailsLastIfAllFailed() async throws {
         let (runner, atr) = runner(tests: ["someTest": .fail("Should fail")])
-        
-        let tests = try await extractTests(runner.run())
+
+        let tests = try extractTests(try await runner.run())
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 6)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 6)
@@ -64,11 +64,11 @@ final class AutoTestRetriesLogicTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
     }
-    
+
     func testAtrRetriesFailedTestAndPassesIfLastPassed() async throws {
         let (runner, atr) = runner(tests: ["someTest": .fail(first: 5)])
-        
-        let tests = try await extractTests(runner.run())
+
+        let tests = try extractTests(try await runner.run())
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 6)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 5)
@@ -85,15 +85,15 @@ final class AutoTestRetriesLogicTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
     }
-    
+
     func testAtrStopRetryingAfterGlobalMaxReached() async throws {
         let (runner, atr) = runner(tests: ["someTest": .fail(first: 5),
                                            "someTest2": .fail("Should fail")],
                                    failedTestRetriesCount: 5,
                                    failedTestTotalRetriesMax: 8)
-        
-        let tests = try await extractTests(runner.run())
-        
+
+        let tests = try extractTests(try await runner.run())
+
         // "someTest" should have all 6 runs (main + 5 retries), last is successful
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 6)
@@ -109,7 +109,7 @@ final class AutoTestRetriesLogicTests: XCTestCase {
         XCTAssertNil(tests["someTest"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries])
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
-        
+
         // someTest2 should have only 4 runs (main + 3 retries) because global limit of 8 reached
         XCTAssertNotNil(tests["someTest2"])
         XCTAssertEqual(tests["someTest2"]?.runs.count, 4)
@@ -125,17 +125,17 @@ final class AutoTestRetriesLogicTests: XCTestCase {
         XCTAssertEqual(tests["someTest2"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries], "true")
         XCTAssertEqual(tests["someTest2"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["someTest2"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
-        
+
         XCTAssertEqual(atr.failedTestTotalRetries, 8)
     }
-    
+
     func testAtrRetriesFailedTestAndKnownTestsWork() async throws {
         let (runner, atr) = runner(tests: ["someTest": .fail(first: 4)])
         var features = runner.features.features
         features.append(KnownTests(tests: [:]))
         runner.features = features
-        
-        let tests = try await extractTests(runner.run())
+
+        let tests = try extractTests(try await runner.run())
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 5)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 4)
@@ -151,19 +151,19 @@ final class AutoTestRetriesLogicTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
     }
-    
+
     func extractTests(_ session: Mocks.Session) throws -> [String: Mocks.Group] {
         guard let suite = session["ATRModule"]?["ATRSuite"] else {
             throw InternalError(description: "Can't get ATRModule and ATRSuite")
         }
         return suite.tests
     }
-    
+
     func runner(tests: KeyValuePairs<String, Mocks.Runner.TestMethod>,
-                failedTestRetriesCount: UInt = 5, failedTestTotalRetriesMax: UInt = 1000) -> (Mocks.Runner, AutomaticTestRetries)
+                failedTestRetriesCount: UInt = 5, failedTestTotalRetriesMax: UInt = 1000) -> (Mocks.STRunner, AutomaticTestRetries)
     {
         let atr = AutomaticTestRetries(failedTestRetriesCount: failedTestRetriesCount,
                                        failedTestTotalRetriesMax: failedTestTotalRetriesMax)
-        return (Mocks.Runner(features: [atr, AdditionalTags()], tests: ["ATRModule": ["ATRSuite": tests]]), atr)
+        return (Mocks.STRunner(features: [atr, AdditionalTags()], tests: ["ATRModule": ["ATRSuite": tests]]), atr)
     }
 }

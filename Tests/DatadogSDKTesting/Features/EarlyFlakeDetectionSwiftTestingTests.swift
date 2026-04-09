@@ -11,11 +11,11 @@ import OpenTelemetrySdk
 import CodeCoverage
 import XCTest
 
-final class EarlyFlakeDetectionLogicTests: XCTestCase {
+final class EarlyFlakeDetectionSwiftTestingTests: XCTestCase {
     func testEfdRetriesNewTest() async throws {
         let (runner, efd) = efdRunner(known: [],
                                       tests: ["newTest": .failOddRuns(1.0)])
-        let tests = try await extractTests(runner.run())
+        let tests = try extractTests(try await runner.run())
         XCTAssertNotNil(tests["newTest"])
         XCTAssertEqual(tests["newTest"]?.runs.count, 10)
         XCTAssertEqual(tests["newTest"]?.runs.filter { $0.status == .fail }.count, 5)
@@ -24,7 +24,7 @@ final class EarlyFlakeDetectionLogicTests: XCTestCase {
         XCTAssertEqual(tests["newTest"]?.isSucceeded, true)
         XCTAssertEqual(efd.testCounters.newTests, 1)
         XCTAssertEqual(efd.testCounters.knownTests, 1)
-        
+
         XCTAssertNil(tests["newTest"]?.runs.first?.tags[DDEfdTags.testIsRetry])
         XCTAssertNil(tests["newTest"]?.runs.first?.tags[DDEfdTags.testRetryReason])
         XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 9)
@@ -33,12 +33,12 @@ final class EarlyFlakeDetectionLogicTests: XCTestCase {
         XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["newTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
     }
-    
+
     func testEfdRetriesNewSuccessTest() async throws {
         let (runner, efd) = efdRunner(known: [],
                                       tests: ["newTest": .pass(1.0)])
-        
-        let tests = try await extractTests(runner.run())
+
+        let tests = try extractTests(try await runner.run())
         XCTAssertNotNil(tests["newTest"])
         XCTAssertEqual(tests["newTest"]?.runs.count, 10)
         XCTAssertEqual(tests["newTest"]?.runs.filter { $0.status == .pass }.count, 10)
@@ -47,7 +47,7 @@ final class EarlyFlakeDetectionLogicTests: XCTestCase {
         XCTAssertEqual(tests["newTest"]?.isSucceeded, true)
         XCTAssertEqual(efd.testCounters.newTests, 1)
         XCTAssertEqual(efd.testCounters.knownTests, 1)
-        
+
         XCTAssertNil(tests["newTest"]?.runs.first?.tags[DDEfdTags.testIsRetry])
         XCTAssertNil(tests["newTest"]?.runs.first?.tags[DDEfdTags.testRetryReason])
         XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 9)
@@ -56,12 +56,12 @@ final class EarlyFlakeDetectionLogicTests: XCTestCase {
         XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["newTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
     }
-    
+
     func testEfdRetriesNewFailureTest() async throws {
         let (runner, efd) = efdRunner(known: [],
                                       tests: ["newTest": .fail("should fail", duration: 1.0)])
-        
-        let tests = try await extractTests(runner.run())
+
+        let tests = try extractTests(try await runner.run())
         XCTAssertNotNil(tests["newTest"])
         XCTAssertEqual(tests["newTest"]?.runs.count, 10)
         XCTAssertEqual(tests["newTest"]?.runs.filter { $0.status == .fail }.count, 10)
@@ -70,7 +70,7 @@ final class EarlyFlakeDetectionLogicTests: XCTestCase {
         XCTAssertEqual(tests["newTest"]?.isSucceeded, false)
         XCTAssertEqual(efd.testCounters.newTests, 1)
         XCTAssertEqual(efd.testCounters.knownTests, 1)
-        
+
         XCTAssertNil(tests["newTest"]?.runs.first?.tags[DDEfdTags.testIsRetry])
         XCTAssertNil(tests["newTest"]?.runs.first?.tags[DDEfdTags.testRetryReason])
         XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 9)
@@ -79,13 +79,13 @@ final class EarlyFlakeDetectionLogicTests: XCTestCase {
         XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["newTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
     }
-    
+
     func testEfdDoesntRetryOldTest() async throws {
         let (runner, efd) = efdRunner(known: ["oldTest"],
                                       tests: ["oldTest": .fail("Should fail")])
-        
-        let tests = try await extractTests(runner.run())
-        
+
+        let tests = try extractTests(try await runner.run())
+
         XCTAssertNotNil(tests["oldTest"])
         XCTAssertEqual(tests["oldTest"]?.runs.count, 1)
         XCTAssertEqual(tests["oldTest"]?.runs.filter { $0.status == .fail }.count, 1)
@@ -94,21 +94,21 @@ final class EarlyFlakeDetectionLogicTests: XCTestCase {
         XCTAssertEqual(tests["oldTest"]?.isSucceeded, false)
         XCTAssertEqual(efd.testCounters.newTests, 0)
         XCTAssertEqual(efd.testCounters.knownTests, 1)
-        
+
         XCTAssertNil(tests["oldTest"]?.runs.first?.tags[DDEfdTags.testIsRetry])
         XCTAssertNil(tests["oldTest"]?.runs.first?.tags[DDEfdTags.testRetryReason])
-        
+
         XCTAssertEqual(tests["oldTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["oldTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
     }
-    
+
     // EFD + ATR
     func testAtrWorksWithEFDForOldTest() async throws {
         let (runner, efd) = efdAndAtrRunner(known: ["oldTest"],
                                             tests: ["oldTest": .fail(first: 3, 1.0)])
-        
-        let tests = try await extractTests(runner.run())
-        
+
+        let tests = try extractTests(try await runner.run())
+
         XCTAssertNotNil(tests["oldTest"])
         XCTAssertEqual(tests["oldTest"]?.runs.count, 4)
         XCTAssertEqual(tests["oldTest"]?.runs.filter { $0.status == .fail }.count, 3)
@@ -117,7 +117,7 @@ final class EarlyFlakeDetectionLogicTests: XCTestCase {
         XCTAssertEqual(tests["oldTest"]?.isSucceeded, true)
         XCTAssertEqual(efd.testCounters.newTests, 0)
         XCTAssertEqual(efd.testCounters.knownTests, 1)
-        
+
         XCTAssertNil(tests["oldTest"]?.runs.first?.tags[DDEfdTags.testIsRetry])
         XCTAssertNil(tests["oldTest"]?.runs.first?.tags[DDEfdTags.testRetryReason])
         XCTAssertEqual(tests["oldTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 3)
@@ -125,38 +125,38 @@ final class EarlyFlakeDetectionLogicTests: XCTestCase {
         XCTAssertEqual(tests["oldTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["oldTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
     }
-    
+
     func testEFDDisablesATRForNewTest() async throws {
         let (runner, efd) = efdAndAtrRunner(known: ["oldTest"],
                                             tests: ["newTest": .fail(first: 5, 1.0),
                                                     "oldTest": .fail(first: 3, 1.0)])
-        
-        let tests = try await extractTests(runner.run())
-        
+
+        let tests = try extractTests(try await runner.run())
+
         XCTAssertNotNil(tests["oldTest"])
         XCTAssertEqual(tests["oldTest"]?.runs.count, 4)
         XCTAssertEqual(tests["oldTest"]?.runs.filter { $0.status == .fail }.count, 3)
         XCTAssertEqual(tests["oldTest"]?.runs.filter { $0.xcStatus == .pass }.count, 4)
         XCTAssertEqual(tests["oldTest"]?.runs.filter { $0.tags[DDTestTags.testIsNew] == nil }.count, 4)
         XCTAssertEqual(tests["oldTest"]?.isSucceeded, true)
-        
+
         XCTAssertNil(tests["oldTest"]?.runs.first?.tags[DDEfdTags.testIsRetry])
         XCTAssertNil(tests["oldTest"]?.runs.first?.tags[DDEfdTags.testRetryReason])
         XCTAssertEqual(tests["oldTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 3)
         XCTAssertEqual(tests["oldTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonAutoTestRetry }.count, 3)
         XCTAssertEqual(tests["oldTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["oldTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
-        
+
         XCTAssertNotNil(tests["newTest"])
         XCTAssertEqual(tests["newTest"]?.runs.count, 10)
         XCTAssertEqual(tests["newTest"]?.runs.filter { $0.status == .fail }.count, 5)
         XCTAssertEqual(tests["newTest"]?.runs.filter { $0.xcStatus == .pass }.count, 10)
         XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDTestTags.testIsNew] == "true" }.count, 10)
         XCTAssertEqual(tests["newTest"]?.isSucceeded, true)
-        
+
         XCTAssertEqual(efd.testCounters.newTests, 1)
         XCTAssertEqual(efd.testCounters.knownTests, 2)
-        
+
         XCTAssertNil(tests["newTest"]?.runs.first?.tags[DDEfdTags.testIsRetry])
         XCTAssertNil(tests["newTest"]?.runs.first?.tags[DDEfdTags.testRetryReason])
         XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 9)
@@ -164,11 +164,11 @@ final class EarlyFlakeDetectionLogicTests: XCTestCase {
         XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["newTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
     }
-    
+
     func testEfdChangesRetryCountForLongTest() async throws {
         let (runner, efd) = efdRunner(known: [],
                                       tests: ["newTest": .failOddRuns(61.0)])
-        let tests = try await extractTests(runner.run())
+        let tests = try extractTests(try await runner.run())
         XCTAssertNotNil(tests["newTest"])
         XCTAssertEqual(tests["newTest"]?.runs.count, 2)
         XCTAssertEqual(tests["newTest"]?.runs.filter { $0.status == .fail }.count, 1)
@@ -177,7 +177,7 @@ final class EarlyFlakeDetectionLogicTests: XCTestCase {
         XCTAssertEqual(efd.testCounters.newTests, 1)
         XCTAssertEqual(efd.testCounters.knownTests, 1)
         XCTAssertEqual(tests["newTest"]?.isSucceeded, true)
-        
+
         XCTAssertNil(tests["newTest"]?.runs.first?.tags[DDEfdTags.testIsRetry])
         XCTAssertNil(tests["newTest"]?.runs.first?.tags[DDEfdTags.testRetryReason])
         XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 1)
@@ -185,11 +185,11 @@ final class EarlyFlakeDetectionLogicTests: XCTestCase {
         XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["newTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
     }
-    
+
     func testEfdChangesRetryCountForLongLongTest() async throws {
         let (runner, efd) = efdRunner(known: [],
                                       tests: ["newTest": .failOddRuns(700.0)])
-        let tests = try await extractTests(runner.run())
+        let tests = try extractTests(try await runner.run())
         XCTAssertNotNil(tests["newTest"])
         XCTAssertEqual(tests["newTest"]?.runs.count, 1)
         XCTAssertEqual(tests["newTest"]?.runs.filter { $0.status == .fail }.count, 1)
@@ -198,21 +198,21 @@ final class EarlyFlakeDetectionLogicTests: XCTestCase {
         XCTAssertEqual(tests["newTest"]?.isSucceeded, false)
         XCTAssertEqual(efd.testCounters.newTests, 1)
         XCTAssertEqual(efd.testCounters.knownTests, 1)
-        
+
         XCTAssertNil(tests["newTest"]?.runs.first?.tags[DDEfdTags.testIsRetry])
         XCTAssertNil(tests["newTest"]?.runs.first?.tags[DDEfdTags.testRetryReason])
         XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["newTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
     }
-    
+
     func extractTests(_ session: Mocks.Session) throws -> [String: Mocks.Group] {
         guard let suite = session["EFDModule"]?["EFDSuite"] else {
             throw InternalError(description: "Can't get EFDModule and EFDSuite")
         }
         return suite.tests
     }
-    
-    func efdRunner(known: [String], tests: KeyValuePairs<String, Mocks.Runner.TestMethod>) -> (Mocks.Runner, EarlyFlakeDetection) {
+
+    func efdRunner(known: [String], tests: KeyValuePairs<String, Mocks.Runner.TestMethod>) -> (Mocks.STRunner, EarlyFlakeDetection) {
         let efd = EarlyFlakeDetection(
             knownTests: KnownTests(tests: ["EFDModule": ["EFDSuite": known]]),
             slowTestRetries: .init(attrs: ["5s": 10, "30s": 5, "1m": 2, "5m": 1]),
@@ -220,11 +220,11 @@ final class EarlyFlakeDetectionLogicTests: XCTestCase {
             log: Mocks.CatchLogger(isDebug: false)
         )
         let knownFeature = KnownTests(tests: ["EFDModule": ["EFDSuite": known]])
-        return (Mocks.Runner(features: [efd, knownFeature, AdditionalTags()],
-                             tests: ["EFDModule": ["EFDSuite": tests]]), efd)
+        return (Mocks.STRunner(features: [efd, knownFeature, AdditionalTags()],
+                               tests: ["EFDModule": ["EFDSuite": tests]]), efd)
     }
-    
-    func efdAndAtrRunner(known: [String], tests: KeyValuePairs<String, Mocks.Runner.TestMethod>) -> (Mocks.Runner, EarlyFlakeDetection) {
+
+    func efdAndAtrRunner(known: [String], tests: KeyValuePairs<String, Mocks.Runner.TestMethod>) -> (Mocks.STRunner, EarlyFlakeDetection) {
         let runner = efdRunner(known: known, tests: tests)
         let atr = AutomaticTestRetries(failedTestRetriesCount: 5, failedTestTotalRetriesMax: 1000)
         var features = runner.0.features.features

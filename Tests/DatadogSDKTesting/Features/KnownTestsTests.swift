@@ -8,7 +8,7 @@ import XCTest
 @testable import DatadogSDKTesting
 
 final class KnownTestsLogicTests: XCTestCase {
-    func testUnknownTestIsMarkedAsNew() {
+    func testUnknownTestIsMarkedAsNew() async {
         let module = "SomeModule"
         let knownSuite = "KnownSuite"
         let knownSuiteKnownTest = "testKnownSuiteKnownTest"
@@ -30,7 +30,47 @@ final class KnownTestsLogicTests: XCTestCase {
             unknownSuite: [unknownSuiteUnknownTest: .fail("SomeERROR")]
         ]]
         
-        let results = Mocks.Runner(features: [feature, additionalTags], tests: testsToRun).run()
+        let results = await Mocks.Runner(features: [feature, additionalTags], tests: testsToRun).run()
+        
+        let knownSuiteResult = results[module]![knownSuite]!
+        let unknownSuiteResult = results[module]![unknownSuite]!
+        
+        XCTAssertNotNil(knownSuiteResult[knownSuiteKnownTest]?[0])
+        XCTAssertNil(knownSuiteResult[knownSuiteKnownTest]?[0]?.tags[DDTestTags.testIsNew])
+        XCTAssertEqual(knownSuiteResult[knownSuiteUnknownTest]?[0]?.tags[DDTestTags.testIsNew], "true")
+        XCTAssertEqual(unknownSuiteResult[unknownSuiteUnknownTest]?[0]?.tags[DDTestTags.testIsNew], "true")
+        
+        XCTAssertEqual(knownSuiteResult[knownSuiteKnownTest]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(knownSuiteResult[knownSuiteKnownTest]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
+        XCTAssertEqual(knownSuiteResult[knownSuiteUnknownTest]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(knownSuiteResult[knownSuiteUnknownTest]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
+        XCTAssertEqual(unknownSuiteResult[unknownSuiteUnknownTest]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(unknownSuiteResult[unknownSuiteUnknownTest]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
+    }
+    
+    func testSwiftTestingIsWorking() async throws {
+        let module = "SomeModule"
+        let knownSuite = "KnownSuite"
+        let knownSuiteKnownTest = "testKnownSuiteKnownTest"
+        let knownSuiteUnknownTest = "testKnownSuiteUnknownTest"
+        
+        let unknownSuite = "UnknwownSuite"
+        let unknownSuiteUnknownTest = "testUnknownSuiteUnknownTest"
+        
+        let knownTestsMap = [module: [knownSuite: [knownSuiteKnownTest]]]
+        
+        let feature: TestHooksFeature = KnownTests(tests: knownTestsMap)
+        let additionalTags = AdditionalTags()
+        
+        let testsToRun: Mocks.Runner.Tests = [module: [
+            knownSuite: [
+                knownSuiteKnownTest: .pass(),
+                knownSuiteUnknownTest: .pass()
+            ],
+            unknownSuite: [unknownSuiteUnknownTest: .fail("SomeERROR")]
+        ]]
+        
+        let results = try await Mocks.STRunner(features: [feature, additionalTags], tests: testsToRun).run()
         
         let knownSuiteResult = results[module]![knownSuite]!
         let unknownSuiteResult = results[module]![unknownSuite]!

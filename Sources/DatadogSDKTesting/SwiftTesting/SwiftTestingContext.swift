@@ -28,18 +28,78 @@ protocol SwiftTestingTestRunInfoType: SwiftTestingTestInfoType {
     var location: SwiftTestingSourceLocation { get }
 }
 
+enum SwiftTestingIssueKind {
+    case unconditional
+    case expectation(description: String)
+    case error(any Error)
+    case confirmationMiscounted(actual: Int, expected: any RangeExpression & Sendable)
+    case timeLimitExceeded(timeLimitComponents: (seconds: Int64, attoseconds: Int64))
+    case knownIssueNotRecorded
+    case valueAttachmentFailed(_ error: any Error)
+    case apiMisused
+    case system
+    case unknown(String)
+    
+    func asTypeAndMessage(warning: Bool, comment: String?) -> (type: String, message: String?) {
+        let type = warning ? "Warning" : "Error"
+        switch self {
+        case .unconditional: return (type, comment)
+        case .apiMisused: return ("\(type)[ApiMisused]", comment)
+        case .expectation(description: let description):
+            return ("\(type)[ExpectationFailed]", combine(message: description, comment: comment))
+        case .confirmationMiscounted(actual: let actual, expected: let expected):
+            return ("\(type)[ConfirmationMiscounted]", combine(message: "actual: \(actual), expected: \(expected)",
+                                                               comment: comment))
+        case .timeLimitExceeded(timeLimitComponents: let limit):
+            return ("\(type)[TimeLimitExceeded]", combine(message: "\(limit)", comment: comment))
+        case .knownIssueNotRecorded: return ("\(type)[KnownIssueNotRecorded]", comment)
+        case .valueAttachmentFailed(let error):
+            return ("\(type)[ValueAttachmentFailed]", combine(message: "\(error)", comment: comment))
+        case .system: return ("\(type)[System]", comment)
+        case .unknown(let error): return ("\(type)[Unknown]", combine(message: error, comment: comment))
+        case .error(let error):
+            return ("\(type)[\(String(reflecting: Swift.type(of: error)))]", combine(message: "\(error)",
+                                                                                     comment: comment))
+        }
+    }
+    
+    private func combine(message: String, comment: String?) -> String {
+        guard let comment else { return message }
+        return message + " - " + comment
+    }
+}
+
 protocol SwiftTestingIssue: Sendable {
+    var issueKind: SwiftTestingIssueKind { get }
     var comment: String? { get }
     var isWarning: Bool { get }
-    var error: (any Error)? { get }
     var location: SwiftTestingSourceLocation? { get }
     func record(test location: SwiftTestingSourceLocation)
+}
+
+extension SwiftTestingIssue {
+    var asTestError: TestError {
+        let info = issueKind.asTypeAndMessage(warning: isWarning,
+                                              comment: comment)
+        var stack: String? = nil
+        if let location {
+            stack = "\(location.filePath):\(location.line):\(location.column)"
+        }
+        return .init(type: info.type, message: info.message, stack: stack)
+    }
 }
 
 enum SwiftTestingTestStatus: Sendable {
     enum Issues {
         case suppressed([SwiftTestingIssue])
         case unsuppressed([SwiftTestingIssue])
+        
+        var issues: [SwiftTestingIssue] {
+            switch self {
+            case .suppressed(let i), .unsuppressed(let i):
+                return i
+            }
+        }
     }
     
     enum Errors {
@@ -86,6 +146,16 @@ enum SwiftTestingTestStatus: Sendable {
                 self = .catched(error: error, suppressed: true, issues: issues)
             case .unsuppressed(let issues):
                 self = .catched(error: error, suppressed: false, issues: issues)
+            }
+        }
+        
+        var asUnsuppressed: Self {
+            switch self {
+            case .catched(error: let err, suppressed: true, issues: let isues):
+                return .catched(error: err, suppressed: false, issues: isues)
+            case .issues(.suppressed(let issues)):
+                return .issues(.unsuppressed(issues))
+            default: return self
             }
         }
     }
@@ -139,15 +209,22 @@ enum SwiftTestingTestStatus: Sendable {
     
     var asUnsuppressed: Self {
         switch self {
-        case .failed(.catched(error: let err, suppressed: true, issues: let isues)):
-            return .failed(.catched(error: err, suppressed: false, issues: isues))
-        case .failed(.issues(.suppressed(let issues))):
-            return .failed(.issues(.unsuppressed(issues)))
         case .skipped(feature: let feat, reason: let reas, issues: .suppressed(let issues)):
             return .skipped(feature: feat, reason: reas, issues: .unsuppressed(issues))
         case .cancelled(error: let error, issues: .suppressed(let issues)):
             return .cancelled(error: error, issues: .unsuppressed(issues))
+        case .failed(let errs): return .failed(errs.asUnsuppressed)
         default: return self
+        }
+    }
+    
+    var suppressedErrors: SwiftTestingRetryGroupContext.Errors? {
+        switch self.errors {
+        case .catched(error: let error, suppressed: true, issues: let issues):
+            return .init(catched: error, issues: issues)
+        case .issues(.suppressed(let issues)):
+            return .init(catched: nil, issues: issues)
+        default: return nil
         }
     }
 }
@@ -296,6 +373,13 @@ struct SwiftTestingRetryGroupContext: Sendable {
             let retry = await test.observer.willFinish(testRun: context,
                                                        withStatus: status,
                                                        andInfo: runInfo)
+            // Add errors to the test.
+            if let issues = status.errors?.issues.issues {
+                for issue in issues {
+                    testRun.add(error: issue.asTestError)
+                }
+            }
+            // set test status
             testRun.set(status: status.testStatus)
             return (context, retry, status)
         }
@@ -676,18 +760,6 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
     
     var session: any TestSessionManager {
         _state.session
-    }
-}
-
-extension SwiftTestingTestStatus {
-    var suppressedErrors: SwiftTestingRetryGroupContext.Errors? {
-        switch self.errors {
-        case .catched(error: let error, suppressed: true, issues: let issues):
-            return .init(catched: error, issues: issues)
-        case .issues(.suppressed(let issues)):
-            return .init(catched: nil, issues: issues)
-        default: return nil
-        }
     }
 }
 

@@ -15,9 +15,13 @@ public struct DatadogSwiftTestingTrait: TestTrait, SuiteTrait {
     
     public let isRecursive: Bool = true
     private let _provider: (any SwiftTestingSuiteProviderType)?
+    private let _actions: any DatadogSwiftTestingTestActions
     
-    init(provider: (any SwiftTestingSuiteProviderType)? = nil) {
+    init(provider: (any SwiftTestingSuiteProviderType)? = nil,
+         actions: any DatadogSwiftTestingTestActions = DatadogSwiftTestingScopeProvider.Actions())
+    {
         self._provider = provider
+        self._actions = actions
     }
     
     public func prepare(for test: Testing.Test) async throws {
@@ -28,7 +32,7 @@ public struct DatadogSwiftTestingTrait: TestTrait, SuiteTrait {
         guard let provider = _activeProvider else {
             return nil
         }
-        return TestScopeProvider(provider: provider)
+        return TestScopeProvider(provider: provider, actions: _actions)
     }
     
     func prepare(test: some SwiftTestingTestInfoType) async throws {
@@ -44,9 +48,11 @@ public struct DatadogSwiftTestingTrait: TestTrait, SuiteTrait {
 
 public struct DatadogSwiftTestingScopeProvider: TestScoping {
     private let _provider: any SwiftTestingSuiteProviderType
+    private let _actions: any DatadogSwiftTestingTestActions
     
-    init(provider: any SwiftTestingSuiteProviderType) {
+    init(provider: any SwiftTestingSuiteProviderType, actions: any DatadogSwiftTestingTestActions) {
         self._provider = provider
+        self._actions = actions
     }
     
     public func provideScope(for test: Testing.Test, testCase: Testing.Test.Case?,
@@ -120,7 +126,7 @@ public struct DatadogSwiftTestingScopeProvider: TestScoping {
                                            suppress: run.shouldSuppressError(info: runInfo))
                             }
                         }
-                    } // we need to catch SkipInfo for cancel too, but it will be supported later
+                    }
                     if let errorsValue = errors.value {
                         return .failed(errorsValue)
                     }
@@ -135,16 +141,11 @@ public struct DatadogSwiftTestingScopeProvider: TestScoping {
             } while group.info.retry.status.isRetry
         }
         switch action {
-#if compiler(>=6.3)
         case .some(.skip(reason: let reason, location: let location)):
-            try Testing.Test.cancel(Comment(rawValue: reason),
-                                    sourceLocation: location?.asSwift ?? run.location.asSwift)
-#else
-        case .some(.skip): break
-#endif
+            try _actions.cancel(reason: reason, location: location ?? run.location)
         case .some(.cancel(error: let error)): throw error
         case .some(.fail):
-            Issue.record("\(run.suite).\(run.name) failed", sourceLocation: run.location.asSwift)
+            _actions.fail(reason: "\(run.suite).\(run.name) failed", location: run.location)
         case .none: break
         }
     }
@@ -153,6 +154,10 @@ public struct DatadogSwiftTestingScopeProvider: TestScoping {
     @TaskLocal static var datadogTest: SwiftTestingTestContext? = nil
 }
 
+protocol DatadogSwiftTestingTestActions: Sendable {
+    func cancel(reason: String, location: SwiftTestingSourceLocation) throws
+    func fail(reason: String, location: SwiftTestingSourceLocation)
+}
 
 extension Testing.Trait where Self == DatadogSwiftTestingTrait {
     public static var datadogTesting: Self { Self() }
@@ -204,6 +209,19 @@ extension DatadogSwiftTestingScopeProvider {
             return .init(arguments: .array(args), metadata: nil)
         }
     }
+    
+    struct Actions: DatadogSwiftTestingTestActions {
+        func cancel(reason: String, location: SwiftTestingSourceLocation) throws {
+#if compiler(>=6.3)
+            try Testing.Test.cancel(Comment(rawValue: reason),
+                                    sourceLocation: location.asSwift)
+#endif
+        }
+        
+        func fail(reason: String, location: SwiftTestingSourceLocation) {
+            Issue.record(Comment(rawValue: reason), sourceLocation: location.asSwift)
+        }
+    }
 }
 
 extension Testing.Test {
@@ -232,26 +250,52 @@ extension Testing.Test {
 }
 
 extension Issue: SwiftTestingIssue {
+    var issueKind: SwiftTestingIssueKind {
+        switch kind {
+        case .expectationFailed:
+            return .expectation(description: "\(kind)")
+        case .apiMisused: return .apiMisused
+        case .confirmationMiscounted(actual: let actual, expected: let expected):
+            return .confirmationMiscounted(actual: actual, expected: expected)
+        case .errorCaught(let error): return .error(error)
+        case .knownIssueNotRecorded: return .knownIssueNotRecorded
+        case .timeLimitExceeded(timeLimitComponents: let time):
+            return .timeLimitExceeded(timeLimitComponents: time)
+        case .valueAttachmentFailed(let err): return .valueAttachmentFailed(err)
+        case .system: return .system
+        case .unconditional: return .unconditional
+        @unknown default: return .unknown("\(kind)")
+        }
+    }
+    
     var comment: String? {
         guard !comments.isEmpty else { return nil }
         return comments.map { $0.rawValue }.joined(separator: "\n")
     }
-    
-    var isWarning: Bool {
-        switch severity {
-        case .warning: return true
-        default: return false
-        }
-    }
+
+#if compiler(>=6.3)
+    var isWarning: Bool { !isFailure }
+#else
+    var isWarning: Bool { false }
+#endif
     
     var location: SwiftTestingSourceLocation? { sourceLocation?.asDD }
     
     func record(test location: SwiftTestingSourceLocation) {
-        let comment = comment.map(Comment.init(rawValue:))
+        let info = issueKind.asTypeAndMessage(warning: isWarning, comment: comment)
+        let message = info.message.map { "\(info.type): \($0)" } ?? info.type
         if let error = error {
-            Issue.record(error, comment, sourceLocation: sourceLocation ?? location.asSwift)
+            Issue.record(error, Comment(rawValue: message),
+                         sourceLocation: sourceLocation ?? location.asSwift)
         } else {
-            Issue.record(comment, severity: severity, sourceLocation: sourceLocation ?? location.asSwift)
+#if compiler(>=6.3)
+            Issue.record(Comment(rawValue: message),
+                         severity: severity,
+                         sourceLocation: sourceLocation ?? location.asSwift)
+#else
+            Issue.record(Comment(rawValue: message),
+                         sourceLocation: sourceLocation ?? location.asSwift)
+#endif
         }
     }
 }

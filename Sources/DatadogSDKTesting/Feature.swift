@@ -54,7 +54,7 @@ protocol TestHooksFeature: Feature, Sendable {
     // Test related callbacks
     /// Configuration for retry group. Feature can interrupt iteration or send it to the next feature with updated config.
     func testGroupConfiguration(for test: String,
-                                meta: UnskippableMethodCheckerFactory,
+                                tags: any TestTags,
                                 in suite: any TestSuite,
                                 configuration: RetryGroupConfiguration.Iterator) -> RetryGroupConfiguration.Iterator
     /// Start of the test case
@@ -399,12 +399,12 @@ protocol TestHooksFeatures: Sendable {
     func testGroupWillStart(for test: String, in suite: any TestSuite)
     
     func testGroupConfiguration(
-        for test: String, meta: UnskippableMethodCheckerFactory, in suite: any TestSuite,
+        for test: String, tags: any TestTags, in suite: any TestSuite,
         configuration: RetryGroupConfiguration.Iterator
     ) -> (feature: (any TestHooksFeature)?, configuration: RetryGroupConfiguration)
     
     func testGroupConfiguration(
-        for test: String, meta: UnskippableMethodCheckerFactory, in suite: any TestSuite
+        for test: String, tags: any TestTags, in suite: any TestSuite
     ) -> (feature: (any TestHooksFeature)?, configuration: RetryGroupConfiguration)
     
     func testWillStart(test: any TestRun, info: TestRunInfoStart)
@@ -430,9 +430,9 @@ protocol TestHooksFeatures: Sendable {
 
 extension TestHooksFeatures {
     func testGroupConfiguration(
-        for test: String, meta: UnskippableMethodCheckerFactory, in suite: any TestSuite
+        for test: String, tags: any TestTags, in suite: any TestSuite
     ) -> (feature: (any TestHooksFeature)?, configuration: RetryGroupConfiguration) {
-        testGroupConfiguration(for: test, meta: meta,
+        testGroupConfiguration(for: test, tags: tags,
                                in: suite, configuration: .init())
     }
     
@@ -460,7 +460,7 @@ extension TestHooksFeature {
     func testSuiteWillEnd(suite: any TestSuite) -> Void {}
     func testSuiteDidEnd(suite: any TestSuite) -> Void {}
     
-    func testGroupConfiguration(for test: String, meta: UnskippableMethodCheckerFactory,
+    func testGroupConfiguration(for test: String, tags: any TestTags,
                                 in suite: any TestSuite,
                                 configuration: RetryGroupConfiguration.Iterator) -> RetryGroupConfiguration.Iterator
     {
@@ -550,17 +550,13 @@ extension Array: TestHooksFeatures where Element == (any TestHooksFeature) {
     }
     
     func testGroupConfiguration(
-        for test: String, meta: UnskippableMethodCheckerFactory, in suite: any TestSuite,
+        for test: String, tags: any TestTags, in suite: any TestSuite,
         configuration: RetryGroupConfiguration.Iterator
     ) -> (feature: (any TestHooksFeature)?, configuration: RetryGroupConfiguration) {
         var configuration = configuration
         for feature in self {
-            configuration = feature.testGroupConfiguration(
-                for: test,
-                meta: meta,
-                in: suite,
-                configuration: configuration
-            )
+            configuration = feature.testGroupConfiguration(for: test, tags: tags, in: suite,
+                                                           configuration: configuration)
             if !configuration.hasNext {
                 return (feature, configuration.configuration)
             }

@@ -57,7 +57,7 @@ struct SwiftTestingObserver: SwiftTestingObserverType {
         test: borrowing SwiftTestingTestContext
     ) async -> (feature: FeatureId?, configuration: RetryGroupConfiguration) {
         let (feautre, config) = test.configuration.activeFeatures.testGroupConfiguration(for: test.info.name,
-                                                                                         meta: Self.dummyChecker,
+                                                                                         tags: DummyTags(),
                                                                                          in: test.suite.suite)
         return (feautre?.id, config)
     }
@@ -106,11 +106,9 @@ struct SwiftTestingObserver: SwiftTestingObserverType {
 }
 
 extension SwiftTestingObserver {
-    final class DummyUnskippableCheckerFactory: UnskippableMethodCheckerFactory {
-        let classId: ObjectIdentifier = .init(DummyUnskippableCheckerFactory.self)
-        let unskippableMethods: UnskippableMethodChecker = .init(isSuiteUnskippable: false,
-                                                                 skippableMethods: [:])
+    struct DummyTags: TestTags {
+        func get<T: TestTag>(tag: T) -> T.Value? {
+            return nil
+        }
     }
-    
-    static let dummyChecker = DummyUnskippableCheckerFactory()
 }

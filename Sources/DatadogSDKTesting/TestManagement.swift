@@ -21,7 +21,7 @@ final class TestManagement: TestHooksFeature {
         self.attemptToFixRetries = attemptToFixRetries
     }
     
-    func testGroupConfiguration(for test: String, meta: UnskippableMethodCheckerFactory,
+    func testGroupConfiguration(for test: String, tags: any TestTags,
                                 in suite: any TestSuite,
                                 configuration: RetryGroupConfiguration.Iterator) -> RetryGroupConfiguration.Iterator
     {

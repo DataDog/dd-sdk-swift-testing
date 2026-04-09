@@ -21,8 +21,6 @@ final class TestImpactAnalysis: TestHooksFeature {
     
     private let _skippedCount: Synced<UInt>
     
-    let unskippableCache: Synced<[ObjectIdentifier: UnskippableMethodChecker]>
-    
     init(tests: SkipTests?, coverage: TestCoverageCollector?) {
         if let tests = tests { // we have skipping enabled
             var modules = [String: [String: Suite]]()
@@ -43,17 +41,13 @@ final class TestImpactAnalysis: TestHooksFeature {
             self.modules = [:]
             self.correlationId = nil
         }
-        self.unskippableCache = .init([:])
         self._skippedCount = .init(0)
         self.coverage = coverage
     }
     
-    func status(for clazz: UnskippableMethodCheckerFactory, named test: String, suite: String, module: String) -> SkipStatus {
-        let checker = unskippableCache.update { cache in
-            cache.get(key: clazz.classId, or: clazz.unskippableMethods)
-        }
+    func status(named test: String, suite: String, module: String, skippable: Bool) -> SkipStatus {
         return .init(canBeSkipped: modules[module]?[suite]?[test] != nil,
-                     markedUnskippable: !checker.canSkip(method: test))
+                     markedUnskippable: !skippable)
     }
     
     func testSessionWillEnd(session: any TestSession) {
@@ -94,11 +88,12 @@ final class TestImpactAnalysis: TestHooksFeature {
         }
     }
 
-    func testGroupConfiguration(for test: String, meta: UnskippableMethodCheckerFactory,
+    func testGroupConfiguration(for test: String, tags: any TestTags,
                                 in suite: any TestSuite,
                                 configuration: RetryGroupConfiguration.Iterator) -> RetryGroupConfiguration.Iterator
     {
-        let status = status(for: meta, named: test, suite: suite.name, module: suite.module.name)
+        let status = status(named: test, suite: suite.name, module: suite.module.name,
+                            skippable: tags.get(tag: .tiaSkippable) ?? true)
         if status.markedUnskippable {
             suite.set(tag: DDItrTags.itrUnskippable, value: true)
         }

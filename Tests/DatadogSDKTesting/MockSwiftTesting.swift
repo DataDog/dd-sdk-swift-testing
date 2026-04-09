@@ -185,10 +185,10 @@ extension Mocks {
         }
         
         func testGroupConfiguration(
-            for test: String, meta: any UnskippableMethodCheckerFactory,
+            for test: String, tags: any TestTags,
             in suite: any TestSuite, configuration: RetryGroupConfiguration.Iterator
         ) -> (feature: (any TestHooksFeature)?, configuration: RetryGroupConfiguration) {
-            let config = wrapped.testGroupConfiguration(for: test, meta: meta,
+            let config = wrapped.testGroupConfiguration(for: test, tags: tags,
                                                         in: suite, configuration: configuration)
             _configs.update {
                 $0[suite.name + "." + test] = config.configuration

@@ -622,7 +622,7 @@ internal class DDTestMonitor {
         CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, CFRunLoopMode.commonModes)
     }
     
-    var activeFeatures: [any TestHooksFeature] {
+    var activeFeatures: any TestHooksFeatures {
         testOptimizationSetupQueue.waitUntilAllOperationsAreFinished()
         let features: [(any TestHooksFeature)?] = [
             testManagement, tia, efd, atr, knownTests,

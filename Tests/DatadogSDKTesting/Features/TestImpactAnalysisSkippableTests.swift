@@ -9,9 +9,9 @@ import XCTest
 
 class UnskippableTypeTaggedTests: XCTestCase, ExtendableTaggedType {
     func testTiaSkippable() {
-        let skip = self.unskippableMethods
-        XCTAssertFalse(skip.canSkip(method: "testTiaSkippable"))
-        XCTAssertFalse(skip.canSkip(method: "testTiaSkippable123"))
+        let suite = XCTestSuiteTags(for: Self.self)
+        XCTAssertFalse(suite.tags(for: "testTiaSkippable").get(tag: .tiaSkippable)!)
+        XCTAssertFalse(suite.tags(for: "testTiaSkippable123").get(tag: .tiaSkippable)!)
     }
     
     static func extendableTypeTags() -> ExtendableTypeTags {
@@ -23,18 +23,18 @@ class UnskippableTypeTaggedTests: XCTestCase, ExtendableTaggedType {
 
 class UnskippableNoTagsTests: XCTestCase {
     func testTiaSkippable() {
-        let skip = self.unskippableMethods
-        XCTAssertTrue(skip.canSkip(method: "testTiaSkippable"))
-        XCTAssertTrue(skip.canSkip(method: "testTiaSkippable123"))
+        let suite = XCTestSuiteTags(for: Self.self)
+        XCTAssertTrue(suite.tags(for: "testTiaSkippable").get(tag: .tiaSkippable) ?? true)
+        XCTAssertTrue(suite.tags(for: "testTiaSkippable123").get(tag: .tiaSkippable) ?? true)
     }
 }
 
 final class UnskippableTypeTaggedOverrideTests: XCTestCase, FinalTaggedType {
     func testTiaSkippable() {
-        let skip = self.unskippableMethods
-        XCTAssertTrue(skip.canSkip(method: "testTiaSkippable"))
-        XCTAssertFalse(skip.canSkip(method: "testTiaSkippable123"))
-        XCTAssertFalse(skip.canSkip(method: "testTiaSkippable456"))
+        let suite = XCTestSuiteTags(for: Self.self)
+        XCTAssertTrue(suite.tags(for: "testTiaSkippable").get(tag: .tiaSkippable)!)
+        XCTAssertFalse(suite.tags(for: "testTiaSkippable123").get(tag: .tiaSkippable)!)
+        XCTAssertFalse(suite.tags(for: "testTiaSkippable456").get(tag: .tiaSkippable)!)
     }
     
     static let finalTypeTags: FinalTypeTags<UnskippableTypeTaggedOverrideTests> = {
@@ -48,10 +48,10 @@ final class UnskippableTypeTaggedOverrideTests: XCTestCase, FinalTaggedType {
 
 class UnskippableMethodTaggedTests: XCTestCase, DDTaggedType {
     func testTiaSkippable() {
-        let skip = self.unskippableMethods
-        XCTAssertFalse(skip.canSkip(method: "testTiaSkippable"))
-        XCTAssertTrue(skip.canSkip(method: "testTiaSkippable123"))
-        XCTAssertTrue(skip.canSkip(method: "testTiaSkippable456"))
+        let suite = XCTestSuiteTags(for: Self.self)
+        XCTAssertFalse(suite.tags(for: "testTiaSkippable").get(tag: .tiaSkippable)!)
+        XCTAssertTrue(suite.tags(for: "testTiaSkippable123").get(tag: .tiaSkippable)!)
+        XCTAssertTrue(suite.tags(for: "testTiaSkippable456").get(tag: .tiaSkippable)!)
     }
     
     static func attachedTypeTags() -> DDTypeTags {

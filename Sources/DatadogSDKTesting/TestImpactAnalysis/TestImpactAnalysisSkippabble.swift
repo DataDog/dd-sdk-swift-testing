@@ -25,51 +25,22 @@ public extension DynamicTag where V == Bool {
     @objc static var tiaSkippableInstanceMethod: DDTag { DDTag(tag: .tiaSkippableInstanceMethod) }
 }
 
-protocol UnskippableMethodCheckerFactory: AnyObject {
-    var classId: ObjectIdentifier { get }
-    var unskippableMethods: UnskippableMethodChecker { get }
-}
-
-final class UnskippableMethodChecker {
-    let isSuiteUnskippable: Bool
-    let skippableMethods: [String: Bool]
+struct TIASkippableTag: XCTestTag {
+    typealias Value = Bool
     
-    convenience init(for type: XCTestCase.Type) {
-        let isSuiteUnskippable: Bool
-        let skippableMethods: [String: Bool]
-        
-        if let tags = type.maybeTypeTags {
-            let pairs = tags.tagged(dynamic: .tiaSkippableInstanceMethod,
-                                    prefixed: "test")
-                .compactMap { tag in
-                    tags[tag].map { (tag.to, $0) }
-                }
-            skippableMethods = Dictionary(uniqueKeysWithValues: pairs)
-            isSuiteUnskippable = tags.tagged(dynamic: .tiaSkippableType).first
-                .flatMap { tags[$0] }.map { !$0 } ?? false
-        } else {
-            isSuiteUnskippable = false
-            skippableMethods = [:]
+    func parse(tags: borrowing TypeTags, test: String) -> Bool? {
+        var isSuiteSkippable: Bool = true
+        var isTestSkippable: Bool? = nil
+        if let tag = tags.tagged(dynamic: .tiaSkippableType).first {
+            isSuiteSkippable = tags[tag] ?? true
         }
-        self.init(isSuiteUnskippable: isSuiteUnskippable, skippableMethods: skippableMethods)
-    }
-    
-    init(isSuiteUnskippable: Bool, skippableMethods: [String: Bool]) {
-        self.isSuiteUnskippable = isSuiteUnskippable
-        self.skippableMethods = skippableMethods
-    }
-    
-    @inlinable func canSkip(method name: String) -> Bool {
-        skippableMethods[name] ?? !isSuiteUnskippable
+        if let tag = tags.tagged(dynamic: .tiaSkippableInstanceMethod, prefixed: test).filter({ $0.to == test }).first {
+            isTestSkippable = tags[tag]
+        }
+        return isTestSkippable ?? isSuiteSkippable
     }
 }
 
-extension XCTestCase: UnskippableMethodCheckerFactory {
-    var classId: ObjectIdentifier {
-        ObjectIdentifier(type(of: self))
-    }
-    
-    var unskippableMethods: UnskippableMethodChecker {
-        UnskippableMethodChecker(for: type(of: self))
-    }
+extension TestTag where Self == TIASkippableTag {
+    static var tiaSkippable: Self { .init() }
 }

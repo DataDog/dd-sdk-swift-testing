@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		300F42B595C3462AB9656B0C /* EarlyFlakeDetectionSwiftTestingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC931D86ADB841B6969C7A7A /* EarlyFlakeDetectionSwiftTestingTests.swift */; };
 		A70B91132DF0AE19003F284F /* AutoTestRetriesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A70B91122DF0AE11003F284F /* AutoTestRetriesTests.swift */; };
+		E101EC71CC9E4715A40188FB /* AutoTestRetriesSwiftTestingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31F8747157604DB48FE692EB /* AutoTestRetriesSwiftTestingTests.swift */; };
 		A71119A22BA8A4F400118323 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */; };
 		A7183A782E9030630093C831 /* CodeCoverageParser in Frameworks */ = {isa = PBXBuildFile; productRef = A7183A772E9030630093C831 /* CodeCoverageParser */; };
 		A718EC2D2CBD5DCE00C5F0D9 /* EarlyFlakeDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A718EC2C2CBD5DCE00C5F0D9 /* EarlyFlakeDetection.swift */; };
@@ -348,6 +349,7 @@
 		81AA244A2978589600DE8F8A /* DDFileReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDFileReader.swift; sourceTree = "<group>"; };
 		81EDADB2292698A200279027 /* LLVMTotalsCoverageFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLVMTotalsCoverageFormat.swift; sourceTree = "<group>"; };
 		A70B91122DF0AE11003F284F /* AutoTestRetriesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoTestRetriesTests.swift; sourceTree = "<group>"; };
+		31F8747157604DB48FE692EB /* AutoTestRetriesSwiftTestingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoTestRetriesSwiftTestingTests.swift; sourceTree = "<group>"; };
 		A718EC2C2CBD5DCE00C5F0D9 /* EarlyFlakeDetection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EarlyFlakeDetection.swift; sourceTree = "<group>"; };
 		A718EC2E2CBD73F300C5F0D9 /* CacheManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheManager.swift; sourceTree = "<group>"; };
 		A718EC302CBE754300C5F0D9 /* KnownTestsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnownTestsService.swift; sourceTree = "<group>"; };
@@ -743,6 +745,7 @@
 				A794A8FE2E7990C40044FE3C /* TestManagementTests.swift */,
 				A76F0F982E2A9F02009ACD06 /* TestImpactAnalysisTests.swift */,
 				A70B91122DF0AE11003F284F /* AutoTestRetriesTests.swift */,
+				31F8747157604DB48FE692EB /* AutoTestRetriesSwiftTestingTests.swift */,
 				A7B6602E2C2E08A900AEBA6C /* TestImpactAnalysisSkippableTests.swift */,
 				A718EC342CC7F32A00C5F0D9 /* EarlyFlakeDetectionTests.swift */,
 				CC931D86ADB841B6969C7A7A /* EarlyFlakeDetectionSwiftTestingTests.swift */,
@@ -1788,6 +1791,7 @@
 				A7FC268F2BA1F90500067E26 /* SwiftExtensions.swift in Sources */,
 				A7FC26682BA1F6FC00067E26 /* FileLocatorTests.swift in Sources */,
 				A70B91132DF0AE19003F284F /* AutoTestRetriesTests.swift in Sources */,
+				E101EC71CC9E4715A40188FB /* AutoTestRetriesSwiftTestingTests.swift in Sources */,
 				A7B4D4C12C21DC510059F39B /* TagsTests.swift in Sources */,
 				A7B6602F2C2E08A900AEBA6C /* TestImpactAnalysisSkippableTests.swift in Sources */,
 				A794A8FF2E7990D20044FE3C /* TestManagementTests.swift in Sources */,

@@ -334,7 +334,7 @@ class TestImpactAnalysisTests: XCTestCase {
                                                         suite: "TIASuite",
                                                         configuration: ["test.bundle": "TIAModule"]) })
         let collector = Mocks.CoverageCollector()
-        let tia = TestImpactAnalysis(tests: skipped, coverage: Mocks.CoverageCollector())
+        let tia = TestImpactAnalysis(tests: skipped, coverage: Mocks.CoverageCollector(), swiftTestingEnabled: false)
         return (Mocks.Runner(features: [tia, AdditionalTags()], tests: ["TIAModule": ["TIASuite": tests]]), tia, collector)
     }
     

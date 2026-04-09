@@ -13,6 +13,7 @@ final class TestImpactAnalysis: TestHooksFeature {
     let modules: [String: [String: Suite]]
     let correlationId: String?
     let coverage: TestCoverageCollector?
+    let swiftTestingEnabled: Bool
     
     var skippedCount: UInt { _skippedCount.value }
     
@@ -21,7 +22,7 @@ final class TestImpactAnalysis: TestHooksFeature {
     
     private let _skippedCount: Synced<UInt>
     
-    init(tests: SkipTests?, coverage: TestCoverageCollector?) {
+    init(tests: SkipTests?, coverage: TestCoverageCollector?, swiftTestingEnabled: Bool) {
         if let tests = tests { // we have skipping enabled
             var modules = [String: [String: Suite]]()
             for test in tests.tests {
@@ -41,6 +42,7 @@ final class TestImpactAnalysis: TestHooksFeature {
             self.modules = [:]
             self.correlationId = nil
         }
+        self.swiftTestingEnabled = swiftTestingEnabled
         self._skippedCount = .init(0)
         self.coverage = coverage
     }
@@ -67,7 +69,7 @@ final class TestImpactAnalysis: TestHooksFeature {
             session.set(metric: DDTestSessionTags.testCoverageLines, value: linesCovered)
         }
     }
-
+    
     func testModuleWillEnd(module: any TestModule) {
         module.set(tag: DDTestSessionTags.testCodeCoverageEnabled, value: isCoverageEnabled)
         module.set(tag: DDTestSessionTags.testSkippingEnabled, value: isSkippingEnabled)
@@ -87,11 +89,14 @@ final class TestImpactAnalysis: TestHooksFeature {
             module.session.set(metric: DDTestSessionTags.testCoverageLines, value: linesCovered)
         }
     }
-
+    
     func testGroupConfiguration(for test: String, tags: any TestTags,
                                 in suite: any TestSuite,
                                 configuration: RetryGroupConfiguration.Iterator) -> RetryGroupConfiguration.Iterator
     {
+        guard !suite.isSwiftTesting || swiftTestingEnabled else {
+            return configuration.next()
+        }
         let status = status(named: test, suite: suite.name, module: suite.module.name,
                             skippable: tags.get(tag: .tiaSkippable) ?? true)
         if status.markedUnskippable {
@@ -109,6 +114,9 @@ final class TestImpactAnalysis: TestHooksFeature {
     }
     
     func testWillStart(test: any TestRun, info: TestRunInfoStart) {
+        guard !test.suite.isSwiftTesting || swiftTestingEnabled else {
+            return
+        }
         if let correlationId = correlationId {
             test.set(tag: DDItrTags.itrCorrelationId, value: correlationId)
         }
@@ -121,6 +129,9 @@ final class TestImpactAnalysis: TestHooksFeature {
     }
     
     func testWillFinish(test: any TestRun, duration: TimeInterval, withStatus status: TestStatus, andInfo info: TestRunInfoEnd) {
+        guard !test.suite.isSwiftTesting || swiftTestingEnabled else {
+            return
+        }
         switch status {
         case .pass, .fail:
             if info.skip.status.isForcedRun {
@@ -136,6 +147,9 @@ final class TestImpactAnalysis: TestHooksFeature {
     }
     
     func testDidFinish(test: any TestRun, info: TestRunInfoEnd) {
+        guard !test.suite.isSwiftTesting || swiftTestingEnabled else {
+            return
+        }
         if !info.skip.status.isSkipped {
             coverage?.endTest(testSessionId: test.session.id.rawValue,
                               testSuiteId: test.suite.id.rawValue,
@@ -147,8 +161,14 @@ final class TestImpactAnalysis: TestHooksFeature {
                         withStatus: TestStatus, retryStatus: RetryStatus.Iterator,
                         andInfo info: TestRunInfoStart) -> RetryStatus.Iterator
     {
+        guard !test.suite.isSwiftTesting || swiftTestingEnabled else {
+            return retryStatus.next()
+        }
+        guard info.skip.by?.feature == id else {
+            return retryStatus.next()
+        }
         // we have to return end value so test will not be passed for retry to other features
-        info.skip.status.isSkipped ? retryStatus.end() : retryStatus.next()
+        return info.skip.status.isSkipped ? retryStatus.end() : retryStatus.next()
     }
     
     func stop() {
@@ -186,6 +206,7 @@ struct TestImpactAnalysisFactory: FeatureFactory {
     let repository: String
     let exporter: EventsExporterProtocol
     let skippingEnabled: Bool
+    let swiftTestingEnabled: Bool
     let coverageConfig: Coverage?
     
     init(configurations: [String: String],
@@ -193,7 +214,7 @@ struct TestImpactAnalysisFactory: FeatureFactory {
          exporter: EventsExporterProtocol,
          commit: String, repository: String,
          cache: Directory, skippingEnabled: Bool,
-         coverage: Coverage?)
+         swiftTestingEnabled: Bool, coverage: Coverage?)
     {
         self.configurations = configurations
         self.customConfigurations = custom
@@ -203,10 +224,11 @@ struct TestImpactAnalysisFactory: FeatureFactory {
         self.commitSha = commit
         self.coverageConfig = coverage
         self.skippingEnabled = skippingEnabled
+        self.swiftTestingEnabled = swiftTestingEnabled
     }
     
     static func isEnabled(config: Config, env: Environment, remote: TracerSettings) -> Bool {
-        guard config.itrEnabled && remote.itr.itrEnabled else { return false }
+        guard config.tiaEnabled && remote.itr.itrEnabled else { return false }
         
         let isExcluded = { (branch: String) in
             let excludedBranches = config.excludedBranches
@@ -258,7 +280,7 @@ struct TestImpactAnalysisFactory: FeatureFactory {
         if coverage != nil {
             log.debug("Code Coverage Enabled")
         }
-        return TestImpactAnalysis(tests: tests, coverage: coverage)
+        return TestImpactAnalysis(tests: tests, coverage: coverage, swiftTestingEnabled: swiftTestingEnabled)
     }
     
     private func loadTestsFromDisk(log: Logger) -> SkipTests? {

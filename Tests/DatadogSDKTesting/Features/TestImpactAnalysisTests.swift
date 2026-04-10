@@ -10,9 +10,9 @@ import XCTest
 
 class TestImpactAnalysisTests: XCTestCase {
     func testTestImpactAnalysisSkipsTest() async throws {
-        let (runner, tia, _) = tiaRunner(skip: ["skipTest"],
-                                         tests: ["someTest": .fail("Always fails"),
-                                                 "skipTest": .fail("Always fails")])
+        let (runner, tia, collector) = tiaRunner(skip: ["skipTest"],
+                                                 tests: ["someTest": .fail("Always fails"),
+                                                         "skipTest": .fail("Always fails")])
         let tests = try await extractTests(runner.run())
         XCTAssertNotNil(tests["skipTest"])
         XCTAssertEqual(tests["skipTest"]?.runs.count, 1)
@@ -40,10 +40,11 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
+        XCTAssertEqual(collector.tests.count, 1) // someTest ran once; skipTest was skipped
     }
-    
+
     func testTestImpactAnalysisDoesntSkipUnskippable() async throws {
-        let (runner, tia, _) = tiaRunner(skip: ["skipTest"],
+        let (runner, tia, collector) = tiaRunner(skip: ["skipTest"],
                                          tests: ["someTest": .fail("Always fails"),
                                                  "skipTest": .fail("Always fails", unskippable: true)])
         let tests = try await extractTests(runner.run())
@@ -73,11 +74,12 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
+        XCTAssertEqual(collector.tests.count, 2) // both someTest and skipTest (unskippable) ran once each
     }
-    
+
     // TIA + EFD
     func testTestImpactAnalysisSkipsEFDKnownTest() async throws {
-        let (runner, tia, _) = tiaAndEfdRunner(skip: ["skipTest"], known: ["skipTest"],
+        let (runner, tia, collector) = tiaAndEfdRunner(skip: ["skipTest"], known: ["skipTest"],
                                                tests: ["someTest": .failOddRuns(),
                                                        "skipTest": .fail("Always fails")])
         let tests = try await extractTests(runner.run())
@@ -113,10 +115,11 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
+        XCTAssertEqual(collector.tests.count, 10) // someTest ran 10 times via EFD; skipTest was skipped
     }
-    
+
     func testTestImpactAnalysisSkipsEFDUnknownTest() async throws {
-        let (runner, tia, _) = tiaAndEfdRunner(skip: ["skipTest"], known: [],
+        let (runner, tia, collector) = tiaAndEfdRunner(skip: ["skipTest"], known: [],
                                                tests: ["someTest": .failOddRuns(),
                                                        "skipTest": .fail("Always fails")])
         let tests = try await extractTests(runner.run())
@@ -152,10 +155,11 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
+        XCTAssertEqual(collector.tests.count, 10) // someTest ran 10 times via EFD; skipTest was skipped
     }
-    
+
     func testTestImpactAnalysisUnskippableEFDWorks() async throws {
-        let (runner, tia, _) = tiaAndEfdRunner(skip: ["skipTest"], known: [],
+        let (runner, tia, collector) = tiaAndEfdRunner(skip: ["skipTest"], known: [],
                                                tests: ["someTest": .failOddRuns(),
                                                        "skipTest": .failEvenRuns(unskippable: true)])
         let tests = try await extractTests(runner.run())
@@ -191,11 +195,12 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
+        XCTAssertEqual(collector.tests.count, 20) // someTest 10 + skipTest (unskippable) 10 runs via EFD
     }
-    
+
     // TIA + ATR
     func testTestImpactAnalysisAndATRWorksTogether() async throws {
-        let (runner, tia, _) = tiaAndAtrRunner(skip: ["skipTest"],
+        let (runner, tia, collector) = tiaAndAtrRunner(skip: ["skipTest"],
                                                tests: ["someTest": .fail(first: 3),
                                                        "skipTest": .fail("Always fails")])
         let tests = try await extractTests(runner.run())
@@ -230,10 +235,11 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
+        XCTAssertEqual(collector.tests.count, 4) // someTest ran 4 times via ATR; skipTest was skipped
     }
-    
+
     func testTestImpactAnalysisAndATRWorksTogetherUnskippable() async throws {
-        let (runner, tia, _) = tiaAndAtrRunner(skip: ["skipTest"],
+        let (runner, tia, collector) = tiaAndAtrRunner(skip: ["skipTest"],
                                                tests: ["someTest": .fail(first: 3),
                                                        "skipTest": .fail(first: 4, unskippable: true)])
         let tests = try await extractTests(runner.run())
@@ -267,11 +273,12 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
+        XCTAssertEqual(collector.tests.count, 9) // skipTest (unskippable) 5 runs + someTest 4 runs via ATR
     }
-    
+
     // TIA + EFD + ATR
     func testTestImpactAnalysisSkipsEFDKnownTestAndATRRuns() async throws {
-        let (runner, tia, _) = tiaEfdAndAtrRunner(skip: ["skipTest"], known: ["skipTest", "knownTest"],
+        let (runner, tia, collector) = tiaEfdAndAtrRunner(skip: ["skipTest"], known: ["skipTest", "knownTest"],
                                                   tests: ["unknownTest": .failOddRuns(),
                                                           "knownTest": .fail(first: 3),
                                                           "skipTest": .fail("Always fails")])
@@ -326,8 +333,9 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertEqual(tests["knownTest"]?.isSkipped, false)
         XCTAssertEqual(tests["knownTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["knownTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
+        XCTAssertEqual(collector.tests.count, 14) // unknownTest 10 + knownTest 4; skipTest was skipped
     }
-    
+
     func tiaRunner(skip: [String], tests: KeyValuePairs<String, Mocks.Runner.TestMethod>) -> (Mocks.Runner, TestImpactAnalysis, Mocks.CoverageCollector) {
         let skipped = SkipTests(correlationId: "abacaba",
                                 tests: skip.map { .init(name: $0,

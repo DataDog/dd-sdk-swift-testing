@@ -446,7 +446,7 @@ internal class DDTestMonitor {
                                                     repository: repository,
                                                     cache: cache,
                                                     skippingEnabled: remote.itr.testsSkipping,
-                                                    swiftTestingEnabled: DDTestMonitor.config.tiaSwiftTestingEnabled,
+                                                    swiftTestingEnabled: DDTestMonitor.env.tiaSwiftTestingEnabled,
                                                     coverage: coverage)
             self.tia = factory.create(log: Log.instance)
         }

@@ -19,6 +19,7 @@ internal final class Environment {
     let testCommand: String
     let service: String
     let isUserProvidedService: Bool
+    let tiaSwiftTestingEnabled: Bool
     
     var environment: String {
         config.environment ?? (ci != nil ? "ci" : "none")
@@ -34,9 +35,21 @@ internal final class Environment {
     init(config: Config, env: EnvironmentReader, log: Logger, ciReaders: [CIEnvironmentReader] = Environment.ciReaders) {
         self.env = env
         self.config = config
-        
+
         sourceRoot = env[.sourcesDir]
-        
+
+        // Determine whether Swift Testing TIA is enabled for this target.
+        // Explicit env var takes precedence; otherwise auto-detect from the test runner config.
+        let targetName: String? = Bundle.testBundle?.name ?? Bundle.main.name
+        if let explicit = config.tiaSwiftTestingEnabled {
+            tiaSwiftTestingEnabled = config.tiaEnabled && explicit
+        } else {
+            tiaSwiftTestingEnabled = config.tiaEnabled &&
+                ParallelTestRunnerDetector.isParallelizationDisabled(
+                    env: env, sourceRoot: sourceRoot, targetName: targetName
+                )
+        }
+
         /// Device Information
         let (runtimeName, runtimeVersion) = PlatformUtils.getRuntimeInfo()
         platform = Platform(deviceName: PlatformUtils.getDeviceName(),

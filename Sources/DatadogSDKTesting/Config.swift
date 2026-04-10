@@ -45,7 +45,7 @@ final class Config {
     /// TIA  related environment
     var gitUploadEnabled: Bool = true
     var tiaEnabled: Bool = true
-    var tiaSwiftTestingEnabled: Bool = false
+    var tiaSwiftTestingEnabled: Bool? = nil
     var codeCoverageEnabled: Bool = true
     var excludedBranches: Set<String> = []
     var codeCoveragePriority: CodeCoveragePriority = .utility
@@ -132,7 +132,7 @@ final class Config {
         /// Intelligent test runner related configuration
         gitUploadEnabled = env[.enableCiVisibilityGitUpload] ?? gitUploadEnabled
         tiaEnabled = env[.enableTIA] ?? env[.enableCiVisibilityITR] ?? tiaEnabled
-        tiaSwiftTestingEnabled = tiaEnabled && (env[.enableSwiftTestingTIA] ?? tiaSwiftTestingEnabled)
+        tiaSwiftTestingEnabled = env[.enableSwiftTestingTIA]
         excludedBranches = env[.ciVisibilityExcludedBranches] ?? excludedBranches
         codeCoverageEnabled = env[.enableCiVisibilityCodeCoverage] ?? tiaEnabled
         
@@ -233,7 +233,7 @@ extension Config: CustomDebugStringConvertible {
         Git Upload Enabled: \(gitUploadEnabled)
         Coverage Enabled: \(codeCoverageEnabled)
         Test Impact Analysis Enabled: \(tiaEnabled)
-        Test Impact Analysis for Swift Testing Enabled: \(tiaSwiftTestingEnabled)
+        Test Impact Analysis for Swift Testing Enabled: \(tiaSwiftTestingEnabled.map(String.init) ?? "auto-detect")
         Excluded Branches: \(excludedBranches)
         Test Management Enabled: \(testManagementEnabled)
         Test Management Attempt To Fix Retries: \(testManagementAttemptToFixRetries.map(String.init) ?? "nil")

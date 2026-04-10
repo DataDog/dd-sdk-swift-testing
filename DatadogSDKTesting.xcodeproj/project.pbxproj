@@ -64,6 +64,7 @@
 		A7675D722F6CA00000A05B5F /* SwiftTestRunParametersParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7675D712F6CA00000A05B5F /* SwiftTestRunParametersParserTests.swift */; };
 		A7675D742F6CA00000A05B5F /* SessionManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7675D732F6CA00000A05B5F /* SessionManagerTests.swift */; };
 		A76F0F992E2A9F0D009ACD06 /* TestImpactAnalysisTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A76F0F982E2A9F02009ACD06 /* TestImpactAnalysisTests.swift */; };
+		E5BF2275FF5E4C7D9EE74AD2 /* TestImpactAnalysisSwiftTestingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A9081E25D194D74A4DA020E /* TestImpactAnalysisSwiftTestingTests.swift */; };
 		A77C122F2D89CFC2009C2BA1 /* SDKCapabilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77C122E2D89CFC2009C2BA1 /* SDKCapabilities.swift */; };
 		A77C12312D8C976B009C2BA1 /* TestManagementService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77C12302D8C976B009C2BA1 /* TestManagementService.swift */; };
 		A77C12332D8C9798009C2BA1 /* KnownTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77C12322D8C9798009C2BA1 /* KnownTests.swift */; };
@@ -399,6 +400,7 @@
 		A7675D712F6CA00000A05B5F /* SwiftTestRunParametersParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftTestRunParametersParserTests.swift; sourceTree = "<group>"; };
 		A7675D732F6CA00000A05B5F /* SessionManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionManagerTests.swift; sourceTree = "<group>"; };
 		A76F0F982E2A9F02009ACD06 /* TestImpactAnalysisTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestImpactAnalysisTests.swift; sourceTree = "<group>"; };
+		0A9081E25D194D74A4DA020E /* TestImpactAnalysisSwiftTestingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestImpactAnalysisSwiftTestingTests.swift; sourceTree = "<group>"; };
 		A77C122E2D89CFC2009C2BA1 /* SDKCapabilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SDKCapabilities.swift; sourceTree = "<group>"; };
 		A77C12302D8C976B009C2BA1 /* TestManagementService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TestManagementService.swift; sourceTree = "<group>"; };
 		A77C12322D8C9798009C2BA1 /* KnownTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KnownTests.swift; sourceTree = "<group>"; };
@@ -744,6 +746,7 @@
 			children = (
 				A794A8FE2E7990C40044FE3C /* TestManagementTests.swift */,
 				A76F0F982E2A9F02009ACD06 /* TestImpactAnalysisTests.swift */,
+				0A9081E25D194D74A4DA020E /* TestImpactAnalysisSwiftTestingTests.swift */,
 				A70B91122DF0AE11003F284F /* AutoTestRetriesTests.swift */,
 				31F8747157604DB48FE692EB /* AutoTestRetriesSwiftTestingTests.swift */,
 				A7B6602E2C2E08A900AEBA6C /* TestImpactAnalysisSkippableTests.swift */,
@@ -1768,6 +1771,7 @@
 				A7FC26652BA1F6FC00067E26 /* GitInfoTests.swift in Sources */,
 				A7FC26692BA1F6FC00067E26 /* SwiftExtensionsTests.swift in Sources */,
 				A76F0F992E2A9F0D009ACD06 /* TestImpactAnalysisTests.swift in Sources */,
+				E5BF2275FF5E4C7D9EE74AD2 /* TestImpactAnalysisSwiftTestingTests.swift in Sources */,
 				A7FC26612BA1F67800067E26 /* DDSymbolicatorTests.swift in Sources */,
 				A7FC266A2BA1F6FC00067E26 /* SpySpanProcessor.swift in Sources */,
 				A7FC26642BA1F6BF00067E26 /* StdoutCaptureTests.swift in Sources */,

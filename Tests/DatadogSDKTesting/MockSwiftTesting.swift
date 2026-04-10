@@ -125,18 +125,22 @@ extension Mocks {
                           tests: KeyValuePairs<String, Runner.TestMethod>) async throws
         {
             for test in tests {
-                try await provider.provideScope(test: STTest(name: test.key, module: module, suite: suite)) {
-                    try await provider.provideScope(run: STTestRun(name: test.key, module: module, suite: suite)) {
-                        if let duration = test.value.duration {
-                            let test = Mocks.Test.active as! Mocks.Test
-                            test.duration = duration.toNanoseconds
-                        }
-                        switch test.value.method() {
-                        case .fail(let err): throw err
-                        case .skip(let reason): throw STSkipError(reason: reason)
-                        case .pass: break
+                do {
+                    try await provider.provideScope(test: STTest(name: test.key, module: module, suite: suite)) {
+                        try await provider.provideScope(run: STTestRun(name: test.key, module: module, suite: suite)) {
+                            if let duration = test.value.duration {
+                                let test = Mocks.Test.active as! Mocks.Test
+                                test.duration = duration.toNanoseconds
+                            }
+                            switch test.value.method() {
+                            case .fail(let err): throw err
+                            case .skip(let reason): throw STSkipError(reason: reason)
+                            case .pass: break
+                            }
                         }
                     }
+                } catch is STSkipError {
+                    // test was skipped by the framework (e.g., by TIA), continue with the next test
                 }
             }
         }

@@ -8,12 +8,12 @@ import XCTest
 @testable import DatadogSDKTesting
 @testable import EventsExporter
 
-class TestManagementTests: XCTestCase {
+final class TestManagementSwiftTestingTests: XCTestCase {
     func testTMSkipsDisabledTest() async throws {
         let runner = tmRunner(disabled: ["disabledTest"],
                               tests: ["someTest": .fail("Always fails"),
                                       "disabledTest": .fail("Always fails")])
-        let tests = try await extractTests(runner.run())
+        let tests = try extractTests(try await runner.run())
         XCTAssertNotNil(tests["disabledTest"])
         XCTAssertEqual(tests["disabledTest"]?.runs.count, 1)
         XCTAssertEqual(tests["disabledTest"]?.runs.filter { $0.status == .skip }.count, 1)
@@ -25,7 +25,7 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["disabledTest"]?.isSkipped, true)
         XCTAssertEqual(tests["disabledTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["disabledTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusSkip)
-        
+
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 1)
@@ -38,12 +38,12 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
     }
-    
+
     func testTMRunsQuarantinedTestAndSuppressesResult() async throws {
         let runner = tmRunner(quarantined: ["quarantinedTest"],
                               tests: ["someTest": .fail("Always fails"),
                                       "quarantinedTest": .fail("Always fails")])
-        let tests = try await extractTests(runner.run())
+        let tests = try extractTests(try await runner.run())
         XCTAssertNotNil(tests["quarantinedTest"])
         XCTAssertEqual(tests["quarantinedTest"]?.runs.count, 1)
         XCTAssertEqual(tests["quarantinedTest"]?.runs.filter { $0.status == .fail }.count, 1)
@@ -55,7 +55,7 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["quarantinedTest"]?.isSkipped, false)
         XCTAssertEqual(tests["quarantinedTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["quarantinedTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
-        
+
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 1)
@@ -68,12 +68,12 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
     }
-    
+
     func testTMRunsQuarantinedTestAndSuppressesResultAndATRWorks() async throws {
         let runner = tmAndAtrRunner(quarantined: ["quarantinedTest"],
                                     tests: ["someTest": .fail("Always fails"),
                                             "quarantinedTest": .fail(first: 4)])
-        let tests = try await extractTests(runner.run())
+        let tests = try extractTests(try await runner.run())
         XCTAssertNotNil(tests["quarantinedTest"])
         XCTAssertEqual(tests["quarantinedTest"]?.runs.count, 5)
         XCTAssertEqual(tests["quarantinedTest"]?.runs.filter { $0.status == .fail }.count, 4)
@@ -89,7 +89,7 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["quarantinedTest"]?.isSkipped, false)
         XCTAssertEqual(tests["quarantinedTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["quarantinedTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
-        
+
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 6)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 6)
@@ -107,12 +107,12 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
     }
-    
+
     func testTMRunsQuarantinedTestAndSuppressesResultWhenATRFails() async throws {
         let runner = tmAndAtrRunner(quarantined: ["quarantinedTest"],
                                     tests: ["someTest": .fail("Always fails"),
                                             "quarantinedTest": .fail("Always fails")])
-        let tests = try await extractTests(runner.run())
+        let tests = try extractTests(try await runner.run())
         XCTAssertNotNil(tests["quarantinedTest"])
         XCTAssertEqual(tests["quarantinedTest"]?.runs.count, 6)
         XCTAssertEqual(tests["quarantinedTest"]?.runs.filter { $0.status == .fail }.count, 6)
@@ -130,7 +130,7 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["quarantinedTest"]?.isSkipped, false)
         XCTAssertEqual(tests["quarantinedTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["quarantinedTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
-        
+
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 6)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 6)
@@ -148,12 +148,12 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
     }
-    
+
     func testTMAttemptToFixWorks() async throws {
         let runner = tmAndAtrRunner(fix: ["atfTest"],
                                     tests: ["someTest": .fail("Always fails"),
                                             "atfTest": .pass()])
-        let tests = try await extractTests(runner.run())
+        let tests = try extractTests(try await runner.run())
         XCTAssertNotNil(tests["atfTest"])
         XCTAssertEqual(tests["atfTest"]?.runs.count, 20)
         XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.status == .pass }.count, 20)
@@ -169,7 +169,7 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["atfTest"]?.isSkipped, false)
         XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["atfTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
-        
+
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 6)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 6)
@@ -187,12 +187,12 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
     }
-    
+
     func testTMAttemptToFixFailsForFailedTest() async throws {
         let runner = tmAndAtrRunner(fix: ["atfTest"],
                                     tests: ["someTest": .fail("Always fails"),
                                             "atfTest": .fail(first: 3)])
-        let tests = try await extractTests(runner.run())
+        let tests = try extractTests(try await runner.run())
         XCTAssertNotNil(tests["atfTest"])
         XCTAssertEqual(tests["atfTest"]?.runs.count, 20)
         XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.status == .pass }.count, 17)
@@ -210,7 +210,7 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["atfTest"]?.isSkipped, false)
         XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["atfTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
-        
+
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 6)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 6)
@@ -228,12 +228,12 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
     }
-    
+
     func testTMAttemptToFixDoesntFailForDisabledTest() async throws {
         let runner = tmAndAtrRunner(fix: ["atfTest"], disabled: ["atfTest"],
                                     tests: ["someTest": .fail("Always fails"),
                                             "atfTest": .fail(first: 3)])
-        let tests = try await extractTests(runner.run())
+        let tests = try extractTests(try await runner.run())
         XCTAssertNotNil(tests["atfTest"])
         XCTAssertEqual(tests["atfTest"]?.runs.count, 20)
         XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.status == .pass }.count, 17)
@@ -251,7 +251,7 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["atfTest"]?.isSkipped, false)
         XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["atfTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
-        
+
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 6)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 6)
@@ -269,12 +269,12 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
     }
-    
+
     func testTMAttemptToFixDoesntFailForQuarantinedTest() async throws {
         let runner = tmAndAtrRunner(fix: ["atfTest"], quarantined: ["atfTest"],
                                     tests: ["someTest": .fail("Always fails"),
                                             "atfTest": .fail(first: 3)])
-        let tests = try await extractTests(runner.run())
+        let tests = try extractTests(try await runner.run())
         XCTAssertNotNil(tests["atfTest"])
         XCTAssertEqual(tests["atfTest"]?.runs.count, 20)
         XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.status == .pass }.count, 17)
@@ -289,7 +289,7 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["atfTest"]?.isSkipped, false)
         XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["atfTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
-        
+
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 6)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 6)
@@ -299,17 +299,20 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 5)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonAutoTestRetry }.count, 5)
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries], "true")
+        XCTAssertEqual(tests["someTest"]?.runs.filter {
+            $0.tags[DDTestTags.testFailureSuppressionReason] == DDTagValues.failureSuppressionReasonATR
+        }.count, 5)
         XCTAssertEqual(tests["someTest"]?.isSucceeded, false)
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
     }
-    
+
     func testTMWithATRDoesntRetryDisabledTest() async throws {
         let runner = tmAndAtrRunner(disabled: ["disabledTest"],
                                     tests: ["someTest": .fail("Always fails"),
                                             "disabledTest": .fail("Always fails")])
-        let tests = try await extractTests(runner.run())
+        let tests = try extractTests(try await runner.run())
         XCTAssertNotNil(tests["disabledTest"])
         XCTAssertEqual(tests["disabledTest"]?.runs.count, 1)
         XCTAssertEqual(tests["disabledTest"]?.runs.filter { $0.status == .skip }.count, 1)
@@ -345,7 +348,7 @@ class TestManagementTests: XCTestCase {
         let runner = tmRunner(disabled: ["multiTest"], quarantined: ["multiTest"],
                               tests: ["someTest": .fail("Always fails"),
                                       "multiTest": .fail("Always fails")])
-        let tests = try await extractTests(runner.run())
+        let tests = try extractTests(try await runner.run())
         XCTAssertNotNil(tests["multiTest"])
         XCTAssertEqual(tests["multiTest"]?.runs.count, 1)
         XCTAssertEqual(tests["multiTest"]?.runs.filter { $0.status == .skip }.count, 1)
@@ -376,7 +379,7 @@ class TestManagementTests: XCTestCase {
                                     known: ["someTest"],
                                     tests: ["someTest": .fail("Always fails"),
                                             "disabledTest": .fail("Always fails")])
-        let tests = try await extractTests(runner.run())
+        let tests = try extractTests(try await runner.run())
         XCTAssertNotNil(tests["disabledTest"])
         XCTAssertEqual(tests["disabledTest"]?.runs.count, 1)
         XCTAssertEqual(tests["disabledTest"]?.runs.filter { $0.status == .skip }.count, 1)
@@ -407,7 +410,7 @@ class TestManagementTests: XCTestCase {
                                     known: ["someTest"],
                                     tests: ["someTest": .fail("Always fails"),
                                             "quarantinedTest": .fail("Always fails")])
-        let tests = try await extractTests(runner.run())
+        let tests = try extractTests(try await runner.run())
         XCTAssertNotNil(tests["quarantinedTest"])
         XCTAssertEqual(tests["quarantinedTest"]?.runs.count, 10)
         XCTAssertEqual(tests["quarantinedTest"]?.runs.filter { $0.status == .fail }.count, 10)
@@ -446,7 +449,7 @@ class TestManagementTests: XCTestCase {
                                     known: ["quarantinedTest", "someTest"],
                                     tests: ["someTest": .fail("Always fails"),
                                             "quarantinedTest": .fail("Always fails")])
-        let tests = try await extractTests(runner.run())
+        let tests = try extractTests(try await runner.run())
         XCTAssertNotNil(tests["quarantinedTest"])
         XCTAssertEqual(tests["quarantinedTest"]?.runs.count, 1)
         XCTAssertEqual(tests["quarantinedTest"]?.runs.filter { $0.status == .fail }.count, 1)
@@ -475,7 +478,7 @@ class TestManagementTests: XCTestCase {
                                     skip: ["disabledTest"],
                                     tests: ["someTest": .fail("Always fails"),
                                             "disabledTest": .fail("Always fails")])
-        let tests = try await extractTests(runner.run())
+        let tests = try extractTests(try await runner.run())
         XCTAssertNotNil(tests["disabledTest"])
         XCTAssertEqual(tests["disabledTest"]?.runs.count, 1)
         XCTAssertEqual(tests["disabledTest"]?.runs.filter { $0.status == .skip }.count, 1)
@@ -506,7 +509,7 @@ class TestManagementTests: XCTestCase {
                                     skip: ["quarantinedTest"],
                                     tests: ["someTest": .fail("Always fails"),
                                             "quarantinedTest": .fail("Always fails")])
-        let tests = try await extractTests(runner.run())
+        let tests = try extractTests(try await runner.run())
         XCTAssertNotNil(tests["quarantinedTest"])
         XCTAssertEqual(tests["quarantinedTest"]?.runs.count, 1)
         XCTAssertEqual(tests["quarantinedTest"]?.runs.filter { $0.status == .skip }.count, 1)
@@ -534,7 +537,7 @@ class TestManagementTests: XCTestCase {
                                     skip: [],
                                     tests: ["someTest": .fail("Always fails"),
                                             "quarantinedTest": .fail("Always fails")])
-        let tests = try await extractTests(runner.run())
+        let tests = try extractTests(try await runner.run())
         XCTAssertNotNil(tests["quarantinedTest"])
         XCTAssertEqual(tests["quarantinedTest"]?.runs.count, 1)
         XCTAssertEqual(tests["quarantinedTest"]?.runs.filter { $0.status == .fail }.count, 1)
@@ -560,7 +563,7 @@ class TestManagementTests: XCTestCase {
 
     func tmAndEfdRunner(fix: [String] = [], disabled: [String] = [],
                         quarantined: [String] = [], known: [String],
-                        tests: KeyValuePairs<String, Mocks.Runner.TestMethod>) -> Mocks.Runner
+                        tests: KeyValuePairs<String, Mocks.Runner.TestMethod>) -> Mocks.STRunner
     {
         let runner = tmRunner(fix: fix, disabled: disabled, quarantined: quarantined, tests: tests)
         let efd = EarlyFlakeDetection(
@@ -578,13 +581,13 @@ class TestManagementTests: XCTestCase {
 
     func tmAndTiaRunner(fix: [String] = [], disabled: [String] = [],
                         quarantined: [String] = [], skip: [String],
-                        tests: KeyValuePairs<String, Mocks.Runner.TestMethod>) -> Mocks.Runner
+                        tests: KeyValuePairs<String, Mocks.Runner.TestMethod>) -> Mocks.STRunner
     {
         let runner = tmRunner(fix: fix, disabled: disabled, quarantined: quarantined, tests: tests)
         let skipped = SkipTests(
             correlationId: "abacaba",
             tests: skip.map { .init(name: $0, suite: "TMSuite", configuration: ["test.bundle": "TMModule"]) })
-        let tia = TestImpactAnalysis(tests: skipped, coverage: nil, swiftTestingEnabled: false)
+        let tia = TestImpactAnalysis(tests: skipped, coverage: nil, swiftTestingEnabled: true)
         var features = runner.features.features
         features.insert(tia, at: features.count - 1)
         runner.features = features
@@ -592,7 +595,7 @@ class TestManagementTests: XCTestCase {
     }
 
     func tmRunner(fix: [String] = [], disabled: [String] = [],
-                  quarantined: [String] = [], tests: KeyValuePairs<String, Mocks.Runner.TestMethod>) -> Mocks.Runner
+                  quarantined: [String] = [], tests: KeyValuePairs<String, Mocks.Runner.TestMethod>) -> Mocks.STRunner
     {
         var tmTests = [String: TestManagementTestsInfo.Test]()
         for test in fix {
@@ -616,12 +619,12 @@ class TestManagementTests: XCTestCase {
         let tmModule = TestManagementTestsInfo.Module(suites: ["TMSuite": tmSuite])
         let tmInfo = TestManagementTestsInfo(modules: ["TMModule": tmModule])
         let tm = TestManagement(tests: tmInfo, attemptToFixRetries: 20, module: "TMModule")
-        return Mocks.Runner(features: [tm, AdditionalTags()], tests: ["TMModule": ["TMSuite": tests]])
+        return Mocks.STRunner(features: [tm, AdditionalTags()], tests: ["TMModule": ["TMSuite": tests]])
     }
-    
+
     func tmAndAtrRunner(fix: [String] = [], disabled: [String] = [],
                         quarantined: [String] = [],
-                        tests: KeyValuePairs<String, Mocks.Runner.TestMethod>) -> Mocks.Runner
+                        tests: KeyValuePairs<String, Mocks.Runner.TestMethod>) -> Mocks.STRunner
     {
         let runner = tmRunner(fix: fix, disabled: disabled, quarantined: quarantined, tests: tests)
         let atr = AutomaticTestRetries(failedTestRetriesCount: 5, failedTestTotalRetriesMax: 1000)
@@ -630,21 +633,11 @@ class TestManagementTests: XCTestCase {
         runner.features = features
         return runner
     }
-    
+
     func extractTests(_ session: Mocks.Session) throws -> [String: Mocks.Group] {
         guard let suite = session["TMModule"]?["TMSuite"] else {
             throw InternalError(description: "Can't get TMModule and TMSuite")
         }
         return suite.tests
-    }
-}
-
-extension TestManagementTestsInfo.Test {
-    func and(disabled: Bool) -> Self {
-        .init(disabled: disabled, quarantined: self.properties.quarantined, attemptToFix: self.properties.attemptToFix)
-    }
-    
-    func and(quarantined: Bool) -> Self {
-        .init(disabled: self.properties.disabled, quarantined: quarantined, attemptToFix: self.properties.attemptToFix)
     }
 }

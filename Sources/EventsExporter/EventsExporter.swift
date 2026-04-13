@@ -10,6 +10,7 @@ import CodeCoverageParser
 
 public protocol EventsExporterProtocol: SpanExporter {
     var endpointURLs: Set<String> { get }
+    var maxObjectSize: UInt64 { get }
     
     func exportEvent<T: Encodable>(event: T)
     func searchCommits(repositoryURL: String, commits: [String]) -> [String]
@@ -40,6 +41,8 @@ public final class EventsExporter: EventsExporterProtocol {
     var settingsService: SettingsService
     var knownTestsService: KnownTestsService
     var testManagementService: TestManagementService
+    
+    public var maxObjectSize: UInt64 { configuration.performancePreset.maxObjectSize }
 
     public init(config: ExporterConfiguration) throws {
         self.configuration = config

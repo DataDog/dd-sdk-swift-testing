@@ -208,6 +208,13 @@ struct TestError: Error, CustomDebugStringConvertible {
         }
     }
     
+    private init(type: String, message: String?, stack: String?, crashLog: [String]?) {
+        self.type = type
+        self.message = message
+        self.stack = stack
+        self.crashLog = crashLog
+    }
+    
     func joined(other error: Self) -> Self {
         var newMessage: String
         var newStack: String? = nil
@@ -241,11 +248,40 @@ struct TestError: Error, CustomDebugStringConvertible {
         return .init(type: type, message: newMessage, stack: newStack)
     }
     
+    func trimmed(maxSize: UInt64) -> Self {
+        var newMessage: String? = nil
+        var newStack: String? = nil
+        var newCrashLog: [String]? = nil
+        var maxSize = Int(maxSize) - type.utf8.count
+        if let message, maxSize > 0 {
+            newMessage = message.trimmed(maxLength: &maxSize)
+        }
+        if let stack, maxSize > 0 {
+            newStack = stack.trimmed(maxLength: &maxSize)
+        }
+        if let crashLog {
+            newCrashLog = []
+            for log in crashLog where maxSize > 0 {
+                newCrashLog?.append(log.trimmed(maxLength: &maxSize))
+            }
+        }
+        return .init(type: type,
+                     message: newMessage,
+                     stack: newStack,
+                     crashLog: newCrashLog)
+    }
+    
     var debugDescription: String {
         var text = type
         if let message { text += ": \(message)" }
         if let stack { text += "\n\(stack)" }
-        if let crashLog { text += "\n\n" + crashLog.joined(separator: "\n") }
+        if let crashLog {
+            var maxStack = 512
+            text += "\n\n" + crashLog.joined(separator: "\n").trimmed(maxLength: &maxStack)
+            if maxStack == 0 {
+                text += "\n(truncated)"
+            }
+        }
         return text
     }
 }

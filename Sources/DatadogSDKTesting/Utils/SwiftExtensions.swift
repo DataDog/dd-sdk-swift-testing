@@ -34,6 +34,17 @@ extension String {
 
         return results.map { String($0) }
     }
+    
+    func trimmed(maxLength: inout Int) -> String {
+        let utf8Count = utf8.count
+        if utf8Count <= maxLength {
+            maxLength -= utf8Count
+            return self
+        } else {
+            defer { maxLength = 0 }
+            return String(bytes: utf8.prefix(maxLength), encoding: .utf8)!
+        }
+    }
 
     var separatedByWords: String {
         enum My {

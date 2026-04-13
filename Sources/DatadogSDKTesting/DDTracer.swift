@@ -20,9 +20,10 @@ enum DDHeaders: String, CaseIterable {
 internal class DDTracer {
     let tracerSdk: TracerSdk
     let tracerProviderSdk: TracerProviderSdk
+    let maxObjectSize: UInt64
     var eventsExporter: EventsExporterProtocol?
+    
     private var launchSpanContext: SpanContext?
-
     private let attributeCountLimit: UInt = 1024
 
     static var activeSpan: Span? { OpenTelemetry.instance.contextProvider.activeSpan ?? Test.current?.span }
@@ -38,6 +39,7 @@ internal class DDTracer {
     init(id: String, version: String, exporter: EventsExporterProtocol?, enabled: Bool, launchContext: SpanContext?) {
         self.launchSpanContext = launchContext
         self.eventsExporter = exporter
+        self.maxObjectSize = exporter?.maxObjectSize ?? 262144
         
         let exporterToUse: SpanExporter
         if !enabled {
@@ -201,6 +203,7 @@ internal class DDTracer {
         }
 
         attributes.updateValue(value: AttributeValue.string(DDTagValues.statusFail), forKey: DDTestTags.testStatus)
+        let error = error.trimmed(maxSize: maxObjectSize - 5120) // 5k for other tags and everything else for crash log
         attributes.updateValue(value: AttributeValue.string(error.type), forKey: DDTags.errorType)
         if let message = error.message {
             attributes.updateValue(value: AttributeValue.string(message), forKey: DDTags.errorMessage)

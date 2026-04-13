@@ -24,7 +24,7 @@ final class AutomaticTestRetries: TestHooksFeature {
         self._failedTestTotalRetries = Synced(0)
     }
     
-    func testGroupConfiguration(for test: String, meta: UnskippableMethodCheckerFactory,
+    func testGroupConfiguration(for test: String, tags: any TestTags,
                                 in suite: any TestSuite,
                                 configuration: RetryGroupConfiguration.Iterator) -> RetryGroupConfiguration.Iterator
     {

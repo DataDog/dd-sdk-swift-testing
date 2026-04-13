@@ -153,7 +153,7 @@ extension Mocks {
         func _run(group name: String, method: TestMethod, suite: Suite) {
             let group = suite.startGroup(named: name)
             
-            let (feature, config) = features.testGroupConfiguration(for: group.name, meta: group, in: suite)
+            let (feature, config) = features.testGroupConfiguration(for: group.name, tags: group, in: suite)
             
             group.skipStrategy = config.skipStrategy
             group.successStrategy = config.successStrategy

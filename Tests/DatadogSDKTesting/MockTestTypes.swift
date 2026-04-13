@@ -355,7 +355,7 @@ enum Mocks {
         }
     }
     
-    final class Group: UnskippableMethodCheckerFactory, Equatable, Hashable, CustomDebugStringConvertible, Sendable {
+    final class Group: Equatable, Hashable, CustomDebugStringConvertible, Sendable, TestTags {
         struct GroupInfo {
             var unskippable: Bool = false
             var runs: [Test] = []
@@ -415,13 +415,6 @@ enum Mocks {
             return runs[run]
         }
         
-        var classId: ObjectIdentifier { ObjectIdentifier(self) }
-        
-        var unskippableMethods: UnskippableMethodChecker {
-            .init(isSuiteUnskippable: suite.unskippable,
-                  skippableMethods: [name: !unskippable])
-        }
-        
         var executionCount: Int { runs.filter { $0.duration > 0 }.count }
         var failedExecutionCount: Int { runs.filter { $0.status == .fail }.count }
         
@@ -443,6 +436,13 @@ enum Mocks {
                 return runs.allSatisfy { $0.status == .skip }
             case .atLeastOneSkipped:
                 return runs.contains { $0.status == .skip }
+            }
+        }
+        
+        func get<T: TestTag>(tag: T) -> T.Value? {
+            switch tag {
+            case is TIASkippableTag: return (!(suite.unskippable || unskippable) as! T.Value)
+            default: return nil
             }
         }
         

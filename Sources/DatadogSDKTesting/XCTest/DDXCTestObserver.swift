@@ -147,9 +147,12 @@ final class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate
             return
         }
         
+        let testType = type(of: group.currentTest!)
+        let suiteTags = context.tags[ObjectIdentifier(testType), default: .init(for: testType)]
+        
         let testId = group.testId
         let (feature, config) = context.features.testGroupConfiguration(for: testId.test,
-                                                                        meta: group.currentTest!,
+                                                                        tags: suiteTags.tags(for: testId.test),
                                                                         in: suite)
         
         group.groupRun?.skipStrategy = config.skipStrategy.xcTest
@@ -429,12 +432,14 @@ extension DDXCTestObserver {
         let module: any TestModule & TestSuiteProvider
         let moduleContext: ModuleContext
         var features: any TestHooksFeatures { moduleContext.features }
+        var tags: [ObjectIdentifier: XCTestSuiteTags]
         
         init(parent: ContainerSuite?, module: any TestModule & TestSuiteProvider, context: ModuleContext)
         {
             self.parent = parent
             self.module = module
             self.moduleContext = context
+            self.tags = [:]
         }
         
         func back(from suite: any TestSuite) -> State {

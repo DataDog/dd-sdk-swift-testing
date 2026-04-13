@@ -11,7 +11,7 @@ internal import CDatadogSDKTesting
 
 typealias cFunc = @convention(c) () -> Void
 
-protocol TestCoverageCollector: Feature {
+protocol TestCoverageCollector: Feature, Sendable {
     func startTest()
     func endTest(testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64)
 }
@@ -19,7 +19,7 @@ protocol TestCoverageCollector: Feature {
 final class DDCoverageHelper: TestCoverageCollector {
     static var id: FeatureId = "Coverage Helper"
     
-    let processor: CoverageProcessor
+    nonisolated(unsafe) let processor: CoverageProcessor
     let exporter: EventsExporterProtocol
     let workspacePath: String?
 

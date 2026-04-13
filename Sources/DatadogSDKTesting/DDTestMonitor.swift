@@ -446,6 +446,7 @@ internal class DDTestMonitor {
                                                     repository: repository,
                                                     cache: cache,
                                                     skippingEnabled: remote.itr.testsSkipping,
+                                                    swiftTestingEnabled: DDTestMonitor.env.tiaSwiftTestingEnabled,
                                                     coverage: coverage)
             self.tia = factory.create(log: Log.instance)
         }
@@ -622,7 +623,7 @@ internal class DDTestMonitor {
         CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, CFRunLoopMode.commonModes)
     }
     
-    var activeFeatures: [any TestHooksFeature] {
+    var activeFeatures: any TestHooksFeatures {
         testOptimizationSetupQueue.waitUntilAllOperationsAreFinished()
         let features: [(any TestHooksFeature)?] = [
             testManagement, tia, efd, atr, knownTests,

@@ -716,7 +716,7 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
     {
         let suite = try await self._state.suite(named: info.suite, in: info.module) { (mod, manager, config) in
             let count = try await self.registry.count(for: info)
-            let suite = mod.startSuite(named: info.suite, at: nil, framework: "Testing")
+            let suite = mod.startSuite(named: info.suite, at: nil, framework: Self.framework)
             return .init(suite: suite, configuration: config, info: info,
                          testsCount: count, observer: self.observer, moduleManager: manager)
         }
@@ -731,7 +731,7 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
     {
         let suite = try await self._state.suite(named: test.suite, in: test.module) { (mod, manager, config) in
             let tests = try await self.registry.tests(for: test)
-            let suite = mod.startSuite(named: test.suite, at: nil, framework: "Testing")
+            let suite = mod.startSuite(named: test.suite, at: nil, framework: Self.framework)
             return SwiftTestingSuiteContext(suite: suite, configuration: config,
                                             tests: tests, info: test, observer: self.observer,
                                             moduleManager: manager)
@@ -761,6 +761,12 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
     var session: any TestSessionManager {
         _state.session
     }
+    
+    static let framework = "Testing"
+}
+
+extension TestSuite {
+    var isSwiftTesting: Bool { testFramework ==  SwiftTestingSuiteProvider.framework }
 }
 
 extension Optional where Wrapped == SwiftTestingTestStatus.Errors {

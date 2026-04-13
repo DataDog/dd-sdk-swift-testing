@@ -18,8 +18,8 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-    - name: Select Xcode 26.0
-      run: sudo xcode-select --switch /Applications/Xcode_26.0.app
+    - name: Select Xcode 26.1
+      run: sudo xcode-select --switch /Applications/Xcode_26.1.app
     - name: Test
       run: make XC_LOG=tests IOS_SIMULATOR="iPhone 17" TVOS_SIMULATOR="Apple TV" tests
     - name: Attach Xcode logs
@@ -46,8 +46,8 @@ jobs:
       with:
         scope: DataDog/dd-sdk-swift-testing
         policy: self.github.create-release.workflow-dispatch
-    - name: Select Xcode 26.0
-      run: sudo xcode-select --switch /Applications/Xcode_26.0.app
+    - name: Select Xcode 26.1
+      run: sudo xcode-select --switch /Applications/Xcode_26.1.app
     - name: Fix git repo url with obtained token
       env:
         GH_TOKEN: ${{ steps.octo-sts.outputs.token }}

@@ -381,7 +381,9 @@ protocol XCTestTag: TestTag {
 }
 
 // XCTest is synchronous so it's not synchronized
-final class XCTestSuiteTags: Identifiable<ObjectIdentifier> {
+final class XCTestSuiteTags: Identifiable {
+    typealias ID = ObjectIdentifier
+    
     var id: ObjectIdentifier { ObjectIdentifier(_clazz) }
     
     private let _clazz: XCTestCase.Type

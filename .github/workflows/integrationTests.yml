@@ -21,7 +21,7 @@ jobs:
             iossim: "iPhone 17"
             tvossim: "Apple TV"
           - xcode: "Xcode_26.4"
-            os: "macos-26-arm"
+            os: "macos-26"
             iossim: "iPhone 17"
             tvossim: "Apple TV"
     runs-on: ${{ matrix.env.os }}

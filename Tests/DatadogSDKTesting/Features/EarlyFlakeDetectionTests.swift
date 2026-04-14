@@ -221,7 +221,7 @@ final class EarlyFlakeDetectionLogicTests: XCTestCase {
         )
         let knownFeature = KnownTests(tests: ["EFDModule": ["EFDSuite": known]])
         return (Mocks.Runner(features: [efd, knownFeature, AdditionalTags()],
-                             tests: ["EFDModule": ["EFDSuite": tests]]), efd)
+                             tests: ["EFDModule": ["EFDSuite": .init(tests: tests)]]), efd)
     }
     
     func efdAndAtrRunner(known: [String], tests: KeyValuePairs<String, Mocks.Runner.TestMethod>) -> (Mocks.Runner, EarlyFlakeDetection) {

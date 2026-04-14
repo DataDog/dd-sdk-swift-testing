@@ -46,7 +46,7 @@ class TestImpactAnalysisTests: XCTestCase {
     func testTestImpactAnalysisDoesntSkipUnskippable() async throws {
         let (runner, tia, collector) = tiaRunner(skip: ["skipTest"],
                                          tests: ["someTest": .fail("Always fails"),
-                                                 "skipTest": .fail("Always fails", unskippable: true)])
+                                                 "skipTest": .fail("Always fails", tags: .init(skippable: false))])
         let tests = try await extractTests(runner.run())
         XCTAssertNotNil(tests["skipTest"])
         XCTAssertEqual(tests["skipTest"]?.runs.count, 1)
@@ -161,7 +161,7 @@ class TestImpactAnalysisTests: XCTestCase {
     func testTestImpactAnalysisUnskippableEFDWorks() async throws {
         let (runner, tia, collector) = tiaAndEfdRunner(skip: ["skipTest"], known: [],
                                                tests: ["someTest": .failOddRuns(),
-                                                       "skipTest": .failEvenRuns(unskippable: true)])
+                                                       "skipTest": .failEvenRuns(tags: .init(skippable: false))])
         let tests = try await extractTests(runner.run())
         XCTAssertNotNil(tests["skipTest"])
         XCTAssertEqual(tests["skipTest"]?.runs.count, 10)
@@ -241,7 +241,7 @@ class TestImpactAnalysisTests: XCTestCase {
     func testTestImpactAnalysisAndATRWorksTogetherUnskippable() async throws {
         let (runner, tia, collector) = tiaAndAtrRunner(skip: ["skipTest"],
                                                tests: ["someTest": .fail(first: 3),
-                                                       "skipTest": .fail(first: 4, unskippable: true)])
+                                                       "skipTest": .fail(first: 4, tags: .init(skippable: false))])
         let tests = try await extractTests(runner.run())
         XCTAssertNotNil(tests["skipTest"])
         XCTAssertEqual(tests["skipTest"]?.runs.count, 5)
@@ -343,7 +343,7 @@ class TestImpactAnalysisTests: XCTestCase {
                                                         configuration: ["test.bundle": "TIAModule"]) })
         let collector = Mocks.CoverageCollector()
         let tia = TestImpactAnalysis(tests: skipped, coverage: collector, swiftTestingEnabled: false)
-        return (Mocks.Runner(features: [tia, AdditionalTags()], tests: ["TIAModule": ["TIASuite": tests]]), tia, collector)
+        return (Mocks.Runner(features: [tia, AdditionalTags()], tests: ["TIAModule": ["TIASuite": .init(tests: tests)]]), tia, collector)
     }
     
     func tiaAndEfdRunner(skip: [String], known: [String], tests: KeyValuePairs<String, Mocks.Runner.TestMethod>) -> (Mocks.Runner, TestImpactAnalysis, Mocks.CoverageCollector) {

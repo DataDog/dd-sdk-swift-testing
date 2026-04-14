@@ -24,6 +24,24 @@ enum Mocks {
         var metrics: [String: Double] = [:]
     }
     
+    struct AttachedTags: TestTags {
+        let skippable: Bool?
+        let retriable: Bool?
+        
+        init(skippable: Bool? = nil, retriable: Bool? = nil) {
+            self.skippable = skippable
+            self.retriable = retriable
+        }
+        
+        func get<T: TestTag>(tag: T) -> T.Value? {
+            switch tag {
+            case is TIASkippableTag: return skippable as? T.Value
+            case is RetriableTag: return retriable as? T.Value
+            default: return nil
+            }
+        }
+    }
+    
     class TestBase<Info: MockTestModuleInfo>: TestContainer, @unchecked Sendable {
         let _state: Synced<Info> = .init(.init())
         
@@ -91,15 +109,15 @@ enum Mocks {
         let _sessionConfig: SessionConfig?
         let _moduleObserver: (any TestModuleManagerObserver)?
         
-        let unskippable: [String: [String: (Bool, [String: Bool])]]
+        let testTags: [String: [String: (AttachedTags, [String: AttachedTags])]]
 
         init(name: String, startTime: Date = Date(),
-             unskippable: [String: [String: (Bool, [String: Bool])]],
+             testTags: [String: [String: (AttachedTags, [String: AttachedTags])]],
              config: SessionConfig? = nil,
              observer: (any TestModuleManagerObserver)? = nil) {
             self._sessionConfig = config
             self._moduleObserver = observer
-            self.unskippable = unskippable
+            self.testTags = testTags
             super.init(name: name, startTime: startTime)
         }
 
@@ -133,7 +151,7 @@ enum Mocks {
         
         func newModule(named name: String, at start: Date?) -> Mocks.Module {
             Mocks.Module(name: name, session: self,
-                         unskippable: unskippable[name] ?? [:],
+                         testTags: testTags[name] ?? [:],
                          startTime: start ?? Date())
         }
 
@@ -169,15 +187,15 @@ enum Mocks {
         final class Provider: TestSessionProvider {
             nonisolated(unsafe) var session: Session? = nil
             
-            let unskippable: [String: [String: (Bool, [String: Bool])]]
+            let tags: [String: [String: (AttachedTags, [String: AttachedTags])]]
             
-            init(unskippable: [String : [String : (Bool, [String : Bool])]] = [:]) {
-                self.unskippable = unskippable
+            init(tags: [String: [String: (AttachedTags, [String: AttachedTags])]] = [:]) {
+                self.tags = tags
             }
             
             func startSession(named name: String, config: SessionConfig, startTime: Date,
                               observer: (any TestModuleManagerObserver)?) async throws -> any TestModuleManager & TestSession {
-                self.session = Session(name: name, startTime: startTime, unskippable: unskippable,
+                self.session = Session(name: name, startTime: startTime, testTags: tags,
                                        config: config, observer: observer)
                 return self.session!
             }
@@ -201,7 +219,7 @@ enum Mocks {
         weak var _session: Session!
 #endif
         
-        let unskippable: [String: (Bool, [String: Bool])]
+        let testTags: [String: (AttachedTags, [String: AttachedTags])]
         var session: any TestSession { _session }
         var testFrameworks: Set<String> { _state.value.testFrameworks }
         var suites: [String: Suite] { _state.value.suites }
@@ -210,9 +228,9 @@ enum Mocks {
             set { _state.update { $0.localization = newValue } }
         }
         
-        init(name: String, session: Session, unskippable: [String: (Bool, [String: Bool])], startTime: Date = Date()) {
+        init(name: String, session: Session, testTags: [String: (AttachedTags, [String: AttachedTags])], startTime: Date = Date()) {
             self._session = session
-            self.unskippable = unskippable
+            self.testTags = testTags
             super.init(name: name, startTime: startTime)
         }
         
@@ -235,12 +253,12 @@ enum Mocks {
             hasher.combine(_session)
         }
         
-        func startSuite(named name: String, at start: Date?, framework: String) -> any DatadogSDKTesting.TestRunProvider & DatadogSDKTesting.TestSuite {
+        func startSuite(named name: String, at start: Date?, framework: String) -> any TestRunProvider & TestSuite {
             let suite = _state.update { state in
                 let suite = Mocks.Suite(name: name, module: self,
                                         framework: framework,
-                                        unskippable: unskippable[name]?.0 ?? false,
-                                        unskippableTests: unskippable[name]?.1 ?? [:],
+                                        tags: testTags[name]?.0 ?? .init(),
+                                        testTags: testTags[name]?.1 ?? [:],
                                         startTime: start ?? Date())
                 state.suites[name] = suite
                 state.testFrameworks.insert(framework)
@@ -261,7 +279,7 @@ enum Mocks {
             var metrics: [String: Double] = [:]
             var tests: [String: Group] = [:]
             var localization: String = ""
-            var unskippable: Bool = false
+            var attachedTags: AttachedTags = .init()
         }
 
 #if compiler(>=6.3)
@@ -271,25 +289,25 @@ enum Mocks {
 #endif
         
         let testFramework: String
-        let unskippableTests: [String: Bool]
+        let testTags: [String: AttachedTags]
         
         var module: any TestModule { _module }
         var localization: String {
             get { _state.value.localization }
             set { _state.update { $0.localization = newValue } }
         }
-        var unskippable: Bool {
-            get { _state.value.unskippable }
-            set { _state.update { $0.unskippable = newValue } }
+        var attachedTags: AttachedTags {
+            get { _state.value.attachedTags }
+            set { _state.update { $0.attachedTags = newValue } }
         }
         var tests: [String: Group] { _state.value.tests }
         
-        init(name: String, module: Module, framework: String, unskippable: Bool, unskippableTests: [String: Bool], startTime: Date = Date()) {
+        init(name: String, module: Module, framework: String, tags: AttachedTags, testTags: [String: AttachedTags], startTime: Date = Date()) {
             self._module = module
             self.testFramework = framework
-            self.unskippableTests = unskippableTests
+            self.testTags = testTags
             super.init(name: name, startTime: startTime)
-            self.unskippable = unskippable
+            self.attachedTags = tags
         }
         
         subscript(_ test: String) -> Mocks.Group? {
@@ -314,7 +332,7 @@ enum Mocks {
         func startGroup(named name: String) -> Mocks.Group {
             _state.update { state in
                 let group = Group(name: name, suite: self,
-                                  unskippable: unskippableTests[name] ?? false)
+                                  tags: testTags[name] ?? .init())
                 state.tests[name] = group
                 return group
             }
@@ -326,7 +344,7 @@ enum Mocks {
                     return group
                 }
                 let group = Group(name: name, suite: self,
-                                  unskippable: unskippableTests[name] ?? false)
+                                  tags: testTags[name] ?? .init())
                 $0.tests[name] = group
                 return group
             }
@@ -338,8 +356,7 @@ enum Mocks {
                 if let group = $0.tests[name] {
                     return group
                 }
-                let group = Group(name: name, suite: self, unskippable:
-                                    unskippableTests[name] ?? false)
+                let group = Group(name: name, suite: self, tags: testTags[name] ?? .init())
                 $0.tests[name] = group
                 return group
             }
@@ -355,9 +372,9 @@ enum Mocks {
         }
     }
     
-    final class Group: Equatable, Hashable, CustomDebugStringConvertible, Sendable, TestTags {
+    final class Group: Equatable, Hashable, CustomDebugStringConvertible, Sendable {
         struct GroupInfo {
-            var unskippable: Bool = false
+            var attachedTags: AttachedTags = .init()
             var runs: [Test] = []
             
             var skipStrategy: RetryGroupSkipStrategy = .allSkipped
@@ -374,9 +391,9 @@ enum Mocks {
 
         let _state: Synced<GroupInfo> = .init(.init())
         
-        var unskippable: Bool {
-            get { _state.value.unskippable }
-            set { _state.update { $0.unskippable = newValue } }
+        var attachedTags: AttachedTags {
+            get { _state.value.attachedTags }
+            set { _state.update { $0.attachedTags = newValue } }
         }
         var skipStrategy: RetryGroupSkipStrategy {
             get { _state.value.skipStrategy }
@@ -390,10 +407,10 @@ enum Mocks {
         
         var runs: [Test] { _state.value.runs }
         
-        init(name: String, suite: Suite, unskippable: Bool) {
+        init(name: String, suite: Suite, tags: AttachedTags) {
             self.name = name
             self.suite = suite
-            self.unskippable = unskippable
+            self.attachedTags = tags
         }
         
         func withTest<T>(named name: String, _ action: (Mocks.Test) throws -> T) rethrows -> T {
@@ -436,13 +453,6 @@ enum Mocks {
                 return runs.allSatisfy { $0.status == .skip }
             case .atLeastOneSkipped:
                 return runs.contains { $0.status == .skip }
-            }
-        }
-        
-        func get<T: TestTag>(tag: T) -> T.Value? {
-            switch tag {
-            case is TIASkippableTag: return (!(suite.unskippable || unskippable) as! T.Value)
-            default: return nil
             }
         }
         
@@ -600,8 +610,8 @@ enum Mocks {
     }
     
     final class CoverageCollector: TestCoverageCollector {
-        var testStarted: Bool = false
-        var tests: Set<String> = []
+        nonisolated(unsafe) var testStarted: Bool = false
+        nonisolated(unsafe) var tests: Set<String> = []
         
         func startTest() {
             assert(!testStarted, "Test should not be started more than once")

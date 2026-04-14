@@ -361,7 +361,8 @@ extension RetryStatus {
 }
 
 
-struct TestRunInfo<RetryInfo> {
+struct TestRunInfo<RetryInfo: Sendable>: Sendable {
+    let tags: any TestTags
     var skip: (by: (feature: FeatureId, reason: String)?, status: SkipStatus)
     var retry: RetryInfo
     var executions: (total: Int, failed: Int)
@@ -377,7 +378,7 @@ extension TestRunInfoEnd {
         }.map {
             (feature: $0, reason: $1, errors: retry.status.errorsStatus)
         }
-        return .init(skip: skip, retry: retryStart, executions: executions)
+        return .init(tags: tags, skip: skip, retry: retryStart, executions: executions)
     }
 }
 

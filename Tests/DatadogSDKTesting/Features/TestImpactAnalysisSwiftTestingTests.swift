@@ -231,7 +231,7 @@ final class TestImpactAnalysisSwiftTestingTests: XCTestCase {
                                                         configuration: ["test.bundle": "TIAModule"]) })
         let collector = Mocks.CoverageCollector()
         let tia = TestImpactAnalysis(tests: skipped, coverage: collector, swiftTestingEnabled: true)
-        return (Mocks.STRunner(features: [tia, AdditionalTags()], tests: ["TIAModule": ["TIASuite": tests]]), tia, collector)
+        return (Mocks.STRunner(features: [tia, AdditionalTags()], tests: ["TIAModule": ["TIASuite": .init(tests: tests)]]), tia, collector)
     }
 
     func tiaAndEfdRunner(skip: [String], known: [String], tests: KeyValuePairs<String, Mocks.Runner.TestMethod>) -> (Mocks.STRunner, TestImpactAnalysis, Mocks.CoverageCollector) {

@@ -151,8 +151,10 @@ final class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate
         let suiteTags = context.tags[ObjectIdentifier(testType), default: .init(for: testType)]
         
         let testId = group.testId
+        let testTags = suiteTags.tags(for: testId.test)
+        
         let (feature, config) = context.features.testGroupConfiguration(for: testId.test,
-                                                                        tags: suiteTags.tags(for: testId.test),
+                                                                        tags: testTags,
                                                                         in: suite)
         
         group.groupRun?.skipStrategy = config.skipStrategy.xcTest
@@ -164,7 +166,7 @@ final class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate
             skip.by = (feature.id, reason)
         }
         
-        group.context = GroupContext(skip: skip, suite: suite, suiteContext: context)
+        group.context = GroupContext(tags: testTags, skip: skip, suite: suite, suiteContext: context)
         
         context.features.testGroupWillStart(for: testId.test, in: suite)
         
@@ -192,8 +194,10 @@ final class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate
             log.print("testCaseWillStart: Unknown test run type: \(type(of: testCase.testRun)) for \(testCase)")
             return
         }
+        
         let test = testRun.ddTest
-        let info = TestRunInfoStart(skip: testRun.context.skip,
+        let info = TestRunInfoStart(tags: testRun.context.tags,
+                                    skip: testRun.context.skip,
                                     retry: testRun.context.retryStart,
                                     executions: (total: testRun.group.groupRun?.executionCount ?? 0,
                                                  failed: testRun.group.groupRun?.failedExecutionCount ?? 0))
@@ -243,7 +247,8 @@ final class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate
                                        reason: testRun.skipReason ?? "Skipped in the code")
         }
         
-        let startInfo = TestRunInfoStart(skip: testRun.context.skip,
+        let startInfo = TestRunInfoStart(tags: testRun.context.tags,
+                                         skip: testRun.context.skip,
                                          retry: testRun.context.retryStart,
                                          executions: (total: groupRun.executionCount,
                                                       failed: groupRun.failedExecutionCount))
@@ -270,7 +275,8 @@ final class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate
         }
         
         // update info with the new retry status
-        let endInfo = TestRunInfoEnd(skip: startInfo.skip,
+        let endInfo = TestRunInfoEnd(tags: startInfo.tags,
+                                     skip: startInfo.skip,
                                      retry: testRun.context.retry,
                                      executions: startInfo.executions)
         // Run hook
@@ -297,7 +303,8 @@ final class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate
             return
         }
         // Run end hook. We can't run it in testCaseDidFinish because test isn't ended yet
-        let info = TestRunInfoEnd(skip: testRun.context.skip,
+        let info = TestRunInfoEnd(tags: testRun.context.tags,
+                                  skip: testRun.context.skip,
                                   retry: testRun.context.retry,
                                   executions: (total: groupRun.executionCount,
                                                failed: groupRun.failedExecutionCount))
@@ -330,7 +337,8 @@ final class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate
             return
         }
         
-        let info = TestRunInfoStart(skip: testRun.context.skip,
+        let info = TestRunInfoStart(tags: testRun.context.tags,
+                                    skip: testRun.context.skip,
                                     retry: testRun.context.retryStart,
                                     executions: (total: testRun.group.groupRun?.executionCount ?? 0,
                                                  failed: testRun.group.groupRun?.failedExecutionCount ?? 0))
@@ -455,6 +463,7 @@ extension DDXCTestObserver {
         let suite: any TestSuite & TestRunProvider
         let suiteContext: SuiteContext
         
+        let tags: XCTestTags
         var skip: (by: (feature: FeatureId, reason: String)?, status: SkipStatus)
         var retry: (feature: FeatureId?, status: RetryStatus)
         
@@ -466,10 +475,12 @@ extension DDXCTestObserver {
             }
         }
         
-        init(skip: (by: (feature: FeatureId, reason: String)?, status: SkipStatus),
+        init(tags: XCTestTags,
+             skip: (by: (feature: FeatureId, reason: String)?, status: SkipStatus),
              suite: any TestSuite & TestRunProvider,
              suiteContext: SuiteContext)
         {
+            self.tags = tags
             self.skip = skip
             self.suite = suite
             self.suiteContext = suiteContext

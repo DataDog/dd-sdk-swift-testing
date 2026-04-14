@@ -14,6 +14,7 @@ protocol SwiftTestingTestInfoType: Sendable {
     var hasSuite: Bool { get }
     var suite: String { get }
     var isParameterized: Bool { get }
+    var attachedTags: any TestTags { get }
 }
 
 struct SwiftTestingSourceLocation {
@@ -297,7 +298,8 @@ struct SwiftTestingRetryGroupContext: Sendable {
          skipStrategy: RetryGroupSkipStrategy, successStrategy: RetryGroupSuccessStrategy)
     {
         self.test = test
-        self.info = .init(skip: skip,
+        self.info = .init(tags: test.attachedTags,
+                          skip: skip,
                           retry: (nil, .end(errors: .unsuppressed)),
                           executions: (0, 0))
         self.executions = []
@@ -425,6 +427,15 @@ final class SwiftTestingTestContext: Sendable {
     typealias GroupResult = (status: SwiftTestingTestStatus,
                              executions: (total: Int, failed: Int))
     
+    struct CombinedTags: TestTags {
+        let suite: any TestTags
+        let test: any TestTags
+        
+        func get<T: TestTag>(tag: T) -> T.Value? {
+            test.get(tag: tag) ?? suite.get(tag: tag)
+        }
+    }
+    
     let suite: SwiftTestingSuiteContext
     let info: any SwiftTestingTestInfoType
     // It's ok to be unsafe. We update it once and it's a serial access
@@ -436,6 +447,11 @@ final class SwiftTestingTestContext: Sendable {
     
     var observer: any SwiftTestingObserverType {
         suite.observer
+    }
+    
+    var attachedTags: any TestTags {
+        CombinedTags(suite: suite.info.attachedTags,
+                     test: info.attachedTags)
     }
     
     init(suite: SwiftTestingSuiteContext, info: any SwiftTestingTestInfoType) {

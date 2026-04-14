@@ -179,6 +179,7 @@ extension DatadogSwiftTestingScopeProvider {
         var isSuite: Bool { test.isSuite }
         var hasSuite: Bool { test.ddHasSuite }
         var isParameterized: Bool { test.isParameterized }
+        var attachedTags: any TestTags { test.attachedTags }
     }
     
     struct SwiftTestRun: SwiftTestingTestRunInfoType {
@@ -199,6 +200,7 @@ extension DatadogSwiftTestingScopeProvider {
         var hasSuite: Bool { test.ddHasSuite }
         var isParameterized: Bool { testCase.isParameterized }
         var location: SwiftTestingSourceLocation { test.sourceLocation.asDD }
+        var attachedTags: any TestTags { test.attachedTags }
 
         var parameters: TestRunParameters {
             guard isParameterized else { return .init(arguments: .nil, metadata: nil) }

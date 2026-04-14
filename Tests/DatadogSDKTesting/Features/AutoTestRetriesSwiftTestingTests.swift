@@ -164,6 +164,6 @@ final class AutoTestRetriesSwiftTestingTests: XCTestCase {
     {
         let atr = AutomaticTestRetries(failedTestRetriesCount: failedTestRetriesCount,
                                        failedTestTotalRetriesMax: failedTestTotalRetriesMax)
-        return (Mocks.STRunner(features: [atr, AdditionalTags()], tests: ["ATRModule": ["ATRSuite": tests]]), atr)
+        return (Mocks.STRunner(features: [atr, AdditionalTags()], tests: ["ATRModule": ["ATRSuite": .init(tests: tests)]]), atr)
     }
 }

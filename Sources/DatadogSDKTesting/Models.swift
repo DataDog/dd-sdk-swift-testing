@@ -149,14 +149,6 @@ extension TestRun {
     }
 }
 
-protocol TestTag {
-    associatedtype Value
-}
-
-protocol TestTags {
-    func get<T: TestTag>(tag: T) -> T.Value?
-}
-
 @objc(DDTestStatus)
 public enum TestStatus: Int, Sendable {
     case pass

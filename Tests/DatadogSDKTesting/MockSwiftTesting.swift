@@ -18,6 +18,7 @@ extension Mocks {
     struct STSuite: SwiftTestingTestInfoType {
         let name: String
         let module: String
+        let attachedTags: any TestTags
         var suite: String { name }
         let isParameterized: Bool = false
         let isSuite: Bool = true
@@ -28,6 +29,7 @@ extension Mocks {
         let name: String
         let module: String
         let suite: String
+        let attachedTags: any TestTags
         let isParameterized: Bool = false
         let isSuite: Bool = false
         let hasSuite: Bool = true
@@ -37,6 +39,7 @@ extension Mocks {
         let name: String
         let module: String
         let suite: String
+        let attachedTags: any TestTags
         let isParameterized: Bool = false
         let isSuite: Bool = false
         let hasSuite: Bool = true
@@ -67,15 +70,15 @@ extension Mocks {
         }
         
         func run() async throws -> Session {
-            let unskippable = tests.map { module in
+            let tags = tests.map { module in
                 let suites = module.value.map { suite in
-                    let tests = Dictionary(uniqueKeysWithValues: suite.value.map { ($0.key, $0.value.unskippable) })
-                    return (suite.key, (false, tests))
+                    let tests = Dictionary(uniqueKeysWithValues: suite.value.tests.map { ($0.name, $0.method.tags) })
+                    return (suite.key, (suite.value.tags, tests))
                 }
                 return (module.key, Dictionary(uniqueKeysWithValues: suites))
             }
             
-            let session = Mocks.Session.Provider(unskippable: Dictionary(uniqueKeysWithValues: unskippable))
+            let session = Mocks.Session.Provider(tags: Dictionary(uniqueKeysWithValues: tags))
             let manager = SessionManager(provider: session,
                                          config: .init(activeFeatures: features,
                                                        platform: DDTestMonitor.env.platform,
@@ -93,10 +96,11 @@ extension Mocks {
             // preregister tests inside registry
             for module in tests {
                 for suite in module.value {
-                    for test in suite.value {
-                        try await suiteProvider.registry.register(test: STTest(name: test.key,
+                    for test in suite.value.tests {
+                        try await suiteProvider.registry.register(test: STTest(name: test.name,
                                                                                module: module.key,
-                                                                               suite: suite.key))
+                                                                               suite: suite.key,
+                                                                               attachedTags: test.method.tags))
                     }
                 }
             }
@@ -111,28 +115,30 @@ extension Mocks {
         
         private func _run(provider: DatadogSwiftTestingScopeProvider,
                           module: String,
-                          suites: KeyValuePairs<String, KeyValuePairs<String, Runner.TestMethod>>) async throws
+                          suites: KeyValuePairs<String, Mocks.Runner.TestSuite>) async throws
         {
             for suite in suites {
-                try await provider.provideScope(suite: STSuite(name: suite.key, module: module)) {
-                    try await self._run(provider: provider, module: module, suite: suite.key, tests: suite.value)
+                try await provider.provideScope(suite: STSuite(name: suite.key, module: module, attachedTags: suite.value.tags)) {
+                    try await self._run(provider: provider, module: module, suite: suite.key,
+                                        suiteTags: suite.value.tags, tests: suite.value.tests)
                 }
             }
         }
         
         private func _run(provider: DatadogSwiftTestingScopeProvider,
-                          module: String, suite: String,
-                          tests: KeyValuePairs<String, Runner.TestMethod>) async throws
+                          module: String, suite: String, suiteTags: AttachedTags,
+                          tests: [(name: String, method: Runner.TestMethod)]) async throws
         {
             for test in tests {
                 do {
-                    try await provider.provideScope(test: STTest(name: test.key, module: module, suite: suite)) {
-                        try await provider.provideScope(run: STTestRun(name: test.key, module: module, suite: suite)) {
-                            if let duration = test.value.duration {
+                    let tags = SwiftTestingTestContext.CombinedTags(suite: suiteTags, test: test.method.tags)
+                    try await provider.provideScope(test: STTest(name: test.name, module: module, suite: suite, attachedTags: tags)) {
+                        try await provider.provideScope(run: STTestRun(name: test.name, module: module, suite: suite, attachedTags: tags)) {
+                            if let duration = test.method.duration {
                                 let test = Mocks.Test.active as! Mocks.Test
                                 test.duration = duration.toNanoseconds
                             }
-                            switch test.value.method() {
+                            switch test.method.method() {
                             case .fail(let err): throw err
                             case .skip(let reason): throw STSkipError(reason: reason)
                             case .pass: break

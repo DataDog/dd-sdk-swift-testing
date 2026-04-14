@@ -77,6 +77,34 @@ struct SwiftTestingTraitTests {
     func testParameterized(p1: Int, p2: String) async throws {
         #expect("\(p1)" == p2)
     }
+
+}
+
+@Suite(.observerTester, .datadogTesting, .tags(.dd.nonretriable, .dd.tia.unskippable))
+struct SwiftTestingTaggedSuiteTests {
+    @Test
+    func testRetriableTagObtainedFromSwiftTestingTags() async throws {
+        let tags = try #require(Testing.Test.current).attachedTags
+        #expect(tags.get(tag: .retriable) == false)
+    }
+
+    @Test
+    func testTiaSkippableTagObtainedFromSwiftTestingTags() async throws {
+        let tags = try #require(Testing.Test.current).attachedTags
+        #expect(tags.get(tag: .tiaSkippable) == false)
+    }
+
+    @Test(.tags(.dd.retriable))
+    func testRetriableTagOverridesSuiteNonretriableTag() async throws {
+        let tags = try #require(Testing.Test.current).attachedTags
+        #expect(tags.get(tag: .retriable) == true)
+    }
+
+    @Test(.tags(.dd.tia.skippable))
+    func testSkippableTagOverridesSuiteUnskippableTag() async throws {
+        let tags = try #require(Testing.Test.current).attachedTags
+        #expect(tags.get(tag: .tiaSkippable) == true)
+    }
 }
 
 @Test(.observerTester, .datadogTesting)
@@ -108,12 +136,16 @@ private final class MockSwiftTestingObserver: SwiftTestingObserverType {
     func didFinish(test: borrowing SwiftTestingTestContext) async {}
 
     func runGroupConfiguration(test: borrowing SwiftTestingTestContext) async -> (feature: FeatureId?, configuration: RetryGroupConfiguration) {
-        if test.info.name.lowercased().contains("skip") {
+        let name = test.info.name.lowercased()
+        guard test.info.suite == "SwiftTestingTraitTests" else {
+            return (nil, .retry(.init(skipStatus: .init(canBeSkipped: false, markedUnskippable: false))))
+        }
+        if name.contains("skip") {
             return ("skip_test", .skip(reason: "skip_test",
                                        configuration: .init(skipStatus: .init(canBeSkipped: true,
                                                                               markedUnskippable: false))))
         }
-        if test.info.name.lowercased().contains("ignore") {
+        if name.contains("ignore") {
             return ("ignore_test", .retry(.init(skipStatus: .init(canBeSkipped: false, markedUnskippable: false),
                                                 successStrategy: .alwaysSucceeded)))
         }
@@ -228,6 +260,10 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
             "testFuncRetryErrorShouldFail": (Array(repeating: .fail, count: 5), 1, nil),
             "testFuncRegistration": ([.pass], nil, nil),
             "testParameterized(p1:p2:)": (Array(repeating: .pass, count: 3), nil, nil),
+            "testRetriableTagObtainedFromSwiftTestingTags": ([.pass], nil, nil),
+            "testTiaSkippableTagObtainedFromSwiftTestingTags": ([.pass], nil, nil),
+            "testRetriableTagOverridesSuiteNonretriableTag": ([.pass], nil, nil),
+            "testSkippableTagOverridesSuiteUnskippableTag": ([.pass], nil, nil),
             "zzzzFuncCancel": ([.skip], nil, true)
         ]
         

@@ -108,6 +108,15 @@ extension Mocks {
             }
         }
         
+        struct CombinedTags: TestTags {
+            let suite: any TestTags
+            let test: any TestTags
+            
+            func get<T: TestTag>(tag: T) -> T.Value? {
+                test.get(tag: tag) ?? suite.get(tag: tag)
+            }
+        }
+        
         // Module, Suite, Test, [Runs]
         typealias Tests = KeyValuePairs<String, KeyValuePairs<String, TestSuite>>
         
@@ -177,10 +186,8 @@ extension Mocks {
         
         func _run(group name: String, method: TestMethod, suite: Suite) {
             let group = suite.startGroup(named: name)
-            
-            let tags = SwiftTestingTestContext.CombinedTags(suite: suite.attachedTags,
-                                                            test: group.attachedTags)
-            
+            let tags = CombinedTags(suite: suite.attachedTags, test: group.attachedTags)
+        
             let (feature, config) = features.testGroupConfiguration(for: group.name, tags: tags, in: suite)
             
             group.skipStrategy = config.skipStrategy

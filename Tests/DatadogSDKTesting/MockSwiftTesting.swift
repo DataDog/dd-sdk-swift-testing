@@ -131,7 +131,7 @@ extension Mocks {
         {
             for test in tests {
                 do {
-                    let tags = SwiftTestingTestContext.CombinedTags(suite: suiteTags, test: test.method.tags)
+                    let tags = Runner.CombinedTags(suite: suiteTags, test: test.method.tags)
                     try await provider.provideScope(test: STTest(name: test.name, module: module, suite: suite, attachedTags: tags)) {
                         try await provider.provideScope(run: STTestRun(name: test.name, module: module, suite: suite, attachedTags: tags)) {
                             if let duration = test.method.duration {

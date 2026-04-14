@@ -129,6 +129,22 @@ final class AutoTestRetriesLogicTests: XCTestCase {
         XCTAssertEqual(atr.failedTestTotalRetries, 8)
     }
     
+    func testAtrDoesNotRetryNonRetriableTest() async throws {
+        let (runner, atr) = runner(tests: ["nonRetriableTest": .fail("Should fail", tags: .init(retriable: false))])
+
+        let tests = try await extractTests(runner.run())
+        XCTAssertNotNil(tests["nonRetriableTest"])
+        XCTAssertEqual(tests["nonRetriableTest"]?.runs.count, 1)
+        XCTAssertEqual(tests["nonRetriableTest"]?.runs.filter { $0.status == .fail }.count, 1)
+        XCTAssertEqual(tests["nonRetriableTest"]?.runs.filter { $0.xcStatus == .fail }.count, 1)
+        XCTAssertEqual(tests["nonRetriableTest"]?.isSucceeded, false)
+        XCTAssertEqual(atr.failedTestTotalRetries, 0)
+        XCTAssertNil(tests["nonRetriableTest"]?.runs.first?.tags[DDEfdTags.testIsRetry])
+        XCTAssertNil(tests["nonRetriableTest"]?.runs.first?.tags[DDEfdTags.testRetryReason])
+        XCTAssertNil(tests["nonRetriableTest"]?.runs.first?.tags[DDTestTags.testFailureSuppressionReason])
+        XCTAssertEqual(tests["nonRetriableTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
+    }
+
     func testAtrRetriesFailedTestAndKnownTestsWork() async throws {
         let (runner, atr) = runner(tests: ["someTest": .fail(first: 4)])
         var features = runner.features.features

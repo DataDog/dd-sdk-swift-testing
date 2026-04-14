@@ -54,13 +54,20 @@ import Testing
 
 extension Tag.dd {
     enum tia {
+        @Tag static var skippable: Tag
         @Tag static var unskippable: Tag
     }
 }
 
 extension TIASkippableTag: STTestTag {
     func parse(tags: borrowing Set<Tag>) -> Bool? {
-        !tags.contains(Tag.dd.tia.unskippable)
+        if tags.contains(.dd.tia.skippable) {
+            return true
+        }
+        if tags.contains(.dd.tia.unskippable) {
+            return false
+        }
+        return nil
     }
 }
 #endif

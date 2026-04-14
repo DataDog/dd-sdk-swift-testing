@@ -36,6 +36,7 @@ final class AutomaticTestRetries: TestHooksFeature {
                         withStatus status: TestStatus, retryStatus: RetryStatus.Iterator,
                         andInfo info: TestRunInfoStart) -> RetryStatus.Iterator
     {
+        guard info.tags.get(tag: .retriable) ?? true else { return retryStatus.next() }
         if case .fail = status {
             if info.executions.total < failedTestRetriesCount // we can retry more
                && incrementRetries() != nil // and increased global retry counter successfully
@@ -52,6 +53,7 @@ final class AutomaticTestRetries: TestHooksFeature {
     }
     
     func shouldSuppressError(test: any TestRun, info: TestRunInfoStart) -> Bool {
+        guard info.tags.get(tag: .retriable) ?? true else { return false }
         return info.executions.total < failedTestRetriesCount // we can retry test more
             && _failedTestTotalRetries.value < failedTestTotalRetriesMax // and global counter allow us to retry
     }

@@ -11,7 +11,8 @@ import Testing
 
 extension Tag {
     enum dd {
-        @Tag static var unretriable: Tag
+        @Tag static var retriable: Tag
+        @Tag static var nonretriable: Tag
     }
 }
 
@@ -42,7 +43,13 @@ extension Testing.Test {
 // Retriable tag
 extension RetriableTag: STTestTag {
     func parse(tags: borrowing Set<Tag>) -> Bool? {
-        !tags.contains(Tag.dd.unretriable)
+        if tags.contains(.dd.retriable) {
+            return true
+        }
+        if tags.contains(.dd.nonretriable) {
+            return false
+        }
+        return nil
     }
 }
 #endif

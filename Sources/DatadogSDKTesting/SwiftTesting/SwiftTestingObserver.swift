@@ -57,7 +57,7 @@ struct SwiftTestingObserver: SwiftTestingObserverType {
         test: borrowing SwiftTestingTestContext
     ) async -> (feature: FeatureId?, configuration: RetryGroupConfiguration) {
         let (feautre, config) = test.configuration.activeFeatures.testGroupConfiguration(for: test.info.name,
-                                                                                         tags: test.info.attachedTags,
+                                                                                         tags: test.attachedTags,
                                                                                          in: test.suite.suite)
         return (feautre?.id, config)
     }

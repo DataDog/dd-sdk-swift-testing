@@ -558,6 +558,37 @@ class TestManagementTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
     }
 
+    func testTMSuppressesErrorForNonRetriableQuarantinedTest() async throws {
+        let runner = tmRunner(quarantined: ["quarantinedTest"],
+                              tests: ["quarantinedTest": .fail("Should fail", tags: .init(retriable: false))])
+        let tests = try await extractTests(runner.run())
+        XCTAssertNotNil(tests["quarantinedTest"])
+        XCTAssertEqual(tests["quarantinedTest"]?.runs.count, 1)
+        XCTAssertEqual(tests["quarantinedTest"]?.runs.filter { $0.status == .fail }.count, 1)
+        XCTAssertEqual(tests["quarantinedTest"]?.runs.filter { $0.xcStatus == .pass }.count, 1)
+        XCTAssertNil(tests["quarantinedTest"]?.runs.first?.tags[DDEfdTags.testIsRetry])
+        XCTAssertNil(tests["quarantinedTest"]?.runs.first?.tags[DDEfdTags.testRetryReason])
+        XCTAssertEqual(tests["quarantinedTest"]?.runs.filter {
+            $0.tags[DDTestTags.testFailureSuppressionReason] == DDTagValues.failureSuppressionReasonQuarantine
+        }.count, 1)
+        XCTAssertEqual(tests["quarantinedTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
+    }
+
+    func testTMDoesNotRetryNonRetriableAtfTest() async throws {
+        let runner = tmRunner(fix: ["atfTest"],
+                              tests: ["atfTest": .fail("Should fail", tags: .init(retriable: false))])
+        let tests = try await extractTests(runner.run())
+        XCTAssertNotNil(tests["atfTest"])
+        XCTAssertEqual(tests["atfTest"]?.runs.count, 1)
+        XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.status == .fail }.count, 1)
+        XCTAssertEqual(tests["atfTest"]?.runs.filter { $0.xcStatus == .fail }.count, 1)
+        XCTAssertNil(tests["atfTest"]?.runs.first?.tags[DDEfdTags.testIsRetry])
+        XCTAssertNil(tests["atfTest"]?.runs.first?.tags[DDEfdTags.testRetryReason])
+        XCTAssertNil(tests["atfTest"]?.runs.first?.tags[DDTestTags.testFailureSuppressionReason])
+        XCTAssertNil(tests["atfTest"]?.runs.last?.tags[DDTestManagementTags.testAttemptToFixPassed])
+        XCTAssertEqual(tests["atfTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
+    }
+
     func tmAndEfdRunner(fix: [String] = [], disabled: [String] = [],
                         quarantined: [String] = [], known: [String],
                         tests: KeyValuePairs<String, Mocks.Runner.TestMethod>) -> Mocks.Runner
@@ -616,7 +647,7 @@ class TestManagementTests: XCTestCase {
         let tmModule = TestManagementTestsInfo.Module(suites: ["TMSuite": tmSuite])
         let tmInfo = TestManagementTestsInfo(modules: ["TMModule": tmModule])
         let tm = TestManagement(tests: tmInfo, attemptToFixRetries: 20, module: "TMModule")
-        return Mocks.Runner(features: [tm, AdditionalTags()], tests: ["TMModule": ["TMSuite": tests]])
+        return Mocks.Runner(features: [tm, AdditionalTags()], tests: ["TMModule": ["TMSuite": .init(tests: tests)]])
     }
     
     func tmAndAtrRunner(fix: [String] = [], disabled: [String] = [],

@@ -205,6 +205,23 @@ final class EarlyFlakeDetectionLogicTests: XCTestCase {
         XCTAssertEqual(tests["newTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
     }
     
+    func testEfdDoesNotRetryNonRetriableNewTest() async throws {
+        let (runner, efd) = efdRunner(known: [],
+                                      tests: ["newTest": .fail("Should fail", tags: .init(retriable: false))])
+        let tests = try await extractTests(runner.run())
+        XCTAssertNotNil(tests["newTest"])
+        XCTAssertEqual(tests["newTest"]?.runs.count, 1)
+        XCTAssertEqual(tests["newTest"]?.runs.filter { $0.status == .fail }.count, 1)
+        XCTAssertEqual(tests["newTest"]?.runs.filter { $0.xcStatus == .fail }.count, 1)
+        XCTAssertEqual(tests["newTest"]?.isSucceeded, false)
+        XCTAssertEqual(efd.testCounters.newTests, 1)
+        XCTAssertNil(tests["newTest"]?.runs.first?.tags[DDEfdTags.testIsRetry])
+        XCTAssertNil(tests["newTest"]?.runs.first?.tags[DDEfdTags.testRetryReason])
+        XCTAssertNil(tests["newTest"]?.runs.first?.tags[DDTestTags.testFailureSuppressionReason])
+        XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDTestTags.testIsNew] == "true" }.count, 1)
+        XCTAssertEqual(tests["newTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
+    }
+
     func extractTests(_ session: Mocks.Session) throws -> [String: Mocks.Group] {
         guard let suite = session["EFDModule"]?["EFDSuite"] else {
             throw InternalError(description: "Can't get EFDModule and EFDSuite")
@@ -221,7 +238,7 @@ final class EarlyFlakeDetectionLogicTests: XCTestCase {
         )
         let knownFeature = KnownTests(tests: ["EFDModule": ["EFDSuite": known]])
         return (Mocks.Runner(features: [efd, knownFeature, AdditionalTags()],
-                             tests: ["EFDModule": ["EFDSuite": tests]]), efd)
+                             tests: ["EFDModule": ["EFDSuite": .init(tests: tests)]]), efd)
     }
     
     func efdAndAtrRunner(known: [String], tests: KeyValuePairs<String, Mocks.Runner.TestMethod>) -> (Mocks.Runner, EarlyFlakeDetection) {

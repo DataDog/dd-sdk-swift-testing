@@ -619,7 +619,7 @@ final class TestManagementSwiftTestingTests: XCTestCase {
         let tmModule = TestManagementTestsInfo.Module(suites: ["TMSuite": tmSuite])
         let tmInfo = TestManagementTestsInfo(modules: ["TMModule": tmModule])
         let tm = TestManagement(tests: tmInfo, attemptToFixRetries: 20, module: "TMModule")
-        return Mocks.STRunner(features: [tm, AdditionalTags()], tests: ["TMModule": ["TMSuite": tests]])
+        return Mocks.STRunner(features: [tm, AdditionalTags()], tests: ["TMModule": ["TMSuite": .init(tests: tests)]])
     }
 
     func tmAndAtrRunner(fix: [String] = [], disabled: [String] = [],

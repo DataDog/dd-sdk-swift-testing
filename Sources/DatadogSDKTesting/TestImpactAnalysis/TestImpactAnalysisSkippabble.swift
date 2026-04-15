@@ -5,19 +5,29 @@
  */
 
 import Foundation
+
+struct TIASkippableTag: TestTag {
+    typealias Value = Bool
+}
+
+extension TestTag where Self == TIASkippableTag {
+    static var tiaSkippable: Self { .init() }
+}
+
+// XCTest
 internal import XCTest
 
 public extension InstanceMethodTag where T: NSObject, V == Bool {
-    static var tiaSkippable: Self { "tia.skippable" }
+    static var tiaSkippable: Self { "dd.tia.skippable" }
 }
 
 public extension TypeTag where T: NSObject, V == Bool {
-    static var tiaSkippable: Self { "tia.skippable" }
+    static var tiaSkippable: Self { "dd.tia.skippable" }
 }
 
 public extension DynamicTag where V == Bool {
-    static var tiaSkippableType: Self { Self(name: "tia.skippable", tagType: .forType) }
-    static var tiaSkippableInstanceMethod: Self { Self(name: "tia.skippable", tagType: .instanceMethod) }
+    static var tiaSkippableType: Self { Self(name: "dd.tia.skippable", tagType: .forType) }
+    static var tiaSkippableInstanceMethod: Self { Self(name: "dd.tia.skippable", tagType: .instanceMethod) }
 }
 
 @objc public extension DDTag {
@@ -25,9 +35,7 @@ public extension DynamicTag where V == Bool {
     @objc static var tiaSkippableInstanceMethod: DDTag { DDTag(tag: .tiaSkippableInstanceMethod) }
 }
 
-struct TIASkippableTag: XCTestTag {
-    typealias Value = Bool
-    
+extension TIASkippableTag: XCTestTag {
     func parse(tags: borrowing TypeTags, test: String) -> Bool? {
         var isSuiteSkippable: Bool = true
         var isTestSkippable: Bool? = nil
@@ -41,6 +49,25 @@ struct TIASkippableTag: XCTestTag {
     }
 }
 
-extension TestTag where Self == TIASkippableTag {
-    static var tiaSkippable: Self { .init() }
+#if canImport(Testing)
+import Testing
+
+extension Tag.dd {
+    enum tia {
+        @Tag static var skippable: Tag
+        @Tag static var unskippable: Tag
+    }
 }
+
+extension TIASkippableTag: STTestTag {
+    func parse(tags: borrowing Set<Tag>) -> Bool? {
+        if tags.contains(.dd.tia.skippable) {
+            return true
+        }
+        if tags.contains(.dd.tia.unskippable) {
+            return false
+        }
+        return nil
+    }
+}
+#endif

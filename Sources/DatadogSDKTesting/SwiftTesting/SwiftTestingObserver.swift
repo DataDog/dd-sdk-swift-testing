@@ -57,7 +57,7 @@ struct SwiftTestingObserver: SwiftTestingObserverType {
         test: borrowing SwiftTestingTestContext
     ) async -> (feature: FeatureId?, configuration: RetryGroupConfiguration) {
         let (feautre, config) = test.configuration.activeFeatures.testGroupConfiguration(for: test.info.name,
-                                                                                         tags: DummyTags(),
+                                                                                         tags: test.attachedTags,
                                                                                          in: test.suite.suite)
         return (feautre?.id, config)
     }
@@ -102,13 +102,5 @@ struct SwiftTestingObserver: SwiftTestingObserverType {
     
     func didFinish(testRun test: borrowing SwiftTestingTestRunContext, with info: TestRunInfoEnd) async {
         test.configuration.activeFeatures.testDidFinish(test: test.testRun, info: info)
-    }
-}
-
-extension SwiftTestingObserver {
-    struct DummyTags: TestTags {
-        func get<T: TestTag>(tag: T) -> T.Value? {
-            return nil
-        }
     }
 }

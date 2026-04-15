@@ -92,15 +92,17 @@ final class TestManagement: TestHooksFeature {
         guard let testInfo = module.suites[test.suite.name]?.tests[test.name] else {
             return retryStatus.next()
         }
-        
+
         let errors: RetryStatus.ErrorsStatus?
         switch (testInfo.disabled, testInfo.quarantined) {
         case (true, _): errors = .suppressed(reason: DDTagValues.failureSuppressionReasonDisabled)
         case (false, true): errors = .suppressed(reason: DDTagValues.failureSuppressionReasonQuarantine)
         case (false, false): errors = nil
         }
-        
+
         if testInfo.attemptToFix {
+            // ATF retries and suppression are skipped for non-retriable tests
+            guard info.tags.get(tag: .retriable) ?? true else { return retryStatus.next() }
             if info.executions.total < attemptToFixRetries - 1 {
                 return retryStatus.retry(reason: DDTagValues.retryReasonAttemptToFix,
                                          errors: errors)
@@ -124,9 +126,11 @@ final class TestManagement: TestHooksFeature {
         guard let testInfo = module.suites[test.suite.name]?.tests[test.name] else {
             return false
         }
-        return testInfo.disabled || testInfo.quarantined || ( // disabled or quarantined
-            testInfo.attemptToFix && info.executions.total < attemptToFixRetries
-        )
+        // Disabled/quarantined always suppress errors regardless of retriable tag
+        if testInfo.disabled || testInfo.quarantined { return true }
+        // ATF suppression is skipped for non-retriable tests
+        guard info.tags.get(tag: .retriable) ?? true else { return false }
+        return testInfo.attemptToFix && info.executions.total < attemptToFixRetries
     }
 
     func stop() {}

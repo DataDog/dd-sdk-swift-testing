@@ -1,0 +1,169 @@
+//
+//  Builder.swift
+//  DatadogSDKTesting
+//
+//  Created by Yehor Popovych on 17/04/2026.
+//
+
+import Foundation
+import Testing
+@testable import DatadogSDKTesting
+
+struct XcodeTestRunner: Sendable {
+    enum RunnerError: Error {
+        case processFailed(Int32)
+        case traitIsNotAttached
+    }
+    
+    actor Modules {
+        var modules: [String: Task<Void, any Error>] = [:]
+        var activeTests: [String: Task<Void, Never>] = [:]
+        let backend: DDMockBackend = .init()
+        var started: Bool = false
+        
+        func build(module: String) async -> Task<Void, any Error> {
+            if let task = modules[module] {
+                return task
+            }
+            let task = Task {
+                let status = try await XcodeTestRunner.xcodebuild(module: module,
+                                                                  action: ["build-for-testing"],
+                                                                  server: nil)
+                if status != 0 { throw RunnerError.processFailed(status) }
+            }
+            modules[module] = task
+            return task
+        }
+        
+        func runTest(module: String, test: String, settings: MockSettings = .init(),
+                     _ function: @Sendable @escaping (DDMockBackend, Bool) async throws -> Void) async throws
+        {
+            await activeTests[module]?.value
+            let task = Task {
+                if !self.started {
+                    try self.backend.start()
+                    self.started = true
+                }
+                self.backend.settings = settings
+                self.backend.reset()
+                let status = try await XcodeTestRunner.xcodebuild(module: module,
+                                                                  action: ["-only-testing",
+                                                                           "\(module)/\(test)",
+                                                                           "test-without-building"],
+                                                                  server: self.backend.baseURL)
+                try await function(self.backend, status == 0)
+                self.backend.reset()
+            }
+            activeTests[module] = Task { let _ = await task.result }
+            try await task.value
+        }
+    }
+    
+    let module: String
+    
+    func build() async throws {
+        try await Self.modules.build(module: module).value
+    }
+    
+    func runTest(named: String, settings: MockSettings = .init(),
+                 _ function: @Sendable @escaping (DDMockBackend, Bool) async throws -> Void) async throws {
+        try await build()
+        try await Self.modules.runTest(module: module, test: named, settings: settings, function)
+    }
+    
+    fileprivate func xcodebuild(action: [String], server: URL?) async throws -> Int32 {
+        try await Self.xcodebuild(module: module, action: action, server: server)
+    }
+    
+    fileprivate static func xcodebuild(module: String, action: [String], server: URL?) async throws -> Int32 {
+        var env = ProcessInfo.processInfo.environment
+        let sdk = env["INTEGRATION_TESTS_SDK"] ?? "macosx"
+        let platform = env["INTEGRATION_TESTS_PLATFORM"] ?? "platform=macOS,arch=arm64"
+        let workdir = env["SRCROOT"] ?? FileManager.default.currentDirectoryPath
+        
+        env["INTEGRATION_TESTS_SDK"] = nil
+        env["INTEGRATION_TESTS_PLATFORM"] = nil
+        
+        if let server {
+            env[EnvironmentKey.customURL.rawValue] = server.absoluteString
+            env[EnvironmentKey.apiKey.rawValue] = "abacabadabacabaeabacabadabacaba"
+            env[EnvironmentKey.isEnabled.rawValue] = "true"
+        } else {
+            env[EnvironmentKey.customURL.rawValue] = nil
+            env[EnvironmentKey.apiKey.rawValue] = nil
+            env[EnvironmentKey.isEnabled.rawValue] = "false"
+        }
+        
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/env", isDirectory: false)
+        process.standardOutput = FileHandle.standardOutput
+        process.standardError = FileHandle.standardError
+        process.standardInput = FileHandle.standardInput
+        process.environment = env
+        process.currentDirectoryURL = URL(fileURLWithPath: workdir, isDirectory: true)
+        process.arguments = [
+            "xcodebuild",
+            "-scheme", module,
+            "-sdk", sdk,
+            "-destination", platform
+        ] + action
+        
+        try process.run()
+        
+        await process.waitUntilExitAsync()
+        return process.terminationStatus
+    }
+    
+    static let modules: Modules = .init()
+}
+
+
+protocol IntergationTestSuite {}
+
+extension IntergationTestSuite {
+    func run(test named: String, settings: MockSettings = .init(),
+             _ function: @Sendable @escaping (DDMockBackend, Bool) async throws -> Void) async throws
+    {
+        guard let runner = BuildProvider.testRunner else {
+            throw XcodeTestRunner.RunnerError.traitIsNotAttached
+        }
+        try await runner.runTest(named: named, settings: settings, function)
+    }
+}
+
+struct BuildProvider: SuiteTrait, TestScoping {
+    let module: String
+    
+    func prepare(for test: Testing.Test) async throws {
+        try await XcodeTestRunner(module: module).build()
+    }
+    
+    func provideScope(for test: Testing.Test, testCase: Testing.Test.Case?,
+                      performing function: @concurrent @Sendable () async throws -> Void) async throws
+    {
+        try await Self.$testRunner.withValue(XcodeTestRunner(module: module), operation: function)
+    }
+    
+    @TaskLocal static var testRunner: XcodeTestRunner?
+}
+
+extension Trait where Self == BuildProvider {
+    static func build(_ type: String) -> Self {
+        .init(module: "IntegrationTests-\(type)")
+    }
+}
+
+extension Process {
+    func waitUntilExitAsync() async {
+        await withCheckedContinuation { continuation in
+            guard self.isRunning else {
+                continuation.resume()
+                return
+            }
+
+            self.terminationHandler = { _ in
+                continuation.resume()
+            }
+        }
+    }
+}

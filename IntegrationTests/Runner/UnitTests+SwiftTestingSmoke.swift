@@ -29,7 +29,11 @@ struct UnitTestsSwiftTestingSmoke: IntergationTestSuite {
             #expect(success == true)
             #expect(spans.count == 1)
             let meta = try #require(spans.last?.meta)
+            #if compiler(>=6.3)
             #expect(meta[DDTestTags.testStatus] == DDTagValues.statusSkip)
+            #else
+            #expect(meta[DDTestTags.testStatus] == DDTagValues.statusPass)
+            #endif
             #expect(meta[DDGenericTags.resource] == "STBasicSkip.basicSkip")
             #expect(meta[DDTestTags.testName] == "basicSkip")
             #expect(meta[DDTestTags.testSuite] == "STBasicSkip")

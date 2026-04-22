@@ -37,8 +37,8 @@ struct XcodeTestRunner: Sendable {
             return task
         }
         
-        func runTest(module: String, test: String, settings: MockSettings = .init(),
-                     _ function: @Sendable @escaping (DDMockBackend, Bool) async throws -> Void) async throws
+        func runTest(module: String, test: String, config: DDMockBackend.Config = .init(),
+                     _ function: @Sendable @escaping (DDMockBackend.Requests, Bool, DDMockBackend.Config) async throws -> Void) async throws
         {
             await activeTests[module]?.value
             let task = Task {
@@ -46,15 +46,14 @@ struct XcodeTestRunner: Sendable {
                     try self.backend.start()
                     self.started = true
                 }
-                self.backend.settings = settings
-                self.backend.reset()
+                self.backend.configuration = config
                 let status = try await XcodeTestRunner.xcodebuild(module: module,
                                                                   action: ["-only-testing",
                                                                            "\(module)/\(test)",
                                                                            "test-without-building"],
                                                                   server: self.backend.baseURL)
-                try await function(self.backend, status == 0)
-                self.backend.reset()
+                defer { self.backend.reset() }
+                try await function(self.backend.requests, status == 0, self.backend.configuration)
             }
             activeTests[module] = Task { let _ = await task.result }
             try await task.value
@@ -67,10 +66,10 @@ struct XcodeTestRunner: Sendable {
         try await Self.modules.build(module: module).value
     }
     
-    func runTest(named: String, settings: MockSettings = .init(),
-                 _ function: @Sendable @escaping (DDMockBackend, Bool) async throws -> Void) async throws {
+    func runTest(named: String, config: DDMockBackend.Config = .init(),
+                 _ function: @Sendable @escaping (DDMockBackend.Requests, Bool, DDMockBackend.Config) async throws -> Void) async throws {
         try await build()
-        try await Self.modules.runTest(module: module, test: named, settings: settings, function)
+        try await Self.modules.runTest(module: module, test: named, config: config, function)
     }
     
     fileprivate func xcodebuild(action: [String], server: URL?) async throws -> Int32 {
@@ -131,13 +130,21 @@ struct XcodeTestRunner: Sendable {
 protocol IntergationTestSuite {}
 
 extension IntergationTestSuite {
-    func run(test named: String, settings: MockSettings = .init(),
-             _ function: @Sendable @escaping (DDMockBackend, Bool) async throws -> Void) async throws
+    func run(test name: String, config: DDMockBackend.Config = .init(),
+             _ function: @Sendable @escaping (DDMockBackend.Requests, Bool, DDMockBackend.Config) async throws -> Void) async throws
     {
         guard let runner = BuildProvider.testRunner else {
             throw XcodeTestRunner.RunnerError.traitIsNotAttached
         }
-        try await runner.runTest(named: named, settings: settings, function)
+        try await runner.runTest(named: name, config: config, function)
+    }
+    
+    func run(test name: String, config: DDMockBackend.Config = .init(),
+             _ function: @Sendable @escaping (DDMockBackend.Requests, Bool) async throws -> Void) async throws
+    {
+        try await run(test: name, config: config) { request, success, _ in
+            try await function(request, success)
+        }
     }
 }
 

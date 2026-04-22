@@ -18,7 +18,7 @@ import Musl
 // MARK: - Decoded Span Types
 
 /// Top-level envelope sent to /api/v2/citestcycle.
-public struct MockSpanEnvelope: Decodable {
+public struct MockSpanEnvelope: Decodable, Sendable {
     public let version: Int
     public let metadata: [String: [String: String]]
     public let events: [MockSpanEvent]
@@ -35,7 +35,7 @@ public struct MockSpanEnvelope: Decodable {
     public var testEvents: [MockTestEventSpan] { extended.filter { $0.isEvent }.compactMap(\.event) }
 }
 
-public enum MockSpanEvent: Decodable {
+public enum MockSpanEvent: Decodable, Sendable {
     case span(MockSpan)
     case test(MockSpan)
     case suiteEnd(MockTestEventSpan)
@@ -158,7 +158,7 @@ public enum MockSpanEvent: Decodable {
     }
 }
 
-public struct MockSpan: Decodable {
+public struct MockSpan: Decodable, Sendable {
     public let traceId: UInt64
     public let spanId: UInt64
     public let parentId: UInt64
@@ -203,7 +203,7 @@ public struct MockSpan: Decodable {
     }
 }
 
-public struct MockTestEventSpan: Decodable {
+public struct MockTestEventSpan: Decodable, Sendable {
     public let testSessionId: UInt64
     public let testModuleId: UInt64?
     public let testSuiteId: UInt64?
@@ -241,13 +241,13 @@ public struct MockTestEventSpan: Decodable {
 // MARK: - Decoded Coverage Types
 
 /// Top-level payload received at /api/v2/citestcov (extracted from the "coverage" multipart field).
-public struct MockCoveragePayload: Decodable {
+public struct MockCoveragePayload: Decodable, Sendable {
     public let version: Int
     public let coverages: [MockTestCoverage]
 }
 
 /// Per-test coverage entry within a payload.
-public struct MockTestCoverage: Decodable {
+public struct MockTestCoverage: Decodable, Sendable {
     public let testSessionId: UInt64
     public let testSuiteId: UInt64
     public let spanId: UInt64
@@ -262,7 +262,7 @@ public struct MockTestCoverage: Decodable {
 }
 
 /// A covered-file entry. `bitmap` is a bit-per-line coverage mask, base64-decoded from JSON.
-public struct MockCoverageFile: Decodable {
+public struct MockCoverageFile: Decodable, Sendable {
     public let filename: String
     public let bitmap: Data
 
@@ -283,7 +283,7 @@ public struct MockCoverageFile: Decodable {
 // MARK: - Decoded Log Types
 
 /// A single log entry received at /api/v2/logs.
-public struct MockLog: Decodable {
+public struct MockLog: Decodable, Sendable {
     public let fields: [String: MockJSONValue]
 
     public subscript(key: String) -> MockJSONValue? { fields[key] }
@@ -303,7 +303,7 @@ public struct MockLog: Decodable {
 }
 
 /// A flexible JSON value used in log fields.
-public enum MockJSONValue: Decodable, CustomStringConvertible {
+public enum MockJSONValue: Decodable, Sendable, CustomStringConvertible {
     case string(String)
     case number(Double)
     case bool(Bool)
@@ -427,61 +427,68 @@ public enum MockBackendError: Error {
 /// backend.stop()
 /// ```
 public final class DDMockBackend {
-
-    // MARK: - Configurable Responses
-
-    /// Returned for POST /api/v2/libraries/tests/services/setting
-    public var settings: MockSettings = .init()
-    /// Returned for POST /api/v2/ci/libraries/tests
-    public var knownTests: MockKnownTestsMap = [:]
-    /// Returned for POST /api/v2/ci/tests/skippable
-    public var skippableTests: [MockSkippableTest] = []
-    /// Correlation ID included in the skippable tests response.
-    public var skippableTestsCorrelationId: String = "mock-correlation-id"
-    /// Returned for GET /api/v2/test/libraries/test-management/tests
-    public var testManagement: MockTestManagementMap = [:]
-
-    // MARK: - Received Data (thread-safe read via computed properties)
-
+    public struct Config {
+        /// Returned for POST /api/v2/libraries/tests/services/setting
+        var settings: MockSettings = .init()
+        /// Returned for POST /api/v2/ci/libraries/tests
+        var knownTests: MockKnownTestsMap = [:]
+        /// Returned for POST /api/v2/ci/tests/skippable
+        var skippableTests: [MockSkippableTest] = []
+        /// Correlation ID included in the skippable tests response.
+        var skippableTestsCorrelationId: String = "mock-correlation-id"
+        /// Returned for GET /api/v2/test/libraries/test-management/tests
+        var testManagement: MockTestManagementMap = [:]
+    }
+    
+    public struct Requests: Sendable {
+        /// All decoded span envelopes received so far.
+        var spanEnvelopes: [MockSpanEnvelope] = []
+        /// All log batches received so far.
+        var logs: [[MockLog]] = []
+        /// All decoded coverage payloads received so far.
+        var coverage: [MockCoveragePayload] = []
+        /// Raw bodies of all settings requests made by the SDK.
+        var settings: [Data] = []
+        /// Raw bodies of all known-tests requests.
+        var knownTests: [Data] = []
+        /// Raw bodies of all skippable-tests requests.
+        var skippableTests: [Data] = []
+        /// Raw bodies of all test-management requests.
+        var testManagement: [Data] = []
+        /// Raw bodies of all git search-commits requests.
+        var searchCommits: [Data] = []
+        /// All packfiles received so far..
+        var packfile: [Data] = []
+        
+        /// All spans across all received envelopes.
+        var allSpans: [MockSpan] { spanEnvelopes.flatMap(\.allSpans) }
+        /// All spans across all received envelopes.
+        var allInfoSpans: [MockSpan] { spanEnvelopes.flatMap(\.infoSpans) }
+        /// All test-type spans across all received envelopes.
+        var allTestSpans: [MockSpan] { spanEnvelopes.flatMap(\.testSpans) }
+        
+        /// All individual log entries across all batches.
+        var allLogs: [MockLog] { logs.flatMap { $0 } }
+        
+        /// All individual coverage entries across all payloads.
+        var allCoverages: [MockTestCoverage] { coverage.flatMap(\.coverages) }
+    }
+    
+    // Thread safety.
     private let _lock = DispatchQueue(label: "DDMockBackend.lock", qos: .userInteractive,
                                       target: .global(qos: .userInteractive))
-    private var _spanEnvelopes: [MockSpanEnvelope] = []
-    private var _logs: [[MockLog]] = []
-    private var _coveragePayloads: [MockCoveragePayload] = []
-    private var _settingsRequests: [Data] = []
-    private var _knownTestsRequests: [Data] = []
-    private var _skippableTestsRequests: [Data] = []
-    private var _testManagementRequests: [Data] = []
-    private var _searchCommitsRequests: [Data] = []
-    private var _packfileRequests: [Data] = []
 
-    /// All decoded span envelopes received so far.
-    public var spanEnvelopes: [MockSpanEnvelope] { _lock.sync { _spanEnvelopes } }
-    /// All spans across all received envelopes.
-    public var allSpans: [MockSpan] { _lock.sync { _spanEnvelopes.flatMap(\.allSpans) } }
-    /// All spans across all received envelopes.
-    public var allInfoSpans: [MockSpan] { _lock.sync { _spanEnvelopes.flatMap(\.infoSpans) } }
-    /// All test-type spans across all received envelopes.
-    public var allTestSpans: [MockSpan] { _lock.sync { _spanEnvelopes.flatMap(\.testSpans) } }
-    /// All log batches received so far.
-    public var logs: [[MockLog]] { _lock.sync { _logs } }
-    /// All individual log entries across all batches.
-    public var allLogs: [MockLog] { _lock.sync { _logs.flatMap { $0 } } }
-    /// All decoded coverage payloads received so far.
-    public var coveragePayloads: [MockCoveragePayload] { _lock.sync { _coveragePayloads } }
-    /// All individual coverage entries across all payloads.
-    public var allCoverages: [MockTestCoverage] { _lock.sync { _coveragePayloads.flatMap(\.coverages) } }
-    /// Raw bodies of all settings requests made by the SDK.
-    public var settingsRequests: [Data] { _lock.sync { _settingsRequests } }
-    /// Raw bodies of all known-tests requests.
-    public var knownTestsRequests: [Data] { _lock.sync { _knownTestsRequests } }
-    /// Raw bodies of all skippable-tests requests.
-    public var skippableTestsRequests: [Data] { _lock.sync { _skippableTestsRequests } }
-    /// Raw bodies of all test-management requests.
-    public var testManagementRequests: [Data] { _lock.sync { _testManagementRequests } }
-    /// Raw bodies of all git search-commits requests.
-    public var searchCommitsRequests: [Data] { _lock.sync { _searchCommitsRequests } }
+    // MARK: - Configuration (thread-safe read via computed property)
+    private var _configuration: Config = .init()
+    public var configuration: Config {
+        get { _lock.sync { _configuration } }
+        set { _lock.sync { _configuration = newValue } }
+    }
 
+    // MARK: - Received Data (thread-safe read via computed property)
+    private var _requests: Requests = .init()
+    public var requests: Requests { _lock.sync { _requests } }
+    
     // MARK: - Server
 
     private var _serverSocket: Int32 = -1
@@ -559,13 +566,7 @@ public final class DDMockBackend {
 
     /// Clears all received data without affecting configuration.
     public func reset() {
-        _lock.sync {
-            _spanEnvelopes.removeAll(); _logs.removeAll()
-            _coveragePayloads.removeAll(); _settingsRequests.removeAll()
-            _knownTestsRequests.removeAll(); _skippableTestsRequests.removeAll()
-            _testManagementRequests.removeAll(); _searchCommitsRequests.removeAll()
-            _packfileRequests.removeAll()
-        }
+        _lock.sync { _requests = .init() }
     }
 
     // MARK: - Wait Helpers
@@ -573,25 +574,25 @@ public final class DDMockBackend {
     /// Blocks until at least `count` span envelopes have been received, or `timeout` elapses.
     @discardableResult
     public func waitForSpans(count: Int = 1, timeout: TimeInterval = 10) -> Bool {
-        poll(timeout: timeout) { self._lock.sync { self._spanEnvelopes.count >= count } }
+        poll(timeout: timeout) { self._lock.sync { self._requests.spanEnvelopes.count >= count } }
     }
 
     /// Blocks until at least `count` log batches have been received, or `timeout` elapses.
     @discardableResult
     public func waitForLogs(count: Int = 1, timeout: TimeInterval = 10) -> Bool {
-        poll(timeout: timeout) { self._lock.sync { self._logs.count >= count } }
+        poll(timeout: timeout) { self._lock.sync { self._requests.logs.count >= count } }
     }
 
     /// Blocks until at least `count` coverage payloads have been received, or `timeout` elapses.
     @discardableResult
     public func waitForCoverage(count: Int = 1, timeout: TimeInterval = 10) -> Bool {
-        poll(timeout: timeout) { self._lock.sync { self._coveragePayloads.count >= count } }
+        poll(timeout: timeout) { self._lock.sync { self._requests.coverage.count >= count } }
     }
 
     /// Blocks until at least `count` settings requests have been received, or `timeout` elapses.
     @discardableResult
     public func waitForSettings(count: Int = 1, timeout: TimeInterval = 10) -> Bool {
-        poll(timeout: timeout) { self._lock.sync { self._settingsRequests.count >= count } }
+        poll(timeout: timeout) { self._lock.sync { self._requests.settings.count >= count } }
     }
 
     private func poll(timeout: TimeInterval, condition: () -> Bool) -> Bool {
@@ -639,44 +640,44 @@ public final class DDMockBackend {
         switch request.path {
         case "/api/v2/citestcycle":
             if let envelope = try? JSONDecoder().decode(MockSpanEnvelope.self, from: body) {
-                _lock.sync { _spanEnvelopes.append(envelope) }
+                _lock.sync { _requests.spanEnvelopes.append(envelope) }
             }
             sendStatus(socket: socket, status: "200 OK", body: Data("{}".utf8))
 
         case "/api/v2/logs":
             if let logs = try? JSONDecoder().decode([MockLog].self, from: body) {
-                _lock.sync { _logs.append(logs) }
+                _lock.sync { _requests.logs.append(logs) }
             }
             sendStatus(socket: socket, status: "200 OK", body: Data("{}".utf8))
 
         case "/api/v2/citestcov":
             if let payload = parseCoveragePayload(request) {
-                _lock.sync { _coveragePayloads.append(payload) }
+                _lock.sync { _requests.coverage.append(payload) }
             }
             sendStatus(socket: socket, status: "200 OK", body: Data("{}".utf8))
 
         case "/api/v2/libraries/tests/services/setting":
-            _lock.sync { _settingsRequests.append(body) }
+            _lock.sync { _requests.settings.append(body) }
             sendJSON(socket: socket, data: buildSettingsResponse())
 
         case "/api/v2/ci/libraries/tests":
-            _lock.sync { _knownTestsRequests.append(body) }
+            _lock.sync { _requests.knownTests.append(body) }
             sendJSON(socket: socket, data: buildKnownTestsResponse())
 
         case "/api/v2/ci/tests/skippable":
-            _lock.sync { _skippableTestsRequests.append(body) }
+            _lock.sync { _requests.skippableTests.append(body) }
             sendJSON(socket: socket, data: buildSkippableTestsResponse())
 
         case "/api/v2/git/repository/search_commits":
-            _lock.sync { _searchCommitsRequests.append(body) }
+            _lock.sync { _requests.searchCommits.append(body) }
             sendJSON(socket: socket, data: Data("{\"data\":[]}".utf8))
 
         case "/api/v2/git/repository/packfile":
-            _lock.sync { _packfileRequests.append(body) }
+            _lock.sync { _requests.packfile.append(body) }
             sendStatus(socket: socket, status: "200 OK", body: Data("{}".utf8))
 
         case "/api/v2/test/libraries/test-management/tests":
-            _lock.sync { _testManagementRequests.append(body) }
+            _lock.sync { _requests.testManagement.append(body) }
             sendJSON(socket: socket, data: buildTestManagementResponse())
 
         default:
@@ -687,7 +688,7 @@ public final class DDMockBackend {
     // MARK: - Response Builders
 
     private func buildSettingsResponse() -> Data {
-        let s = settings
+        let s = configuration.settings
         let payload: [String: Any] = [
             "data": [
                 "id": "1",
@@ -715,6 +716,7 @@ public final class DDMockBackend {
     }
 
     private func buildKnownTestsResponse() -> Data {
+        let knownTests = configuration.knownTests
         let totalTests = knownTests.values.flatMap { $0.values }.flatMap { $0 }.count
         let payload: [String: Any] = [
             "data": [
@@ -734,7 +736,7 @@ public final class DDMockBackend {
     }
 
     private func buildSkippableTestsResponse() -> Data {
-        let dataArray: [[String: Any]] = skippableTests.enumerated().map { idx, test in
+        let dataArray: [[String: Any]] = configuration.skippableTests.enumerated().map { idx, test in
             [
                 "type": "test",
                 "id": "\(idx + 1)",
@@ -747,7 +749,7 @@ public final class DDMockBackend {
             ]
         }
         let payload: [String: Any] = [
-            "meta": ["correlation_id": skippableTestsCorrelationId],
+            "meta": ["correlation_id": configuration.skippableTestsCorrelationId],
             "data": dataArray
         ]
         return (try? JSONSerialization.data(withJSONObject: payload)) ?? Data()
@@ -755,7 +757,7 @@ public final class DDMockBackend {
 
     private func buildTestManagementResponse() -> Data {
         var modulesDict: [String: Any] = [:]
-        for (moduleName, suites) in testManagement {
+        for (moduleName, suites) in configuration.testManagement {
             var suitesDict: [String: Any] = [:]
             for (suiteName, tests) in suites {
                 var testsDict: [String: Any] = [:]

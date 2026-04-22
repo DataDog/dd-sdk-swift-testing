@@ -15,6 +15,10 @@
         "value" : "$(GITHUB_REPOSITORY)"
       },
       {
+        "key" : "INTEGRATION_TESTS_LOG_PATH",
+        "value" : "$(INTEGRATION_TESTS_LOG_PATH)"
+      },
+      {
         "key" : "INTEGRATION_TESTS_SDK",
         "value" : "$(INTEGRATION_TESTS_SDK)"
       },

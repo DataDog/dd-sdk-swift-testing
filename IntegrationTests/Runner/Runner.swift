@@ -26,11 +26,11 @@ struct XcodeTestRunner: Sendable {
                 return task
             }
             let task = Task {
-                print(">>>>>>>>>>>>>> IntegrationTestRunner: building \(module)... >>>>>>>>>>>>>>")
+                print("note: >>>>>>>>>>>>>> IntegrationTestRunner: building \(module)... >>>>>>>>>>>>>>")
                 let status = try await XcodeTestRunner.xcodebuild(module: module,
                                                                   action: ["build-for-testing"],
                                                                   server: nil)
-                print("<<<<<<<<<<<<<< IntegrationTestRunner: build finished for \(module), status: \(status) <<<<<<<<<<<<<<")
+                print("note: <<<<<<<<<<<<<< IntegrationTestRunner: build finished for \(module), status: \(status) <<<<<<<<<<<<<<")
                 if status != 0 { throw RunnerError.processFailed(status) }
             }
             modules[module] = task
@@ -88,10 +88,16 @@ struct XcodeTestRunner: Sendable {
             platform = "platform=macOS,arch=arm64"
         }
         
+        var log = env["INTEGRATION_TESTS_LOG_PATH"]
+        if log == "" {
+            log = nil
+        }
+        
         let workdir = env["SRCROOT"] ?? FileManager.default.currentDirectoryPath
         
         env["INTEGRATION_TESTS_SDK"] = nil
         env["INTEGRATION_TESTS_PLATFORM"] = nil
+        env["INTEGRATION_TESTS_LOG_PATH"] = nil
         
         if let server {
             env[EnvironmentKey.customURL.rawValue] = server.absoluteString
@@ -103,10 +109,31 @@ struct XcodeTestRunner: Sendable {
             env[EnvironmentKey.isEnabled.rawValue] = "false"
         }
         
+        var stdOut = FileHandle.standardOutput
+        var stdErr = FileHandle.standardError
+        var shouldCloseStdOut: Bool = false
+        if let log = log.map({ URL(fileURLWithPath: $0, isDirectory: true) }){
+            let name = action.joined(separator: "_")
+                .replacingOccurrences(of: "(", with: "_")
+                .replacingOccurrences(of: ")", with: "_")
+                .replacingOccurrences(of: "/", with: "-")
+                .replacingOccurrences(of: ":", with: "-")
+            let path =  log.appendingPathComponent("\(sdk)-\(module)-\(name).log")
+            try Data().write(to: path)
+            let file = try FileHandle(forWritingTo: path)
+            stdOut = file
+            stdErr = file
+            shouldCloseStdOut = true
+        }
+        
+        defer {
+            if shouldCloseStdOut { try? stdOut.close() }
+        }
+        
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/env", isDirectory: false)
-        process.standardOutput = FileHandle.standardOutput
-        process.standardError = FileHandle.standardError
+        process.standardOutput = stdOut
+        process.standardError = stdErr
         process.standardInput = FileHandle.standardInput
         process.environment = env
         process.currentDirectoryURL = URL(fileURLWithPath: workdir, isDirectory: true)

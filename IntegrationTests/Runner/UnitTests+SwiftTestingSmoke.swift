@@ -75,7 +75,11 @@ struct UnitTestsSwiftTestingSmoke: IntergationTestSuite {
             #expect(success == true)
             #expect(spans.count == 1)
             let meta = try #require(spans.last?.meta)
+            #if compiler(>=6.3)
             #expect(meta[DDTestTags.testStatus] == DDTagValues.statusSkip)
+            #else
+            #expect(meta[DDTestTags.testStatus] == DDTagValues.statusPass)
+            #endif
             #expect(meta[DDGenericTags.resource] == "STAsynchronousSkip.asynchronousSkip")
             #expect(meta[DDTestTags.testName] == "asynchronousSkip")
             #expect(meta[DDTestTags.testSuite] == "STAsynchronousSkip")

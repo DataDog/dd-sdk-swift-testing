@@ -328,4 +328,33 @@ internal class FileLocatorEdgeCaseTests: XCTestCase {
         let info = try XCTUnwrap(map["Last.func"])
         XCTAssertEqual(42, info.startLine)
     }
+    
+    func testAllMethodHasIsClosure() throws {
+        // for wrappers and etc. Test function will be split in two
+        let body = """
+                        0x0000000000002358 (   0x108) MyModule.myFunc() [FUNC, EXT, LENGTH, NameNList, MangledNameNList, Merged, NList, DebugMap, FunctionStarts] 
+                            0x0000000000002358 (    0x34) /path/to/mymodule.swift:12
+                            0x000000000000238c (     0xc) /path/to/mymodule.swift:12
+                            0x0000000000002398 (    0x24) /path/to/mymodule.swift:13
+                            0x00000000000023bc (    0x2c) /path/to/mymodule.swift:0
+                            0x00000000000023e8 (    0x68) /path/to/mymodule.swift:13
+                            0x0000000000002450 (    0x10) /path/to/mymodule.swift:13
+                        0x0000000000002460 (    0xe4) MyModule.myFunc() [FUNC, LENGTH, NameNList, MangledNameNList, Merged, NList, DebugMap, FunctionStarts] 
+                            0x0000000000002460 (    0x20) /path/to/mymodule.swift:13
+                            0x0000000000002480 (    0x3c) /path/to/mymodule.swift:13
+                            0x00000000000024bc (    0x20) /path/to/mymodule.swift:0
+                            0x00000000000024dc (     0xc) /path/to/mymodule.swift:24
+                            0x00000000000024e8 (    0x10) /path/to/mymodule.swift:24
+                            0x00000000000024f8 (     0xc) /path/to/mymodule.swift:0
+                            0x0000000000002504 (    0x28) /path/to/mymodule.swift:13
+                            0x000000000000252c (     0x8) /path/to/mymodule.swift:23
+                            0x0000000000002534 (    0x10) /path/to/mymodule.swift:23
+        """
+        let url = try makeFixture(body)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let map = try FileLocator.extractFunctions(url)
+        let info = try XCTUnwrap(map["MyModule.myFunc"])
+        XCTAssertEqual(12, info.startLine)
+        XCTAssertEqual(24, info.endLine)
+    }
 }

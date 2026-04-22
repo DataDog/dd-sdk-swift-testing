@@ -335,7 +335,7 @@ public enum MockJSONValue: Decodable, Sendable, CustomStringConvertible {
 // MARK: - Mock Configuration Types
 
 /// Configure the settings response returned to the SDK.
-public struct MockSettings {
+public struct MockSettings: Sendable {
     public var itrEnabled: Bool
     public var codeCoverage: Bool
     public var testsSkipping: Bool
@@ -358,7 +358,7 @@ public struct MockSettings {
 }
 
 /// Early Flake Detection configuration returned in settings.
-public struct MockEFDConfig {
+public struct MockEFDConfig: Sendable {
     public var enabled: Bool
     public var slowTestRetries: [String: UInt]  // e.g. ["5s": 3, "1m": 1]
     public var faultySessionThreshold: Double
@@ -371,7 +371,7 @@ public struct MockEFDConfig {
 }
 
 /// Test Management configuration returned in settings.
-public struct MockTestManagementConfig {
+public struct MockTestManagementConfig: Sendable {
     public var enabled: Bool
     public var attemptToFixRetries: UInt
 
@@ -384,7 +384,7 @@ public struct MockTestManagementConfig {
 public typealias MockKnownTestsMap = [String: [String: [String]]]
 
 /// A single test to be skipped in ITR response.
-public struct MockSkippableTest {
+public struct MockSkippableTest: Sendable {
     public let name: String
     public let suite: String
 
@@ -394,7 +394,7 @@ public struct MockSkippableTest {
 /// Module → Suite → TestName → Properties. Used for Test Management response.
 public typealias MockTestManagementMap = [String: [String: [String: MockTestProperties]]]
 
-public struct MockTestProperties {
+public struct MockTestProperties: Sendable {
     public var disabled: Bool
     public var quarantined: Bool
     public var attemptToFix: Bool
@@ -427,7 +427,7 @@ public enum MockBackendError: Error {
 /// backend.stop()
 /// ```
 public final class DDMockBackend {
-    public struct Config {
+    public struct Config: Sendable {
         /// Returned for POST /api/v2/libraries/tests/services/setting
         var settings: MockSettings = .init()
         /// Returned for POST /api/v2/ci/libraries/tests

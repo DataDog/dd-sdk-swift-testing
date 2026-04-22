@@ -26,9 +26,11 @@ struct XcodeTestRunner: Sendable {
                 return task
             }
             let task = Task {
+                print(">>>>>>>>>>>>>> IntegrationTestRunner: building \(module)... >>>>>>>>>>>>>>")
                 let status = try await XcodeTestRunner.xcodebuild(module: module,
                                                                   action: ["build-for-testing"],
                                                                   server: nil)
+                print("<<<<<<<<<<<<<< IntegrationTestRunner: build finished for \(module), status: \(status) <<<<<<<<<<<<<<")
                 if status != 0 { throw RunnerError.processFailed(status) }
             }
             modules[module] = task
@@ -77,8 +79,16 @@ struct XcodeTestRunner: Sendable {
     
     fileprivate static func xcodebuild(module: String, action: [String], server: URL?) async throws -> Int32 {
         var env = ProcessInfo.processInfo.environment
-        let sdk = env["INTEGRATION_TESTS_SDK"] ?? "macosx"
-        let platform = env["INTEGRATION_TESTS_PLATFORM"] ?? "platform=macOS,arch=arm64"
+        
+        var sdk = env["INTEGRATION_TESTS_SDK"] ?? ""
+        if sdk == "" {
+            sdk = "macosx"
+        }
+        var platform = env["INTEGRATION_TESTS_PLATFORM"] ?? ""
+        if platform == "" {
+            platform = "platform=macOS,arch=arm64"
+        }
+        
         let workdir = env["SRCROOT"] ?? FileManager.default.currentDirectoryPath
         
         env["INTEGRATION_TESTS_SDK"] = nil

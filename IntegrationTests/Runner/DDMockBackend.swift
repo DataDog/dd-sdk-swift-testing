@@ -636,8 +636,6 @@ public final class DDMockBackend {
 
     private func route(request: _RawRequest, socket: Int32) {
         let body = request.decompressedBody
-        print("BODY: \(String(data: body, encoding: .utf8)!)")
-
         switch request.path {
         case "/api/v2/citestcycle":
             if let envelope = try? JSONDecoder().decode(MockSpanEnvelope.self, from: body) {

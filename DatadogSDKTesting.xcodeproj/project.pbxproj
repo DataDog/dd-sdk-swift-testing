@@ -75,7 +75,7 @@
 		A77C123E2D9474E6009C2BA1 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77C123D2D9474E6009C2BA1 /* Models.swift */; };
 		A794A8FF2E7990D20044FE3C /* TestManagementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A794A8FE2E7990C40044FE3C /* TestManagementTests.swift */; };
 		A79DA5B42F928F87004BCA8C /* SwiftTestingSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A79DA5B32F928F87004BCA8C /* SwiftTestingSmokeTests.swift */; };
-		A79DA5B72F929812004BCA8C /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */; platformFilters = (ios, macos, ); };
+		A79DA5B72F929812004BCA8C /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */; };
 		A79DA5B92F92B7BC004BCA8C /* XCTestSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A79DA5B82F92B7B6004BCA8C /* XCTestSmokeTests.swift */; };
 		A79DA5BB2F92BC70004BCA8C /* UnitTests+SwiftTestingSmoke.swift in Sources */ = {isa = PBXBuildFile; fileRef = A79DA5BA2F92BC70004BCA8C /* UnitTests+SwiftTestingSmoke.swift */; };
 		A79FAD992F8548780080C3F6 /* SessionAndModuleObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A79FAD982F8548700080C3F6 /* SessionAndModuleObserver.swift */; };
@@ -1662,6 +1662,7 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "mkdir -p \"`dirname \"${SCRIPT_INPUT_FILE_0}\"`\"\ncp -af \"${SCRIPT_INPUT_FILE_0}\" \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -2194,7 +2195,6 @@
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 26.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.IntegrationTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
@@ -2217,7 +2217,6 @@
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 26.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.IntegrationTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
@@ -2243,13 +2242,16 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,3,6";
 			};
 			name = Debug;
 		};
@@ -2266,11 +2268,14 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,3,6";
 			};
 			name = Release;
 		};

@@ -26,11 +26,12 @@ enum FileLocator {
         case skipping
         case started(function: FunctionName, module: String?)
         case parsing(function: FunctionName, module: String, info: FunctionInfo)
-        
+        case continuing(mapKey: String)  // same function split into closure/wrapper blocks
+
         var isParsing: Bool {
             switch self {
             case .skipping: return false
-            case .parsing, .started: return true
+            case .parsing, .started, .continuing: return true
             }
         }
     }
@@ -44,6 +45,7 @@ enum FileLocator {
         
         let funcNamePattern = #"(?:-\[[\w \:\$#]+\])|(?:\S+)"#
         let funcRegex = try NSRegularExpression(pattern: #"^\s+[0-9a-fA-FxX]+\s+\([0-9a-fA-FxX\ ]+\)\s+(\#(funcNamePattern))\s+\[FUNC,\s+((?:EXT)|(?:OBJC))[\w\s,]+\] $"#)
+        let anyFuncRegex = try NSRegularExpression(pattern: #"^\s+[0-9a-fA-FxX]+\s+\([0-9a-fA-FxX\ ]+\)\s+(\#(funcNamePattern))\s+\[FUNC,"#)
         let lineRegex = try NSRegularExpression(pattern: #"^\s+[0-9a-fA-FxX]+\s+\([0-9a-fA-FxX\ ]+\)\s+(.*?)\:(\d+)$"#)
         let trimCharacters = CharacterSet(charactersIn: "-[]")
         
@@ -56,38 +58,37 @@ enum FileLocator {
         
         while let line = try file.readLine() {
             if line.hasSuffix("] \n") {
+                var previousFunctionKey: String? = nil
                 switch state {
                 case .parsing(function: let name, module: let mod, info: let info):
                     map["\(mod).\(name)"] = info
-                    state = .skipping
-                case .started: state = .skipping
-                case .skipping: break
+                    previousFunctionKey = "\(mod).\(name)"
+                case .continuing(mapKey: let key):
+                    previousFunctionKey = key
+                case .started, .skipping: break
                 }
-                guard let match = funcRegex.firstMatch(in: line, range: NSRange(line.startIndex..., in: line)) else {
-                    continue
-                }
-                let name = line[Range(match.range(at: 1), in: line)!]
-                let type = line[Range(match.range(at: 2), in: line)!]
-                switch type {
-                case "EXT":
-                    var function: String
-                    let module: String?
-                    if let dotPos = name.lastIndex(of: ".") {
-                        function = String(name[name.index(after: dotPos)...])
-                        module = String(name[..<dotPos])
-                    } else {
-                        function = String(name)
-                        module = nil
+                state = .skipping
+                if let match = funcRegex.firstMatch(in: line, range: NSRange(line.startIndex..., in: line)) {
+                    let name = line[Range(match.range(at: 1), in: line)!]
+                    let type = line[Range(match.range(at: 2), in: line)!]
+                    switch type {
+                    case "EXT":
+                        let info = Self.swiftTestName(function: String(name))
+                        state = .started(function: info.test, module: info.module)
+                    case "OBJC":
+                        let parts = name.trimmingCharacters(in: trimCharacters).components(separatedBy: " ")
+                        guard parts.count == 2, parts[1].hasPrefix("test") else { continue }
+                        state = .started(function: parts[1], module: parts[0])
+                    default: continue
                     }
-                    if function.hasSuffix("()") {
-                        function = String(function[..<function.index(function.endIndex, offsetBy: -2)])
+                } else if let prevKey = previousFunctionKey, map[prevKey] != nil,
+                          let anyMatch = anyFuncRegex.firstMatch(in: line, range: NSRange(line.startIndex..., in: line)) {
+                    let rawName = String(line[Range(anyMatch.range(at: 1), in: line)!])
+                    let info = Self.swiftTestName(function: rawName)
+                    let currentMethod = info.module == nil ? info.test : "\(info.module!).\(info.test)"
+                    if currentMethod == prevKey {
+                        state = .continuing(mapKey: prevKey)
                     }
-                    state = .started(function: function, module: module)
-                case "OBJC":
-                    let parts = name.trimmingCharacters(in: trimCharacters).components(separatedBy: " ")
-                    guard parts.count == 2, parts[1].hasPrefix("test") else { continue }
-                    state = .started(function: parts[1], module: parts[0])
-                default: continue
                 }
             } else if line.hasSuffix(":0\n") { // ignoring zero addresses
                 continue
@@ -114,6 +115,8 @@ enum FileLocator {
                         info.updateWithLine(lineNumber)
                     }
                     state = .parsing(function: name, module: mod, info: info)
+                case .continuing(mapKey: let key):
+                    map[key]?.updateWithLine(lineNumber)
                 default: throw InternalError(description: "Function parsing failed. Parser in wrong state \(state)")
                 }
             } else if line.hasSuffix("__TEXT __stubs\n") {
@@ -135,5 +138,21 @@ enum FileLocator {
         defer { try? FileManager.default.removeItem(at: symbolsFile) }
 
         return try extractFunctions(symbolsFile)
+    }
+    
+    private static func swiftTestName(function name: String) -> (test: String, module: String?) {
+        var function: String
+        let module: String?
+        if let dotPos = name.lastIndex(of: ".") {
+            function = String(name[name.index(after: dotPos)...])
+            module = String(name[..<dotPos])
+        } else {
+            function = String(name)
+            module = nil
+        }
+        if function.hasSuffix("()") {
+            function = String(function[..<function.index(function.endIndex, offsetBy: -2)])
+        }
+        return (test: function, module: module)
     }
 }

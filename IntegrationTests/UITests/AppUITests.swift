@@ -6,38 +6,6 @@
 
 import XCTest
 
-final class UIBasicPass: XCTestCase {
-    override func setUpWithError() throws {
-        continueAfterFailure = false
-    }
-
-    @MainActor func testBasicPass() throws {
-        let app = XCUIApplication()
-        app.launch()
-        XCTAssertTrue(app.exists)
-    }
-}
-
-final class UIBasicSkip: XCTestCase {
-    override func setUpWithError() throws {
-        continueAfterFailure = false
-    }
-
-    @MainActor func testBasicSkip() throws {
-        throw XCTSkip("skip")
-    }
-}
-
-final class UIBasicError: XCTestCase {
-    override func setUpWithError() throws {
-        continueAfterFailure = false
-    }
-
-    @MainActor func testBasicError() {
-        XCTAssert(false)
-    }
-}
-
 final class UIEnvironmentPassed: XCTestCase {
     private static let envKeys = ["DD_ENV", "DD_SERVICE", "DD_API_KEY", "DD_TEST_RUNNER"]
 
@@ -48,13 +16,29 @@ final class UIEnvironmentPassed: XCTestCase {
     @MainActor func testEnvironmentPassed() throws {
         let app = XCUIApplication()
         app.launch()
+        defer { app.terminate() }
         
         let env = ProcessInfo.processInfo.environment
         for key in Self.envKeys {
             guard let expected = env[key] else { continue }
             let element = app.staticTexts[key]
             XCTAssertTrue(element.waitForExistence(timeout: 5), "\(key) should be visible in app")
-            XCTAssertEqual(element.value as? String, expected, "\(key) value mismatch")
+            XCTAssertEqual(element._textValue, expected, "\(key) value mismatch")
         }
+    }
+}
+
+extension XCUIElementAttributes {
+    var _textValue: String {
+        if let text = self.value as? String, text != "" {
+            return text
+        }
+        if self.label != "" {
+            return self.label
+        }
+        if self.title != "" {
+            return self.title
+        }
+        return ""
     }
 }

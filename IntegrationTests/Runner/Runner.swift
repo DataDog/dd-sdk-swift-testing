@@ -31,12 +31,12 @@ struct XcodeTestRunner: Sendable {
                 return task
             }
             let task = Task {
-                print("note: >>>>>>>>>>>>>> IntegrationTestRunner: building \(module)... >>>>>>>>>>>>>>")
+                print("note: [IntegrationTestRunner]: building \(module)...")
                 let status = try await XcodeTestRunner.xcodebuild(module: module,
                                                                   action: ["build-for-testing"],
                                                                   environment: [:],
                                                                   server: nil)
-                print("note: <<<<<<<<<<<<<< IntegrationTestRunner: build finished for \(module), status: \(status) <<<<<<<<<<<<<<")
+                print("note: [IntegrationTestRunner]: build finished for \(module), status: \(status).")
                 if status != 0 { throw RunnerError.processFailed(status) }
             }
             modules[module] = task
@@ -53,12 +53,14 @@ struct XcodeTestRunner: Sendable {
                     self.started = true
                 }
                 self.backend.configuration = config.backend
+                print("note: [IntegrationTestRunner]: testing \(testBundle)/\(test)...")
                 let status = try await XcodeTestRunner.xcodebuild(module: module,
                                                                   action: ["-only-testing",
                                                                            "\(testBundle)/\(test)",
                                                                            "test-without-building"],
                                                                   environment: config.environment,
                                                                   server: self.backend.baseURL)
+                print("note: [IntegrationTestRunner]: test \(testBundle)/\(test) finished, status: \(status).")
                 defer { self.backend.reset() }
                 try await function(self.backend.requests, status == 0, config)
             }
@@ -139,6 +141,7 @@ struct XcodeTestRunner: Sendable {
             stdOut = file
             stdErr = file
             shouldCloseStdOut = true
+            print("note: [IntegrationTestRunner]: writing xcodebuild logs to: \(path.path)")
         }
         
         defer {

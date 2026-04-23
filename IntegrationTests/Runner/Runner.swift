@@ -23,6 +23,7 @@ struct XcodeTestRunner: Sendable {
     actor Modules {
         var modules: [String: Task<Void, any Error>] = [:]
         var activeTests: [String: Task<Void, Never>] = [:]
+        var simulator: Task<Void, any Error>? = nil
         let backend: DDMockBackend = .init()
         var started: Bool = false
 
@@ -67,6 +68,14 @@ struct XcodeTestRunner: Sendable {
             activeTests[module] = Task { let _ = await task.result }
             try await task.value
         }
+        
+        func bootSimulator() async throws {
+            if let simulator = simulator {
+                return try await simulator.value
+            }
+            simulator = Task { try await XcodeTestRunner.bootSimulator() }
+            try await simulator!.value
+        }
     }
 
     let module: String
@@ -76,11 +85,16 @@ struct XcodeTestRunner: Sendable {
         self.module = module
         self.testBundle = testBundle ?? module
     }
-
-    func build() async throws {
-        try await Self.modules.build(module: module).value
+    
+    func bootSimulator() async throws {
+        try await Self.modules.bootSimulator()
     }
 
+    func build() async throws {
+        try await bootSimulator()
+        try await Self.modules.build(module: module).value
+    }
+    
     func runTest(named: String, config: Config = .init(),
                  _ function: @Sendable @escaping (DDMockBackend.Requests, Bool, Config) async throws -> Void) async throws {
         try await build()
@@ -93,22 +107,7 @@ struct XcodeTestRunner: Sendable {
     
     fileprivate static func xcodebuild(module: String, action: [String], environment: [String: String], server: URL?) async throws -> Int32 {
         var env = ProcessInfo.processInfo.environment
-        
-        var sdk = env["INTEGRATION_TESTS_SDK"] ?? ""
-        if sdk == "" {
-            sdk = "macosx"
-        }
-        var platform = env["INTEGRATION_TESTS_PLATFORM"] ?? ""
-        if platform == "" {
-            platform = "platform=macOS,arch=arm64"
-        }
-        
-        var log = env["INTEGRATION_TESTS_LOG_PATH"]
-        if log == "" {
-            log = nil
-        }
-        
-        let workdir = env["SRCROOT"] ?? FileManager.default.currentDirectoryPath
+        let (sdk, platform, workdir, log) = parameters(env: env)
         
         env["INTEGRATION_TESTS_SDK"] = nil
         env["INTEGRATION_TESTS_PLATFORM"] = nil
@@ -166,6 +165,58 @@ struct XcodeTestRunner: Sendable {
         
         await process.waitUntilExitAsync()
         return process.terminationStatus
+    }
+    
+    fileprivate static func bootSimulator() async throws {
+        let env = ProcessInfo.processInfo.environment
+        let platform = parameters(env: env).platform
+
+        guard platform.contains("Simulator") else { return }
+
+        let nameComponent = platform.split(separator: ",")
+            .first(where: { $0.hasPrefix("name=") })
+        guard let nameComponent else { return }
+        let simulatorName = String(nameComponent.dropFirst("name=".count))
+
+        print("note: [IntegrationTestRunner]: booting simulator '\(simulatorName)'...")
+
+        let stderrPipe = Pipe()
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/env", isDirectory: false)
+        process.arguments = ["xcrun", "simctl", "boot", simulatorName]
+        process.standardOutput = FileHandle.standardOutput
+        process.standardError = stderrPipe
+        try process.run()
+        await process.waitUntilExitAsync()
+
+        let stderrData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
+        let stderrText = String(data: stderrData, encoding: .utf8) ?? ""
+        if !stderrText.isEmpty { FileHandle.standardError.write(stderrData) }
+
+        let status = process.terminationStatus
+        // Non-zero exit is OK if the simulator is already booted
+        if status != 0 && !stderrText.contains("Booted") {
+            throw RunnerError.processFailed(status)
+        }
+
+        print("note: [IntegrationTestRunner]: simulator '\(simulatorName)' is booted.")
+    }
+    
+    fileprivate static func parameters(env: borrowing [String: String]) -> (sdk: String, platform: String, workdir: String, log: String?) {
+        var sdk = env["INTEGRATION_TESTS_SDK"] ?? ""
+        if sdk == "" {
+            sdk = "macosx"
+        }
+        var platform = env["INTEGRATION_TESTS_PLATFORM"] ?? ""
+        if platform == "" {
+            platform = "platform=macOS,arch=arm64"
+        }
+        var log = env["INTEGRATION_TESTS_LOG_PATH"]
+        if log == "" {
+            log = nil
+        }
+        let workdir = env["SRCROOT"] ?? FileManager.default.currentDirectoryPath
+        return (sdk, platform, workdir, log)
     }
     
     static let modules: Modules = .init()

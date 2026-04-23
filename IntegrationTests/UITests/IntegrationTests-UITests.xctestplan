@@ -1,7 +1,7 @@
 {
   "configurations" : [
     {
-      "id" : "4395694F-82AE-4F6C-AB04-B7BC31410AF3",
+      "id" : "2B069D55-AE9E-4D92-BF7C-B063F8D0F4D1",
       "name" : "Test Scheme Action",
       "options" : {
 
@@ -13,6 +13,10 @@
       {
         "key" : "GITHUB_REPOSITORY",
         "value" : "$(GITHUB_REPOSITORY)"
+      },
+      {
+        "key" : "DD_CIVISIBILITY_AGENTLESS_URL",
+        "value" : "$(DD_CIVISIBILITY_AGENTLESS_URL)"
       },
       {
         "key" : "GITHUB_REF",
@@ -28,11 +32,11 @@
       },
       {
         "key" : "DD_ENV",
-        "value" : "internal-tests"
+        "value" : "$(DD_ENV)"
       },
       {
         "key" : "DD_SERVICE",
-        "value" : "dd-sdk-swift-testing"
+        "value" : "$(DD_SERVICE)"
       },
       {
         "key" : "SRCROOT",
@@ -48,7 +52,7 @@
       },
       {
         "key" : "DD_ENABLE_NETWORK_CALL_STACK_SYMBOLICATED",
-        "value" : "0"
+        "value" : "$(DD_ENABLE_NETWORK_CALL_STACK_SYMBOLICATED)"
       },
       {
         "key" : "GITHUB_RUN_NUMBER",
@@ -60,7 +64,7 @@
       },
       {
         "key" : "DD_TEST_RUNNER",
-        "value" : "1"
+        "value" : "$(DD_TEST_RUNNER)"
       },
       {
         "key" : "GITHUB_WORKSPACE",
@@ -72,21 +76,22 @@
       },
       {
         "key" : "DD_TRACE_DEBUG",
-        "value" : "1"
+        "value" : "$(DD_TRACE_DEBUG)"
       }
     ],
+    "performanceAntipatternCheckerEnabled" : true,
     "targetForVariableExpansion" : {
       "containerPath" : "container:DatadogSDKTesting.xcodeproj",
-      "identifier" : "A7FC26A72BA20A6500067E26",
-      "name" : "IntegrationTestsApp"
+      "identifier" : "A79DA5BF2F993060004BCA8C",
+      "name" : "IntegrationTests-UITests"
     }
   },
   "testTargets" : [
     {
       "target" : {
         "containerPath" : "container:DatadogSDKTesting.xcodeproj",
-        "identifier" : "A7FC26BF2BA20D1200067E26",
-        "name" : "IntegrationTestsUITests"
+        "identifier" : "A79DA5D52F993061004BCA8C",
+        "name" : "IntegrationTests-UITests-Tests"
       }
     }
   ],

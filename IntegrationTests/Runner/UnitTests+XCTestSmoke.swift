@@ -124,4 +124,22 @@ struct UnitTestsXCTestSmoke: IntergationTestSuite {
             #expect(span["http.method"] == "GET")
         }
     }
+    
+    @Test func crash() async throws {
+        try await run(test: "XCCrash/testCrash") { backend, success in
+            let testSpans = backend.allTestSpans
+            #expect(success == false)
+            #expect(testSpans.count == 1)
+            let meta = try #require(testSpans.last?.meta)
+            #expect(meta[DDTestTags.testStatus] == DDTagValues.statusFail)
+            #expect(meta[DDGenericTags.resource] == "XCCrash.testCrash")
+            #expect(meta[DDTestTags.testName] == "testCrash")
+            #expect(meta[DDTestTags.testSuite] == "XCCrash")
+            #expect(meta[DDTestTags.testType] == "test")
+            #expect(meta[DDTags.errorType] != nil)
+            #expect(meta[DDTags.errorMessage] != nil)
+            #expect(meta[DDTags.errorStack] != nil)
+            #expect(meta[DDTags.errorCrashLog + ".00"] != nil)
+        }
+    }
 }

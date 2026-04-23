@@ -24,6 +24,19 @@ define xcarchive
 		xcodebuild archive -scheme $1 -sdk $2 -destination $3 -archivePath build/$1/$4.xcarchive SKIP_INSTALL=NO)
 endef
 
+ROOT_DIR := $(shell pwd)
+
+# params: scheme, platform, logfile, simulator
+define xctestint
+	$(if $(filter $2,macOS),$(eval SDK=macosx)$(eval DEST='platform=macOS,arch=arm64'),)
+	$(if $(filter $2,iOSsim),$(eval SDK=iphonesimulator)$(eval DEST='platform=iOS Simulator,name=$4'),)
+	$(if $(filter $2,tvOSsim),$(eval SDK=appletvsimulator)$(eval DEST='platform=tvOS Simulator,name=$4'),)
+	$(if $3,mkdir -p logs-$3,)
+	$(if $3,\
+		set -o pipefail; INTEGRATION_TESTS_SDK=$(SDK) INTEGRATION_TESTS_PLATFORM=$(DEST) INTEGRATION_TESTS_LOG_PATH=$(ROOT_DIR)/logs-$3 xcodebuild -scheme $1 test | tee logs-$3/$1-$2-$3.log | xcbeautify,\
+		INTEGRATION_TESTS_SDK=$(SDK) INTEGRATION_TESTS_PLATFORM=$(DEST) xcodebuild -scheme $1 test)
+endef
+
 build/%/iphoneos.xcarchive:
 	$(call xcarchive,$*,iphoneos,'generic/platform=iOS',iphoneos,$(XC_LOG))
 
@@ -143,7 +156,7 @@ tests/integration/%:
 	$(if $(TVOS_SIMULATOR),,$(eval TVOS_SIMULATOR = Apple TV))
 	$(if $(filter $*,iOSsim),$(eval SIMULATOR=$(IOS_SIMULATOR)),$(eval SIMULATOR :=))
 	$(if $(filter $*,tvOSsim),$(eval SIMULATOR=$(TVOS_SIMULATOR)),)
-	$(call xctest,IntegrationTests,$*,$(XC_LOG),$(SIMULATOR))
+	$(call xctestint,IntegrationTests,$*,$(XC_LOG),$(SIMULATOR))
 
 tests/unit: tests/unit/EventsExporter tests/unit/DatadogSDKTesting
 

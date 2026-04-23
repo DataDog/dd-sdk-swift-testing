@@ -59,8 +59,6 @@ jobs:
             tvossim: "Apple TV"
         platform: ["macOS", "iOSsim", "tvOSsim"]
     runs-on: ${{ matrix.env.os }}
-    env:
-      DD_API_KEY: '${{ secrets.DD_API_KEY }}'
     steps:
     - name: Checkout
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -68,10 +66,12 @@ jobs:
       run: sudo xcode-select --switch /Applications/${{ matrix.env.xcode }}.app
     - name: Run tests for ${{ matrix.platform }}
       run: make XC_LOG=integration IOS_SIMULATOR="${{ matrix.env.iossim }}" TVOS_SIMULATOR="${{ matrix.env.tvossim }}" tests/integration/${{ matrix.platform }}
+      env:
+        DD_API_KEY: '${{ secrets.DD_API_KEY }}'
+        DD_TEST_RUNNER: 1
     - name: Attach Xcode logs
       if: '!cancelled()'
       uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
       with:
         name: ${{ matrix.env.xcode }}-${{ matrix.platform }}-integration-log
-        path: "*-integration.log"
-
+        path: "logs-integration/*.log"

@@ -1,0 +1,108 @@
+{
+  "configurations" : [
+    {
+      "id" : "25FC07C6-162C-4F5C-BD2E-37F762EC6E86",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "environmentVariableEntries" : [
+      {
+        "key" : "GITHUB_REPOSITORY",
+        "value" : "$(GITHUB_REPOSITORY)"
+      },
+      {
+        "key" : "INTEGRATION_TESTS_LOG_PATH",
+        "value" : "$(INTEGRATION_TESTS_LOG_PATH)"
+      },
+      {
+        "key" : "INTEGRATION_TESTS_SDK",
+        "value" : "$(INTEGRATION_TESTS_SDK)"
+      },
+      {
+        "key" : "INTEGRATION_TESTS_PLATFORM",
+        "value" : "$(INTEGRATION_TESTS_PLATFORM)"
+      },
+      {
+        "key" : "GITHUB_REF",
+        "value" : "$(GITHUB_REF)"
+      },
+      {
+        "key" : "GITHUB_HEAD_REF",
+        "value" : "$(GITHUB_HEAD_REF)"
+      },
+      {
+        "key" : "GITHUB_ACTIONS",
+        "value" : "$(GITHUB_ACTIONS)"
+      },
+      {
+        "key" : "DD_ENV",
+        "value" : "integration-tests"
+      },
+      {
+        "key" : "DD_SERVICE",
+        "value" : "dd-sdk-swift-testing"
+      },
+      {
+        "key" : "SRCROOT",
+        "value" : "$(SRCROOT)"
+      },
+      {
+        "key" : "DD_API_KEY",
+        "value" : "$(DD_API_KEY)"
+      },
+      {
+        "key" : "GITHUB_RUN_ID",
+        "value" : "$(GITHUB_RUN_ID)"
+      },
+      {
+        "key" : "DD_ENABLE_NETWORK_CALL_STACK_SYMBOLICATED",
+        "value" : "0"
+      },
+      {
+        "key" : "GITHUB_RUN_NUMBER",
+        "value" : "$(GITHUB_RUN_NUMBER)"
+      },
+      {
+        "key" : "GITHUB_SHA",
+        "value" : "$(GITHUB_SHA)"
+      },
+      {
+        "key" : "DD_TEST_RUNNER",
+        "value" : "$(DD_TEST_RUNNER)"
+      },
+      {
+        "key" : "GITHUB_WORKSPACE",
+        "value" : "$(GITHUB_WORKSPACE)"
+      },
+      {
+        "key" : "GITHUB_WORKFLOW",
+        "value" : "$(GITHUB_WORKFLOW)"
+      },
+      {
+        "key" : "DD_TRACE_DEBUG",
+        "value" : "1"
+      }
+    ],
+    "performanceAntipatternCheckerEnabled" : true,
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:DatadogSDKTesting.xcodeproj",
+      "identifier" : "A7F3FC132F924521002EFFAB",
+      "name" : "IntegrationTests"
+    }
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:DatadogSDKTesting.xcodeproj",
+        "identifier" : "A7F3FC132F924521002EFFAB",
+        "name" : "IntegrationTests"
+      }
+    }
+  ],
+  "version" : 1
+}

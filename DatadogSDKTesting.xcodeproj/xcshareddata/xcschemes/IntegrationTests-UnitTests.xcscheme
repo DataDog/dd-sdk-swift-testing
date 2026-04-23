@@ -14,19 +14,19 @@
       shouldUseLaunchSchemeArgsEnv = "YES">
       <TestPlans>
          <TestPlanReference
-            reference = "container:IntegrationTests/IntegrationTests.xctestplan"
+            reference = "container:IntegrationTests/UnitTests/IntegrationTests-UnitTests.xctestplan"
             default = "YES">
          </TestPlanReference>
       </TestPlans>
       <Testables>
          <TestableReference
             skipped = "NO"
-            parallelizable = "NO">
+            parallelizable = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "A7F3FC132F924521002EFFAB"
-               BuildableName = "IntegrationTests.xctest"
-               BlueprintName = "IntegrationTests"
+               BlueprintIdentifier = "A7F3FC402F928191002EFFAB"
+               BuildableName = "IntegrationTests-UnitTests.xctest"
+               BlueprintName = "IntegrationTests-UnitTests"
                ReferencedContainer = "container:DatadogSDKTesting.xcodeproj">
             </BuildableReference>
          </TestableReference>

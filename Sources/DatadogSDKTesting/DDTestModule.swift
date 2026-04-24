@@ -113,7 +113,7 @@ public extension Module {
     ///   - name: name of the suite
     ///   - startTime: Optional, the time where the suite started
     @objc func suiteStart(name: String, startTime: Date? = nil) -> Suite {
-        startSuite(named: name, at: startTime, framework: "SwiftManual") as! Suite
+        startSuite(named: name, at: startTime, framework: .init(name: "SwiftManual", version: "0.0.0")) as! Suite
     }
 
     @objc func suiteStart(name: String) -> Suite {
@@ -159,8 +159,8 @@ extension Module: TestModule {
 }
 
 extension Module: TestSuiteProvider {
-    func startSuite(named name: String, at start: Date?, framework: String) -> any TestRunProvider & TestSuite {
-        addFramework(framework)
+    func startSuite(named name: String, at start: Date?, framework: TestFramework) -> any TestRunProvider & TestSuite {
+        addFramework(framework.name)
         return Suite(name: name, module: self, framework: framework, startTime: start)
     }
 }

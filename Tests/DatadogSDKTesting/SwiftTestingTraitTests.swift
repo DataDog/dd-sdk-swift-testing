@@ -26,6 +26,10 @@ struct SwiftTestingTraitTests {
     @Test
     func scopingTraitIsApplied() async throws {
         #expect(Testing.Test.current?.ddSuite == "\(type(of: self))")
+        let test = try #require(Mocks.Test.active as? Mocks.Test)
+        let framework = test.suite.testFramework
+        #expect(framework.name == "Testing")
+        #expect(framework.version == PlatformUtils.getSwiftTestingVersion())
     }
     
     @Test

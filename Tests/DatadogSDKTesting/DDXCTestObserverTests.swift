@@ -80,6 +80,7 @@ internal class DDXCTestObserverTests: XCTestCase {
         XCTAssertEqual(spanData.attributes[DDTestTags.testName]?.description, testName)
         XCTAssertEqual(spanData.attributes[DDTestTags.testSuite]?.description, testSuite)
         XCTAssertEqual(spanData.attributes[DDTestTags.testFramework]?.description, "XCTest")
+        XCTAssertEqual(spanData.attributes[DDTestTags.testFrameworkVersion]?.description, PlatformUtils.getXCTestVersion())
         XCTAssertEqual(spanData.attributes[DDTestTags.testType]?.description, DDTagValues.typeTest)
         XCTAssertEqual(spanData.attributes[DDHostTags.hostVCPUCount]?.description, String(Double(PlatformUtils.getCpuCount())))
     }

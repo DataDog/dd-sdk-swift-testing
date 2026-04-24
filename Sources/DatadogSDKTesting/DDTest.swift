@@ -143,7 +143,7 @@ extension Test {
                                _ action: @Sendable (Test) async throws -> T) async rethrows -> T
     {
         let testStartTime = start ?? suite.configuration.clock.now
-        return try await DDTestMonitor.tracer.withActiveSpan(name: "\(suite.testFramework).test",
+        return try await DDTestMonitor.tracer.withActiveSpan(name: "\(suite.testFramework.name).test",
                                                              attributes: attributes(test: name, in: suite),
                                                              startTime: testStartTime) { span in
             let test = Self(name: name, suite: suite, span: span)
@@ -159,7 +159,7 @@ extension Test {
                                _ action: (Test) throws -> T) rethrows -> T
     {
         let testStartTime = start ?? suite.configuration.clock.now
-        return try DDTestMonitor.tracer.withActiveSpan(name: "\(suite.testFramework).test",
+        return try DDTestMonitor.tracer.withActiveSpan(name: "\(suite.testFramework.name).test",
                                                        attributes: attributes(test: name, in: suite),
                                                        startTime: testStartTime) { span in
             let test = Self(name: name, suite: suite, span: span)
@@ -178,7 +178,8 @@ extension Test {
             DDTestTags.testName: .string(name),
             DDTestTags.testSuite: .string(suite.name),
             DDTestTags.testModule: .string(suite.module.name),
-            DDTestTags.testFramework: .string(suite.testFramework),
+            DDTestTags.testFramework: .string(suite.testFramework.name),
+            DDTestTags.testFrameworkVersion: .string(suite.testFramework.version),
             DDTestTags.testType: .string(DDTagValues.typeTest),
             DDTestTags.testIsUITest: .string("false"),
             DDTestSuiteVisibilityTags.testSessionId: .string(suite.session.id.hexString),

@@ -174,7 +174,7 @@ extension Mocks {
         }
         
         func _run(suite name: String, info: TestSuite, module: Module) {
-            let suite = module.startSuite(named: name, at: nil, framework: "MockRunner") as! Mocks.Suite
+            let suite = module.startSuite(named: name, at: nil, framework: .init(name: "MockRunner", version: "1.0.0")) as! Mocks.Suite
             features.testSuiteWillStart(suite: suite, testsCount: UInt(info.tests.count))
             for (test, method) in info.tests {
                 _run(group: test, method: method, suite: suite)

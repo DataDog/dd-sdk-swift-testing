@@ -421,9 +421,30 @@ public extension HTTPTestRequest {
 }
 
 public struct HTTPTestResponseSender: Sendable {
+    public struct Status: Sendable, Equatable, Hashable, CustomStringConvertible {
+        public let code: UInt16
+        public let reason: String
+        
+        public var description: String {
+            "\(code) \(reason)"
+        }
+        
+        public init(code: UInt16, reason: String) {
+            self.code = code
+            self.reason = reason
+        }
+        
+        static var ok: Status { Status(code: 200, reason: "OK") }
+        static var badRequest: Status { Status(code: 400, reason: "Bad Request") }
+        static var forbidden: Status { Status(code: 403, reason: "Forbidden") }
+        static var notFound: Status { Status(code: 404, reason: "Not Found") }
+        static var internalServerError: Status { Status(code: 500, reason: "Internal Server Error") }
+    }
+    
+    
     let socket: Int32
     
-    public func sendResponse(status: String, contentType: String, body: Data) {
+    public func sendResponse(status: Status, contentType: String, body: Data) {
         let header = "HTTP/1.1 \(status)\r\nContent-Type: \(contentType)\r\nContent-Length: \(body.count)\r\nConnection: close\r\n\r\n"
         _ = header.withCString { send(socket, $0, strlen($0), 0) }
         _ = body.withUnsafeBytes { ptr -> Int in
@@ -433,7 +454,7 @@ public struct HTTPTestResponseSender: Sendable {
     }
 
     public func sendSuccessResponse(data: Data, type: String) {
-        sendResponse(status: "200 OK", contentType: "text/plain", body: data)
+        sendResponse(status: .ok, contentType: "text/plain", body: data)
     }
     
     public func sendSuccessResponse(message: String = "Success response!") {
@@ -441,15 +462,15 @@ public struct HTTPTestResponseSender: Sendable {
     }
     
     public func sendErrorResponse(error: String = "Error response!") {
-        sendResponse(status: "400 Bad Request", contentType: "text/plain", body: Data(error.utf8))
+        sendResponse(status: .badRequest, contentType: "text/plain", body: Data(error.utf8))
     }
     
     public func sendForbiddenResponse(message: String = "Forbidden response!") {
-        sendResponse(status: "403 Forbidden", contentType: "text/plain", body: Data(message.utf8))
+        sendResponse(status: .forbidden, contentType: "text/plain", body: Data(message.utf8))
     }
     
     public func sendNotFoundResponse(message: String = "Not Found response!") {
-        sendResponse(status: "404 Not Found", contentType: "text/plain", body: Data(message.utf8))
+        sendResponse(status: .notFound, contentType: "text/plain", body: Data(message.utf8))
     }
     
     public func sendHeadersResponse(headers: HTTPTestRequest.Headers) {

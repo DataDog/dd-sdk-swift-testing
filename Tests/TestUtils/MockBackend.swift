@@ -117,7 +117,7 @@ public final class MockBackend {
     public func start() throws {
         _server = .init() { [weak self] request, response in
             guard let self else {
-                response.sendResponse(status: "500 Internal Server Error",
+                response.sendResponse(status: .internalServerError,
                                       contentType: "application/json",
                                       body: Data("{}".utf8))
                 return
@@ -176,7 +176,7 @@ public final class MockBackend {
 
     // MARK: - Routing
 
-    private func route(request: HTTPTestRequest) -> (status: String, contentType: String, body: Data) {
+    private func route(request: HTTPTestRequest) -> (status: HTTPTestResponseSender.Status, contentType: String, body: Data) {
         let body = request.head.headers.first(name: "content-encoding")?.lowercased() == "deflate"
             ? (request.body._zlibInflated ?? request.body) : request.body
         switch request.head.path {
@@ -184,46 +184,46 @@ public final class MockBackend {
             if let envelope = try? JSONDecoder().decode(SpanEnvelope.self, from: body) {
                 _lock.sync { _requests.spanEnvelopes.append(envelope) }
             }
-            return ("200 OK", "application/json", Data("{}".utf8))
+            return (.ok, "application/json", Data("{}".utf8))
 
         case "/api/v2/logs":
             if let logs = try? JSONDecoder().decode([Log].self, from: body) {
                 _lock.sync { _requests.logs.append(logs) }
             }
-            return ("200 OK", "application/json", Data("{}".utf8))
+            return (.ok, "application/json", Data("{}".utf8))
 
         case "/api/v2/citestcov":
             if let payload = parseCoveragePayload(headers: request.head.headers, rawBody: request.body) {
                 _lock.sync { _requests.coverage.append(payload) }
             }
-            return ("200 OK", "application/json", Data("{}".utf8))
+            return (.ok, "application/json", Data("{}".utf8))
 
         case "/api/v2/libraries/tests/services/setting":
             _lock.sync { _requests.settings.append(body) }
-            return ("200 OK", "application/json", buildSettingsResponse())
+            return (.ok, "application/json", buildSettingsResponse())
 
         case "/api/v2/ci/libraries/tests":
             _lock.sync { _requests.knownTests.append(body) }
-            return ("200 OK", "application/json", buildKnownTestsResponse())
+            return (.ok, "application/json", buildKnownTestsResponse())
 
         case "/api/v2/ci/tests/skippable":
             _lock.sync { _requests.skippableTests.append(body) }
-            return ("200 OK", "application/json", buildSkippableTestsResponse())
+            return (.ok, "application/json", buildSkippableTestsResponse())
 
         case "/api/v2/git/repository/search_commits":
             _lock.sync { _requests.searchCommits.append(body) }
-            return ("200 OK", "application/json", Data("{\"data\":[]}".utf8))
+            return (.ok, "application/json", Data("{\"data\":[]}".utf8))
 
         case "/api/v2/git/repository/packfile":
             _lock.sync { _requests.packfile.append(body) }
-            return ("200 OK", "application/json", Data("{}".utf8))
+            return (.ok, "application/json", Data("{}".utf8))
 
         case "/api/v2/test/libraries/test-management/tests":
             _lock.sync { _requests.testManagement.append(body) }
-            return ("200 OK", "application/json", buildTestManagementResponse())
+            return (.ok, "application/json", buildTestManagementResponse())
 
         default:
-            return ("404 Not Found", "application/json", Data("{}".utf8))
+            return (.notFound, "application/json", Data("{}".utf8))
         }
     }
 

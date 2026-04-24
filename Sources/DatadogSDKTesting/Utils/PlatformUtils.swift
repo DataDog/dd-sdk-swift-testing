@@ -83,6 +83,17 @@ struct PlatformUtils {
         return version
     }
 
+    static func getXCTestVersion() -> String? {
+        guard let xcTestClass = NSClassFromString("XCTest") else { return nil }
+        return Bundle(for: xcTestClass).infoDictionary?["CFBundleShortVersionString"] as? String
+    }
+    
+    static func getSwiftTestingVersion() -> String? {
+        Bundle.allFrameworks
+            .first { $0.bundleIdentifier == "com.apple.dt.swift-testing" }
+            .flatMap { $0.infoDictionary?["CFBundleVersion"] as? String }
+    }
+
     static func getRuntimeInfo() -> (String, String) {
         if NSClassFromString("XCTest") != nil {
             return ("Xcode", getXcodeVersion())

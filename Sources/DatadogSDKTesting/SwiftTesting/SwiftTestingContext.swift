@@ -502,33 +502,34 @@ struct SwiftTestingSuiteContext: Sendable {
     let observer: any SwiftTestingObserverType
     let moduleManager: any TestModuleManager
     let testsCount: Int
+    let version: String
     
     init(suite: any TestSuite & TestRunProvider,
-         configuration: SessionConfig,
+         configuration: SessionConfig, version: String,
          info: any SwiftTestingTestInfoType,
          testsCount: Int,
          observer: any SwiftTestingObserverType,
          moduleManager: any TestModuleManager)
     {
-        self.init(suite: suite, configuration: configuration,
+        self.init(suite: suite, configuration: configuration, version: version,
                   testsCount: testsCount, state: .init(tests: []),
                   info: info, observer: observer, moduleManager: moduleManager)
     }
    
     init(suite: any TestSuite & TestRunProvider,
-         configuration: SessionConfig,
+         configuration: SessionConfig, version: String,
          tests: Set<String>,
          info: any SwiftTestingTestInfoType,
          observer: any SwiftTestingObserverType,
          moduleManager: any TestModuleManager)
     {
-        self.init(suite: suite, configuration: configuration,
+        self.init(suite: suite, configuration: configuration, version: version,
                   testsCount: tests.count, state: .init(tests: tests),
                   info: info, observer: observer, moduleManager: moduleManager)
     }
     
     private init(suite: any TestSuite & TestRunProvider,
-                 configuration: SessionConfig,
+                 configuration: SessionConfig, version: String,
                  testsCount: Int, state: State,
                  info: any SwiftTestingTestInfoType,
                  observer: any SwiftTestingObserverType,
@@ -541,6 +542,7 @@ struct SwiftTestingSuiteContext: Sendable {
         self.observer = observer
         self.configuration = configuration
         self.moduleManager = moduleManager
+        self.version = version
     }
     
     func withTestRun<T>(named name: String, _ action: @Sendable (any TestRun) async throws -> T) async rethrows -> T {
@@ -709,10 +711,12 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
     
     var registry: any SwiftTestingTestRegistryType { _state.registry }
     var observer: any SwiftTestingObserverType { _state.observer }
+    let version: String
     private let _state: State
     
     init(session: any TestSessionManager, observer: any SwiftTestingObserverType) {
         self._state = .init(session: session, observer: observer, registry: Registry())
+        self.version = PlatformUtils.getSwiftTestingVersion() ?? "unknown"
     }
     
     func with(suite info: some SwiftTestingTestInfoType,
@@ -720,8 +724,8 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
     {
         let suite = try await self._state.suite(named: info.suite, in: info.module) { (mod, manager, config) in
             let count = try await self.registry.count(for: info)
-            let suite = mod.startSuite(named: info.suite, at: nil, framework: Self.framework)
-            return .init(suite: suite, configuration: config, info: info,
+            let suite = mod.startSuite(named: info.suite, at: nil, framework: .init(name: Self.framework, version: version))
+            return .init(suite: suite, configuration: config, version: version, info: info,
                          testsCount: count, observer: self.observer, moduleManager: manager)
         }
         if suite.isNew {
@@ -735,8 +739,8 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
     {
         let suite = try await self._state.suite(named: test.suite, in: test.module) { (mod, manager, config) in
             let tests = try await self.registry.tests(for: test)
-            let suite = mod.startSuite(named: test.suite, at: nil, framework: Self.framework)
-            return SwiftTestingSuiteContext(suite: suite, configuration: config,
+            let suite = mod.startSuite(named: test.suite, at: nil, framework: .init(name: Self.framework, version: version))
+            return SwiftTestingSuiteContext(suite: suite, configuration: config, version: version,
                                             tests: tests, info: test, observer: self.observer,
                                             moduleManager: manager)
         }
@@ -770,7 +774,7 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
 }
 
 extension TestSuite {
-    var isSwiftTesting: Bool { testFramework ==  SwiftTestingSuiteProvider.framework }
+    var isSwiftTesting: Bool { testFramework.name ==  SwiftTestingSuiteProvider.framework }
 }
 
 extension Optional where Wrapped == SwiftTestingTestStatus.Errors {

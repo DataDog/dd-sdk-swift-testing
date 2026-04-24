@@ -253,7 +253,7 @@ enum Mocks {
             hasher.combine(_session)
         }
         
-        func startSuite(named name: String, at start: Date?, framework: String) -> any TestRunProvider & TestSuite {
+        func startSuite(named name: String, at start: Date?, framework: TestFramework) -> any TestRunProvider & TestSuite {
             let suite = _state.update { state in
                 let suite = Mocks.Suite(name: name, module: self,
                                         framework: framework,
@@ -261,11 +261,11 @@ enum Mocks {
                                         testTags: testTags[name]?.1 ?? [:],
                                         startTime: start ?? Date())
                 state.suites[name] = suite
-                state.testFrameworks.insert(framework)
+                state.testFrameworks.insert(framework.name)
                 return suite
             }
             let _ = _session?._state.update {
-                $0.testFrameworks.insert(framework)
+                $0.testFrameworks.insert(framework.name)
             }
             return suite
         }
@@ -288,7 +288,7 @@ enum Mocks {
         weak var _module: Module!
 #endif
         
-        let testFramework: String
+        let testFramework: TestFramework
         let testTags: [String: AttachedTags]
         
         var module: any TestModule { _module }
@@ -302,7 +302,9 @@ enum Mocks {
         }
         var tests: [String: Group] { _state.value.tests }
         
-        init(name: String, module: Module, framework: String, tags: AttachedTags, testTags: [String: AttachedTags], startTime: Date = Date()) {
+        init(name: String, module: Module, framework: TestFramework,
+             tags: AttachedTags, testTags: [String: AttachedTags], startTime: Date = Date())
+        {
             self._module = module
             self.testFramework = framework
             self.testTags = testTags

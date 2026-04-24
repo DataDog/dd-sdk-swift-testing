@@ -93,11 +93,11 @@ protocol TestSuite: TestContainer {
     var session: any TestSession { get }
     var module: any TestModule { get }
     var localization: String { get }
-    var testFramework: String { get }
+    var testFramework: TestFramework { get }
 }
 
 protocol TestSuiteProvider: Sendable {
-    func startSuite(named: String, at: Date?, framework: String) -> any TestSuite & TestRunProvider
+    func startSuite(named: String, at: Date?, framework: TestFramework) -> any TestSuite & TestRunProvider
 }
 
 protocol TestRunProvider: Sendable {
@@ -296,6 +296,16 @@ struct TestRunParameters: Encodable {
     init(arguments: JSONGeneric, metadata: JSONGeneric?) {
         self.arguments = arguments
         self.metadata = metadata
+    }
+}
+
+public struct TestFramework: Sendable {
+    public var name: String
+    public var version: String
+    
+    public init(name: String, version: String) {
+        self.name = name
+        self.version = version
     }
 }
 

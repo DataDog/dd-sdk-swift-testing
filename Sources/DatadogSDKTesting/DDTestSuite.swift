@@ -18,7 +18,7 @@ public final class Suite: NSObject, Encodable {
     
     public let name: String
     public let startTime: Date
-    public let testFramework: String
+    public let testFramework: TestFramework
     public let localization: String
     
     var duration: UInt64 { _state.value.duration }
@@ -33,7 +33,7 @@ public final class Suite: NSObject, Encodable {
     private let _module: Module
     private let _state: Synced<MutableState>
 
-    init(name: String, module: Module, framework: String, startTime: Date? = nil) {
+    init(name: String, module: Module, framework: TestFramework, startTime: Date? = nil) {
         self.name = name
         self._module = module
         self.testFramework = framework
@@ -51,7 +51,8 @@ public final class Suite: NSObject, Encodable {
         state.meta[DDGenericTags.type] = DDTagValues.typeSuiteEnd
         state.meta[DDTestTags.testSuite] = name
         state.meta[DDTestTags.testModule] = module.name
-        state.meta[DDTestTags.testFramework] = testFramework
+        state.meta[DDTestTags.testFramework] = testFramework.name
+        state.meta[DDTestTags.testFrameworkVersion] = testFramework.version
         state.meta[DDTestSuiteVisibilityTags.testSessionId] = String(module.session.id.rawValue)
         state.meta[DDTestSuiteVisibilityTags.testModuleId] = String(module.id.rawValue)
         state.meta[DDTestSuiteVisibilityTags.testSuiteId] = String(id.rawValue)

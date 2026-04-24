@@ -11,11 +11,13 @@ internal import XCTest
 final class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate {
     private(set) var state: State
     private let log: Logger
+    private let version: String
 
     init(session: any TestSessionManager, log: Logger) {
         XCUIApplication.swizzleMethods
         state = .start(session)
         self.log = log
+        self.version = PlatformUtils.getXCTestVersion() ?? "unknown"
         super.init()
     }
 
@@ -103,7 +105,7 @@ final class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate
         let wrappedTests = tests.map { DDXCTestRetryGroup(for: $0, observer: self) }
         testSuite.setValue(wrappedTests, forKey: "_mutableTests")
         
-        let suite = module.startSuite(named: testSuite.name, at: nil, framework: "XCTest")
+        let suite = module.startSuite(named: testSuite.name, at: nil, framework: .init(name: "XCTest", version: version))
         DDCrashes.setCurrent(spanData: suite.toCrashData)
         context.features.testSuiteWillStart(suite: suite, testsCount: UInt(wrappedTests.count))
         

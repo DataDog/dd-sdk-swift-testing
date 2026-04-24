@@ -31,7 +31,8 @@ internal class DataUploadWorker: DataUploadWorkerType {
     private var uploadWork: DispatchWorkItem?
 
     deinit {
-        shutdown()
+        uploadWork?.cancel()
+        uploadWork = nil
     }
 
     init(

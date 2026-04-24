@@ -60,12 +60,10 @@ public class HttpTestServer {
         setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &yes, socklen_t(MemoryLayout<Int32>.size))
         
         // Set non-blocking mode for OTLP tests
-        //if config == nil {
         let flags = fcntl(serverSocket, F_GETFL, 0)
         if flags >= 0 {
             _ = fcntl(serverSocket, F_SETFL, flags | O_NONBLOCK)
         }
-        //}
         
         // Bind to port
         var addr = sockaddr_in()

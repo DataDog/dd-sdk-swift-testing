@@ -69,3 +69,11 @@ import DatadogSDKTesting
         let (_, _) = try await URLSession.shared.data(from: url)
     }
 }
+
+
+@Suite(.datadogTesting) struct STCrash {
+    @Test func crash() {
+        let array: [Int] = [1]
+        #expect(array[1] == 1)
+    }
+}

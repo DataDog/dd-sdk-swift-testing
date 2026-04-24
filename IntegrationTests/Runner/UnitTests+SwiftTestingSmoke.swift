@@ -118,4 +118,22 @@ struct UnitTestsSwiftTestingSmoke: IntergationTestSuite {
             #expect(span["http.method"] == "GET")
         }
     }
+    
+    @Test func crash() async throws {
+        try await run(test: "STCrash/crash()") { backend, success in
+            let spans = backend.allTestSpans
+            #expect(success == false)
+            #expect(spans.count == 1)
+            let meta = try #require(spans.last?.meta)
+            #expect(meta[DDTestTags.testStatus] == DDTagValues.statusFail)
+            #expect(meta[DDGenericTags.resource] == "STCrash.crash")
+            #expect(meta[DDTestTags.testName] == "crash")
+            #expect(meta[DDTestTags.testSuite] == "STCrash")
+            #expect(meta[DDTestTags.testType] == "test")
+            #expect(meta[DDTags.errorType] != nil)
+            #expect(meta[DDTags.errorMessage] != nil)
+            #expect(meta[DDTags.errorStack] != nil)
+            #expect(meta[DDTags.errorCrashLog + ".00"] != nil)
+        }
+    }
 }

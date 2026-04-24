@@ -60,3 +60,10 @@ final class XCNetworkIntegration: XCTestCase {
         let (_, _) = try await URLSession.shared.data(from: url)
     }
 }
+
+final class XCCrash: XCTestCase {
+    func testCrash() {
+        let array: [Int] = [1]
+        XCTAssertEqual(array[1], 1)
+    }
+}

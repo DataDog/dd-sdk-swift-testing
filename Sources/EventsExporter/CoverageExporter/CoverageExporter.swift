@@ -100,6 +100,10 @@ internal class CoverageExporter {
         
         Log.debug("End processing coverage: \(coverage.path)")
     }
+    
+    func shutdown() {
+        coverageUpload.shutdown()
+    }
 
     private func addCoverage(request: MultipartFormDataRequest, data: Data?) {
         guard let data = data else { return }

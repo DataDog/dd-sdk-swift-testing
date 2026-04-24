@@ -48,4 +48,8 @@ internal struct FeatureUpload {
     init(uploader: DataUploadWorkerType) {
         self.uploader = uploader
     }
+    
+    func shutdown() {
+        self.uploader.shutdown()
+    }
 }

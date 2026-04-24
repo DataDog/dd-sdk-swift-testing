@@ -5,6 +5,7 @@
  */
 
 import Testing
+import TestUtils
 @testable import DatadogSDKTesting
 
 @Suite("Integration Tests - Swift Testing Smoke Unit Tests", .build("UnitTests"), .datadogTesting)

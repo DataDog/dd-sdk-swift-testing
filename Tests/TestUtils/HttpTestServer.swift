@@ -28,38 +28,23 @@ public class HttpTestServer {
     public private(set) var serverPort: Int = 0
     private var isRunning = false
     private var serverQueue: DispatchQueue?
-    private let startSemaphore = DispatchSemaphore(value: 0)
     
-    // Request tracking for OTLP tests
-    internal var receivedRequests: [HTTPTestRequest] = []
-    internal let receivedRequestsQueue = DispatchQueue(label: "HttpTestServer.requests",
-                                                       qos: .userInteractive,
-                                                       target: .global(qos: .userInteractive))
+    public var baseURL: URL { URL(string: "http://127.0.0.1:\(serverPort)")! }
+    public let handler: @Sendable (HTTPTestRequest, HTTPTestResponseSender) -> Void
     
-    // Configuration for URLSession tests
-    public var config: HttpTestServerConfig?
-    
-    // Server properties
-    private var host: String
-    private var port: Int
-    
-    // Constructor for OTLP tests (no URL/config)
-    public convenience init() {
-        self.init(url: nil, config: nil)
+    // Constructor for URLSession tests (with config)
+    public convenience init(config: HttpTestServerConfig) {
+        self.init() { request, response in
+            Self.handleURLSessionRequest(request: request, response: response, config: config)
+        }
     }
     
-    // Constructor for URLSession tests (with URL/config)
-    public init(url: URL?, config: HttpTestServerConfig? = nil) {
-        self.host = url?.host ?? "localhost"
-        self.port = url?.port ?? 0  // 0 means OS will assign port
-        self.config = config
+    // Constructor with handler
+    public init(handler: @Sendable @escaping (HTTPTestRequest, HTTPTestResponseSender) -> Void) {
+        self.handler = handler
     }
     
     public func start() throws {
-        try start(semaphore: nil)
-    }
-    
-    public func start(semaphore: DispatchSemaphore?) throws {
         // Create socket
         #if canImport(Darwin)
         serverSocket = socket(AF_INET, SOCK_STREAM, 0)
@@ -75,17 +60,17 @@ public class HttpTestServer {
         setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &yes, socklen_t(MemoryLayout<Int32>.size))
         
         // Set non-blocking mode for OTLP tests
-        if config == nil {
-            let flags = fcntl(serverSocket, F_GETFL, 0)
-            if flags >= 0 {
-                _ = fcntl(serverSocket, F_SETFL, flags | O_NONBLOCK)
-            }
+        //if config == nil {
+        let flags = fcntl(serverSocket, F_GETFL, 0)
+        if flags >= 0 {
+            _ = fcntl(serverSocket, F_SETFL, flags | O_NONBLOCK)
         }
+        //}
         
         // Bind to port
         var addr = sockaddr_in()
         addr.sin_family = sa_family_t(AF_INET)
-        addr.sin_port = in_port_t(port).bigEndian
+        addr.sin_port = 0
         addr.sin_addr.s_addr = INADDR_ANY
         
         let bindResult = withUnsafePointer(to: &addr) { ptr in
@@ -123,18 +108,12 @@ public class HttpTestServer {
         }
         
         isRunning = true
-        serverQueue = DispatchQueue(label: "HttpTestServer",
-                                    qos: .userInteractive,
-                                    attributes: .concurrent)
+        serverQueue = DispatchQueue(label: "HttpTestServer", qos: .userInteractive, attributes: .concurrent)
         
         // Start accept loop
         serverQueue?.async { [weak self] in
             self?.acceptLoop()
         }
-        
-        // Signal that server is ready
-        startSemaphore.signal()
-        semaphore?.signal()  // For URLSession tests compatibility
     }
     
     public func stop() {
@@ -154,77 +133,13 @@ public class HttpTestServer {
             serverSocket = -1
         }
         
-        // Clear received requests
-        receivedRequestsQueue.sync {
-            receivedRequests.removeAll()
-        }
-        
         // Wait for queue to finish
         serverQueue?.sync(flags: .barrier) {}
         serverQueue = nil
     }
     
-    public func shutdown() {
-        stop()
-    }
-    
     deinit {
         stop()
-    }
-    
-    // MARK: - OTLP Test Support
-    
-    public var requests: [HTTPTestRequest] {
-        return receivedRequestsQueue.sync { receivedRequests }
-    }
-    
-    public func waitForRequest(timeout: TimeInterval = 5.0, remove: Bool = false) -> HTTPTestRequest? {
-        let deadline = Date(timeIntervalSinceNow: timeout)
-        while Date() < deadline {
-            let request: HTTPTestRequest? = receivedRequestsQueue.sync {
-                if remove && receivedRequests.count > 0 {
-                    return receivedRequests.removeFirst()
-                }
-                return receivedRequests.first
-            }
-            if let request = request {
-                return request
-            }
-            Thread.sleep(forTimeInterval: 0.1)
-        }
-        return nil
-    }
-    
-    public func clearRequests() {
-        receivedRequestsQueue.sync {
-            receivedRequests.removeAll()
-        }
-    }
-    
-    // For backward compatibility with existing test APIs
-    public func clearReceivedRequests() {
-        clearRequests()
-    }
-    
-    // Wait for the next request and provide access to headers and body
-    public func receiveHeadAndVerify(_ verify: (HTTPTestRequest.Head) throws -> Void) rethrows {
-        guard let request = waitForRequest() else {
-            XCTFail("Timeout waiting for request")
-            return
-        }
-        try verify(request.head)
-    }
-    
-    public func receiveBodyAndVerify(_ verify: (Data) throws -> Void) rethrows {
-        guard let lastRequest = receivedRequestsQueue.sync(execute: { receivedRequests.last }) else {
-            XCTFail("No request received")
-            return
-        }
-        try verify(lastRequest.body)
-    }
-    
-    public func receiveEnd() throws {
-        // This is a no-op for compatibility with the NIOHTTP1 test server API
     }
     
     // MARK: - Private Implementation
@@ -260,6 +175,9 @@ public class HttpTestServer {
         var totalData = Data()
         var buffer = [UInt8](repeating: 0, count: 4096)
         
+        // struct to send responses
+        let response = HTTPTestResponseSender(socket: clientSocket)
+        
         // Read headers first
         while true {
             let bytesRead = recv(clientSocket, &buffer, buffer.count, 0)
@@ -280,13 +198,13 @@ public class HttpTestServer {
         
         // Parse headers to get content length
         guard let headerEndRange = totalData.range(of: Data([0x0D, 0x0A, 0x0D, 0x0A])) else {
-            sendErrorResponse(socket: clientSocket)
+            response.sendErrorResponse(error: "Headers end not found")
             return
         }
         
         let headerData = totalData.subdata(in: 0..<headerEndRange.lowerBound)
         guard let headerString = String(data: headerData, encoding: .utf8) else {
-            sendErrorResponse(socket: clientSocket)
+            response.sendErrorResponse(error: "Invalid header data. Can't read UTF-8")
             return
         }
         
@@ -295,29 +213,30 @@ public class HttpTestServer {
         
         // Parse first line
         guard let firstLine = lines.first else {
-            sendErrorResponse(socket: clientSocket)
+            response.sendErrorResponse(error: "Empty header")
             return
         }
         
         let parts = firstLine.components(separatedBy: " ")
         guard parts.count >= 3 else {
-            sendErrorResponse(socket: clientSocket)
+            response.sendErrorResponse(error: "First line is not an HTTP command: \(firstLine)")
             return
         }
         
-        let _ = parts[0]  // method - unused but needed for parsing
+        let method = parts[0]
         let path = parts[1]
+        let version = parts[2]
         
         // Parse headers
-        var headers: [String: String] = [:]
+        var headers = HTTPTestRequest.Headers(headers: [:])
         for line in lines.dropFirst() {
             if line.isEmpty { break }
             if let colonIndex = line.firstIndex(of: ":") {
-                let key = String(line[..<colonIndex]).trimmingCharacters(in: .whitespaces)
+                let name = String(line[..<colonIndex]).trimmingCharacters(in: .whitespaces)
                 let value = String(line[line.index(after: colonIndex)...]).trimmingCharacters(in: .whitespaces)
-                headers[key] = value
+                headers.add(.init(name: name, value: value))
                 
-                if key.lowercased() == "content-length" {
+                if name.lowercased() == "content-length" {
                     contentLength = Int(value) ?? 0
                 }
             }
@@ -345,133 +264,34 @@ public class HttpTestServer {
             totalData.append(contentsOf: bodyBuffer[0..<totalRead])
         }
         
-        // Handle URLSession test paths
-        if config != nil {
-            handleURLSessionRequest(socket: clientSocket, path: path, headers: headers)
-            return
-        }
-
-        // Handle OTLP test requests (or when no config is provided)
-        // For paths like /error without config, still handle them appropriately
-        if path.hasPrefix("/error") {
-            // Close without response - this simulates a network error
-            return
-        }
-
-        guard let request = parseHttpRequest(rawData: totalData) else {
-            sendErrorResponse(socket: clientSocket)
-            return
-        }
-        
-        // Store the request
-        receivedRequestsQueue.sync {
-            receivedRequests.append(request)
-        }
-        
-        // Send success response
-        sendSuccessResponse(socket: clientSocket)
+        let body = totalData.subdata(in: headerEndRange.upperBound..<totalData.count)
+        let request = HTTPTestRequest(head: .init(method: .init(rawValue: method),
+                                                  uri: path,
+                                                  version: version == "HTTP/1.1" ? .http1_1 : .http2,
+                                                  headers: headers),
+                                      body: body)
+        handler(request, response)
     }
     
-    private func handleURLSessionRequest(socket: Int32, path: String, headers: [String: String]) {
-        if path.hasPrefix("/success") || path.hasPrefix("/dontinstrument") {
-            sendSuccessResponse(socket: socket)
-            config?.successCallback?()
-        } else if path.hasPrefix("/forbidden") {
-            sendForbiddenResponse(socket: socket)
-            config?.errorCallback?()
-        } else if path.hasPrefix("/error") {
+    private static func handleURLSessionRequest(request: HTTPTestRequest, response: HTTPTestResponseSender, config: HttpTestServerConfig) {
+        if request.head.uri.hasPrefix("/success") || request.head.uri.hasPrefix("/dontinstrument") {
+            response.sendSuccessResponse()
+            config.successCallback?()
+        } else if request.head.uri.hasPrefix("/forbidden") {
+            response.sendForbiddenResponse()
+            config.errorCallback?()
+        } else if request.head.uri.hasPrefix("/error") {
+            response.sendErrorResponse()
+            config.errorCallback?()
+        } else if request.head.uri.hasPrefix("/network-error") {
             // Close without response
-            config?.errorCallback?()
-        } else if path.hasPrefix("/headers") {
-            sendHeadersResponse(socket: socket, headers: headers)
-            config?.successCallback?()
+            config.errorCallback?()
+        } else if request.head.uri.hasPrefix("/headers") {
+            response.sendHeadersResponse(headers: request.head.headers)
+            config.successCallback?()
         } else {
-            sendNotFoundResponse(socket: socket)
+            response.sendNotFoundResponse()
         }
-    }
-    
-    private func sendSuccessResponse(socket: Int32) {
-        let response = "HTTP/1.1 200 OK\r\nContent-Length: 17\r\nConnection: close\r\n\r\nSuccess response!"
-        _ = response.withCString { ptr in
-            send(socket, ptr, strlen(ptr), 0)
-        }
-    }
-    
-    private func sendErrorResponse(socket: Int32) {
-        let response = "HTTP/1.1 400 Bad Request\r\nContent-Length: 15\r\nConnection: close\r\n\r\nError response!"
-        _ = response.withCString { ptr in
-            send(socket, ptr, strlen(ptr), 0)
-        }
-    }
-    
-    private func sendForbiddenResponse(socket: Int32) {
-        let response = "HTTP/1.1 403 Forbidden\r\nContent-Length: 19\r\nConnection: close\r\n\r\nForbidden response!"
-        _ = response.withCString { ptr in
-            send(socket, ptr, strlen(ptr), 0)
-        }
-    }
-    
-    private func sendNotFoundResponse(socket: Int32) {
-        let response = "HTTP/1.1 404 Not Found\r\nContent-Length: 19\r\nConnection: close\r\n\r\nNot Found response!"
-        _ = response.withCString { ptr in
-            send(socket, ptr, strlen(ptr), 0)
-        }
-    }
-    
-    private func sendHeadersResponse(socket: Int32, headers: [String: String]) {
-        let json = "{" + headers.map { key, value in "\"\(key)\":\"\(value)\"" }.joined(separator: ",") + "}"
-        let response = "HTTP/1.1 200 OK\r\nContent-Length: \(json.count)\r\nConnection: close\r\n\r\n\(json)"
-        _ = response.withCString { ptr in
-            send(socket, ptr, strlen(ptr), 0)
-        }
-    }
-    
-    private func parseHttpRequest(rawData: Data) -> HTTPTestRequest? {
-        // Find header end
-        guard let headerEndRange = rawData.range(of: Data([0x0D, 0x0A, 0x0D, 0x0A])) else {
-            return nil
-        }
-        
-        let headerData = rawData.subdata(in: 0..<headerEndRange.lowerBound)
-        guard let headerString = String(data: headerData, encoding: .utf8) else {
-            return nil
-        }
-        
-        let lines = headerString.components(separatedBy: "\r\n")
-        guard let requestLine = lines.first else {
-            return nil
-        }
-        
-        // Parse request line
-        let parts = requestLine.components(separatedBy: " ")
-        guard parts.count >= 3 else {
-            return nil
-        }
-        
-        let method = parts[0]
-        let uri = parts[1]
-        let version = parts[2]
-        
-        // Parse headers
-        var headers = HTTPTestRequest.Headers(headers: [:])
-        for line in lines.dropFirst() {
-            if line.isEmpty { break }
-            if let colonIndex = line.firstIndex(of: ":") {
-                let name = String(line[..<colonIndex]).trimmingCharacters(in: .whitespaces)
-                let value = String(line[line.index(after: colonIndex)...]).trimmingCharacters(in: .whitespaces)
-                headers.add(.init(name: name, value: value))
-            }
-        }
-        
-        // Extract body
-        let bodyStartIndex = headerEndRange.upperBound
-        let body = rawData.subdata(in: bodyStartIndex..<rawData.count)
-        
-        return .init(head: .init(method: .init(rawValue: method),
-                                 uri: uri,
-                                 version: version == "HTTP/1.1" ? .http1_1 : .http2,
-                                 headers: headers),
-                     body: body)
     }
 }
 
@@ -514,7 +334,7 @@ public struct HttpTestServerConfig {
 // MARK: - HTTP Types for OTLP Tests
 
 /// HTTPRequest wrapper for compatibility
-public struct HTTPTestRequest {
+public struct HTTPTestRequest: Sendable {
     public let head: Head
     public let body: Data
     
@@ -525,14 +345,23 @@ public struct HTTPTestRequest {
 }
 
 public extension HTTPTestRequest {
-    struct Head: Equatable {
+    struct Head: Equatable, Sendable {
         public let method: Method
         public let uri: String
+        public let path: String
         public let version: Version
         public let headers: Headers
+        
+        init(method: Method, uri: String, version: Version, headers: Headers) {
+            self.method = method
+            self.uri = uri
+            self.version = version
+            self.headers = headers
+            self.path = uri.components(separatedBy: "?").first ?? uri
+        }
     }
     
-    struct Method: Equatable, RawRepresentable {
+    struct Method: Equatable, RawRepresentable, Sendable {
         public let rawValue: String
     
         public init(rawValue: String) {
@@ -548,18 +377,18 @@ public extension HTTPTestRequest {
         public static let PATCH = Self(rawValue: "PATCH")
     }
     
-    enum Version: Equatable {
+    enum Version: Equatable, Sendable {
         case http1_1
         case http2
     }
     
-    struct Header: Equatable {
+    struct Header: Equatable, Sendable {
         public let name: String
         public let value: String
     }
     
-    struct Headers: Equatable {
-        private var headers: [String: [Header]]
+    struct Headers: Equatable, Sendable {
+        public private(set) var headers: [String: [Header]]
         
         init(headers: [String : [Header]]) {
             self.headers = headers
@@ -590,5 +419,45 @@ public extension HTTPTestRequest {
             array.append(header)
             headers[name] = array
         }
+    }
+}
+
+public struct HTTPTestResponseSender: Sendable {
+    let socket: Int32
+    
+    public func sendResponse(status: String, contentType: String, body: Data) {
+        let header = "HTTP/1.1 \(status)\r\nContent-Type: \(contentType)\r\nContent-Length: \(body.count)\r\nConnection: close\r\n\r\n"
+        _ = header.withCString { send(socket, $0, strlen($0), 0) }
+        _ = body.withUnsafeBytes { ptr -> Int in
+            guard let base = ptr.baseAddress, !body.isEmpty else { return 0 }
+            return send(socket, base, body.count, 0)
+        }
+    }
+
+    public func sendSuccessResponse(data: Data, type: String) {
+        sendResponse(status: "200 OK", contentType: "text/plain", body: data)
+    }
+    
+    public func sendSuccessResponse(message: String = "Success response!") {
+        sendSuccessResponse(data: Data(message.utf8), type: "text/plain")
+    }
+    
+    public func sendErrorResponse(error: String = "Error response!") {
+        sendResponse(status: "400 Bad Request", contentType: "text/plain", body: Data(error.utf8))
+    }
+    
+    public func sendForbiddenResponse(message: String = "Forbidden response!") {
+        sendResponse(status: "403 Forbidden", contentType: "text/plain", body: Data(message.utf8))
+    }
+    
+    public func sendNotFoundResponse(message: String = "Not Found response!") {
+        sendResponse(status: "404 Not Found", contentType: "text/plain", body: Data(message.utf8))
+    }
+    
+    public func sendHeadersResponse(headers: HTTPTestRequest.Headers) {
+        let headersStr = headers.headers.flatMap { (_, vals) in
+            vals.map { #""\#($0.name)":"\#($0.value)""# }
+        }.joined(separator: ",")
+        sendSuccessResponse(data: Data("{\(headersStr)}".utf8), type: "application/json")
     }
 }

@@ -20,7 +20,7 @@ class LogsExporterTests: XCTestCase {
     }
 
     func testWhenExportSpanIsCalledAndSpanHasEvent_thenLogIsUploaded() throws {
-        let server = HttpTestServer(url: URL(string: "http://127.0.0.1:33333"))
+        let server = MockBackend()
         try server.start()
         defer { server.stop() }
 
@@ -31,8 +31,8 @@ class LogsExporterTests: XCTestCase {
                                                   hostname: "hostname",
                                                   apiKey: "apikey",
                                                   endpoint: .other(
-                                                    testsBaseURL: URL(string: "http://127.0.0.1:33333")!,
-                                                    logsBaseURL: URL(string: "http://127.0.0.1:33333")!
+                                                    testsBaseURL: server.baseURL,
+                                                    logsBaseURL: server.baseURL
                                                   ),
                                                   metadata: .init(),
                                                   performancePreset: .readAllFiles,
@@ -44,12 +44,12 @@ class LogsExporterTests: XCTestCase {
         let spanData = createBasicSpanWithEvent()
         logsExporter.exportLogs(fromSpan: spanData)
         
-        guard let request = server.waitForRequest(timeout: 30) else {
+        guard server.waitForLogs(timeout: 20) else {
             XCTFail("Request not received")
             return
         }
         
-        XCTAssertTrue(request.head.uri.hasPrefix("/api/v2/logs"))
+        XCTAssertTrue(server.requests.allLogs.count == 1)
     }
 
     private func createBasicSpanWithEvent() -> SpanData {

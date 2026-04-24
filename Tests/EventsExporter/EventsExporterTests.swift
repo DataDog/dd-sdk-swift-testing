@@ -20,7 +20,7 @@ class EventsExporterTests: XCTestCase {
     }
 
     func testWhenExportSpanIsCalled_thenTraceAndLogsAreUploaded() throws {
-        let server = HttpTestServer(url: URL(string: "http://127.0.0.1:33333"))
+        let server = MockBackend()
         try server.start()
         defer { server.stop() }
         
@@ -34,8 +34,8 @@ class EventsExporterTests: XCTestCase {
                                                           hostname: "hostname",
                                                           apiKey: "apikey",
                                                           endpoint: .other(
-                                                            testsBaseURL: URL(string: "http://127.0.0.1:33333")!,
-                                                            logsBaseURL: URL(string: "http://127.0.0.1:33333")!
+                                                            testsBaseURL: server.baseURL,
+                                                            logsBaseURL: server.baseURL
                                                           ),
                                                           metadata: .init(),
                                                           performancePreset: .readAllFiles,
@@ -56,22 +56,16 @@ class EventsExporterTests: XCTestCase {
         
         simpleSpan(tracer: tracer)
         
-        var logsSent = false
-        var tracesSent = false
-        while !(tracesSent && logsSent) {
-            guard let request = server.waitForRequest(timeout: 20, remove: true) else {
-                XCTFail("Request not received")
-                return
-            }
-            if request.head.uri.hasPrefix("/api/v2/citestcycle") {
-                tracesSent = true
-            } else if request.head.uri.hasPrefix("/api/v2/logs") {
-                logsSent = true
-            }
+        guard server.waitForSpans(timeout: 20) else {
+            XCTFail("Spans not received")
+            return
         }
-        
-        XCTAssertTrue(logsSent)
-        XCTAssertTrue(tracesSent)
+        guard server.waitForLogs(timeout: 20) else {
+            XCTFail("Logs not received")
+            return
+        }
+        XCTAssertTrue(server.requests.allLogs.count == 1)
+        XCTAssertTrue(server.requests.allInfoSpans.count == 1)
     }
 
     private func simpleSpan(tracer: TracerSdk) {

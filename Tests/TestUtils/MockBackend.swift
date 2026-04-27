@@ -85,8 +85,7 @@ public final class MockBackend {
     }
 
     // Thread safety.
-    private let _lock = DispatchQueue(label: "DDMockBackend.lock", qos: .userInteractive,
-                                      target: .global(qos: .userInteractive))
+    private let _lock = DispatchQueue(label: "MockBackend.lock", qos: .userInteractive)
 
     // MARK: - Configuration (thread-safe read via computed property)
     private var _configuration: Config = .init()

@@ -27,6 +27,7 @@ public class HttpTestServer {
     private var serverSocket: Int32 = -1
     public private(set) var serverPort: Int = 0
     private var isRunning = false
+    private var listenThread: Thread?
     private var serverQueue: DispatchQueue?
     
     public var baseURL: URL { URL(string: "http://127.0.0.1:\(serverPort)")! }
@@ -59,11 +60,11 @@ public class HttpTestServer {
         var yes: Int32 = 1
         setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &yes, socklen_t(MemoryLayout<Int32>.size))
         
-        // Set non-blocking mode for OTLP tests
-        let flags = fcntl(serverSocket, F_GETFL, 0)
-        if flags >= 0 {
-            _ = fcntl(serverSocket, F_SETFL, flags | O_NONBLOCK)
-        }
+//        // Set non-blocking mode for OTLP tests
+//        let flags = fcntl(serverSocket, F_GETFL, 0)
+//        if flags >= 0 {
+//            _ = fcntl(serverSocket, F_SETFL, flags | O_NONBLOCK)
+//        }
         
         // Bind to port
         var addr = sockaddr_in()
@@ -107,15 +108,20 @@ public class HttpTestServer {
         
         isRunning = true
         serverQueue = DispatchQueue(label: "HttpTestServer", qos: .userInteractive, attributes: .concurrent)
-        
         // Start accept loop
-        serverQueue?.async { [weak self] in
+        listenThread = Thread { [weak self] in
             self?.acceptLoop()
         }
+        listenThread?.qualityOfService = .userInteractive
+        listenThread?.start()
     }
     
     public func stop() {
         isRunning = false
+        
+        // stop listen thread
+        listenThread?.cancel()
+        listenThread = nil
         
         // Close server socket
         if serverSocket >= 0 {

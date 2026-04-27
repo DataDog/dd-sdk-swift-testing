@@ -107,12 +107,16 @@ public class HttpTestServer {
         }
         
         isRunning = true
-        serverQueue = DispatchQueue(label: "HttpTestServer", qos: .userInteractive, attributes: .concurrent)
+        serverQueue = DispatchQueue(label: "HttpTestServer",
+                                    qos: .userInteractive,
+                                    attributes: .concurrent,
+                                    target: .global(qos: .userInteractive))
         // Start accept loop
         listenThread = Thread { [weak self] in
             self?.acceptLoop()
         }
         listenThread?.qualityOfService = .userInteractive
+        listenThread?.threadPriority = 1.0
         listenThread?.start()
     }
     
@@ -167,8 +171,12 @@ public class HttpTestServer {
             }
             
             // Handle client asynchronously
-            serverQueue?.async {
-                self.handleClient(socket: clientSocket)
+            if let serverQueue {
+                serverQueue.async {
+                    self.handleClient(socket: clientSocket)
+                    close(clientSocket)
+                }
+            } else {
                 close(clientSocket)
             }
         }

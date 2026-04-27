@@ -83,20 +83,20 @@ public final class MockBackend {
         /// All individual coverage entries across all payloads.
         public var allCoverages: [TestCoverage] { coverage.flatMap(\.coverages) }
     }
-
+    
     // Thread safety.
-    private let _lock = DispatchQueue(label: "MockBackend.lock", qos: .userInteractive)
+    private let _lock = NSLock()
 
     // MARK: - Configuration (thread-safe read via computed property)
     private var _configuration: Config = .init()
     public var configuration: Config {
-        get { _lock.sync { _configuration } }
-        set { _lock.sync { _configuration = newValue } }
+        get { _lock.withLock { _configuration } }
+        set { _lock.withLock { _configuration = newValue } }
     }
 
     // MARK: - Received Data (thread-safe read via computed property)
     private var _requests: Requests = .init()
-    public var requests: Requests { _lock.sync { _requests } }
+    public var requests: Requests { _lock.withLock { _requests } }
 
     // MARK: - Server
 
@@ -135,7 +135,7 @@ public final class MockBackend {
 
     /// Clears all received data without affecting configuration.
     public func reset() {
-        _lock.sync { _requests = .init() }
+        _lock.withLock { _requests = .init() }
     }
 
     // MARK: - Wait Helpers
@@ -143,25 +143,25 @@ public final class MockBackend {
     /// Blocks until at least `count` span envelopes have been received, or `timeout` elapses.
     @discardableResult
     public func waitForSpans(count: Int = 1, timeout: TimeInterval = 10) -> Bool {
-        poll(timeout: timeout) { self._lock.sync { self._requests.spanEnvelopes.count >= count } }
+        poll(timeout: timeout) { self._lock.withLock { self._requests.spanEnvelopes.count >= count } }
     }
 
     /// Blocks until at least `count` log batches have been received, or `timeout` elapses.
     @discardableResult
     public func waitForLogs(count: Int = 1, timeout: TimeInterval = 10) -> Bool {
-        poll(timeout: timeout) { self._lock.sync { self._requests.logs.count >= count } }
+        poll(timeout: timeout) { self._lock.withLock { self._requests.logs.count >= count } }
     }
 
     /// Blocks until at least `count` coverage payloads have been received, or `timeout` elapses.
     @discardableResult
     public func waitForCoverage(count: Int = 1, timeout: TimeInterval = 10) -> Bool {
-        poll(timeout: timeout) { self._lock.sync { self._requests.coverage.count >= count } }
+        poll(timeout: timeout) { self._lock.withLock { self._requests.coverage.count >= count } }
     }
 
     /// Blocks until at least `count` settings requests have been received, or `timeout` elapses.
     @discardableResult
     public func waitForSettings(count: Int = 1, timeout: TimeInterval = 10) -> Bool {
-        poll(timeout: timeout) { self._lock.sync { self._requests.settings.count >= count } }
+        poll(timeout: timeout) { self._lock.withLock { self._requests.settings.count >= count } }
     }
 
     private func poll(timeout: TimeInterval, condition: () -> Bool) -> Bool {
@@ -181,44 +181,44 @@ public final class MockBackend {
         switch request.head.path {
         case "/api/v2/citestcycle":
             if let envelope = try? JSONDecoder().decode(SpanEnvelope.self, from: body) {
-                _lock.sync { _requests.spanEnvelopes.append(envelope) }
+                _lock.withLock { _requests.spanEnvelopes.append(envelope) }
             }
             return (.ok, "application/json", Data("{}".utf8))
 
         case "/api/v2/logs":
             if let logs = try? JSONDecoder().decode([Log].self, from: body) {
-                _lock.sync { _requests.logs.append(logs) }
+                _lock.withLock { _requests.logs.append(logs) }
             }
             return (.ok, "application/json", Data("{}".utf8))
 
         case "/api/v2/citestcov":
             if let payload = parseCoveragePayload(headers: request.head.headers, rawBody: request.body) {
-                _lock.sync { _requests.coverage.append(payload) }
+                _lock.withLock { _requests.coverage.append(payload) }
             }
             return (.ok, "application/json", Data("{}".utf8))
 
         case "/api/v2/libraries/tests/services/setting":
-            _lock.sync { _requests.settings.append(body) }
+            _lock.withLock { _requests.settings.append(body) }
             return (.ok, "application/json", buildSettingsResponse())
 
         case "/api/v2/ci/libraries/tests":
-            _lock.sync { _requests.knownTests.append(body) }
+            _lock.withLock { _requests.knownTests.append(body) }
             return (.ok, "application/json", buildKnownTestsResponse())
 
         case "/api/v2/ci/tests/skippable":
-            _lock.sync { _requests.skippableTests.append(body) }
+            _lock.withLock { _requests.skippableTests.append(body) }
             return (.ok, "application/json", buildSkippableTestsResponse())
 
         case "/api/v2/git/repository/search_commits":
-            _lock.sync { _requests.searchCommits.append(body) }
+            _lock.withLock { _requests.searchCommits.append(body) }
             return (.ok, "application/json", Data("{\"data\":[]}".utf8))
 
         case "/api/v2/git/repository/packfile":
-            _lock.sync { _requests.packfile.append(body) }
+            _lock.withLock { _requests.packfile.append(body) }
             return (.ok, "application/json", Data("{}".utf8))
 
         case "/api/v2/test/libraries/test-management/tests":
-            _lock.sync { _requests.testManagement.append(body) }
+            _lock.withLock { _requests.testManagement.append(body) }
             return (.ok, "application/json", buildTestManagementResponse())
 
         default:

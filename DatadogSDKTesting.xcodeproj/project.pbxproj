@@ -108,6 +108,8 @@
 		A7CC6D862C07D624003C13BC /* Tags.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7CC6D852C07D624003C13BC /* Tags.swift */; };
 		A7CC6D882C0F3F83003C13BC /* Tags+ObjC.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7CC6D872C0F3F83003C13BC /* Tags+ObjC.swift */; };
 		A7D23AF82C9B10A8006AB41D /* SpanMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D23AF72C9B10A8006AB41D /* SpanMetadata.swift */; };
+		A7DD0000000001000000000A /* MockBackend.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F3FC432F9246A5002EFFAB /* MockBackend.swift */; };
+		A7DD0000000002000000000B /* TestUtils.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A722B7D02EA6783300F00FA6 /* TestUtils.framework */; };
 		A7DEAD022F3DEAD00000001A /* ParallelTestRunnerDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7DEAD012F3DEAD00000001A /* ParallelTestRunnerDetector.swift */; };
 		A7DEAD042F3DEAD00000001A /* ParallelTestRunnerDetectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7DEAD032F3DEAD00000001A /* ParallelTestRunnerDetectorTests.swift */; };
 		A7E0056D2C766EF7004D4B78 /* CoreTelephony.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7E0056C2C766EF7004D4B78 /* CoreTelephony.framework */; platformFilters = (ios, maccatalyst, macos, ); };
@@ -124,7 +126,6 @@
 		A7F3FC182F924521002EFFAB /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */; };
 		A7F3FC3A2F92465C002EFFAB /* UnitTests+XCTestSmoke.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F3FC392F92465C002EFFAB /* UnitTests+XCTestSmoke.swift */; };
 		A7F3FC3C2F9246A5002EFFAB /* Runner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F3FC3B2F9246A0002EFFAB /* Runner.swift */; };
-		A7F3FC422F9246A5002EFFAB /* DDMockBackend.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F3FC432F9246A5002EFFAB /* DDMockBackend.swift */; };
 		A7FC256E2BA1E83500067E26 /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */; };
 		A7FC25882BA1E87400067E26 /* EventsExporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25802BA1E87400067E26 /* EventsExporter.framework */; };
 		A7FC25B42BA1EADF00067E26 /* DDXCTestObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA07025231F4700ED8AEF /* DDXCTestObserver.swift */; };
@@ -307,6 +308,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = A7E232DB2BC6E68B0087D8F8;
 			remoteInfo = CDatadogSDKTesting;
+		};
+		A7DD0000000003000000000C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E1ABA04125231E2500ED8AEF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A722B7CF2EA6783300F00FA6;
+			remoteInfo = TestUtils;
 		};
 		A7E233092BC6F46F0087D8F8 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -505,7 +513,7 @@
 		A7F3FC392F92465C002EFFAB /* UnitTests+XCTestSmoke.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UnitTests+XCTestSmoke.swift"; sourceTree = "<group>"; };
 		A7F3FC3B2F9246A0002EFFAB /* Runner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Runner.swift; sourceTree = "<group>"; };
 		A7F3FC412F928191002EFFAB /* IntegrationTests-UnitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "IntegrationTests-UnitTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		A7F3FC432F9246A5002EFFAB /* DDMockBackend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDMockBackend.swift; sourceTree = "<group>"; };
+		A7F3FC432F9246A5002EFFAB /* MockBackend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockBackend.swift; sourceTree = "<group>"; };
 		A7F3FC482F928290002EFFAB /* IntegrationTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = IntegrationTests.xctestplan; sourceTree = "<group>"; };
 		A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = DatadogSDKTesting.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7FC256D2BA1E83500067E26 /* DatadogSDKTestingTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DatadogSDKTestingTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -675,6 +683,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A7DD0000000002000000000B /* TestUtils.framework in Frameworks */,
 				A7F3FC182F924521002EFFAB /* DatadogSDKTesting.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -785,6 +794,7 @@
 		A722B7D92EA6785700F00FA6 /* TestUtils */ = {
 			isa = PBXGroup;
 			children = (
+				A7F3FC432F9246A5002EFFAB /* MockBackend.swift */,
 				A722B7D82EA6785700F00FA6 /* HttpTestServer.swift */,
 			);
 			path = TestUtils;
@@ -878,7 +888,6 @@
 		A7F3FC0E2F924444002EFFAB /* Runner */ = {
 			isa = PBXGroup;
 			children = (
-				A7F3FC432F9246A5002EFFAB /* DDMockBackend.swift */,
 				A7F3FC3B2F9246A0002EFFAB /* Runner.swift */,
 				A7F3FC392F92465C002EFFAB /* UnitTests+XCTestSmoke.swift */,
 				A79DA5BA2F92BC70004BCA8C /* UnitTests+SwiftTestingSmoke.swift */,
@@ -1516,6 +1525,7 @@
 			);
 			dependencies = (
 				A7F3FC1A2F924521002EFFAB /* PBXTargetDependency */,
+				A7DD0000000004000000000D /* PBXTargetDependency */,
 			);
 			name = IntegrationTests;
 			packageProductDependencies = (
@@ -1829,6 +1839,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A7DD0000000001000000000A /* MockBackend.swift in Sources */,
 				A722B7DA2EA6785700F00FA6 /* HttpTestServer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1868,7 +1879,6 @@
 				A7F3FC3C2F9246A5002EFFAB /* Runner.swift in Sources */,
 				A79DA5BB2F92BC70004BCA8C /* UnitTests+SwiftTestingSmoke.swift in Sources */,
 				A79DA6112F994001004BCA8C /* UITests+XCTestSmoke.swift in Sources */,
-				A7F3FC422F9246A5002EFFAB /* DDMockBackend.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2165,6 +2175,11 @@
 			target = A7E232DB2BC6E68B0087D8F8 /* CDatadogSDKTesting */;
 			targetProxy = A7B39C6D2BCFC7CE007F98B2 /* PBXContainerItemProxy */;
 		};
+		A7DD0000000004000000000D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A722B7CF2EA6783300F00FA6 /* TestUtils */;
+			targetProxy = A7DD0000000003000000000C /* PBXContainerItemProxy */;
+		};
 		A7E2330A2BC6F46F0087D8F8 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = A7E232DB2BC6E68B0087D8F8 /* CDatadogSDKTesting */;
@@ -2305,7 +2320,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = IntegrationTests/UITests/App/App.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_PREVIEWS = YES;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -2326,6 +2345,7 @@
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.datadoghq.IntegrationTests-UITests-App";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -2346,7 +2366,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = IntegrationTests/UITests/App/App.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_PREVIEWS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -2366,6 +2390,7 @@
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.datadoghq.IntegrationTests-UITests-App";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

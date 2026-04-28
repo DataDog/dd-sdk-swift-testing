@@ -10,6 +10,7 @@ import OpenTelemetrySdk
 /// Abstracts the `DataUploadWorker`, so we can have no-op uploader in tests.
 internal protocol DataUploadWorkerType {
     func flush() -> SpanExporterResultCode
+    func shutdown()
 }
 
 internal class DataUploadWorker: DataUploadWorkerType {
@@ -28,6 +29,11 @@ internal class DataUploadWorker: DataUploadWorkerType {
 
     /// Upload work scheduled by this worker.
     private var uploadWork: DispatchWorkItem?
+
+    deinit {
+        uploadWork?.cancel()
+        uploadWork = nil
+    }
 
     init(
         fileReader: FileReader,
@@ -96,7 +102,7 @@ internal class DataUploadWorker: DataUploadWorkerType {
     /// Cancels scheduled uploads and stops scheduling next ones.
     /// - It does not affect the upload that has already begun.
     /// - It blocks the caller thread if called in the middle of upload execution.
-    internal func cancelSynchronously() {
+    internal func shutdown() {
         queue.sync {
             // This cancellation must be performed on the `queue` to ensure that it is not called
             // in the middle of a `DispatchWorkItem` execution - otherwise, as the pending block would be

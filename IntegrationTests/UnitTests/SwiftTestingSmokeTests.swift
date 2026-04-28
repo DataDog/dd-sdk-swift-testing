@@ -76,4 +76,9 @@ import DatadogSDKTesting
         let array: [Int] = [1]
         #expect(array[1] == 1)
     }
+    
+    @Test func noCrash() {
+        let array: [Int] = [1]
+        #expect(array[0] == 1)
+    }
 }

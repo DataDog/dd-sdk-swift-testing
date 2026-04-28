@@ -5,6 +5,7 @@
  */
 
 import Testing
+import TestUtils
 @testable import DatadogSDKTesting
 
 @Suite("Integration Tests - XCTest Smoke Unit Tests", .build("UnitTests"), .datadogTesting)
@@ -126,20 +127,32 @@ struct UnitTestsXCTestSmoke: IntergationTestSuite {
     }
     
     @Test func crash() async throws {
-        try await run(test: "XCCrash/testCrash") { backend, success in
-            let testSpans = backend.allTestSpans
+        try await run(test: "XCCrash") { backend, success in
+            let spans = backend.allTestSpans
             #expect(success == false)
-            #expect(testSpans.count == 1)
-            let meta = try #require(testSpans.last?.meta)
-            #expect(meta[DDTestTags.testStatus] == DDTagValues.statusFail)
-            #expect(meta[DDGenericTags.resource] == "XCCrash.testCrash")
-            #expect(meta[DDTestTags.testName] == "testCrash")
-            #expect(meta[DDTestTags.testSuite] == "XCCrash")
-            #expect(meta[DDTestTags.testType] == "test")
-            #expect(meta[DDTags.errorType] != nil)
-            #expect(meta[DDTags.errorMessage] != nil)
-            #expect(meta[DDTags.errorStack] != nil)
-            #expect(meta[DDTags.errorCrashLog + ".00"] != nil)
+            #expect(spans.count == 2)
+            
+            let failed = try #require(spans.first?.meta)
+            #expect(failed[DDTestTags.testStatus] == DDTagValues.statusFail)
+            #expect(failed[DDGenericTags.resource] == "XCCrash.testCrash")
+            #expect(failed[DDTestTags.testName] == "testCrash")
+            #expect(failed[DDTestTags.testSuite] == "XCCrash")
+            #expect(failed[DDTestTags.testType] == "test")
+            #expect(failed[DDTags.errorType] != nil)
+            #expect(failed[DDTags.errorMessage] != nil)
+            #expect(failed[DDTags.errorStack] != nil)
+            #expect(failed[DDTags.errorCrashLog + ".00"] != nil)
+            
+            let succeeded = try #require(spans.last?.meta)
+            #expect(succeeded[DDTestTags.testStatus] == DDTagValues.statusPass)
+            #expect(succeeded[DDGenericTags.resource] == "XCCrash.testNoCrash")
+            #expect(succeeded[DDTestTags.testName] == "testNoCrash")
+            #expect(succeeded[DDTestTags.testSuite] == "XCCrash")
+            #expect(succeeded[DDTestTags.testType] == "test")
+            #expect(succeeded[DDTags.errorType] == nil)
+            #expect(succeeded[DDTags.errorMessage] == nil)
+            #expect(succeeded[DDTags.errorStack] == nil)
+            #expect(succeeded[DDTags.errorCrashLog + ".00"] == nil)
         }
     }
 }

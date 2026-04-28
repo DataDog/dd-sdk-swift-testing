@@ -13,11 +13,10 @@ import TestUtils
 class DDNetworkInstrumentationTests: XCTestCase {
     let testSpanProcessor = SpySpanProcessor()
     var server: HttpTestServer?
-    let url: URL = URL(string: "http://127.0.0.1:65432")!
 
     override func setUpWithError() throws {
         XCTAssertNil(DDTracer.activeSpan)
-        server = HttpTestServer(url: url, config: .init())
+        server = HttpTestServer(config: .init())
         DDTestMonitor._env_recreate(env: ["DD_API_KEY": "fakeToken", "DD_DISABLE_TEST_INSTRUMENTING": "1"])
         DDTestMonitor.instance = DDTestMonitor()
         DDTestMonitor.instance?.instrumentationWorkQueue.waitUntilAllOperationsAreFinished()
@@ -47,7 +46,8 @@ class DDNetworkInstrumentationTests: XCTestCase {
         try withContainerSpan { _ in
             var testSpan: SpanSdk
             
-            let url = self.url.appendingPathComponent("success")
+            let server = try XCTUnwrap(self.server)
+            let url = server.baseURL.appendingPathComponent("success")
             let expec = expectation(description: "GET \(url)")
             var task: URLSessionTask
             task = URLSession.shared.dataTask(with: url) { _, _, _ in
@@ -80,7 +80,8 @@ class DDNetworkInstrumentationTests: XCTestCase {
             DDInstrumentationControl.startPayloadCapture()
             DDInstrumentationControl.stopInjectingHeaders()
             
-            let url = self.url.appendingPathComponent("success")
+            let server = try XCTUnwrap(self.server)
+            let url = server.baseURL.appendingPathComponent("success")
             let urlRequest = URLRequest(url: url)
             let expec = expectation(description: "GET \(url)")
             var task: URLSessionTask
@@ -114,7 +115,8 @@ class DDNetworkInstrumentationTests: XCTestCase {
         try withContainerSpan { _ in
             var testSpan: SpanSdk
             
-            let url = self.url.appendingPathComponent("404")
+            let server = try XCTUnwrap(self.server)
+            let url = server.baseURL.appendingPathComponent("/error")
             let expec = expectation(description: "GET \(url)")
             var task: URLSessionTask
             task = URLSession.shared.dataTask(with: url) { _, _, _ in
@@ -128,15 +130,16 @@ class DDNetworkInstrumentationTests: XCTestCase {
             let spanData = testSpan.toSpanData()
             XCTAssertEqual(spanData.name, "HTTP GET")
             XCTAssertTrue(spanData.status.isError)
-            XCTAssertEqual(spanData.attributes["http.status_code"]?.description, "404")
+            XCTAssertEqual(spanData.attributes["http.status_code"]?.description, "400")
         }
     }
 
-    func testItReturnsErrorStatusForNetworkErrors() {
-        withContainerSpan { _ in
+    func testItReturnsErrorStatusForNetworkErrors() throws {
+        try withContainerSpan { _ in
             var testSpan: SpanSdk?
             
-            let url = URL(string: "http://127.0.0.1:65554/404")!
+            let server = try XCTUnwrap(self.server)
+            let url = server.baseURL.appendingPathComponent("/network-error")
             let expec = expectation(description: "GET \(url)")
             var task: URLSessionTask
             task = URLSession.shared.dataTask(with: url) { _, _, _ in
@@ -156,7 +159,8 @@ class DDNetworkInstrumentationTests: XCTestCase {
 
     func testItInjectTracingHeaders() throws {
         try withContainerSpan { containerSpan in
-            let url = self.url.appendingPathComponent("headers")
+            let server = try XCTUnwrap(self.server)
+            let url = server.baseURL.appendingPathComponent("headers")
             let expec = expectation(description: "Headers \(url)")
             var task: URLSessionTask
             

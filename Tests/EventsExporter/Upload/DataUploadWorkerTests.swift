@@ -62,7 +62,7 @@ class DataUploadWorkerTests: XCTestCase {
         XCTAssertTrue(recordedRequests.contains { $0.httpBody == #"[{"k2":"v2"}]"#.utf8Data })
         XCTAssertTrue(recordedRequests.contains { $0.httpBody == #"[{"k3":"v3"}]"#.utf8Data })
 
-        worker.cancelSynchronously()
+        worker.shutdown()
 
         XCTAssertEqual(try temporaryDirectory.files().count, 0)
     }
@@ -87,7 +87,7 @@ class DataUploadWorkerTests: XCTestCase {
         )
 
         wait(for: [startUploadExpectation], timeout: 5.0)
-        worker.cancelSynchronously()
+        worker.shutdown()
 
         // Then
         XCTAssertEqual(try temporaryDirectory.files().count, 0, "When upload finishes with `needsRetry: false`, data should be deleted")
@@ -113,7 +113,7 @@ class DataUploadWorkerTests: XCTestCase {
         )
 
         wait(for: [startUploadExpectation], timeout: 0.5)
-        worker.cancelSynchronously()
+        worker.shutdown()
 
         // Then
         XCTAssertEqual(try temporaryDirectory.files().count, 1, "When upload finishes with `needsRetry: true`, data should be preserved")
@@ -150,7 +150,7 @@ class DataUploadWorkerTests: XCTestCase {
         // Then
         server.waitFor(requestsCompletion: 0)
         waitForExpectations(timeout: 1, handler: nil)
-        worker.cancelSynchronously()
+        worker.shutdown()
     }
 
     func testWhenBatchFails_thenIntervalIncreases() {
@@ -182,7 +182,7 @@ class DataUploadWorkerTests: XCTestCase {
         // Then
         server.waitFor(requestsCompletion: 1)
         waitForExpectations(timeout: 1, handler: nil)
-        worker.cancelSynchronously()
+        worker.shutdown()
     }
 
     func testWhenBatchSucceeds_thenIntervalDecreases() {
@@ -214,7 +214,7 @@ class DataUploadWorkerTests: XCTestCase {
         // Then
         server.waitFor(requestsCompletion: 1)
         waitForExpectations(timeout: 2, handler: nil)
-        worker.cancelSynchronously()
+        worker.shutdown()
     }
 
     // MARK: - Tearing Down
@@ -235,7 +235,7 @@ class DataUploadWorkerTests: XCTestCase {
         )
 
         // When
-        worker.cancelSynchronously()
+        worker.shutdown()
 
         // Then
         writer.write(value: ["k1": "v1"])
@@ -274,7 +274,7 @@ class DataUploadWorkerTests: XCTestCase {
         XCTAssertTrue(recordedRequests.contains { $0.httpBody == #"[{"k2":"v2"}]"#.utf8Data })
         XCTAssertTrue(recordedRequests.contains { $0.httpBody == #"[{"k3":"v3"}]"#.utf8Data })
 
-        worker.cancelSynchronously()
+        worker.shutdown()
     }
 }
 

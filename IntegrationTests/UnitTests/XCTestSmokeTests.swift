@@ -66,4 +66,9 @@ final class XCCrash: XCTestCase {
         let array: [Int] = [1]
         XCTAssertEqual(array[1], 1)
     }
+    
+    func testNoCrash() {
+        let array: [Int] = [1]
+        XCTAssertEqual(array[0], 1)
+    }
 }

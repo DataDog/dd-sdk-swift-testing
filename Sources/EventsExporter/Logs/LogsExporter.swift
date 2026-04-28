@@ -84,4 +84,8 @@ internal class LogsExporter {
             }
         }
     }
+    
+    func shutdown() {
+        logsUpload.shutdown()
+    }
 }

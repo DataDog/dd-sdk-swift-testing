@@ -156,6 +156,9 @@ public final class EventsExporter: EventsExporterProtocol {
 
     public func shutdown(explicitTimeout: TimeInterval?) {
         _ = self.flush(explicitTimeout: explicitTimeout)
+        logsExporter.shutdown()
+        spansExporter.shutdown()
+        coverageExporter.shutdown()
     }
 
     public var endpointURLs: Set<String> {

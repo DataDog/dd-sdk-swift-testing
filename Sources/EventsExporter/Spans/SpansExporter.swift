@@ -92,4 +92,8 @@ internal class SpansExporter {
             }
         }
     }
+    
+    func shutdown() {
+        spansUpload.shutdown()
+    }
 }

@@ -20,7 +20,7 @@ class SpansExporterTests: XCTestCase {
     }
 
     func testWhenExportSpanIsCalled_thenTraceIsUploaded() throws {
-        let server = HttpTestServer(url: URL(string: "http://127.0.0.1:33333"))
+        let server = MockBackend()
         try server.start()
         defer { server.stop() }
 
@@ -31,8 +31,8 @@ class SpansExporterTests: XCTestCase {
                                                   hostname: nil,
                                                   apiKey: "apikey",
                                                   endpoint: .other(
-                                                    testsBaseURL: URL(string: "http://127.0.0.1:33333")!,
-                                                    logsBaseURL: URL(string: "http://127.0.0.1:33333")!
+                                                    testsBaseURL: server.baseURL,
+                                                    logsBaseURL: server.baseURL
                                                   ),
                                                   metadata: .init(),
                                                   performancePreset: .readAllFiles,
@@ -44,12 +44,14 @@ class SpansExporterTests: XCTestCase {
         let spanData = createBasicSpan()
         spansExporter.exportSpan(span: spanData)
         
-        guard let request = server.waitForRequest(timeout: 30) else {
+        guard server.waitForSpans(timeout: 30) else {
             XCTFail("No request received")
             return
         }
+        
+        let spans = server.requests.allInfoSpans
 
-        XCTAssertTrue(request.head.uri.hasPrefix("/api/v2/citestcycle"))
+        XCTAssertTrue(spans.count == 1)
     }
 
     private func createBasicSpan() -> SpanData {

@@ -14,21 +14,21 @@ import XCTest
 final class EarlyFlakeDetectionLogicTests: XCTestCase {
     func testEfdRetriesNewTest() async throws {
         let (runner, efd) = efdRunner(known: [],
-                                      tests: ["newTest": .failOddRuns(1.0)])
+                                      tests: ["newTest": .fail(first: 4, 1.0)])
         let tests = try await extractTests(runner.run())
         XCTAssertNotNil(tests["newTest"])
-        XCTAssertEqual(tests["newTest"]?.runs.count, 10)
-        XCTAssertEqual(tests["newTest"]?.runs.filter { $0.status == .fail }.count, 5)
-        XCTAssertEqual(tests["newTest"]?.runs.filter { $0.xcStatus == .pass }.count, 10)
-        XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDTestTags.testIsNew] == "true" }.count, 10)
+        XCTAssertEqual(tests["newTest"]?.runs.count, 5)
+        XCTAssertEqual(tests["newTest"]?.runs.filter { $0.status == .fail }.count, 4)
+        XCTAssertEqual(tests["newTest"]?.runs.filter { $0.xcStatus == .pass }.count, 5)
+        XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDTestTags.testIsNew] == "true" }.count, 5)
         XCTAssertEqual(tests["newTest"]?.isSucceeded, true)
         XCTAssertEqual(efd.testCounters.newTests, 1)
         XCTAssertEqual(efd.testCounters.knownTests, 1)
-        
+
         XCTAssertNil(tests["newTest"]?.runs.first?.tags[DDEfdTags.testIsRetry])
         XCTAssertNil(tests["newTest"]?.runs.first?.tags[DDEfdTags.testRetryReason])
-        XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 9)
-        XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonEarlyFlakeDetection }.count, 9)
+        XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 4)
+        XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonEarlyFlakeDetection }.count, 4)
         XCTAssertNil(tests["newTest"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries])
         XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["newTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
@@ -148,19 +148,20 @@ final class EarlyFlakeDetectionLogicTests: XCTestCase {
         XCTAssertEqual(tests["oldTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
         
         XCTAssertNotNil(tests["newTest"])
-        XCTAssertEqual(tests["newTest"]?.runs.count, 10)
+        XCTAssertEqual(tests["newTest"]?.runs.count, 6)
         XCTAssertEqual(tests["newTest"]?.runs.filter { $0.status == .fail }.count, 5)
-        XCTAssertEqual(tests["newTest"]?.runs.filter { $0.xcStatus == .pass }.count, 10)
-        XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDTestTags.testIsNew] == "true" }.count, 10)
+        XCTAssertEqual(tests["newTest"]?.runs.filter { $0.xcStatus == .pass }.count, 6)
+        XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDTestTags.testIsNew] == "true" }.count, 6)
         XCTAssertEqual(tests["newTest"]?.isSucceeded, true)
-        
+
         XCTAssertEqual(efd.testCounters.newTests, 1)
         XCTAssertEqual(efd.testCounters.knownTests, 2)
-        
+
         XCTAssertNil(tests["newTest"]?.runs.first?.tags[DDEfdTags.testIsRetry])
         XCTAssertNil(tests["newTest"]?.runs.first?.tags[DDEfdTags.testRetryReason])
-        XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 9)
-        XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonEarlyFlakeDetection }.count, 9)
+        XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 5)
+        XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonEarlyFlakeDetection }.count, 5)
+        XCTAssertNil(tests["newTest"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries])
         XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["newTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
     }

@@ -91,7 +91,7 @@ extension Mocks {
             
             static func fail(after: Int, _ duration: TimeInterval? = nil, tags: AttachedTags = .init()) -> Self {
                 runCounter((), duration: duration, tags: tags) { (count, _) in
-                    count+1 >= after ? .fail(.init(type: "Fail \(Int(count)+2-after) after \(after)")) : .pass
+                    count+1 > after ? .fail(.init(type: "Fail \(Int(count)+2-after) after \(after)")) : .pass
                 }
             }
             

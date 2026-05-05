@@ -80,7 +80,7 @@ class TestImpactAnalysisTests: XCTestCase {
     // TIA + EFD
     func testTestImpactAnalysisSkipsEFDKnownTest() async throws {
         let (runner, tia, collector) = tiaAndEfdRunner(skip: ["skipTest"], known: ["skipTest"],
-                                               tests: ["someTest": .failOddRuns(),
+                                                       tests: ["someTest": .fail(first: 3),
                                                        "skipTest": .fail("Always fails")])
         let tests = try await extractTests(runner.run())
         XCTAssertNotNil(tests["skipTest"])
@@ -101,26 +101,26 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertEqual(tests["skipTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusSkip)
         
         XCTAssertNotNil(tests["someTest"])
-        XCTAssertEqual(tests["someTest"]?.runs.count, 10)
-        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 5)
+        XCTAssertEqual(tests["someTest"]?.runs.count, 4)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 3)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.xcStatus == .fail }.count, 0)
-        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testSkippedByITR] == nil }.count, 10)
-        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDItrTags.itrUnskippable] == nil }.count, 10)
-        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDItrTags.itrForcedRun] == nil }.count, 10)
-        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testIsNew] == "true" }.count, 10)
-        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 9)
-        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonEarlyFlakeDetection }.count, 9)
-        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testSkipReason] == nil }.count, 10)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testSkippedByITR] == nil }.count, 4)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDItrTags.itrUnskippable] == nil }.count, 4)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDItrTags.itrForcedRun] == nil }.count, 4)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testIsNew] == "true" }.count, 4)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 3)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonEarlyFlakeDetection }.count, 3)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testSkipReason] == nil }.count, 4)
         XCTAssertEqual(tests["someTest"]?.isSucceeded, true)
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
-        XCTAssertEqual(collector.tests.count, 10) // someTest ran 10 times via EFD; skipTest was skipped
+        XCTAssertEqual(collector.tests.count, 4) // someTest ran 4 times via EFD; skipTest was skipped
     }
 
     func testTestImpactAnalysisSkipsEFDUnknownTest() async throws {
         let (runner, tia, collector) = tiaAndEfdRunner(skip: ["skipTest"], known: [],
-                                               tests: ["someTest": .failOddRuns(),
+                                               tests: ["someTest": .fail(first: 2),
                                                        "skipTest": .fail("Always fails")])
         let tests = try await extractTests(runner.run())
         XCTAssertNotNil(tests["skipTest"])
@@ -141,39 +141,39 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertEqual(tests["skipTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusSkip)
         
         XCTAssertNotNil(tests["someTest"])
-        XCTAssertEqual(tests["someTest"]?.runs.count, 10)
-        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 5)
+        XCTAssertEqual(tests["someTest"]?.runs.count, 3)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 2)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.xcStatus == .fail }.count, 0)
-        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testSkippedByITR] == nil }.count, 10)
-        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDItrTags.itrUnskippable] == nil }.count, 10)
-        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDItrTags.itrForcedRun] == nil }.count, 10)
-        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testIsNew] == "true" }.count, 10)
-        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 9)
-        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonEarlyFlakeDetection }.count, 9)
-        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testSkipReason] == nil }.count, 10)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testSkippedByITR] == nil }.count, 3)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDItrTags.itrUnskippable] == nil }.count, 3)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDItrTags.itrForcedRun] == nil }.count, 3)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testIsNew] == "true" }.count, 3)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 2)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonEarlyFlakeDetection }.count, 2)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testSkipReason] == nil }.count, 3)
         XCTAssertEqual(tests["someTest"]?.isSucceeded, true)
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
-        XCTAssertEqual(collector.tests.count, 10) // someTest ran 10 times via EFD; skipTest was skipped
+        XCTAssertEqual(collector.tests.count, 3) // someTest ran 3 times via EFD; skipTest was skipped
     }
 
     func testTestImpactAnalysisUnskippableEFDWorks() async throws {
         let (runner, tia, collector) = tiaAndEfdRunner(skip: ["skipTest"], known: [],
-                                               tests: ["someTest": .failOddRuns(),
-                                                       "skipTest": .failEvenRuns(tags: .init(skippable: false))])
+                                               tests: ["someTest": .fail(first: 3),
+                                                       "skipTest": .fail(first: 2, tags: .init(skippable: false))])
         let tests = try await extractTests(runner.run())
         XCTAssertNotNil(tests["skipTest"])
-        XCTAssertEqual(tests["skipTest"]?.runs.count, 10)
-        XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.status == .fail }.count, 5)
-        XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.xcStatus == .pass }.count, 10)
-        XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.tags[DDTestTags.testSkippedByITR] == nil }.count, 10)
-        XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.tags[DDItrTags.itrUnskippable] == "true" }.count, 10)
-        XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.tags[DDItrTags.itrForcedRun] == "true" }.count, 10)
-        XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.tags[DDTestTags.testIsNew] == "true" }.count, 10)
-        XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 9)
-        XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonEarlyFlakeDetection }.count, 9)
-        XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.tags[DDTestTags.testSkipReason] == nil }.count, 10)
+        XCTAssertEqual(tests["skipTest"]?.runs.count, 3)
+        XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.status == .fail }.count, 2)
+        XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.xcStatus == .pass }.count, 3)
+        XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.tags[DDTestTags.testSkippedByITR] == nil }.count, 3)
+        XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.tags[DDItrTags.itrUnskippable] == "true" }.count, 3)
+        XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.tags[DDItrTags.itrForcedRun] == "true" }.count, 3)
+        XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.tags[DDTestTags.testIsNew] == "true" }.count, 3)
+        XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 2)
+        XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonEarlyFlakeDetection }.count, 2)
+        XCTAssertEqual(tests["skipTest"]?.runs.filter { $0.tags[DDTestTags.testSkipReason] == nil }.count, 3)
         XCTAssertEqual(tests["skipTest"]?.isSucceeded, true)
         XCTAssertEqual(tests["skipTest"]?.isSkipped, false)
         XCTAssertEqual(tia.skippedCount, 0)
@@ -181,21 +181,21 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertEqual(tests["skipTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
         
         XCTAssertNotNil(tests["someTest"])
-        XCTAssertEqual(tests["someTest"]?.runs.count, 10)
-        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 5)
+        XCTAssertEqual(tests["someTest"]?.runs.count, 4)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 3)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.xcStatus == .fail }.count, 0)
-        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testSkippedByITR] == nil }.count, 10)
-        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDItrTags.itrUnskippable] == nil }.count, 10)
-        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDItrTags.itrForcedRun] == nil }.count, 10)
-        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testIsNew] == "true" }.count, 10)
-        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 9)
-        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonEarlyFlakeDetection }.count, 9)
-        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testSkipReason] == nil }.count, 10)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testSkippedByITR] == nil }.count, 4)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDItrTags.itrUnskippable] == nil }.count, 4)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDItrTags.itrForcedRun] == nil }.count, 4)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testIsNew] == "true" }.count, 4)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 3)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonEarlyFlakeDetection }.count, 3)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testSkipReason] == nil }.count, 4)
         XCTAssertEqual(tests["someTest"]?.isSucceeded, true)
         XCTAssertEqual(tests["someTest"]?.isSkipped, false)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
-        XCTAssertEqual(collector.tests.count, 20) // someTest 10 + skipTest (unskippable) 10 runs via EFD
+        XCTAssertEqual(collector.tests.count, 7) // someTest 3 + skipTest (unskippable) 4 runs via EFD
     }
 
     // TIA + ATR
@@ -302,16 +302,16 @@ class TestImpactAnalysisTests: XCTestCase {
         
         // EFD works
         XCTAssertNotNil(tests["unknownTest"])
-        XCTAssertEqual(tests["unknownTest"]?.runs.count, 10)
-        XCTAssertEqual(tests["unknownTest"]?.runs.filter { $0.status == .fail }.count, 5)
+        XCTAssertEqual(tests["unknownTest"]?.runs.count, 2)
+        XCTAssertEqual(tests["unknownTest"]?.runs.filter { $0.status == .fail }.count, 1)
         XCTAssertEqual(tests["unknownTest"]?.runs.filter { $0.xcStatus == .fail }.count, 0)
-        XCTAssertEqual(tests["unknownTest"]?.runs.filter { $0.tags[DDTestTags.testSkippedByITR] == nil }.count, 10)
-        XCTAssertEqual(tests["unknownTest"]?.runs.filter { $0.tags[DDItrTags.itrUnskippable] == nil }.count, 10)
-        XCTAssertEqual(tests["unknownTest"]?.runs.filter { $0.tags[DDItrTags.itrForcedRun] == nil }.count, 10)
-        XCTAssertEqual(tests["unknownTest"]?.runs.filter { $0.tags[DDTestTags.testIsNew] == "true" }.count, 10)
-        XCTAssertEqual(tests["unknownTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 9)
-        XCTAssertEqual(tests["unknownTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonEarlyFlakeDetection }.count, 9)
-        XCTAssertEqual(tests["unknownTest"]?.runs.filter { $0.tags[DDTestTags.testSkipReason] == nil }.count, 10)
+        XCTAssertEqual(tests["unknownTest"]?.runs.filter { $0.tags[DDTestTags.testSkippedByITR] == nil }.count, 2)
+        XCTAssertEqual(tests["unknownTest"]?.runs.filter { $0.tags[DDItrTags.itrUnskippable] == nil }.count, 2)
+        XCTAssertEqual(tests["unknownTest"]?.runs.filter { $0.tags[DDItrTags.itrForcedRun] == nil }.count, 2)
+        XCTAssertEqual(tests["unknownTest"]?.runs.filter { $0.tags[DDTestTags.testIsNew] == "true" }.count, 2)
+        XCTAssertEqual(tests["unknownTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 1)
+        XCTAssertEqual(tests["unknownTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonEarlyFlakeDetection }.count, 1)
+        XCTAssertEqual(tests["unknownTest"]?.runs.filter { $0.tags[DDTestTags.testSkipReason] == nil }.count, 2)
         XCTAssertEqual(tests["unknownTest"]?.isSucceeded, true)
         XCTAssertEqual(tests["unknownTest"]?.isSkipped, false)
         XCTAssertEqual(tests["unknownTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
@@ -333,7 +333,7 @@ class TestImpactAnalysisTests: XCTestCase {
         XCTAssertEqual(tests["knownTest"]?.isSkipped, false)
         XCTAssertEqual(tests["knownTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
         XCTAssertEqual(tests["knownTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
-        XCTAssertEqual(collector.tests.count, 14) // unknownTest 10 + knownTest 4; skipTest was skipped
+        XCTAssertEqual(collector.tests.count, 6) // unknownTest 2 + knownTest 4; skipTest was skipped
     }
 
     func tiaRunner(skip: [String], tests: KeyValuePairs<String, Mocks.Runner.TestMethod>) -> (Mocks.Runner, TestImpactAnalysis, Mocks.CoverageCollector) {

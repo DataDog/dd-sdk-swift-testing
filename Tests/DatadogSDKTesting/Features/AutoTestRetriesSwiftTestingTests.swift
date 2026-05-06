@@ -152,6 +152,27 @@ final class AutoTestRetriesSwiftTestingTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
     }
 
+    func testAtrStopsRetryingAfterFirstSuccess() async throws {
+        let (runner, atr) = runner(tests: ["someTest": .fail(first: 2)])
+
+        let tests = try extractTests(try await runner.run())
+        XCTAssertNotNil(tests["someTest"])
+        XCTAssertEqual(tests["someTest"]?.runs.count, 3)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 2)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .pass }.count, 1)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.xcStatus == .pass }.count, 3)
+        XCTAssertEqual(tests["someTest"]?.runs.last?.status, .pass)
+        XCTAssertEqual(tests["someTest"]?.isSucceeded, true)
+        XCTAssertEqual(atr.failedTestTotalRetries, 2)
+        XCTAssertNil(tests["someTest"]?.runs.first?.tags[DDEfdTags.testIsRetry])
+        XCTAssertNil(tests["someTest"]?.runs.first?.tags[DDEfdTags.testRetryReason])
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testIsRetry] == "true" }.count, 2)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonAutoTestRetry }.count, 2)
+        XCTAssertNil(tests["someTest"]?.runs.last?.tags[DDTestTags.testHasFailedAllRetries])
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDTestTags.testFinalStatus] != nil }.count, 1)
+        XCTAssertEqual(tests["someTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
+    }
+
     func extractTests(_ session: Mocks.Session) throws -> [String: Mocks.Group] {
         guard let suite = session["ATRModule"]?["ATRSuite"] else {
             throw InternalError(description: "Can't get ATRModule and ATRSuite")

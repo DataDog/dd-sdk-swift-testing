@@ -103,13 +103,26 @@ final class EarlyFlakeDetection: TestHooksFeature {
     }
     
     func testGroupRetry(test: any TestRun, duration: TimeInterval,
-                        withStatus: TestStatus, retryStatus: RetryStatus.Iterator,
+                        withStatus status: TestStatus, retryStatus: RetryStatus.Iterator,
                         andInfo info: TestRunInfoStart) -> RetryStatus.Iterator
     {
         guard info.tags.get(tag: .retriable) ?? true else { return retryStatus.next() }
         // EFD should be enabled for this test
         guard checkStatus(for: test) else { return retryStatus.next() }
-        
+
+        // Early exit: once we've seen both a failure and a success, the test is flaky
+        switch status {
+        case .fail:
+            if info.executions.total > info.executions.failed {
+                return retryStatus.end(errors: .suppressed(reason: DDTagValues.failureSuppressionReasonEFD))
+            }
+        case .pass:
+            if info.executions.failed > 0 {
+                return retryStatus.end(errors: .suppressed(reason: DDTagValues.failureSuppressionReasonEFD))
+            }
+        default: break
+        }
+
         // Check how much repeats do we have
         let repeats = slowTestRetries.repeats(for: duration)
         if info.executions.total < Int(repeats) - 1 {

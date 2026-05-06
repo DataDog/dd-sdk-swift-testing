@@ -72,8 +72,10 @@ final class TestManagement: TestHooksFeature {
         // Retry logic (ATF)
         // Check that was retried by us
         guard info.retry.feature == id else { return }
-        // Check that we retried this test (we have previous runs).
-        if info.executions.total > 0 {
+        // Check that we have config for that test (we should if it was retried by us)
+        guard let testInfo = module.suites[test.suite.name]?.tests[test.name] else { return }
+        // Check that ATF is enabled for that test
+        if testInfo.attemptToFix {
             // Check that all executions passed
             let atfPassed = info.executions.failed == 0 && status != .fail
             test.set(tag: DDTestManagementTags.testAttemptToFixPassed, value: atfPassed)
@@ -103,10 +105,12 @@ final class TestManagement: TestHooksFeature {
         if testInfo.attemptToFix {
             // ATF retries and suppression are skipped for non-retriable tests
             guard info.tags.get(tag: .retriable) ?? true else { return retryStatus.next() }
-            if info.executions.total < attemptToFixRetries - 1 {
+            // if test isn't failed retry till max retries
+            if status != .fail, info.executions.total < attemptToFixRetries - 1 {
                 return retryStatus.retry(reason: DDTagValues.retryReasonAttemptToFix,
                                          errors: errors)
             }
+            // end retries (test failed or all retries succeeded)
             return retryStatus.end(errors: errors)
         }
         return testInfo.disabled

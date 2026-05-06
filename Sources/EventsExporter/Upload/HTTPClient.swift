@@ -11,6 +11,22 @@ internal final class HTTPClient {
     private let session: URLSession
     private let debug: Bool
     
+    enum RequestError: Error {
+        case http(code: Int, body: Data?)
+        case transport(any Error)
+        /// An error returned if `URLSession` response state is inconsistent (like no data, no response and no error).
+        /// The code execution in `URLSessionTransport` should never reach its initialization.
+        case inconsistentSession
+        
+        var isUnathorized: Bool {
+            switch self {
+            case .http(code: 401, body: _), .http(code: 403, body: _):
+                return true
+            default: return false
+            }
+        }
+    }
+    
     convenience init(debug: Bool) {
         let configuration: URLSessionConfiguration = .ephemeral
         // NOTE: RUMM-610 Default behaviour of `.ephemeral` session is to cache requests.
@@ -27,7 +43,7 @@ internal final class HTTPClient {
         self.debug = debug
     }
     
-    func send(request: URLRequest, completion: @escaping (Result<HTTPURLResponse, Error>) -> Void) {
+    func send(request: URLRequest, completion: @escaping (Result<HTTPURLResponse, RequestError>) -> Void) {
         let task = session.dataTask(with: request) { data, response, error in
             self.log(request: request, response: (data, response, error))
             completion(httpClientResult(for: (data, response, error)))
@@ -35,7 +51,7 @@ internal final class HTTPClient {
         task.resume()
     }
     
-    func sendWithResult(request: URLRequest, completion: @escaping (Result<Data, Error>) -> Void) {
+    func sendWithResult(request: URLRequest, completion: @escaping (Result<Data, RequestError>) -> Void) {
         let task = session.dataTask(with: request) { data, response, error in
             self.log(request: request, response: (data, response, error))
             completion(httpClientResultWithData(for: (data, response, error)))
@@ -68,32 +84,38 @@ internal struct URLSessionTransportInconsistencyException: Error {}
 
 /// As `URLSession` returns 3-values-tuple for request execution, this function applies consistency constraints and turns
 /// it into only two possible states of `HTTPTransportResult`.
-private func httpClientResult(for urlSessionTaskCompletion: (Data?, URLResponse?, Error?)) -> Result<HTTPURLResponse, Error> {
-    let (_, response, error) = urlSessionTaskCompletion
+private func httpClientResult(for urlSessionTaskCompletion: (Data?, URLResponse?, Error?)) -> Result<HTTPURLResponse, HTTPClient.RequestError> {
+    let (data, response, error) = urlSessionTaskCompletion
 
     if let error = error {
-        return .failure(error)
+        return .failure(.transport(error))
     }
 
     if let httpResponse = response as? HTTPURLResponse {
+        guard httpResponse.statusCode < 400 else {
+            return .failure(.http(code: httpResponse.statusCode, body: data))
+        }
         return .success(httpResponse)
     }
 
-    return .failure(URLSessionTransportInconsistencyException())
+    return .failure(.inconsistentSession)
 }
 
 /// As `URLSession` returns 3-values-tuple for request execution, this function applies consistency constraints and turns
 /// it into only two possible states of `HTTPTransportResult`.
-private func httpClientResultWithData(for urlSessionTaskCompletion: (Data?, URLResponse?, Error?)) -> Result<Data, Error> {
-    let (data, _ , error) = urlSessionTaskCompletion
+private func httpClientResultWithData(for urlSessionTaskCompletion: (Data?, URLResponse?, Error?)) -> Result<Data, HTTPClient.RequestError> {
+    let (data, response, error) = urlSessionTaskCompletion
 
     if let error = error {
-        return .failure(error)
+        return .failure(.transport(error))
     }
 
-    if let httpResponse = data {
-        return .success(httpResponse)
+    if let httpResponse = response as? HTTPURLResponse {
+        guard httpResponse.statusCode < 400 else {
+            return .failure(.http(code: httpResponse.statusCode, body: data))
+        }
+        return .success(data ?? Data())
     }
 
-    return .failure(URLSessionTransportInconsistencyException())
+    return .failure(.inconsistentSession)
 }

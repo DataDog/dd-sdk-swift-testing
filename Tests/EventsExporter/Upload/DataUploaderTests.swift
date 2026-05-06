@@ -13,7 +13,7 @@ extension DataUploadStatus: EquatableInTests {}
 class DataUploaderTests: XCTestCase {
     func testWhenUploadCompletesWithSuccess_itReturnsExpectedUploadStatus() {
         // Given
-        let randomResponse: HTTPURLResponse = .mockResponseWith(statusCode: (100 ... 599).randomElement()!)
+        let randomResponse: HTTPURLResponse = .mockResponseWith(statusCode: (100 ... 399).randomElement()!)
 
         let server = ServerMock(delivery: .success(response: randomResponse))
         let uploader = DataUploader(
@@ -46,7 +46,7 @@ class DataUploaderTests: XCTestCase {
         let uploadStatus = uploader.upload(data: .mockAny())
 
         // Then
-        let expectedUploadStatus = DataUploadStatus(networkError: randomError)
+        let expectedUploadStatus = DataUploadStatus(networkError: .transport(randomError))
 
         XCTAssertEqual(uploadStatus, expectedUploadStatus)
         server.waitFor(requestsCompletion: 1)

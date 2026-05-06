@@ -38,6 +38,9 @@ internal final class DataUploader: DataUploaderType {
                 uploadStatus = DataUploadStatus(httpResponse: httpResponse)
             case .failure(let error):
                 uploadStatus = DataUploadStatus(networkError: error)
+                if error.isUnauthorized {
+                    Log.print("Datadog backend rejected the request as unathorized. Please verify that DD_API_KEY is correct.")
+                }
             }
 
             semaphore.signal()
@@ -58,10 +61,13 @@ internal final class DataUploader: DataUploaderType {
 
         httpClient.sendWithResult(request: request) { result in
             switch result {
-                case .success(let data):
-                    returnData = data
-                case .failure:
-                    returnData = nil
+            case .success(let data):
+                returnData = data
+            case .failure(let error):
+                if error.isUnauthorized {
+                    Log.print("Datadog backend rejected the request as unathorized. Please verify that DD_API_KEY is correct.")
+                }
+                returnData = nil
             }
 
             semaphore.signal()

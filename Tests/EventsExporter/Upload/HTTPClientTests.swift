@@ -35,11 +35,10 @@ class HTTPClientTests: XCTestCase {
 
         client.send(request: .mockAny()) { result in
             switch result {
-            case .success:
-                break
-            case .failure(let error):
+            case .failure(.transport(let error)):
                 XCTAssertEqual((error as NSError).localizedDescription, "no internet connection")
                 expectation.fulfill()
+            default: break
             }
         }
 

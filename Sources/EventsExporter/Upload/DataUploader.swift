@@ -38,7 +38,7 @@ internal final class DataUploader: DataUploaderType {
                 uploadStatus = DataUploadStatus(httpResponse: httpResponse)
             case .failure(let error):
                 uploadStatus = DataUploadStatus(networkError: error)
-                if error.isUnathorized {
+                if error.isUnauthorized {
                     Log.print("Datadog backend rejected the request as unathorized. Please verify that DD_API_KEY is correct.")
                 }
             }
@@ -64,7 +64,7 @@ internal final class DataUploader: DataUploaderType {
             case .success(let data):
                 returnData = data
             case .failure(let error):
-                if error.isUnathorized {
+                if error.isUnauthorized {
                     Log.print("Datadog backend rejected the request as unathorized. Please verify that DD_API_KEY is correct.")
                 }
                 returnData = nil

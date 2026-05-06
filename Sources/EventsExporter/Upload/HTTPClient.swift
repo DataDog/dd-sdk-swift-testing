@@ -18,7 +18,7 @@ internal final class HTTPClient {
         /// The code execution in `URLSessionTransport` should never reach its initialization.
         case inconsistentSession
         
-        var isUnathorized: Bool {
+        var isUnauthorized: Bool {
             switch self {
             case .http(code: 401, body: _), .http(code: 403, body: _):
                 return true

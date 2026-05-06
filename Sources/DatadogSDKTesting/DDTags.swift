@@ -252,6 +252,14 @@ internal enum DDTestManagementTags {
     static let testIsAttemptToFix = "test.test_management.is_attempt_to_fix"
 }
 
+internal enum DDLibraryConfigurationErrorTags {
+    static let settings = "_dd.ci.library_configuration_error.settings"
+    static let skippableTests = "_dd.ci.library_configuration_error.skippable_tests"
+    static let flakyTests = "_dd.ci.library_configuration_error.flaky_tests"
+    static let knownTests = "_dd.ci.library_configuration_error.known_tests"
+    static let testManagementTests = "_dd.ci.library_configuration_error.test_management_tests"
+}
+
 internal enum DDLibraryCapabilitiesTags {
     static let testImpactAnalysis = "_dd.library_capabilities.test_impact_analysis"
     static let earlyFlakeDetection = "_dd.library_capabilities.early_flake_detection"

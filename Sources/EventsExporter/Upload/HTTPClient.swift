@@ -11,18 +11,32 @@ internal final class HTTPClient {
     private let session: URLSession
     private let debug: Bool
     
-    enum RequestError: Error {
+    enum RequestError: Error, CustomStringConvertible {
         case http(code: Int, body: Data?)
         case transport(any Error)
         /// An error returned if `URLSession` response state is inconsistent (like no data, no response and no error).
         /// The code execution in `URLSessionTransport` should never reach its initialization.
         case inconsistentSession
-        
+
         var isUnauthorized: Bool {
             switch self {
             case .http(code: 401, body: _), .http(code: 403, body: _):
                 return true
             default: return false
+            }
+        }
+
+        var description: String {
+            switch self {
+            case .http(let code, let body):
+                if let body, !body.isEmpty {
+                    return "HTTP \(code): \(String(decoding: body, as: UTF8.self))"
+                }
+                return "HTTP \(code)"
+            case .transport(let error):
+                return "transport error: \(error.localizedDescription)"
+            case .inconsistentSession:
+                return "inconsistent URLSession response"
             }
         }
     }

@@ -6,6 +6,32 @@
 
 import Foundation
 
+/// Tracks communication errors that occurred while fetching library
+/// configuration data from the backend (settings, skippable tests, flaky tests,
+/// known tests, test management tests). Each flag is sticky: once set to
+/// `true` it stays `true` until the tracker is discarded.
+final class LibraryConfigurationErrors: @unchecked Sendable {
+    enum Kind: Hashable, CaseIterable {
+        case settings
+        case skippableTests
+        case flakyTests
+        case knownTests
+        case testManagementTests
+    }
+
+    private let lock = NSLock()
+    private var flags: Set<Kind> = []
+
+    subscript(_ kind: Kind) -> Bool {
+        lock.withLock { flags.contains(kind) }
+    }
+
+    /// Marks the request kind as having failed with a communication error.
+    func recordCommunicationError(_ kind: Kind) {
+        lock.withLock { _ = flags.insert(kind) }
+    }
+}
+
 final class AdditionalTags: TestHooksFeature {
     static let id: FeatureId = "Additional Test Tags"
 
@@ -85,6 +111,51 @@ final class AdditionalTags: TestHooksFeature {
             test.set(tag: DDTestTags.testFinalStatus,
                      value: status.final(ignoreErrors: info.retry.status.ignoreErrors))
         }
+    }
+
+    func stop() {}
+}
+
+/// Adds `_dd.ci.library_configuration_error.*` hidden tags to every test,
+/// suite, module and session event whenever a backend communication error
+/// occurred while fetching library configuration data.
+final class LibraryConfigurationErrorTags: TestHooksFeature {
+    static let id: FeatureId = "Library Configuration Error Tags"
+
+    let errors: LibraryConfigurationErrors
+
+    init(errors: LibraryConfigurationErrors) {
+        self.errors = errors
+    }
+
+    private static let tagByKind: [LibraryConfigurationErrors.Kind: String] = [
+        .settings: DDLibraryConfigurationErrorTags.settings,
+        .skippableTests: DDLibraryConfigurationErrorTags.skippableTests,
+        .flakyTests: DDLibraryConfigurationErrorTags.flakyTests,
+        .knownTests: DDLibraryConfigurationErrorTags.knownTests,
+        .testManagementTests: DDLibraryConfigurationErrorTags.testManagementTests
+    ]
+
+    private func apply(_ setter: (String, String) -> Void) {
+        for (kind, tag) in Self.tagByKind where errors[kind] {
+            setter(tag, "true")
+        }
+    }
+
+    func testSessionWillEnd(session: any TestSession) {
+        apply { session.set(tag: $0, value: $1) }
+    }
+
+    func testModuleWillEnd(module: any TestModule) {
+        apply { module.set(tag: $0, value: $1) }
+    }
+
+    func testSuiteWillEnd(suite: any TestSuite) {
+        apply { suite.set(tag: $0, value: $1) }
+    }
+
+    func testWillStart(test: any TestRun, info: TestRunInfoStart) {
+        apply { test.set(tag: $0, value: $1) }
     }
 
     func stop() {}

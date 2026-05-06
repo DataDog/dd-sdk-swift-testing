@@ -81,6 +81,7 @@ internal class DDTestMonitor {
     var efd: EarlyFlakeDetection? = nil
     var atr: AutomaticTestRetries? = nil
     var testManagement: TestManagement? = nil
+    let libraryConfigurationErrors = LibraryConfigurationErrors()
     
     let lock: UnfairLock = .init()
     
@@ -255,10 +256,13 @@ internal class DDTestMonitor {
             return
         }
         
-        let getTracerConfig = { (log: String) in
-            if let eventsExporter = DDTestMonitor.tracer.eventsExporter {
-                return Log.measure(name: log) {
-                    eventsExporter.tracerSettings(
+        let getTracerConfig = { [self] (log: String) -> TracerSettings? in
+            guard let eventsExporter = DDTestMonitor.tracer.eventsExporter else {
+                return nil
+            }
+            do {
+                return try Log.measure(name: log) {
+                    try eventsExporter.tracerSettings(
                         service: service,
                         env: DDTestMonitor.env.environment,
                         repositoryURL: repository,
@@ -269,7 +273,9 @@ internal class DDTestMonitor {
                         customConfigurations: DDTestMonitor.config.customConfigurations
                     )
                 }
-            } else {
+            } catch {
+                Log.print("\(error)")
+                self.libraryConfigurationErrors.recordCommunicationError(.settings)
                 return nil
             }
         }
@@ -341,7 +347,8 @@ internal class DDTestMonitor {
                                             environment: DDTestMonitor.env.environment,
                                             configurations: DDTestMonitor.env.baseConfigurations,
                                             custom: DDTestMonitor.config.customConfigurations,
-                                            exporter: eventsExporter, cache: cache)
+                                            exporter: eventsExporter, cache: cache,
+                                            libraryConfigurationErrors: self.libraryConfigurationErrors)
             self.knownTests = factory.create(log: Log.instance)
         }
         knownTestsSetup.addDependency(updateTracerConfig)
@@ -402,7 +409,8 @@ internal class DDTestMonitor {
                                                 module: module,
                                                 attemptToFixRetries: attemptToFixRetryCount,
                                                 exporter: eventsExporter,
-                                                cache: cache)
+                                                cache: cache,
+                                                libraryConfigurationErrors: self.libraryConfigurationErrors)
             self.testManagement = factory.create(log: Log.instance)
         }
         testManagementSetup.addDependency(updateTracerConfig)
@@ -447,7 +455,8 @@ internal class DDTestMonitor {
                                                     cache: cache,
                                                     skippingEnabled: remote.itr.testsSkipping,
                                                     swiftTestingEnabled: DDTestMonitor.env.tiaSwiftTestingEnabled,
-                                                    coverage: coverage)
+                                                    coverage: coverage,
+                                                    libraryConfigurationErrors: self.libraryConfigurationErrors)
             self.tia = factory.create(log: Log.instance)
         }
         tiaSetup.addDependency(updateTracerConfig)
@@ -630,7 +639,8 @@ internal class DDTestMonitor {
             AdditionalTags(codeCoverage: tia == nil,
                            bundleFunctions: bundleFunctionInfo,
                            codeOwners: codeOwners,
-                           workspacePath: DDTestMonitor.env.workspacePath)
+                           workspacePath: DDTestMonitor.env.workspacePath),
+            LibraryConfigurationErrorTags(errors: libraryConfigurationErrors)
         ]
         return features.compactMap { $0 }
     }

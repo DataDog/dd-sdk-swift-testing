@@ -84,19 +84,44 @@ internal class ITRService {
         )
     }
 
-    func searchExistingCommits(repositoryURL: String, commits: [String]) -> [String] {
+    func searchExistingCommits(
+        repositoryURL: String, commits: [String]
+    ) throws(LibraryConfigurationCommunicationError) -> [String] {
         let commitPayload = CommitRequesFormat(repositoryURL: repositoryURL, commits: commits)
-        guard let jsonData = commitPayload.jsonData,
-              let response = searchCommitUploader.uploadWithResponse(data: jsonData),
-              let commitResponse = try? JSONDecoder().decode(CommitResponseFormat.self, from: response)
-        else {
-            Log.debug("CommitRequestFormat payload: \(commitPayload.jsonString)")
-            Log.debug("searchCommits invalid response")
-            return []
+        let payloadString = commitPayload.jsonString
+
+        guard let jsonData = commitPayload.jsonData else {
+            throw LibraryConfigurationCommunicationError(
+                requestName: "SearchCommitsRequest",
+                payload: payloadString,
+                reason: .payloadEncodingFailed
+            )
         }
 
-        let commits = commitResponse.data.map { $0.id }
-        return commits
+        let response: Data
+        switch searchCommitUploader.uploadWithResult(data: jsonData) {
+        case .success(let data):
+            response = data
+        case .failure(let error):
+            throw LibraryConfigurationCommunicationError(
+                requestName: "SearchCommitsRequest",
+                payload: payloadString,
+                reason: error.isUnauthorized ? .unauthorized : .communicationFailed(error)
+            )
+        }
+
+        let commitResponse: CommitResponseFormat
+        do {
+            commitResponse = try JSONDecoder().decode(CommitResponseFormat.self, from: response)
+        } catch {
+            throw LibraryConfigurationCommunicationError(
+                requestName: "SearchCommitsRequest",
+                payload: payloadString,
+                reason: .responseDecodingFailed(body: response, error: error)
+            )
+        }
+
+        return commitResponse.data.map { $0.id }
     }
 
     func uploadPackFiles(packFilesDirectory: Directory, commit: String, repository: String) throws {
@@ -113,7 +138,8 @@ internal class ITRService {
     }
 
     func skippableTests(repositoryURL: String, sha: String, testLevel: ITRTestLevel,
-                        configurations: [String: String], customConfigurations: [String: String]) -> SkipTests? {
+                        configurations: [String: String], customConfigurations: [String: String]
+    ) throws(LibraryConfigurationCommunicationError) -> SkipTests {
         var itrConfig: [String: JSONGeneric] = configurations.mapValues { .string($0) }
         itrConfig["custom"] = .init(customConfigurations)
 
@@ -123,18 +149,37 @@ internal class ITRService {
                                                       sha: sha,
                                                       testLevel: testLevel,
                                                       configurations: itrConfig)
+        let payloadString = skippablePayload.jsonString
 
-        Log.debug("SkipTestsRequestFormat payload: \(skippablePayload.jsonString)")
-        guard let jsonData = skippablePayload.jsonData,
-              let response = skippableTestsUploader.uploadWithResponse(data: jsonData)
-        else {
-            Log.debug("skippableTests no response")
-            return nil
+        guard let jsonData = skippablePayload.jsonData else {
+            throw LibraryConfigurationCommunicationError(
+                requestName: "SkipTestsRequest",
+                payload: payloadString,
+                reason: .payloadEncodingFailed
+            )
         }
 
-        guard let skipTests = try? JSONDecoder().decode(SkipTestsResponseFormat.self, from: response) else {
-            Log.debug("skippableTests invalid response: \(String(decoding: response, as: UTF8.self))")
-            return nil
+        let response: Data
+        switch skippableTestsUploader.uploadWithResult(data: jsonData) {
+        case .success(let data):
+            response = data
+        case .failure(let error):
+            throw LibraryConfigurationCommunicationError(
+                requestName: "SkipTestsRequest",
+                payload: payloadString,
+                reason: error.isUnauthorized ? .unauthorized : .communicationFailed(error)
+            )
+        }
+
+        let skipTests: SkipTestsResponseFormat
+        do {
+            skipTests = try JSONDecoder().decode(SkipTestsResponseFormat.self, from: response)
+        } catch {
+            throw LibraryConfigurationCommunicationError(
+                requestName: "SkipTestsRequest",
+                payload: payloadString,
+                reason: .responseDecodingFailed(body: response, error: error)
+            )
         }
 
         let tests = skipTests.data.map { skipTest in

@@ -208,13 +208,15 @@ struct TestImpactAnalysisFactory: FeatureFactory {
     let skippingEnabled: Bool
     let swiftTestingEnabled: Bool
     let coverageConfig: Coverage?
-    
+    let libraryConfigurationErrors: LibraryConfigurationErrors
+
     init(configurations: [String: String],
          custom: [String: String],
          exporter: EventsExporterProtocol,
          commit: String, repository: String,
          cache: Directory, skippingEnabled: Bool,
-         swiftTestingEnabled: Bool, coverage: Coverage?)
+         swiftTestingEnabled: Bool, coverage: Coverage?,
+         libraryConfigurationErrors: LibraryConfigurationErrors)
     {
         self.configurations = configurations
         self.customConfigurations = custom
@@ -225,6 +227,7 @@ struct TestImpactAnalysisFactory: FeatureFactory {
         self.coverageConfig = coverage
         self.skippingEnabled = skippingEnabled
         self.swiftTestingEnabled = swiftTestingEnabled
+        self.libraryConfigurationErrors = libraryConfigurationErrors
     }
     
     static func isEnabled(config: Config, env: Environment, remote: TracerSettings) -> Bool {
@@ -300,15 +303,18 @@ struct TestImpactAnalysisFactory: FeatureFactory {
     }
     
     private func getTests(exporter: EventsExporterProtocol, log: Logger) -> SkipTests? {
-        let tests = exporter.skippableTests(
-            repositoryURL: repository.spanAttribute, sha: commitSha, testLevel: .test,
-            configurations: configurations, customConfigurations: customConfigurations
-        )
-        guard let tests = tests else {
-            Log.print("TIA: tests request failed")
+        let tests: SkipTests
+        do {
+            tests = try exporter.skippableTests(
+                repositoryURL: repository.spanAttribute, sha: commitSha, testLevel: .test,
+                configurations: configurations, customConfigurations: customConfigurations
+            )
+        } catch {
+            log.print("\(error)")
+            libraryConfigurationErrors.recordCommunicationError(.skippableTests)
             return nil
         }
-        Log.debug("TIA: tests: \(tests)")
+        log.debug("TIA: tests: \(tests)")
         return tests
     }
     

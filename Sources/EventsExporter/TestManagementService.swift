@@ -9,10 +9,10 @@ import Foundation
 internal final class TestManagementService {
     let exporterConfiguration: ExporterConfiguration
     let testsUploader: DataUploader
-    
+
     init(config: ExporterConfiguration) throws {
         self.exporterConfiguration = config
-        
+
         let testsRequestBuilder = SingleRequestBuilder(
             url: exporterConfiguration.endpoint.testManagementTestsURL,
             queryItems: [],
@@ -38,20 +38,39 @@ internal final class TestManagementService {
     
     func tests(
         repositoryURL: String, sha: String? = nil, commitMessage: String? = nil, module: String? = nil, branch: String? = nil
-    ) -> TestManagementTestsInfo? {
+    ) throws(LibraryConfigurationCommunicationError) -> TestManagementTestsInfo {
         let testsPayload = TestsRequest(repositoryURL: repositoryURL, sha: sha, commitMessage: commitMessage, module: module, branch: branch)
+        let payloadString = testsPayload.jsonString
 
-        guard let jsonData = testsPayload.jsonData,
-              let response = testsUploader.uploadWithResponse(data: jsonData)
-        else {
-            Log.debug("Test Management Tests Request payload: \(testsPayload.jsonString)")
-            Log.debug("Test Management Tests Request no response")
-            return nil
+        guard let jsonData = testsPayload.jsonData else {
+            throw LibraryConfigurationCommunicationError(
+                requestName: "Test Management Tests Request",
+                payload: payloadString,
+                reason: .payloadEncodingFailed
+            )
         }
 
-        guard let settings = try? JSONDecoder().decode(TestsResponse.self, from: response) else {
-            Log.debug("Test Management Tests Request invalid response: \(String(decoding: response, as: UTF8.self))")
-            return nil
+        let response: Data
+        switch testsUploader.uploadWithResult(data: jsonData) {
+        case .success(let data):
+            response = data
+        case .failure(let error):
+            throw LibraryConfigurationCommunicationError(
+                requestName: "Test Management Tests Request",
+                payload: payloadString,
+                reason: error.isUnauthorized ? .unauthorized : .communicationFailed(error)
+            )
+        }
+
+        let settings: TestsResponse
+        do {
+            settings = try JSONDecoder().decode(TestsResponse.self, from: response)
+        } catch {
+            throw LibraryConfigurationCommunicationError(
+                requestName: "Test Management Tests Request",
+                payload: payloadString,
+                reason: .responseDecodingFailed(body: response, error: error)
+            )
         }
         Log.debug("Test Management Tests Request response: \(String(decoding: response, as: UTF8.self))")
 

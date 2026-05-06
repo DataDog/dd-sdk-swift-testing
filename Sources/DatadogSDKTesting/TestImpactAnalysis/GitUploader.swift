@@ -131,8 +131,14 @@ final class GitUploader {
             log.print("sendGitInfo failed, can't get latest commits")
             return nil
         }
-        let existingCommits = log.measure(name: "searchRepositoryCommits") {
-            exporter.searchCommits(repositoryURL: repositoryURL, commits: latestCommits)
+        let existingCommits: [String]
+        do {
+            existingCommits = try log.measure(name: "searchRepositoryCommits") {
+                try exporter.searchCommits(repositoryURL: repositoryURL, commits: latestCommits)
+            }
+        } catch {
+            log.print("\(error)")
+            return nil
         }
         let commits = Set(latestCommits).subtracting(existingCommits)
         if commits.isEmpty { return [] }

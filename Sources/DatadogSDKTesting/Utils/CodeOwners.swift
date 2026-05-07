@@ -79,7 +79,7 @@ struct CodeOwners {
         self.init(sections: sectionsOrder.map { ($0, sections[$0]!) })
     }
     
-    func ownersForPath(_ path: String) -> String? {
+    func owners(forPath path: String) -> [String]? {
         let fullPath = path.first == "/" ? path : "/" + path
         let fullPathRange = NSRange(location: 0, length: fullPath.utf16.count)
         // Last matching rule wins (inside one section).
@@ -103,8 +103,15 @@ struct CodeOwners {
                 codeowners.append(contentsOf: lastMatch)
             }
         }
-        guard !codeowners.isEmpty else { return nil }
-        return "[\"" + codeowners.joined(separator: "\",\"") + "\"]"
+        return codeowners.isEmpty ? nil : codeowners
+    }
+
+    func ownersForPath(_ path: String) -> String? {
+        owners(forPath: path).map(Self.format)
+    }
+
+    static func format(_ owners: [String]) -> String {
+        #"[""# + owners.joined(separator: #"",""#) + #""]"#
     }
 }
 

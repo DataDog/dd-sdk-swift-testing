@@ -40,6 +40,8 @@ final class AdditionalTags: TestHooksFeature {
     let codeOwners: CodeOwners?
     let workspacePath: String?
 
+    private let suiteOwners = Synced<[ObjectIdentifier: [String]]>([:])
+
     init(codeCoverage: Bool = false, bundleFunctions: FunctionMap = [:], codeOwners: CodeOwners? = nil, workspacePath: String? = nil) {
         self.codeCoverage = codeCoverage
         self.bundleFunctions = bundleFunctions
@@ -66,25 +68,48 @@ final class AdditionalTags: TestHooksFeature {
         }
     }
 
+    func testSuiteWillEnd(suite: any TestSuite) {
+        let owners = suiteOwners.update { $0.removeValue(forKey: ObjectIdentifier(suite)) }
+        if let owners, !owners.isEmpty {
+            suite.set(tag: DDTestTags.testCodeowners, value: CodeOwners.format(owners))
+        }
+    }
+
     func testWillStart(test: any TestRun, info: TestRunInfoStart) {
         if let functionInfo = bundleFunctions["\(test.suite.name).\(test.name)"] {
-            var filePath = functionInfo.file
-            if let workspacePath,
-               let workspaceRange = filePath.range(of: workspacePath + "/")
-            {
-                filePath.removeSubrange(workspaceRange)
-            }
+            let filePath = stripWorkspace(from: functionInfo.file)
             test.set(tag: DDTestTags.testSourceFile, value: filePath)
             test.set(tag: DDTestTags.testSourceStartLine, value: functionInfo.startLine)
             test.set(tag: DDTestTags.testSourceEndLine, value: functionInfo.endLine)
-            if let owners = codeOwners?.ownersForPath(filePath) {
-                test.set(tag: DDTestTags.testCodeowners, value: owners)
+            if let owners = codeOwners?.owners(forPath: filePath) {
+                test.set(tag: DDTestTags.testCodeowners, value: CodeOwners.format(owners))
+                accumulate(owners: owners, in: test.suite)
             }
         }
         if let retry = info.retry {
             test.set(tag: DDEfdTags.testIsRetry, value: "true")
             test.set(tag: DDEfdTags.testRetryReason, value: retry.reason)
         }
+    }
+
+    private func accumulate(owners: [String], in suite: any TestSuite) {
+        let key = ObjectIdentifier(suite)
+        suiteOwners.update { state in
+            var existing = state[key] ?? []
+            for owner in owners where !existing.contains(owner) {
+                existing.append(owner)
+            }
+            state[key] = existing
+        }
+    }
+
+    private func stripWorkspace(from path: String) -> String {
+        guard let workspacePath,
+              let range = path.range(of: workspacePath + "/")
+        else { return path }
+        var result = path
+        result.removeSubrange(range)
+        return result
     }
 
     func testWillFinish(test: any TestRun, duration: TimeInterval,

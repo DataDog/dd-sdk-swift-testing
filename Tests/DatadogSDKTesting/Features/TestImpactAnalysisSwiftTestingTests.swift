@@ -43,6 +43,26 @@ final class TestImpactAnalysisSwiftTestingTests: XCTestCase {
         XCTAssertEqual(collector.tests.count, 1) // someTest ran once; skipTest was skipped
     }
 
+    func testTestsSkippingEnabledTagOnSuite_whenSkippingEnabled() async throws {
+        let (runner, _, _) = tiaRunner(skip: ["skipTest"],
+                                       tests: ["someTest": .pass(),
+                                               "skipTest": .fail("Always fails")])
+        let session = try await runner.run()
+        let suite = try extractSuite(session)
+
+        XCTAssertEqual(suite.tags[DDTestSessionTags.testSkippingEnabled], "true")
+    }
+
+    func testTestsSkippingEnabledTagOnTest_whenSkippingEnabled() async throws {
+        let (runner, _, _) = tiaRunner(skip: ["skipTest"],
+                                       tests: ["someTest": .pass(),
+                                               "skipTest": .fail("Always fails")])
+        let tests = try extractTests(try await runner.run())
+
+        XCTAssertEqual(tests["someTest"]?.runs.first?.tags[DDTestSessionTags.testSkippingEnabled], "true")
+        XCTAssertEqual(tests["skipTest"]?.runs.first?.tags[DDTestSessionTags.testSkippingEnabled], "true")
+    }
+
     // TIA + EFD
     func testTestImpactAnalysisSkipsEFDKnownTest() async throws {
         let (runner, tia, collector) = tiaAndEfdRunner(skip: ["skipTest"], known: ["skipTest"],
@@ -266,6 +286,13 @@ final class TestImpactAnalysisSwiftTestingTests: XCTestCase {
         features.insert(atr, at: features.count - 2)
         runner.0.features = features
         return runner
+    }
+
+    func extractSuite(_ session: Mocks.Session) throws -> Mocks.Suite {
+        guard let suite = session["TIAModule"]?["TIASuite"] else {
+            throw InternalError(description: "Can't get TIAModule and TIASuite")
+        }
+        return suite
     }
 
     func extractTests(_ session: Mocks.Session) throws -> [String: Mocks.Group] {

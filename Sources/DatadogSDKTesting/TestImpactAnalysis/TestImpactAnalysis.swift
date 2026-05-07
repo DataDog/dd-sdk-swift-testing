@@ -89,6 +89,10 @@ final class TestImpactAnalysis: TestHooksFeature {
             module.session.set(metric: DDTestSessionTags.testCoverageLines, value: linesCovered)
         }
     }
+
+    func testSuiteWillEnd(suite: any TestSuite) {
+        suite.set(tag: DDTestSessionTags.testSkippingEnabled, value: isSkippingEnabled)
+    }
     
     func testGroupConfiguration(for test: String, tags: any TestTags,
                                 in suite: any TestSuite,
@@ -117,6 +121,7 @@ final class TestImpactAnalysis: TestHooksFeature {
         guard !test.suite.isSwiftTesting || swiftTestingEnabled else {
             return
         }
+        test.set(tag: DDTestSessionTags.testSkippingEnabled, value: isSkippingEnabled)
         if let correlationId = correlationId {
             test.set(tag: DDItrTags.itrCorrelationId, value: correlationId)
         }

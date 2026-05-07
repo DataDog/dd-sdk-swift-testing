@@ -73,6 +73,7 @@
 		A77C12392D8DD2A9009C2BA1 /* Feature.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77C12382D8DD2A9009C2BA1 /* Feature.swift */; };
 		A77C123C2D9425C7009C2BA1 /* KnownTestsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77C123B2D9425C7009C2BA1 /* KnownTestsTests.swift */; };
 		A7EE000000020000000000A2 /* LibraryConfigurationErrorTagsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7EE000000020000000000A1 /* LibraryConfigurationErrorTagsTests.swift */; };
+		A7EE000000020000000000A4 /* AdditionalTagsFeatureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7EE000000020000000000A3 /* AdditionalTagsFeatureTests.swift */; };
 		A77C123E2D9474E6009C2BA1 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77C123D2D9474E6009C2BA1 /* Models.swift */; };
 		A794A8FF2E7990D20044FE3C /* TestManagementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A794A8FE2E7990C40044FE3C /* TestManagementTests.swift */; };
 		A79DA5B42F928F87004BCA8C /* SwiftTestingSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A79DA5B32F928F87004BCA8C /* SwiftTestingSmokeTests.swift */; };
@@ -466,6 +467,7 @@
 		A77C12382D8DD2A9009C2BA1 /* Feature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Feature.swift; sourceTree = "<group>"; };
 		A77C123B2D9425C7009C2BA1 /* KnownTestsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnownTestsTests.swift; sourceTree = "<group>"; };
 		A7EE000000020000000000A1 /* LibraryConfigurationErrorTagsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryConfigurationErrorTagsTests.swift; sourceTree = "<group>"; };
+		A7EE000000020000000000A3 /* AdditionalTagsFeatureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdditionalTagsFeatureTests.swift; sourceTree = "<group>"; };
 		A77C123D2D9474E6009C2BA1 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		A794A8FE2E7990C40044FE3C /* TestManagementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestManagementTests.swift; sourceTree = "<group>"; };
 		A79DA5B22F928F71004BCA8C /* IntegrationTests-UnitTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = "IntegrationTests-UnitTests.xctestplan"; sourceTree = "<group>"; };
@@ -844,6 +846,7 @@
 				CC931D86ADB841B6969C7A7A /* EarlyFlakeDetectionSwiftTestingTests.swift */,
 				A77C123B2D9425C7009C2BA1 /* KnownTestsTests.swift */,
 				A7EE000000020000000000A1 /* LibraryConfigurationErrorTagsTests.swift */,
+				A7EE000000020000000000A3 /* AdditionalTagsFeatureTests.swift */,
 			);
 			path = Features;
 			sourceTree = "<group>";
@@ -2014,6 +2017,7 @@
 				A7675D722F6CA00000A05B5F /* SwiftTestRunParametersParserTests.swift in Sources */,
 				A77C123C2D9425C7009C2BA1 /* KnownTestsTests.swift in Sources */,
 				A7EE000000020000000000A2 /* LibraryConfigurationErrorTagsTests.swift in Sources */,
+				A7EE000000020000000000A4 /* AdditionalTagsFeatureTests.swift in Sources */,
 				A7FC266E2BA1F70200067E26 /* DDXCTestObserverTests.swift in Sources */,
 				A7675D742F6CA00000A05B5F /* SessionManagerTests.swift in Sources */,
 				A7FC266C2BA1F70200067E26 /* FrameworkLoadHandlerTests.swift in Sources */,

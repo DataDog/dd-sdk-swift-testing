@@ -126,15 +126,26 @@ internal class ITRService {
 
     func uploadPackFiles(packFilesDirectory: Directory, commit: String, repository: String) throws {
         Log.debug("Uploading packfiles from: \(packFilesDirectory) for commit: \(commit) in repo: \(repository)")
-        try packFilesDirectory.files()
-            .filter { $0.name.hasSuffix(".pack") }
-            .forEach {
-                packFileRequestBuilder.addFieldsCallback = { request, data in
-                    request.addDataField(named: "packfile", data: data, mimeType: .applicationOctetStream)
-                    request.addDataField(named: "pushedSha", data: PushedSHA(id: commit, repoURL: repository).bytes!, mimeType: .applicationJSON)
-                }
-                _ = packFileUploader.upload(data: try $0.read())
+        let files = try packFilesDirectory.files().filter { $0.name.hasSuffix(".pack") }
+        
+        let pushedSha = PushedSHA(id: commit, repoURL: repository).bytes!
+        packFileRequestBuilder.addFieldsCallback = { request, data in
+            request.addDataField(named: "packfile", data: data, mimeType: .applicationOctetStream)
+            request.addDataField(named: "pushedSha", data: pushedSha, mimeType: .applicationJSON)
+        }
+        
+        for file in files {
+            switch packFileUploader.uploadWithResult(data: try file.read()) {
+            case .success:
+                continue
+            case .failure(let error):
+                throw LibraryConfigurationCommunicationError(
+                    requestName: "PackFileRequest",
+                    payload: file.name,
+                    reason: error.isUnauthorized ? .unauthorized : .communicationFailed(error)
+                )
             }
+        }
     }
 
     func skippableTests(repositoryURL: String, sha: String, testLevel: ITRTestLevel,

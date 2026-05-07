@@ -8,8 +8,10 @@ import Foundation
 import OpenTelemetrySdk
 import CodeCoverageParser
 
-/// Thrown by `EventsExporterProtocol` library configuration requests
-/// (`tracerSettings`, `skippableTests`, `knownTests`, `testManagementTests`).
+/// Thrown by `EventsExporterProtocol` requests that need to surface a
+/// backend communication failure to the caller — library configuration
+/// (`tracerSettings`, `skippableTests`, `knownTests`, `testManagementTests`)
+/// as well as the git-upload pair (`searchCommits`, `uploadPackFiles`).
 /// Carries enough context (request name, payload, and the failure reason) for
 /// the caller to log a meaningful diagnostic. `.unauthorized` and
 /// `.communicationFailed` count as communication failures with the backend;

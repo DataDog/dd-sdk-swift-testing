@@ -91,6 +91,9 @@ final class TestImpactAnalysis: TestHooksFeature {
     }
 
     func testSuiteWillEnd(suite: any TestSuite) {
+        guard !suite.isSwiftTesting || swiftTestingEnabled else {
+            return
+        }
         suite.set(tag: DDTestSessionTags.testSkippingEnabled, value: isSkippingEnabled)
     }
     

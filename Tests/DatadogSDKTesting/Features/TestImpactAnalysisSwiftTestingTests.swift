@@ -63,6 +63,15 @@ final class TestImpactAnalysisSwiftTestingTests: XCTestCase {
         XCTAssertEqual(tests["skipTest"]?.runs.first?.tags[DDTestSessionTags.testSkippingEnabled], "true")
     }
 
+    func testTestsSkippingEnabledTagNotSetOnSuite_whenSwiftTestingDisabled() async throws {
+        let (runner, _, _) = tiaSwiftTestingDisabledRunner(skip: [],
+                                                           tests: ["someTest": .pass()])
+        let session = try await runner.run()
+        let suite = try extractSuite(session)
+
+        XCTAssertNil(suite.tags[DDTestSessionTags.testSkippingEnabled])
+    }
+
     // TIA + EFD
     func testTestImpactAnalysisSkipsEFDKnownTest() async throws {
         let (runner, tia, collector) = tiaAndEfdRunner(skip: ["skipTest"], known: ["skipTest"],
@@ -251,6 +260,16 @@ final class TestImpactAnalysisSwiftTestingTests: XCTestCase {
                                                         configuration: ["test.bundle": "TIAModule"]) })
         let collector = Mocks.CoverageCollector()
         let tia = TestImpactAnalysis(tests: skipped, coverage: collector, swiftTestingEnabled: true)
+        return (Mocks.STRunner(features: [tia, AdditionalTags()], tests: ["TIAModule": ["TIASuite": .init(tests: tests)]]), tia, collector)
+    }
+
+    func tiaSwiftTestingDisabledRunner(skip: [String], tests: KeyValuePairs<String, Mocks.Runner.TestMethod>) -> (Mocks.STRunner, TestImpactAnalysis, Mocks.CoverageCollector) {
+        let skipped = SkipTests(correlationId: "abacaba",
+                                tests: skip.map { .init(name: $0,
+                                                        suite: "TIASuite",
+                                                        configuration: ["test.bundle": "TIAModule"]) })
+        let collector = Mocks.CoverageCollector()
+        let tia = TestImpactAnalysis(tests: skipped, coverage: collector, swiftTestingEnabled: false)
         return (Mocks.STRunner(features: [tia, AdditionalTags()], tests: ["TIAModule": ["TIASuite": .init(tests: tests)]]), tia, collector)
     }
 

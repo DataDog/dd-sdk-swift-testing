@@ -44,6 +44,7 @@ final class Config {
     
     /// TIA  related environment
     var gitUploadEnabled: Bool = true
+    var gitUnshallowEnabled: Bool = true
     var tiaEnabled: Bool = true
     var tiaSwiftTestingEnabled: Bool? = nil
     var codeCoverageEnabled: Bool = true
@@ -131,6 +132,7 @@ final class Config {
         
         /// Intelligent test runner related configuration
         gitUploadEnabled = env[.enableCiVisibilityGitUpload] ?? gitUploadEnabled
+        gitUnshallowEnabled = env[.enableCiVisibilityGitUnshallow] ?? gitUnshallowEnabled
         tiaEnabled = env[.enableTIA] ?? env[.enableCiVisibilityITR] ?? tiaEnabled
         tiaSwiftTestingEnabled = env[.enableSwiftTestingTIA]
         excludedBranches = env[.ciVisibilityExcludedBranches] ?? excludedBranches
@@ -231,6 +233,7 @@ extension Config: CustomDebugStringConvertible {
         Disable NTP Clock: \(disableNTPClock)
         Disable Git Information: \(disableGitInformation)
         Git Upload Enabled: \(gitUploadEnabled)
+        Git Unshallow Enabled: \(gitUnshallowEnabled)
         Coverage Enabled: \(codeCoverageEnabled)
         Test Impact Analysis Enabled: \(tiaEnabled)
         Test Impact Analysis for Swift Testing Enabled: \(tiaSwiftTestingEnabled.map(String.init) ?? "auto-detect")

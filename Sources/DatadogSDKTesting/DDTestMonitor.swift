@@ -225,7 +225,8 @@ internal class DDTestMonitor {
                 }
                 DDTestMonitor.instance?.gitUploader = GitUploader(
                     log: Log.instance, exporter: exporter, gitDirectory: gitDirectory,
-                    commitFolder: try? DDTestMonitor.cacheManager?.commit(feature: "git")
+                    commitFolder: try? DDTestMonitor.cacheManager?.commit(feature: "git"),
+                    unshallowEnabled: DDTestMonitor.config.gitUnshallowEnabled
                 )
             } else {
                 Log.debug("Git Upload Disabled")

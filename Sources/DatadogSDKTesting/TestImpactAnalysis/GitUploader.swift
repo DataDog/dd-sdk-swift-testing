@@ -14,11 +14,14 @@ final class GitUploader {
     private let gitDirectory: String
     private let log: Logger
     private let exporter: EventsExporterProtocol
+    private let unshallowEnabled: Bool
 
     private let commitFolder: Directory
     private let packFilesDirectory: Directory
 
-    init?(log: Logger, exporter: EventsExporterProtocol, gitDirectory: String, commitFolder: Directory?) {
+    init?(log: Logger, exporter: EventsExporterProtocol, gitDirectory: String,
+          commitFolder: Directory?, unshallowEnabled: Bool = true)
+    {
         guard !gitDirectory.isEmpty,
               let commitFolder = commitFolder,
               let packFilesDir = try? commitFolder.createSubdirectory(path: Self.packFilesLocation)
@@ -28,6 +31,7 @@ final class GitUploader {
         }
         self.gitDirectory = gitDirectory
         self.exporter = exporter
+        self.unshallowEnabled = unshallowEnabled
         
         guard !commitFolder.hasFile(named: Self.uploadedCommitFile) else {
             log.debug("GitUploader: git information alredy uploaded")
@@ -71,7 +75,8 @@ final class GitUploader {
         }
         
         /// Check if the repository is a shallow clone, if so fetch more info and calculate one more time
-        if isShallowRepository {
+        switch (isShallowRepository, unshallowEnabled) {
+        case (true, true):
             let unshallowed = log.measure(name: "handleShallowClone") {
                 handleShallowClone()
             }
@@ -88,6 +93,9 @@ final class GitUploader {
                 }
                 newCommits = newCommitsUnshallow
             }
+        case (true, false):
+            log.debug("Shallow repository detected but unshallow is disabled. Proceeding with available commits.")
+        default: break
         }
         
         // Generate pack files for the new commits

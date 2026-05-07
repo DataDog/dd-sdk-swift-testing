@@ -39,6 +39,7 @@ internal enum EnvironmentKey: String, CaseIterable {
     case disableNTPClock = "DD_DISABLE_NTPCLOCK"
     case enableCiVisibilityLogs = "DD_CIVISIBILITY_LOGS_ENABLED"
     case enableCiVisibilityGitUpload = "DD_CIVISIBILITY_GIT_UPLOAD_ENABLED"
+    case enableCiVisibilityGitUnshallow = "DD_CIVISIBILITY_GIT_UNSHALLOW_ENABLED"
     case enableCiVisibilityCodeCoverage = "DD_CIVISIBILITY_CODE_COVERAGE_ENABLED"
     case ciVisibilityCodeCoveragePriority = "DD_CIVISIBILITY_CODE_COVERAGE_PRIORITY"
     case enableCiVisibilityITR = "DD_CIVISIBILITY_ITR_ENABLED"

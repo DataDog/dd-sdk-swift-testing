@@ -85,6 +85,27 @@ internal class DDXCTestObserverTests: XCTestCase {
         XCTAssertEqual(spanData.attributes[DDHostTags.hostVCPUCount]?.description, String(Double(PlatformUtils.getCpuCount())))
     }
 
+    func testWhenTestRunSetTagGetsBoolValue_tagIsSetAsStringAttribute() async {
+        let group = DDXCTestRetryGroup(for: self, observer: testObserver)
+        testObserver.testBundleWillStart(Bundle.main)
+        testObserver.testSuiteWillStart(theSuite)
+        testObserver.testRetryGroupWillStart(group)
+
+        let spanData = group.context.suite.withActiveTest(named: self.testId.test) { test in
+            test.set(tag: "test.bool_tag", value: true)
+
+            let span = OpenTelemetry.instance.contextProvider.activeSpan as! SpanSdk
+            return span.toSpanData()
+        }
+
+        testObserver.testRetryGroupDidFinish(group)
+        testObserver.testSuiteDidFinish(theSuite)
+        testObserver.testBundleDidFinish(Bundle.main)
+        await destroyObserver()
+
+        XCTAssertEqual(spanData.attributes["test.bool_tag"], AttributeValue.string("true"))
+    }
+
     func testWhenTestCaseDidFinishIsCalled_testStatusIsSet() async {
         let group = DDXCTestRetryGroup(for: self, observer: testObserver)
         testObserver.testBundleWillStart(Bundle.main)

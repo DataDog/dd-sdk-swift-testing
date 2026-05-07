@@ -119,10 +119,10 @@ public struct TracerSettings {
 internal class SettingsService {
     let exporterConfiguration: ExporterConfiguration
     let settingsUploader: DataUploader
-    
+
     init(config: ExporterConfiguration) throws {
         self.exporterConfiguration = config
-        
+
         let settingsRequestBuilder = SingleRequestBuilder(
             url: exporterConfiguration.endpoint.settingsURL,
             queryItems: [],
@@ -149,26 +149,44 @@ internal class SettingsService {
     func settings(
         service: String, env: String, repositoryURL: String, branch: String, sha: String,
         testLevel: ITRTestLevel, configurations: [String: String], customConfigurations: [String: String]
-    ) -> TracerSettings? {
+    ) throws(LibraryConfigurationCommunicationError) -> TracerSettings {
         var configurations: [String: JSONGeneric] = configurations.mapValues { .string($0) }
         configurations["custom"] = .init(customConfigurations)
-        
+
         let settingsPayload = SettingsRequest(service: service, env: env, repositoryURL: repositoryURL,
                                               branch: branch, sha: sha, configurations: configurations,
                                               testLevel: testLevel)
+        let payloadString = settingsPayload.jsonString
 
-        guard let jsonData = settingsPayload.jsonData,
-              let response = settingsUploader.uploadWithResponse(data: jsonData)
-        else {
-            Log.debug("SettingsRequest payload: \(settingsPayload.jsonString)")
-            Log.debug("SettingsRequest no response")
-            return nil
+        guard let jsonData = settingsPayload.jsonData else {
+            throw LibraryConfigurationCommunicationError(
+                requestName: "SettingsRequest",
+                payload: payloadString,
+                reason: .payloadEncodingFailed
+            )
         }
 
-        guard let settings = try? JSONDecoder().decode(SettingsResponse.self, from: response) else {
-            Log.debug("SettingsRequest payload: \(settingsPayload.jsonString)")
-            Log.debug("SettingsRequest invalid response: \(String(decoding: response, as: UTF8.self))")
-            return nil
+        let response: Data
+        switch settingsUploader.uploadWithResult(data: jsonData) {
+        case .success(let data):
+            response = data
+        case .failure(let error):
+            throw LibraryConfigurationCommunicationError(
+                requestName: "SettingsRequest",
+                payload: payloadString,
+                reason: error.isUnauthorized ? .unauthorized : .communicationFailed(error)
+            )
+        }
+
+        let settings: SettingsResponse
+        do {
+            settings = try JSONDecoder().decode(SettingsResponse.self, from: response)
+        } catch {
+            throw LibraryConfigurationCommunicationError(
+                requestName: "SettingsRequest",
+                payload: payloadString,
+                reason: .responseDecodingFailed(body: response, error: error)
+            )
         }
         Log.debug("SettingsRequest response: \(String(decoding: response, as: UTF8.self))")
 

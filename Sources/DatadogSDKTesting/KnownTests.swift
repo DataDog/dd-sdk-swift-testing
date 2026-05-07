@@ -68,7 +68,7 @@ extension KnownTests {
 
 struct KnownTestsFactory: FeatureFactory {
     typealias FT = KnownTests
-    
+
     let repository: String
     let service: String
     let environment: String
@@ -76,11 +76,13 @@ struct KnownTestsFactory: FeatureFactory {
     let customConfigurations: [String: String]
     let cacheFolder: Directory
     let exporter: EventsExporterProtocol
+    let libraryConfigurationErrors: LibraryConfigurationErrors
     let cacheFileName = "known_tests.json"
-    
+
     init(repository: String, service: String, environment: String,
          configurations: [String: String], custom: [String: String],
-         exporter: EventsExporterProtocol, cache: Directory
+         exporter: EventsExporterProtocol, cache: Directory,
+         libraryConfigurationErrors: LibraryConfigurationErrors
     ) {
         self.configurations = configurations
         self.customConfigurations = custom
@@ -89,6 +91,7 @@ struct KnownTestsFactory: FeatureFactory {
         self.service = service
         self.environment = environment
         self.exporter = exporter
+        self.libraryConfigurationErrors = libraryConfigurationErrors
     }
     
     static func isEnabled(config: Config, env: Environment, remote: TracerSettings) -> Bool {
@@ -125,15 +128,18 @@ struct KnownTestsFactory: FeatureFactory {
     }
     
     private func getTests(exporter: EventsExporterProtocol, log: Logger) -> KnownTestsMap? {
-        let tests = exporter.knownTests(
-            service: service, env: environment, repositoryURL: repository,
-            configurations: configurations, customConfigurations: customConfigurations
-        )
-        guard let tests = tests else {
-            Log.print("Known Tests: tests request failed")
+        let tests: KnownTestsMap
+        do {
+            tests = try exporter.knownTests(
+                service: service, env: environment, repositoryURL: repository,
+                configurations: configurations, customConfigurations: customConfigurations
+            )
+        } catch {
+            log.print("\(error)")
+            libraryConfigurationErrors.recordCommunicationError(.knownTests)
             return nil
         }
-        Log.debug("Known Tests: tests: \(tests)")
+        log.debug("Known Tests: tests: \(tests)")
         // if we have empty array we should disable Known Tests functionality
         guard tests.count > 0 else { return nil }
         return tests

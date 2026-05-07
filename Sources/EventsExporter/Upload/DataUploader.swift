@@ -38,9 +38,6 @@ internal final class DataUploader: DataUploaderType {
                 uploadStatus = DataUploadStatus(httpResponse: httpResponse)
             case .failure(let error):
                 uploadStatus = DataUploadStatus(networkError: error)
-                if error.isUnauthorized {
-                    Log.print("Datadog backend rejected the request as unathorized. Please verify that DD_API_KEY is correct.")
-                }
             }
 
             semaphore.signal()
@@ -54,28 +51,26 @@ internal final class DataUploader: DataUploaderType {
     /// Uploads data synchronously (will block current thread) and returns the response data
     /// Uses timeout configured for `HTTPClient`.
     func uploadWithResponse(data: Data) -> Data? {
+        try? uploadWithResult(data: data).get()
+    }
+
+    /// Uploads data synchronously and returns the response data on success
+    /// or the underlying transport/HTTP error so callers can distinguish a
+    /// communication failure from an empty/invalid response.
+    func uploadWithResult(data: Data) -> Result<Data, HTTPClient.RequestError> {
         let request = createRequest(with: data)
-        var returnData: Data?
+        var result: Result<Data, HTTPClient.RequestError>?
 
         let semaphore = DispatchSemaphore(value: 0)
 
-        httpClient.sendWithResult(request: request) { result in
-            switch result {
-            case .success(let data):
-                returnData = data
-            case .failure(let error):
-                if error.isUnauthorized {
-                    Log.print("Datadog backend rejected the request as unathorized. Please verify that DD_API_KEY is correct.")
-                }
-                returnData = nil
-            }
-
+        httpClient.sendWithResult(request: request) { httpResult in
+            result = httpResult
             semaphore.signal()
         }
 
         _ = semaphore.wait(timeout: .distantFuture)
 
-        return returnData
+        return result ?? .failure(.inconsistentSession)
     }
 
     private func createRequest(with data: Data) -> URLRequest {

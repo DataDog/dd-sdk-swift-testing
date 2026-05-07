@@ -1,0 +1,316 @@
+/*
+ * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
+ * This product includes software developed at Datadog (https://www.datadoghq.com/).
+ * Copyright 2020-Present Datadog, Inc.
+ */
+
+@testable import EventsExporter
+import XCTest
+import TestUtils
+
+private struct DummyError: Error, CustomStringConvertible {
+    let message: String
+    var description: String { message }
+}
+
+// MARK: - LibraryConfigurationCommunicationError.description
+
+final class LibraryConfigurationCommunicationErrorTests: XCTestCase {
+    func testDescription_unauthorized_mentionsApiKey() {
+        let error = makeError(reason: .unauthorized)
+        let text = error.description
+
+        XCTAssertTrue(text.contains("Req"), "description should include the request name")
+        XCTAssertTrue(text.contains("DD_API_KEY"),
+                      "unauthorized description should ask the user to verify DD_API_KEY")
+        XCTAssertTrue(text.contains("Payload: {\"k\":1}"),
+                      "description should include the payload")
+    }
+
+    func testDescription_communicationFailed_includesUnderlyingError() {
+        let underlying = DummyError(message: "transport boom")
+        let error = makeError(reason: .communicationFailed(underlying))
+
+        let text = error.description
+        XCTAssertTrue(text.contains("no response from backend"))
+        XCTAssertTrue(text.contains("transport boom"))
+        XCTAssertTrue(text.contains("Payload: {\"k\":1}"))
+    }
+
+    func testDescription_responseDecodingFailed_includesBodyAndUnderlyingError() {
+        let underlying = DummyError(message: "decode boom")
+        let body = Data("<html>nope</html>".utf8)
+        let error = makeError(reason: .responseDecodingFailed(body: body, error: underlying))
+
+        let text = error.description
+        XCTAssertTrue(text.contains("invalid response body"))
+        XCTAssertTrue(text.contains("decode boom"))
+        XCTAssertTrue(text.contains("Response: <html>nope</html>"))
+        XCTAssertTrue(text.contains("Payload: {\"k\":1}"))
+    }
+
+    func testDescription_payloadEncodingFailed_includesPayload() {
+        let error = makeError(reason: .payloadEncodingFailed)
+        let text = error.description
+        XCTAssertTrue(text.contains("payload could not be encoded"))
+        XCTAssertTrue(text.contains("Payload: {\"k\":1}"))
+    }
+
+    private func makeError(reason: LibraryConfigurationCommunicationError.Reason)
+        -> LibraryConfigurationCommunicationError
+    {
+        LibraryConfigurationCommunicationError(requestName: "Req", payload: "{\"k\":1}", reason: reason)
+    }
+}
+
+// MARK: - HTTPClient.RequestError.description
+
+final class HTTPClientRequestErrorDescriptionTests: XCTestCase {
+    func testHTTPWithBody() {
+        let body = Data("server says no".utf8)
+        let error: HTTPClient.RequestError = .http(code: 500, body: body)
+        XCTAssertEqual("\(error)", "HTTP 500: server says no")
+    }
+
+    func testHTTPWithoutBody() {
+        XCTAssertEqual("\(HTTPClient.RequestError.http(code: 401, body: nil))", "HTTP 401")
+        XCTAssertEqual("\(HTTPClient.RequestError.http(code: 403, body: Data()))", "HTTP 403")
+    }
+
+    func testTransportWrapsLocalizedDescription() {
+        let underlying = NSError(domain: "DDTest", code: -1,
+                                 userInfo: [NSLocalizedDescriptionKey: "no internet"])
+        XCTAssertEqual("\(HTTPClient.RequestError.transport(underlying))",
+                       "transport error: no internet")
+    }
+
+    func testInconsistentSession() {
+        XCTAssertEqual("\(HTTPClient.RequestError.inconsistentSession)",
+                       "inconsistent URLSession response")
+    }
+}
+
+// MARK: - Service throw paths
+
+final class LibraryConfigurationServiceThrowTests: XCTestCase {
+    private var server: HttpTestServer!
+
+    override func tearDown() {
+        server?.stop()
+        server = nil
+        super.tearDown()
+    }
+
+    // MARK: - SettingsService
+
+    func testSettingsService_throwsUnauthorizedOn401() throws {
+        let baseURL = try startServer(replyingWith: status(401, reason: "Unauthorized"))
+        let service = try SettingsService(config: makeConfig(baseURL: baseURL))
+
+        let error = expectError {
+            _ = try service.settings(service: "service", env: "env",
+                                     repositoryURL: "repo", branch: "main", sha: "abc",
+                                     testLevel: ITRTestLevel.test,
+                                     configurations: [:], customConfigurations: [:])
+        }
+        XCTAssertEqual(error?.requestName, "SettingsRequest")
+        if case .unauthorized = error?.reason {} else {
+            XCTFail("Expected .unauthorized, got \(error?.reason as Any)")
+        }
+    }
+
+    func testSettingsService_throwsCommunicationFailedOn500() throws {
+        let baseURL = try startServer(replyingWith: status(500, reason: "Internal Server Error"))
+        let service = try SettingsService(config: makeConfig(baseURL: baseURL))
+
+        let error = expectError {
+            _ = try service.settings(service: "service", env: "env",
+                                     repositoryURL: "repo", branch: "main", sha: "abc",
+                                     testLevel: ITRTestLevel.test,
+                                     configurations: [:], customConfigurations: [:])
+        }
+        XCTAssertEqual(error?.requestName, "SettingsRequest")
+        guard case .communicationFailed(let underlying)? = error?.reason else {
+            XCTFail("Expected .communicationFailed, got \(error?.reason as Any)")
+            return
+        }
+        XCTAssertTrue("\(underlying)".contains("HTTP 500"),
+                      "communicationFailed should carry the underlying HTTP error")
+    }
+
+    func testSettingsService_throwsResponseDecodingFailedOnGarbageBody() throws {
+        let body = Data("<not-json>".utf8)
+        let baseURL = try startServer(replyingWith: status(200, reason: "OK"), body: body)
+        let service = try SettingsService(config: makeConfig(baseURL: baseURL))
+
+        let error = expectError {
+            _ = try service.settings(service: "service", env: "env",
+                                     repositoryURL: "repo", branch: "main", sha: "abc",
+                                     testLevel: ITRTestLevel.test,
+                                     configurations: [:], customConfigurations: [:])
+        }
+        XCTAssertEqual(error?.requestName, "SettingsRequest")
+        guard case .responseDecodingFailed(let receivedBody, _)? = error?.reason else {
+            XCTFail("Expected .responseDecodingFailed, got \(error?.reason as Any)")
+            return
+        }
+        XCTAssertEqual(receivedBody, body)
+    }
+
+    func testSettingsService_succeedsOnValidResponse() throws {
+        let baseURL = try startServer(replyingWith: status(200, reason: "OK"),
+                                      body: validSettingsBody())
+        let service = try SettingsService(config: makeConfig(baseURL: baseURL))
+
+        let settings = try service.settings(service: "service", env: "env",
+                                            repositoryURL: "repo", branch: "main", sha: "abc",
+                                            testLevel: ITRTestLevel.test,
+                                            configurations: [:], customConfigurations: [:])
+        XCTAssertTrue(settings.flakyTestRetriesEnabled)
+        XCTAssertTrue(settings.knownTestsEnabled)
+        XCTAssertTrue(settings.itr.itrEnabled)
+    }
+
+    // MARK: - Other services (one throw scenario each)
+
+    func testSkippableTestsService_throwsUnauthorizedOn403() throws {
+        let baseURL = try startServer(replyingWith: status(403, reason: "Forbidden"))
+        let service = try ITRService(config: makeConfig(baseURL: baseURL))
+
+        let error = expectError {
+            _ = try service.skippableTests(repositoryURL: "repo", sha: "abc",
+                                           testLevel: ITRTestLevel.test,
+                                           configurations: [:], customConfigurations: [:])
+        }
+        XCTAssertEqual(error?.requestName, "SkipTestsRequest")
+        if case .unauthorized = error?.reason {} else {
+            XCTFail("Expected .unauthorized, got \(error?.reason as Any)")
+        }
+    }
+
+    func testKnownTestsService_throwsCommunicationFailedOn500() throws {
+        let baseURL = try startServer(replyingWith: status(500, reason: "Internal Server Error"))
+        let service = try KnownTestsService(config: makeConfig(baseURL: baseURL))
+
+        let error = expectError {
+            _ = try service.tests(service: "service", env: "env", repositoryURL: "repo",
+                                  configurations: [:], customConfigurations: [:])
+        }
+        XCTAssertEqual(error?.requestName, "Known Tests Request")
+        if case .communicationFailed = error?.reason {} else {
+            XCTFail("Expected .communicationFailed, got \(error?.reason as Any)")
+        }
+    }
+
+    func testTestManagementService_throwsResponseDecodingFailedOnBadBody() throws {
+        let body = Data("not-json".utf8)
+        let baseURL = try startServer(replyingWith: status(200, reason: "OK"), body: body)
+        let service = try TestManagementService(config: makeConfig(baseURL: baseURL))
+
+        let error = expectError {
+            _ = try service.tests(repositoryURL: "repo",
+                                  sha: String?.none,
+                                  commitMessage: String?.none,
+                                  module: String?.none,
+                                  branch: String?.none)
+        }
+        XCTAssertEqual(error?.requestName, "Test Management Tests Request")
+        guard case .responseDecodingFailed(let receivedBody, _)? = error?.reason else {
+            XCTFail("Expected .responseDecodingFailed, got \(error?.reason as Any)")
+            return
+        }
+        XCTAssertEqual(receivedBody, body)
+    }
+
+    func testSearchExistingCommits_throwsUnauthorizedOn401() throws {
+        let baseURL = try startServer(replyingWith: status(401, reason: "Unauthorized"))
+        let service = try ITRService(config: makeConfig(baseURL: baseURL))
+
+        let error = expectError {
+            _ = try service.searchExistingCommits(repositoryURL: "repo", commits: ["abc"])
+        }
+        XCTAssertEqual(error?.requestName, "SearchCommitsRequest")
+        if case .unauthorized = error?.reason {} else {
+            XCTFail("Expected .unauthorized, got \(error?.reason as Any)")
+        }
+    }
+
+    // MARK: - helpers
+
+    private func startServer(replyingWith status: HTTPTestResponseSender.Status,
+                             body: Data = Data("{}".utf8)) throws -> URL
+    {
+        let captured = (status, body)
+        server = HttpTestServer { _, response in
+            response.sendResponse(status: captured.0,
+                                  contentType: "application/json",
+                                  body: captured.1)
+        }
+        try server.start()
+        return server.baseURL
+    }
+
+    private func status(_ code: UInt16, reason: String) -> HTTPTestResponseSender.Status {
+        HTTPTestResponseSender.Status(code: code, reason: reason)
+    }
+
+    private func makeConfig(baseURL: URL) -> ExporterConfiguration {
+        ExporterConfiguration(
+            serviceName: "service",
+            applicationName: "app",
+            applicationVersion: "1.0",
+            environment: "test",
+            hostname: "host",
+            apiKey: "fakeToken",
+            endpoint: .other(testsBaseURL: baseURL, logsBaseURL: baseURL),
+            metadata: .init(),
+            performancePreset: .readAllFiles,
+            exporterId: "exporterId",
+            logger: Log(isDebug: false)
+        )
+    }
+
+    private func expectError(_ block: () throws -> Void,
+                             file: StaticString = #file, line: UInt = #line)
+        -> LibraryConfigurationCommunicationError?
+    {
+        do {
+            try block()
+            XCTFail("Expected throw", file: file, line: line)
+            return nil
+        } catch let error as LibraryConfigurationCommunicationError {
+            return error
+        } catch {
+            XCTFail("Expected LibraryConfigurationCommunicationError, got \(type(of: error))",
+                    file: file, line: line)
+            return nil
+        }
+    }
+
+    private func validSettingsBody() -> Data {
+        let payload: [String: Any] = [
+            "data": [
+                "id": "1",
+                "type": "ci_app_tracers_test_service_settings",
+                "attributes": [
+                    "itr_enabled": true,
+                    "code_coverage": false,
+                    "tests_skipping": false,
+                    "known_tests_enabled": true,
+                    "require_git": false,
+                    "flaky_test_retries_enabled": true,
+                    "early_flake_detection": [
+                        "enabled": false,
+                        "slow_test_retries": [String: Int](),
+                        "faulty_session_threshold": 0
+                    ] as [String: Any],
+                    "test_management": [
+                        "enabled": false,
+                        "attempt_to_fix_retries": 0
+                    ] as [String: Any]
+                ] as [String: Any]
+            ] as [String: Any]
+        ]
+        return (try? JSONSerialization.data(withJSONObject: payload)) ?? Data()
+    }
+}

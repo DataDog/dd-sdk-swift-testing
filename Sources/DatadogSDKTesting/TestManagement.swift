@@ -194,10 +194,12 @@ struct TestManagementFactory: FeatureFactory {
     let cacheFolder: Directory
     let exporter: EventsExporterProtocol
     let module: String
+    let libraryConfigurationErrors: LibraryConfigurationErrors
 
     init(repository: String, commitSha: String, commitMessage: String?, branch: String?,
          module: String, attemptToFixRetries: UInt,
-         exporter: EventsExporterProtocol, cache: Directory
+         exporter: EventsExporterProtocol, cache: Directory,
+         libraryConfigurationErrors: LibraryConfigurationErrors
     ) {
         self.cacheFolder = cache
         self.repository = repository
@@ -207,6 +209,7 @@ struct TestManagementFactory: FeatureFactory {
         self.attemptToFixRetries = attemptToFixRetries
         self.exporter = exporter
         self.module = module
+        self.libraryConfigurationErrors = libraryConfigurationErrors
     }
     
     static func isEnabled(config: Config, env: Environment, remote: TracerSettings) -> Bool {
@@ -244,13 +247,16 @@ struct TestManagementFactory: FeatureFactory {
     }
     
     private func getTests(exporter: EventsExporterProtocol, log: Logger) -> TestManagementTestsInfo? {
-        let tests = exporter.testManagementTests(repositoryURL: repository, sha: commitSha,
-                                                 commitMessage: commitMessage, module: module, branch: branch)
-        guard let tests = tests else {
-            Log.print("Test Management: tests request failed")
+        let tests: TestManagementTestsInfo
+        do {
+            tests = try exporter.testManagementTests(repositoryURL: repository, sha: commitSha,
+                                                     commitMessage: commitMessage, module: module, branch: branch)
+        } catch {
+            log.print("\(error)")
+            libraryConfigurationErrors.recordCommunicationError(.testManagementTests)
             return nil
         }
-        Log.debug("Test Management: tests: \(tests)")
+        log.debug("Test Management: tests: \(tests)")
         // if we have empty array we can disable Test Management functionality
         guard tests.modules.count > 0 else { return nil }
         return tests

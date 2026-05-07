@@ -46,10 +46,10 @@ public struct KnownTestsPageInfo {
 internal final class KnownTestsService {
     let exporterConfiguration: ExporterConfiguration
     let testsUploader: DataUploader
-    
+
     init(config: ExporterConfiguration) throws {
         self.exporterConfiguration = config
-        
+
         let testsRequestBuilder = SingleRequestBuilder(
             url: exporterConfiguration.endpoint.knownTestsURL,
             queryItems: [],
@@ -79,22 +79,20 @@ internal final class KnownTestsService {
         service: String, env: String, repositoryURL: String,
         configurations: [String: String], customConfigurations: [String: String],
         pageInfo: KnownTestsPageInfo? = nil
-    ) -> KnownTestsResult? {
+    ) throws(LibraryConfigurationCommunicationError) -> KnownTestsResult {
         var configurations: [String: JSONGeneric] = configurations.mapValues { .string($0) }
         configurations["custom"] = .init(customConfigurations)
-        
+
         let onePageOnly: Bool = (pageInfo != nil)
         var tests: KnownTestsMap = [:]
         var pageInfo: KnownTestsPageInfo = pageInfo ?? .init()
         var size: Int = 0
         repeat {
-            guard let result = fetchPage(
+            let result = try fetchPage(
                 service: service, env: env, repositoryURL: repositoryURL,
                 configurations: configurations,
                 pageInfo: pageInfo.requestParameters
-            ) else {
-                return nil
-            }
+            )
             tests = tests.merging(result.tests) { (current, new) in
                 current.merging(new) { (current, new) in
                     Array(Set(current).union(new))
@@ -116,24 +114,43 @@ internal final class KnownTestsService {
         service: String, env: String, repositoryURL: String,
         configurations: [String: JSONGeneric],
         pageInfo: PageInfoRequest
-    ) -> KnownTestsResult? {
+    ) throws(LibraryConfigurationCommunicationError) -> KnownTestsResult {
         let testsPayload = TestsRequest(
             service: service, env: env, repositoryURL: repositoryURL,
             configurations: configurations,
             pageInfo: pageInfo
         )
+        let payloadString = testsPayload.jsonString
 
-        guard let jsonData = testsPayload.jsonData,
-              let response = testsUploader.uploadWithResponse(data: jsonData)
-        else {
-            Log.debug("Known Tests Request payload: \(testsPayload.jsonString)")
-            Log.debug("Known Tests Request no response")
-            return nil
+        guard let jsonData = testsPayload.jsonData else {
+            throw LibraryConfigurationCommunicationError(
+                requestName: "Known Tests Request",
+                payload: payloadString,
+                reason: .payloadEncodingFailed
+            )
         }
 
-        guard let known = try? JSONDecoder().decode(TestsResponse.self, from: response) else {
-            Log.debug("Known Tests Request invalid response: \(String(decoding: response, as: UTF8.self))")
-            return nil
+        let response: Data
+        switch testsUploader.uploadWithResult(data: jsonData) {
+        case .success(let data):
+            response = data
+        case .failure(let error):
+            throw LibraryConfigurationCommunicationError(
+                requestName: "Known Tests Request",
+                payload: payloadString,
+                reason: error.isUnauthorized ? .unauthorized : .communicationFailed(error)
+            )
+        }
+
+        let known: TestsResponse
+        do {
+            known = try JSONDecoder().decode(TestsResponse.self, from: response)
+        } catch {
+            throw LibraryConfigurationCommunicationError(
+                requestName: "Known Tests Request",
+                payload: payloadString,
+                reason: .responseDecodingFailed(body: response, error: error)
+            )
         }
         Log.debug("Known Tests Request response: \(String(decoding: response, as: UTF8.self))")
 

@@ -119,7 +119,7 @@ extension Test: TestRun {
     }
     
     func set(tag name: String, value: SpanAttributeConvertible) {
-        setTag(key: name, value: value)
+        span.setAttribute(key: name, value: value.spanAttribute)
     }
     
     func set(metric name: String, value: Double) {

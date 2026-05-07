@@ -90,16 +90,21 @@ internal final class Environment {
             workspace = workspace ?? CI.expand(path: info.workspacePath, home: env.get(env: "HOME"))
         }
         workspacePath = workspace ?? sourceRoot
-        
+
+        // Ensure git.directory is set, falling back to workspacePath.
+        if git.directory == nil {
+            git = git.with(directory: workspacePath)
+        }
+
         #if targetEnvironment(simulator) || os(macOS)
-        if let sourceRoot = sourceRoot ?? workspace,
+        if let gitDirectory = git.directory,
            let head = git.commitHead?.sha,
-           let info = Self.mergeHeadInfo(headSha: head, workspace: sourceRoot, log: log)
+           let info = Self.mergeHeadInfo(headSha: head, gitDirectory: gitDirectory, log: log)
         {
             git = git.updated(with: info)
         }
         #endif
-        
+
         self.git = git.updated(with: Environment.gitOverrides(env: env))
         
         testCommand = "test \(Bundle.testBundle?.name ?? Bundle.main.name)"
@@ -262,9 +267,9 @@ internal final class Environment {
         return gitInfo
     }
     
-    static func mergeHeadInfo(headSha: String, workspace: String, log: Logger) -> Git? {
+    static func mergeHeadInfo(headSha: String, gitDirectory: String, log: Logger) -> Git? {
         let git = { (cmd: String) -> String? in
-            Spawn.output(try: "git -C \"\(workspace)\" \(cmd)", log: log)
+            Spawn.output(try: "git -c safe.directory=\"\(gitDirectory)\" -C \"\(gitDirectory)\" \(cmd)", log: log)
         }
         // Unshallow one commit
         guard git("fetch --deepen=1 --update-shallow --filter=blob:none --recurse-submodules=no") != nil else {
@@ -557,28 +562,34 @@ internal extension Environment {
             }
         }
         
+        // Path to the git working tree (parent of .git). Used for `git -C` and
+        // `-c safe.directory=<path>` so commands target the repo regardless of cwd.
+        let directory: String?
+
         // git.*
         let repositoryURL: URL?
         let branch: String?
         let tag: String?
-        
+
         // git.commit.*
         let commit: CommitInfo?
-        
+
         // git.commit.head.*
         let commitHead: CommitInfo?
-        
+
         // git.pull_request.*
         let pullRequestBaseBranch: BaseBranchInfo?
-        
+
         var repositoryName: String? {
             repositoryURL?.deletingPathExtension().lastPathComponent
         }
-        
-        init(repositoryURL: URL? = nil, branch: String? = nil, tag: String? = nil,
+
+        init(directory: String? = nil,
+             repositoryURL: URL? = nil, branch: String? = nil, tag: String? = nil,
              commit: CommitInfo? = nil, commitHead: CommitInfo? = nil,
              pullRequestBaseBranch: BaseBranchInfo? = nil)
         {
+            self.directory = directory
             self.repositoryURL = repositoryURL
             self.branch = branch
             self.tag = tag
@@ -586,7 +597,19 @@ internal extension Environment {
             self.commitHead = commitHead
             self.pullRequestBaseBranch = pullRequestBaseBranch
         }
-        
+
+        func with(directory: String?) -> Git {
+            Git(
+                directory: directory ?? self.directory,
+                repositoryURL: repositoryURL,
+                branch: branch,
+                tag: tag,
+                commit: commit,
+                commitHead: commitHead,
+                pullRequestBaseBranch: pullRequestBaseBranch
+            )
+        }
+
         func extended(from info: GitInfo) -> Git {
             let (_branch, isTag) = Self.normalize(branchOrTag: info.branch)
             let infoCommit = CommitInfo(
@@ -596,6 +619,7 @@ internal extension Environment {
                 committer: .maybe(name: info.committerName, email: info.committerEmail, date: info.committerDate)
             )
             return Git(
+                directory: directory ?? info.workspacePath,
                 repositoryURL: repositoryURL ?? info.repository.flatMap { URL(string: $0) },
                 branch: branch ?? (isTag ? nil : _branch),
                 tag: tag ?? (isTag ? branch : nil),
@@ -604,9 +628,10 @@ internal extension Environment {
                 pullRequestBaseBranch: pullRequestBaseBranch
             )
         }
-        
+
         func updated(with info: Git) -> Git {
             Git(
+                directory: info.directory ?? directory,
                 repositoryURL: info.repositoryURL ?? repositoryURL,
                 branch: info.branch ?? branch,
                 tag: info.tag ?? tag,
@@ -643,6 +668,7 @@ internal extension Environment {
         var debugDescription: String {
             """
             GIT:
+              Directory: \(directory ?? "")
               Repository Name: \(repositoryName ?? "")
               Repository URL: \(repositoryURL?.spanAttribute ?? "")
               Branch: \(branch ?? "")

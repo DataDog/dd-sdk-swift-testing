@@ -10,23 +10,23 @@ import Foundation
 final class GitUploader {
     private static let packFilesLocation = "packfiles/v1/"
     private static let uploadedCommitFile = "uploaded_commits.json"
-    
-    private let workspacePath: String
+
+    private let gitDirectory: String
     private let log: Logger
     private let exporter: EventsExporterProtocol
-    
+
     private let commitFolder: Directory
     private let packFilesDirectory: Directory
-    
-    init?(log: Logger, exporter: EventsExporterProtocol, workspace: String, commitFolder: Directory?) {
-        guard !workspace.isEmpty,
+
+    init?(log: Logger, exporter: EventsExporterProtocol, gitDirectory: String, commitFolder: Directory?) {
+        guard !gitDirectory.isEmpty,
               let commitFolder = commitFolder,
               let packFilesDir = try? commitFolder.createSubdirectory(path: Self.packFilesLocation)
         else {
             log.print("GitUploader failed initializing")
             return nil
         }
-        self.workspacePath = workspace
+        self.gitDirectory = gitDirectory
         self.exporter = exporter
         
         guard !commitFolder.hasFile(named: Self.uploadedCommitFile) else {
@@ -113,11 +113,11 @@ final class GitUploader {
         return true
     }
     
-    static func statusUpToDate(workspace: String, log: Logger) -> Bool {
-        guard !workspace.isEmpty else {
+    static func statusUpToDate(gitDirectory: String, log: Logger) -> Bool {
+        guard !gitDirectory.isEmpty else {
             return false
         }
-        guard let status = Spawn.output(try: #"git -C "\#(workspace)" status --short -uno"#, log: log) else {
+        guard let status = Spawn.output(try: #"git -c safe.directory="\#(gitDirectory)" -C "\#(gitDirectory)" status --short -uno"#, log: log) else {
             return false
         }
         log.debug("Git status: \(status)")
@@ -188,7 +188,7 @@ final class GitUploader {
     }
     
     private func git(_ cmd: String) -> String? {
-        Spawn.output(try: "git -C \"\(workspacePath)\" \(cmd)", log: log)
+        Spawn.output(try: "git -c safe.directory=\"\(gitDirectory)\" -C \"\(gitDirectory)\" \(cmd)", log: log)
     }
 
     private func getLatestCommits() -> [String]? {
@@ -222,14 +222,14 @@ final class GitUploader {
     }
 
     private func generatePackFilesFromCommits(commits: [String], repository: String) -> Directory? {
-        let generate = { (ws: String, dir: String, list: String) in
+        let generate = { (gitDir: String, dir: String, list: String) in
             do {
                 try FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
             } catch {
                 return false
             }
             let cmd = """
-            git -C "\(ws)" pack-objects --quiet --compression=9 --max-pack-size=3m "\(dir)" <<< "\(list)"
+            git -c safe.directory="\(gitDir)" -C "\(gitDir)" pack-objects --quiet --compression=9 --max-pack-size=3m "\(dir)" <<< "\(list)"
             """
             guard let (_, err) = Spawn.command(try: cmd, log: self.log), !err.contains("fatal:") else {
                 try? FileManager.default.removeItem(atPath: dir)
@@ -237,22 +237,22 @@ final class GitUploader {
             }
             return true
         }
-        
+
         return log.measure(name: "packObjects") {
             var uploadPackfileDirectory = packFilesDirectory.url.path + "/" + UUID().uuidString
             let commitList = commits.joined(separator: "\n")
-            
-            if generate(workspacePath, uploadPackfileDirectory, commitList) {
+
+            if generate(gitDirectory, uploadPackfileDirectory, commitList) {
                 return Directory(url: URL(fileURLWithPath: uploadPackfileDirectory, isDirectory: true))
             }
-            
-            log.debug("Can't write packfile to cache path. Trying to workspace...")
-            
-            uploadPackfileDirectory = workspacePath + "/" + UUID().uuidString
-            if generate(workspacePath, uploadPackfileDirectory, commitList) {
+
+            log.debug("Can't write packfile to cache path. Trying to git directory...")
+
+            uploadPackfileDirectory = gitDirectory + "/" + UUID().uuidString
+            if generate(gitDirectory, uploadPackfileDirectory, commitList) {
                 return Directory(url: URL(fileURLWithPath: uploadPackfileDirectory, isDirectory: true))
             }
-            
+
             log.debug("packfile generation failed")
             return nil
         }

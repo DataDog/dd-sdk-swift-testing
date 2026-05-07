@@ -39,14 +39,31 @@ final class AdditionalTags: TestHooksFeature {
     let bundleFunctions: FunctionMap
     let codeOwners: CodeOwners?
     let workspacePath: String?
+    
+    struct SuiteOwners {
+        private var _owners: [String: Int] = [:]
+        
+        var owners: [String] {
+            _owners.sorted { $0.value < $1.value }.map { $0.key }
+        }
+        
+        var isEmpty: Bool { _owners.isEmpty }
+        
+        mutating func add(owners: [String]) {
+            for owner in owners where _owners[owner] == nil {
+                _owners[owner] = _owners.count
+            }
+        }
+    }
 
-    private let suiteOwners = Synced<[ObjectIdentifier: [String]]>([:])
+    private let suiteOwners: Synced<[ObjectIdentifier: SuiteOwners]>
 
     init(codeCoverage: Bool = false, bundleFunctions: FunctionMap = [:], codeOwners: CodeOwners? = nil, workspacePath: String? = nil) {
         self.codeCoverage = codeCoverage
         self.bundleFunctions = bundleFunctions
         self.codeOwners = codeOwners
         self.workspacePath = workspacePath
+        self.suiteOwners = .init([:])
     }
 
     func testSessionWillEnd(session: any TestSession) {
@@ -71,7 +88,7 @@ final class AdditionalTags: TestHooksFeature {
     func testSuiteWillEnd(suite: any TestSuite) {
         let owners = suiteOwners.update { $0.removeValue(forKey: ObjectIdentifier(suite)) }
         if let owners, !owners.isEmpty {
-            suite.set(tag: DDTestTags.testCodeowners, value: CodeOwners.format(owners))
+            suite.set(tag: DDTestTags.testCodeowners, value: CodeOwners.format(owners.owners))
         }
     }
 
@@ -83,33 +100,15 @@ final class AdditionalTags: TestHooksFeature {
             test.set(tag: DDTestTags.testSourceEndLine, value: functionInfo.endLine)
             if let owners = codeOwners?.owners(forPath: filePath) {
                 test.set(tag: DDTestTags.testCodeowners, value: CodeOwners.format(owners))
-                accumulate(owners: owners, in: test.suite)
+                suiteOwners.update { state in
+                    state[ObjectIdentifier(test.suite), default: .init()].add(owners: owners)
+                }
             }
         }
         if let retry = info.retry {
             test.set(tag: DDEfdTags.testIsRetry, value: "true")
             test.set(tag: DDEfdTags.testRetryReason, value: retry.reason)
         }
-    }
-
-    private func accumulate(owners: [String], in suite: any TestSuite) {
-        let key = ObjectIdentifier(suite)
-        suiteOwners.update { state in
-            var existing = state[key] ?? []
-            for owner in owners where !existing.contains(owner) {
-                existing.append(owner)
-            }
-            state[key] = existing
-        }
-    }
-
-    private func stripWorkspace(from path: String) -> String {
-        guard let workspacePath,
-              let range = path.range(of: workspacePath + "/")
-        else { return path }
-        var result = path
-        result.removeSubrange(range)
-        return result
     }
 
     func testWillFinish(test: any TestRun, duration: TimeInterval,
@@ -139,6 +138,15 @@ final class AdditionalTags: TestHooksFeature {
     }
 
     func stop() {}
+    
+    private func stripWorkspace(from path: String) -> String {
+        guard let workspacePath,
+              let range = path.range(of: workspacePath + "/")
+        else { return path }
+        var result = path
+        result.removeSubrange(range)
+        return result
+    }
 }
 
 /// Adds `_dd.ci.library_configuration_error.*` hidden tags to every test,

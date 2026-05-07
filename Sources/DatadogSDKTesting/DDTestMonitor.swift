@@ -203,18 +203,18 @@ internal class DDTestMonitor {
 
     func startGitUpload() {
         /// Check Git is up to date and no local changes
-        let workspace = DDTestMonitor.env.workspacePath ?? ""
-        guard DDTestMonitor.env.isCI || GitUploader.statusUpToDate(workspace: workspace, log: Log.instance) else {
+        let gitDirectory = DDTestMonitor.env.git.directory ?? ""
+        guard DDTestMonitor.env.isCI || GitUploader.statusUpToDate(gitDirectory: gitDirectory, log: Log.instance) else {
             Log.print("Git status is not up to date")
             return
         }
-        
+
         guard let commit = DDTestMonitor.env.git.commit?.sha, commit != "" else {
             Log.print("Commit SHA is empty. Git upload failed")
             self.isGitUploadSucceded = false
             return
         }
-        
+
         DDTestMonitor.instance?.gitUploadQueue.addOperation {
             if DDTestMonitor.config.gitUploadEnabled {
                 Log.debug("Git Upload Enabled")
@@ -224,7 +224,7 @@ internal class DDTestMonitor {
                     return
                 }
                 DDTestMonitor.instance?.gitUploader = GitUploader(
-                    log: Log.instance, exporter: exporter, workspace: workspace,
+                    log: Log.instance, exporter: exporter, gitDirectory: gitDirectory,
                     commitFolder: try? DDTestMonitor.cacheManager?.commit(feature: "git")
                 )
             } else {

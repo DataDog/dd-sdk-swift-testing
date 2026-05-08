@@ -137,6 +137,20 @@ struct UnitTestsSwiftTestingSmoke: IntergationTestSuite {
             #expect(failed[DDTags.errorStack] != nil)
             #expect(failed[DDTags.errorCrashLog + ".00"] != nil)
             
+            // save all error tags to our test span so we can inspect them in the DD UI
+            if let test = DatadogSDKTesting.Test.current {
+                let tags = [DDTags.errorType, DDTags.errorMessage, DDTags.errorStack,
+                            DDTags.errorCrashLog + ".00", DDTags.errorCrashLog + ".01",
+                            DDTags.errorCrashLog + ".02", DDTags.errorCrashLog + ".03",
+                            DDTags.errorCrashLog + ".04", DDTags.errorCrashLog + ".05",
+                            DDTags.errorCrashLog + ".06", DDTags.errorCrashLog + ".07"]
+                for tag in tags {
+                    if let value = failed[tag] {
+                        test.set(tag: "returned_" + tag, value: value)
+                    }
+                }
+            }
+            
             let succeeded = try #require(spans.last?.meta)
             #expect(succeeded[DDTestTags.testStatus] == DDTagValues.statusPass)
             #expect(succeeded[DDGenericTags.resource] == "STCrash.noCrash")

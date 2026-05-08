@@ -6,11 +6,9 @@
 
 import Foundation
 import MachO
-internal import CodeCoverage
 internal import EventsExporter
 
 enum DDSymbolicator {
-    private static let crashLineRegex = try! NSRegularExpression(pattern: "^([0-9]+)(\\s+)((?:[\\w.] *[\\w.]*)+)(\\s+)(0x[0-9a-fA-F]+)([ \t]+)(0x[0-9a-fA-F]+)([ \t]+\\+[ \t]+[0-9]+)$?", options: .anchorsMatchLines)
     private static let callStackRegex = try! NSRegularExpression(pattern: "^([0-9]+)(\\s+)((?:[\\w.] *[\\w.]*)+)(\\s+)(0x[0-9a-fA-F]+)", options: .anchorsMatchLines)
     
     internal static var dsymFilesPath: URL { dsymFilesDir.url }
@@ -91,64 +89,96 @@ enum DDSymbolicator {
         return dSYMFiles
     }()
 
-    /// It symbolicates using atos a given crashLog replacing all addresses by its respective symbol
-    static func symbolicate(crashLog: String) -> String {
-        let linesLock = NSLock()
+    /// Symbolicates the frames of a `CrashLog` in place. Frames are grouped by
+    /// `(binary, library load address)` so each unique binary is opened by atos exactly once —
+    /// turning N per-frame spawns into M per-binary spawns (M ≪ N). Frames whose binary cannot
+    /// be located fall back to `dladdr` + Swift demangling against the current process.
+    static func symbolicate(_ crashLog: inout CrashLog) {
+        struct Pending {
+            let threadIdx: Int
+            let frameIdx: Int
+            let library: String
+            let instructionAddress: UInt64
+            let objectAddress: UInt64
+            let objectPath: String?
+        }
 
-        var lines: [String] = crashLog.components(separatedBy: "\n").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-
-        DispatchQueue.concurrentPerform(iterations: lines.count) { lineNumber in
-            linesLock.lock()
-            let line = lines[lineNumber]
-            linesLock.unlock()
-
-            if let match = crashLineRegex.firstMatch(in: line, options: [], range: NSRange(location: 0, length: line.count)) {
-                guard let libraryRange = Range(match.range(at: 3), in: line),
-                      let libraryAddressRange = Range(match.range(at: 7), in: line),
-                      let callAddressRange = Range(match.range(at: 5), in: line)
-                else {
-                    return
-                }
-
-                let library = String(line[libraryRange])
-                let libraryAddress = String(line[libraryAddressRange])
-                let callAddress = String(line[callAddressRange])
-                
-                let objectURL = dSYMFiles.first(where: { $0.lastPathComponent == library }) ?? BinaryImages.imageAddresses[library]?.path
-
-                if let objectPath = objectURL?.path {
-                    let symbol = symbolWithAtos(objectPath: objectPath, libraryAdress: libraryAddress, callAddress: callAddress)
-                    if !symbol.isEmpty {
-                        linesLock.lock()
-                        lines[lineNumber] = crashLineRegex.replacementString(for: match, in: line, offset: 0, template: "$1$2$3$4$5$6\(symbol)")
-                        linesLock.unlock()
-                        return
-                    }
-                }
-                /// No dSYM to symbolicate this line, write symbol Information
-                guard let originalCallAdress = Float64(callAddress) else {
-                    return
-                }
-                var callAddressInt = UInt(originalCallAdress)
-
-                /// Calculate the new address of the library, if it is in the map
-                if let libraryOffset = BinaryImages.imageAddresses[library]?.slide,
-                   let originalLibraryAddress = Float64(libraryAddress)
-                {
-                    let callOffset = UInt(originalCallAdress) - UInt(originalLibraryAddress)
-                    callAddressInt = UInt(libraryOffset) + callOffset
-                }
-
-                guard let symbolName = demangleAddress(callAddress: callAddressInt) else {
-                    return
-                }
-
-                linesLock.lock()
-                lines[lineNumber] = crashLineRegex.replacementString(for: match, in: line, offset: 0, template: "$1$2$3$4$5$6\(symbolName)")
-                linesLock.unlock()
+        // Flatten frames and resolve a binary path per frame in a single sweep.
+        var pending: [Pending] = []
+        for (tIdx, thread) in crashLog.threads.enumerated() {
+            for (fIdx, frame) in thread.frames.enumerated() {
+                let objectURL = dSYMFiles.first(where: { $0.lastPathComponent == frame.library })
+                    ?? BinaryImages.imageAddresses[frame.library]?.path
+                pending.append(Pending(
+                    threadIdx: tIdx, frameIdx: fIdx,
+                    library: frame.library,
+                    instructionAddress: frame.instructionAddress,
+                    objectAddress: frame.objectAddress,
+                    objectPath: objectURL?.path
+                ))
             }
         }
-        return lines.joined(separator: "\n")
+
+        // Group by (objectPath, libraryLoadAddress) so each group becomes one atos invocation.
+        struct BatchKey: Hashable { let objectPath: String; let libraryAddress: UInt64 }
+        var groups: [BatchKey: [Int]] = [:]
+        for (i, p) in pending.enumerated() {
+            guard let path = p.objectPath else { continue }
+            groups[BatchKey(objectPath: path, libraryAddress: p.objectAddress), default: []].append(i)
+        }
+
+        let workspacePath = DDTestMonitor.env.workspacePath
+        let resolvedSymbols: Synced<[Int: String]> = .init([:])
+        let groupList = Array(groups)
+        DispatchQueue.concurrentPerform(iterations: groupList.count) { gIdx in
+            let (key, frameIndices) = groupList[gIdx]
+            let addresses = frameIndices
+                .map { String(format: "0x%llx", pending[$0].instructionAddress) }
+                .joined(separator: " ")
+            let libraryHex = String(format: "0x%llx", key.libraryAddress)
+            guard let response = Spawn.command(
+                try: "/usr/bin/atos --fullPath -o \"\(key.objectPath)\" -l \(libraryHex) \(addresses)",
+                log: Log.instance
+            ) else { return }
+            if response.error.hasPrefix("atos cannot load") { return }
+            let symbols = response.output.components(separatedBy: "\n")
+            guard symbols.count == frameIndices.count else { return }
+
+            resolvedSymbols.update { resolvedSymbols in
+                for (i, frameIdx) in frameIndices.enumerated() {
+                    var symbol = symbols[i]
+                    if symbol.isEmpty { continue }
+                    if let workspacePath {
+                        symbol = symbol.replacingOccurrences(of: workspacePath + "/", with: "")
+                    }
+                    resolvedSymbols[frameIdx] = symbol
+                }
+            }
+        }
+
+        // Apply resolved symbols back into the crash log; fall back to dladdr+demangle for the rest.
+        let resolved = resolvedSymbols.value
+        for (i, p) in pending.enumerated() {
+            if let symbol = resolved[i] {
+                crashLog.threads[p.threadIdx].frames[p.frameIdx].symbolicated = symbol
+            } else if let symbol = dladdrFallback(library: p.library,
+                                                  instructionAddress: p.instructionAddress,
+                                                  objectAddress: p.objectAddress)
+            {
+                crashLog.threads[p.threadIdx].frames[p.frameIdx].symbolicated = symbol
+            }
+        }
+    }
+
+    /// Translates a crash-time PC into the equivalent address in the current process and looks up
+    /// the symbol via `dladdr`. Returns `nil` if the binary isn't loaded in this process.
+    private static func dladdrFallback(library: String, instructionAddress: UInt64, objectAddress: UInt64) -> String? {
+        var lookupAddr = UInt(instructionAddress)
+        if let currentSlide = BinaryImages.imageAddresses[library]?.slide, objectAddress > 0 {
+            let offset = instructionAddress &- objectAddress
+            lookupAddr = UInt(currentSlide) &+ UInt(offset)
+        }
+        return demangleAddress(callAddress: lookupAddr)
     }
 
     /// Generates a dSYM symbol file from a binary if possible
@@ -179,101 +209,6 @@ enum DDSymbolicator {
         if dSYMFile == nil {
             _ = DDSymbolicator.generateDSYMFile(forImageName: imageName)
         }
-    }
-
-    /// Manually creates the symbol of a swift test with a given name, this is the name we will locate in the mach image
-    /// It only supports test, because only can have one parameter and dont return values, for more complex symbols
-    /// a complete Mangler should be implemented
-    static func swiftTestMangledName(forClassName className: String, testName: String, throwsError: Bool) -> String {
-        let bundleAndClassComponents = className.components(separatedBy: ".")
-        guard bundleAndClassComponents.count == 2 else {
-            return ""
-        }
-        let endName = throwsError ? "KF" : "F"
-
-        var componentsAdded = [String]()
-
-        let moduleMangled = mangleIdentifier(identifier: bundleAndClassComponents[0], previousComponents: &componentsAdded, existingModule: "")
-        let classMangled = mangleIdentifier(identifier: bundleAndClassComponents[1], previousComponents: &componentsAdded, existingModule: bundleAndClassComponents[0])
-        let testNameMangled = mangleIdentifier(identifier: testName, previousComponents: &componentsAdded, existingModule: bundleAndClassComponents[0])
-        return "_$s" + moduleMangled + classMangled + "C" + testNameMangled + "yy" + endName
-    }
-
-    fileprivate static func mangleIdentifier(identifier: String, previousComponents: inout [String], existingModule: String) -> String {
-        if identifier == existingModule {
-            return "AA"
-        }
-
-        var mangledIdentifier = ""
-        let namesToProcess = identifier.separatedByWords.components(separatedBy: " ")
-        var accumulator = ""
-
-        let numNamesToProcess = namesToProcess.count
-        var replacementHappened = false
-
-        var lastReplacementIndex: Int?
-        for namesIdx in 0 ..< numNamesToProcess {
-            let wordToProcess = namesToProcess[namesIdx].replacingOccurrences(of: "_", with: "")
-            if let index = previousComponents.firstIndex(of: wordToProcess) {
-                replacementHappened = true
-                let replacingCharacter = Unicode.Scalar(Int(Unicode.Scalar("a").value) + index)
-                if !accumulator.isEmpty {
-                    mangledIdentifier += "\(accumulator.count)" + accumulator
-                }
-                accumulator = String(namesToProcess[namesIdx].suffix(namesToProcess[namesIdx].count - wordToProcess.count))
-                mangledIdentifier += String(replacingCharacter!)
-                lastReplacementIndex = mangledIdentifier.count - 1
-                if namesIdx == numNamesToProcess - 1 {
-                    mangledIdentifier += "0"
-                }
-            } else {
-                accumulator += namesToProcess[namesIdx]
-                if previousComponents.count < 26 {
-                    previousComponents.append(wordToProcess)
-                }
-            }
-        }
-        if !accumulator.isEmpty {
-            mangledIdentifier += "\(accumulator.count)" + accumulator
-        }
-
-        if let replacementIndex = lastReplacementIndex {
-            mangledIdentifier = DDSymbolicator.upperCase(mangledIdentifier, replacementIndex)
-        }
-        return replacementHappened ? "0" + mangledIdentifier : mangledIdentifier
-    }
-
-    fileprivate static func upperCase(_ myString: String, _ index: Int) -> String {
-        var chars = Array(myString) // gets an array of characters
-        chars[index] = Character(String(chars[index]).uppercased())
-        let modifiedString = String(chars)
-        return modifiedString
-    }
-
-    /// It locates the address in the image og the library where the symbol is located, it must receive a mangled name
-    static func address(forSymbolName name: String, library: String) -> UnsafeRawPointer? {
-        guard let imageAddressHeader = BinaryImages.imageAddresses[library]?.header,
-              let imageSlide = BinaryImages.imageAddresses[library]?.slide else { return nil }
-
-        let symbol = CoveredBinary.findSymbol(named: name, image: imageAddressHeader, slide: imageSlide)
-
-        return symbol
-    }
-
-    private static func symbolWithAtos(objectPath: String, libraryAdress: String, callAddress: String) -> String {
-        guard let response = Spawn.command(
-            try: "/usr/bin/atos --fullPath -o \"\(objectPath)\" -l \(libraryAdress) \(callAddress)", log: Log.instance
-        ) else {
-            return ""
-        }
-        if response.error.hasPrefix("atos cannot load") {
-            return ""
-        }
-        var symbol = response.output
-        if let workspacePath = DDTestMonitor.env.workspacePath {
-            symbol = symbol.replacingOccurrences(of: workspacePath + "/", with: "")
-        }
-        return symbol
     }
 
     static func atosSymbol(forAddress callAddress: String, library: String) -> String? {

@@ -1,6 +1,6 @@
 Component,Origin,License,Copyright
 import,opentelemetry-swift,Apache-2.0,Copyright 2020 - The OpenTelemetry Authors
-import,PLCrashReporter,MIT,Copyright Microsoft Corporation
+import,KSCrash,MIT,Copyright 2012 Karl Stenerud
 import,SigmaSwiftStatistics,MIT,Copyright 2015 - Evgenii Neumerzhitckii
 import,Kronos,Apache-2.0,Copyright Mobile Native Foundation
 import,LLVM,Apache-2.0 WITH LLVM-exception,Copyright LLVM Project

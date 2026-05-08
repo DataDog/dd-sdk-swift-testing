@@ -71,6 +71,24 @@ enum CrashInformation {
 }
 
 
+/// File-scope `@convention(c)` callback handed to `KSCrashConfiguration.isWritingReportCallback`.
+/// Runs in the crash-time exception handling context (subject to the async-safety constraints
+/// described by `KSCrash_ExceptionHandlingPlan`). Mirrors the prior PLCrashReporter signal callback.
+private let ddCrashIsWritingReportCallback: @convention(c) (
+    UnsafePointer<ExceptionHandlingPlan>, UnsafePointer<ReportWriter>
+) -> Void = { _, _ in
+    if let info = SanitizerHelper.getSaniziterInfo(), let url = DDCrashes.sanitizerURL {
+        try? info.write(to: url, atomically: true, encoding: .utf8)
+    }
+    if let url = DDCrashes.spanURL, let test = Test.current {
+        let data = SimpleSpanSerializer.serializeSpan(simpleSpan: test.toCrashData)
+        try? data.write(to: url, options: .atomic)
+    }
+    DDTestMonitor.instance?.tia?.stop()
+    Log.print("Crash detected! Exiting...")
+}
+
+
 /// This class is our interface with the crash reporter, now backed by KSCrash.
 internal enum DDCrashes {
     private static let userInfoSpanKey = "dd.span"
@@ -103,17 +121,10 @@ internal enum DDCrashes {
         config.monitors = monitors
         config.deadlockWatchdogInterval = 0
 
-        config.crashNotifyCallback = { _ in
-            if let info = SanitizerHelper.getSaniziterInfo(), let url = sanitizerURL {
-                try? info.write(to: url, atomically: true, encoding: .utf8)
-            }
-            if let url = spanURL, let test = Test.current {
-                let data = SimpleSpanSerializer.serializeSpan(simpleSpan: test.toCrashData)
-                try? data.write(to: url, options: .atomic)
-            }
-            DDTestMonitor.instance?.tia?.stop()
-            Log.print("Crash detected! Exiting...")
-        }
+        // `isWritingReportCallback` is a `@convention(c)` function pointer — it cannot capture
+        // locals. Everything below is a static property/function access, so the closure is
+        // non-capturing. The plan/writer parameters are unused.
+        config.isWritingReportCallback = ddCrashIsWritingReportCallback
 
         do {
             try KSCrash.shared.install(with: config)

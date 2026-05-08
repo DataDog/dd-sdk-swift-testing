@@ -145,6 +145,7 @@
 		A7FC25C12BA1EAF500067E26 /* GitUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E146BC392869AEA80057C37B /* GitUploader.swift */; };
 		A7FC25C22BA1EAF500067E26 /* TestImpactAnalysis.swift in Sources */ = {isa = PBXBuildFile; fileRef = E137366128A3BE3600420E26 /* TestImpactAnalysis.swift */; };
 		A7FC25D02BA1EB2900067E26 /* SimpleSpanData.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FB483F253891CE0083B263 /* SimpleSpanData.swift */; };
+		B0CDA0CDA0CDA0CDA0CDA002 /* CrashLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0CDA0CDA0CDA0CDA0CDA001 /* CrashLog.swift */; };
 		A7FC25D12BA1EB2900067E26 /* DDCrashes.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FB483E253891CE0083B263 /* DDCrashes.swift */; };
 		A7FC25D22BA1EB2900067E26 /* SimpleSpanSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FB483D253891CE0083B263 /* SimpleSpanSerializer.swift */; };
 		A7FC25D32BA1EB3400067E26 /* DDSymbolicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1665A8025D13BBB00BA53CD /* DDSymbolicator.swift */; };
@@ -206,7 +207,7 @@
 		A7FC264A2BA1ECF800067E26 /* File.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1827D7790300F4018A /* File.swift */; };
 		A7FC264C2BA1ED0C00067E26 /* ExporterConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0C27D7790300F4018A /* ExporterConfiguration.swift */; };
 		A7FC264D2BA1ED1200067E26 /* EventsExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1927D7790300F4018A /* EventsExporter.swift */; };
-		A7FC26502BA1F1E600067E26 /* CrashReporter in Frameworks */ = {isa = PBXBuildFile; productRef = E157A718256E9D1D00CBCA52 /* CrashReporter */; };
+		A7FC26502BA1F1E600067E26 /* Recording in Frameworks */ = {isa = PBXBuildFile; productRef = A7FC26F82BA87E4000067E26 /* Recording */; };
 		A7FC26512BA1F1E600067E26 /* SigmaSwiftStatistics in Frameworks */ = {isa = PBXBuildFile; productRef = E157A71A256E9D1D00CBCA52 /* SigmaSwiftStatistics */; };
 		A7FC26552BA1F1F900067E26 /* EventsExporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25802BA1E87400067E26 /* EventsExporter.framework */; };
 		A7FC265E2BA1F65200067E26 /* fixtures in Resources */ = {isa = PBXBuildFile; fileRef = A7C292122B9B2B39009C2979 /* fixtures */; };
@@ -651,6 +652,7 @@
 		E1FB483D253891CE0083B263 /* SimpleSpanSerializer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleSpanSerializer.swift; sourceTree = "<group>"; };
 		E1FB483E253891CE0083B263 /* DDCrashes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DDCrashes.swift; sourceTree = "<group>"; };
 		E1FB483F253891CE0083B263 /* SimpleSpanData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleSpanData.swift; sourceTree = "<group>"; };
+		B0CDA0CDA0CDA0CDA0CDA001 /* CrashLog.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CrashLog.swift; sourceTree = "<group>"; };
 		E1FB4844253891E70083B263 /* SimpleSpanSerializerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleSpanSerializerTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -709,7 +711,7 @@
 				A79DA60B2F9935E3004BCA8C /* Testing.framework in Frameworks */,
 				A7E0056D2C766EF7004D4B78 /* CoreTelephony.framework in Frameworks */,
 				A7E233312BC82CD10087D8F8 /* Kronos in Frameworks */,
-				A7FC26502BA1F1E600067E26 /* CrashReporter in Frameworks */,
+				A7FC26502BA1F1E600067E26 /* Recording in Frameworks */,
 				A74EB8E02D0AE8A600FAD9B8 /* CodeCoverage in Frameworks */,
 				A7FC26512BA1F1E600067E26 /* SigmaSwiftStatistics in Frameworks */,
 				A7FC26552BA1F1F900067E26 /* EventsExporter.framework in Frameworks */,
@@ -1386,6 +1388,7 @@
 			isa = PBXGroup;
 			children = (
 				E1FB483E253891CE0083B263 /* DDCrashes.swift */,
+				B0CDA0CDA0CDA0CDA0CDA001 /* CrashLog.swift */,
 				E1FB483F253891CE0083B263 /* SimpleSpanData.swift */,
 				E1FB483D253891CE0083B263 /* SimpleSpanSerializer.swift */,
 			);
@@ -1587,7 +1590,7 @@
 			);
 			name = DatadogSDKTesting;
 			packageProductDependencies = (
-				E157A718256E9D1D00CBCA52 /* CrashReporter */,
+				A7FC26F82BA87E4000067E26 /* Recording */,
 				E157A71A256E9D1D00CBCA52 /* SigmaSwiftStatistics */,
 				A7E233302BC82CD10087D8F8 /* Kronos */,
 				A74EB8DF2D0AE8A600FAD9B8 /* CodeCoverage */,
@@ -1720,7 +1723,7 @@
 			);
 			mainGroup = E1ABA04025231E2500ED8AEF;
 			packageReferences = (
-				E1FB4839253891650083B263 /* XCRemoteSwiftPackageReference "plcrashreporter" */,
+				E1FB4839253891650083B263 /* XCRemoteSwiftPackageReference "KSCrash" */,
 				E17B7AA6253F02580081D7F3 /* XCRemoteSwiftPackageReference "SigmaSwiftStatistics" */,
 				A7E2332F2BC82CD10087D8F8 /* XCRemoteSwiftPackageReference "Kronos" */,
 				A7D7E64E2D074D9200B49C35 /* XCRemoteSwiftPackageReference "swift-code-coverage" */,
@@ -1979,6 +1982,7 @@
 				A7CC6D882C0F3F83003C13BC /* Tags+ObjC.swift in Sources */,
 				A74C91CA2E67278800B10681 /* DroneCI.swift in Sources */,
 				A7FC25D12BA1EB2900067E26 /* DDCrashes.swift in Sources */,
+				B0CDA0CDA0CDA0CDA0CDA002 /* CrashLog.swift in Sources */,
 				A71E64762BAA0AA100F2ACA5 /* XcodeCI.swift in Sources */,
 				A7FC25D02BA1EB2900067E26 /* SimpleSpanData.swift in Sources */,
 				A7FC25BE2BA1EADF00067E26 /* DDTest.swift in Sources */,
@@ -2236,7 +2240,7 @@
 		};
 		A7FC26F92BA87E4000067E26 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			productRef = A7FC26F82BA87E4000067E26 /* CrashReporter */;
+			productRef = A7FC26F82BA87E4000067E26 /* Recording */;
 		};
 		A7FC26FB2BA87E4A00067E26 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -3144,14 +3148,6 @@
 				minimumVersion = 1.12.1;
 			};
 		};
-		E157A719256E9D1D00CBCA52 /* XCRemoteSwiftPackageReference "plcrashreporter" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/microsoft/plcrashreporter.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.8.1;
-			};
-		};
 		E157A71B256E9D1D00CBCA52 /* XCRemoteSwiftPackageReference "SigmaSwiftStatistics" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/evgenyneu/SigmaSwiftStatistics.git";
@@ -3168,12 +3164,12 @@
 				minimumVersion = 9.0.2;
 			};
 		};
-		E1FB4839253891650083B263 /* XCRemoteSwiftPackageReference "plcrashreporter" */ = {
+		E1FB4839253891650083B263 /* XCRemoteSwiftPackageReference "KSCrash" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/microsoft/plcrashreporter.git";
+			repositoryURL = "https://github.com/kstenerud/KSCrash.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 1.12.0;
+				minimumVersion = 2.5.1;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -3229,10 +3225,10 @@
 			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
 			productName = URLSessionInstrumentation;
 		};
-		A7FC26F82BA87E4000067E26 /* CrashReporter */ = {
+		A7FC26F82BA87E4000067E26 /* Recording */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = E1FB4839253891650083B263 /* XCRemoteSwiftPackageReference "plcrashreporter" */;
-			productName = CrashReporter;
+			package = E1FB4839253891650083B263 /* XCRemoteSwiftPackageReference "KSCrash" */;
+			productName = Recording;
 		};
 		A7FC26FA2BA87E4A00067E26 /* SigmaSwiftStatistics */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -3243,11 +3239,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
 			productName = InMemoryExporter;
-		};
-		E157A718256E9D1D00CBCA52 /* CrashReporter */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E157A719256E9D1D00CBCA52 /* XCRemoteSwiftPackageReference "plcrashreporter" */;
-			productName = CrashReporter;
 		};
 		E157A71A256E9D1D00CBCA52 /* SigmaSwiftStatistics */ = {
 			isa = XCSwiftPackageProductDependency;

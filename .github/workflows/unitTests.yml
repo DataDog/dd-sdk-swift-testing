@@ -19,14 +19,20 @@ jobs:
             os: "macos-26"
             iossim: "iPhone 17"
             tvossim: "Apple TV"
+            watchossim: "Apple Watch Series 11 (46mm)"
+            visionossim: "Apple Vision Pro"
           - xcode: "Xcode_26.2"
             os: "macos-26"
             iossim: "iPhone 17"
             tvossim: "Apple TV"
+            watchossim: "Apple Watch Series 11 (46mm)"
+            visionossim: "Apple Vision Pro"
           - xcode: "Xcode_26.4"
             os: "macos-26"
             iossim: "iPhone 17"
             tvossim: "Apple TV"
+            watchossim: "Apple Watch Series 11 (46mm)"
+            visionossim: "Apple Vision Pro"
     runs-on: ${{ matrix.env.os }}
     steps:
     - name: Checkout
@@ -34,7 +40,7 @@ jobs:
     - name: Select ${{ matrix.env.xcode }}
       run: sudo xcode-select --switch /Applications/${{ matrix.env.xcode }}.app
     - name: Unit tests
-      run: make XC_LOG=unit IOS_SIMULATOR="${{ matrix.env.iossim }}" TVOS_SIMULATOR="${{ matrix.env.tvossim }}" tests/unit
+      run: make XC_LOG=unit IOS_SIMULATOR="${{ matrix.env.iossim }}" TVOS_SIMULATOR="${{ matrix.env.tvossim }}" WATCHOS_SIMULATOR="${{ matrix.env.watchossim }}" VISIONOS_SIMULATOR="${{ matrix.env.visionossim }}" tests/unit
     - name: Attach Xcode logs
       if: '!cancelled()'
       uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0

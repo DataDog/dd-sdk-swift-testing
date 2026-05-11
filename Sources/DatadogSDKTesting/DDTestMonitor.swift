@@ -8,10 +8,14 @@ internal import EventsExporter
 internal import OpenTelemetryApi
 internal import OpenTelemetrySdk
 
-#if canImport(UIKit)
+#if canImport(UIKit) && !os(watchOS)
     import UIKit
     let launchNotificationName = UIApplication.didFinishLaunchingNotification
     let didBecomeActiveNotificationName = UIApplication.didBecomeActiveNotification
+#elseif canImport(WatchKit)
+    import WatchKit
+    let launchNotificationName = WKApplication.didFinishLaunchingNotification
+    let didBecomeActiveNotificationName = WKApplication.didBecomeActiveNotification
 #elseif canImport(Cocoa)
     import Cocoa
     let launchNotificationName = NSApplication.didFinishLaunchingNotification
@@ -22,7 +26,13 @@ internal import OpenTelemetrySdk
 
 internal class DDTestMonitor {
     static var instance: DDTestMonitor?
-    static var clock: Clock = DDTestMonitor.config.disableNTPClock ? DateClock() : NTPClock()
+    static var clock: Clock = {
+        #if os(watchOS)
+            return DateClock()
+        #else
+            return DDTestMonitor.config.disableNTPClock ? DateClock() as Clock : NTPClock()
+        #endif
+    }()
 
     static var tracer = DDTracer()
     static var env = Environment(config: config, env: envReader, log: Log.instance)
@@ -72,7 +82,13 @@ internal class DDTestMonitor {
     private let testOptimizationSetupQueue = OperationQueue()
     let gitUploadQueue = OperationQueue()
 
-    static let developerMachineHostName: String? = try? Spawn.output("hostname")
+    static let developerMachineHostName: String? = {
+        #if targetEnvironment(simulator) || os(macOS)
+            return try? Spawn.output("hostname")
+        #else
+            return nil
+        #endif
+    }()
 
     // Advanced features
     var gitUploader: GitUploader? = nil

@@ -11,6 +11,13 @@ extension DataUploadStatus: @retroactive Equatable {}
 extension DataUploadStatus: EquatableInTests {}
 
 class DataUploaderTests: XCTestCase {
+    override func setUpWithError() throws {
+        // See `isWatchOS` in `CoreMocks.swift`: watchOS bypasses `URLProtocol`-based
+        // mocks for synchronous URLSession calls, which is exactly the pattern
+        // `DataUploader.upload(data:)` uses (sync via `RunLoopWaiter`).
+        try XCTSkipIf(isWatchOS, "watchOS bypasses URLProtocol mocks for sync URLSession calls")
+    }
+
     func testWhenUploadCompletesWithSuccess_itReturnsExpectedUploadStatus() {
         // Given
         let randomResponse: HTTPURLResponse = .mockResponseWith(statusCode: (100 ... 399).randomElement()!)

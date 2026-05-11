@@ -7,6 +7,19 @@
 @testable import EventsExporter
 import Foundation
 
+/// True when the test bundle is running on watchOS. Used to skip suites that drive
+/// uploads through `URLProtocol`-based mocks (`ServerMock`): watchOS' URLSession
+/// honors `URLSessionConfiguration.protocolClasses` only for asynchronous, run-loop-
+/// driven calls (`XCTestExpectation` + `waitForExpectations`), and silently bypasses
+/// the protocol when the caller is using a custom run-loop pump — even though
+/// `URLProtocol.canInit` is invoked and returns `true`. The result is that uploads
+/// hit the real network and the mocks never fire.
+#if os(watchOS)
+let isWatchOS = true
+#else
+let isWatchOS = false
+#endif
+
 // MARK: - PerformancePreset Mocks
 
 struct StoragePerformanceMock: StoragePerformancePreset {

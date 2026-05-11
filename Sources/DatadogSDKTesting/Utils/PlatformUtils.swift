@@ -5,9 +5,12 @@
  */
 
 import Foundation
-#if os(iOS) || os(tvOS) || os(watchOS)
+#if canImport(WatchKit)
+    import WatchKit
+#endif
+#if canImport(UIKit)
     import UIKit
-#else
+#elseif canImport(Cocoa)
     import Cocoa
     import SystemConfiguration
 #endif
@@ -26,6 +29,8 @@ struct PlatformUtils {
             platform = "tvOS"
         #elseif os(watchOS)
             platform = "watchOS"
+        #elseif os(visionOS)
+            platform = "visionOS"
         #else
             platform = "macOS"
         #endif
@@ -45,11 +50,17 @@ struct PlatformUtils {
             return "arm"
         #elseif arch(arm64)
             return "arm64"
+        #elseif arch(arm64_32)
+            return "arm64_32"
+        #else
+            return "unknown"
         #endif
     }
 
     static func getDeviceName() -> String {
-        #if os(iOS) || os(tvOS) || os(watchOS)
+        #if os(watchOS)
+            return WKInterfaceDevice.current().name
+        #elseif os(iOS) || os(tvOS) || os(visionOS)
             return UIDevice.current.name
         #else
             return (SCDynamicStoreCopyComputerName(nil, nil) as String?) ?? "Mac"
@@ -57,7 +68,13 @@ struct PlatformUtils {
     }
 
     static func getDeviceModel() -> String {
-        #if os(iOS) || os(tvOS) || os(watchOS)
+        #if os(watchOS)
+            #if targetEnvironment(simulator)
+                return ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"] ?? (WKInterfaceDevice.current().model + " simulator")
+            #else
+                return WKInterfaceDevice.current().model
+            #endif
+        #elseif os(iOS) || os(tvOS) || os(visionOS)
             #if targetEnvironment(simulator)
                 return ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"] ?? (UIDevice.current.model + " simulator")
             #else
@@ -108,34 +125,20 @@ struct PlatformUtils {
     }
 
     static func getAppearance() -> String {
-        #if os(iOS) || os(tvOS) || os(watchOS)
+        #if os(watchOS)
+            return "unspecified"
+        #elseif os(iOS) || os(tvOS) || os(visionOS)
             let appearance: String
-            if #available(iOS 13.0, tvOS 13.0, *) {
-                switch UITraitCollection.current.userInterfaceStyle {
-                    case .unspecified:
-                        appearance = "unspecified"
-                    case .light:
-                        appearance = "light"
-                    case .dark:
-                        appearance = "dark"
-                    @unknown default:
-                        appearance = "unknown"
-                }
-            } else if #available(iOS 12.0, tvOS 12.0, *) {
-                switch UIScreen.main.traitCollection.userInterfaceStyle {
-                    case .dark:
-                        appearance = "dark"
-                    case .light:
-                        appearance = "light"
-                    case .unspecified:
-                        appearance = "unspecified"
-                    @unknown default:
-                        appearance = "unknown"
-                }
-            } else {
-                appearance = "light"
+            switch UITraitCollection.current.userInterfaceStyle {
+                case .unspecified:
+                    appearance = "unspecified"
+                case .light:
+                    appearance = "light"
+                case .dark:
+                    appearance = "dark"
+                @unknown default:
+                    appearance = "unknown"
             }
-
             return appearance
         #else
             if #available(OSX 10.14, *) {
@@ -175,7 +178,7 @@ struct PlatformUtils {
     #endif
 
     static func getLocalization() -> String {
-        #if os(iOS) || os(tvOS) || os(watchOS)
+        #if os(iOS) || os(tvOS) || os(watchOS) || os(visionOS)
             return Locale.current.languageCode ?? "none"
         #else
             return NSLocale.current.languageCode ?? "none"
@@ -183,14 +186,6 @@ struct PlatformUtils {
     }
     
     static var xcodeVersion: XcodeVersion {
-        guard let version = Int(getXcodeVersion(), radix: 10) else {
-            return .xcode26
-        }
-        switch version {
-        case 1600..<1630: return .xcode16_0
-        case 1630..<1700: return .xcode16_3
-        case 2600..<2700: return .xcode26
-        default: return .xcode26
-        }
+        .xcode26
     }
 }

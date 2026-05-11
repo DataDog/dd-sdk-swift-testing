@@ -4,7 +4,7 @@
  * Copyright 2020-Present Datadog, Inc.
  */
 
-#if !os(macOS) && !targetEnvironment(macCatalyst)
+#if !os(macOS) && !targetEnvironment(macCatalyst) && !os(watchOS)
 import UIKit
 
 class UIDeviceMock : UIDevice {

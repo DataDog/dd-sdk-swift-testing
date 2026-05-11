@@ -21,7 +21,7 @@ jobs:
     - name: Select Xcode 26.1
       run: sudo xcode-select --switch /Applications/Xcode_26.1.app
     - name: Test
-      run: make XC_LOG=tests IOS_SIMULATOR="iPhone 17" TVOS_SIMULATOR="Apple TV" tests
+      run: make XC_LOG=tests IOS_SIMULATOR="iPhone 17" TVOS_SIMULATOR="Apple TV" WATCHOS_SIMULATOR="Apple Watch Series 11 (46mm)" VISIONOS_SIMULATOR="Apple Vision Pro" tests
     - name: Attach Xcode logs
       if: '!cancelled()'
       uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0

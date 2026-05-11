@@ -27,7 +27,11 @@ class HTTPClientTests: XCTestCase {
         server.waitFor(requestsCompletion: 1)
     }
 
-    func testWhenRequestIsNotDelivered_itReturnsHTTPRequestDeliveryError() {
+    func testWhenRequestIsNotDelivered_itReturnsHTTPRequestDeliveryError() throws {
+        // watchOS' URLSession does not propagate `URLProtocolClient.urlProtocol(_:didFailWithError:)`
+        // to the dataTask completion handler when no prior response/data callbacks were
+        // delivered — the request silently completes without firing the failure path.
+        try XCTSkipIf(isWatchOS, "watchOS does not deliver URLProtocol error callbacks")
         let mockError = NSError(domain: "network", code: 999, userInfo: [NSLocalizedDescriptionKey: "no internet connection"])
         let server = ServerMock(delivery: .failure(error: mockError))
         let expectation = self.expectation(description: "receive response")

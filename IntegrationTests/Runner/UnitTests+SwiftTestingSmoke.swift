@@ -102,7 +102,11 @@ struct UnitTestsSwiftTestingSmoke: IntergationTestSuite {
         }
     }
 
-    @Test func networkIntegration() async throws {
+    @Test(
+        .disabled(if: XcodeTestRunner.isWatchOSChildSDK,
+                  "On watchOS, `URLSession.shared.data(from:)` against a URL that redirects (GitHub canonicalizes the path) produces two info spans instead of one — URLSession's redirect handling is instrumented twice. Separate investigation required.")
+    )
+    func networkIntegration() async throws {
         try await run(test: "STNetworkIntegration/networkIntegration()") { backend, success in
             let testSpans = backend.allTestSpans
             let infoSpans = backend.allInfoSpans
@@ -120,7 +124,11 @@ struct UnitTestsSwiftTestingSmoke: IntergationTestSuite {
         }
     }
     
-    @Test func crash() async throws {
+    @Test(
+        .disabled(if: XcodeTestRunner.isWatchOSChildSDK,
+                  "KSCrash disables signal/mach exception handlers on watchOS (KSCRASH_HAS_SIGNAL = 0, KSCRASH_HAS_MACH = 0), so SIGILL from Swift array bounds traps cannot be captured.")
+    )
+    func crash() async throws {
         try await run(test: "STCrash") { backend, success in
             let spans = backend.allTestSpans
             #expect(success == false)

@@ -219,7 +219,16 @@ struct XcodeTestRunner: Sendable {
         let workdir = env["SRCROOT"] ?? FileManager.default.currentDirectoryPath
         return (sdk, platform, workdir, log)
     }
-    
+
+    /// `true` when the child test bundle is being launched against a watchOS SDK
+    /// (`watchos` device or `watchsimulator`). Used by tests to skip assertions
+    /// that depend on platform features unavailable on watchOS — most notably
+    /// KSCrash signal/mach exception handlers, which are disabled in KSCrash
+    /// itself (`KSCRASH_HAS_SIGNAL = 0`, `KSCRASH_HAS_MACH = 0` on watchOS).
+    static var isWatchOSChildSDK: Bool {
+        parameters(env: ProcessInfo.processInfo.environment).sdk.hasPrefix("watch")
+    }
+
     static let modules: Modules = .init()
 }
 

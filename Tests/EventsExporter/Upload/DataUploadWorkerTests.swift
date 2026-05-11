@@ -28,6 +28,12 @@ class DataUploadWorkerTests: XCTestCase {
         temporaryDirectory.testCreate()
     }
 
+    /// Tests that drive uploads through the real `DataUploader` + `ServerMock` pair
+    /// must opt-in to this guard. See `isWatchOS` in `CoreMocks.swift`.
+    private func skipIfRealDataUploaderUnsupported() throws {
+        try XCTSkipIf(isWatchOS, "watchOS bypasses URLProtocol mocks for sync URLSession calls")
+    }
+
     override func tearDown() {
         temporaryDirectory.testDelete()
         super.tearDown()
@@ -35,7 +41,8 @@ class DataUploadWorkerTests: XCTestCase {
 
     // MARK: - Data Uploads
 
-    func testItUploadsAllData() {
+    func testItUploadsAllData() throws {
+        try skipIfRealDataUploaderUnsupported()
         let server = ServerMock(delivery: .success(response: .mockResponseWith(statusCode: 200)))
         let dataUploader = DataUploader(
             httpClient: HTTPClient(session: server.getInterceptedURLSession(), debug: false),
@@ -153,7 +160,8 @@ class DataUploadWorkerTests: XCTestCase {
         worker.shutdown()
     }
 
-    func testWhenBatchFails_thenIntervalIncreases() {
+    func testWhenBatchFails_thenIntervalIncreases() throws {
+        try skipIfRealDataUploaderUnsupported()
         let delayChangeExpectation = expectation(description: "Upload delay is increased")
         let mockDelay = MockDelay { command in
             if case .increase = command {
@@ -185,7 +193,8 @@ class DataUploadWorkerTests: XCTestCase {
         worker.shutdown()
     }
 
-    func testWhenBatchSucceeds_thenIntervalDecreases() {
+    func testWhenBatchSucceeds_thenIntervalDecreases() throws {
+        try skipIfRealDataUploaderUnsupported()
         let delayChangeExpectation = expectation(description: "Upload delay is decreased")
         let mockDelay = MockDelay { command in
             if case .decrease = command {
@@ -243,7 +252,8 @@ class DataUploadWorkerTests: XCTestCase {
         server.waitFor(requestsCompletion: 0)
     }
 
-    func testItFlushesAllData() {
+    func testItFlushesAllData() throws {
+        try skipIfRealDataUploaderUnsupported()
         let server = ServerMock(delivery: .success(response: .mockResponseWith(statusCode: 200)))
         let dataUploader = DataUploader(
             httpClient: HTTPClient(session: server.getInterceptedURLSession(), debug: false),

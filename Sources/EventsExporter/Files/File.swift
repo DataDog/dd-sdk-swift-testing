@@ -62,7 +62,7 @@ public struct File: WritableFile, ReadableFile {
           ```
           This is fixed in iOS 14/Xcode 12
          */
-        if #available(OSX 10.15.4, iOS 13.4, watchOS 6.0, tvOS 13.4, *) {
+        if #available(OSX 10.15.4, iOS 13.4, watchOS 6.0, tvOS 13.4, visionOS 1.0, *) {
             defer {
                 if synchronized {
                     try? fileHandle.synchronize()
@@ -107,7 +107,7 @@ public struct File: WritableFile, ReadableFile {
           ```
          This is fixed in iOS 14/Xcode 12
          */
-        if #available(OSX 10.15.4, iOS 13.4, watchOS 6.0, tvOS 13.4, *) {
+        if #available(OSX 10.15.4, iOS 13.4, watchOS 6.0, tvOS 13.4, visionOS 1.0, *) {
             defer { try? fileHandle.close() }
             return try fileHandle.readToEnd() ?? Data()
         } else {

@@ -6,7 +6,9 @@
 
 import XCTest
 
-#if !os(macOS)
+#if canImport(WatchKit)
+import WatchKit
+#elseif canImport(UIKit)
 import UIKit
 #else
 import Foundation
@@ -20,7 +22,7 @@ class DeviceTests: XCTestCase {
         XCTAssertNotNil(Device.current)
     }
 
-    #if !os(macOS) && !targetEnvironment(macCatalyst)
+    #if !os(macOS) && !targetEnvironment(macCatalyst) && !os(watchOS)
     func testWhenRunningOnMobile_itUsesUIDeviceInfo() {
         let uiDevice = UIDeviceMock(
             model: "model mock",

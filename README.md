@@ -3,6 +3,17 @@
 This SDK is part of Datadog's [Test Optimization](https://docs.datadoghq.com/tests/) product.
 A more comprehensive and updated documentation can be found at [Test Optimization - Swift](https://docs.datadoghq.com/tests/setup/swift/).
 
+## Supported platforms
+
+- iOS 15+
+- tvOS 15+
+- macOS 11+
+- Mac Catalyst 14+
+- watchOS 8+
+- visionOS 1+
+
+UI tests, code coverage post-processing, Test Impact Analysis, and dSYM symbolication require simulator or macOS host execution.
+
 ## Getting Started
 
 Link your test targets with the framework (you can use SPM or direct linking )

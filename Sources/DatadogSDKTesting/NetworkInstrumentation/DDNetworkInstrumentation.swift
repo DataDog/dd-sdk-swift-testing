@@ -154,11 +154,9 @@ class DDNetworkInstrumentation {
             span.setAttribute(key: DDTags.contextQueueName, value: name)
         }
 
-        if #available(macOS 10.15, iOS 13.0, tvOS 13.0, *) {
-            withUnsafeCurrentTask { task in
-                if let hash = task?.hashValue {
-                    span.setAttribute(key: DDTags.contextTaskHashValue, value: hash)
-                }
+        withUnsafeCurrentTask { task in
+            if let hash = task?.hashValue {
+                span.setAttribute(key: DDTags.contextTaskHashValue, value: hash)
             }
         }
         

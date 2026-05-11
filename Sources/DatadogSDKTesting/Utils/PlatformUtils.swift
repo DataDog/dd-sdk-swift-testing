@@ -141,25 +141,16 @@ struct PlatformUtils {
             }
             return appearance
         #else
-            if #available(OSX 10.14, *) {
-                return NSApp?.effectiveAppearance.name.rawValue ?? "light"
-            } else {
-                return "light"
-            }
+            return NSApp?.effectiveAppearance.name.rawValue ?? "light"
         #endif
     }
 
 
     #if os(iOS)
         static func getOrientation() -> String {
-            let orientation: UIInterfaceOrientation
-            if #available(iOS 13.0, *) {
-                let scene = UIApplication.shared.connectedScenes
-                            .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene
-                orientation = scene?.interfaceOrientation ?? .portrait
-            } else {
-                orientation = UIApplication.shared.statusBarOrientation
-            }
+            let scene = UIApplication.shared.connectedScenes
+                        .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene
+            let orientation: UIInterfaceOrientation = scene?.interfaceOrientation ?? .portrait
             switch orientation {
                 case .unknown:
                     return "unknown"

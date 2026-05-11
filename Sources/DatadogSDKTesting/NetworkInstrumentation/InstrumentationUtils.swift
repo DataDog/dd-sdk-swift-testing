@@ -47,9 +47,7 @@ enum InstrumentationUtils {
             safeClasses.append(cls)
         }
         
-        if #available(iOS 14, macOS 11, tvOS 14, watchOS 7, visionOS 1, *) {
-          os_log(.info, "failed to initialize network connection status: %ld", safeClasses.count)
-        }
+        os_log(.info, "failed to initialize network connection status: %ld", safeClasses.count)
         return safeClasses
     }
     

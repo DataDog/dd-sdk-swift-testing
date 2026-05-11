@@ -130,9 +130,7 @@ class URLSessionInstrumentation {
       }
     }
 
-    if #available(OSX 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, visionOS 1.0, *) {
-      injectIntoNSURLSessionCreateTaskMethods()
-    }
+    injectIntoNSURLSessionCreateTaskMethods()
     injectIntoNSURLSessionCreateTaskWithParameterMethods()
     injectIntoNSURLSessionAsyncDataAndDownloadTaskMethods()
     injectIntoNSURLSessionAsyncUploadTaskMethods()
@@ -146,7 +144,7 @@ class URLSessionInstrumentation {
     injectTaskDidCompleteWithErrorIntoDelegateClass(cls: cls)
     injectRespondsToSelectorIntoDelegateClass(cls: cls)
     // For future use
-    if #available(OSX 13.0, iOS 16.0, watchOS 9.0, tvOS 16.0, visionOS 1.0, *) {
+    if #available(OSX 13.0, iOS 16.0, watchOS 9.0, tvOS 16.0, *) {
       injectTaskDidFinishCollectingMetricsIntoDelegateClass(cls: cls)
     }
 
@@ -757,13 +755,14 @@ class URLSessionInstrumentation {
         requestMap[taskId]?.setRequest(request)
       }
 
-      // For iOS 15+/macOS 12+, handle async/await methods differently
-      if #available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, visionOS 1.0, *) {
-        // Check if we can determine if this is an async/await call
-        // For iOS 15/macOS 12, we can't use Task.basePriority, so we check other indicators
+      // For macOS 12+, handle async/await methods differently.
+      // (All other platforms already meet the minimum deployment target.)
+      if #available(macOS 12.0, *) {
+        // Check if we can determine if this is an async/await call.
+        // On macOS 12, we can't use Task.basePriority, so we check other indicators.
         var isAsyncContext = false
 
-        if #available(OSX 13.0, iOS 16.0, watchOS 9.0, tvOS 16.0, visionOS 1.0, *) {
+        if #available(OSX 13.0, iOS 16.0, watchOS 9.0, tvOS 16.0, *) {
           isAsyncContext = Task.basePriority != nil
         } else {
           // For iOS 15/macOS 12, check if the task has no delegate and no session delegate
@@ -796,7 +795,7 @@ class URLSessionInstrumentation {
         }
       }
 
-      if #available(OSX 13.0, iOS 16.0, watchOS 9.0, tvOS 16.0, visionOS 1.0, *) {
+      if #available(OSX 13.0, iOS 16.0, watchOS 9.0, tvOS 16.0, *) {
         guard Task.basePriority != nil else {
           // If not inside a Task basePriority is nil
           return
@@ -846,7 +845,7 @@ class FakeDelegate: NSObject, URLSessionTaskDelegate {
                   didCompleteWithError error: Error?) {}
 }
 
-@available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, visionOS 1.0, *)
+@available(macOS 12.0, *)
 class AsyncTaskDelegate: NSObject, URLSessionTaskDelegate {
   private weak var instrumentation: URLSessionInstrumentation?
   private let sessionTaskId: String

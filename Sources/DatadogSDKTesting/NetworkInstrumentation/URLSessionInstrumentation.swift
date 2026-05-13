@@ -745,7 +745,7 @@ class URLSessionInstrumentation {
     guard !task.isBackground else {
       return
     }
-    
+
     let taskId = idKeyForTask(task)
     if let request = task.currentRequest {
       queue.sync {
@@ -755,11 +755,21 @@ class URLSessionInstrumentation {
         requestMap[taskId]?.setRequest(request)
       }
 
-      // For macOS 12+, handle async/await methods differently.
-      // (All other platforms already meet the minimum deployment target.)
+      // A span may have already been started for this task — either by a factory
+      // swizzle (e.g. dataTask(with:completionHandler:)) or by a previous resume
+      // (NSURLSession super-class chaining and redirect handling can both cause
+      // resume to fire more than once per logical request, most visibly on watchOS).
+      // Starting another one here would orphan the existing span: processAndLogRequest
+      // would overwrite runningSpans[taskId] and the first span would never be ended.
+      let alreadyTracked = URLSessionLogger.runningSpansQueue.sync {
+        URLSessionLogger.runningSpans[taskId] != nil
+      }
+      if alreadyTracked { return }
+
+      // For iOS 15+/macOS 12+, handle async/await methods differently
       if #available(macOS 12.0, *) {
-        // Check if we can determine if this is an async/await call.
-        // On macOS 12, we can't use Task.basePriority, so we check other indicators.
+        // Check if we can determine if this is an async/await call
+        // For iOS 15/macOS 12, we can't use Task.basePriority, so we check other indicators
         var isAsyncContext = false
 
         if #available(OSX 13.0, iOS 16.0, watchOS 9.0, tvOS 16.0, *) {

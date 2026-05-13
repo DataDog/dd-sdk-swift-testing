@@ -108,11 +108,7 @@ struct UnitTestsXCTestSmoke: IntergationTestSuite {
         }
     }
 
-    @Test(
-        .disabled(if: XcodeTestRunner.isWatchOSChildSDK,
-                  "On watchOS, `URLSession.shared.data(from:)` against a URL that redirects (GitHub canonicalizes the path) produces two info spans instead of one — URLSession's redirect handling is instrumented twice. Separate investigation required.")
-    )
-    func networkIntegration() async throws {
+    @Test func networkIntegration() async throws {
         try await run(test: "XCNetworkIntegration/testNetworkIntegration") { backend, success in
             let testSpans = backend.allTestSpans
             let infoSpans = backend.allInfoSpans

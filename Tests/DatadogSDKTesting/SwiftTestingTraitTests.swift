@@ -189,25 +189,37 @@ private final class MockSwiftTestingObserver: SwiftTestingObserverType {
 
 private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
     let isRecursive: Bool = false
-    
-    func prepare(for test: Testing.Test) async throws {
-        if DatadogSwiftTestingTrait.sharedSuiteProvider == nil {
-            let session = Mocks.SessionManager(provider: Mocks.Session.Provider(),
-                                               config: .init(activeFeatures: [],
-                                                             platform: DDTestMonitor.env.platform,
-                                                             clock: DateClock(),
-                                                             crash: nil,
-                                                             command: nil,
-                                                             service: "test-service",
-                                                             metrics: [:],
-                                                             log: Mocks.CatchLogger()),
-                                               observer: SessionAndModuleObserver())
-            DatadogSwiftTestingTrait.sharedSuiteProvider = SwiftTestingSuiteProvider(session: session,
-                                                                                     observer: MockSwiftTestingObserver())
-        }
+
+    /// Lazy setup of the shared suite provider. Called from both `prepare(for:)`
+    /// and `provideScope(for:testCase:performing:)`. The latter matters when
+    /// XCTest relaunches the bundle after a crash: Swift Testing skips
+    /// `prepare(for:)` for suites whose tests all completed in the previous
+    /// launch but still invokes the suite-level `provideScope`, so without
+    /// this guard `DatadogSwiftTestingTrait.sharedSuiteProvider` would be nil
+    /// and the trait's `#require` would crash the test runner with
+    /// "Recording issues for suites is not supported".
+    private static func ensureSuiteProvider() {
+        guard DatadogSwiftTestingTrait.sharedSuiteProvider == nil else { return }
+        let session = Mocks.SessionManager(provider: Mocks.Session.Provider(),
+                                           config: .init(activeFeatures: [],
+                                                         platform: DDTestMonitor.env.platform,
+                                                         clock: DateClock(),
+                                                         crash: nil,
+                                                         command: nil,
+                                                         service: "test-service",
+                                                         metrics: [:],
+                                                         log: Mocks.CatchLogger()),
+                                           observer: SessionAndModuleObserver())
+        DatadogSwiftTestingTrait.sharedSuiteProvider = SwiftTestingSuiteProvider(session: session,
+                                                                                 observer: MockSwiftTestingObserver())
     }
-    
+
+    func prepare(for test: Testing.Test) async throws {
+        Self.ensureSuiteProvider()
+    }
+
     func provideScope(for test: Testing.Test, testCase: Testing.Test.Case?, performing function: @Sendable () async throws -> Void) async throws {
+        Self.ensureSuiteProvider()
         let issues: Synced<[String: Int]> = .init([:])
         let cancelled: Synced<[String: Bool]> = .init([:])
         

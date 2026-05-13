@@ -596,16 +596,15 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
         func register(test: some SwiftTestingTestInfoType) {
             if !test.isSuite {
                 _tests[test.module, default: [:]][test.suite, default: []].insert(test.name)
-            } else {
-                // Ensure the suite/module entries exist even if no individual
+            } else if _tests[test.module]?[test.suite] == nil {
+                // Ensure the suite/module entries exist even when no individual
                 // tests have called `register` yet. This matters when the test
                 // bundle is relaunched after a crash: Swift Testing skips
                 // `prepare(for:)` for tests that already completed in the
                 // previous launch, so the registry would otherwise have no
-                // record of suites whose tests are all "carried over" — which
-                // would make `count(for:)` / `tests(for:)` throw and break the
-                // suite-level `provideScope`.
-                _tests[test.module, default: [:]][test.suite, default: []]
+                // record of suites whose tests are all "carried over" — and
+                // `tests[module]?[suite]` would read `nil` in trait scopes.
+                _tests[test.module, default: [:]][test.suite] = []
             }
         }
 

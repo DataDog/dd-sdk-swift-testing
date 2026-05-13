@@ -187,8 +187,45 @@ private final class MockSwiftTestingObserver: SwiftTestingObserverType {
     func didFinish(testRun test: borrowing SwiftTestingTestRunContext, with info: TestRunInfoEnd) async {}
 }
 
+/// Serialises the post-check section across parallel @Suite types that share
+/// `ObserverTesterTrait`. Swift Testing runs `@Suite` types in parallel by
+/// default, so two suites can reach the trait's post-checks concurrently.
+/// `Mocks.SessionManager.stop()` nils both `SessionManager._session` and
+/// `DatadogSwiftTestingTrait.sharedSuiteProvider`, so a naive race lets one
+/// suite tear down state while the other is still reading it.
+///
+/// - `session(for:)` captures the underlying `Mocks.Session` and stashes the
+///   first reference seen. Later callers that race past `stop()` get the
+///   stashed reference (the `Mocks.Session` itself stays alive — only the
+///   manager's pointer is cleared).
+/// - `stopOnce(via:)` ensures `session.stop()` runs at most once, no matter
+///   how many sibling suites think the module has ended.
+private actor PostCheckGate {
+    private var stashed: Mocks.Session?
+    private var didStop: Bool = false
+
+    func session(for provider: SwiftTestingSuiteProvider) async -> Mocks.Session? {
+        // `provider.session.session` throws when the SessionManager has been
+        // stopped (it returns nil internally and the protocol default rethrows
+        // it as an error). Treat that as "fall back to the stashed reference".
+        if let live = try? await provider.session.session as? Mocks.Session {
+            if stashed == nil { stashed = live }
+            return live
+        }
+        return stashed
+    }
+
+    func stopOnce(via provider: SwiftTestingSuiteProvider) async {
+        guard !didStop else { return }
+        didStop = true
+        await provider.session.stop()
+    }
+}
+
 private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
     let isRecursive: Bool = false
+
+    private static let gate = PostCheckGate()
 
     /// Lazy setup of the shared suite provider. Called from both `prepare(for:)`
     /// and `provideScope(for:testCase:performing:)`. The latter matters when
@@ -220,6 +257,13 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
 
     func provideScope(for test: Testing.Test, testCase: Testing.Test.Case?, performing function: @Sendable () async throws -> Void) async throws {
         Self.ensureSuiteProvider()
+        // Capture the shared provider into a local up-front: a sibling suite's
+        // `session.stop()` runs `SessionAndModuleObserver.didFinish(session:)`
+        // which nils `DatadogSwiftTestingTrait.sharedSuiteProvider`. Without
+        // this capture the post-checks below would race the sibling and read
+        // `nil`, triggering Swift Testing's fatal "Recording issues for suites
+        // is not supported".
+        let suiteProvider = try #require(DatadogSwiftTestingTrait.sharedSuiteProvider as? SwiftTestingSuiteProvider)
         let issues: Synced<[String: Int]> = .init([:])
         let cancelled: Synced<[String: Bool]> = .init([:])
         
@@ -247,23 +291,20 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
             }
         }
         
-        let suiteProvider = try #require(DatadogSwiftTestingTrait.sharedSuiteProvider as? SwiftTestingSuiteProvider)
-        
         let tests = await suiteProvider.registry.registeredTests
         let suite = try #require(tests[test.ddModule]?[test.ddSuite])
-        let session = try await #require(suiteProvider.session.session as? Mocks.Session)
-
-        // Swift Testing runs `@Suite` types in parallel by default, so two
-        // suites that share this trait can reach this point concurrently.
-        // Capture the suite snapshot we want to verify *before* the
-        // session-stop branch below, otherwise a sibling suite that wins the
-        // race can tear down `session.modules` and we read `nil`.
+        // Route session capture through the gate so a sibling that has already
+        // called `stop()` (which nils `SessionManager._session`) doesn't
+        // starve us — the gate hands back the stashed reference instead.
+        let session = try await #require(Self.gate.session(for: suiteProvider))
         let statuses = try #require(session.modules[test.ddModule]?.suites[test.ddSuite])
 
-        // check is module ended and if ended - stop the test session. This is the last test
+        // check is module ended and if ended - stop the test session. The gate
+        // ensures `stop()` runs exactly once across all parallel sibling suites.
         if session.modules.first?.value.duration ?? 0 > 0 {
-            await suiteProvider.session.stop()
+            await Self.gate.stopOnce(via: suiteProvider)
         }
+
         let errors = issues.value
         let cancels = cancelled.value
         

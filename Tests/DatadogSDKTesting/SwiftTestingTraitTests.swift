@@ -240,13 +240,18 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
         let tests = await suiteProvider.registry.registeredTests
         let suite = try #require(tests[test.ddModule]?[test.ddSuite])
         let session = try await #require(suiteProvider.session.session as? Mocks.Session)
-        
+
+        // Swift Testing runs `@Suite` types in parallel by default, so two
+        // suites that share this trait can reach this point concurrently.
+        // Capture the suite snapshot we want to verify *before* the
+        // session-stop branch below, otherwise a sibling suite that wins the
+        // race can tear down `session.modules` and we read `nil`.
+        let statuses = try #require(session.modules[test.ddModule]?.suites[test.ddSuite])
+
         // check is module ended and if ended - stop the test session. This is the last test
         if session.modules.first?.value.duration ?? 0 > 0 {
             await suiteProvider.session.stop()
         }
-        
-        let statuses = try #require(session.modules[test.ddModule]?.suites[test.ddSuite])
         let errors = issues.value
         let cancels = cancelled.value
         

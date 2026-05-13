@@ -238,11 +238,11 @@ public enum SwiftTestingRegistryError: Error {
 
 protocol SwiftTestingTestRegistryType: AnyObject, Sendable {
     var registeredTests: [String: [String: Set<String>]] { get async }
-    
-    func register(test: some SwiftTestingTestInfoType) async throws
-    func count(for suite: some SwiftTestingTestInfoType) async throws -> Int
-    func tests(for suite: some SwiftTestingTestInfoType) async throws -> Set<String>
-    func suites(for module: String) async throws -> Set<String>
+
+    func register(test: some SwiftTestingTestInfoType) async
+    func count(for suite: some SwiftTestingTestInfoType) async -> Int
+    func tests(for suite: some SwiftTestingTestInfoType) async -> Set<String>
+    func suites(for module: String) async -> Set<String>
 }
 
 protocol SwiftTestingSuiteProviderType: Sendable {
@@ -590,36 +590,44 @@ struct SwiftTestingSuiteContext: Sendable {
 struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
     final actor Registry: SwiftTestingTestRegistryType {
         private var _tests: [String: [String: Set<String>]] = [:]
-        
+
         var registeredTests: [String: [String: Set<String>]] {
             _tests
         }
-        
+
         func register(test: some SwiftTestingTestInfoType) {
             if !test.isSuite {
                 _tests[test.module, default: [:]][test.suite, default: []].insert(test.name)
+            } else {
+                // Ensure the suite/module entries exist even if no individual
+                // tests have called `register` yet. This matters when the test
+                // bundle is relaunched after a crash: Swift Testing skips
+                // `prepare(for:)` for tests that already completed in the
+                // previous launch, so the registry would otherwise have no
+                // record of suites whose tests are all "carried over" — which
+                // would make `count(for:)` / `tests(for:)` throw and break the
+                // suite-level `provideScope`.
+                _tests[test.module, default: [:]][test.suite, default: []]
             }
         }
-        
-        func count(for suite: some SwiftTestingTestInfoType) throws -> Int {
-            try tests(for: suite).count
+
+        /// Number of tests registered for a suite. Returns `0` when the suite
+        /// hasn't been seen in this process (e.g. after a relaunch where Swift
+        /// Testing skips `prepare(for:)` for already-completed tests).
+        func count(for suite: some SwiftTestingTestInfoType) -> Int {
+            tests(for: suite).count
         }
-        
-        func tests(for suite: some SwiftTestingTestInfoType) throws -> Set<String> {
-            guard let module = _tests[suite.module] else {
-                throw SwiftTestingRegistryError.moduleNotFound(name: suite.module)
-            }
-            guard let tests = module[suite.suite] else {
-                throw SwiftTestingRegistryError.unknownSuite(name: suite.suite, module: suite.module)
-            }
-            return tests
+
+        /// Tests registered for a suite. Returns the empty set when the suite
+        /// hasn't been seen in this process; see `count(for:)`.
+        func tests(for suite: some SwiftTestingTestInfoType) -> Set<String> {
+            _tests[suite.module]?[suite.suite] ?? []
         }
-        
-        func suites(for module: String) throws -> Set<String> {
-            guard let keys = _tests[module]?.keys else {
-                throw SwiftTestingRegistryError.moduleNotFound(name: module)
-            }
-            return Set(keys)
+
+        /// Suites registered for a module. Returns the empty set when the
+        /// module hasn't been seen in this process; see `count(for:)`.
+        func suites(for module: String) -> Set<String> {
+            Set(_tests[module]?.keys ?? [:].keys)
         }
     }
     
@@ -670,7 +678,7 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
             case .notStarted: break
             }
             let (session, config) = try await self.session.sessionAndConfig
-            let suites = try await self.registry.suites(for: name)
+            let suites = await self.registry.suites(for: name)
             if case .active(let context) = _modules[name] {
                 // other thread created it
                 return context
@@ -723,7 +731,7 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
               performing function: @Sendable (borrowing SwiftTestingSuiteContext) async throws -> Void) async throws
     {
         let suite = try await self._state.suite(named: info.suite, in: info.module) { (mod, manager, config) in
-            let count = try await self.registry.count(for: info)
+            let count = await self.registry.count(for: info)
             let suite = mod.startSuite(named: info.suite, at: nil, framework: .init(name: Self.framework, version: version))
             return .init(suite: suite, configuration: config, version: version, info: info,
                          testsCount: count, observer: self.observer, moduleManager: manager)
@@ -738,7 +746,7 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
               performing function: @Sendable (borrowing SwiftTestingSuiteContext) async throws -> Void) async throws
     {
         let suite = try await self._state.suite(named: test.suite, in: test.module) { (mod, manager, config) in
-            let tests = try await self.registry.tests(for: test)
+            let tests = await self.registry.tests(for: test)
             let suite = mod.startSuite(named: test.suite, at: nil, framework: .init(name: Self.framework, version: version))
             return SwiftTestingSuiteContext(suite: suite, configuration: config, version: version,
                                             tests: tests, info: test, observer: self.observer,

@@ -95,6 +95,11 @@ class DataUploadWorkerTests: XCTestCase {
 
     func testGivenDataToUpload_whenUploadFinishesAndNeedsToBeRetried_thenDataIsPreserved() {
         let startUploadExpectation = self.expectation(description: "Upload has started")
+        // `needsRetry: true` keeps the batch on disk, so the worker re-uploads on
+        // every tick (every ~50ms with `UploadPerformanceMock.veryQuick`). A second
+        // tick can fire before `wait(for:timeout:)` returns after the first
+        // fulfillment — without this, XCTest throws on the double fulfill.
+        startUploadExpectation.assertForOverFulfill = false
 
         var mockDataUploader = DataUploaderMock(uploadStatus: .mockWith(needsRetry: true))
         mockDataUploader.onUpload = { startUploadExpectation.fulfill() }

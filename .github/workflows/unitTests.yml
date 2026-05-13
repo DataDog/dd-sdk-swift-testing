@@ -10,40 +10,29 @@ on:
 
 jobs:
   unit:
-    name: Run Unit Tests
+    name: ${{ matrix.xcode }} / ${{ matrix.platform }}
     strategy:
       fail-fast: false
       matrix:
-        env:
-          - xcode: "Xcode_26.1"
-            os: "macos-26"
-            iossim: "iPhone 17"
-            tvossim: "Apple TV"
-            watchossim: "Apple Watch Series 11 (46mm)"
-            visionossim: "Apple Vision Pro"
-          - xcode: "Xcode_26.2"
-            os: "macos-26"
-            iossim: "iPhone 17"
-            tvossim: "Apple TV"
-            watchossim: "Apple Watch Series 11 (46mm)"
-            visionossim: "Apple Vision Pro"
-          - xcode: "Xcode_26.4"
-            os: "macos-26"
-            iossim: "iPhone 17"
-            tvossim: "Apple TV"
-            watchossim: "Apple Watch Series 11 (46mm)"
-            visionossim: "Apple Vision Pro"
-    runs-on: ${{ matrix.env.os }}
+        xcode: ["Xcode_26.1", "Xcode_26.2", "Xcode_26.4"]
+        platform: ["macOS", "iOSsim", "tvOSsim", "watchOSsim", "visionOSsim"]
+    runs-on: macos-26
     steps:
     - name: Checkout
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-    - name: Select ${{ matrix.env.xcode }}
-      run: sudo xcode-select --switch /Applications/${{ matrix.env.xcode }}.app
+    - name: Select ${{ matrix.xcode }}
+      run: sudo xcode-select --switch /Applications/${{ matrix.xcode }}.app
     - name: Unit tests
-      run: make XC_LOG=unit IOS_SIMULATOR="${{ matrix.env.iossim }}" TVOS_SIMULATOR="${{ matrix.env.tvossim }}" WATCHOS_SIMULATOR="${{ matrix.env.watchossim }}" VISIONOS_SIMULATOR="${{ matrix.env.visionossim }}" tests/unit
+      run: >-
+        make XC_LOG=unit
+        IOS_SIMULATOR="iPhone 17"
+        TVOS_SIMULATOR="Apple TV"
+        WATCHOS_SIMULATOR="Apple Watch Series 11 (46mm)"
+        VISIONOS_SIMULATOR="Apple Vision Pro"
+        tests/unit/${{ matrix.platform }}
     - name: Attach Xcode logs
       if: '!cancelled()'
       uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
       with:
-        name: ${{ matrix.env.xcode }}-unit-logs
+        name: ${{ matrix.xcode }}-${{ matrix.platform }}-unit-logs
         path: "*-unit.log"

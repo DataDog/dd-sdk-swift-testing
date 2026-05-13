@@ -175,6 +175,32 @@ tests/unit/%:
 	$(call xctest,$*,watchOSsim,$(XC_LOG),$(WATCHOS_SIMULATOR))
 	$(call xctest,$*,visionOSsim,$(XC_LOG),$(VISIONOS_SIMULATOR))
 
+# Per-platform targets — run both unit-test schemes on a single platform.
+# Used by CI to parallelize across the matrix.
+tests/unit/macOS:
+	$(call xctest,EventsExporter,macOS,$(XC_LOG),)
+	$(call xctest,DatadogSDKTesting,macOS,$(XC_LOG),)
+
+tests/unit/iOSsim:
+	$(if $(IOS_SIMULATOR),,$(eval IOS_SIMULATOR = iPhone 17))
+	$(call xctest,EventsExporter,iOSsim,$(XC_LOG),$(IOS_SIMULATOR))
+	$(call xctest,DatadogSDKTesting,iOSsim,$(XC_LOG),$(IOS_SIMULATOR))
+
+tests/unit/tvOSsim:
+	$(if $(TVOS_SIMULATOR),,$(eval TVOS_SIMULATOR = Apple TV))
+	$(call xctest,EventsExporter,tvOSsim,$(XC_LOG),$(TVOS_SIMULATOR))
+	$(call xctest,DatadogSDKTesting,tvOSsim,$(XC_LOG),$(TVOS_SIMULATOR))
+
+tests/unit/watchOSsim:
+	$(if $(WATCHOS_SIMULATOR),,$(eval WATCHOS_SIMULATOR = Apple Watch Series 11 (46mm)))
+	$(call xctest,EventsExporter,watchOSsim,$(XC_LOG),$(WATCHOS_SIMULATOR))
+	$(call xctest,DatadogSDKTesting,watchOSsim,$(XC_LOG),$(WATCHOS_SIMULATOR))
+
+tests/unit/visionOSsim:
+	$(if $(VISIONOS_SIMULATOR),,$(eval VISIONOS_SIMULATOR = Apple Vision Pro))
+	$(call xctest,EventsExporter,visionOSsim,$(XC_LOG),$(VISIONOS_SIMULATOR))
+	$(call xctest,DatadogSDKTesting,visionOSsim,$(XC_LOG),$(VISIONOS_SIMULATOR))
+
 tests/integration/%:
 	$(if $(IOS_SIMULATOR),,$(eval IOS_SIMULATOR = iPhone 17))
 	$(if $(TVOS_SIMULATOR),,$(eval TVOS_SIMULATOR = Apple TV))

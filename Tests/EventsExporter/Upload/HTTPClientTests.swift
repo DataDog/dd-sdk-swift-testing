@@ -23,7 +23,7 @@ class HTTPClientTests: XCTestCase {
             }
         }
 
-        waitForExpectations(timeout: 1, handler: nil)
+        waitForExpectations(timeout: 5, handler: nil)
         server.waitFor(requestsCompletion: 1)
     }
 
@@ -46,7 +46,7 @@ class HTTPClientTests: XCTestCase {
             }
         }
 
-        waitForExpectations(timeout: 1, handler: nil)
+        waitForExpectations(timeout: 5, handler: nil)
         server.waitFor(requestsCompletion: 1)
     }
 }

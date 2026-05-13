@@ -164,6 +164,19 @@ publish_pod:
 clean:
 	rm -rf ./build
 
+# params: scheme — run `scheme` across every unit-test platform.
+define xctest_unit_all_platforms
+	$(if $(IOS_SIMULATOR),,$(eval IOS_SIMULATOR = iPhone 17))
+	$(if $(TVOS_SIMULATOR),,$(eval TVOS_SIMULATOR = Apple TV))
+	$(if $(WATCHOS_SIMULATOR),,$(eval WATCHOS_SIMULATOR = Apple Watch Series 11 (46mm)))
+	$(if $(VISIONOS_SIMULATOR),,$(eval VISIONOS_SIMULATOR = Apple Vision Pro))
+	$(call xctest,$1,macOS,$(XC_LOG),)
+	$(call xctest,$1,iOSsim,$(XC_LOG),$(IOS_SIMULATOR))
+	$(call xctest,$1,tvOSsim,$(XC_LOG),$(TVOS_SIMULATOR))
+	$(call xctest,$1,watchOSsim,$(XC_LOG),$(WATCHOS_SIMULATOR))
+	$(call xctest,$1,visionOSsim,$(XC_LOG),$(VISIONOS_SIMULATOR))
+endef
+
 # Per-platform target — runs both unit-test schemes on a single platform.
 # The `%` placeholder is one of: macOS, iOSsim, tvOSsim, watchOSsim, visionOSsim.
 tests/unit/%:
@@ -177,6 +190,14 @@ tests/unit/%:
 	$(if $(filter $*,visionOSsim),$(eval SIMULATOR=$(VISIONOS_SIMULATOR)),)
 	$(call xctest,EventsExporter,$*,$(XC_LOG),$(SIMULATOR))
 	$(call xctest,DatadogSDKTesting,$*,$(XC_LOG),$(SIMULATOR))
+
+# Per-scheme convenience targets — run a single unit-test scheme across every
+# platform. Explicit names shadow the `tests/unit/%` pattern above.
+tests/unit/EventsExporter:
+	$(call xctest_unit_all_platforms,EventsExporter)
+
+tests/unit/DatadogSDKTesting:
+	$(call xctest_unit_all_platforms,DatadogSDKTesting)
 
 tests/integration/%:
 	$(if $(IOS_SIMULATOR),,$(eval IOS_SIMULATOR = iPhone 17))

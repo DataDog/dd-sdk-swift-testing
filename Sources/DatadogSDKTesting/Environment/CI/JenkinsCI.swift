@@ -14,6 +14,7 @@ internal struct JenkinsCIEnvironmentReader: CIEnvironmentReader {
         
         var environment = [String: SpanAttributeConvertible]()
         environment["DD_CUSTOM_TRACE_ID"] = env["DD_CUSTOM_TRACE_ID", String.self]
+        environment["DD_CUSTOM_PARENT_ID"] = env["DD_CUSTOM_PARENT_ID", String.self]
         
         return (
             ci: .init(

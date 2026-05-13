@@ -23,7 +23,12 @@ public final class RunLoopWaiter: @unchecked Sendable {
 
     public func wait() {
         if Thread.isMainThread {
-            while _locked { CFRunLoopRunInMode(.defaultMode, 0, true) }
+            // Block in the main run loop until either `signal()` wakes us up via
+            // `CFRunLoopWakeUp` (the fast path) or the per-iteration timeout
+            // elapses (safety net in case the wake-up event arrives before
+            // `CFRunLoopRunInMode` enters its wait state, or in case the run loop
+            // has no other sources installed and would otherwise return early).
+            while _locked { CFRunLoopRunInMode(.defaultMode, 0.05, true) }
         } else {
             _sema.wait()
             _sema.signal() // So other threads who are waiting can wake up
@@ -33,5 +38,11 @@ public final class RunLoopWaiter: @unchecked Sendable {
     public func signal() {
         _locked = false
         _sema.signal()
+        // Post a no-op block onto the main run loop and wake it so a `wait()`
+        // call spinning there returns from `CFRunLoopRunInMode` immediately and
+        // re-evaluates `_locked` instead of waiting out the timeout.
+        let main = CFRunLoopGetMain()
+        CFRunLoopPerformBlock(main, CFRunLoopMode.commonModes.rawValue) { }
+        CFRunLoopWakeUp(main)
     }
 }

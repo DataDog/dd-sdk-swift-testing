@@ -296,7 +296,11 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
         // Route session capture through the gate so a sibling that has already
         // called `stop()` (which nils `SessionManager._session`) doesn't
         // starve us — the gate hands back the stashed reference instead.
-        let session = try await #require(Self.gate.session(for: suiteProvider))
+        // The `await` is pulled out of `#require` because Swift Testing's
+        // macro expansion does not reliably re-introduce `await` inside the
+        // synthesized closure on older toolchains (tvOS 26.2 / Testing 1501).
+        let resolvedSession = await Self.gate.session(for: suiteProvider)
+        let session = try #require(resolvedSession)
         let statuses = try #require(session.modules[test.ddModule]?.suites[test.ddSuite])
 
         // check is module ended and if ended - stop the test session. The gate

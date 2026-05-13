@@ -1580,10 +1580,8 @@
 			);
 			dependencies = (
 				A74EB8DE2D0A010A00FAD9B8 /* PBXTargetDependency */,
-				A7FC26FD2BA87E5100067E26 /* PBXTargetDependency */,
 				A7FC26FB2BA87E4A00067E26 /* PBXTargetDependency */,
 				A7FC26F92BA87E4000067E26 /* PBXTargetDependency */,
-				A7FC26F72BA87E2900067E26 /* PBXTargetDependency */,
 				A7FC26582BA1F1F900067E26 /* PBXTargetDependency */,
 				A7E2330A2BC6F46F0087D8F8 /* PBXTargetDependency */,
 			);
@@ -1630,8 +1628,6 @@
 			);
 			dependencies = (
 				A7183A762E90305A0093C831 /* PBXTargetDependency */,
-				A7FC26F32BA867B000067E26 /* PBXTargetDependency */,
-				A7FC26EF2BA8676A00067E26 /* PBXTargetDependency */,
 				A7E233122BC6F4E70087D8F8 /* PBXTargetDependency */,
 			);
 			name = EventsExporter;
@@ -2226,18 +2222,6 @@
 			target = A7FC257F2BA1E87400067E26 /* EventsExporter */;
 			targetProxy = A7FC26572BA1F1F900067E26 /* PBXContainerItemProxy */;
 		};
-		A7FC26EF2BA8676A00067E26 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			productRef = A7FC26EE2BA8676A00067E26 /* OpenTelemetrySdk */;
-		};
-		A7FC26F32BA867B000067E26 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			productRef = A7FC26F22BA867B000067E26 /* OpenTelemetryApi */;
-		};
-		A7FC26F72BA87E2900067E26 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			productRef = A7FC26F62BA87E2900067E26 /* URLSessionInstrumentation */;
-		};
 		A7FC26F92BA87E4000067E26 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			productRef = A7FC26F82BA87E4000067E26 /* Recording */;
@@ -2245,10 +2229,6 @@
 		A7FC26FB2BA87E4A00067E26 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			productRef = A7FC26FA2BA87E4A00067E26 /* SigmaSwiftStatistics */;
-		};
-		A7FC26FD2BA87E5100067E26 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			productRef = A7FC26FC2BA87E5100067E26 /* InMemoryExporter */;
 		};
 /* End PBXTargetDependency section */
 
@@ -3210,18 +3190,6 @@
 			package = A7E2332F2BC82CD10087D8F8 /* XCRemoteSwiftPackageReference "Kronos" */;
 			productName = Kronos;
 		};
-		A7FC26EE2BA8676A00067E26 /* OpenTelemetrySdk */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = OpenTelemetrySdk;
-		};
-		A7FC26F22BA867B000067E26 /* OpenTelemetryApi */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = OpenTelemetryApi;
-		};
-		A7FC26F62BA87E2900067E26 /* URLSessionInstrumentation */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = URLSessionInstrumentation;
-		};
 		A7FC26F82BA87E4000067E26 /* Recording */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = E1FB4839253891650083B263 /* XCRemoteSwiftPackageReference "KSCrash" */;
@@ -3231,10 +3199,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E17B7AA6253F02580081D7F3 /* XCRemoteSwiftPackageReference "SigmaSwiftStatistics" */;
 			productName = SigmaSwiftStatistics;
-		};
-		A7FC26FC2BA87E5100067E26 /* InMemoryExporter */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = InMemoryExporter;
 		};
 		E157A71A256E9D1D00CBCA52 /* SigmaSwiftStatistics */ = {
 			isa = XCSwiftPackageProductDependency;

@@ -253,6 +253,7 @@
 		A7FC26872BA1F81D00067E26 /* LoggingFeatureMocks.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAF527EB3B9E0057D747 /* LoggingFeatureMocks.swift */; };
 		A7FC26882BA1F81D00067E26 /* SwiftExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAF127EB3B9E0057D747 /* SwiftExtensions.swift */; };
 		A7FC26892BA1F81D00067E26 /* ServerMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAF627EB3B9E0057D747 /* ServerMock.swift */; };
+		A7AB7C0F2F11AA1200000001 /* MockHTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C0F2F11AA1200000002 /* MockHTTPClient.swift */; };
 		A7FC268A2BA1F82300067E26 /* DataUploaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAFE27EB3B9E0057D747 /* DataUploaderTests.swift */; };
 		A7FC268B2BA1F82300067E26 /* DataUploadWorkerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAFC27EB3B9E0057D747 /* DataUploadWorkerTests.swift */; };
 		A7FC268C2BA1F82300067E26 /* HTTPClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAFF27EB3B9E0057D747 /* HTTPClientTests.swift */; };
@@ -566,6 +567,7 @@
 		E141EAF427EB3B9E0057D747 /* FoundationMocks.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FoundationMocks.swift; sourceTree = "<group>"; };
 		E141EAF527EB3B9E0057D747 /* LoggingFeatureMocks.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoggingFeatureMocks.swift; sourceTree = "<group>"; };
 		E141EAF627EB3B9E0057D747 /* ServerMock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ServerMock.swift; sourceTree = "<group>"; };
+		A7AB7C0F2F11AA1200000002 /* MockHTTPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockHTTPClient.swift; sourceTree = "<group>"; };
 		E141EAF727EB3B9E0057D747 /* CoreMocks.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CoreMocks.swift; sourceTree = "<group>"; };
 		E141EAF827EB3B9E0057D747 /* EquatableInTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EquatableInTests.swift; sourceTree = "<group>"; };
 		E141EAFA27EB3B9E0057D747 /* DeviceMock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeviceMock.swift; sourceTree = "<group>"; };
@@ -1048,6 +1050,7 @@
 				E141EAF427EB3B9E0057D747 /* FoundationMocks.swift */,
 				E141EAF527EB3B9E0057D747 /* LoggingFeatureMocks.swift */,
 				E141EAF627EB3B9E0057D747 /* ServerMock.swift */,
+				A7AB7C0F2F11AA1200000002 /* MockHTTPClient.swift */,
 				E141EAF127EB3B9E0057D747 /* SwiftExtensions.swift */,
 				E141EAF227EB3B9E0057D747 /* TestsDirectory.swift */,
 				A71D89252BD6CACD00531A90 /* Logger.swift */,
@@ -2131,6 +2134,7 @@
 				A74EB8E42D0AFD3C00FAD9B8 /* CodeCoverageModelTests.swift in Sources */,
 				A7FC267F2BA1F81D00067E26 /* TestsDirectory.swift in Sources */,
 				A7FC26892BA1F81D00067E26 /* ServerMock.swift in Sources */,
+				A7AB7C0F2F11AA1200000001 /* MockHTTPClient.swift in Sources */,
 				A7FC26832BA1F81D00067E26 /* CoreMocks.swift in Sources */,
 				A7FC26852BA1F81D00067E26 /* FoundationMocks.swift in Sources */,
 				A7FC268B2BA1F82300067E26 /* DataUploadWorkerTests.swift in Sources */,

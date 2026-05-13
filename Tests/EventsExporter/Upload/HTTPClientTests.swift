@@ -28,10 +28,10 @@ class HTTPClientTests: XCTestCase {
     }
 
     func testWhenRequestIsNotDelivered_itReturnsHTTPRequestDeliveryError() throws {
-        // watchOS' URLSession does not propagate `URLProtocolClient.urlProtocol(_:didFailWithError:)`
-        // to the dataTask completion handler when no prior response/data callbacks were
-        // delivered — the request silently completes without firing the failure path.
-        try XCTSkipIf(isWatchOS, "watchOS does not deliver URLProtocol error callbacks")
+        // Same watchOS URLProtocol bypass as `DataUploaderTests`: the request
+        // reaches the real network rather than `ServerMockProtocol`, so the
+        // mocked failure is never delivered to the completion handler.
+        try XCTSkipIf(isWatchOS, "watchOS URLSession bypasses URLProtocol mocks for sync dispatch")
         let mockError = NSError(domain: "network", code: 999, userInfo: [NSLocalizedDescriptionKey: "no internet connection"])
         let server = ServerMock(delivery: .failure(error: mockError))
         let expectation = self.expectation(description: "receive response")

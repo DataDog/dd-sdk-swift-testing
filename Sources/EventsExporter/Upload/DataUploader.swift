@@ -16,10 +16,10 @@ internal final class DataUploader: DataUploaderType {
     /// An unreachable upload status - only meant to satisfy the compiler.
     private static let unreachableUploadStatus = DataUploadStatus(needsRetry: false)
 
-    private let httpClient: HTTPClient
+    private let httpClient: any HTTPClientType
     private let requestBuilder: RequestBuilder
 
-    init(httpClient: HTTPClient, requestBuilder: RequestBuilder) {
+    init(httpClient: any HTTPClientType, requestBuilder: RequestBuilder) {
         self.httpClient = httpClient
         self.requestBuilder = requestBuilder
     }

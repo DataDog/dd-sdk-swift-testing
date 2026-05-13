@@ -28,12 +28,6 @@ class DataUploadWorkerTests: XCTestCase {
         temporaryDirectory.testCreate()
     }
 
-    /// Tests that drive uploads through the real `DataUploader` + `ServerMock` pair
-    /// must opt-in to this guard. See `isWatchOS` in `CoreMocks.swift`.
-    private func skipIfRealDataUploaderUnsupported() throws {
-        try XCTSkipIf(isWatchOS, "watchOS bypasses URLProtocol mocks for sync URLSession calls")
-    }
-
     override func tearDown() {
         temporaryDirectory.testDelete()
         super.tearDown()
@@ -41,11 +35,10 @@ class DataUploadWorkerTests: XCTestCase {
 
     // MARK: - Data Uploads
 
-    func testItUploadsAllData() throws {
-        try skipIfRealDataUploaderUnsupported()
-        let server = ServerMock(delivery: .success(response: .mockResponseWith(statusCode: 200)))
+    func testItUploadsAllData() {
+        let httpClient = MockHTTPClient(delivery: .success(response: .mockResponseWith(statusCode: 200)))
         let dataUploader = DataUploader(
-            httpClient: HTTPClient(session: server.getInterceptedURLSession(), debug: false),
+            httpClient: httpClient,
             requestBuilder: SingleRequestBuilder.mockAny()
         )
 
@@ -64,7 +57,7 @@ class DataUploadWorkerTests: XCTestCase {
         )
 
         // Then
-        let recordedRequests = server.waitAndReturnRequests(count: 3)
+        let recordedRequests = httpClient.waitAndReturnRequests(count: 3)
         XCTAssertTrue(recordedRequests.contains { $0.httpBody == #"[{"k1":"v1"}]"#.utf8Data })
         XCTAssertTrue(recordedRequests.contains { $0.httpBody == #"[{"k2":"v2"}]"#.utf8Data })
         XCTAssertTrue(recordedRequests.contains { $0.httpBody == #"[{"k3":"v3"}]"#.utf8Data })
@@ -141,9 +134,9 @@ class DataUploadWorkerTests: XCTestCase {
         // When
         XCTAssertEqual(try temporaryDirectory.files().count, 0)
 
-        let server = ServerMock(delivery: .success(response: .mockResponseWith(statusCode: 200)))
+        let httpClient = MockHTTPClient(delivery: .success(response: .mockResponseWith(statusCode: 200)))
         let dataUploader = DataUploader(
-            httpClient: HTTPClient(session: server.getInterceptedURLSession(), debug: false),
+            httpClient: httpClient,
             requestBuilder: SingleRequestBuilder.mockAny()
         )
         let worker = DataUploadWorker(
@@ -155,13 +148,12 @@ class DataUploadWorkerTests: XCTestCase {
         )
 
         // Then
-        server.waitFor(requestsCompletion: 0)
         waitForExpectations(timeout: 1, handler: nil)
+        httpClient.waitAndAssertNoRequestsSent()
         worker.shutdown()
     }
 
-    func testWhenBatchFails_thenIntervalIncreases() throws {
-        try skipIfRealDataUploaderUnsupported()
+    func testWhenBatchFails_thenIntervalIncreases() {
         let delayChangeExpectation = expectation(description: "Upload delay is increased")
         let mockDelay = MockDelay { command in
             if case .increase = command {
@@ -174,9 +166,9 @@ class DataUploadWorkerTests: XCTestCase {
         // When
         writer.write(value: ["k1": "v1"])
 
-        let server = ServerMock(delivery: .success(response: .mockResponseWith(statusCode: 500)))
+        let httpClient = MockHTTPClient(delivery: .success(response: .mockResponseWith(statusCode: 500)))
         let dataUploader = DataUploader(
-            httpClient: HTTPClient(session: server.getInterceptedURLSession(), debug: false),
+            httpClient: httpClient,
             requestBuilder: SingleRequestBuilder.mockAny()
         )
         let worker = DataUploadWorker(
@@ -188,13 +180,12 @@ class DataUploadWorkerTests: XCTestCase {
         )
 
         // Then
-        server.waitFor(requestsCompletion: 1)
+        httpClient.waitFor(requestsCompletion: 1)
         waitForExpectations(timeout: 1, handler: nil)
         worker.shutdown()
     }
 
-    func testWhenBatchSucceeds_thenIntervalDecreases() throws {
-        try skipIfRealDataUploaderUnsupported()
+    func testWhenBatchSucceeds_thenIntervalDecreases() {
         let delayChangeExpectation = expectation(description: "Upload delay is decreased")
         let mockDelay = MockDelay { command in
             if case .decrease = command {
@@ -207,9 +198,9 @@ class DataUploadWorkerTests: XCTestCase {
         // When
         writer.write(value: ["k1": "v1"])
 
-        let server = ServerMock(delivery: .success(response: .mockResponseWith(statusCode: 200)))
+        let httpClient = MockHTTPClient(delivery: .success(response: .mockResponseWith(statusCode: 200)))
         let dataUploader = DataUploader(
-            httpClient: HTTPClient(session: server.getInterceptedURLSession(), debug: false),
+            httpClient: httpClient,
             requestBuilder: SingleRequestBuilder.mockAny()
         )
         let worker = DataUploadWorker(
@@ -221,7 +212,7 @@ class DataUploadWorkerTests: XCTestCase {
         )
 
         // Then
-        server.waitFor(requestsCompletion: 1)
+        httpClient.waitFor(requestsCompletion: 1)
         waitForExpectations(timeout: 2, handler: nil)
         worker.shutdown()
     }
@@ -230,9 +221,9 @@ class DataUploadWorkerTests: XCTestCase {
 
     func testWhenCancelled_itPerformsNoMoreUploads() {
         // Given
-        let server = ServerMock(delivery: .success(response: .mockResponseWith(statusCode: 200)))
+        let httpClient = MockHTTPClient(delivery: .success(response: .mockResponseWith(statusCode: 200)))
         let dataUploader = DataUploader(
-            httpClient: HTTPClient(session: server.getInterceptedURLSession(), debug: false),
+            httpClient: httpClient,
             requestBuilder: SingleRequestBuilder.mockAny()
         )
         let worker = DataUploadWorker(
@@ -249,14 +240,13 @@ class DataUploadWorkerTests: XCTestCase {
         // Then
         writer.write(value: ["k1": "v1"])
 
-        server.waitFor(requestsCompletion: 0)
+        httpClient.waitAndAssertNoRequestsSent()
     }
 
-    func testItFlushesAllData() throws {
-        try skipIfRealDataUploaderUnsupported()
-        let server = ServerMock(delivery: .success(response: .mockResponseWith(statusCode: 200)))
+    func testItFlushesAllData() {
+        let httpClient = MockHTTPClient(delivery: .success(response: .mockResponseWith(statusCode: 200)))
         let dataUploader = DataUploader(
-            httpClient: HTTPClient(session: server.getInterceptedURLSession(), debug: false),
+            httpClient: httpClient,
             requestBuilder: SingleRequestBuilder.mockAny()
         )
         let worker = DataUploadWorker(
@@ -279,7 +269,7 @@ class DataUploadWorkerTests: XCTestCase {
         // Then
         XCTAssertEqual(try temporaryDirectory.files().count, 0)
 
-        let recordedRequests = server.waitAndReturnRequests(count: 3)
+        let recordedRequests = httpClient.waitAndReturnRequests(count: 3)
         XCTAssertTrue(recordedRequests.contains { $0.httpBody == #"[{"k1":"v1"}]"#.utf8Data })
         XCTAssertTrue(recordedRequests.contains { $0.httpBody == #"[{"k2":"v2"}]"#.utf8Data })
         XCTAssertTrue(recordedRequests.contains { $0.httpBody == #"[{"k3":"v3"}]"#.utf8Data })

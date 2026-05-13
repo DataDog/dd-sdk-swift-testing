@@ -6,8 +6,13 @@
 
 import Foundation
 
+internal protocol HTTPClientType: AnyObject {
+    func send(request: URLRequest, completion: @escaping (Result<HTTPURLResponse, HTTPClient.RequestError>) -> Void)
+    func sendWithResult(request: URLRequest, completion: @escaping (Result<Data, HTTPClient.RequestError>) -> Void)
+}
+
 /// Client for sending requests over HTTP.
-internal final class HTTPClient {
+internal final class HTTPClient: HTTPClientType {
     private let session: URLSession
     private let debug: Bool
     

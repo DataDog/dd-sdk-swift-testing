@@ -231,9 +231,7 @@ enum SwiftTestingTestStatus: Sendable {
 }
 
 public enum SwiftTestingRegistryError: Error {
-    case unknownSuite(name: String, module: String)
     case moduleAlreadyEnded(name: String)
-    case moduleNotFound(name: String)
 }
 
 protocol SwiftTestingTestRegistryType: AnyObject, Sendable {

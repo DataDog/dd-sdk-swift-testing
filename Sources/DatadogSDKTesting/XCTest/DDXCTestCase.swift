@@ -253,6 +253,7 @@ final class DDXCTestRetryGroup: XCTest, DDXCTestRetryGroupType {
     private let _testMethod: Selector
     private var _skipReason: String?
     private var _nextTest: XCTestCase?
+    private var _retryCount: Int = 0
 
     init(for test: XCTestCase, observer: any DDXCTestRetryDelegate) {
         self.currentTest = test
@@ -265,24 +266,41 @@ final class DDXCTestRetryGroup: XCTest, DDXCTestRetryGroupType {
         self.observer = observer
         super.init()
     }
-    
+
     func skip(reason: String) {
         _skipReason = reason
         _nextTest = nil
     }
-    
+
     func retry() {
+        _retryCount += 1
+#if canImport(ObjectiveC)
+        // Xcode dedupes a real retry failure against the prior run's expected
+        // failure when both runs report the same test identity. Initialise
+        // each retry instance with a fresh alias selector (testFoo$2,
+        // testFoo$3, ...) that forwards to the original test body. XCTest's
+        // default -name derives from invocation.selector, so Xcode treats
+        // every retry as a separate test run. The backend still receives the
+        // original test name — see perform(_:) below.
+        let aliasName = "\(NSStringFromSelector(_testMethod))$\(_retryCount + 1)"
+        let aliasSelector = testClass.addAlias(of: _testMethod, named: aliasName)
+        _nextTest = testClass.init(selector: aliasSelector)
+#else
         _nextTest = testClass.init(selector: _testMethod)
+#endif
         _skipReason = nil
     }
-    
+
     override func perform(_ run: XCTestRun) {
         guard let groupRun = run as? DDXCTestRetryGroupRun else {
             fatalError("Wrong XCTestRun class. Expected DDXCTestRetryGroupRun")
         }
         groupRun.start()
         while let xcTest = currentTest {
-            context.suite.withActiveTest(named: xcTest.testId.test) { test in
+            // Use the group's captured original testId so the backend keeps a
+            // stable test name across retries even though xcTest.name has been
+            // suffixed ($2, $3, ...) for Xcode.
+            context.suite.withActiveTest(named: testId.test) { test in
                 let xcTestRun = DDXCTestCaseRetryRun(xcTest: xcTest, test: test, group: self)
                 xcTest.setValue(xcTestRun, forKey: "testRun")
                 groupRun.addTestRun(xcTestRun)

@@ -60,6 +60,29 @@ public struct LibraryConfigurationCommunicationError: Error, CustomStringConvert
         lines.append("Payload: \(payload)")
         return lines.joined(separator: "\n")
     }
+
+    /// Translate an `APICallError` from the new API wrappers into the
+    /// public configuration-error shape. The request payload, when not
+    /// captured by the caller, is rendered as a best-effort summary.
+    init(requestName: String, payload: String, error: APICallError) {
+        let reason: Reason
+        switch error {
+        case .httpError(code: 401, headers: _, body: _),
+             .httpError(code: 403, headers: _, body: _):
+            reason = .unauthorized
+        case .httpError, .transport:
+            reason = .communicationFailed(error)
+        case .encoding:
+            reason = .payloadEncodingFailed
+        case .decoding(let body, let decodingError):
+            reason = .responseDecodingFailed(body: body, error: decodingError)
+        case .idMismatch, .typeMismatch:
+            reason = .communicationFailed(error)
+        case .fileSystem(let underlying), .unknownError(let underlying):
+            reason = .communicationFailed(underlying)
+        }
+        self.init(requestName: requestName, payload: payload, reason: reason)
+    }
 }
 
 public protocol EventsExporterProtocol: SpanExporter {
@@ -94,10 +117,8 @@ public final class EventsExporter: EventsExporterProtocol {
     var spansExporter: SpansExporter
     var logsExporter: LogsExporter
     var coverageExporter: CoverageExporter
-    var itrService: ITRService
-    var settingsService: SettingsService
-    var knownTestsService: KnownTestsService
-    var testManagementService: TestManagementService
+
+    let api: TestOptimizationApiService
 
     public var maxObjectSize: UInt64 { configuration.performancePreset.maxObjectSize }
 
@@ -107,10 +128,23 @@ public final class EventsExporter: EventsExporterProtocol {
         spansExporter = try SpansExporter(config: configuration)
         logsExporter = try LogsExporter(config: configuration)
         coverageExporter = try CoverageExporter(config: configuration)
-        itrService = try ITRService(config: configuration)
-        settingsService = try SettingsService(config: configuration)
-        knownTestsService = try KnownTestsService(config: configuration)
-        testManagementService = try TestManagementService(config: configuration)
+
+        let apiConfig = APIServiceConfig(
+            applicationName: config.applicationName,
+            version: config.version,
+            device: .current,
+            hostname: config.hostname,
+            apiKey: config.apiKey,
+            endpoint: config.endpoint,
+            clientId: config.exporterId,
+            payloadCompression: false
+        )
+        self.api = TestOptimizationApiService(
+            config: apiConfig,
+            httpClient: HTTPClient(debug: config.debug.logNetworkRequests),
+            log: config.logger
+        )
+
         Log.debug("EventsExporter created: \(spansExporter.runtimeId), endpoint: \(config.endpoint)")
     }
 
@@ -158,32 +192,49 @@ public final class EventsExporter: EventsExporterProtocol {
     public func searchCommits(
         repositoryURL: String, commits: [String]
     ) throws(LibraryConfigurationCommunicationError) -> [String] {
-        try itrService.searchExistingCommits(repositoryURL: repositoryURL, commits: commits)
+        try invoke(requestName: "SearchCommitsRequest",
+                   payload: "commits: \(commits)") { api throws(APICallError) in
+            try await api.git.searchCommits(repositoryURL: repositoryURL, commits: commits)
+        }
     }
 
     public func uploadPackFiles(packFilesDirectory: Directory, commit: String, repository: String) throws {
-        try itrService.uploadPackFiles(packFilesDirectory: packFilesDirectory, commit: commit, repository: repository)
+        Log.debug("Uploading packfiles from: \(packFilesDirectory.url) for commit: \(commit) in repo: \(repository)")
+        try invoke(requestName: "PackFileRequest",
+                   payload: "commit: \(commit)") { api throws(APICallError) in
+            try await api.git.uploadPackFiles(directory: packFilesDirectory.url,
+                                              commit: commit, repositoryURL: repository)
+        }
     }
 
     public func skippableTests(
         repositoryURL: String, sha: String, testLevel: ITRTestLevel,
         configurations: [String: String], customConfigurations: [String: String]
     ) throws(LibraryConfigurationCommunicationError) -> SkipTests {
-        try itrService.skippableTests(repositoryURL: repositoryURL, sha: sha,
-                                      testLevel: testLevel,
-                                      configurations: configurations,
-                                      customConfigurations: customConfigurations)
+        try invoke(requestName: "SkipTestsRequest",
+                   payload: "sha: \(sha)") { api throws(APICallError) in
+            try await api.tia.skippableTests(repositoryURL: repositoryURL, sha: sha,
+                                             environment: self.configuration.environment,
+                                             service: self.configuration.serviceName,
+                                             testLevel: testLevel,
+                                             configurations: configurations,
+                                             customConfigurations: customConfigurations)
+        }
     }
 
     public func tracerSettings(
         service: String, env: String, repositoryURL: String, branch: String, sha: String,
         testLevel: ITRTestLevel, configurations: [String: String], customConfigurations: [String: String]
     ) throws(LibraryConfigurationCommunicationError) -> TracerSettings {
-        try settingsService.settings(
-            service: service, env: env, repositoryURL: repositoryURL,
-            branch: branch, sha: sha, testLevel: testLevel, configurations: configurations,
-            customConfigurations: customConfigurations
-        )
+        try invoke(requestName: "SettingsRequest",
+                   payload: "service: \(service), env: \(env)") { api throws(APICallError) in
+            try await api.settings.tracerSettings(service: service, env: env,
+                                                  repositoryURL: repositoryURL,
+                                                  branch: branch, sha: sha,
+                                                  testLevel: testLevel,
+                                                  configurations: configurations,
+                                                  customConfigurations: customConfigurations)
+        }
     }
 
     /// Returns all known tests by fetching every page and merging results.
@@ -191,9 +242,13 @@ public final class EventsExporter: EventsExporterProtocol {
         service: String, env: String, repositoryURL: String,
         configurations: [String: String], customConfigurations: [String: String]
     ) throws(LibraryConfigurationCommunicationError) -> KnownTestsMap {
-        try knownTestsService.tests(service: service, env: env, repositoryURL: repositoryURL,
-                                    configurations: configurations,
-                                    customConfigurations: customConfigurations).tests
+        try invoke(requestName: "Known Tests Request",
+                   payload: "service: \(service), env: \(env)") { api throws(APICallError) in
+            try await api.knownTests.tests(service: service, env: env,
+                                           repositoryURL: repositoryURL,
+                                           configurations: configurations,
+                                           customConfigurations: customConfigurations)
+        }.tests
     }
 
     /// Returns a single page of known tests with pagination info when provided.
@@ -202,15 +257,25 @@ public final class EventsExporter: EventsExporterProtocol {
         configurations: [String: String], customConfigurations: [String: String],
         page: KnownTestsPageInfo
     ) throws(LibraryConfigurationCommunicationError) -> KnownTestsResult {
-        try knownTestsService.tests(service: service, env: env, repositoryURL: repositoryURL,
-                                    configurations: configurations, customConfigurations: customConfigurations,
-                                    pageInfo: page)
+        try invoke(requestName: "Known Tests Request",
+                   payload: "service: \(service), env: \(env)") { api throws(APICallError) in
+            try await api.knownTests.tests(service: service, env: env,
+                                           repositoryURL: repositoryURL,
+                                           configurations: configurations,
+                                           customConfigurations: customConfigurations,
+                                           page: page)
+        }
     }
 
     public func testManagementTests(
         repositoryURL: String, sha: String? = nil, commitMessage: String? = nil, module: String? = nil, branch: String? = nil
     ) throws(LibraryConfigurationCommunicationError) -> TestManagementTestsInfo {
-        try testManagementService.tests(repositoryURL: repositoryURL, sha: sha, commitMessage: commitMessage, module: module, branch: branch)
+        try invoke(requestName: "Test Management Tests Request",
+                   payload: "repo: \(repositoryURL)") { api throws(APICallError) in
+            try await api.testManagement.tests(repositoryURL: repositoryURL,
+                                               sha: sha, commitMessage: commitMessage,
+                                               branch: branch, module: module)
+        }
     }
 
     public func shutdown(explicitTimeout: TimeInterval?) {
@@ -221,14 +286,30 @@ public final class EventsExporter: EventsExporterProtocol {
     }
 
     public var endpointURLs: Set<String> {
-        [configuration.endpoint.logsURL.absoluteString,
-         configuration.endpoint.spansURL.absoluteString,
-         configuration.endpoint.coverageURL.absoluteString,
-         configuration.endpoint.searchCommitsURL.absoluteString,
-         configuration.endpoint.skippableTestsURL.absoluteString,
-         configuration.endpoint.packfileURL.absoluteString,
-         configuration.endpoint.settingsURL.absoluteString,
-         configuration.endpoint.knownTestsURL.absoluteString,
-         configuration.endpoint.testManagementTestsURL.absoluteString]
+        var urls = Set<String>([
+            configuration.endpoint.logsURL.absoluteString,
+            configuration.endpoint.spansURL.absoluteString,
+            configuration.endpoint.coverageURL.absoluteString,
+        ])
+        urls.formUnion(api.endpointURLs.map { $0.absoluteString })
+        return urls
+    }
+
+    /// Drive an async API call from the synchronous public surface, mapping
+    /// any `APICallError` into the public configuration-error shape with the
+    /// request's name and payload summary.
+    private func invoke<V>(
+        requestName: String, payload: String,
+        _ call: @Sendable @escaping (TestOptimizationApiService) async throws(APICallError) -> V
+    ) throws(LibraryConfigurationCommunicationError) -> V {
+        let api = self.api
+        do {
+            return try waitForAsync { () async throws(APICallError) -> V in
+                try await call(api)
+            }
+        } catch let error {
+            throw LibraryConfigurationCommunicationError(requestName: requestName,
+                                                         payload: payload, error: error)
+        }
     }
 }

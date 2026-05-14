@@ -5,9 +5,13 @@
  */
 
 import Foundation
-internal import EventsExporter
 
-func waitForAsync<V, E>(_ function: @Sendable @escaping () async throws(E) -> V) throws(E) -> V {
+/// Runs the supplied async work on a detached high-priority Task and blocks
+/// the calling thread until the work completes. On the main thread the wait
+/// is implemented by spinning the run loop (see `RunLoopWaiter`), which is
+/// required on watchOS where the URL-loading machinery is dispatched on the
+/// caller's run loop.
+public func waitForAsync<V, E>(_ function: @Sendable @escaping () async throws(E) -> V) throws(E) -> V {
     let waiter = RunLoopWaiter()
     var result: Result<V, E>! = nil
     Task<Void, Never>.detached(priority: .high) {

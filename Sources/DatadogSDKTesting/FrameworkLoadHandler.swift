@@ -6,6 +6,7 @@
 
 import Foundation
 internal import CDatadogSDKTesting
+internal import EventsExporter
 
 enum FrameworkLoadHandler {
     static var testObserver: DDXCTestObserver?

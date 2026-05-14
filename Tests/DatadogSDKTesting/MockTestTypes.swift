@@ -639,6 +639,7 @@ enum Mocks {
                                        config: SessionConfig)
 
         private var _session: Task<SessionWithConfig, any Error>?
+        private var _stopped: Bool = false
         let provider: any TestSessionProvider
         let _config: SessionConfig
         let _observer: (any TestSessionManagerObserver & TestModuleManagerObserver)?
@@ -671,13 +672,16 @@ enum Mocks {
         }
 
         func stop() async {
-            guard let sc = try? await _session?.value else {
-                return
-            }
+            guard !_stopped else { return }
+            _stopped = true
+            guard let sc = try? await _session?.value else { return }
             await _observer?.willFinish(session: sc.session, with: sc.config)
-            _session = nil
             sc.session.end()
             await _observer?.didFinish(session: sc.session, with: sc.config)
+            // Keep _session set so concurrent readers calling sessionAndConfig
+            // after stop() see the same (now-ended) session instead of bootstrapping
+            // a fresh empty one — that would race with parallel verification blocks
+            // inspecting session.modules.
         }
     }
 }

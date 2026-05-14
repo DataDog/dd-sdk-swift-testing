@@ -11,6 +11,8 @@ define xctest
 	$(if $(filter $2,macOS),$(eval SDK=macosx)$(eval DEST='platform=macOS,arch=arm64'),)
 	$(if $(filter $2,iOSsim),$(eval SDK=iphonesimulator)$(eval DEST='platform=iOS Simulator,name=$4'),)
 	$(if $(filter $2,tvOSsim),$(eval SDK=appletvsimulator)$(eval DEST='platform=tvOS Simulator,name=$4'),)
+	$(if $(filter $2,watchOSsim),$(eval SDK=watchsimulator)$(eval DEST='platform=watchOS Simulator,name=$4'),)
+	$(if $(filter $2,visionOSsim),$(eval SDK=xrsimulator)$(eval DEST='platform=visionOS Simulator,name=$4'),)
 	$(if $3,\
 		set -o pipefail; xcodebuild -scheme $1 -sdk $(SDK) -destination $(DEST) test | tee $1-$2-$3.log | xcbeautify,\
 		xcodebuild -scheme $1 -sdk $(SDK) -destination $(DEST) test)
@@ -31,6 +33,8 @@ define xctestint
 	$(if $(filter $2,macOS),$(eval SDK=macosx)$(eval DEST='platform=macOS,arch=arm64'),)
 	$(if $(filter $2,iOSsim),$(eval SDK=iphonesimulator)$(eval DEST='platform=iOS Simulator,name=$4'),)
 	$(if $(filter $2,tvOSsim),$(eval SDK=appletvsimulator)$(eval DEST='platform=tvOS Simulator,name=$4'),)
+	$(if $(filter $2,watchOSsim),$(eval SDK=watchsimulator)$(eval DEST='platform=watchOS Simulator,name=$4'),)
+	$(if $(filter $2,visionOSsim),$(eval SDK=xrsimulator)$(eval DEST='platform=visionOS Simulator,name=$4'),)
 	$(if $3,mkdir -p logs-$3,)
 	$(if $3,\
 		set -o pipefail; INTEGRATION_TESTS_SDK=$(SDK) INTEGRATION_TESTS_PLATFORM=$(DEST) INTEGRATION_TESTS_LOG_PATH=$(ROOT_DIR)/logs-$3 xcodebuild -scheme $1 test | tee logs-$3/$1-$2-$3.log | xcbeautify,\
@@ -56,10 +60,24 @@ build/%/appletvos.xcarchive:
 build/%/appletvsimulator.xcarchive:
 	$(call xcarchive,$*,appletvsimulator,'generic/platform=tvOS Simulator',appletvsimulator,$(XC_LOG))
 
+build/%/watchos.xcarchive:
+	$(call xcarchive,$*,watchos,'generic/platform=watchOS',watchos,$(XC_LOG))
+
+build/%/watchsimulator.xcarchive:
+	$(call xcarchive,$*,watchsimulator,'generic/platform=watchOS Simulator',watchsimulator,$(XC_LOG))
+
+build/%/xros.xcarchive:
+	$(call xcarchive,$*,xros,'generic/platform=visionOS',xros,$(XC_LOG))
+
+build/%/xrsimulator.xcarchive:
+	$(call xcarchive,$*,xrsimulator,'generic/platform=visionOS Simulator',xrsimulator,$(XC_LOG))
+
 build/xcframework/%.xcframework: \
 build/%/iphoneos.xcarchive build/%/iphonesimulator.xcarchive \
 build/%/macos.xcarchive build/%/maccatalyst.xcarchive \
-build/%/appletvos.xcarchive build/%/appletvsimulator.xcarchive
+build/%/appletvos.xcarchive build/%/appletvsimulator.xcarchive \
+build/%/watchos.xcarchive build/%/watchsimulator.xcarchive \
+build/%/xros.xcarchive build/%/xrsimulator.xcarchive
 	@mkdir -p $(PWD)/build/xcframework
 	@xargs xcodebuild -create-xcframework -output $@ <<<"$(foreach archive,$^,-framework $(archive)/Products/Library/Frameworks/$*.framework)"
 
@@ -69,7 +87,9 @@ build/xcframework/%.zip: build/xcframework/%.xcframework
 build/symbols/%.zip: \
 build/%/iphoneos.xcarchive build/%/iphonesimulator.xcarchive \
 build/%/macos.xcarchive build/%/maccatalyst.xcarchive \
-build/%/appletvos.xcarchive build/%/appletvsimulator.xcarchive
+build/%/appletvos.xcarchive build/%/appletvsimulator.xcarchive \
+build/%/watchos.xcarchive build/%/watchsimulator.xcarchive \
+build/%/xros.xcarchive build/%/xrsimulator.xcarchive
 	@for archive in $^ ; do \
 		name=$$(basename $$archive | cut -d'.' -f1) ;\
 		mkdir -p $(PWD)/build/symbols/$*/$$name ;\
@@ -144,22 +164,54 @@ publish_pod:
 clean:
 	rm -rf ./build
 
+# params: scheme — run `scheme` across every unit-test platform.
+define xctest_unit_all_platforms
+	$(if $(IOS_SIMULATOR),,$(eval IOS_SIMULATOR = iPhone 17))
+	$(if $(TVOS_SIMULATOR),,$(eval TVOS_SIMULATOR = Apple TV))
+	$(if $(WATCHOS_SIMULATOR),,$(eval WATCHOS_SIMULATOR = Apple Watch Series 11 (46mm)))
+	$(if $(VISIONOS_SIMULATOR),,$(eval VISIONOS_SIMULATOR = Apple Vision Pro))
+	$(call xctest,$1,macOS,$(XC_LOG),)
+	$(call xctest,$1,iOSsim,$(XC_LOG),$(IOS_SIMULATOR))
+	$(call xctest,$1,tvOSsim,$(XC_LOG),$(TVOS_SIMULATOR))
+	$(call xctest,$1,watchOSsim,$(XC_LOG),$(WATCHOS_SIMULATOR))
+	$(call xctest,$1,visionOSsim,$(XC_LOG),$(VISIONOS_SIMULATOR))
+endef
+
+# Per-platform target — runs both unit-test schemes on a single platform.
+# The `%` placeholder is one of: macOS, iOSsim, tvOSsim, watchOSsim, visionOSsim.
 tests/unit/%:
 	$(if $(IOS_SIMULATOR),,$(eval IOS_SIMULATOR = iPhone 17))
 	$(if $(TVOS_SIMULATOR),,$(eval TVOS_SIMULATOR = Apple TV))
-	$(call xctest,$*,macOS,$(XC_LOG),)
-	$(call xctest,$*,iOSsim,$(XC_LOG),$(IOS_SIMULATOR))
-	$(call xctest,$*,tvOSsim,$(XC_LOG),$(TVOS_SIMULATOR))
-	
+	$(if $(WATCHOS_SIMULATOR),,$(eval WATCHOS_SIMULATOR = Apple Watch Series 11 (46mm)))
+	$(if $(VISIONOS_SIMULATOR),,$(eval VISIONOS_SIMULATOR = Apple Vision Pro))
+	$(if $(filter $*,iOSsim),$(eval SIMULATOR=$(IOS_SIMULATOR)),$(eval SIMULATOR :=))
+	$(if $(filter $*,tvOSsim),$(eval SIMULATOR=$(TVOS_SIMULATOR)),)
+	$(if $(filter $*,watchOSsim),$(eval SIMULATOR=$(WATCHOS_SIMULATOR)),)
+	$(if $(filter $*,visionOSsim),$(eval SIMULATOR=$(VISIONOS_SIMULATOR)),)
+	$(call xctest,EventsExporter,$*,$(XC_LOG),$(SIMULATOR))
+	$(call xctest,DatadogSDKTesting,$*,$(XC_LOG),$(SIMULATOR))
+
+# Per-scheme convenience targets — run a single unit-test scheme across every
+# platform. Explicit names shadow the `tests/unit/%` pattern above.
+tests/unit/EventsExporter:
+	$(call xctest_unit_all_platforms,EventsExporter)
+
+tests/unit/DatadogSDKTesting:
+	$(call xctest_unit_all_platforms,DatadogSDKTesting)
+
 tests/integration/%:
 	$(if $(IOS_SIMULATOR),,$(eval IOS_SIMULATOR = iPhone 17))
 	$(if $(TVOS_SIMULATOR),,$(eval TVOS_SIMULATOR = Apple TV))
+	$(if $(WATCHOS_SIMULATOR),,$(eval WATCHOS_SIMULATOR = Apple Watch Series 11 (46mm)))
+	$(if $(VISIONOS_SIMULATOR),,$(eval VISIONOS_SIMULATOR = Apple Vision Pro))
 	$(if $(filter $*,iOSsim),$(eval SIMULATOR=$(IOS_SIMULATOR)),$(eval SIMULATOR :=))
 	$(if $(filter $*,tvOSsim),$(eval SIMULATOR=$(TVOS_SIMULATOR)),)
+	$(if $(filter $*,watchOSsim),$(eval SIMULATOR=$(WATCHOS_SIMULATOR)),)
+	$(if $(filter $*,visionOSsim),$(eval SIMULATOR=$(VISIONOS_SIMULATOR)),)
 	$(call xctestint,IntegrationTests,$*,$(XC_LOG),$(SIMULATOR))
 
-tests/unit: tests/unit/EventsExporter tests/unit/DatadogSDKTesting
+tests/unit: tests/unit/macOS tests/unit/iOSsim tests/unit/tvOSsim tests/unit/watchOSsim tests/unit/visionOSsim
 
-tests/integration: tests/integration/macOS tests/integration/iOSsim tests/integration/tvOSsim
+tests/integration: tests/integration/macOS tests/integration/iOSsim tests/integration/tvOSsim tests/integration/watchOSsim tests/integration/visionOSsim
 
 tests: tests/unit

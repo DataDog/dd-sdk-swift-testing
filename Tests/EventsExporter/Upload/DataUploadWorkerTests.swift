@@ -36,9 +36,9 @@ class DataUploadWorkerTests: XCTestCase {
     // MARK: - Data Uploads
 
     func testItUploadsAllData() {
-        let server = ServerMock(delivery: .success(response: .mockResponseWith(statusCode: 200)))
+        let httpClient = MockHTTPClient(delivery: .success(response: .mockResponseWith(statusCode: 200)))
         let dataUploader = DataUploader(
-            httpClient: HTTPClient(session: server.getInterceptedURLSession(), debug: false),
+            httpClient: httpClient,
             requestBuilder: SingleRequestBuilder.mockAny()
         )
 
@@ -57,7 +57,7 @@ class DataUploadWorkerTests: XCTestCase {
         )
 
         // Then
-        let recordedRequests = server.waitAndReturnRequests(count: 3)
+        let recordedRequests = httpClient.waitAndReturnRequests(count: 3)
         XCTAssertTrue(recordedRequests.contains { $0.httpBody == #"[{"k1":"v1"}]"#.utf8Data })
         XCTAssertTrue(recordedRequests.contains { $0.httpBody == #"[{"k2":"v2"}]"#.utf8Data })
         XCTAssertTrue(recordedRequests.contains { $0.httpBody == #"[{"k3":"v3"}]"#.utf8Data })
@@ -95,6 +95,11 @@ class DataUploadWorkerTests: XCTestCase {
 
     func testGivenDataToUpload_whenUploadFinishesAndNeedsToBeRetried_thenDataIsPreserved() {
         let startUploadExpectation = self.expectation(description: "Upload has started")
+        // `needsRetry: true` keeps the batch on disk, so the worker re-uploads on
+        // every tick (every ~50ms with `UploadPerformanceMock.veryQuick`). A second
+        // tick can fire before `wait(for:timeout:)` returns after the first
+        // fulfillment — without this, XCTest throws on the double fulfill.
+        startUploadExpectation.assertForOverFulfill = false
 
         var mockDataUploader = DataUploaderMock(uploadStatus: .mockWith(needsRetry: true))
         mockDataUploader.onUpload = { startUploadExpectation.fulfill() }
@@ -134,9 +139,9 @@ class DataUploadWorkerTests: XCTestCase {
         // When
         XCTAssertEqual(try temporaryDirectory.files().count, 0)
 
-        let server = ServerMock(delivery: .success(response: .mockResponseWith(statusCode: 200)))
+        let httpClient = MockHTTPClient(delivery: .success(response: .mockResponseWith(statusCode: 200)))
         let dataUploader = DataUploader(
-            httpClient: HTTPClient(session: server.getInterceptedURLSession(), debug: false),
+            httpClient: httpClient,
             requestBuilder: SingleRequestBuilder.mockAny()
         )
         let worker = DataUploadWorker(
@@ -148,8 +153,8 @@ class DataUploadWorkerTests: XCTestCase {
         )
 
         // Then
-        server.waitFor(requestsCompletion: 0)
         waitForExpectations(timeout: 1, handler: nil)
+        httpClient.waitAndAssertNoRequestsSent()
         worker.shutdown()
     }
 
@@ -166,9 +171,9 @@ class DataUploadWorkerTests: XCTestCase {
         // When
         writer.write(value: ["k1": "v1"])
 
-        let server = ServerMock(delivery: .success(response: .mockResponseWith(statusCode: 500)))
+        let httpClient = MockHTTPClient(delivery: .success(response: .mockResponseWith(statusCode: 500)))
         let dataUploader = DataUploader(
-            httpClient: HTTPClient(session: server.getInterceptedURLSession(), debug: false),
+            httpClient: httpClient,
             requestBuilder: SingleRequestBuilder.mockAny()
         )
         let worker = DataUploadWorker(
@@ -180,7 +185,7 @@ class DataUploadWorkerTests: XCTestCase {
         )
 
         // Then
-        server.waitFor(requestsCompletion: 1)
+        httpClient.waitFor(requestsCompletion: 1)
         waitForExpectations(timeout: 1, handler: nil)
         worker.shutdown()
     }
@@ -198,9 +203,9 @@ class DataUploadWorkerTests: XCTestCase {
         // When
         writer.write(value: ["k1": "v1"])
 
-        let server = ServerMock(delivery: .success(response: .mockResponseWith(statusCode: 200)))
+        let httpClient = MockHTTPClient(delivery: .success(response: .mockResponseWith(statusCode: 200)))
         let dataUploader = DataUploader(
-            httpClient: HTTPClient(session: server.getInterceptedURLSession(), debug: false),
+            httpClient: httpClient,
             requestBuilder: SingleRequestBuilder.mockAny()
         )
         let worker = DataUploadWorker(
@@ -212,7 +217,7 @@ class DataUploadWorkerTests: XCTestCase {
         )
 
         // Then
-        server.waitFor(requestsCompletion: 1)
+        httpClient.waitFor(requestsCompletion: 1)
         waitForExpectations(timeout: 2, handler: nil)
         worker.shutdown()
     }
@@ -221,9 +226,9 @@ class DataUploadWorkerTests: XCTestCase {
 
     func testWhenCancelled_itPerformsNoMoreUploads() {
         // Given
-        let server = ServerMock(delivery: .success(response: .mockResponseWith(statusCode: 200)))
+        let httpClient = MockHTTPClient(delivery: .success(response: .mockResponseWith(statusCode: 200)))
         let dataUploader = DataUploader(
-            httpClient: HTTPClient(session: server.getInterceptedURLSession(), debug: false),
+            httpClient: httpClient,
             requestBuilder: SingleRequestBuilder.mockAny()
         )
         let worker = DataUploadWorker(
@@ -240,13 +245,13 @@ class DataUploadWorkerTests: XCTestCase {
         // Then
         writer.write(value: ["k1": "v1"])
 
-        server.waitFor(requestsCompletion: 0)
+        httpClient.waitAndAssertNoRequestsSent()
     }
 
     func testItFlushesAllData() {
-        let server = ServerMock(delivery: .success(response: .mockResponseWith(statusCode: 200)))
+        let httpClient = MockHTTPClient(delivery: .success(response: .mockResponseWith(statusCode: 200)))
         let dataUploader = DataUploader(
-            httpClient: HTTPClient(session: server.getInterceptedURLSession(), debug: false),
+            httpClient: httpClient,
             requestBuilder: SingleRequestBuilder.mockAny()
         )
         let worker = DataUploadWorker(
@@ -269,7 +274,7 @@ class DataUploadWorkerTests: XCTestCase {
         // Then
         XCTAssertEqual(try temporaryDirectory.files().count, 0)
 
-        let recordedRequests = server.waitAndReturnRequests(count: 3)
+        let recordedRequests = httpClient.waitAndReturnRequests(count: 3)
         XCTAssertTrue(recordedRequests.contains { $0.httpBody == #"[{"k1":"v1"}]"#.utf8Data })
         XCTAssertTrue(recordedRequests.contains { $0.httpBody == #"[{"k2":"v2"}]"#.utf8Data })
         XCTAssertTrue(recordedRequests.contains { $0.httpBody == #"[{"k3":"v3"}]"#.utf8Data })

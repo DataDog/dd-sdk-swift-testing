@@ -91,6 +91,7 @@
 		A79FAD992F8548780080C3F6 /* SessionAndModuleObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A79FAD982F8548700080C3F6 /* SessionAndModuleObserver.swift */; };
 		A79FAD9B2F8559530080C3F6 /* AdditionalTagsFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = A79FAD9A2F8559530080C3F6 /* AdditionalTagsFeature.swift */; };
 		A7A98C202C8F44BC00C93E59 /* CoverageSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7A98C1F2C8F44BC00C93E59 /* CoverageSettings.swift */; };
+		A7AB7C0F2F11AA1100000001 /* RunLoopWaiter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C0F2F11AA1100000002 /* RunLoopWaiter.swift */; };
 		A7B0120F2F364B97000270A4 /* InstrumentationUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B0120E2F364B8A000270A4 /* InstrumentationUtils.swift */; };
 		A7B012112F364BCE000270A4 /* URLSessionInstrumentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B012102F364BC2000270A4 /* URLSessionInstrumentation.swift */; };
 		A7B012132F364C04000270A4 /* URLSessionInstrumentationConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B012122F364C02000270A4 /* URLSessionInstrumentationConfiguration.swift */; };
@@ -112,13 +113,12 @@
 		A7DD0000000002000000000B /* TestUtils.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A722B7D02EA6783300F00FA6 /* TestUtils.framework */; };
 		A7DEAD022F3DEAD00000001A /* ParallelTestRunnerDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7DEAD012F3DEAD00000001A /* ParallelTestRunnerDetector.swift */; };
 		A7DEAD042F3DEAD00000001A /* ParallelTestRunnerDetectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7DEAD032F3DEAD00000001A /* ParallelTestRunnerDetectorTests.swift */; };
-		A7E0056D2C766EF7004D4B78 /* CoreTelephony.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7E0056C2C766EF7004D4B78 /* CoreTelephony.framework */; platformFilters = (ios, maccatalyst, macos, ); };
 		A7E233072BC6F46F0087D8F8 /* CDatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7E232DC2BC6E68B0087D8F8 /* CDatadogSDKTesting.framework */; };
 		A7E2330F2BC6F4E70087D8F8 /* CDatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7E232DC2BC6E68B0087D8F8 /* CDatadogSDKTesting.framework */; };
 		A7E233172BC7FA590087D8F8 /* CDatadogSDKTesting.h in Headers */ = {isa = PBXBuildFile; fileRef = A7E233162BC7FA590087D8F8 /* CDatadogSDKTesting.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A7E2332D2BC81B5D0087D8F8 /* AutoLoad.c in Sources */ = {isa = PBXBuildFile; fileRef = A7E233002BC6EF220087D8F8 /* AutoLoad.c */; };
 		A7E2332E2BC81B680087D8F8 /* AutoLoad.h in Headers */ = {isa = PBXBuildFile; fileRef = A7E233202BC819A70087D8F8 /* AutoLoad.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7E233312BC82CD10087D8F8 /* Kronos in Frameworks */ = {isa = PBXBuildFile; productRef = A7E233302BC82CD10087D8F8 /* Kronos */; };
+		A7E233312BC82CD10087D8F8 /* Kronos in Frameworks */ = {isa = PBXBuildFile; platformFilters = (ios, maccatalyst, macos, tvos, xros, ); productRef = A7E233302BC82CD10087D8F8 /* Kronos */; };
 		A7E233332BC93D100087D8F8 /* Synced.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E233322BC93D100087D8F8 /* Synced.swift */; };
 		A7E233352BCD39E30087D8F8 /* Swift+C.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E233342BCD39E30087D8F8 /* Swift+C.swift */; };
 		A7E233372BCD6A000087D8F8 /* SubprocessSpawn.h in Headers */ = {isa = PBXBuildFile; fileRef = A7E233362BCD6A000087D8F8 /* SubprocessSpawn.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -253,6 +253,7 @@
 		A7FC26872BA1F81D00067E26 /* LoggingFeatureMocks.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAF527EB3B9E0057D747 /* LoggingFeatureMocks.swift */; };
 		A7FC26882BA1F81D00067E26 /* SwiftExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAF127EB3B9E0057D747 /* SwiftExtensions.swift */; };
 		A7FC26892BA1F81D00067E26 /* ServerMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAF627EB3B9E0057D747 /* ServerMock.swift */; };
+		A7AB7C0F2F11AA1200000001 /* MockHTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C0F2F11AA1200000002 /* MockHTTPClient.swift */; };
 		A7FC268A2BA1F82300067E26 /* DataUploaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAFE27EB3B9E0057D747 /* DataUploaderTests.swift */; };
 		A7FC268B2BA1F82300067E26 /* DataUploadWorkerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAFC27EB3B9E0057D747 /* DataUploadWorkerTests.swift */; };
 		A7FC268C2BA1F82300067E26 /* HTTPClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAFF27EB3B9E0057D747 /* HTTPClientTests.swift */; };
@@ -486,6 +487,7 @@
 		A79FAD982F8548700080C3F6 /* SessionAndModuleObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionAndModuleObserver.swift; sourceTree = "<group>"; };
 		A79FAD9A2F8559530080C3F6 /* AdditionalTagsFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdditionalTagsFeature.swift; sourceTree = "<group>"; };
 		A7A98C1F2C8F44BC00C93E59 /* CoverageSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoverageSettings.swift; sourceTree = "<group>"; };
+		A7AB7C0F2F11AA1100000002 /* RunLoopWaiter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunLoopWaiter.swift; sourceTree = "<group>"; };
 		A7B0120E2F364B8A000270A4 /* InstrumentationUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstrumentationUtils.swift; sourceTree = "<group>"; };
 		A7B012102F364BC2000270A4 /* URLSessionInstrumentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLSessionInstrumentation.swift; sourceTree = "<group>"; };
 		A7B012122F364C02000270A4 /* URLSessionInstrumentationConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLSessionInstrumentationConfiguration.swift; sourceTree = "<group>"; };
@@ -504,7 +506,6 @@
 		A7D23AF72C9B10A8006AB41D /* SpanMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpanMetadata.swift; sourceTree = "<group>"; };
 		A7DEAD012F3DEAD00000001A /* ParallelTestRunnerDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParallelTestRunnerDetector.swift; sourceTree = "<group>"; };
 		A7DEAD032F3DEAD00000001A /* ParallelTestRunnerDetectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParallelTestRunnerDetectorTests.swift; sourceTree = "<group>"; };
-		A7E0056C2C766EF7004D4B78 /* CoreTelephony.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreTelephony.framework; path = System/Library/Frameworks/CoreTelephony.framework; sourceTree = SDKROOT; };
 		A7E232DC2BC6E68B0087D8F8 /* CDatadogSDKTesting.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CDatadogSDKTesting.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7E233002BC6EF220087D8F8 /* AutoLoad.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = AutoLoad.c; sourceTree = "<group>"; };
 		A7E233162BC7FA590087D8F8 /* CDatadogSDKTesting.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CDatadogSDKTesting.h; sourceTree = "<group>"; };
@@ -566,6 +567,7 @@
 		E141EAF427EB3B9E0057D747 /* FoundationMocks.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FoundationMocks.swift; sourceTree = "<group>"; };
 		E141EAF527EB3B9E0057D747 /* LoggingFeatureMocks.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoggingFeatureMocks.swift; sourceTree = "<group>"; };
 		E141EAF627EB3B9E0057D747 /* ServerMock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ServerMock.swift; sourceTree = "<group>"; };
+		A7AB7C0F2F11AA1200000002 /* MockHTTPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockHTTPClient.swift; sourceTree = "<group>"; };
 		E141EAF727EB3B9E0057D747 /* CoreMocks.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CoreMocks.swift; sourceTree = "<group>"; };
 		E141EAF827EB3B9E0057D747 /* EquatableInTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EquatableInTests.swift; sourceTree = "<group>"; };
 		E141EAFA27EB3B9E0057D747 /* DeviceMock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeviceMock.swift; sourceTree = "<group>"; };
@@ -709,7 +711,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				A79DA60B2F9935E3004BCA8C /* Testing.framework in Frameworks */,
-				A7E0056D2C766EF7004D4B78 /* CoreTelephony.framework in Frameworks */,
 				A7E233312BC82CD10087D8F8 /* Kronos in Frameworks */,
 				A7FC26502BA1F1E600067E26 /* Recording in Frameworks */,
 				A74EB8E02D0AE8A600FAD9B8 /* CodeCoverage in Frameworks */,
@@ -868,7 +869,6 @@
 			isa = PBXGroup;
 			children = (
 				A79DA60A2F9935E3004BCA8C /* Testing.framework */,
-				A7E0056C2C766EF7004D4B78 /* CoreTelephony.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -1050,6 +1050,7 @@
 				E141EAF427EB3B9E0057D747 /* FoundationMocks.swift */,
 				E141EAF527EB3B9E0057D747 /* LoggingFeatureMocks.swift */,
 				E141EAF627EB3B9E0057D747 /* ServerMock.swift */,
+				A7AB7C0F2F11AA1200000002 /* MockHTTPClient.swift */,
 				E141EAF127EB3B9E0057D747 /* SwiftExtensions.swift */,
 				E141EAF227EB3B9E0057D747 /* TestsDirectory.swift */,
 				A71D89252BD6CACD00531A90 /* Logger.swift */,
@@ -1115,6 +1116,7 @@
 				E143CF0527D7790200F4018A /* DateFormatting.swift */,
 				E143CF0627D7790200F4018A /* EncodableValue.swift */,
 				E143CF0927D7790200F4018A /* Device.swift */,
+				A7AB7C0F2F11AA1100000002 /* RunLoopWaiter.swift */,
 				A7E233342BCD39E30087D8F8 /* Swift+C.swift */,
 			);
 			path = Utils;
@@ -1581,10 +1583,8 @@
 			);
 			dependencies = (
 				A74EB8DE2D0A010A00FAD9B8 /* PBXTargetDependency */,
-				A7FC26FD2BA87E5100067E26 /* PBXTargetDependency */,
 				A7FC26FB2BA87E4A00067E26 /* PBXTargetDependency */,
 				A7FC26F92BA87E4000067E26 /* PBXTargetDependency */,
-				A7FC26F72BA87E2900067E26 /* PBXTargetDependency */,
 				A7FC26582BA1F1F900067E26 /* PBXTargetDependency */,
 				A7E2330A2BC6F46F0087D8F8 /* PBXTargetDependency */,
 			);
@@ -1631,8 +1631,6 @@
 			);
 			dependencies = (
 				A7183A762E90305A0093C831 /* PBXTargetDependency */,
-				A7FC26F32BA867B000067E26 /* PBXTargetDependency */,
-				A7FC26EF2BA8676A00067E26 /* PBXTargetDependency */,
 				A7E233122BC6F4E70087D8F8 /* PBXTargetDependency */,
 			);
 			name = EventsExporter;
@@ -2059,6 +2057,7 @@
 				A7FC26422BA1ECE400067E26 /* LogsExporter.swift in Sources */,
 				A7FC261C2BA1EC5A00067E26 /* RequestBuilder.swift in Sources */,
 				A7FC263E2BA1ECCF00067E26 /* Device.swift in Sources */,
+				A7AB7C0F2F11AA1100000001 /* RunLoopWaiter.swift in Sources */,
 				A7FC26162BA1EC5A00067E26 /* DataUploader.swift in Sources */,
 				A7FC26442BA1ECE400067E26 /* LogEncoder.swift in Sources */,
 				A77C12312D8C976B009C2BA1 /* TestManagementService.swift in Sources */,
@@ -2135,6 +2134,7 @@
 				A74EB8E42D0AFD3C00FAD9B8 /* CodeCoverageModelTests.swift in Sources */,
 				A7FC267F2BA1F81D00067E26 /* TestsDirectory.swift in Sources */,
 				A7FC26892BA1F81D00067E26 /* ServerMock.swift in Sources */,
+				A7AB7C0F2F11AA1200000001 /* MockHTTPClient.swift in Sources */,
 				A7FC26832BA1F81D00067E26 /* CoreMocks.swift in Sources */,
 				A7FC26852BA1F81D00067E26 /* FoundationMocks.swift in Sources */,
 				A7FC268B2BA1F82300067E26 /* DataUploadWorkerTests.swift in Sources */,
@@ -2226,18 +2226,6 @@
 			target = A7FC257F2BA1E87400067E26 /* EventsExporter */;
 			targetProxy = A7FC26572BA1F1F900067E26 /* PBXContainerItemProxy */;
 		};
-		A7FC26EF2BA8676A00067E26 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			productRef = A7FC26EE2BA8676A00067E26 /* OpenTelemetrySdk */;
-		};
-		A7FC26F32BA867B000067E26 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			productRef = A7FC26F22BA867B000067E26 /* OpenTelemetryApi */;
-		};
-		A7FC26F72BA87E2900067E26 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			productRef = A7FC26F62BA87E2900067E26 /* URLSessionInstrumentation */;
-		};
 		A7FC26F92BA87E4000067E26 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			productRef = A7FC26F82BA87E4000067E26 /* Recording */;
@@ -2245,10 +2233,6 @@
 		A7FC26FB2BA87E4A00067E26 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			productRef = A7FC26FA2BA87E4A00067E26 /* SigmaSwiftStatistics */;
-		};
-		A7FC26FD2BA87E5100067E26 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			productRef = A7FC26FC2BA87E5100067E26 /* InMemoryExporter */;
 		};
 /* End PBXTargetDependency section */
 
@@ -2285,7 +2269,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SDKROOT = auto;
 				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx watchos watchsimulator xros xrsimulator";
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -2323,7 +2307,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SDKROOT = auto;
 				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx watchos watchsimulator xros xrsimulator";
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -2356,6 +2340,8 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				"INFOPLIST_KEY_WKApplication[sdk=watch*]" = YES;
+				"INFOPLIST_KEY_WKWatchOnly[sdk=watch*]" = YES;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
@@ -2365,7 +2351,7 @@
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx watchos watchsimulator xros xrsimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -2401,6 +2387,8 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				"INFOPLIST_KEY_WKApplication[sdk=watch*]" = YES;
+				"INFOPLIST_KEY_WKWatchOnly[sdk=watch*]" = YES;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
@@ -2410,7 +2398,7 @@
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx watchos watchsimulator xros xrsimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -2433,7 +2421,7 @@
 				PROVISIONING_PROFILE = "";
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx watchos watchsimulator xros xrsimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -2455,7 +2443,7 @@
 				PROVISIONING_PROFILE = "";
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx watchos watchsimulator xros xrsimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -2497,7 +2485,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SDKROOT = auto;
 				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx watchos watchsimulator xros xrsimulator";
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -2535,7 +2523,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SDKROOT = auto;
 				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx watchos watchsimulator xros xrsimulator";
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -2599,7 +2587,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx watchos watchsimulator xros xrsimulator";
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
@@ -2624,7 +2612,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx watchos watchsimulator xros xrsimulator";
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -2669,7 +2657,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SDKROOT = auto;
 				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx watchos watchsimulator xros xrsimulator";
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -2710,7 +2698,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SDKROOT = auto;
 				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx watchos watchsimulator xros xrsimulator";
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -2727,7 +2715,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTestingTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx watchos watchsimulator xros xrsimulator";
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -2743,7 +2731,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.DatadogSDKTestingTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx watchos watchsimulator xros xrsimulator";
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -2779,7 +2767,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SDKROOT = auto;
 				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx watchos watchsimulator xros xrsimulator";
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -2814,7 +2802,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SDKROOT = auto;
 				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx watchos watchsimulator xros xrsimulator";
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -2835,7 +2823,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.EventsExporterTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx watchos watchsimulator xros xrsimulator";
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -2855,7 +2843,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.datadoghq.EventsExporterTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx watchos watchsimulator xros xrsimulator";
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -2930,11 +2918,13 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,3,6";
+				TARGETED_DEVICE_FAMILY = "1,2,3,4,6,7";
 				TVOS_DEPLOYMENT_TARGET = 15.0;
 				USE_HEADERMAP = NO;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
+				WATCHOS_DEPLOYMENT_TARGET = 8.0;
+				XROS_DEPLOYMENT_TARGET = 1.0;
 			};
 			name = Debug;
 		};
@@ -3002,12 +2992,14 @@
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,3,6";
+				TARGETED_DEVICE_FAMILY = "1,2,3,4,6,7";
 				TVOS_DEPLOYMENT_TARGET = 15.0;
 				USE_HEADERMAP = NO;
 				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
+				WATCHOS_DEPLOYMENT_TARGET = 8.0;
+				XROS_DEPLOYMENT_TARGET = 1.0;
 			};
 			name = Release;
 		};
@@ -3129,7 +3121,7 @@
 			repositoryURL = "https://github.com/DataDog/swift-code-coverage.git";
 			requirement = {
 				kind = upToNextMinorVersion;
-				minimumVersion = 2.0.1;
+				minimumVersion = 2.1.0;
 			};
 		};
 		A7E2332F2BC82CD10087D8F8 /* XCRemoteSwiftPackageReference "Kronos" */ = {
@@ -3138,14 +3130,6 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 4.2.2;
-			};
-		};
-		E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/open-telemetry/opentelemetry-swift.git";
-			requirement = {
-				kind = upToNextMinorVersion;
-				minimumVersion = 1.12.1;
 			};
 		};
 		E157A71B256E9D1D00CBCA52 /* XCRemoteSwiftPackageReference "SigmaSwiftStatistics" */ = {
@@ -3210,21 +3194,6 @@
 			package = A7E2332F2BC82CD10087D8F8 /* XCRemoteSwiftPackageReference "Kronos" */;
 			productName = Kronos;
 		};
-		A7FC26EE2BA8676A00067E26 /* OpenTelemetrySdk */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
-			productName = OpenTelemetrySdk;
-		};
-		A7FC26F22BA867B000067E26 /* OpenTelemetryApi */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
-			productName = OpenTelemetryApi;
-		};
-		A7FC26F62BA87E2900067E26 /* URLSessionInstrumentation */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
-			productName = URLSessionInstrumentation;
-		};
 		A7FC26F82BA87E4000067E26 /* Recording */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = E1FB4839253891650083B263 /* XCRemoteSwiftPackageReference "KSCrash" */;
@@ -3234,11 +3203,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E17B7AA6253F02580081D7F3 /* XCRemoteSwiftPackageReference "SigmaSwiftStatistics" */;
 			productName = SigmaSwiftStatistics;
-		};
-		A7FC26FC2BA87E5100067E26 /* InMemoryExporter */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E12248DA26455DEB00305968 /* XCRemoteSwiftPackageReference "opentelemetry-swift" */;
-			productName = InMemoryExporter;
 		};
 		E157A71A256E9D1D00CBCA52 /* SigmaSwiftStatistics */ = {
 			isa = XCSwiftPackageProductDependency;

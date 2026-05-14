@@ -12,7 +12,7 @@ import Foundation
   import os.log
 #endif
 
-#if os(iOS) || os(tvOS)
+#if os(iOS) || os(tvOS) || os(visionOS)
 import UIKit
 #elseif os(watchOS)
 import WatchKit
@@ -47,9 +47,7 @@ enum InstrumentationUtils {
             safeClasses.append(cls)
         }
         
-        if #available(iOS 14, macOS 11, tvOS 14, *) {
-          os_log(.info, "failed to initialize network connection status: %ld", safeClasses.count)
-        }
+        os_log(.info, "failed to initialize network connection status: %ld", safeClasses.count)
         return safeClasses
     }
     

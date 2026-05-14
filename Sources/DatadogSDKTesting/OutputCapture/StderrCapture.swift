@@ -93,44 +93,19 @@ enum StderrCapture {
         let space = CharacterSet.whitespaces
         var message: String?
 
-        if #available(macOS 10.15, iOS 13.0, tvOS 13.0, *) {
-            guard let dateString = scanner.scanUpToCharacters(from: space),
-                  let timeString = scanner.scanUpToCharacters(from: space),
-                  let date = StderrCapture.logDateFormatter.date(from: dateString + " " + timeString)
-            else {
-                return
-            }
-            _ = scanner.scanUpToCharacters(from: space)
-            if !scanner.isAtEnd {
-                message = String(scanner.string.suffix(from: scanner.string.index(after: scanner.currentIndex)))
-            }
+        guard let dateString = scanner.scanUpToCharacters(from: space),
+              let timeString = scanner.scanUpToCharacters(from: space),
+              let date = StderrCapture.logDateFormatter.date(from: dateString + " " + timeString)
+        else {
+            return
+        }
+        _ = scanner.scanUpToCharacters(from: space)
+        if !scanner.isAtEnd {
+            message = String(scanner.string.suffix(from: scanner.string.index(after: scanner.currentIndex)))
+        }
 
-            if let message = message {
-                DDTestMonitor.tracer.logString(string: message, date: date)
-            }
-
-        } else {
-            var dateNSString: NSString?
-            var timeNSString: NSString?
-            scanner.scanUpToCharacters(from: space, into: &dateNSString)
-            scanner.scanUpToCharacters(from: space, into: &timeNSString)
-            guard let dateString = dateNSString as String?,
-                  let timeString = timeNSString as String?,
-                  let date = StderrCapture.logDateFormatter.date(from: dateString + " " + timeString)
-            else {
-                return
-            }
-            var processId: NSString?
-            scanner.scanUpToCharacters(from: space, into: &processId)
-
-            if !scanner.isAtEnd {
-                let currentIndex = scanner.string.index(scanner.string.startIndex, offsetBy: scanner.scanLocation + 1)
-                message = String(scanner.string.suffix(from: currentIndex))
-            }
-
-            if let message = message {
-                DDTestMonitor.tracer.logString(string: message, date: date)
-            }
+        if let message = message {
+            DDTestMonitor.tracer.logString(string: message, date: date)
         }
     }
 
@@ -141,22 +116,12 @@ enum StderrCapture {
 
         var timeFromStart = 0.0
 
-        if #available(macOS 10.15, iOS 13.0, tvOS 13.0, *) {
-            _ = scanner.scanString("t =")
-            timeFromStart = scanner.scanDouble() ?? 0.0
-            _ = scanner.scanUpToCharacters(from: space)
-            if !scanner.isAtEnd {
-                let scannerLocIndex = scanner.string.index(after: scanner.currentIndex)
-                message = String(scanner.string[scannerLocIndex...])
-            }
-        } else {
-            scanner.scanString("t =", into: nil)
-            scanner.scanDouble(&timeFromStart)
-            scanner.scanUpToCharacters(from: space, into: nil)
-            if !scanner.isAtEnd {
-                let scannerLocIndex = scanner.string.index(scanner.string.startIndex, offsetBy: scanner.scanLocation + 1)
-                message = String(scanner.string[scannerLocIndex...])
-            }
+        _ = scanner.scanString("t =")
+        timeFromStart = scanner.scanDouble() ?? 0.0
+        _ = scanner.scanUpToCharacters(from: space)
+        if !scanner.isAtEnd {
+            let scannerLocIndex = scanner.string.index(after: scanner.currentIndex)
+            message = String(scanner.string[scannerLocIndex...])
         }
 
         if let message = message {

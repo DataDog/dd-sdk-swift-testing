@@ -19,9 +19,11 @@ Pod::Spec.new do |s|
     :sha256 => '74c0c62df47fd3175ba9de1b278350f2a09b679fd044482824977e0e84526f32'
   }
   
-  s.ios.deployment_target  = '12.0'
-  s.osx.deployment_target  = '10.13'
-  s.tvos.deployment_target = '12.0'
+  s.ios.deployment_target     = '15.0'
+  s.osx.deployment_target     = '11.0'
+  s.tvos.deployment_target    = '15.0'
+  s.watchos.deployment_target = '8.0'
+  s.visionos.deployment_target = '1.0'
   
   s.vendored_frameworks    = 'DatadogSDKTesting.xcframework'
 end

@@ -126,7 +126,11 @@ struct UnitTestsXCTestSmoke: IntergationTestSuite {
         }
     }
     
-    @Test func crash() async throws {
+    @Test(
+        .disabled(if: XcodeTestRunner.isWatchOSChildSDK,
+                  "KSCrash disables signal/mach exception handlers on watchOS (KSCRASH_HAS_SIGNAL = 0, KSCRASH_HAS_MACH = 0), so SIGILL from Swift array bounds traps cannot be captured.")
+    )
+    func crash() async throws {
         try await run(test: "XCCrash") { backend, success in
             let spans = backend.allTestSpans
             #expect(success == false)

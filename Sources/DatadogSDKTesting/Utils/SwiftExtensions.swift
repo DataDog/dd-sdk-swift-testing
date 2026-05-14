@@ -6,7 +6,7 @@
 
 import Compression
 import Foundation
-#if !os(macOS)
+#if canImport(UIKit)
 import UIKit
 #endif
 
@@ -121,7 +121,7 @@ extension Data {
     private static let _hexCharacters = Data("0123456789abcdef".utf8)
 }
 
-#if !os(macOS)
+#if canImport(UIKit) && !os(watchOS)
 extension UIDevice {
     var modelName: String {
         var systemInfo = utsname()

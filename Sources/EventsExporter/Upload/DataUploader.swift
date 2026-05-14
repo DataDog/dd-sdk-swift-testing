@@ -16,21 +16,26 @@ internal final class DataUploader: DataUploaderType {
     /// An unreachable upload status - only meant to satisfy the compiler.
     private static let unreachableUploadStatus = DataUploadStatus(needsRetry: false)
 
-    private let httpClient: HTTPClient
+    private let httpClient: any HTTPClientType
     private let requestBuilder: RequestBuilder
 
-    init(httpClient: HTTPClient, requestBuilder: RequestBuilder) {
+    init(httpClient: any HTTPClientType, requestBuilder: RequestBuilder) {
         self.httpClient = httpClient
         self.requestBuilder = requestBuilder
     }
 
     /// Uploads data synchronously (will block current thread) and returns the upload status.
     /// Uses timeout configured for `HTTPClient`.
+    ///
+    /// Uses `RunLoopWaiter` rather than a bare `DispatchSemaphore`: on the main thread we
+    /// spin the run loop instead of blocking it, which is required on watchOS where the
+    /// URL-loading machinery (and `URLProtocol`-based test mocks) is dispatched on the
+    /// caller's run loop.
     func upload(data: Data) -> DataUploadStatus {
         let request = createRequest(with: data)
         var uploadStatus: DataUploadStatus?
 
-        let semaphore = DispatchSemaphore(value: 0)
+        let waiter = RunLoopWaiter()
 
         httpClient.send(request: request) { result in
             switch result {
@@ -40,10 +45,10 @@ internal final class DataUploader: DataUploaderType {
                 uploadStatus = DataUploadStatus(networkError: error)
             }
 
-            semaphore.signal()
+            waiter.signal()
         }
 
-        _ = semaphore.wait(timeout: .distantFuture)
+        waiter.wait()
 
         return uploadStatus ?? DataUploader.unreachableUploadStatus
     }
@@ -61,14 +66,14 @@ internal final class DataUploader: DataUploaderType {
         let request = createRequest(with: data)
         var result: Result<Data, HTTPClient.RequestError>?
 
-        let semaphore = DispatchSemaphore(value: 0)
+        let waiter = RunLoopWaiter()
 
         httpClient.sendWithResult(request: request) { httpResult in
             result = httpResult
-            semaphore.signal()
+            waiter.signal()
         }
 
-        _ = semaphore.wait(timeout: .distantFuture)
+        waiter.wait()
 
         return result ?? .failure(.inconsistentSession)
     }

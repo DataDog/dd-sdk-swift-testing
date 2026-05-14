@@ -5,13 +5,16 @@
  */
 
 import Foundation
+#if !os(watchOS)
 internal import Kronos
+#endif
 internal import OpenTelemetrySdk
 
 protocol Clock: OpenTelemetrySdk.Clock, Sendable {
     func sync() async throws
 }
 
+#if !os(watchOS)
 final class NTPClock: Clock {
     /// List of Datadog NTP pools.
     static let datadogNTPServers = [
@@ -73,6 +76,7 @@ final class NTPClock: Clock {
 
     var now: Date { try! _state.value.now() }
 }
+#endif
 
 final class DateClock: Clock {
     func sync() async {}

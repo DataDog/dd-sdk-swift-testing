@@ -21,7 +21,7 @@ public typealias HTTPStatus = Int
 /// Controls which HTTP semantic conventions to emit.
 ///
 /// See migration guide: https://opentelemetry.io/docs/specs/semconv/non-normative/http-migration/
-public enum HTTPSemanticConvention {
+enum HTTPSemanticConvention {
   case old      // Old HTTP and networking conventions
   case stable   // Stable HTTP and networking conventions (v1.23.1+)
   case httpDup  // Emit both old and stable (migration period)

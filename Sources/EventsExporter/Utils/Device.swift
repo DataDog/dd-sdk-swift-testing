@@ -4,7 +4,9 @@
  * Copyright 2020-Present Datadog, Inc.
  */
 
-#if !os(macOS)
+#if canImport(WatchKit)
+import WatchKit
+#elseif canImport(UIKit)
 import UIKit
 #else
 import Foundation
@@ -29,7 +31,14 @@ internal class Device {
         self.osVersion = osVersion
     }
 
-    #if !os(macOS)
+    #if canImport(WatchKit)
+    convenience init(wkDevice: WKInterfaceDevice, processInfo: ProcessInfo) {
+        self.init(
+            model: wkDevice.model,
+            osName: wkDevice.systemName,
+            osVersion: wkDevice.systemVersion)
+    }
+    #elseif canImport(UIKit)
     convenience init(uiDevice: UIDevice, processInfo: ProcessInfo) {
         self.init(
             model: uiDevice.model,
@@ -48,13 +57,15 @@ internal class Device {
     /// Returns current mobile device  if `UIDevice` is available on this platform.
     /// On other platforms returns `nil`.
     static var current: Device {
-        #if os(macOS)
+        #if canImport(WatchKit)
+        return Device(wkDevice: WKInterfaceDevice.current(), processInfo: ProcessInfo.processInfo)
+        #elseif os(macOS)
         return Device(processInfo: ProcessInfo.processInfo)
         #elseif os(iOS) && !targetEnvironment(simulator)
         // Real device
         return Device(uiDevice: UIDevice.current, processInfo: ProcessInfo.processInfo)
         #else
-        // iOS Simulator or tvOS - battery monitoring doesn't work on Simulator, so return "always OK" value
+        // iOS Simulator, tvOS, visionOS - battery monitoring doesn't work on Simulator, so return "always OK" value
         return Device(
             model: UIDevice.current.model,
             osName: UIDevice.current.systemName,

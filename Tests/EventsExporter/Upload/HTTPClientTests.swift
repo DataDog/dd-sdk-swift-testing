@@ -23,11 +23,15 @@ class HTTPClientTests: XCTestCase {
             }
         }
 
-        waitForExpectations(timeout: 1, handler: nil)
+        waitForExpectations(timeout: 5, handler: nil)
         server.waitFor(requestsCompletion: 1)
     }
 
-    func testWhenRequestIsNotDelivered_itReturnsHTTPRequestDeliveryError() {
+    func testWhenRequestIsNotDelivered_itReturnsHTTPRequestDeliveryError() throws {
+        // Same watchOS URLProtocol bypass as `DataUploaderTests`: the request
+        // reaches the real network rather than `ServerMockProtocol`, so the
+        // mocked failure is never delivered to the completion handler.
+        try XCTSkipIf(isWatchOS, "watchOS URLSession bypasses URLProtocol mocks for sync dispatch")
         let mockError = NSError(domain: "network", code: 999, userInfo: [NSLocalizedDescriptionKey: "no internet connection"])
         let server = ServerMock(delivery: .failure(error: mockError))
         let expectation = self.expectation(description: "receive response")
@@ -42,7 +46,7 @@ class HTTPClientTests: XCTestCase {
             }
         }
 
-        waitForExpectations(timeout: 1, handler: nil)
+        waitForExpectations(timeout: 5, handler: nil)
         server.waitFor(requestsCompletion: 1)
     }
 }

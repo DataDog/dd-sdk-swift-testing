@@ -61,19 +61,21 @@ private class ServerMockProtocol: URLProtocol {
     }
 
     override func startLoading() {
+        defer { server?.record(newRequest: request) }
+        // URLProtocol contract: call exactly one of `urlProtocolDidFinishLoading`
+        // or `urlProtocol(_:didFailWithError:)`, never both. iOS/macOS tolerate the
+        // violation; watchOS does not and silently drops the failure callback.
+        if let error = server?.mockedError {
+            client?.urlProtocol(self, didFailWithError: error)
+            return
+        }
         if let response = server?.mockedResponse {
             client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
         }
         if let data = server?.mockedData {
             client?.urlProtocol(self, didLoad: data)
         }
-        if let error = server?.mockedError {
-            client?.urlProtocol(self, didFailWithError: error)
-        }
-
         client?.urlProtocolDidFinishLoading(self)
-
-        server?.record(newRequest: request)
     }
 
     override func stopLoading() {

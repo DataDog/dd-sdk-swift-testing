@@ -15,9 +15,9 @@ class DataUploaderTests: XCTestCase {
         // Given
         let randomResponse: HTTPURLResponse = .mockResponseWith(statusCode: (100 ... 399).randomElement()!)
 
-        let server = ServerMock(delivery: .success(response: randomResponse))
+        let httpClient = MockHTTPClient(delivery: .success(response: randomResponse))
         let uploader = DataUploader(
-            httpClient: HTTPClient(session: server.getInterceptedURLSession(), debug: false),
+            httpClient: httpClient,
             requestBuilder: SingleRequestBuilder.mockWith(headers: [])
         )
 
@@ -28,7 +28,7 @@ class DataUploaderTests: XCTestCase {
         let expectedUploadStatus = DataUploadStatus(httpResponse: randomResponse)
 
         XCTAssertEqual(uploadStatus, expectedUploadStatus)
-        server.waitFor(requestsCompletion: 1)
+        httpClient.waitFor(requestsCompletion: 1)
     }
 
     func testWhenUploadCompletesWithFailure_itReturnsExpectedUploadStatus() {
@@ -36,9 +36,9 @@ class DataUploaderTests: XCTestCase {
         let randomErrorDescription: String = .mockRandom()
         let randomError = NSError(domain: .mockRandom(), code: .mockRandom(), userInfo: [NSLocalizedDescriptionKey: randomErrorDescription])
 
-        let server = ServerMock(delivery: .failure(error: randomError))
+        let httpClient = MockHTTPClient(delivery: .failure(error: .transport(randomError)))
         let uploader = DataUploader(
-            httpClient: HTTPClient(session: server.getInterceptedURLSession(), debug: false),
+            httpClient: httpClient,
             requestBuilder: SingleRequestBuilder.mockAny()
         )
 
@@ -49,6 +49,6 @@ class DataUploaderTests: XCTestCase {
         let expectedUploadStatus = DataUploadStatus(networkError: .transport(randomError))
 
         XCTAssertEqual(uploadStatus, expectedUploadStatus)
-        server.waitFor(requestsCompletion: 1)
+        httpClient.waitFor(requestsCompletion: 1)
     }
 }

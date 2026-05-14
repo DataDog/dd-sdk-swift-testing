@@ -282,7 +282,7 @@ final class DDXCTestRetryGroup: XCTest, DDXCTestRetryGroupType {
         // default -name derives from invocation.selector, so Xcode treats
         // every retry as a separate test run. The backend still receives the
         // original test name — see perform(_:) below.
-        let aliasName = "\(NSStringFromSelector(_testMethod))$\(_retryCount + 1)"
+        let aliasName = "\(testId.test)$\(_retryCount + 1)"
         let aliasSelector = testClass.addAlias(of: _testMethod, named: aliasName)
         _nextTest = testClass.init(selector: aliasSelector)
 #else

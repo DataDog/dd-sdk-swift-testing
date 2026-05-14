@@ -29,9 +29,7 @@ final class TestManagement: TestHooksFeature {
             return configuration.next()
         }
         if testInfo.attemptToFix {
-            let strategy: RetryGroupSuccessStrategy = testInfo.disabled || testInfo.quarantined ?
-                .alwaysSucceeded : .allSucceeded
-            return configuration.retry(strategy: strategy)
+            return configuration.retry(strategy: .allSucceeded)
         }
         if testInfo.disabled {
             return configuration.skip(reason: "Flaky test is disabled by Datadog",
@@ -79,9 +77,7 @@ final class TestManagement: TestHooksFeature {
             // Check that all executions passed
             let atfPassed = info.executions.failed == 0 && status != .fail
             test.set(tag: DDTestManagementTags.testAttemptToFixPassed, value: atfPassed)
-            // Quarantine and Disable will disable errors, so we should pass.
-            // Otherwise it depends on ATF results
-            let finalStatus: TestStatus = info.retry.status.ignoreErrors ? .pass : (atfPassed ? .pass : .fail)
+            let finalStatus: TestStatus = atfPassed ? .pass : .fail
             // mark test with final status
             test.set(tag: DDTestTags.testFinalStatus, value: finalStatus)
         }
@@ -108,10 +104,10 @@ final class TestManagement: TestHooksFeature {
             // if test isn't failed retry till max retries
             if status != .fail, info.executions.total < attemptToFixRetries - 1 {
                 return retryStatus.retry(reason: DDTagValues.retryReasonAttemptToFix,
-                                         errors: errors)
+                                         errors: nil)
             }
             // end retries (test failed or all retries succeeded)
-            return retryStatus.end(errors: errors)
+            return retryStatus.end(errors: nil)
         }
         return testInfo.disabled
             ? retryStatus.end(errors: errors)
@@ -130,11 +126,14 @@ final class TestManagement: TestHooksFeature {
         guard let testInfo = module.suites[test.suite.name]?.tests[test.name] else {
             return false
         }
+        if testInfo.attemptToFix {
+            // ATF suppression is skipped for non-retriable tests
+            guard info.tags.get(tag: .retriable) ?? true else { return false }
+            return info.executions.total < attemptToFixRetries
+        }
         // Disabled/quarantined always suppress errors regardless of retriable tag
         if testInfo.disabled || testInfo.quarantined { return true }
-        // ATF suppression is skipped for non-retriable tests
-        guard info.tags.get(tag: .retriable) ?? true else { return false }
-        return testInfo.attemptToFix && info.executions.total < attemptToFixRetries
+        return false
     }
 
     func stop() {}

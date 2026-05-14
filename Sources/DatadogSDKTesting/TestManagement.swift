@@ -77,9 +77,8 @@ final class TestManagement: TestHooksFeature {
             // Check that all executions passed
             let atfPassed = info.executions.failed == 0 && status != .fail
             test.set(tag: DDTestManagementTags.testAttemptToFixPassed, value: atfPassed)
-            let finalStatus: TestStatus = atfPassed ? .pass : .fail
             // mark test with final status
-            test.set(tag: DDTestTags.testFinalStatus, value: finalStatus)
+            test.set(tag: DDTestTags.testFinalStatus, value: atfPassed ? TestStatus.pass : .fail)
         }
     }
     
@@ -89,13 +88,6 @@ final class TestManagement: TestHooksFeature {
     {
         guard let testInfo = module.suites[test.suite.name]?.tests[test.name] else {
             return retryStatus.next()
-        }
-
-        let errors: RetryStatus.ErrorsStatus?
-        switch (testInfo.disabled, testInfo.quarantined) {
-        case (true, _): errors = .suppressed(reason: DDTagValues.failureSuppressionReasonDisabled)
-        case (false, true): errors = .suppressed(reason: DDTagValues.failureSuppressionReasonQuarantine)
-        case (false, false): errors = nil
         }
 
         if testInfo.attemptToFix {
@@ -108,6 +100,13 @@ final class TestManagement: TestHooksFeature {
             }
             // end retries (test failed or all retries succeeded)
             return retryStatus.end(errors: nil)
+        }
+        
+        let errors: RetryStatus.ErrorsStatus?
+        switch (testInfo.disabled, testInfo.quarantined) {
+        case (true, _): errors = .suppressed(reason: DDTagValues.failureSuppressionReasonDisabled)
+        case (false, true): errors = .suppressed(reason: DDTagValues.failureSuppressionReasonQuarantine)
+        case (false, false): errors = nil
         }
         return testInfo.disabled
             ? retryStatus.end(errors: errors)

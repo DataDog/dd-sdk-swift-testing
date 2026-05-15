@@ -11,22 +11,38 @@ on:
 permissions:
   contents: read
 
+env:
+  XCODE_VERSION: Xcode_26.1
+
 jobs:
   test:
-    name: Run Tests
+    name: Test / ${{ matrix.platform }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: ["macOS", "iOSsim", "tvOSsim", "watchOSsim", "visionOSsim"]
     runs-on: macos-26
     steps:
     - name: Checkout
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-    - name: Select Xcode 26.1
-      run: sudo xcode-select --switch /Applications/Xcode_26.1.app
+    - name: Setup ${{ env.XCODE_VERSION }}
+      id: xcode
+      uses: ./.github/actions/setup-xcode
+      with:
+        version: ${{ env.XCODE_VERSION }}
     - name: Test
-      run: make XC_LOG=tests IOS_SIMULATOR="iPhone 17" TVOS_SIMULATOR="Apple TV" WATCHOS_SIMULATOR="Apple Watch Series 11 (46mm)" VISIONOS_SIMULATOR="Apple Vision Pro" tests
+      run: >-
+        make XC_LOG=tests
+        IOS_SIMULATOR="${{ steps.xcode.outputs.ios-simulator }}"
+        TVOS_SIMULATOR="${{ steps.xcode.outputs.tvos-simulator }}"
+        WATCHOS_SIMULATOR="${{ steps.xcode.outputs.watchos-simulator }}"
+        VISIONOS_SIMULATOR="${{ steps.xcode.outputs.visionos-simulator }}"
+        tests/unit/${{ matrix.platform }}
     - name: Attach Xcode logs
       if: '!cancelled()'
       uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
       with:
-        name: xcode-tests-logs
+        name: ${{ env.XCODE_VERSION }}-${{ matrix.platform }}-tests-logs
         path: "*-tests.log"
 
   release:
@@ -46,8 +62,10 @@ jobs:
       with:
         scope: DataDog/dd-sdk-swift-testing
         policy: self.github.create-release.workflow-dispatch
-    - name: Select Xcode 26.1
-      run: sudo xcode-select --switch /Applications/Xcode_26.1.app
+    - name: Setup ${{ env.XCODE_VERSION }}
+      uses: ./.github/actions/setup-xcode
+      with:
+        version: ${{ env.XCODE_VERSION }}
     - name: Fix git repo url with obtained token
       env:
         GH_TOKEN: ${{ steps.octo-sts.outputs.token }}
@@ -62,7 +80,7 @@ jobs:
       with:
         name: xcode-archive-logs
         path: "*-archive.log"
-  
+
   publish-pod:
     name: Publish Pod
     needs: [release]

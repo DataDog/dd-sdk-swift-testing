@@ -48,9 +48,9 @@ internal struct SingleRequestBuilder: RequestBuilder {
         headers.forEach { header in
             switch header.value {
             case .constant(let value):
-                precomputedHeaders[header.field] = value
+                precomputedHeaders[header.field.rawValue] = value
             case .dynamic(let value):
-                computedHeaders[header.field] = value
+                computedHeaders[header.field.rawValue] = value
             }
         }
 
@@ -69,7 +69,7 @@ internal struct SingleRequestBuilder: RequestBuilder {
 
         request.httpMethod = "POST"
         request.allHTTPHeaderFields = headers
-        request.httpBody = headers["Content-Encoding"] != nil ? data.deflated : data
+        request.httpBody = headers[HTTPHeader.Field.contentEncodingHeaderField.rawValue] != nil ? data.deflated : data
         return request
     }
 }
@@ -100,9 +100,9 @@ internal class MultipartRequestBuilder: RequestBuilder {
         headers.forEach { header in
             switch header.value {
             case .constant(let value):
-                precomputedHeaders[header.field] = value
+                precomputedHeaders[header.field.rawValue] = value
             case .dynamic(let value):
-                computedHeaders[header.field] = value
+                computedHeaders[header.field.rawValue] = value
             }
         }
 

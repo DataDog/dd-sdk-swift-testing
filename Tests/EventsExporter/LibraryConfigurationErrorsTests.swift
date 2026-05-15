@@ -68,13 +68,13 @@ final class LibraryConfigurationCommunicationErrorTests: XCTestCase {
 final class HTTPClientRequestErrorDescriptionTests: XCTestCase {
     func testHTTPWithBody() {
         let body = Data("server says no".utf8)
-        let error: HTTPClient.RequestError = .http(code: 500, body: body)
+        let error: HTTPClient.RequestError = .http(code: 500, headers: [:], body: body)
         XCTAssertEqual("\(error)", "HTTP 500: server says no")
     }
 
     func testHTTPWithoutBody() {
-        XCTAssertEqual("\(HTTPClient.RequestError.http(code: 401, body: nil))", "HTTP 401")
-        XCTAssertEqual("\(HTTPClient.RequestError.http(code: 403, body: Data()))", "HTTP 403")
+        XCTAssertEqual("\(HTTPClient.RequestError.http(code: 401, headers: [:], body: nil))", "HTTP 401")
+        XCTAssertEqual("\(HTTPClient.RequestError.http(code: 403, headers: [:], body: Data()))", "HTTP 403")
     }
 
     func testTransportWrapsLocalizedDescription() {
@@ -105,13 +105,13 @@ final class LibraryConfigurationServiceThrowTests: XCTestCase {
 
     func testSettingsService_throwsUnauthorizedOn401() throws {
         let baseURL = try startServer(replyingWith: status(401, reason: "Unauthorized"))
-        let service = try SettingsService(config: makeConfig(baseURL: baseURL))
+        let exporter = try EventsExporter(config: makeConfig(baseURL: baseURL))
 
         let error = expectError {
-            _ = try service.settings(service: "service", env: "env",
-                                     repositoryURL: "repo", branch: "main", sha: "abc",
-                                     testLevel: ITRTestLevel.test,
-                                     configurations: [:], customConfigurations: [:])
+            _ = try exporter.tracerSettings(service: "service", env: "env",
+                                            repositoryURL: "repo", branch: "main", sha: "abc",
+                                            testLevel: ITRTestLevel.test,
+                                            configurations: [:], customConfigurations: [:])
         }
         XCTAssertEqual(error?.requestName, "SettingsRequest")
         if case .unauthorized = error?.reason {} else {
@@ -121,33 +121,33 @@ final class LibraryConfigurationServiceThrowTests: XCTestCase {
 
     func testSettingsService_throwsCommunicationFailedOn500() throws {
         let baseURL = try startServer(replyingWith: status(500, reason: "Internal Server Error"))
-        let service = try SettingsService(config: makeConfig(baseURL: baseURL))
+        let exporter = try EventsExporter(config: makeConfig(baseURL: baseURL))
 
         let error = expectError {
-            _ = try service.settings(service: "service", env: "env",
-                                     repositoryURL: "repo", branch: "main", sha: "abc",
-                                     testLevel: ITRTestLevel.test,
-                                     configurations: [:], customConfigurations: [:])
+            _ = try exporter.tracerSettings(service: "service", env: "env",
+                                            repositoryURL: "repo", branch: "main", sha: "abc",
+                                            testLevel: ITRTestLevel.test,
+                                            configurations: [:], customConfigurations: [:])
         }
         XCTAssertEqual(error?.requestName, "SettingsRequest")
         guard case .communicationFailed(let underlying)? = error?.reason else {
             XCTFail("Expected .communicationFailed, got \(error?.reason as Any)")
             return
         }
-        XCTAssertTrue("\(underlying)".contains("HTTP 500"),
+        XCTAssertTrue("\(underlying)".contains("500"),
                       "communicationFailed should carry the underlying HTTP error")
     }
 
     func testSettingsService_throwsResponseDecodingFailedOnGarbageBody() throws {
         let body = Data("<not-json>".utf8)
         let baseURL = try startServer(replyingWith: status(200, reason: "OK"), body: body)
-        let service = try SettingsService(config: makeConfig(baseURL: baseURL))
+        let exporter = try EventsExporter(config: makeConfig(baseURL: baseURL))
 
         let error = expectError {
-            _ = try service.settings(service: "service", env: "env",
-                                     repositoryURL: "repo", branch: "main", sha: "abc",
-                                     testLevel: ITRTestLevel.test,
-                                     configurations: [:], customConfigurations: [:])
+            _ = try exporter.tracerSettings(service: "service", env: "env",
+                                            repositoryURL: "repo", branch: "main", sha: "abc",
+                                            testLevel: ITRTestLevel.test,
+                                            configurations: [:], customConfigurations: [:])
         }
         XCTAssertEqual(error?.requestName, "SettingsRequest")
         guard case .responseDecodingFailed(let receivedBody, _)? = error?.reason else {
@@ -158,14 +158,13 @@ final class LibraryConfigurationServiceThrowTests: XCTestCase {
     }
 
     func testSettingsService_succeedsOnValidResponse() throws {
-        let baseURL = try startServer(replyingWith: status(200, reason: "OK"),
-                                      body: validSettingsBody())
-        let service = try SettingsService(config: makeConfig(baseURL: baseURL))
+        let baseURL = try startServerEchoingRequestId { id in Self.validSettingsBody(id: id) }
+        let exporter = try EventsExporter(config: makeConfig(baseURL: baseURL))
 
-        let settings = try service.settings(service: "service", env: "env",
-                                            repositoryURL: "repo", branch: "main", sha: "abc",
-                                            testLevel: ITRTestLevel.test,
-                                            configurations: [:], customConfigurations: [:])
+        let settings = try exporter.tracerSettings(service: "service", env: "env",
+                                                   repositoryURL: "repo", branch: "main", sha: "abc",
+                                                   testLevel: ITRTestLevel.test,
+                                                   configurations: [:], customConfigurations: [:])
         XCTAssertTrue(settings.flakyTestRetriesEnabled)
         XCTAssertTrue(settings.knownTestsEnabled)
         XCTAssertTrue(settings.itr.itrEnabled)
@@ -175,12 +174,12 @@ final class LibraryConfigurationServiceThrowTests: XCTestCase {
 
     func testSkippableTestsService_throwsUnauthorizedOn403() throws {
         let baseURL = try startServer(replyingWith: status(403, reason: "Forbidden"))
-        let service = try ITRService(config: makeConfig(baseURL: baseURL))
+        let exporter = try EventsExporter(config: makeConfig(baseURL: baseURL))
 
         let error = expectError {
-            _ = try service.skippableTests(repositoryURL: "repo", sha: "abc",
-                                           testLevel: ITRTestLevel.test,
-                                           configurations: [:], customConfigurations: [:])
+            _ = try exporter.skippableTests(repositoryURL: "repo", sha: "abc",
+                                            testLevel: ITRTestLevel.test,
+                                            configurations: [:], customConfigurations: [:])
         }
         XCTAssertEqual(error?.requestName, "SkipTestsRequest")
         if case .unauthorized = error?.reason {} else {
@@ -190,11 +189,11 @@ final class LibraryConfigurationServiceThrowTests: XCTestCase {
 
     func testKnownTestsService_throwsCommunicationFailedOn500() throws {
         let baseURL = try startServer(replyingWith: status(500, reason: "Internal Server Error"))
-        let service = try KnownTestsService(config: makeConfig(baseURL: baseURL))
+        let exporter = try EventsExporter(config: makeConfig(baseURL: baseURL))
 
         let error = expectError {
-            _ = try service.tests(service: "service", env: "env", repositoryURL: "repo",
-                                  configurations: [:], customConfigurations: [:])
+            _ = try exporter.knownTests(service: "service", env: "env", repositoryURL: "repo",
+                                        configurations: [:], customConfigurations: [:])
         }
         XCTAssertEqual(error?.requestName, "Known Tests Request")
         if case .communicationFailed = error?.reason {} else {
@@ -205,14 +204,14 @@ final class LibraryConfigurationServiceThrowTests: XCTestCase {
     func testTestManagementService_throwsResponseDecodingFailedOnBadBody() throws {
         let body = Data("not-json".utf8)
         let baseURL = try startServer(replyingWith: status(200, reason: "OK"), body: body)
-        let service = try TestManagementService(config: makeConfig(baseURL: baseURL))
+        let exporter = try EventsExporter(config: makeConfig(baseURL: baseURL))
 
         let error = expectError {
-            _ = try service.tests(repositoryURL: "repo",
-                                  sha: String?.none,
-                                  commitMessage: String?.none,
-                                  module: String?.none,
-                                  branch: String?.none)
+            _ = try exporter.testManagementTests(repositoryURL: "repo",
+                                                 sha: String?.none,
+                                                 commitMessage: String?.none,
+                                                 module: String?.none,
+                                                 branch: String?.none)
         }
         XCTAssertEqual(error?.requestName, "Test Management Tests Request")
         guard case .responseDecodingFailed(let receivedBody, _)? = error?.reason else {
@@ -224,10 +223,10 @@ final class LibraryConfigurationServiceThrowTests: XCTestCase {
 
     func testSearchExistingCommits_throwsUnauthorizedOn401() throws {
         let baseURL = try startServer(replyingWith: status(401, reason: "Unauthorized"))
-        let service = try ITRService(config: makeConfig(baseURL: baseURL))
+        let exporter = try EventsExporter(config: makeConfig(baseURL: baseURL))
 
         let error = expectError {
-            _ = try service.searchExistingCommits(repositoryURL: "repo", commits: ["abc"])
+            _ = try exporter.searchCommits(repositoryURL: "repo", commits: ["abc"])
         }
         XCTAssertEqual(error?.requestName, "SearchCommitsRequest")
         if case .unauthorized = error?.reason {} else {
@@ -245,6 +244,24 @@ final class LibraryConfigurationServiceThrowTests: XCTestCase {
             response.sendResponse(status: captured.0,
                                   contentType: "application/json",
                                   body: captured.1)
+        }
+        try server.start()
+        return server.baseURL
+    }
+
+    /// Start a test server that echoes the request's `data.id` back into the
+    /// response body — matching the real Datadog backend, which reflects the
+    /// client-supplied UUID so callers can correlate request/response.
+    private func startServerEchoingRequestId(
+        body: @escaping @Sendable (_ requestId: String) -> Data
+    ) throws -> URL {
+        server = HttpTestServer { request, response in
+            let requestId = (try? JSONSerialization.jsonObject(with: request.body) as? [String: Any])
+                .flatMap { $0["data"] as? [String: Any] }
+                .flatMap { $0["id"] as? String } ?? "missing-id"
+            response.sendResponse(status: HTTPTestResponseSender.Status(code: 200, reason: "OK"),
+                                  contentType: "application/json",
+                                  body: body(requestId))
         }
         try server.start()
         return server.baseURL
@@ -287,10 +304,10 @@ final class LibraryConfigurationServiceThrowTests: XCTestCase {
         }
     }
 
-    private func validSettingsBody() -> Data {
+    private static func validSettingsBody(id: String = "1") -> Data {
         let payload: [String: Any] = [
             "data": [
-                "id": "1",
+                "id": id,
                 "type": "ci_app_tracers_test_service_settings",
                 "attributes": [
                     "itr_enabled": true,

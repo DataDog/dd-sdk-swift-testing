@@ -64,7 +64,7 @@ extension DataUploadStatus {
 
     init(networkError: HTTPClient.RequestError) {
         switch networkError {
-        case .http(code: let code, body: nil):
+        case .http(code: let code, headers: _, body: nil):
             let statusCode = HTTPResponseStatusCode(rawValue: code) ?? .unexpected
             self.init(needsRetry: statusCode.needsRetry)
         default:

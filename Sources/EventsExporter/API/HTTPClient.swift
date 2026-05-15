@@ -12,28 +12,29 @@ internal protocol HTTPClientType: AnyObject {
 }
 
 /// Client for sending requests over HTTP.
-internal final class HTTPClient: HTTPClientType {
+public final class HTTPClient: HTTPClientType {
     private let session: URLSession
     private let debug: Bool
-    
-    enum RequestError: Error, CustomStringConvertible {
-        case http(code: Int, body: Data?)
+
+    public enum RequestError: Error, CustomStringConvertible {
+        case http(code: Int, headers: [HTTPHeader.Field: String], body: Data?)
         case transport(any Error)
         /// An error returned if `URLSession` response state is inconsistent (like no data, no response and no error).
         /// The code execution in `URLSessionTransport` should never reach its initialization.
         case inconsistentSession
 
-        var isUnauthorized: Bool {
+        public var isUnauthorized: Bool {
             switch self {
-            case .http(code: 401, body: _), .http(code: 403, body: _):
+            case .http(code: 401, headers: _, body: _),
+                 .http(code: 403, headers: _, body: _):
                 return true
             default: return false
             }
         }
 
-        var description: String {
+        public var description: String {
             switch self {
-            case .http(let code, let body):
+            case .http(let code, _, let body):
                 if let body, !body.isEmpty {
                     return "HTTP \(code): \(String(decoding: body, as: UTF8.self))"
                 }
@@ -44,9 +45,23 @@ internal final class HTTPClient: HTTPClientType {
                 return "inconsistent URLSession response"
             }
         }
+
+        init?(response: HTTPURLResponse, body: Data?) {
+            if (200..<400).contains(response.statusCode) {
+                return nil
+            }
+            let headers: [(HTTPHeader.Field, String)] = response.allHeaderFields.compactMap { key, val in
+                guard let key = key as? String else { return nil }
+                guard let val = val as? String else { return nil }
+                return (.init(key), val)
+            }
+            self = .http(code: response.statusCode,
+                         headers: Dictionary(headers) { "\($0),\($1)" },
+                         body: body)
+        }
     }
-    
-    convenience init(debug: Bool) {
+
+    public convenience init(debug: Bool) {
         let configuration: URLSessionConfiguration = .ephemeral
         // NOTE: RUMM-610 Default behaviour of `.ephemeral` session is to cache requests.
         // To not leak requests memory (including their `.httpBody` which may be significant)
@@ -56,12 +71,12 @@ internal final class HTTPClient: HTTPClientType {
         // and move session configuration constants to `PerformancePreset`.
         self.init(session: URLSession(configuration: configuration), debug: debug)
     }
-    
-    init(session: URLSession, debug: Bool) {
+
+    public init(session: URLSession, debug: Bool) {
         self.session = session
         self.debug = debug
     }
-    
+
     func send(request: URLRequest, completion: @escaping (Result<HTTPURLResponse, RequestError>) -> Void) {
         let task = session.dataTask(with: request) { data, response, error in
             self.log(request: request, response: (data, response, error))
@@ -69,7 +84,7 @@ internal final class HTTPClient: HTTPClientType {
         }
         task.resume()
     }
-    
+
     func sendWithResult(request: URLRequest, completion: @escaping (Result<Data, RequestError>) -> Void) {
         let task = session.dataTask(with: request) { data, response, error in
             self.log(request: request, response: (data, response, error))
@@ -77,7 +92,30 @@ internal final class HTTPClient: HTTPClientType {
         }
         task.resume()
     }
-    
+
+    /// Async variant returning the HTTP response (no body). Used by the API wrappers.
+    func send(request: URLRequest) async throws(RequestError) -> HTTPURLResponse {
+        try await runAsync { completion in
+            self.send(request: request, completion: completion)
+        }
+    }
+
+    /// Async variant returning the response body. Used by the API wrappers.
+    func sendWithResponse(request: URLRequest) async throws(RequestError) -> Data {
+        try await runAsync { completion in
+            self.sendWithResult(request: request, completion: completion)
+        }
+    }
+
+    private func runAsync<T>(
+        _ work: @escaping (@escaping (Result<T, RequestError>) -> Void) -> Void
+    ) async throws(RequestError) -> T {
+        let result: Result<T, RequestError> = await withCheckedContinuation { continuation in
+            work { res in continuation.resume(returning: res) }
+        }
+        return try result.get()
+    }
+
     private func log(request: URLRequest, response: (Data?, URLResponse?, Error?)) {
         guard debug else { return }
         let (data, urlres, error) = response
@@ -110,14 +148,15 @@ private func httpClientResult(for urlSessionTaskCompletion: (Data?, URLResponse?
         return .failure(.transport(error))
     }
 
-    if let httpResponse = response as? HTTPURLResponse {
-        guard httpResponse.statusCode < 400 else {
-            return .failure(.http(code: httpResponse.statusCode, body: data))
-        }
-        return .success(httpResponse)
+    guard let httpResponse = response as? HTTPURLResponse else {
+        return .failure(.inconsistentSession)
     }
 
-    return .failure(.inconsistentSession)
+    if let httpError = HTTPClient.RequestError(response: httpResponse, body: data) {
+        return .failure(httpError)
+    }
+
+    return .success(httpResponse)
 }
 
 /// As `URLSession` returns 3-values-tuple for request execution, this function applies consistency constraints and turns
@@ -129,12 +168,13 @@ private func httpClientResultWithData(for urlSessionTaskCompletion: (Data?, URLR
         return .failure(.transport(error))
     }
 
-    if let httpResponse = response as? HTTPURLResponse {
-        guard httpResponse.statusCode < 400 else {
-            return .failure(.http(code: httpResponse.statusCode, body: data))
-        }
-        return .success(data ?? Data())
+    guard let httpResponse = response as? HTTPURLResponse else {
+        return .failure(.inconsistentSession)
     }
 
-    return .failure(.inconsistentSession)
+    if let httpError = HTTPClient.RequestError(response: httpResponse, body: data) {
+        return .failure(httpError)
+    }
+
+    return .success(data ?? Data())
 }

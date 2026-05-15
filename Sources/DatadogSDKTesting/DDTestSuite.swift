@@ -6,6 +6,7 @@
 
 import Foundation
 @preconcurrency internal import OpenTelemetryApi
+internal import EventsExporter
 
 @objc(DDTestSuite)
 public final class Suite: NSObject, Encodable {

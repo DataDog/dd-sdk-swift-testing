@@ -8,6 +8,7 @@ import Foundation
 @preconcurrency internal import OpenTelemetryApi
 @preconcurrency internal import OpenTelemetrySdk
 internal import SigmaSwiftStatistics
+internal import EventsExporter
 
 @objc(DDTest)
 public final class Test: NSObject {

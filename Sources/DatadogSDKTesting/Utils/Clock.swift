@@ -5,6 +5,7 @@
  */
 
 import Foundation
+internal import EventsExporter
 #if !os(watchOS)
 internal import Kronos
 #endif

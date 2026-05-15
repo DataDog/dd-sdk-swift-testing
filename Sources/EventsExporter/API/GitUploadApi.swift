@@ -43,8 +43,19 @@ extension GitUploadApi {
         } catch {
             throw APICallError.fileSystem(error)
         }
-        for file in files {
-            try await uploadPackFile(file: file, commit: commit, repositoryURL: repositoryURL)
+        do {
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                for file in files {
+                    group.addTask {
+                        try await uploadPackFile(file: file, commit: commit, repositoryURL: repositoryURL)
+                    }
+                }
+                return try await group.next()
+            }
+        } catch let err as APICallError {
+            throw err
+        } catch {
+            throw .unknownError(error)
         }
     }
 }

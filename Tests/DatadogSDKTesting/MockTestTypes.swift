@@ -6,6 +6,7 @@
 
 import Foundation
 @testable import DatadogSDKTesting
+@testable import EventsExporter
 @preconcurrency import OpenTelemetryApi
 
 protocol MockTestModuleInfo {

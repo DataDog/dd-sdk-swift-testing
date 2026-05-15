@@ -6,6 +6,7 @@
 
 import Foundation
 @preconcurrency internal import OpenTelemetryApi
+internal import EventsExporter
 
 @objc(DDTestModule)
 public final class Module: NSObject, Encodable {

@@ -254,6 +254,8 @@ internal enum APICallError: Error {
 }
 
 internal struct APIServiceConfig {
+    let serviceName: String
+    let environment: String
     let applicationName: String
     let version: String
     let device: Device
@@ -289,10 +291,13 @@ internal struct APIServiceConfig {
             (hostname != nil ? [.hostnameHeader(hostname: hostname!)] : [])
     }
 
-    init(applicationName: String, version: String,
+    init(serviceName: String, environment: String,
+         applicationName: String, version: String,
          device: Device, hostname: String?, apiKey: String,
          endpoint: Endpoint, clientId: String, payloadCompression: Bool)
     {
+        self.serviceName = serviceName
+        self.environment = environment
         self.applicationName = applicationName
         self.version = version
         self.device = device

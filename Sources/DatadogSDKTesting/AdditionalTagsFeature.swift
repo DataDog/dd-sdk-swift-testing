@@ -5,6 +5,7 @@
  */
 
 import Foundation
+internal import EventsExporter
 
 /// Tracks communication errors that occurred while fetching library
 /// configuration data from the backend (settings, skippable tests, flaky tests,

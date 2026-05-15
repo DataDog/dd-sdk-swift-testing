@@ -24,7 +24,7 @@ internal struct GithubCIEnvironmentReader: CIEnvironmentReader {
     private let _diagnosticDirs: [URL]
     
     init(diagnosticDirs: [URL] = [
-        URL(fileURLWithPath: "/home/runner/actions-runner/cached/_diag", isDirectory: true), // for SaaS
+        URL(fileURLWithPath: "/home/runner/actions-runner/cached/**/_diag", isDirectory: true), // for SaaS (matches both pre-2.334.0 and version-namespaced layouts)
         URL(fileURLWithPath: "/home/runner/actions-runner/_diag", isDirectory: true), // for self-hosted
     ]) {
         self._diagnosticDirs = diagnosticDirs
@@ -111,7 +111,7 @@ internal struct GithubCIEnvironmentReader: CIEnvironmentReader {
             return id
         }
         
-        let files: [URL] = _diagnosticDirs.compactMap { dir -> ([URL]?) in
+        let files: [URL] = _diagnosticDirs.flatMap(expandGlob).compactMap { dir -> ([URL]?) in
             guard let contents = try? FileManager.default.contentsOfDirectory(at: dir,
                                                                               includingPropertiesForKeys: nil,
                                                                               options: [.skipsHiddenFiles, .skipsSubdirectoryDescendants])
@@ -136,5 +136,41 @@ internal struct GithubCIEnvironmentReader: CIEnvironmentReader {
     
     private var jobIdRegex: NSRegularExpression {
         try! NSRegularExpression(pattern: #""k":\s*"check_run_id"[^}]*"v":\s*(\d+)(?:\.\d+)?"#)
+    }
+
+    /// Expand a file URL containing `**` segments into concrete existing directory URLs.
+    /// `**` matches zero or more path segments. URLs without `**` are returned as-is.
+    private func expandGlob(_ url: URL) -> [URL] {
+        let path = url.path
+        guard path.contains("**") else { return [url] }
+        let segments = path.split(separator: "/", omittingEmptySubsequences: true).map(String.init)
+        let root = URL(fileURLWithPath: path.hasPrefix("/") ? "/" : "", isDirectory: true)
+        return expandGlobSegments(prefix: root, segments: segments)
+    }
+
+    private func expandGlobSegments(prefix: URL, segments: [String]) -> [URL] {
+        guard let head = segments.first else {
+            var isDir: ObjCBool = false
+            guard FileManager.default.fileExists(atPath: prefix.path, isDirectory: &isDir), isDir.boolValue else {
+                return []
+            }
+            return [prefix]
+        }
+        let tail = Array(segments.dropFirst())
+        if head == "**" {
+            // Zero-segment match: drop ** and continue at current prefix.
+            var results = expandGlobSegments(prefix: prefix, segments: tail)
+            // One-or-more match: descend into each subdir keeping ** for further recursion.
+            if let children = try? FileManager.default.contentsOfDirectory(at: prefix,
+                                                                           includingPropertiesForKeys: [.isDirectoryKey],
+                                                                           options: [.skipsHiddenFiles, .skipsSubdirectoryDescendants]) {
+                for child in children {
+                    guard (try? child.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true else { continue }
+                    results.append(contentsOf: expandGlobSegments(prefix: child, segments: segments))
+                }
+            }
+            return results
+        }
+        return expandGlobSegments(prefix: prefix.appendingPathComponent(head, isDirectory: true), segments: tail)
     }
 }

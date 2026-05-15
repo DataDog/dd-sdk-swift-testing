@@ -371,7 +371,12 @@ class EnvironmentTests: XCTestCase {
     private func createEnv(_ env: [String: SpanAttributeConvertible]) -> Environment {
         let reader = ProcessEnvironmentReader(environment: env.mapValues { $0.spanAttribute }, infoDictionary: [:])
         let config = Config(env: reader)
-        return Environment(config: config, env: reader, log: Log.instance)
+        // Replace the default GithubCIEnvironmentReader with one that has no diagnostic dirs,
+        // so it can't pick up a real GitHub runner's job ID when tests run on GitHub Actions.
+        let ciReaders: [CIEnvironmentReader] = Environment.ciReaders.map { reader in
+            reader is GithubCIEnvironmentReader ? GithubCIEnvironmentReader(diagnosticDirs: []) : reader
+        }
+        return Environment(config: config, env: reader, log: Log.instance, ciReaders: ciReaders)
     }
 
     private func validateSpec(file: URL, ci: String) throws {

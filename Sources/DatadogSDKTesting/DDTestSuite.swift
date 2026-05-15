@@ -215,7 +215,7 @@ extension Suite {
             try container.encode(state.meta, forKey: .meta)
             try container.encode(state.metrics, forKey: .metrics)
             try container.encode(state.status == .fail ? 1 : 0, forKey: .error)
-            try container.encode("\(testFramework).suite", forKey: .name)
+            try container.encode("\(testFramework.name).suite", forKey: .name)
             try container.encode(name, forKey: .resource)
             try container.encode(configuration.service, forKey: .service)
         }

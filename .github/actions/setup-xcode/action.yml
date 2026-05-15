@@ -1,0 +1,53 @@
+name: Setup Xcode
+description: Select an Xcode version and resolve the matching simulator names.
+
+inputs:
+  version:
+    description: Xcode app name without the `.app` suffix (e.g. `Xcode_26.1`).
+    required: true
+
+outputs:
+  ios-simulator:
+    description: iOS simulator destination name.
+    value: ${{ steps.simulators.outputs.ios }}
+  tvos-simulator:
+    description: tvOS simulator destination name.
+    value: ${{ steps.simulators.outputs.tvos }}
+  watchos-simulator:
+    description: watchOS simulator destination name.
+    value: ${{ steps.simulators.outputs.watchos }}
+  visionos-simulator:
+    description: visionOS simulator destination name.
+    value: ${{ steps.simulators.outputs.visionos }}
+
+runs:
+  using: composite
+  steps:
+    - name: Select ${{ inputs.version }}
+      shell: bash
+      run: sudo xcode-select --switch "/Applications/${{ inputs.version }}.app"
+
+    - name: Resolve simulators for ${{ inputs.version }}
+      id: simulators
+      shell: bash
+      env:
+        XCODE_VERSION: ${{ inputs.version }}
+      run: |
+        case "$XCODE_VERSION" in
+          Xcode_26.1 | Xcode_26.2 | Xcode_26.4)
+            ios="iPhone 17"
+            tvos="Apple TV"
+            watchos="Apple Watch Series 11 (46mm)"
+            visionos="Apple Vision Pro"
+            ;;
+          *)
+            echo "::error::Unknown Xcode version '$XCODE_VERSION' — add it to .github/actions/setup-xcode/action.yml" >&2
+            exit 1
+            ;;
+        esac
+        {
+          echo "ios=$ios"
+          echo "tvos=$tvos"
+          echo "watchos=$watchos"
+          echo "visionos=$visionos"
+        } >> "$GITHUB_OUTPUT"

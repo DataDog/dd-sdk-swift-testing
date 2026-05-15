@@ -143,6 +143,7 @@ extension Test {
                                _ action: @Sendable (Test) async throws -> T) async rethrows -> T
     {
         let testStartTime = start ?? suite.configuration.clock.now
+        suite.recordTestStarted()
         return try await DDTestMonitor.tracer.withActiveSpan(name: "\(suite.testFramework.name).test",
                                                              attributes: attributes(test: name, in: suite),
                                                              startTime: testStartTime) { span in
@@ -154,11 +155,12 @@ extension Test {
             return result
         }
     }
-    
+
     static func withActiveTest<T>(named name: String, in suite: Suite, at start: Date? = nil,
                                _ action: (Test) throws -> T) rethrows -> T
     {
         let testStartTime = start ?? suite.configuration.clock.now
+        suite.recordTestStarted()
         return try DDTestMonitor.tracer.withActiveSpan(name: "\(suite.testFramework.name).test",
                                                        attributes: attributes(test: name, in: suite),
                                                        startTime: testStartTime) { span in

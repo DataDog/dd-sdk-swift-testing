@@ -15,14 +15,14 @@ import Testing
 struct SwiftTestingTraitTests {
     enum TestError: Error {
         case test(String)
-        
+
         var name: String {
             switch self {
             case .test(let name): return name
             }
         }
     }
-    
+
     @Test
     func scopingTraitIsApplied() async throws {
         #expect(Testing.Test.current?.ddSuite == "\(type(of: self))")
@@ -31,52 +31,52 @@ struct SwiftTestingTraitTests {
         #expect(framework.name == "Testing")
         #expect(framework.version == PlatformUtils.getSwiftTestingVersion())
     }
-    
+
     @Test
     func testSkip() async throws {
-        #expect(1 == 0, Comment(rawValue: Testing.Test.current!.ddName))
+        #expect(1 == 0, Comment(rawValue: Testing.Test.current!.ddFullName))
     }
-    
+
     @Test()
     func testRetryIgnore() async throws {
-        #expect(1 == 0, Comment(rawValue: Testing.Test.current!.ddName))
+        #expect(1 == 0, Comment(rawValue: Testing.Test.current!.ddFullName))
     }
-    
+
     @Test
     func testRetryShouldFail() async throws {
-        #expect(1 == 0, Comment(rawValue: Testing.Test.current!.ddName))
+        #expect(1 == 0, Comment(rawValue: Testing.Test.current!.ddFullName))
     }
-    
+
     @Test
     func testRetryErrorIgnore() async throws {
-        throw TestError.test(Testing.Test.current!.ddName)
+        throw TestError.test(Testing.Test.current!.ddFullName)
     }
-    
+
     @Test
     func testRetryErrorShouldFail() async throws {
-        throw TestError.test(Testing.Test.current!.ddName)
+        throw TestError.test(Testing.Test.current!.ddFullName)
     }
-    
+
     @Test
     func testPass() async throws {
-        #expect(1 == 1, Comment(rawValue: Testing.Test.current!.ddName))
+        #expect(1 == 1, Comment(rawValue: Testing.Test.current!.ddFullName))
     }
-    
+
     @Test
     func testShouldFail() async throws {
-        #expect(1 == 0, Comment(rawValue: Testing.Test.current!.ddName))
+        #expect(1 == 0, Comment(rawValue: Testing.Test.current!.ddFullName))
     }
-    
+
     @Test
     func testError() async throws {
-        throw TestError.test(Testing.Test.current!.ddName)
+        throw TestError.test(Testing.Test.current!.ddFullName)
     }
-    
+
     @Test
     func testErrorIgnore() async throws {
-        throw TestError.test(Testing.Test.current!.ddName)
+        throw TestError.test(Testing.Test.current!.ddFullName)
     }
-    
+
     @Test(arguments: zip([1, 2, 3], ["1", "2", "3"]))
     func testParameterized(p1: Int, p2: String) async throws {
         #expect("\(p1)" == p2)
@@ -113,7 +113,7 @@ struct SwiftTestingTaggedSuiteTests {
 
 @Test(.observerTester, .datadogTesting)
 func testFuncRetryErrorShouldFail() async throws {
-    throw SwiftTestingTraitTests.TestError.test(Testing.Test.current!.ddName)
+    throw SwiftTestingTraitTests.TestError.test(Testing.Test.current!.ddFullName)
 }
 
 @Test(.observerTester, .datadogTesting)
@@ -124,9 +124,39 @@ func testFuncRegistration() async throws {
 #if compiler(>=6.3)
 @Test(.observerTester, .datadogTesting)
 func zzzzFuncCancel() async throws {
-    try Testing.Test.cancel(Comment(rawValue: Testing.Test.current!.ddName))
+    try Testing.Test.cancel(Comment(rawValue: Testing.Test.current!.ddFullName))
 }
 #endif
+
+private extension Testing.Test {
+    /// Suite-qualified test identifier (e.g. `"SwiftTestingTraitTests.testPass"`)
+    /// used as the unique key in `ObserverTesterTrait`'s expected map and the
+    /// payload carried by issues raised inside tests.
+    var ddFullName: String { "\(ddSuite).\(ddName)" }
+}
+
+
+/// Verifies that `ddSuite` joins the full enclosing-type chain into a dotted
+/// path (e.g. `"Outer.Inner"`) so nested `@Suite` types don't collide on the
+/// outermost type name in the registry and function-lines lookup.
+@Suite(.observerTester, .datadogTesting)
+struct DDSuiteNamingTests {
+    @Test func topLevelSuiteName() async throws {
+        #expect(Testing.Test.current?.ddSuite == "DDSuiteNamingTests")
+    }
+
+    struct NestedSuite {
+        @Test func nestedSuiteName() async throws {
+            #expect(Testing.Test.current?.ddSuite == "DDSuiteNamingTests.NestedSuite")
+        }
+
+        struct DoublyNestedSuite {
+            @Test func doublyNestedSuiteName() async throws {
+                #expect(Testing.Test.current?.ddSuite == "DDSuiteNamingTests.NestedSuite.DoublyNestedSuite")
+            }
+        }
+    }
+}
 
 private final class MockSwiftTestingObserver: SwiftTestingObserverType {
     func willStart(suite: borrowing SwiftTestingSuiteContext) async {}
@@ -312,36 +342,44 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
         let errors = issues.value
         let cancels = cancelled.value
         
+        // Keyed by the suite-qualified test name (`"<ddSuite>.<ddName>"`) so
+        // tests that share a function name across nested suites don't collide.
         let expected: [String: (status: [TestStatus], errors: Int?, cancelled: Bool?)] = [
-            "scopingTraitIsApplied": ([.pass], nil, nil),
-            "testSkip": ([.skip], nil, nil),
-            "testRetryIgnore": (Array(repeating: .fail, count: 5), nil, nil),
-            "testRetryShouldFail": (Array(repeating: .fail, count: 5), 1, nil),
-            "testRetryErrorIgnore": (Array(repeating: .fail, count: 5), nil, nil),
-            "testRetryErrorShouldFail": (Array(repeating: .fail, count: 5), 1, nil),
-            "testPass": ([.pass], nil, nil),
-            "testShouldFail": ([.fail], 1, nil),
-            "testError": ([.fail], 1, nil),
-            "testErrorIgnore": ([.fail], nil, nil),
-            "testFuncRetryErrorShouldFail": (Array(repeating: .fail, count: 5), 1, nil),
-            "testFuncRegistration": ([.pass], nil, nil),
-            "testParameterized(p1:p2:)": (Array(repeating: .pass, count: 3), nil, nil),
-            "testRetriableTagObtainedFromSwiftTestingTags": ([.pass], nil, nil),
-            "testTiaSkippableTagObtainedFromSwiftTestingTags": ([.pass], nil, nil),
-            "testRetriableTagOverridesSuiteNonretriableTag": ([.pass], nil, nil),
-            "testSkippableTagOverridesSuiteUnskippableTag": ([.pass], nil, nil),
-            "zzzzFuncCancel": ([.skip], nil, true)
+            "SwiftTestingTraitTests.scopingTraitIsApplied": ([.pass], nil, nil),
+            "SwiftTestingTraitTests.testSkip": ([.skip], nil, nil),
+            "SwiftTestingTraitTests.testRetryIgnore": (Array(repeating: .fail, count: 5), nil, nil),
+            "SwiftTestingTraitTests.testRetryShouldFail": (Array(repeating: .fail, count: 5), 1, nil),
+            "SwiftTestingTraitTests.testRetryErrorIgnore": (Array(repeating: .fail, count: 5), nil, nil),
+            "SwiftTestingTraitTests.testRetryErrorShouldFail": (Array(repeating: .fail, count: 5), 1, nil),
+            "SwiftTestingTraitTests.testPass": ([.pass], nil, nil),
+            "SwiftTestingTraitTests.testShouldFail": ([.fail], 1, nil),
+            "SwiftTestingTraitTests.testError": ([.fail], 1, nil),
+            "SwiftTestingTraitTests.testErrorIgnore": ([.fail], nil, nil),
+            "SwiftTestingTraitTests.testParameterized(p1:p2:)": (Array(repeating: .pass, count: 3), nil, nil),
+            "SwiftTestingTaggedSuiteTests.testRetriableTagObtainedFromSwiftTestingTags": ([.pass], nil, nil),
+            "SwiftTestingTaggedSuiteTests.testTiaSkippableTagObtainedFromSwiftTestingTags": ([.pass], nil, nil),
+            "SwiftTestingTaggedSuiteTests.testRetriableTagOverridesSuiteNonretriableTag": ([.pass], nil, nil),
+            "SwiftTestingTaggedSuiteTests.testSkippableTagOverridesSuiteUnskippableTag": ([.pass], nil, nil),
+            "DDSuiteNamingTests.topLevelSuiteName": ([.pass], nil, nil),
+            "DDSuiteNamingTests.NestedSuite.nestedSuiteName": ([.pass], nil, nil),
+            "DDSuiteNamingTests.NestedSuite.DoublyNestedSuite.doublyNestedSuiteName": ([.pass], nil, nil),
+            "[SwiftTestingTraitTests].testFuncRetryErrorShouldFail": (Array(repeating: .fail, count: 5), 1, nil),
+            "[SwiftTestingTraitTests].testFuncRegistration": ([.pass], nil, nil),
+            "[SwiftTestingTraitTests].zzzzFuncCancel": ([.skip], nil, true)
         ]
-        
-        // If we have a suite we should check for all tests.
-        // If we have function we need check only for function, scope will be called for each
-        let testsList = test.isSuite ? suite : [test.ddName]
-        for test in testsList {
-            let expect = try #require(expected[test])
-            let status = try #require(statuses[test]).runs.map { $0.status }
+
+        // If we have a suite we should check for all tests it owns.
+        // If we have a function we only check that function; the framework
+        // invokes provideScope separately for each test.
+        let suiteName = test.ddSuite
+        let testNames: [String] = test.isSuite ? Array(suite) : [test.ddName]
+        for testName in testNames {
+            let fullName = "\(suiteName).\(testName)"
+            let expect = try #require(expected[fullName], "missing expectation for \(fullName)")
+            let status = try #require(statuses[testName]).runs.map { $0.status }
             #expect(status == expect.status)
-            #expect(errors[test] == expect.errors)
-            #expect(cancels[test] == expect.cancelled)
+            #expect(errors[fullName] == expect.errors)
+            #expect(cancels[fullName] == expect.cancelled)
         }
         
         let decoder = JSONDecoder()

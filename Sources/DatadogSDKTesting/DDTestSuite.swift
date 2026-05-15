@@ -14,6 +14,7 @@ public final class Suite: NSObject, Encodable {
         var meta: [String: String] = [:]
         var metrics: [String: Double] = [:]
         var status: TestStatus = .pass
+        var testsStarted: Int = 0
     }
     
     public let name: String
@@ -75,12 +76,24 @@ public final class Suite: NSObject, Encodable {
 
     private func internalEnd(endTime: Date? = nil) {
         let duration = (endTime ?? configuration.clock.now).timeIntervalSince(startTime).toNanoseconds
-        _state.update { state in
+        let shouldExport: Bool = _state.update { state in
             state.duration = duration
             state.meta[DDTestTags.testStatus] = state.status.spanAttribute
+            return state.testsStarted > 0
+        }
+        // Don't emit a `test_suite_end` event for suites in which no tests
+        // actually ran. This happens for container types that only enclose
+        // nested @Suite types, and for XCTest's empty wrapper suites.
+        guard shouldExport else {
+            Log.debug("Skipped suite_end event for empty suite \(name) (id: \(self.id))")
+            return
         }
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: SuiteEnvelope(self))
         Log.debug("Exported suite_end event suiteId: \(self.id)")
+    }
+
+    func recordTestStarted() {
+        _state.update { $0.testsStarted += 1 }
     }
 
     /// Ends the test suite 

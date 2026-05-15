@@ -227,8 +227,16 @@ extension DatadogSwiftTestingScopeProvider {
 }
 
 extension Testing.Test {
-    var ddModule: String { id.moduleName }
-    
+    /// Module identifier used by the registry, module manager, and span tags.
+    /// Underscores are normalized to hyphens so that Swift Testing's
+    /// `id.moduleName` (e.g. `"My_Tests"`) and XCTest's `Bundle.name` (e.g.
+    /// `"My-Tests"`) collapse to the same canonical name. Without this both
+    /// framework paths produce two `Module` instances for the same bundle.
+    var ddModule: String {
+        id.moduleName.replacingOccurrences(of: "_", with: "-")
+    }
+
+
     var ddHasSuite: Bool {
         let components = id.nameComponents
         return components.count > 1 || components.first?.last != ")"
@@ -242,12 +250,18 @@ extension Testing.Test {
     }
     
     var ddSuite: String {
-        guard !isSuite else { return name }
-        if ddHasSuite {
-            return id.nameComponents.first!
-        } else {
+        let components = id.nameComponents
+        // For test functions, the trailing component is the function signature
+        // (ends with ")"). Drop it to obtain the enclosing type chain. For
+        // suite Tests every component is a type name and is kept. Nested
+        // types produce a dotted chain like "Outer.Inner".
+        let typeChain = isSuite || components.last?.last != ")"
+            ? components
+            : Array(components.dropLast())
+        guard !typeChain.isEmpty else {
             return "[\(sourceLocation.fileName.replacingOccurrences(of: ".swift", with: ""))]"
         }
+        return typeChain.joined(separator: ".")
     }
 }
 

@@ -44,8 +44,13 @@ final class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate
             return
         }
         
-        let bundleName = testBundle.name
-        
+        // Normalize underscores to hyphens so this matches Swift Testing's
+        // `ddModule` (which derives from the Swift module name where any `-`
+        // in the original product name became `_`). Both paths must converge
+        // on the same identifier or `StatefulManager.module(named:)` creates
+        // two `Module` instances for the same bundle.
+        let bundleName = testBundle.name.replacingOccurrences(of: "_", with: "-")
+
         do {
             let session = try waitForAsync { try await manager.sessionAndConfig }
             let module = session.session.module(named: bundleName)
@@ -65,8 +70,9 @@ final class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate
             return
         }
         state = .stopping
-        guard module.name == testBundle.name else {
-            log.print("testBundleDidFinish: Bad module: \(testBundle.name), expected: \(module.name)")
+        let bundleName = testBundle.name.replacingOccurrences(of: "_", with: "-")
+        guard module.name == bundleName else {
+            log.print("testBundleDidFinish: Bad module: \(bundleName), expected: \(module.name)")
             return
         }
         context.session.end(module: module)

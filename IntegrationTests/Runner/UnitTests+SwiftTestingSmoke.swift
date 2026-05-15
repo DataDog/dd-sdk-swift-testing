@@ -102,6 +102,32 @@ struct UnitTestsSwiftTestingSmoke: IntergationTestSuite {
         }
     }
 
+    @Test func nestedSuitePass() async throws {
+        try await run(test: "STNestedSuite/Inner/nestedPass()") { backend, success in
+            let spans = backend.allTestSpans
+            let suiteEnds = backend.allSuiteEnds
+            #expect(success == true)
+            #expect(spans.count == 1)
+            let meta = try #require(spans.last?.meta)
+            #expect(meta[DDTestTags.testStatus] == DDTagValues.statusPass)
+            #expect(meta[DDGenericTags.resource] == "STNestedSuite.Inner.nestedPass")
+            #expect(meta[DDTestTags.testName] == "nestedPass")
+            #expect(meta[DDTestTags.testSuite] == "STNestedSuite.Inner")
+            #expect(meta[DDTestTags.testType] == "test")
+
+            // Only the leaf suite that actually owns the test should emit a
+            // `test_suite_end` event. The outer `STNestedSuite` container
+            // should not produce one of its own.
+            let emittedSuites = suiteEnds.map(\.resource).sorted()
+            #expect(emittedSuites == ["STNestedSuite.Inner"])
+
+            // Exactly one module_end and one session_end should be emitted
+            // for a single-test run, regardless of suite nesting.
+            #expect(backend.allModuleEnds.count == 1)
+            #expect(backend.allSessionEnds.count == 1)
+        }
+    }
+
     @Test func networkIntegration() async throws {
         try await run(test: "STNetworkIntegration/networkIntegration()") { backend, success in
             let testSpans = backend.allTestSpans

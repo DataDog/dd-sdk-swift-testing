@@ -40,7 +40,8 @@ final class Log: Logger, @unchecked Sendable {
             let startTime = CFAbsoluteTimeGetCurrent()
             defer {
                 let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
-                print(prefix: "[Debug][DatadogSDKTesting] ", message: "Time elapsed for \(name): \(timeElapsed) s.")
+                print(prefix: "[Debug][DatadogSDKTesting] ",
+                      message: "Time elapsed for \(name): \(String(format: "%.5f", timeElapsed))s.")
             }
             return try operation()
         } else {

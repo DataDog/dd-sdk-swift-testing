@@ -36,7 +36,7 @@ public struct DatadogSwiftTestingTrait: TestTrait, SuiteTrait {
     }
     
     func prepare(test: some SwiftTestingTestInfoType) async throws {
-        try await _activeProvider?.registry.register(test: test)
+        await _activeProvider?.registry.register(test: test)
     }
     
     private var _activeProvider: (any SwiftTestingSuiteProviderType)? {

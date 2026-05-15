@@ -18,6 +18,41 @@ extension XCTestCase {
     private static let _trimmedCharacters: CharacterSet = CharacterSet(charactersIn: "-[]")
 }
 
+#if canImport(ObjectiveC)
+extension XCTestCase {
+    /// Adds a new instance method to this class with selector `newName`. The
+    /// added method shares the original method's IMP and type encoding, so
+    /// invoking the new selector runs the same code as `original` regardless
+    /// of signature (sync, `throws`, `async`, return value).
+    ///
+    /// XCTest identifies a test by its invocation selector — XCTest's default
+    /// `-name` is computed from `[self class]` and `invocation.selector`, and
+    /// Xcode keys retry-failure dedup off that identity. Adding an alias and
+    /// initialising a retry instance with the alias selector makes Xcode
+    /// treat each retry as a separate test run while the original method's
+    /// body still runs.
+    ///
+    /// Idempotent: repeat calls with the same `newName` return the cached
+    /// selector. Returns `original` unchanged if it isn't defined on the
+    /// class.
+    @discardableResult
+    class func addAlias(of original: Selector, named newName: String) -> Selector {
+        let newSelector = NSSelectorFromString(newName)
+        if class_getInstanceMethod(self, newSelector) != nil {
+            return newSelector
+        }
+        guard let originalMethod = class_getInstanceMethod(self, original) else {
+            return original
+        }
+        class_addMethod(self,
+                        newSelector,
+                        method_getImplementation(originalMethod),
+                        method_getTypeEncoding(originalMethod))
+        return newSelector
+    }
+}
+#endif
+
 extension XCTestRun {
     var status: TestStatus {
         if hasBeenSkipped { return .skip }

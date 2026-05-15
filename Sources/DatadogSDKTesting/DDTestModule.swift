@@ -79,7 +79,7 @@ public final class Module: NSObject, Encodable {
         DDTestMonitor.tracer.eventsExporter?.exportEvent(event: ModuleEnvelope(self))
         configuration.log.debug("Exported module_end event moduleId: \(self.id)")
     }
-    
+
     func addFramework(_ name: String) {
         let _ = _state.update { $0.testFrameworks.insert(name) }
         _session.addFramework(name)

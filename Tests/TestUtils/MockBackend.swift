@@ -76,6 +76,12 @@ public final class MockBackend {
         public var allInfoSpans: [Span] { spanEnvelopes.flatMap(\.infoSpans) }
         /// All test-type spans across all received envelopes.
         public var allTestSpans: [Span] { spanEnvelopes.flatMap(\.testSpans) }
+        /// All `test_suite_end` events across all received envelopes.
+        public var allSuiteEnds: [TestSpan] { spanEnvelopes.flatMap(\.suiteEndEvents) }
+        /// All `test_module_end` events across all received envelopes.
+        public var allModuleEnds: [TestSpan] { spanEnvelopes.flatMap(\.moduleEndEvents) }
+        /// All `test_session_end` events across all received envelopes.
+        public var allSessionEnds: [TestSpan] { spanEnvelopes.flatMap(\.sessionEndEvents) }
 
         /// All individual log entries across all batches.
         public var allLogs: [Log] { logs.flatMap { $0 } }
@@ -406,7 +412,13 @@ extension MockBackend {
         /// Only events with type == "test".
         public var testSpans: [Span] { extended.filter { $0.isTest }.compactMap(\.span) }
         /// Only end events
-        public var testEvents: [TestSpan] { extended.filter { $0.isEvent }.compactMap(\.event) }
+        public var allEndEvents: [TestSpan] { extended.filter { $0.isEndEvent }.compactMap(\.event) }
+        /// Only suite_end events
+        public var suiteEndEvents: [TestSpan] { extended.filter { $0.isSuiteEndEvent }.compactMap(\.event) }
+        /// Only module_end events
+        public var moduleEndEvents: [TestSpan] { extended.filter { $0.isModuleEndEvent }.compactMap(\.event) }
+        /// Only session_end events
+        public var sessionEndEvents: [TestSpan] { extended.filter { $0.isSessionEndEvent }.compactMap(\.event) }
     }
     
     public enum SpanEvent: Decodable, Sendable {
@@ -430,9 +442,30 @@ extension MockBackend {
             }
         }
         
-        var isEvent: Bool {
+        var isEndEvent: Bool {
             switch self {
             case .moduleEnd, .suiteEnd, .sessionEnd: return true
+            default: return false
+            }
+        }
+        
+        var isSuiteEndEvent: Bool {
+            switch self {
+            case .suiteEnd: return true
+            default: return false
+            }
+        }
+        
+        var isModuleEndEvent: Bool {
+            switch self {
+            case .moduleEnd: return true
+            default: return false
+            }
+        }
+        
+        var isSessionEndEvent: Bool {
+            switch self {
+            case .sessionEnd: return true
             default: return false
             }
         }

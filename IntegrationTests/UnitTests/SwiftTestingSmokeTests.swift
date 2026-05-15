@@ -71,6 +71,14 @@ import DatadogSDKTesting
 }
 
 
+@Suite(.datadogTesting) struct STNestedSuite {
+    struct Inner {
+        @Test func nestedPass() {
+            #expect(Bool(true))
+        }
+    }
+}
+
 @Suite(.datadogTesting) struct STCrash {
     @Test func crash() {
         let array: [Int] = [1]

@@ -16,7 +16,7 @@ env:
 
 jobs:
   test:
-    name: ${{ env.XCODE_VERSION }} / ${{ matrix.platform }}
+    name: Test / ${{ matrix.platform }}
     strategy:
       fail-fast: false
       matrix:
@@ -80,7 +80,7 @@ jobs:
       with:
         name: xcode-archive-logs
         path: "*-archive.log"
-  
+
   publish-pod:
     name: Publish Pod
     needs: [release]

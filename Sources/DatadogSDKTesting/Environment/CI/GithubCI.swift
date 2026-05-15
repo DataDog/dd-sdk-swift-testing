@@ -25,9 +25,9 @@ internal struct GithubCIEnvironmentReader: CIEnvironmentReader {
     
     init(diagnosticDirs: [URL] = [
         URL(fileURLWithPath: "/Users/runner/_diag", isDirectory: true),
-        URL(fileURLWithPath: "/Users/runner/actions-runner/cached/**/_diag", isDirectory: true), // for SaaS (matches both pre-2.334.0 and version-namespaced layouts)
-        URL(fileURLWithPath: "/Users/runner/actions-runner/**/_diag", isDirectory: true),
         URL(fileURLWithPath: "/Users/runner/actions-runner/_diag", isDirectory: true), // for self-hosted
+        URL(fileURLWithPath: "/Users/runner/actions-runner/cached/**/_diag", isDirectory: true), // for SaaS (matches both pre-2.334.0 and version-namespaced layouts)
+        URL(fileURLWithPath: "/Users/runner/actions-runner/**/_diag", isDirectory: true)
     ]) {
         self._diagnosticDirs = diagnosticDirs
     }

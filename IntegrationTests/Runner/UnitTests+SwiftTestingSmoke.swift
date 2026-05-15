@@ -115,6 +115,15 @@ struct UnitTestsSwiftTestingSmoke: IntergationTestSuite {
             #expect(meta[DDTestTags.testSuite] == "STNestedSuite.Inner")
             #expect(meta[DDTestTags.testType] == "test")
 
+            // Source location was resolved for the nested test: function-lines
+            // lookup keys are `<ddSuite>.<ddName>`, which the FileLocator's
+            // last-dot split produces from the dsym symbol
+            // `STNestedSuite.Inner.nestedPass()`.
+            let sourceFile = meta[DDTestTags.testSourceFile] ?? ""
+            #expect(sourceFile.hasSuffix("SwiftTestingSmokeTests.swift"))
+            #expect((meta[DDTestTags.testSourceStartLine] ?? "0") != "0")
+            #expect((meta[DDTestTags.testSourceEndLine] ?? "0") != "0")
+
             // Only the leaf suite that actually owns the test should emit a
             // `test_suite_end` event. The outer `STNestedSuite` container
             // should not produce one of its own.

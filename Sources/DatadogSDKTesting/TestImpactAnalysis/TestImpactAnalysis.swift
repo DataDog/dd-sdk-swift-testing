@@ -159,9 +159,9 @@ final class TestImpactAnalysis: TestHooksFeature {
             return
         }
         if !info.skip.status.isSkipped {
-            coverage?.endTest(testSessionId: test.session.id.rawValue,
-                              testSuiteId: test.suite.id.rawValue,
-                              spanId: test.id.rawValue)
+            coverage?.endTest(testSessionId: test.session.id,
+                              testSuiteId: test.suite.id,
+                              testSpanId: test.id)
         }
     }
     

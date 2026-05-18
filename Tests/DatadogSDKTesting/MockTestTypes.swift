@@ -621,12 +621,12 @@ enum Mocks {
             testStarted = true
         }
         
-        func endTest(testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64) {
+        func endTest(testSessionId: SpanId, testSuiteId: SpanId, testSpanId: SpanId) {
             assert(testStarted, "Test should not be stopped more than once")
             testStarted = false
-            tests.insert(String(describing: (testSessionId, testSuiteId, spanId)))
+            tests.insert(String(describing: (testSessionId.rawValue, testSuiteId.rawValue, testSpanId.rawValue)))
         }
-        
+
         func has(testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64) -> Bool {
             return tests.contains(String(describing: (testSessionId, testSuiteId, spanId)))
         }

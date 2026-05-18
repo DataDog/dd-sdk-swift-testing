@@ -5,10 +5,90 @@
  */
 
 import Foundation
+import OpenTelemetryApi
 import OpenTelemetrySdk
 import CodeCoverageParser
 
-internal final class CoverageExporter {
+/// A single per-test or per-suite coverage payload. The caller (DDCoverageHelper)
+/// parses the raw profraw file and builds a record with the OTel anchors
+/// (`Resource`, `InstrumentationScopeInfo`, span context) — coverage upload
+/// happens through `CoverageExporterType.export(coverageRecords:)`. Not Codable:
+/// the on-wire shape is `TestCodeCoverage`, built inside the exporter.
+public struct CoverageRecord {
+    public enum Context {
+        case test(testSpanId: SpanId, suiteId: SpanId, sessionId: SpanId)
+        case suite(suiteSpanId: SpanId, sessionId: SpanId)
+
+        public var sessionId: SpanId {
+            switch self {
+            case .test(_, _, let id), .suite(_, let id): return id
+            }
+        }
+
+        public var suiteId: SpanId {
+            switch self {
+            case .test(_, let id, _): return id
+            case .suite(let id, _): return id
+            }
+        }
+
+        public var testId: SpanId? {
+            switch self {
+            case .test(let id, _, _): return id
+            case .suite: return nil
+            }
+        }
+
+        public var isSuite: Bool {
+            if case .suite = self { return true }
+            return false
+        }
+    }
+
+    public let name: String
+    public let coverage: CoverageInfo
+    public let resource: Resource
+    public let instrumentationScopeInfo: InstrumentationScopeInfo
+    public let context: Context
+    public let workspacePath: URL?
+
+    public init(name: String,
+                coverage: CoverageInfo,
+                workspacePath: URL?,
+                resource: Resource,
+                instrumentationScopeInfo: InstrumentationScopeInfo,
+                context: Context)
+    {
+        self.name = name
+        self.coverage = coverage
+        self.workspacePath = workspacePath
+        self.resource = resource
+        self.instrumentationScopeInfo = instrumentationScopeInfo
+        self.context = context
+    }
+}
+
+/// Public surface of the coverage feature's exporter — record-based,
+/// drives the per-test profraw → TestCodeCoverage pipeline.
+public protocol CoverageExporterType {
+    func export(coverageRecords: [CoverageRecord], explicitTimeout: TimeInterval?) -> ExportResult
+    func forceFlush(explicitTimeout: TimeInterval?) -> ExportResult
+    func shutdown(explicitTimeout: TimeInterval?)
+}
+
+public extension CoverageExporterType {
+    @discardableResult
+    func export(coverageRecords: [CoverageRecord]) -> ExportResult {
+        export(coverageRecords: coverageRecords, explicitTimeout: nil)
+    }
+
+    @discardableResult
+    func forceFlush() -> ExportResult { forceFlush(explicitTimeout: nil) }
+
+    func shutdown() { shutdown(explicitTimeout: nil) }
+}
+
+internal final class CoverageExporter: CoverageExporterType {
     let coverageDirectory = "com.datadog.civisibility/coverage/v1"
     let configuration: ExporterConfiguration
     let coverageStorage: FeatureStoreAndUpload
@@ -41,43 +121,32 @@ internal final class CoverageExporter {
                                                      uploader: uploader)
     }
 
-    func exportCoverage(coverage: URL, parser: CoverageParser, workspacePath: String?,
-                        testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64)
-    {
-        Log.debug("Start processing coverage: \(coverage.path)")
-        var coverageData: TestCodeCoverage? = nil
-
-        defer {
-            if configuration.debug.saveCodeCoverageFiles {
-                if let coverageData = coverageData, let data = try? JSONEncoder.apiEncoder.encode(coverageData) {
-                    let testName = coverage.deletingPathExtension().lastPathComponent.components(separatedBy: "__").last!
-                    let jsonURL = coverage.deletingLastPathComponent()
-                        .appendingPathComponent(testName + ".json", isDirectory: false)
-                    try? data.write(to: jsonURL)
-                }
-            } else {
-                try? FileManager.default.removeItem(at: coverage)
-            }
+    func export(coverageRecords: [CoverageRecord], explicitTimeout: TimeInterval?) -> ExportResult {
+        for record in coverageRecords {
+            let coverage = TestCodeCoverage(sessionId: record.context.sessionId.rawValue,
+                                            suiteId: record.context.suiteId.rawValue,
+                                            spanId: record.context.testId?.rawValue ?? 0,
+                                            workspace: record.workspacePath?.path,
+                                            files: record.coverage.files.values)
+            writeCoverage(coverage)
         }
-
-        do {
-            let info = try parser.filesCovered(in: coverage)
-            coverageData = TestCodeCoverage(sessionId: testSessionId,
-                                            suiteId: testSuiteId,
-                                            spanId: spanId,
-                                            workspace: workspacePath,
-                                            files: info.files.values)
-            coverageStorage.write(value: coverageData!)
-        } catch {
-            Log.print("Code coverage generation failed: \(error)")
-            return
-        }
-
-        Log.debug("End processing coverage: \(coverage.path)")
+        return .success
     }
 
-    func shutdown() {
+    func forceFlush(explicitTimeout: TimeInterval?) -> ExportResult {
+        (try? coverageStorage.flush()) == true ? .success : .failure
+    }
+
+    func shutdown(explicitTimeout: TimeInterval?) {
         coverageStorage.stop()
+    }
+
+    private func writeCoverage(_ data: TestCodeCoverage) {
+        if configuration.performancePreset.synchronousWrite {
+            try? coverageStorage.writeSync(value: data)
+        } else {
+            coverageStorage.write(value: data)
+        }
     }
 }
 

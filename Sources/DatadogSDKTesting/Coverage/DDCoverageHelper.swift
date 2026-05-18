@@ -8,12 +8,14 @@ import Foundation
 @preconcurrency internal import EventsExporter
 internal import CDatadogSDKTesting
 @preconcurrency internal import CodeCoverage
+internal import OpenTelemetryApi
+internal import OpenTelemetrySdk
 
 typealias cFunc = @convention(c) () -> Void
 
 protocol TestCoverageCollector: Feature, Sendable {
     func startTest()
-    func endTest(testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64)
+    func endTest(testSessionId: SpanId, testSuiteId: SpanId, testSpanId: SpanId)
 }
 
 final class DDCoverageHelper: TestCoverageCollector {
@@ -52,7 +54,7 @@ final class DDCoverageHelper: TestCoverageCollector {
         }
     }
     
-    func endTest(testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64) {
+    func endTest(testSessionId: SpanId, testSuiteId: SpanId, testSpanId: SpanId) {
         let file: URL
         do {
             file = try processor.stopCoverageGathering()
@@ -60,13 +62,40 @@ final class DDCoverageHelper: TestCoverageCollector {
             Log.debug("Coverage gathering error: \(error)")
             return
         }
-        coverageWorkQueue.addOperation {
+        let debugSave = debug
+        coverageWorkQueue.addOperation { [weak self] in
+            guard let self else { return }
             guard FileManager.default.fileExists(atPath: file.path) else {
                 Log.debug("Coverage file is missing at: \(file.path)")
                 return
             }
-            self.exporter.export(coverage: file, parser: self.processor.parser, workspacePath: self.workspacePath,
-                                 testSessionId: testSessionId, testSuiteId: testSuiteId, spanId: spanId)
+            Log.debug("Start processing coverage: \(file.path)")
+            defer {
+                if !debugSave {
+                    try? FileManager.default.removeItem(at: file)
+                }
+            }
+
+            let info: CoverageInfo
+            do {
+                info = try self.processor.filesCovered(in: file)
+            } catch {
+                Log.print("Code coverage generation failed: \(error)")
+                return
+            }
+
+            let record = CoverageRecord(
+                name: file.deletingPathExtension().lastPathComponent.components(separatedBy: "__").last ?? file.lastPathComponent,
+                coverage: info,
+                workspacePath: self.workspacePath.map { URL(fileURLWithPath: $0) },
+                resource: Resource(),
+                instrumentationScopeInfo: InstrumentationScopeInfo(),
+                context: .test(testSpanId: testSpanId,
+                               suiteId: testSuiteId,
+                               sessionId: testSessionId)
+            )
+            self.exporter.export(coverageRecords: [record])
+            Log.debug("End processing coverage: \(file.path)")
         }
     }
     

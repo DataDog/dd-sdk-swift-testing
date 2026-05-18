@@ -6,7 +6,6 @@
 
 import Foundation
 import OpenTelemetrySdk
-import CodeCoverageParser
 
 /// Thrown by `EventsExporterProtocol` requests that need to surface a
 /// backend communication failure to the caller — library configuration
@@ -96,11 +95,15 @@ public protocol EventsExporterProtocol: SpanExporter {
     /// batch.
     func setMetadata(_ metadata: SpanMetadata)
 
+    /// Hand off one or more pre-parsed `CoverageRecord`s for upload. Each record
+    /// becomes a `TestCodeCoverage` payload on disk and is shipped through the
+    /// coverage upload pipeline.
+    @discardableResult
+    func export(coverageRecords: [CoverageRecord]) -> ExportResult
+
     func searchCommits(
         repositoryURL: String, commits: [String]
     ) throws(LibraryConfigurationCommunicationError) -> [String]
-    func export(coverage: URL, parser: CoverageParser, workspacePath: String?,
-                testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64)
     func uploadPackFiles(packFilesDirectory: Directory, commit: String, repository: String) throws
     func skippableTests(repositoryURL: String, sha: String, testLevel: ITRTestLevel,
                         configurations: [String: String], customConfigurations: [String: String]
@@ -183,11 +186,9 @@ public final class EventsExporter: EventsExporterProtocol {
         return (logsOK && spansOK && covOK) ? .success : .failure
     }
 
-    public func export(coverage: URL, parser: CoverageParser, workspacePath: String?,
-                       testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64)
-    {
-        coverageExporter.exportCoverage(coverage: coverage, parser: parser, workspacePath: workspacePath,
-                                        testSessionId: testSessionId, testSuiteId: testSuiteId, spanId: spanId)
+    @discardableResult
+    public func export(coverageRecords: [CoverageRecord]) -> ExportResult {
+        coverageExporter.export(coverageRecords: coverageRecords, explicitTimeout: nil)
     }
 
     public func searchCommits(

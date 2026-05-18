@@ -6,59 +6,59 @@
 
 import Foundation
 
-final class UnfairLock: Sendable {
+public final class UnfairLock: Sendable {
     nonisolated(unsafe) private let _lock: os_unfair_lock_t
-    
-    init() {
+
+    public init() {
         _lock = .allocate(capacity: 1)
         _lock.initialize(to: .init())
     }
-    
+
     deinit {
         _lock.deinitialize(count: 1)
         _lock.deallocate()
     }
-    
-    func lock() {
+
+    public func lock() {
         os_unfair_lock_lock(_lock)
     }
-    
-    func unlock() {
+
+    public func unlock() {
         os_unfair_lock_unlock(_lock)
     }
-    
-    func whileLocked<T>(_ action: () throws -> T) rethrows -> T {
+
+    public func whileLocked<T>(_ action: () throws -> T) rethrows -> T {
         os_unfair_lock_lock(_lock)
         defer { os_unfair_lock_unlock(_lock) }
         return try action()
     }
 }
 
-final class Synced<V>: Sendable {
+public final class Synced<V>: Sendable {
     nonisolated(unsafe) private var _value: V
     private let lock = UnfairLock()
-    
-    init(_ value: V) {
+
+    public init(_ value: V) {
         _value = value
     }
-    
-    var value: V { lock.whileLocked { _value } }
-    
-    func use<R>(_ action: (V) throws -> R) rethrows -> R {
+
+    public var value: V { lock.whileLocked { _value } }
+
+    public func use<R>(_ action: (V) throws -> R) rethrows -> R {
         try lock.whileLocked { try action(_value) }
     }
-    
-    func update<R>(_ action: (inout V) throws -> R) rethrows -> R {
+
+    public func update<R>(_ action: (inout V) throws -> R) rethrows -> R {
         try lock.whileLocked { try action(&_value) }
     }
 }
 
-struct LazySynced<V>: Sendable {
+public struct LazySynced<V>: Sendable {
     private enum State {
         case constructor(() throws -> V)
         case value(V)
         case error(any Error)
-        
+
         mutating func get() throws -> V {
             switch self {
             case .value(let v): return v
@@ -75,22 +75,22 @@ struct LazySynced<V>: Sendable {
             }
         }
     }
-    
+
     private let state: Synced<State>
-    
-    init(_ constructor: @escaping () throws -> V) {
+
+    public init(_ constructor: @escaping () throws -> V) {
         state = .init(.constructor(constructor))
     }
-    
-    func value() throws -> V {
+
+    public func value() throws -> V {
         try state.update { try $0.get() }
     }
-    
-    func use<R>(_ action: (V) throws -> R) throws -> R {
+
+    public func use<R>(_ action: (V) throws -> R) throws -> R {
         try state.update { try action($0.get()) }
     }
-    
-    func update<R>(_ action: (inout V) throws -> R) throws -> R {
+
+    public func update<R>(_ action: (inout V) throws -> R) throws -> R {
         try state.update { state in
             var value = try state.get()
             let result = try action(&value)

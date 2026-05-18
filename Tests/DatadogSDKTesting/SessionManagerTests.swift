@@ -5,6 +5,7 @@
  */
 
 @testable import DatadogSDKTesting
+@testable import EventsExporter
 import XCTest
 
 final class SessionManagerTests: XCTestCase {

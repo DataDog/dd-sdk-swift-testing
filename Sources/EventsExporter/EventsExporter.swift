@@ -130,6 +130,8 @@ public final class EventsExporter: EventsExporterProtocol {
         coverageExporter = try CoverageExporter(config: configuration)
 
         let apiConfig = APIServiceConfig(
+            serviceName: config.serviceName,
+            environment: config.environment,
             applicationName: config.applicationName,
             version: config.version,
             device: .current,

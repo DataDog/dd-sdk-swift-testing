@@ -14,6 +14,7 @@ internal protocol TestOptimizationApi: APIService {
     var testManagement: TestManagementApi { get }
     var spans: SpansApi { get }
     var logs: LogsApi { get }
+    var telemetry: TelemetryApi { get }
 }
 
 internal struct TestOptimizationApiService: TestOptimizationApi {
@@ -27,6 +28,7 @@ internal struct TestOptimizationApiService: TestOptimizationApi {
             testManagement.endpoint = newValue
             spans.endpoint = newValue
             logs.endpoint = newValue
+            telemetry.endpoint = newValue
         }
     }
     var headers: [HTTPHeader] {
@@ -39,6 +41,7 @@ internal struct TestOptimizationApiService: TestOptimizationApi {
             testManagement.headers = newValue
             spans.headers = newValue
             logs.headers = newValue
+            telemetry.headers = newValue
         }
     }
 
@@ -52,6 +55,7 @@ internal struct TestOptimizationApiService: TestOptimizationApi {
             testManagement.encoder = newValue
             spans.encoder = newValue
             logs.encoder = newValue
+            telemetry.encoder = newValue
         }
     }
 
@@ -65,6 +69,7 @@ internal struct TestOptimizationApiService: TestOptimizationApi {
             testManagement.decoder = newValue
             spans.decoder = newValue
             logs.decoder = newValue
+            telemetry.decoder = newValue
         }
     }
 
@@ -75,6 +80,7 @@ internal struct TestOptimizationApiService: TestOptimizationApi {
     var testManagement: TestManagementApi
     var spans: SpansApi
     var logs: LogsApi
+    var telemetry: TelemetryApi
 
     init(config: APIServiceConfig, httpClient: HTTPClient, log: Logger) {
         settings = SettingsApiService(config: config, httpClient: httpClient, log: log)
@@ -84,6 +90,7 @@ internal struct TestOptimizationApiService: TestOptimizationApi {
         testManagement = TestManagementApiService(config: config, httpClient: httpClient, log: log)
         spans = SpansApiService(config: config, httpClient: httpClient, log: log)
         logs = LogsApiService(config: config, httpClient: httpClient, log: log)
+        telemetry = TelemetryApiService(config: config, httpClient: httpClient, log: log)
     }
 
     var endpointURLs: Set<URL> {
@@ -94,5 +101,6 @@ internal struct TestOptimizationApiService: TestOptimizationApi {
             .union(testManagement.endpointURLs)
             .union(spans.endpointURLs)
             .union(logs.endpointURLs)
+            .union(telemetry.endpointURLs)
     }
 }

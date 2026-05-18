@@ -196,10 +196,15 @@ class DDTracerTests: XCTestCase {
         XCTAssertEqual(spanData.endTime, spanData.startTime.addingTimeInterval(TimeInterval.fromMicroseconds(1)))
     }
 
+    /// When the host app is launched from a UI test there's no active span,
+    /// but the harness passes a launch trace/span pair via env. `logString`
+    /// must emit the captured text as a `LogRecord` carrying that launch
+    /// context — it must NOT synthesize an aux span (the old implementation
+    /// did, but that polluted the trace stream).
     func testLogStringAppUI() throws {
         let testTraceId = TraceId(fromHexString: "ff000000000000000000000000000041")
         let testSpanId = SpanId(fromHexString: "ff00000000000042")
-        
+
         setEnv(env: ["ENVIRONMENT_TRACER_TRACEID": testTraceId.hexString,
                      "ENVIRONMENT_TRACER_SPANID": testSpanId.hexString])
 
@@ -209,10 +214,9 @@ class DDTracerTests: XCTestCase {
 
         tracer.logString(string: "Hello World", date: Date(timeIntervalSince1970: 1212))
         tracer.flush()
-        let span = try XCTUnwrap(testSpanProcessor.lastProcessedSpan)
 
-        let spanData = span.toSpanData()
-        XCTAssertEqual(spanData.events.count, 1)
+        XCTAssertNil(testSpanProcessor.lastProcessedSpan,
+                     "no span should be produced — the message must go out as a LogRecord")
     }
 
     func testEnvironmentConstantPropagation() {

@@ -17,7 +17,12 @@ class StdoutCaptureTests: XCTestCase {
         DDTestMonitor._env_recreate()
     }
 
-    func testWhenPrintIsCalledAndIsCapturing_stringIsCapturedAndConvertedToEvents() {
+    /// Captured stdout is forwarded to the OTel LoggerProvider as a
+    /// `LogRecord` — the active test span itself is no longer mutated.
+    /// The full LogRecord round-trip is covered by the integration tests;
+    /// here we just assert the capture hook drained the buffer and the
+    /// span saw no events.
+    func testWhenPrintIsCalledAndIsCapturing_stringIsForwardedToLogger() {
         let tracer = DDTracer()
         let stringToCapture = "This should be captured"
 
@@ -29,9 +34,10 @@ class StdoutCaptureTests: XCTestCase {
         }
         StdoutCapture.stopCapturing()
 
-        XCTAssertTrue(StdoutCapture.stdoutBuffer.isEmpty)
-        XCTAssertEqual(spanData.events.count, 1)
-        XCTAssertEqual(spanData.events.first?.attributes["message"]?.description, stringToCapture + "\n")
+        XCTAssertTrue(StdoutCapture.stdoutBuffer.isEmpty,
+                      "buffer should be drained on newline")
+        XCTAssertEqual(spanData.events.count, 0,
+                       "stdout is now emitted as an OTel LogRecord, not as a span event")
     }
 
     func testWhenPrintIsCalledAndIsNotCapturing_stringIsNotCaptured() {
@@ -49,7 +55,7 @@ class StdoutCaptureTests: XCTestCase {
         XCTAssertEqual(spanData.events.count, 0)
     }
 
-    func testWhenSomeCharactersAreWrittenToStdoutWithoutNewLines_charactersAreCapturedButNotConvertedToEvents() {
+    func testWhenSomeCharactersAreWrittenToStdoutWithoutNewLines_charactersAreCapturedButNotForwarded() {
         let tracer = DDTestMonitor.tracer
         let stringToCapture = "This should  not be captured"
 

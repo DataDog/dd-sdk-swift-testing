@@ -22,7 +22,13 @@ internal class DDTracer {
     let tracerProviderSdk: TracerProviderSdk
     let maxObjectSize: UInt64
     var eventsExporter: EventsExporterProtocol?
-    
+
+    /// Logger used to emit `print()`/stderr captures and test-error context as
+    /// first-class OTel `LogRecord`s through the registered LoggerProvider.
+    /// `includeTraceContext` stays on (default) so the active test span's
+    /// context is auto-attached as `dd.trace_id` / `dd.span_id`.
+    private let loggerSdk: LoggerSdk
+
     private var launchSpanContext: SpanContext?
     private let attributeCountLimit: UInt = 1024
 
@@ -89,6 +95,10 @@ internal class DDTracer {
         OpenTelemetry.registerTracerProvider(tracerProvider: tracerProviderSdk)
         OpenTelemetry.registerLoggerProvider(loggerProvider: loggerProviderSdk)
         tracerSdk = tracerProviderSdk.get(instrumentationName: id, instrumentationVersion: version) as! TracerSdk
+        loggerSdk = loggerProviderSdk
+            .loggerBuilder(instrumentationScopeName: id)
+            .setInstrumentationVersion(version)
+            .build() as! LoggerSdk
     }
 
     convenience init() {
@@ -334,49 +344,53 @@ internal class DDTracer {
                 DDTestTags.testModule: AttributeValue.string(currentTest.module.name)]
     }
 
-    private func attributesForString(_ string: String) -> [String: AttributeValue] {
-        return testAttributes().merging(["message": AttributeValue.string(string)]) { _, other in other }
-    }
-
-    private func attributesForError(_ string: String) -> [String: AttributeValue] {
-        return testAttributes().merging(["message": AttributeValue.string(string),
-                                         "status": AttributeValue.string("error")]) { _, other in other }
-    }
-
     func logString(string: String, date: Date? = nil) {
+        // UI-test edge case: no active span, but a launchSpanContext from the
+        // host harness — emit with that context so the log still correlates to
+        // the test span that started this app.
         if launchSpanContext != nil, DDTracer.activeSpan == nil {
-            // This is a special case when an app executed trough a UITest, logs without a span
-            return logStringAppUITested(string: string, date: date)
-        }
-
-        DDTracer.activeSpan?.addEvent(name: "logString", attributes: attributesForString(string), timestamp: date ?? Date())
-    }
-
-    /// This method is only currently used for loggign the steps when runnning UITest
-    func logString(string: String, timeIntervalSinceSpanStart: Double) {
-        guard let activeSpan = DDTracer.activeSpan as? SpanSdk else {
+            emitLog(body: string, severity: .info, timestamp: date,
+                    explicitSpanContext: launchSpanContext)
             return
         }
+        emitLog(body: string, severity: .info, timestamp: date)
+    }
+
+    /// Used for logging UI-test step events at offsets relative to the active
+    /// span's start time.
+    func logString(string: String, timeIntervalSinceSpanStart: Double) {
+        guard let activeSpan = DDTracer.activeSpan as? SpanSdk else { return }
         let timestamp = activeSpan.startTime.addingTimeInterval(timeIntervalSinceSpanStart)
-        activeSpan.addEvent(name: "logString", attributes: attributesForString(string), timestamp: timestamp)
+        emitLog(body: string, severity: .info, timestamp: timestamp)
     }
 
-    /// This method is only currently used when logging with an app being launched from a UITest, and no span has been created in the App.
-    /// It creates a "non-sampled" instantaneous span that wont be serialized but where we can add the log using the SpanId and TraceId of the
-    /// test Span that lunched the app.
-    func logStringAppUITested(string: String, date: Date? = nil) {
-        let auxSpan = createSpanFromLaunchContext()
-        auxSpan.addEvent(name: "logString", attributes: attributesForString(string), timestamp: date ?? Date())
-        auxSpan.status = .ok
-        auxSpan.end()
-    }
-
-    /// This method is only currently used when logging with an app being launched from a UITest, and no span has been created in the App.
+    /// Test-assertion error context, called from DDTest. The umbrella stdout
+    /// / stderr instrumentation gate is preserved because errors are written
+    /// into the log pipeline rather than the test span's attributes — without
+    /// the gate they'd surface even when logs are disabled.
     func logError(string: String, date: Date? = nil) {
         guard DDTestMonitor.config.enableStderrInstrumentation || DDTestMonitor.config.enableStdoutInstrumentation else {
             return
         }
-        DDTracer.activeSpan?.addEvent(name: "logString", attributes: attributesForError(string), timestamp: date ?? Date())
+        emitLog(body: string, severity: .error, timestamp: date)
+    }
+
+    /// Emit a `LogRecord` through the registered OTel LoggerProvider. The
+    /// LoggerSdk auto-injects the active span context (`includeTraceContext`
+    /// defaults to `true`), so `dd.trace_id` / `dd.span_id` on the wire come
+    /// out matching the test span without an explicit set. Pass
+    /// `explicitSpanContext` only when there is no active span but we still
+    /// want correlation (the UI-test launch context case).
+    private func emitLog(body: String, severity: Severity, timestamp: Date?,
+                         explicitSpanContext: SpanContext? = nil)
+    {
+        var builder = loggerSdk.logRecordBuilder()
+            .setBody(.string(body))
+            .setSeverity(severity)
+            .setAttributes(testAttributes())
+        if let timestamp { builder = builder.setTimestamp(timestamp) }
+        if let explicitSpanContext { builder = builder.setSpanContext(explicitSpanContext) }
+        builder.emit()
     }
 
     func flush() {

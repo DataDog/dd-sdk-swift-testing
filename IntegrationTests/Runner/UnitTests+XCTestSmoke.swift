@@ -4,6 +4,7 @@
  * Copyright 2020-Present Datadog, Inc.
  */
 
+import Foundation
 import Testing
 import TestUtils
 @testable import DatadogSDKTesting
@@ -185,6 +186,10 @@ struct UnitTestsXCTestSmoke: IntergationTestSuite {
         config.backend.settings.itrEnabled = true
         config.backend.settings.codeCoverage = true
         config.environment["DD_CIVISIBILITY_CODE_COVERAGE_ENABLED"] = "true"
+        // `enableStdoutInstrumentation` defaults to false; flipping the
+        // umbrella DD_CIVISIBILITY_LOGS_ENABLED flag turns on both stdout
+        // capture and the OTel LoggerProvider's wiring.
+        config.environment["DD_CIVISIBILITY_LOGS_ENABLED"] = "true"
 
         try await run(test: "XCStdoutOTelAndCoverage/testStdoutOTelAndCoverage", config: config) { backend, success in
             #expect(success == true)

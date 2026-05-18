@@ -7,6 +7,7 @@
 import XCTest
 import Foundation
 import DatadogSDKTesting
+import OpenTelemetryApi
 
 final class XCBasicPass: XCTestCase {
     func testBasicPass() {
@@ -66,9 +67,36 @@ final class XCCrash: XCTestCase {
         let array: [Int] = [1]
         XCTAssertEqual(array[1], 1)
     }
-    
+
     func testNoCrash() {
         let array: [Int] = [1]
         XCTAssertEqual(array[0], 1)
+    }
+}
+
+/// Drives the three observable telemetry pipelines from inside a real XCTest
+/// run: print() → StdoutCapture → span event → SpanEventsLogExporterAdapter →
+/// LogsExporter; an OTel `LogRecord` emitted through the global LoggerProvider
+/// (registered by `DDTracer`) → LogsExporter; and the implicit per-test code
+/// coverage profraw → CoverageExporter → CoverageRecord upload (enabled by the
+/// xctestplan + backend settings supplied by the outer harness).
+final class XCStdoutOTelAndCoverage: XCTestCase {
+    func testStdoutOTelAndCoverage() {
+        // 1) stdout path
+        print("hello from XCTest stdout")
+
+        // 2) OTel log path — go through OpenTelemetry.instance.loggerProvider
+        // which DDTracer wires up to the same LogsExporter.
+        let logger = OpenTelemetry.instance.loggerProvider
+            .loggerBuilder(instrumentationScopeName: "xctest-integration")
+            .build()
+        logger.logRecordBuilder()
+            .setBody(.string("hello from XCTest OTel"))
+            .setSeverity(.warn)
+            .emit()
+
+        // 3) The test passing is enough to trigger DDCoverageHelper.endTest,
+        //    which is what produces the coverage payload — no extra wiring.
+        XCTAssert(Bool(true))
     }
 }

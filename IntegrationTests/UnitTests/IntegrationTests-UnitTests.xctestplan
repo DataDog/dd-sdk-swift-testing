@@ -83,6 +83,7 @@
         "value" : "$(DD_TRACE_DEBUG)"
       }
     ],
+    "codeCoverage" : true,
     "performanceAntipatternCheckerEnabled" : true
   },
   "testTargets" : [

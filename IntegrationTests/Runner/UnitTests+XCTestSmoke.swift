@@ -173,4 +173,43 @@ struct UnitTestsXCTestSmoke: IntergationTestSuite {
             #expect(succeeded[DDTags.errorCrashLog + ".00"] == nil)
         }
     }
+
+    /// Full-stack integration test: spins up the real SDK in a subprocess that
+    /// runs `XCStdoutOTelAndCoverage.testStdoutOTelAndCoverage`, then asserts
+    /// that all three telemetry pipelines reached the backend with the right
+    /// shape: one test span, the stdout-captured `print()` as a log entry, the
+    /// OTel `LogRecord` as a log entry (status `warn`), and at least one
+    /// coverage payload.
+    @Test func stdoutOTelAndCoverage() async throws {
+        var config = XcodeTestRunner.Config()
+        config.backend.settings.itrEnabled = true
+        config.backend.settings.codeCoverage = true
+        config.environment["DD_CIVISIBILITY_CODE_COVERAGE_ENABLED"] = "true"
+
+        try await run(test: "XCStdoutOTelAndCoverage/testStdoutOTelAndCoverage", config: config) { backend, success in
+            #expect(success == true)
+
+            // 1) Span side
+            let spans = backend.allTestSpans
+            #expect(spans.count == 1)
+            let meta = try #require(spans.last?.meta)
+            #expect(meta[DDTestTags.testStatus] == DDTagValues.statusPass)
+            #expect(meta[DDGenericTags.resource] == "XCStdoutOTelAndCoverage.testStdoutOTelAndCoverage")
+            #expect(meta[DDTestTags.testName] == "testStdoutOTelAndCoverage")
+            #expect(meta[DDTestTags.testSuite] == "XCStdoutOTelAndCoverage")
+            #expect(meta[DDTestTags.testType] == "test")
+
+            // 2) Logs side — both flows produce one log each
+            let stdoutLog = backend.allLogs.first { $0.message?.contains("hello from XCTest stdout") == true }
+            let otelLog = backend.allLogs.first { $0.message?.contains("hello from XCTest OTel") == true }
+            #expect(stdoutLog != nil, "stdout `print()` should be captured and shipped as a log entry")
+            #expect(otelLog != nil, "an OTel LogRecord should be shipped as a log entry")
+            #expect(otelLog?.status == "warn",
+                    "Severity.warn must map to DDLog.Status.warn on the wire")
+
+            // 3) Coverage side
+            let coverages = backend.allCoverages
+            #expect(!coverages.isEmpty, "at least one coverage payload should arrive for the passing test")
+        }
+    }
 }

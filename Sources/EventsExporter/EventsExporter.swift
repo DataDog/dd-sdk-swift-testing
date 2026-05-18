@@ -84,7 +84,7 @@ public struct LibraryConfigurationCommunicationError: Error, CustomStringConvert
     }
 }
 
-public protocol EventsExporterProtocol: SpanExporter {
+public protocol EventsExporterProtocol: SpanExporter, LogRecordExporter {
     var endpointURLs: Set<String> { get }
     var maxObjectSize: UInt64 { get }
 
@@ -295,6 +295,21 @@ public final class EventsExporter: EventsExporterProtocol {
         ])
         urls.formUnion(api.endpointURLs.map { $0.absoluteString })
         return urls
+    }
+
+    /// OTel `LogRecordExporter` conformance — forwarded to the wrapped
+    /// `LogsExporter`. Lets a consumer register the `EventsExporter` as the
+    /// `LogRecordExporter` on a `LoggerProviderSdk`, so logs emitted through
+    /// `OpenTelemetry.instance.loggerProvider` flow into the same upload
+    /// pipeline as span-event-derived logs. `shutdown(explicitTimeout:)` is
+    /// already provided for the `SpanExporter` conformance and satisfies
+    /// `LogRecordExporter`'s requirement of the same signature.
+    public func export(logRecords: [ReadableLogRecord], explicitTimeout: TimeInterval?) -> ExportResult {
+        logsExporter.export(logRecords: logRecords, explicitTimeout: explicitTimeout)
+    }
+
+    public func forceFlush(explicitTimeout: TimeInterval?) -> ExportResult {
+        logsExporter.forceFlush(explicitTimeout: explicitTimeout)
     }
 
     /// Drive an async API call from the synchronous public surface, mapping

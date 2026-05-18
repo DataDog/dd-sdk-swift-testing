@@ -43,21 +43,25 @@ internal class DDTracer {
         self.eventsExporter = exporter
         self.maxObjectSize = exporter?.maxObjectSize ?? 262144
 
-        let exporterToUse: SpanExporter
+        let spanExporterToUse: SpanExporter
+        let logRecordExporterToUse: LogRecordExporter
         if !enabled {
-            exporterToUse = NoopSpanExporter()
+            spanExporterToUse = NoopSpanExporter()
+            logRecordExporterToUse = NoopLogRecordExporter.instance
         } else if let exporter = eventsExporter {
-            exporterToUse = exporter as SpanExporter
+            spanExporterToUse = exporter as SpanExporter
+            logRecordExporterToUse = exporter as LogRecordExporter
         } else {
             Log.print("Failed creating Datadog exporter.")
-            exporterToUse = NoopSpanExporter()
+            spanExporterToUse = NoopSpanExporter()
+            logRecordExporterToUse = NoopLogRecordExporter.instance
         }
 
         let spanProcessor: SpanProcessor
         if launchSpanContext != nil {
-            spanProcessor = SimpleSpanProcessor(spanExporter: exporterToUse).reportingOnlySampled(sampled: false)
+            spanProcessor = SimpleSpanProcessor(spanExporter: spanExporterToUse).reportingOnlySampled(sampled: false)
         } else {
-            spanProcessor = SimpleSpanProcessor(spanExporter: exporterToUse)
+            spanProcessor = SimpleSpanProcessor(spanExporter: spanExporterToUse)
         }
 
         // sync clock
@@ -76,7 +80,14 @@ internal class DDTracer {
             .add(spanProcessor: spanProcessor)
             .build()
 
+        let loggerProviderSdk = LoggerProviderBuilder()
+            .with(clock: DDTestMonitor.clock)
+            .with(resource: resource)
+            .with(processors: [SimpleLogRecordProcessor(logRecordExporter: logRecordExporterToUse)])
+            .build()
+
         OpenTelemetry.registerTracerProvider(tracerProvider: tracerProviderSdk)
+        OpenTelemetry.registerLoggerProvider(loggerProvider: loggerProviderSdk)
         tracerSdk = tracerProviderSdk.get(instrumentationName: id, instrumentationVersion: version) as! TracerSdk
     }
 

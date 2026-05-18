@@ -307,15 +307,33 @@ internal struct APIServiceConfig {
         self.clientId = clientId
         self.payloadCompression = payloadCompression
     }
+
+    init(configuration: ExporterConfiguration, device: Device = .current) {
+        self.init(serviceName: configuration.serviceName,
+                  environment: configuration.environment,
+                  applicationName: configuration.applicationName,
+                  version: configuration.version,
+                  device: device,
+                  hostname: configuration.hostname,
+                  apiKey: configuration.apiKey,
+                  endpoint: configuration.endpoint,
+                  clientId: configuration.exporterId,
+                  payloadCompression: configuration.payloadCompression)
+    }
 }
 
 extension JSONEncoder {
     internal static let apiEncoder: JSONEncoder = {
         let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
+        encoder.dateEncodingStrategy = .custom { date, encoder in
+            var container = encoder.singleValueContainer()
+            let formatted = iso8601DateFormatter.string(from: date)
+            try container.encode(formatted)
+        }
         encoder.dataEncodingStrategy = .base64
         encoder.keyEncodingStrategy = .convertToSnakeCase
         encoder.nonConformingFloatEncodingStrategy = .throw
+        encoder.outputFormatting = [.withoutEscapingSlashes]
         return encoder
     }()
 
@@ -333,7 +351,15 @@ extension JSONEncoder {
 extension JSONDecoder {
     internal static let apiDecoder: JSONDecoder = {
         let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+            let string = try container.decode(String.self)
+            guard let date = iso8601DateFormatter.date(from: string) else {
+                throw DecodingError.dataCorruptedError(in: container,
+                                                       debugDescription: "Bad date: \(string)")
+            }
+            return date
+        }
         decoder.keyDecodingStrategy = .convertFromSnakeCase
         decoder.dataDecodingStrategy = .base64
         return decoder

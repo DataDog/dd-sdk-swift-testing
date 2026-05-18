@@ -6,24 +6,50 @@
 
 import Foundation
 
+internal protocol DataFormatType {
+    var prefix: Data { get }
+    var suffix: Data { get }
+    var separator: Data { get }
+}
+
+internal protocol JSONFileHeader: Encodable {
+    static var batchFieldName: String { get }
+}
+
 /// Describes the format of writing and reading data from files.
-internal struct DataFormat {
+internal struct DataFormat: DataFormatType {
     /// Prefixes the batch payload read from file.
-    let prefixData: Data
+    let prefix: Data
     /// Suffixes the batch payload read from file.
-    let suffixData: Data
+    let suffix: Data
     /// Separates entities written to file.
-    let separatorData: Data
+    let separator: Data
 
     // MARK: - Initialization
 
-    init(
-        prefix: String,
-        suffix: String,
-        separator: String
-    ) {
-        self.prefixData = prefix.data(using: .utf8)! // swiftlint:disable:this force_unwrapping
-        self.suffixData = suffix.data(using: .utf8)! // swiftlint:disable:this force_unwrapping
-        self.separatorData = separator.data(using: .utf8)! // swiftlint:disable:this force_unwrapping
+    init(prefix: Data, suffix: Data, separator: Data) {
+        self.prefix = prefix
+        self.suffix = suffix
+        self.separator = separator
+    }
+
+    /// Builds a `{ ...header..., "<batch>": [ ... ] }` envelope around the
+    /// written entities. The header is encoded once at init; the writer prepends
+    /// `prefix` before the first entity and appends `suffix` after the last.
+    init<H: JSONFileHeader>(header: H, encoder: JSONEncoder) throws {
+        var headerData = try encoder.encode(header)
+        // Replace closing `}` with `,` then append the array opener so the
+        // batch entities slot in as the value of `batchFieldName`.
+        headerData[headerData.count - 1] = UInt8(ascii: ",")
+        headerData.append(contentsOf: "\"\(H.batchFieldName)\":[".utf8)
+        self.init(prefix: headerData,
+                  suffix: Data("]}".utf8),
+                  separator: Data(",".utf8))
+    }
+
+    static var jsonArray: Self {
+        .init(prefix: Data("[".utf8),
+              suffix: Data("]".utf8),
+              separator: Data(",".utf8))
     }
 }

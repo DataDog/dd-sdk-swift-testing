@@ -10,6 +10,11 @@ internal protocol Delay {
     var current: TimeInterval { get }
     mutating func decrease()
     mutating func increase()
+
+    /// Sets the next delay explicitly (e.g. from a Retry-After header).
+    /// Returns `false` if the requested delay exceeds the configured max,
+    /// in which case the caller should treat the upload as failed rather than retried.
+    mutating func set(delay: TimeInterval) -> Bool
 }
 
 /// Mutable interval used for periodic data uploads.
@@ -37,5 +42,10 @@ internal struct DataUploadDelay: Delay {
 
     mutating func increase() {
         delay = min(delay * (1.0 + changeRate), maxDelay)
+    }
+
+    mutating func set(delay: TimeInterval) -> Bool {
+        self.delay = delay
+        return delay <= maxDelay
     }
 }

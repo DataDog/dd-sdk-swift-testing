@@ -178,8 +178,6 @@
 		A7FC26192BA1EC5A00067E26 /* DataUploadDelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF2027D7790300F4018A /* DataUploadDelay.swift */; };
 		A7FC261A2BA1EC5A00067E26 /* DataUploadStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF2127D7790300F4018A /* DataUploadStatus.swift */; };
 		A7FC261B2BA1EC5A00067E26 /* DataUploadWorker.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1E27D7790300F4018A /* DataUploadWorker.swift */; };
-		A7FC261C2BA1EC5A00067E26 /* RequestBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1B27D7790300F4018A /* RequestBuilder.swift */; };
-		A7FC261D2BA1EC5A00067E26 /* MultipartFormDataRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C3F529284E150C00A2C2F8 /* MultipartFormDataRequest.swift */; };
 		A7FC262E2BA1ECBD00067E26 /* LLVMSimpleCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10A7E0D2806D68F00B464C9 /* LLVMSimpleCoverageFormat.swift */; };
 		A7FC26302BA1ECBD00067E26 /* CoverageExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1743F5628490141006CBFF8 /* CoverageExporter.swift */; };
 		A7FC26322BA1ECC500067E26 /* SpansExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CEFE27D7790200F4018A /* SpansExporter.swift */; };
@@ -611,7 +609,6 @@
 		E143CF1727D7790300F4018A /* Directory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Directory.swift; sourceTree = "<group>"; };
 		E143CF1827D7790300F4018A /* File.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = File.swift; sourceTree = "<group>"; };
 		E143CF1927D7790300F4018A /* EventsExporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventsExporter.swift; sourceTree = "<group>"; };
-		E143CF1B27D7790300F4018A /* RequestBuilder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RequestBuilder.swift; sourceTree = "<group>"; };
 		E143CF1C27D7790300F4018A /* DataUploader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataUploader.swift; sourceTree = "<group>"; };
 		E143CF1E27D7790300F4018A /* DataUploadWorker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataUploadWorker.swift; sourceTree = "<group>"; };
 		E143CF2027D7790300F4018A /* DataUploadDelay.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataUploadDelay.swift; sourceTree = "<group>"; };
@@ -651,7 +648,6 @@
 		E1BB54AC25401E85007C2D93 /* StdoutCaptureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StdoutCaptureTests.swift; sourceTree = "<group>"; };
 		E1BB54C325408E92007C2D93 /* StderrCaptureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StderrCaptureTests.swift; sourceTree = "<group>"; };
 		E1C189B8270F193F00188C0E /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
-		E1C3F529284E150C00A2C2F8 /* MultipartFormDataRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipartFormDataRequest.swift; sourceTree = "<group>"; };
 		E1C8DEF4268363EC005B5411 /* DDCoverageHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDCoverageHelper.swift; sourceTree = "<group>"; };
 		E1C8DEF7268367AB005B5411 /* BinaryImages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinaryImages.swift; sourceTree = "<group>"; };
 		E1D476A525DD369F00832592 /* BinaryParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinaryParser.swift; sourceTree = "<group>"; };
@@ -1162,8 +1158,6 @@
 		E143CF1A27D7790300F4018A /* Upload */ = {
 			isa = PBXGroup;
 			children = (
-				E1C3F529284E150C00A2C2F8 /* MultipartFormDataRequest.swift */,
-				E143CF1B27D7790300F4018A /* RequestBuilder.swift */,
 				E143CF1C27D7790300F4018A /* DataUploader.swift */,
 				E143CF1E27D7790300F4018A /* DataUploadWorker.swift */,
 				E143CF2027D7790300F4018A /* DataUploadDelay.swift */,
@@ -2053,14 +2047,12 @@
 				A7FC26452BA1ECEF00067E26 /* FileReader.swift in Sources */,
 				A7FC264C2BA1ED0C00067E26 /* ExporterConfiguration.swift in Sources */,
 				A7FC26422BA1ECE400067E26 /* LogsExporter.swift in Sources */,
-				A7FC261C2BA1EC5A00067E26 /* RequestBuilder.swift in Sources */,
 				A7FC263E2BA1ECCF00067E26 /* Device.swift in Sources */,
 				A7AB7C0F2F11AA1100000001 /* RunLoopWaiter.swift in Sources */,
 				A7FC26162BA1EC5A00067E26 /* DataUploader.swift in Sources */,
 				A7FC26442BA1ECE400067E26 /* LogEncoder.swift in Sources */,
 				A7FC26432BA1ECE400067E26 /* LogSanitizer.swift in Sources */,
 				A7FC263D2BA1ECCF00067E26 /* AttributesSanitizer.swift in Sources */,
-				A7FC261D2BA1EC5A00067E26 /* MultipartFormDataRequest.swift in Sources */,
 				A7FC26322BA1ECC500067E26 /* SpansExporter.swift in Sources */,
 				A7FC26462BA1ECEF00067E26 /* FilesOrchestrator.swift in Sources */,
 				A7FC26482BA1ECEF00067E26 /* FileWriter.swift in Sources */,

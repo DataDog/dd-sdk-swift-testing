@@ -8,7 +8,7 @@
 import XCTest
 
 class JSONEncoderTests: XCTestCase {
-    private let jsonEncoder = JSONEncoder.default()
+    private let jsonEncoder = JSONEncoder.apiEncoder
 
     func testDateEncoding() throws {
         let encodedDate = try jsonEncoder.encode(

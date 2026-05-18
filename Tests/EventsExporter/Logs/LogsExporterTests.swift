@@ -11,14 +11,6 @@ import TestUtils
 import XCTest
 
 class LogsExporterTests: XCTestCase {
-    override func setUp() {
-        super.setUp()
-    }
-
-    override func tearDown() {
-        super.tearDown()
-    }
-
     func testWhenExportSpanIsCalledAndSpanHasEvent_thenLogIsUploaded() throws {
         let server = MockBackend()
         try server.start()
@@ -39,16 +31,21 @@ class LogsExporterTests: XCTestCase {
                                                   exporterId: "exporterId",
                                                   logger: Log())
 
-        let logsExporter = try LogsExporter(config: configuration)
+        let api = LogsApiService(
+            config: APIServiceConfig(configuration: configuration),
+            httpClient: HTTPClient(debug: false),
+            log: configuration.logger
+        )
+        let logsExporter = try LogsExporter(config: configuration, api: api)
 
         let spanData = createBasicSpanWithEvent()
         logsExporter.exportLogs(fromSpan: spanData)
-        
+
         guard server.waitForLogs(timeout: 20) else {
             XCTFail("Request not received")
             return
         }
-        
+
         XCTAssertTrue(server.requests.allLogs.count == 1)
     }
 

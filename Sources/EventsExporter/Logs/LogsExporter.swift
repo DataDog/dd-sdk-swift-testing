@@ -21,13 +21,12 @@ internal enum LogConstants {
     static let ddProduct = "datadog.product:citest"
 }
 
-internal class LogsExporter {
+internal final class LogsExporter {
     let logsDirectory = "com.datadog.civisibility/logs/v1"
     let configuration: ExporterConfiguration
-    let logsStorage: FeatureStorage
-    let logsUpload: FeatureUpload
+    let logsStorage: FeatureStoreAndUpload
 
-    init(config: ExporterConfiguration) throws {
+    init(config: ExporterConfiguration, api: LogsApi) throws {
         self.configuration = config
 
         let filesOrchestrator = FilesOrchestrator(
@@ -36,56 +35,37 @@ internal class LogsExporter {
             dateProvider: SystemDateProvider()
         )
 
-        let dataFormat = DataFormat(prefix: "[", suffix: "]", separator: ",")
+        let encoder = api.encoder
+        let dataFormat = DataFormat.jsonArray
 
-        let logsFileWriter = FileWriter(
-            dataFormat: dataFormat,
-            orchestrator: filesOrchestrator
-        )
-
-        let logsFileReader = FileReader(
-            dataFormat: dataFormat,
-            orchestrator: filesOrchestrator
-        )
-
-        logsStorage = FeatureStorage(writer: logsFileWriter, reader: logsFileReader)
-
-        let requestBuilder = SingleRequestBuilder(
-            url: configuration.endpoint.logsURL,
-            queryItems: [
-                .ddsource(source: LogConstants.ddSource),
-                .ddtags(tags: [LogConstants.ddProduct])
-            ],
-            headers: [
-                .contentTypeHeader(contentType: .applicationJSON),
-                .userAgentHeader(
-                    appName: configuration.applicationName,
-                    appVersion: configuration.version,
-                    device: Device.current
-                ),
-                .apiKeyHeader(apiKey: configuration.apiKey)
-            ] + (configuration.payloadCompression ? [HTTPHeader.contentEncodingHeader(contentEncoding: .deflate)] : [])
-        )
-
-        logsUpload = FeatureUpload(featureName: "logsUpload",
-                                   storage: logsStorage,
-                                   requestBuilder: requestBuilder,
-                                   performance: configuration.performancePreset,
-                                   debug: config.debug.logNetworkRequests)
+        let writer = FileWriter(entity: "logs",
+                                dataFormat: dataFormat,
+                                orchestrator: filesOrchestrator,
+                                encoder: encoder)
+        let reader = FileReader(dataFormat: dataFormat, orchestrator: filesOrchestrator)
+        let upload: ClosureDataUploader.UploadCallback = { (data: Data) async throws(HTTPClient.RequestError) -> Void in
+            try await api.uploadLogs(batch: data)
+        }
+        let uploader = ClosureDataUploader(upload: upload)
+        self.logsStorage = FeatureStoreAndUpload(featureName: "logs",
+                                                 reader: reader,
+                                                 writer: writer,
+                                                 performance: configuration.performancePreset,
+                                                 uploader: uploader)
     }
 
     func exportLogs(fromSpan span: SpanData) {
         span.events.forEach {
             let log = DDLog(event: $0, span: span, configuration: configuration)
             if configuration.performancePreset.synchronousWrite {
-                logsStorage.writer.writeSync(value: log)
+                try? logsStorage.writeSync(value: log)
             } else {
-                logsStorage.writer.write(value: log)
+                logsStorage.write(value: log)
             }
         }
     }
-    
+
     func shutdown() {
-        logsUpload.shutdown()
+        logsStorage.stop()
     }
 }

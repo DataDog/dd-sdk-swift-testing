@@ -7,61 +7,66 @@
 import Foundation
 
 internal struct Batch {
-    /// Data read from file, prefixed with `[` and suffixed with `]`.
+    /// Data read from file (with prefix; suffix is appended below).
     let data: Data
     /// File from which `data` was read.
-    fileprivate let file: ReadableFile
+    let file: ReadableFile
 }
 
-internal final class FileReader {
-    /// Data reading format.
-    private let dataFormat: DataFormat
-    /// Orchestrator producing reference to readable file.
-    private let orchestrator: FilesOrchestrator
-    /// Files marked as read.
-    private var filesRead: [ReadableFile] = []
+extension Batch {
+    struct Iterator: IteratorProtocol {
+        typealias Element = Result<Batch, any Error>
 
-    init(dataFormat: DataFormat, orchestrator: FilesOrchestrator) {
+        private var iterator: Array<ReadableFile>.Iterator
+        private let suffix: Data
+
+        init(_ iter: Array<ReadableFile>.Iterator, suffix: Data) {
+            self.iterator = iter
+            self.suffix = suffix
+        }
+
+        mutating func next() -> Element? {
+            iterator.next().map { file in
+                Result { try Batch(data: file.read() + suffix, file: file) }
+            }
+        }
+    }
+}
+
+/// Not thread safe — must be driven from the upload worker's queue.
+internal final class FileReader {
+    /// Data reading format (header lives in the file itself; we only need the suffix).
+    private var dataFormat: DataFormatType
+    /// Orchestrator producing reference to readable file.
+    private let orchestrator: FilesOrchestratorType
+
+    init(dataFormat: DataFormatType, orchestrator: FilesOrchestratorType) {
         self.dataFormat = dataFormat
         self.orchestrator = orchestrator
     }
 
-    // MARK: - Reading batches
-
-    func readNextBatch() -> Batch? {
-        if let file = orchestrator.getReadableFile(excludingFilesNamed: Set(filesRead.map { $0.name })) {
-            do {
-                let fileData = try file.read()
-                let batchData = dataFormat.prefixData + fileData + dataFormat.suffixData
-                return Batch(data: batchData, file: file)
-            } catch {
-                Log.print("Failed to read data from file")
-                return nil
-            }
-        }
-
-        return nil
+    func update(dataFormat: DataFormatType) {
+        self.dataFormat = dataFormat
     }
 
-    /// This method  gets remaining files at once, and process each file after with the block passed.
-    /// Currently called from flush method
-    func onRemainingBatches(process: (Batch) -> ()) -> Bool {
-        do {
-            try orchestrator.getAllFiles(excludingFilesNamed: Set(filesRead.map { $0.name }))?.forEach {
-                let fileData = try $0.read()
-                let batchData = dataFormat.prefixData + fileData + dataFormat.suffixData
-                process(Batch(data: batchData, file: $0))
-            }
-        } catch {
-            return false
+    // MARK: - Reading batches
+
+    func getNextBatch() throws -> Batch? {
+        guard let file = try orchestrator.getReadableFile() else {
+            return nil
         }
-        return true
+        let data = try file.read()
+        return Batch(data: data + dataFormat.suffix, file: file)
+    }
+
+    func getRemainingBatches() throws -> Batch.Iterator {
+        let files = try orchestrator.getAllReadableFiles()
+        return Batch.Iterator(files.makeIterator(), suffix: dataFormat.suffix)
     }
 
     // MARK: - Accepting batches
 
-    func markBatchAsRead(_ batch: Batch) {
-        orchestrator.delete(readableFile: batch.file)
-        filesRead.append(batch.file)
+    func markBatchAsRead(_ batch: Batch) throws {
+        try orchestrator.delete(readableFile: batch.file)
     }
 }

@@ -6,24 +6,57 @@
 
 import Foundation
 
-internal class FilesOrchestrator {
+/// File orchestration logic.
+/// Type is not thread-safe and should be synchronised by reader and writer.
+internal protocol FilesOrchestratorType {
+    // Read
+    func getReadableFile() throws -> ReadableFile?
+    func delete(readableFile: ReadableFile) throws
+
+    /// Caller must close the writable file (and drain the writer queue) before
+    /// calling this method, or the in-progress writable file will be returned
+    /// to the uploader mid-write.
+    func getAllReadableFiles() throws -> [ReadableFile]
+
+    // Write
+    func getWritableFile(writeSize: UInt64) throws -> (file: WritableFile, isNew: Bool)
+    func closeWritableFile()
+}
+
+internal final class FilesOrchestrator: FilesOrchestratorType {
+    struct FileInfo: Comparable {
+        let file: File
+        let creationDate: Date
+        var isNew: Bool { get throws { try file.size() == 0 } }
+
+        init(file: File, creationDate: Date? = nil) {
+            self.file = file
+            self.creationDate = creationDate ?? fileCreationDateFrom(fileName: file.name)
+        }
+
+        static func < (lhs: Self, rhs: Self) -> Bool {
+            lhs.creationDate < rhs.creationDate
+        }
+
+        static func == (lhs: Self, rhs: Self) -> Bool {
+            lhs.file == rhs.file && lhs.creationDate == rhs.creationDate
+        }
+    }
+
     /// Directory where files are stored.
     private let directory: Directory
     /// Date provider.
     private let dateProvider: DateProvider
     /// Performance rules for writing and reading files.
     private let performance: StoragePerformancePreset
-    /// Name of the last file returned by `getWritableFile()`.
-    private var lastWritableFileName: String?
-    /// Tracks number of times the file at `lastWritableFileURL` was returned from `getWritableFile()`.
-    /// This should correspond with number of objects stored in file, assuming that majority of writes succeed (the difference is negligible).
-    private var lastWritableFileUsesCount: Int = 0
+    /// Current writable file.
+    private var _currentFile: FileInfo?
+    private var _currentFileUseCount: Int = 0
 
-    init(
-        directory: Directory,
-        performance: StoragePerformancePreset,
-        dateProvider: DateProvider
-    ) {
+    init(directory: Directory,
+         performance: StoragePerformancePreset,
+         dateProvider: DateProvider)
+    {
         self.directory = directory
         self.performance = performance
         self.dateProvider = dateProvider
@@ -31,132 +64,100 @@ internal class FilesOrchestrator {
 
     // MARK: - `WritableFile` orchestration
 
-    func getWritableFile(writeSize: UInt64) throws -> WritableFile {
+    func getWritableFile(writeSize: UInt64) throws -> (file: WritableFile, isNew: Bool) {
         if writeSize > performance.maxObjectSize {
             throw ExporterError(description: "data exceeds the maximum size of \(performance.maxObjectSize) bytes.")
         }
 
-        let lastWritableFileOrNil = reuseLastWritableFileIfPossible(writeSize: writeSize)
-
-        if let lastWritableFile = lastWritableFileOrNil { // if last writable file can be reused
-            lastWritableFileUsesCount += 1
-            return lastWritableFile
-        } else {
-            // NOTE: RUMM-610 As purging files directory is a memory-expensive operation, do it only when we know
-            // that a new file will be created. With SDK's `PerformancePreset` this gives
-            // the process enough time to not over-allocate internal `_FileCache` and `_NSFastEnumerationEnumerator`
-            // objects, resulting with a flat allocations graph in a long term.
-            try purgeFilesDirectoryIfNeeded()
-
-            let newFileName = fileNameFrom(fileCreationDate: dateProvider.currentDate())
-            let newFile = try directory.createFile(named: newFileName)
-            lastWritableFileName = newFile.name
-            lastWritableFileUsesCount = 1
-            return newFile
+        if let reusable = try reuseWritableFileIfPossible(writeSize: writeSize) {
+            _currentFileUseCount += 1
+            return try (reusable.file, reusable.isNew)
         }
+
+        // NOTE: RUMM-610 As purging files directory is a memory-expensive operation, do it only when we know
+        // that a new file will be created. With SDK's `PerformancePreset` this gives
+        // the process enough time to not over-allocate internal `_FileCache` and `_NSFastEnumerationEnumerator`
+        // objects, resulting with a flat allocations graph in a long term.
+        try purgeFilesDirectoryIfNeeded()
+
+        let creationDate = dateProvider.currentDate()
+        let file = try directory.createFile(named: fileNameFrom(fileCreationDate: creationDate))
+        let newFile = FileInfo(file: file, creationDate: creationDate)
+        _currentFile = newFile
+        _currentFileUseCount = 1
+        return try (newFile.file, newFile.isNew)
     }
 
-    private func reuseLastWritableFileIfPossible(writeSize: UInt64) -> WritableFile? {
-        if let lastFileName = lastWritableFileName {
-            do {
-                guard let lastFile = try? directory.file(named: lastFileName) else {
-                    return nil
-                }
-                let fileCanBeUsedMoreTimes = (lastWritableFileUsesCount + 1) <= performance.maxObjectsInFile
-                let lastFileCreationDate = fileCreationDateFrom(fileName: lastFile.name)
-                let lastFileAge = dateProvider.currentDate().timeIntervalSince(lastFileCreationDate)
+    private func reuseWritableFileIfPossible(writeSize: UInt64) throws -> FileInfo? {
+        guard let currentFile = _currentFile else { return nil }
+        // If the file was deleted off-disk between writes, fall back to creating a new one.
+        guard let currentSize = try? currentFile.file.size() else { return nil }
+        let fileCanBeUsedMoreTimes = (_currentFileUseCount + 1) <= performance.maxObjectsInFile
+        let currentFileAge = dateProvider.currentDate().timeIntervalSince(currentFile.creationDate)
+        let fileIsRecentEnough = currentFileAge <= performance.maxFileAgeForWrite
+        let fileHasRoomForMore = (currentSize + writeSize) <= performance.maxFileSize
 
-                let fileIsRecentEnough = lastFileAge <= performance.maxFileAgeForWrite
-                let fileHasRoomForMore = (try lastFile.size() + writeSize) <= performance.maxFileSize
-
-                if fileIsRecentEnough, fileHasRoomForMore, fileCanBeUsedMoreTimes {
-                    return lastFile
-                }
-            } catch {
-                Log.print("🔥 Failed to read previously used writable file: \(error)")
-            }
+        if fileIsRecentEnough, fileHasRoomForMore, fileCanBeUsedMoreTimes {
+            return currentFile
         }
         return nil
     }
 
+    func closeWritableFile() {
+        _currentFile = nil
+        _currentFileUseCount = 0
+    }
+
     // MARK: - `ReadableFile` orchestration
 
-    func getReadableFile(excludingFilesNamed excludedFileNames: Set<String> = []) -> ReadableFile? {
-        do {
-            let filesWithCreationDate = try directory.files()
-                .map { (file: $0, creationDate: fileCreationDateFrom(fileName: $0.name)) }
-                .compactMap { try deleteFileIfItsObsolete(file: $0.file, fileCreationDate: $0.creationDate) }
-
-            guard let (oldestFile, creationDate) = filesWithCreationDate
-                .filter({ excludedFileNames.contains($0.file.name) == false })
-                .sorted(by: { $0.creationDate < $1.creationDate })
-                .first
-            else {
-                return nil
-            }
-
-            let oldestFileAge = dateProvider.currentDate().timeIntervalSince(creationDate)
-            let fileIsOldEnough = oldestFileAge >= performance.minFileAgeForRead
-
-            return fileIsOldEnough ? oldestFile : nil
-        } catch {
-            Log.print("🔥 Failed to obtain readable file: \(error)")
+    func getReadableFile() throws -> ReadableFile? {
+        guard let oldestFile = try fileInfos().first else {
             return nil
         }
+        let oldestFileAge = dateProvider.currentDate().timeIntervalSince(oldestFile.creationDate)
+        return oldestFileAge >= performance.minFileAgeForRead ? oldestFile.file : nil
     }
 
-    func getAllFiles(excludingFilesNamed excludedFileNames: Set<String> = []) -> [ReadableFile]? {
-        do {
-            return try directory.files()
-                .filter { excludedFileNames.contains($0.name) == false }
-        } catch {
-            Log.print("🔥 Failed to obtain readable files: \(error)")
-            return nil
-        }
+    func getAllReadableFiles() throws -> [ReadableFile] {
+        try fileInfos().map { $0.file }
     }
 
-    func delete(readableFile: ReadableFile) {
-        do {
-            try readableFile.delete()
-        } catch {
-            Log.print("🔥 Failed to delete file: \(error)")
-        }
+    func delete(readableFile: ReadableFile) throws {
+        try readableFile.delete()
     }
 
     // MARK: - Directory size management
 
     /// Removes oldest files from the directory if it becomes too big.
     private func purgeFilesDirectoryIfNeeded() throws {
-        let filesSortedByCreationDate = try directory.files()
-            .map { (file: $0, creationDate: fileCreationDateFrom(fileName: $0.name)) }
-            .sorted { $0.creationDate < $1.creationDate }
-
-        var filesWithSizeSortedByCreationDate = try filesSortedByCreationDate
+        var filesWithSize = try fileInfos()
             .map { (file: $0.file, size: try $0.file.size()) }
-
-        let accumulatedFilesSize = filesWithSizeSortedByCreationDate.map { $0.size }.reduce(0, +)
-
-        if accumulatedFilesSize > performance.maxDirectorySize {
-            let sizeToFree = accumulatedFilesSize - performance.maxDirectorySize
+        let accumulated = filesWithSize.map { $0.size }.reduce(0, +)
+        if accumulated > performance.maxDirectorySize {
+            let sizeToFree = accumulated - performance.maxDirectorySize
             var sizeFreed: UInt64 = 0
-
-            while sizeFreed < sizeToFree, !filesWithSizeSortedByCreationDate.isEmpty {
-                let fileWithSize = filesWithSizeSortedByCreationDate.removeFirst()
+            while sizeFreed < sizeToFree, !filesWithSize.isEmpty {
+                let fileWithSize = filesWithSize.removeFirst()
                 try fileWithSize.file.delete()
                 sizeFreed += fileWithSize.size
             }
         }
     }
 
-    private func deleteFileIfItsObsolete(file: File, fileCreationDate: Date) throws -> (file: File, creationDate: Date)? {
-        let fileAge = dateProvider.currentDate().timeIntervalSince(fileCreationDate)
-
+    private func deleteFileIfItsObsolete(info: FileInfo) throws -> FileInfo? {
+        let fileAge = dateProvider.currentDate().timeIntervalSince(info.creationDate)
         if fileAge > performance.maxFileAgeForRead {
-            try file.delete()
+            try info.file.delete()
             return nil
-        } else {
-            return (file: file, creationDate: fileCreationDate)
         }
+        return info
+    }
+
+    private func fileInfos() throws -> [FileInfo] {
+        try directory.files()
+            .map { FileInfo(file: $0) }
+            .compactMap { try deleteFileIfItsObsolete(info: $0) }
+            .sorted()
     }
 }
 

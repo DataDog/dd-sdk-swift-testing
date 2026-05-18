@@ -125,27 +125,16 @@ public final class EventsExporter: EventsExporterProtocol {
     public init(config: ExporterConfiguration) throws {
         self.configuration = config
         Log.setLogger(config.logger)
-        spansExporter = try SpansExporter(config: configuration)
-        logsExporter = try LogsExporter(config: configuration)
-        coverageExporter = try CoverageExporter(config: configuration)
 
-        let apiConfig = APIServiceConfig(
-            serviceName: config.serviceName,
-            environment: config.environment,
-            applicationName: config.applicationName,
-            version: config.version,
-            device: .current,
-            hostname: config.hostname,
-            apiKey: config.apiKey,
-            endpoint: config.endpoint,
-            clientId: config.exporterId,
-            payloadCompression: false
-        )
         self.api = TestOptimizationApiService(
-            config: apiConfig,
+            config: APIServiceConfig(configuration: config),
             httpClient: HTTPClient(debug: config.debug.logNetworkRequests),
             log: config.logger
         )
+
+        spansExporter = try SpansExporter(config: configuration, api: api.spans)
+        logsExporter = try LogsExporter(config: configuration, api: api.logs)
+        coverageExporter = try CoverageExporter(config: configuration, api: api.tia)
 
         Log.debug("EventsExporter created: \(spansExporter.runtimeId), endpoint: \(config.endpoint)")
     }
@@ -165,23 +154,18 @@ public final class EventsExporter: EventsExporterProtocol {
 
     public func exportEvent<T: Encodable>(event: T) {
         if configuration.performancePreset.synchronousWrite {
-            spansExporter.spansStorage.writer.writeSync(value: event)
+            try? spansExporter.spansStorage.writeSync(value: event)
         } else {
-            spansExporter.spansStorage.writer.write(value: event)
+            spansExporter.spansStorage.write(value: event)
         }
     }
 
     public func flush(explicitTimeout: TimeInterval?) -> SpanExporterResultCode {
         // TODO: Honor the timeout
-        logsExporter.logsStorage.writer.queue.sync {}
-        spansExporter.spansStorage.writer.queue.sync {}
-        coverageExporter.coverageStorage.writer.queue.sync {}
-
-        _ = logsExporter.logsUpload.uploader.flush()
-        _ = spansExporter.spansUpload.uploader.flush()
-        _ = coverageExporter.coverageUpload.uploader.flush()
-
-        return .success
+        let logsOK = (try? logsExporter.logsStorage.flush()) ?? false
+        let spansOK = (try? spansExporter.spansStorage.flush()) ?? false
+        let covOK = (try? coverageExporter.coverageStorage.flush()) ?? false
+        return (logsOK && spansOK && covOK) ? .success : .failure
     }
 
     public func export(coverage: URL, parser: CoverageParser, workspacePath: String?,

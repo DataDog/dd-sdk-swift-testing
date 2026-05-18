@@ -47,6 +47,25 @@ internal protocol TestImpactAnalysisApi: APIService {
                         environment: String, service: String,
                         testLevel: ITRTestLevel, configurations: [String: String],
                         customConfigurations: [String: String]) async throws(APICallError) -> SkipTests
+
+    func uploadCoverage(batch url: URL) async throws(APICallError)
+    func uploadCoverage(batch data: Data) async throws(HTTPClient.RequestError)
+}
+
+extension TestImpactAnalysisApi {
+    func uploadCoverage(batch url: URL) async throws(APICallError) {
+        let data: Data
+        do {
+            data = try Data(contentsOf: url, options: [.mappedIfSafe])
+        } catch {
+            throw .fileSystem(error)
+        }
+        do {
+            try await uploadCoverage(batch: data)
+        } catch {
+            throw APICallError(from: error)
+        }
+    }
 }
 
 struct TestImpactAnalysisApiService: TestImpactAnalysisApi {
@@ -116,7 +135,24 @@ struct TestImpactAnalysisApiService: TestImpactAnalysisApi {
         return SkipTests(correlationId: correlationId, tests: tests)
     }
 
-    var endpointURLs: Set<URL> { [endpoint.skippableTestsURL] }
+    func uploadCoverage(batch data: Data) async throws(HTTPClient.RequestError) {
+        var request = MultipartFormURLRequest(url: endpoint.coverageURL)
+        request.headers = headers
+        request.append(data: data,
+                       withName: "coverage",
+                       filename: "CoverageBatch.json",
+                       contentType: .applicationJSON)
+        request.append(data: Data("{\"dummy\": true}".utf8),
+                       withName: "event",
+                       filename: "DummyEvent.json",
+                       contentType: .applicationJSON)
+        let log = self.log
+        log.debug("Uploading coverage batch...")
+        let response = try await httpClient.send(request: request)
+        log.debug("Coverage batch upload response: \(response.statusCode)")
+    }
+
+    var endpointURLs: Set<URL> { [endpoint.skippableTestsURL, endpoint.coverageURL] }
 }
 
 extension TestImpactAnalysisApiService {

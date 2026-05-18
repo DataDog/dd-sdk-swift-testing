@@ -5,35 +5,36 @@
  */
 
 import Foundation
-import OpenTelemetrySdk
 
-/// Abstracts the `DataUploadWorker`, so we can have no-op uploader in tests.
+/// Abstracts the `DataUploadWorker` so we can swap it for a no-op in tests.
 internal protocol DataUploadWorkerType {
-    func flush() -> SpanExporterResultCode
-    func shutdown()
+    /// Replace the data format. Only the header (prefix) can be changed —
+    /// already-flushed files keep their original format until they upload.
+    func update(dataFormat: DataFormatType)
+
+    /// Synchronously drain all stored data (with retry on transient failures).
+    /// Returns `false` if a non-retriable failure was encountered.
+    func flush() throws -> Bool
+
+    /// Cancel scheduled uploads and stop scheduling new ones. Does not
+    /// interrupt an upload that has already started; will block the caller
+    /// if invoked mid-upload.
+    func stop()
 }
 
-internal class DataUploadWorker: DataUploadWorkerType {
+internal final class DataUploadWorker: DataUploadWorkerType {
     /// Queue to execute uploads.
     internal let queue: DispatchQueue
     /// File reader providing data to upload.
     private let fileReader: FileReader
     /// Data uploader sending data to server.
     private let dataUploader: DataUploaderType
-
     /// Name of the feature this worker is performing uploads for.
     private let featureName: String
-
     /// Delay used to schedule consecutive uploads.
     private var delay: Delay
-
     /// Upload work scheduled by this worker.
     private var uploadWork: DispatchWorkItem?
-
-    deinit {
-        uploadWork?.cancel()
-        uploadWork = nil
-    }
 
     init(
         fileReader: FileReader,
@@ -50,20 +51,18 @@ internal class DataUploadWorker: DataUploadWorkerType {
         self.featureName = featureName
 
         let uploadWork = DispatchWorkItem { [weak self] in
-            guard let self = self else {
-                return
+            guard let self = self else { return }
+
+            let batch: Batch?
+            do {
+                batch = try self.fileReader.getNextBatch()
+            } catch {
+                batch = nil // file is broken
             }
 
-            if let batch = self.fileReader.readNextBatch() {
-                // Upload batch
-                let uploadStatus = self.dataUploader.upload(data: batch.data)
-
-                // Delete or keep batch depending on the upload status
-                if uploadStatus.needsRetry {
-                    self.delay.increase()
-                } else {
-                    self.fileReader.markBatchAsRead(batch)
-                    self.delay.decrease()
+            if let batch = batch {
+                if self.upload(data: batch.data) == .success {
+                    try? self.fileReader.markBatchAsRead(batch)
                 }
             } else {
                 self.delay.increase()
@@ -71,44 +70,81 @@ internal class DataUploadWorker: DataUploadWorkerType {
 
             self.scheduleNextUpload(after: self.delay.current)
         }
-
         self.uploadWork = uploadWork
-
         scheduleNextUpload(after: self.delay.current)
     }
 
     private func scheduleNextUpload(after delay: TimeInterval) {
-        guard let work = uploadWork else {
-            return
-        }
-
+        guard let work = uploadWork else { return }
         queue.asyncAfter(deadline: .now() + delay, execute: work)
     }
 
-    /// This method  gets remaining files at once, and uploads them
-    /// It assures that periodic uploader cannot read or upload the files while the flush is being processed
-    internal func flush() -> SpanExporterResultCode {
-        let success = queue.sync {
-            self.fileReader.onRemainingBatches {
-                let uploadStatus = self.dataUploader.upload(data: $0.data)
-                if !uploadStatus.needsRetry {
-                    self.fileReader.markBatchAsRead($0)
-                }
-            }
-        }
-        return success ? .success : .failure
+    func update(dataFormat: DataFormatType) {
+        queue.sync { fileReader.update(dataFormat: dataFormat) }
     }
 
-    /// Cancels scheduled uploads and stops scheduling next ones.
-    /// - It does not affect the upload that has already begun.
-    /// - It blocks the caller thread if called in the middle of upload execution.
-    internal func shutdown() {
+    /// Drains all pending batches synchronously. Holds the upload queue for
+    /// the duration so the periodic worker can't interleave reads with the flush.
+    func flush() throws -> Bool {
+        var result = false
+        try queue.sync {
+            var iterator = try fileReader.getRemainingBatches()
+            while let batchRes = iterator.next() {
+                guard case .success(let batch) = batchRes else {
+                    result = false
+                    break
+                }
+                var status: UploadResult
+                repeat {
+                    status = upload(data: batch.data)
+                    switch status {
+                    case .success:
+                        try self.fileReader.markBatchAsRead(batch)
+                        result = true
+                    case .failed:
+                        result = false
+                    case .retry:
+                        Thread.sleep(forTimeInterval: delay.current)
+                    }
+                } while status.isRetry
+                guard result else { break }
+            }
+        }
+        return result
+    }
+
+    func stop() {
         queue.sync {
-            // This cancellation must be performed on the `queue` to ensure that it is not called
-            // in the middle of a `DispatchWorkItem` execution - otherwise, as the pending block would be
-            // fully executed, it will schedule another upload by calling `nextScheduledWork(after:)` at the end.
+            // Cancellation must happen on `queue` — otherwise a pending block could
+            // execute fully and schedule another upload at the end.
             self.uploadWork?.cancel()
             self.uploadWork = nil
+        }
+    }
+
+    private func upload(data: Data) -> UploadResult {
+        let uploadStatus = self.dataUploader.upload(data: data)
+        if uploadStatus.needsRetry {
+            if let waitTime = uploadStatus.waitTime {
+                return delay.set(delay: waitTime) ? .retry : .failed
+            } else {
+                delay.increase()
+                return .retry
+            }
+        } else {
+            delay.decrease()
+            return .success
+        }
+    }
+
+    private enum UploadResult {
+        case success
+        case retry
+        case failed
+
+        var isRetry: Bool {
+            if case .retry = self { return true }
+            return false
         }
     }
 }

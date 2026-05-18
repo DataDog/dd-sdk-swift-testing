@@ -19,8 +19,9 @@ class FileReaderTests: XCTestCase {
     }
 
     func testItReadsSingleBatch() throws {
+        let dataFormat = DataFormat.mockWith(prefix: "[", suffix: "]")
         let reader = FileReader(
-            dataFormat: .mockWith(prefix: "[", suffix: "]"),
+            dataFormat: dataFormat,
             orchestrator: FilesOrchestrator(
                 directory: temporaryDirectory,
                 performance: StoragePerformanceMock.readAllFiles,
@@ -29,18 +30,19 @@ class FileReaderTests: XCTestCase {
         )
         _ = try temporaryDirectory
             .createFile(named: Date.mockAny().toFileName)
-            .append(data: "ABCD".utf8Data)
+            .append(data: dataFormat.formatFileContents(["ABCD".utf8Data]))
 
         XCTAssertEqual(try temporaryDirectory.files().count, 1)
-        let batch = reader.readNextBatch()
+        let batch = try reader.getNextBatch()
 
         XCTAssertEqual(batch?.data, "[ABCD]".utf8Data)
     }
 
     func testItMarksBatchesAsRead() throws {
         let dateProvider = RelativeDateProvider(advancingBySeconds: 60)
+        let dataFormat = DataFormat.mockWith(prefix: "[", suffix: "]")
         let reader = FileReader(
-            dataFormat: .mockWith(prefix: "[", suffix: "]"),
+            dataFormat: dataFormat,
             orchestrator: FilesOrchestrator(
                 directory: temporaryDirectory,
                 performance: StoragePerformanceMock.readAllFiles,
@@ -48,28 +50,28 @@ class FileReaderTests: XCTestCase {
             )
         )
         let file1 = try temporaryDirectory.createFile(named: dateProvider.currentDate().toFileName)
-        try file1.append(data: "1".utf8Data)
+        try file1.append(data: dataFormat.formatFileContents(["1".utf8Data]))
 
         let file2 = try temporaryDirectory.createFile(named: dateProvider.currentDate().toFileName)
-        try file2.append(data: "2".utf8Data)
+        try file2.append(data: dataFormat.formatFileContents(["2".utf8Data]))
 
         let file3 = try temporaryDirectory.createFile(named: dateProvider.currentDate().toFileName)
-        try file3.append(data: "3".utf8Data)
+        try file3.append(data: dataFormat.formatFileContents(["3".utf8Data]))
 
         var batch: Batch
-        batch = try reader.readNextBatch().unwrapOrThrow()
+        batch = try reader.getNextBatch().unwrapOrThrow()
         XCTAssertEqual(batch.data, "[1]".utf8Data)
-        reader.markBatchAsRead(batch)
+        try reader.markBatchAsRead(batch)
 
-        batch = try reader.readNextBatch().unwrapOrThrow()
+        batch = try reader.getNextBatch().unwrapOrThrow()
         XCTAssertEqual(batch.data, "[2]".utf8Data)
-        reader.markBatchAsRead(batch)
+        try reader.markBatchAsRead(batch)
 
-        batch = try reader.readNextBatch().unwrapOrThrow()
+        batch = try reader.getNextBatch().unwrapOrThrow()
         XCTAssertEqual(batch.data, "[3]".utf8Data)
-        reader.markBatchAsRead(batch)
+        try reader.markBatchAsRead(batch)
 
-        XCTAssertNil(reader.readNextBatch())
+        XCTAssertNil(try reader.getNextBatch())
         XCTAssertEqual(try temporaryDirectory.files().count, 0)
     }
 }

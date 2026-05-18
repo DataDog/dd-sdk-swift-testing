@@ -10,12 +10,16 @@ internal protocol DateFormatterType {
     func string(from date: Date) -> String
 }
 
-extension ISO8601DateFormatter: DateFormatterType {}
-extension DateFormatter: DateFormatterType {}
+internal protocol DateParserType {
+    func date(from string: String) -> Date?
+}
+
+extension ISO8601DateFormatter: DateFormatterType, DateParserType {}
+extension DateFormatter: DateFormatterType, DateParserType {}
 
 /// Date formatter producing `ISO8601` string representation of a given date.
 /// Should be used to encode dates in messages send to the server.
-internal let iso8601DateFormatter: DateFormatterType = {
+internal let iso8601DateFormatter: DateFormatterType & DateParserType = {
     let formatter = ISO8601DateFormatter()
     formatter.formatOptions.insert(.withFractionalSeconds)
     return formatter

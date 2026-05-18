@@ -15,11 +15,13 @@ class DataUploadWorkerTests: XCTestCase {
         dateProvider: dateProvider
     )
     lazy var writer = FileWriter(
-        dataFormat: .mockWith(prefix: "[", suffix: "]"),
-        orchestrator: orchestrator
+        entity: "datauploadworker",
+        dataFormat: DataFormat.mockWith(prefix: "[", suffix: "]", separator: ","),
+        orchestrator: orchestrator,
+        encoder: JSONEncoder.apiEncoder
     )
     lazy var reader = FileReader(
-        dataFormat: .mockWith(prefix: "[", suffix: "]"),
+        dataFormat: DataFormat.mockWith(prefix: "[", suffix: "]", separator: ","),
         orchestrator: orchestrator
     )
 
@@ -37,10 +39,7 @@ class DataUploadWorkerTests: XCTestCase {
 
     func testItUploadsAllData() {
         let httpClient = MockHTTPClient(delivery: .success(response: .mockResponseWith(statusCode: 200)))
-        let dataUploader = DataUploader(
-            httpClient: httpClient,
-            requestBuilder: SingleRequestBuilder.mockAny()
-        )
+        let dataUploader = MockClosureDataUploader(httpClient: httpClient)
 
         // Given
         writer.write(value: ["k1": "v1"])
@@ -62,7 +61,7 @@ class DataUploadWorkerTests: XCTestCase {
         XCTAssertTrue(recordedRequests.contains { $0.httpBody == #"[{"k2":"v2"}]"#.utf8Data })
         XCTAssertTrue(recordedRequests.contains { $0.httpBody == #"[{"k3":"v3"}]"#.utf8Data })
 
-        worker.shutdown()
+        worker.stop()
 
         XCTAssertEqual(try temporaryDirectory.files().count, 0)
     }
@@ -74,7 +73,7 @@ class DataUploadWorkerTests: XCTestCase {
         mockDataUploader.onUpload = { startUploadExpectation.fulfill() }
 
         // Given
-        writer.writeSync(value: ["key": "value"])
+        try? writer.writeSync(value: ["key": "value"])
         XCTAssertEqual(try temporaryDirectory.files().count, 1)
 
         // When
@@ -87,7 +86,7 @@ class DataUploadWorkerTests: XCTestCase {
         )
 
         wait(for: [startUploadExpectation], timeout: 5.0)
-        worker.shutdown()
+        worker.stop()
 
         // Then
         XCTAssertEqual(try temporaryDirectory.files().count, 0, "When upload finishes with `needsRetry: false`, data should be deleted")
@@ -96,16 +95,14 @@ class DataUploadWorkerTests: XCTestCase {
     func testGivenDataToUpload_whenUploadFinishesAndNeedsToBeRetried_thenDataIsPreserved() {
         let startUploadExpectation = self.expectation(description: "Upload has started")
         // `needsRetry: true` keeps the batch on disk, so the worker re-uploads on
-        // every tick (every ~50ms with `UploadPerformanceMock.veryQuick`). A second
-        // tick can fire before `wait(for:timeout:)` returns after the first
-        // fulfillment — without this, XCTest throws on the double fulfill.
+        // every tick. Don't fail on the (expected) second fulfillment.
         startUploadExpectation.assertForOverFulfill = false
 
         var mockDataUploader = DataUploaderMock(uploadStatus: .mockWith(needsRetry: true))
         mockDataUploader.onUpload = { startUploadExpectation.fulfill() }
 
         // Given
-        writer.writeSync(value: ["key": "value"])
+        try? writer.writeSync(value: ["key": "value"])
         XCTAssertEqual(try temporaryDirectory.files().count, 1)
 
         // When
@@ -118,7 +115,7 @@ class DataUploadWorkerTests: XCTestCase {
         )
 
         wait(for: [startUploadExpectation], timeout: 0.5)
-        worker.shutdown()
+        worker.stop()
 
         // Then
         XCTAssertEqual(try temporaryDirectory.files().count, 1, "When upload finishes with `needsRetry: true`, data should be preserved")
@@ -140,10 +137,7 @@ class DataUploadWorkerTests: XCTestCase {
         XCTAssertEqual(try temporaryDirectory.files().count, 0)
 
         let httpClient = MockHTTPClient(delivery: .success(response: .mockResponseWith(statusCode: 200)))
-        let dataUploader = DataUploader(
-            httpClient: httpClient,
-            requestBuilder: SingleRequestBuilder.mockAny()
-        )
+        let dataUploader = MockClosureDataUploader(httpClient: httpClient)
         let worker = DataUploadWorker(
             fileReader: reader,
             dataUploader: dataUploader,
@@ -155,7 +149,7 @@ class DataUploadWorkerTests: XCTestCase {
         // Then
         waitForExpectations(timeout: 1, handler: nil)
         httpClient.waitAndAssertNoRequestsSent()
-        worker.shutdown()
+        worker.stop()
     }
 
     func testWhenBatchFails_thenIntervalIncreases() {
@@ -172,10 +166,7 @@ class DataUploadWorkerTests: XCTestCase {
         writer.write(value: ["k1": "v1"])
 
         let httpClient = MockHTTPClient(delivery: .success(response: .mockResponseWith(statusCode: 500)))
-        let dataUploader = DataUploader(
-            httpClient: httpClient,
-            requestBuilder: SingleRequestBuilder.mockAny()
-        )
+        let dataUploader = MockClosureDataUploader(httpClient: httpClient)
         let worker = DataUploadWorker(
             fileReader: reader,
             dataUploader: dataUploader,
@@ -187,7 +178,7 @@ class DataUploadWorkerTests: XCTestCase {
         // Then
         httpClient.waitFor(requestsCompletion: 1)
         waitForExpectations(timeout: 1, handler: nil)
-        worker.shutdown()
+        worker.stop()
     }
 
     func testWhenBatchSucceeds_thenIntervalDecreases() {
@@ -204,10 +195,7 @@ class DataUploadWorkerTests: XCTestCase {
         writer.write(value: ["k1": "v1"])
 
         let httpClient = MockHTTPClient(delivery: .success(response: .mockResponseWith(statusCode: 200)))
-        let dataUploader = DataUploader(
-            httpClient: httpClient,
-            requestBuilder: SingleRequestBuilder.mockAny()
-        )
+        let dataUploader = MockClosureDataUploader(httpClient: httpClient)
         let worker = DataUploadWorker(
             fileReader: reader,
             dataUploader: dataUploader,
@@ -219,7 +207,7 @@ class DataUploadWorkerTests: XCTestCase {
         // Then
         httpClient.waitFor(requestsCompletion: 1)
         waitForExpectations(timeout: 2, handler: nil)
-        worker.shutdown()
+        worker.stop()
     }
 
     // MARK: - Tearing Down
@@ -227,10 +215,7 @@ class DataUploadWorkerTests: XCTestCase {
     func testWhenCancelled_itPerformsNoMoreUploads() {
         // Given
         let httpClient = MockHTTPClient(delivery: .success(response: .mockResponseWith(statusCode: 200)))
-        let dataUploader = DataUploader(
-            httpClient: httpClient,
-            requestBuilder: SingleRequestBuilder.mockAny()
-        )
+        let dataUploader = MockClosureDataUploader(httpClient: httpClient)
         let worker = DataUploadWorker(
             fileReader: reader,
             dataUploader: dataUploader,
@@ -240,7 +225,7 @@ class DataUploadWorkerTests: XCTestCase {
         )
 
         // When
-        worker.shutdown()
+        worker.stop()
 
         // Then
         writer.write(value: ["k1": "v1"])
@@ -248,12 +233,9 @@ class DataUploadWorkerTests: XCTestCase {
         httpClient.waitAndAssertNoRequestsSent()
     }
 
-    func testItFlushesAllData() {
+    func testItFlushesAllData() throws {
         let httpClient = MockHTTPClient(delivery: .success(response: .mockResponseWith(statusCode: 200)))
-        let dataUploader = DataUploader(
-            httpClient: httpClient,
-            requestBuilder: SingleRequestBuilder.mockAny()
-        )
+        let dataUploader = MockClosureDataUploader(httpClient: httpClient)
         let worker = DataUploadWorker(
             fileReader: reader,
             dataUploader: dataUploader,
@@ -269,7 +251,7 @@ class DataUploadWorkerTests: XCTestCase {
         writer.queue.sync {}
 
         // When
-        _ = worker.flush()
+        _ = try worker.flush()
 
         // Then
         XCTAssertEqual(try temporaryDirectory.files().count, 0)
@@ -279,7 +261,7 @@ class DataUploadWorkerTests: XCTestCase {
         XCTAssertTrue(recordedRequests.contains { $0.httpBody == #"[{"k2":"v2"}]"#.utf8Data })
         XCTAssertTrue(recordedRequests.contains { $0.httpBody == #"[{"k3":"v3"}]"#.utf8Data })
 
-        worker.shutdown()
+        worker.stop()
     }
 }
 
@@ -299,5 +281,11 @@ struct MockDelay: Delay {
     mutating func increase() {
         callback?(.increase)
         callback = nil
+    }
+
+    mutating func set(delay: TimeInterval) -> Bool {
+        // tests don't exercise server-driven retry delay; treat as "can't accept"
+        // so the worker falls through to its default retry/back-off path.
+        return false
     }
 }

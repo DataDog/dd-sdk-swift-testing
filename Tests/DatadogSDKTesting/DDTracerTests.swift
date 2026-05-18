@@ -6,7 +6,7 @@
 
 @testable import DatadogSDKTesting
 import OpenTelemetryApi
-import OpenTelemetrySdk
+@testable import OpenTelemetrySdk
 import XCTest
 
 class DDTracerTests: XCTestCase {
@@ -208,15 +208,28 @@ class DDTracerTests: XCTestCase {
         setEnv(env: ["ENVIRONMENT_TRACER_TRACEID": testTraceId.hexString,
                      "ENVIRONMENT_TRACER_SPANID": testSpanId.hexString])
 
-        let tracer = DDTracer()
+        let logExporter = InMemoryLogRecordExporter()
+        let tracer = DDTracer(logRecordExporter: logExporter)
         let testSpanProcessor = SpySpanProcessor()
         tracer.tracerProviderSdk.addSpanProcessor(testSpanProcessor)
 
-        tracer.logString(string: "Hello World", date: Date(timeIntervalSince1970: 1212))
+        let timestamp = Date(timeIntervalSince1970: 1212)
+        tracer.logString(string: "Hello World", date: timestamp)
         tracer.flush()
 
         XCTAssertNil(testSpanProcessor.lastProcessedSpan,
                      "no span should be produced — the message must go out as a LogRecord")
+
+        let records = logExporter.getFinishedLogRecords()
+        XCTAssertEqual(records.count, 1)
+        let record = records[0]
+        XCTAssertEqual(record.body?.description, "Hello World")
+        XCTAssertEqual(record.severity, .info)
+        XCTAssertEqual(record.timestamp, timestamp)
+        XCTAssertEqual(record.spanContext?.traceId, testTraceId,
+                       "launch traceId from env must be propagated onto the log record")
+        XCTAssertEqual(record.spanContext?.spanId, testSpanId,
+                       "launch spanId from env must be propagated onto the log record")
     }
 
     func testEnvironmentConstantPropagation() {

@@ -43,25 +43,30 @@ internal class DDTracer {
     }
     
     init(id: String, version: String, exporter: EventsExporterProtocol?, enabled: Bool, launchContext: SpanContext?,
-         resource: Resource = Resource())
+         resource: Resource = Resource(),
+         logRecordExporter: LogRecordExporter? = nil)
     {
         self.launchSpanContext = launchContext
         self.eventsExporter = exporter
         self.maxObjectSize = exporter?.maxObjectSize ?? 262144
 
         let spanExporterToUse: SpanExporter
-        let logRecordExporterToUse: LogRecordExporter
+        let defaultLogRecordExporter: LogRecordExporter
         if !enabled {
             spanExporterToUse = NoopSpanExporter()
-            logRecordExporterToUse = NoopLogRecordExporter.instance
+            defaultLogRecordExporter = NoopLogRecordExporter.instance
         } else if let exporter = eventsExporter {
             spanExporterToUse = exporter as SpanExporter
-            logRecordExporterToUse = exporter as LogRecordExporter
+            defaultLogRecordExporter = exporter as LogRecordExporter
         } else {
             Log.print("Failed creating Datadog exporter.")
             spanExporterToUse = NoopSpanExporter()
-            logRecordExporterToUse = NoopLogRecordExporter.instance
+            defaultLogRecordExporter = NoopLogRecordExporter.instance
         }
+        // The `logRecordExporter` override exists so tests can intercept
+        // emissions with an in-memory exporter without touching the rest of
+        // the pipeline. Production callers never pass it.
+        let logRecordExporterToUse: LogRecordExporter = logRecordExporter ?? defaultLogRecordExporter
 
         let spanProcessor: SpanProcessor
         if launchSpanContext != nil {
@@ -94,6 +99,7 @@ internal class DDTracer {
 
         OpenTelemetry.registerTracerProvider(tracerProvider: tracerProviderSdk)
         OpenTelemetry.registerLoggerProvider(loggerProvider: loggerProviderSdk)
+        
         tracerSdk = tracerProviderSdk.get(instrumentationName: id, instrumentationVersion: version) as! TracerSdk
         loggerSdk = loggerProviderSdk
             .loggerBuilder(instrumentationScopeName: id)
@@ -101,7 +107,7 @@ internal class DDTracer {
             .build() as! LoggerSdk
     }
 
-    convenience init() {
+    convenience init(logRecordExporter: LogRecordExporter? = nil) {
         let conf = DDTestMonitor.config
         let env = DDTestMonitor.env
         var launchSpanContext: SpanContext? = nil
@@ -166,7 +172,8 @@ internal class DDTracer {
 
         self.init(id: identifier, version: version, exporter: eventsExporter,
                   enabled: !conf.disableTracesExporting, launchContext: launchSpanContext,
-                  resource: resource)
+                  resource: resource,
+                  logRecordExporter: logRecordExporter)
     }
     
     private func createSpanBuilder(name: String, attributes: [String: AttributeValue], startTime: Date? = nil) -> SpanBuilder {

@@ -207,6 +207,8 @@
 		A7FC264A2BA1ECF800067E26 /* File.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1827D7790300F4018A /* File.swift */; };
 		A7FC264C2BA1ED0C00067E26 /* ExporterConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0C27D7790300F4018A /* ExporterConfiguration.swift */; };
 		A7FC264D2BA1ED1200067E26 /* EventsExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1927D7790300F4018A /* EventsExporter.swift */; };
+		A7AB7C2026E7EB1100000001 /* OpenTelemetry+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB1100000002 /* OpenTelemetry+Extensions.swift */; };
+		A7AB7C2026E7EB1100000003 /* SpanComposites.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB1100000004 /* SpanComposites.swift */; };
 		A7FC26502BA1F1E600067E26 /* Recording in Frameworks */ = {isa = PBXBuildFile; productRef = A7FC26F82BA87E4000067E26 /* Recording */; };
 		A7FC26512BA1F1E600067E26 /* SigmaSwiftStatistics in Frameworks */ = {isa = PBXBuildFile; productRef = E157A71A256E9D1D00CBCA52 /* SigmaSwiftStatistics */; };
 		A7FC26552BA1F1F900067E26 /* EventsExporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25802BA1E87400067E26 /* EventsExporter.framework */; };
@@ -228,6 +230,7 @@
 		A7FC266D2BA1F70200067E26 /* DDTracerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1AD075C252F206D003705C1 /* DDTracerTests.swift */; };
 		A7FC266E2BA1F70200067E26 /* DDXCTestObserverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1AD0761252F2F7E003705C1 /* DDXCTestObserverTests.swift */; };
 		A7FC266F2BA1F7FA00067E26 /* SpanSanitizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EBBD4E27F200A50059BC3E /* SpanSanitizerTests.swift */; };
+		A7AB7C2026E7EB1100000005 /* SpanCompositesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB1100000006 /* SpanCompositesTests.swift */; };
 		A7FC26702BA1F7FA00067E26 /* SpansExporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EADD27EB3B9E0057D747 /* SpansExporterTests.swift */; };
 		A7FC26712BA1F80000067E26 /* DateFormattingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAE327EB3B9E0057D747 /* DateFormattingTests.swift */; };
 		A7FC26722BA1F80000067E26 /* EncodableValueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EADF27EB3B9E0057D747 /* EncodableValueTests.swift */; };
@@ -609,6 +612,8 @@
 		E143CF1727D7790300F4018A /* Directory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Directory.swift; sourceTree = "<group>"; };
 		E143CF1827D7790300F4018A /* File.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = File.swift; sourceTree = "<group>"; };
 		E143CF1927D7790300F4018A /* EventsExporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventsExporter.swift; sourceTree = "<group>"; };
+		A7AB7C2026E7EB1100000002 /* OpenTelemetry+Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "OpenTelemetry+Extensions.swift"; sourceTree = "<group>"; };
+		A7AB7C2026E7EB1100000004 /* SpanComposites.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpanComposites.swift; sourceTree = "<group>"; };
 		E143CF1C27D7790300F4018A /* DataUploader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataUploader.swift; sourceTree = "<group>"; };
 		E143CF1E27D7790300F4018A /* DataUploadWorker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataUploadWorker.swift; sourceTree = "<group>"; };
 		E143CF2027D7790300F4018A /* DataUploadDelay.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataUploadDelay.swift; sourceTree = "<group>"; };
@@ -654,6 +659,7 @@
 		E1EBBD4627F1FFE70059BC3E /* SpanSanitizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpanSanitizer.swift; sourceTree = "<group>"; };
 		E1EBBD4A27F200210059BC3E /* AttributesSanitizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AttributesSanitizer.swift; sourceTree = "<group>"; };
 		E1EBBD4E27F200A50059BC3E /* SpanSanitizerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpanSanitizerTests.swift; sourceTree = "<group>"; };
+		A7AB7C2026E7EB1100000006 /* SpanCompositesTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpanCompositesTests.swift; sourceTree = "<group>"; };
 		E1F595D32609FC3000AE92B7 /* DDNetworkInstrumentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDNetworkInstrumentation.swift; sourceTree = "<group>"; };
 		E1F69C2028C648000042156E /* JSONGeneric.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONGeneric.swift; sourceTree = "<group>"; };
 		E1F69C2A28C72FAD0042156E /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
@@ -995,6 +1001,7 @@
 		E141EADC27EB3B9E0057D747 /* Spans */ = {
 			isa = PBXGroup;
 			children = (
+				A7AB7C2026E7EB1100000006 /* SpanCompositesTests.swift */,
 				E1EBBD4E27F200A50059BC3E /* SpanSanitizerTests.swift */,
 				E141EADD27EB3B9E0057D747 /* SpansExporterTests.swift */,
 			);
@@ -1086,6 +1093,7 @@
 				E143CF1627D7790300F4018A /* Files */,
 				E143CF0C27D7790300F4018A /* ExporterConfiguration.swift */,
 				E143CF1927D7790300F4018A /* EventsExporter.swift */,
+				A7AB7C2026E7EB1100000002 /* OpenTelemetry+Extensions.swift */,
 			);
 			path = EventsExporter;
 			sourceTree = "<group>";
@@ -1094,6 +1102,7 @@
 			isa = PBXGroup;
 			children = (
 				E143CEFE27D7790200F4018A /* SpansExporter.swift */,
+				A7AB7C2026E7EB1100000004 /* SpanComposites.swift */,
 				E143CEFF27D7790200F4018A /* SpanEncoder.swift */,
 				E1EBBD4627F1FFE70059BC3E /* SpanSanitizer.swift */,
 				A7D23AF72C9B10A8006AB41D /* SpanMetadata.swift */,
@@ -2065,6 +2074,8 @@
 				A7FC26372BA1ECCF00067E26 /* JSONGeneric.swift in Sources */,
 				A7FC262E2BA1ECBD00067E26 /* LLVMSimpleCoverageFormat.swift in Sources */,
 				A79DA6442FB62618004BCA8C /* HTTPClient.swift in Sources */,
+				A7AB7C2026E7EB1100000001 /* OpenTelemetry+Extensions.swift in Sources */,
+				A7AB7C2026E7EB1100000003 /* SpanComposites.swift in Sources */,
 				A79DA6452FB62618004BCA8C /* HTTPHeader.swift in Sources */,
 				A7FC26332BA1ECC500067E26 /* SpanEncoder.swift in Sources */,
 				A7FC26492BA1ECF800067E26 /* Directory.swift in Sources */,
@@ -2127,6 +2138,7 @@
 				A7FC268C2BA1F82300067E26 /* HTTPClientTests.swift in Sources */,
 				A7FC26742BA1F80000067E26 /* JSONEncoderTests.swift in Sources */,
 				A7FC266F2BA1F7FA00067E26 /* SpanSanitizerTests.swift in Sources */,
+				A7AB7C2026E7EB1100000005 /* SpanCompositesTests.swift in Sources */,
 				A7FC26842BA1F81D00067E26 /* Encoding.swift in Sources */,
 				A7FC26762BA1F80000067E26 /* SpawnTests.swift in Sources */,
 				A74EB8E42D0AFD3C00FAD9B8 /* CodeCoverageModelTests.swift in Sources */,
@@ -3111,7 +3123,7 @@
 			repositoryURL = "https://github.com/open-telemetry/opentelemetry-swift-core.git";
 			requirement = {
 				kind = upToNextMinorVersion;
-				minimumVersion = 2.3.0;
+				minimumVersion = 2.4.0;
 			};
 		};
 		A7D7E64E2D074D9200B49C35 /* XCRemoteSwiftPackageReference "swift-code-coverage" */ = {

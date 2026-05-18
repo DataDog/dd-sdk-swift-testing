@@ -7,11 +7,12 @@
 import Foundation
 import OpenTelemetrySdk
 
-internal final class SpansExporter {
+internal final class SpansExporter: SpanExporter {
     let spansDirectory = "com.datadog.civisibility/spans/v1"
     let configuration: ExporterConfiguration
-    let spansStorage: FeatureStoreAndUpload
     let runtimeId: String
+    let spansStorage: FeatureStoreAndUpload
+    private let encoder: JSONEncoder
 
     init(config: ExporterConfiguration, api: SpansApi) throws {
         self.configuration = config
@@ -27,6 +28,7 @@ internal final class SpansExporter {
         metadata[string: "runtime-id"] = self.runtimeId
 
         let encoder = api.encoder
+        self.encoder = encoder
         let dataFormat = try DataFormat(header: Header(metadata: metadata.metadata),
                                         encoder: encoder)
 
@@ -46,22 +48,24 @@ internal final class SpansExporter {
                                                   uploader: uploader)
     }
 
-    func exportSpan(span: SpanData) {
-        if span.attributes["type"]?.description == "test" {
-            let envelope = CITestEnvelope(DDSpan(spanData: span,
-                                                 serviceName: configuration.serviceName,
-                                                 applicationVersion: configuration.version))
-            write(envelope)
-        } else {
-            let envelope = SpanEnvelope(DDSpan(spanData: span,
-                                               serviceName: configuration.serviceName,
-                                               applicationVersion: configuration.version))
-            write(envelope)
-        }
+    /// Rebuild the file header (which embeds the per-feature `SpanMetadata`)
+    /// and rotate the writable file so the new header takes effect on the
+    /// next batch. The runtime-id stays pinned across updates.
+    func setMetadata(_ meta: SpanMetadata) {
+        var meta = meta
+        meta[string: "runtime-id"] = self.runtimeId
+        // `try!` is safe: `Header` is a fixed-shape struct that always encodes.
+        let dataFormat = try! DataFormat(header: Header(metadata: meta.metadata),
+                                         encoder: encoder)
+        spansStorage.update(dataFormat: dataFormat)
     }
 
-    func shutdown() {
-        spansStorage.stop()
+    func exportSpan(span: SpanData) {
+        if span.attributes["type"]?.description == "test" {
+            write(CITestEnvelope(DDSpan(spanData: span)))
+        } else {
+            write(SpanEnvelope(DDSpan(spanData: span)))
+        }
     }
 
     private func write<T: Encodable>(_ value: T) {
@@ -70,6 +74,23 @@ internal final class SpansExporter {
         } else {
             spansStorage.write(value: value)
         }
+    }
+
+    // MARK: - OpenTelemetrySdk.SpanExporter
+
+    func export(spans: [SpanData], explicitTimeout: TimeInterval?) -> SpanExporterResultCode {
+        for span in spans {
+            exportSpan(span: span)
+        }
+        return .success
+    }
+
+    func flush(explicitTimeout: TimeInterval?) -> SpanExporterResultCode {
+        (try? spansStorage.flush()) == true ? .success : .failure
+    }
+
+    func shutdown(explicitTimeout: TimeInterval?) {
+        spansStorage.stop()
     }
 }
 

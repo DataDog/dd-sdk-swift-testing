@@ -21,17 +21,17 @@ internal enum LogConstants {
     static let ddProduct = "datadog.product:citest"
 }
 
-internal final class LogsExporter {
+internal final class LogsExporter: LogRecordExporter {
     let logsDirectory = "com.datadog.civisibility/logs/v1"
-    let configuration: ExporterConfiguration
+    let synchronousWrite: Bool
     let logsStorage: FeatureStoreAndUpload
 
     init(config: ExporterConfiguration, api: LogsApi) throws {
-        self.configuration = config
+        self.synchronousWrite = config.performancePreset.synchronousWrite
 
         let filesOrchestrator = FilesOrchestrator(
             directory: try Directory(withSubdirectoryPath: logsDirectory),
-            performance: configuration.performancePreset,
+            performance: config.performancePreset,
             dateProvider: SystemDateProvider()
         )
 
@@ -50,22 +50,39 @@ internal final class LogsExporter {
         self.logsStorage = FeatureStoreAndUpload(featureName: "logs",
                                                  reader: reader,
                                                  writer: writer,
-                                                 performance: configuration.performancePreset,
+                                                 performance: config.performancePreset,
                                                  uploader: uploader)
     }
 
+    /// Write each event on `span` as a `DDLog`. Service / env / version are
+    /// pulled from the span's `Resource`.
     func exportLogs(fromSpan span: SpanData) {
-        span.events.forEach {
-            let log = DDLog(event: $0, span: span, configuration: configuration)
-            if configuration.performancePreset.synchronousWrite {
-                try? logsStorage.writeSync(value: log)
-            } else {
-                logsStorage.write(value: log)
-            }
+        span.events.forEach { writeLog(DDLog(event: $0, span: span)) }
+    }
+
+    private func writeLog(_ log: DDLog) {
+        if synchronousWrite {
+            try? logsStorage.writeSync(value: log)
+        } else {
+            logsStorage.write(value: log)
         }
     }
 
-    func shutdown() {
+    // MARK: - OpenTelemetrySdk.LogRecordExporter
+
+    func export(logRecords: [ReadableLogRecord], explicitTimeout: TimeInterval?) -> ExportResult {
+        for record in logRecords {
+            guard let context = record.spanContext else { continue }
+            writeLog(DDLog(log: record, span: context))
+        }
+        return .success
+    }
+
+    func forceFlush(explicitTimeout: TimeInterval?) -> ExportResult {
+        (try? logsStorage.flush()) == true ? .success : .failure
+    }
+
+    func shutdown(explicitTimeout: TimeInterval?) {
         logsStorage.stop()
     }
 }

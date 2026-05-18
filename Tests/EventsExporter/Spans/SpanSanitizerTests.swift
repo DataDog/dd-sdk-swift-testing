@@ -27,7 +27,7 @@ class SpanSanitizerTests: XCTestCase {
             "tag-one.two.three.four.five.six.seven.eight.nine.ten.eleven.twelve": AttributeValue(String.mockAny())!,
         ], endTime: Date().addingTimeInterval(1.0))
 
-        let ddSpan = DDSpan(spanData: spanData, serviceName: "name", applicationVersion: "1.0")
+        let ddSpan = DDSpan(spanData: spanData)
 
         // When
         let sanitized = SpanSanitizer().sanitize(span:ddSpan)

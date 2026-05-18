@@ -90,6 +90,12 @@ public protocol EventsExporterProtocol: SpanExporter {
     var maxObjectSize: UInt64 { get }
 
     func exportEvent<T: Encodable>(event: T)
+
+    /// Rebuild the spans file header from the supplied `SpanMetadata` and
+    /// rotate the writable file so the new header takes effect on the next
+    /// batch.
+    func setMetadata(_ metadata: SpanMetadata)
+
     func searchCommits(
         repositoryURL: String, commits: [String]
     ) throws(LibraryConfigurationCommunicationError) -> [String]
@@ -114,11 +120,16 @@ public protocol EventsExporterProtocol: SpanExporter {
 
 public final class EventsExporter: EventsExporterProtocol {
     let configuration: ExporterConfiguration
-    var spansExporter: SpansExporter
-    var logsExporter: LogsExporter
-    var coverageExporter: CoverageExporter
+    let spansExporter: SpansExporter
+    let logsExporter: LogsExporter
+    let coverageExporter: CoverageExporter
 
     let api: TestOptimizationApiService
+
+    /// Composite that fans `SpanExporter.export(spans:)` out to both the spans
+    /// pipeline and a `SpanEventsLogExporterAdapter` so span events end up in
+    /// the logs pipeline transparently. Sampling-gated by the public facade.
+    private let spanExporterComposite: SpanExporter
 
     public var maxObjectSize: UInt64 { configuration.performancePreset.maxObjectSize }
 
@@ -132,24 +143,28 @@ public final class EventsExporter: EventsExporterProtocol {
             log: config.logger
         )
 
-        spansExporter = try SpansExporter(config: configuration, api: api.spans)
-        logsExporter = try LogsExporter(config: configuration, api: api.logs)
-        coverageExporter = try CoverageExporter(config: configuration, api: api.tia)
+        let spansExporter = try SpansExporter(config: configuration, api: api.spans)
+        let logsExporter = try LogsExporter(config: configuration, api: api.logs)
+        self.spansExporter = spansExporter
+        self.logsExporter = logsExporter
+        self.coverageExporter = try CoverageExporter(config: configuration, api: api.tia)
+        self.spanExporterComposite = OpenTelemetrySdk.MultiSpanExporter(spanExporters: [
+            spansExporter,
+            SpanEventsLogExporterAdapter(logsExporter: logsExporter),
+        ])
 
         Log.debug("EventsExporter created: \(spansExporter.runtimeId), endpoint: \(config.endpoint)")
     }
 
     public func export(spans: [SpanData], explicitTimeout: TimeInterval?) -> SpanExporterResultCode {
         // TODO: Honor the timeout
-        spans.forEach {
-            if $0.traceFlags.sampled {
-                spansExporter.exportSpan(span: $0)
-            }
-            if $0.traceFlags.sampled {
-                logsExporter.exportLogs(fromSpan: $0)
-            }
-        }
-        return .success
+        let sampled = spans.filter { $0.traceFlags.sampled }
+        guard !sampled.isEmpty else { return .success }
+        return spanExporterComposite.export(spans: sampled, explicitTimeout: explicitTimeout)
+    }
+
+    public func setMetadata(_ metadata: SpanMetadata) {
+        spansExporter.setMetadata(metadata)
     }
 
     public func exportEvent<T: Encodable>(event: T) {

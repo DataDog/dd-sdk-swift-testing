@@ -36,11 +36,13 @@ internal class DDTracer {
         return launchSpanContext != nil
     }
     
-    init(id: String, version: String, exporter: EventsExporterProtocol?, enabled: Bool, launchContext: SpanContext?) {
+    init(id: String, version: String, exporter: EventsExporterProtocol?, enabled: Bool, launchContext: SpanContext?,
+         resource: Resource = Resource())
+    {
         self.launchSpanContext = launchContext
         self.eventsExporter = exporter
         self.maxObjectSize = exporter?.maxObjectSize ?? 262144
-        
+
         let exporterToUse: SpanExporter
         if !enabled {
             exporterToUse = NoopSpanExporter()
@@ -50,7 +52,7 @@ internal class DDTracer {
             Log.print("Failed creating Datadog exporter.")
             exporterToUse = NoopSpanExporter()
         }
-        
+
         let spanProcessor: SpanProcessor
         if launchSpanContext != nil {
             spanProcessor = SimpleSpanProcessor(spanExporter: exporterToUse).reportingOnlySampled(sampled: false)
@@ -66,10 +68,11 @@ internal class DDTracer {
                 DDTestMonitor.clock = DateClock()
             }
         }
-        
+
         tracerProviderSdk = TracerProviderBuilder().with(sampler: Samplers.alwaysOn)
             .with(spanLimits: SpanLimits().settingAttributeCountLimit(attributeCountLimit))
             .with(clock: DDTestMonitor.clock)
+            .with(resource: resource)
             .add(spanProcessor: spanProcessor)
             .build()
 
@@ -130,9 +133,19 @@ internal class DDTracer {
                          saveCodeCoverageFiles: conf.extraDebugCodeCoverage)
         )
         let eventsExporter = try? EventsExporter(config: exporterConfiguration)
-        
+
+        var resource = Resource()
+        resource.applicationName = identifier
+        resource.applicationVersion = version
+        resource.environment = env.environment
+        resource.service = env.service
+        resource.sdkLanguage = "swift"
+        resource.sdkName = identifier
+        resource.sdkVersion = DDTestMonitor.tracerVersion
+
         self.init(id: identifier, version: version, exporter: eventsExporter,
-                  enabled: !conf.disableTracesExporting, launchContext: launchSpanContext)
+                  enabled: !conf.disableTracesExporting, launchContext: launchSpanContext,
+                  resource: resource)
     }
     
     private func createSpanBuilder(name: String, attributes: [String: AttributeValue], startTime: Date? = nil) -> SpanBuilder {

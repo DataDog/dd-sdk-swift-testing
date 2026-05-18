@@ -11,6 +11,26 @@ import TestUtils
 import XCTest
 
 class CoverageExporterTests: XCTestCase {
+    override func setUp() {
+        super.setUp()
+        Self.wipeCoverageDirectory()
+    }
+
+    override func tearDown() {
+        Self.wipeCoverageDirectory()
+        super.tearDown()
+    }
+
+    /// `CoverageExporter` writes to a fixed Caches subpath shared across
+    /// tests in this class. Leftover files from a prior test would be
+    /// re-uploaded by the next test's reader, so wipe between tests.
+    private static func wipeCoverageDirectory() {
+        guard let cache = try? Directory.cache() else { return }
+        let url = cache.url.appendingPathComponent("com.datadog.civisibility/coverage/v1",
+                                                   isDirectory: true)
+        try? FileManager.default.removeItem(at: url)
+    }
+
     func testExportCoverageData_uploadsParsedPayload() throws {
         let server = MockBackend()
         try server.start()

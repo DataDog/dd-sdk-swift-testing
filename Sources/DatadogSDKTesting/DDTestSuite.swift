@@ -9,7 +9,7 @@ import Foundation
 internal import EventsExporter
 
 @objc(DDTestSuite)
-public final class Suite: NSObject, Encodable {
+public final class Suite: NSObject {
     struct MutableState {
         var duration: UInt64 = 0
         var meta: [String: String] = [:]
@@ -76,20 +76,34 @@ public final class Suite: NSObject, Encodable {
     }
 
     private func internalEnd(endTime: Date? = nil) {
-        let duration = (endTime ?? configuration.clock.now).timeIntervalSince(startTime).toNanoseconds
-        let shouldExport: Bool = _state.update { state in
-            state.duration = duration
-            state.meta[DDTestTags.testStatus] = state.status.spanAttribute
-            return state.testsStarted > 0
-        }
+        let endTime = endTime ?? configuration.clock.now
+        let duration = endTime.timeIntervalSince(startTime).toNanoseconds
+        let snapshot: (meta: [String: String], metrics: [String: Double], status: TestStatus, shouldExport: Bool) =
+            _state.update { state in
+                state.duration = duration
+                state.meta[DDTestTags.testStatus] = state.status.spanAttribute
+                return (state.meta, state.metrics, state.status, state.testsStarted > 0)
+            }
         // Don't emit a `test_suite_end` event for suites in which no tests
         // actually ran. This happens for container types that only enclose
         // nested @Suite types, and for XCTest's empty wrapper suites.
-        guard shouldExport else {
+        guard snapshot.shouldExport else {
             Log.debug("Skipped suite_end event for empty suite \(name) (id: \(self.id))")
             return
         }
-        DDTestMonitor.tracer.eventsExporter?.exportEvent(event: SuiteEnvelope(self))
+
+        var attributes: [String: AttributeValue] = ["resource": .string(name)]
+        for (key, value) in snapshot.meta { attributes[key] = .string(value) }
+        for (key, value) in snapshot.metrics { attributes[key] = .double(value) }
+
+        let span = DDTestMonitor.tracer.createLifecycleSpan(name: "\(testFramework.name).suite",
+                                                            spanId: id,
+                                                            startTime: startTime,
+                                                            attributes: attributes)
+        if snapshot.status == .fail {
+            span.status = .error(description: "suite failed")
+        }
+        span.end(time: endTime)
         Log.debug("Exported suite_end event suiteId: \(self.id)")
     }
 
@@ -190,52 +204,3 @@ extension Suite: TestRunProvider {
     }
 }
 
-extension Suite {
-    enum StaticCodingKeys: String, CodingKey {
-        case test_session_id
-        case test_module_id
-        case test_suite_id
-        case start
-        case duration
-        case meta
-        case metrics
-        case error
-        case name
-        case resource
-        case service
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: StaticCodingKeys.self)
-        try _state.use { state in
-            try container.encode(session.id.rawValue, forKey: .test_session_id)
-            try container.encode(module.id.rawValue, forKey: .test_module_id)
-            try container.encode(id.rawValue, forKey: .test_suite_id)
-            try container.encode(startTime.timeIntervalSince1970.toNanoseconds, forKey: .start)
-            try container.encode(state.duration, forKey: .duration)
-            try container.encode(state.meta, forKey: .meta)
-            try container.encode(state.metrics, forKey: .metrics)
-            try container.encode(state.status == .fail ? 1 : 0, forKey: .error)
-            try container.encode("\(testFramework.name).suite", forKey: .name)
-            try container.encode(name, forKey: .resource)
-            try container.encode(configuration.service, forKey: .service)
-        }
-    }
-
-    struct SuiteEnvelope: Encodable {
-        enum CodingKeys: String, CodingKey {
-            case type
-            case version
-            case content
-        }
-
-        let version: Int = 1
-
-        let type: String = DDTagValues.typeSuiteEnd
-        let content: Suite
-
-        init(_ content: Suite) {
-            self.content = content
-        }
-    }
-}

@@ -34,7 +34,7 @@ class SpanCompositesTests: XCTestCase {
                                  httpClient: HTTPClient(debug: false),
                                  log: configuration.logger)
         let logsExporter = try LogsExporter(config: configuration, api: api)
-        let adapter = SpanEventsLogExporterAdapter(logsExporter: logsExporter)
+        let adapter = SpanEventsLogExporterAdapter(logRecordExporter: logsExporter)
 
         let span = makeSpanData(events: [
             SpanData.Event(name: "event-1", timestamp: Date(), attributes: ["k": .string("v")]),

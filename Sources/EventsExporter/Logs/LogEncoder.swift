@@ -117,16 +117,6 @@ internal struct DDLog: Encodable {
         self.tags = nil
     }
 
-    internal init(event: SpanData.Event, span: SpanData) {
-        var attributes = event.attributes
-        self.init(spanId: span.spanId, traceId: span.traceId,
-                  timestamp: event.timestamp,
-                  status: Status(rawValue: attributes["status"]?.description ?? "info") ?? .info,
-                  message: attributes.removeValue(forKey: "message")?.description ?? "Span event",
-                  resource: span.resource,
-                  attributes: attributes)
-    }
-
     internal init(log: ReadableLogRecord, span: SpanContext) {
         var attributes = log.attributes
         self.init(spanId: span.spanId, traceId: span.traceId,

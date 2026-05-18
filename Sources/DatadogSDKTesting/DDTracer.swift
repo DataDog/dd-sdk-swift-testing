@@ -268,6 +268,41 @@ internal class DDTracer {
         return span
     }
 
+    /// Creates an OTel `SpanSdk` for a test session / module / suite lifecycle
+    /// event. The caller controls the `spanId` so the wire payload's
+    /// `test_session_id` / `test_module_id` / `test_suite_id` field matches the
+    /// session's/module's/suite's logical id. The span flows through the
+    /// registered `SimpleSpanProcessor` → `EventsExporter` → `SpansExporter`
+    /// pipeline; the per-`type` dispatch in `SpansExporter.exportSpan`
+    /// picks the right `Test{Session,Module,Suite}Envelope` encoder.
+    func createLifecycleSpan(name: String, spanId: SpanId, startTime: Date,
+                             attributes: [String: AttributeValue]) -> SpanSdk
+    {
+        let context = SpanContext.create(traceId: TraceId.random(),
+                                         spanId: spanId,
+                                         traceFlags: TraceFlags().settingIsSampled(true),
+                                         traceState: TraceState())
+        var attrs = AttributesDictionary(capacity: Int(attributeCountLimit))
+        for (key, value) in attributes {
+            attrs.updateValue(value: value, forKey: key)
+        }
+        let spanProcessor = MultiSpanProcessor(spanProcessors: tracerProviderSdk.getActiveSpanProcessors())
+        return SpanSdk.startSpan(context: context,
+                                 name: name,
+                                 instrumentationScopeInfo: tracerSdk.instrumentationScopeInfo,
+                                 kind: .internal,
+                                 parentContext: nil,
+                                 hasRemoteParent: false,
+                                 spanLimits: tracerProviderSdk.getActiveSpanLimits(),
+                                 spanProcessor: spanProcessor,
+                                 clock: tracerProviderSdk.getActiveClock(),
+                                 resource: tracerProviderSdk.getActiveResource(),
+                                 attributes: attrs,
+                                 links: [SpanData.Link](),
+                                 totalRecordedLinks: 0,
+                                 startTime: startTime)
+    }
+
     @discardableResult func createSpanFromLaunchContext() -> SpanSdk {
         let attributes = AttributesDictionary(capacity: tracerProviderSdk.getActiveSpanLimits().attributeCountLimit)
         let spanProcessor = MultiSpanProcessor(spanProcessors: tracerProviderSdk.getActiveSpanProcessors())

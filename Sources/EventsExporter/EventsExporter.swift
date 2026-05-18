@@ -88,8 +88,6 @@ public protocol EventsExporterProtocol: SpanExporter, LogRecordExporter {
     var endpointURLs: Set<String> { get }
     var maxObjectSize: UInt64 { get }
 
-    func exportEvent<T: Encodable>(event: T)
-
     /// Rebuild the spans file header from the supplied `SpanMetadata` and
     /// rotate the writable file so the new header takes effect on the next
     /// batch.
@@ -153,7 +151,7 @@ public final class EventsExporter: EventsExporterProtocol {
         self.coverageExporter = try CoverageExporter(config: configuration, api: api.tia)
         self.spanExporterComposite = OpenTelemetrySdk.MultiSpanExporter(spanExporters: [
             spansExporter,
-            SpanEventsLogExporterAdapter(logsExporter: logsExporter),
+            SpanEventsLogExporterAdapter(logRecordExporter: logsExporter),
         ])
 
         Log.debug("EventsExporter created: \(spansExporter.runtimeId), endpoint: \(config.endpoint)")
@@ -168,14 +166,6 @@ public final class EventsExporter: EventsExporterProtocol {
 
     public func setMetadata(_ metadata: SpanMetadata) {
         spansExporter.setMetadata(metadata)
-    }
-
-    public func exportEvent<T: Encodable>(event: T) {
-        if configuration.performancePreset.synchronousWrite {
-            try? spansExporter.spansStorage.writeSync(value: event)
-        } else {
-            spansExporter.spansStorage.write(value: event)
-        }
     }
 
     public func flush(explicitTimeout: TimeInterval?) -> SpanExporterResultCode {

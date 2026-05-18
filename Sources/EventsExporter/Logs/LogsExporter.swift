@@ -54,12 +54,6 @@ internal final class LogsExporter: LogRecordExporter {
                                                  uploader: uploader)
     }
 
-    /// Write each event on `span` as a `DDLog`. Service / env / version are
-    /// pulled from the span's `Resource`.
-    func exportLogs(fromSpan span: SpanData) {
-        span.events.forEach { writeLog(DDLog(event: $0, span: span)) }
-    }
-
     private func writeLog(_ log: DDLog) {
         if synchronousWrite {
             try? logsStorage.writeSync(value: log)

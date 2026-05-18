@@ -9,7 +9,7 @@ import Foundation
 internal import EventsExporter
 
 @objc(DDTestModule)
-public final class Module: NSObject, Encodable {
+public final class Module: NSObject {
     struct MutableState {
         var duration: UInt64 = 0
         var meta: [String: String] = [:]
@@ -71,13 +71,32 @@ public final class Module: NSObject, Encodable {
     }
     
     private func internalEnd(endTime: Date? = nil) {
-        let duration = (endTime ?? configuration.clock.now).timeIntervalSince(startTime).toNanoseconds
-        _state.update { state in
+        let endTime = endTime ?? configuration.clock.now
+        let duration = endTime.timeIntervalSince(startTime).toNanoseconds
+
+        let (meta, metrics, status, framework) = _state.update { state -> ([String: String], [String: Double], TestStatus, String) in
             state.duration = duration
             state.meta[DDTestTags.testFramework] = state.testFrameworks.joined(separator: ",")
             state.meta[DDTestTags.testStatus] = state.status.spanAttribute
+            let framework: String = state.testFrameworks.count == 1
+                ? "\(state.testFrameworks.first!).module"
+                : "Swift.module"
+            return (state.meta, state.metrics, state.status, framework)
         }
-        DDTestMonitor.tracer.eventsExporter?.exportEvent(event: ModuleEnvelope(self))
+
+        var attributes: [String: AttributeValue] = ["resource": .string(name)]
+        for (key, value) in meta { attributes[key] = .string(value) }
+        for (key, value) in metrics { attributes[key] = .double(value) }
+
+        let span = DDTestMonitor.tracer.createLifecycleSpan(name: framework,
+                                                            spanId: id,
+                                                            startTime: startTime,
+                                                            attributes: attributes)
+        if status == .fail {
+            span.status = .error(description: "module failed")
+        }
+        span.end(time: endTime)
+
         configuration.log.debug("Exported module_end event moduleId: \(self.id)")
     }
 
@@ -166,54 +185,3 @@ extension Module: TestSuiteProvider {
     }
 }
 
-extension Module {
-    enum StaticCodingKeys: String, CodingKey {
-        case test_session_id
-        case test_module_id
-        case start
-        case duration
-        case meta
-        case metrics
-        case error
-        case name
-        case resource
-        case service
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: StaticCodingKeys.self)
-        try _state.use { state in
-            try container.encode(session.id.rawValue, forKey: .test_session_id)
-            try container.encode(id.rawValue, forKey: .test_module_id)
-            try container.encode(startTime.timeIntervalSince1970.toNanoseconds, forKey: .start)
-            try container.encode(state.duration, forKey: .duration)
-            try container.encode(state.meta, forKey: .meta)
-            try container.encode(state.metrics, forKey: .metrics)
-            try container.encode(state.status == .fail ? 1 : 0, forKey: .error)
-            if state.testFrameworks.count == 1, let framework = state.testFrameworks.first {
-                try container.encode("\(framework).module", forKey: .name)
-            } else {
-                try container.encode("Swift.module", forKey: .name)
-            }
-            try container.encode(name, forKey: .resource)
-            try container.encode(DDTestMonitor.env.service, forKey: .service)
-        }
-    }
-
-    struct ModuleEnvelope: Encodable {
-        enum CodingKeys: String, CodingKey {
-            case type
-            case version
-            case content
-        }
-
-        let version: Int = 1
-
-        let type: String = DDTagValues.typeModuleEnd
-        let content: Module
-
-        init(_ content: Module) {
-            self.content = content
-        }
-    }
-}

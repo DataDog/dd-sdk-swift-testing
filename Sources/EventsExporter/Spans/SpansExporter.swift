@@ -61,9 +61,16 @@ internal final class SpansExporter: SpanExporter {
     }
 
     func exportSpan(span: SpanData) {
-        if span.attributes["type"]?.description == "test" {
+        switch span.attributes["type"]?.description {
+        case "test":
             write(CITestEnvelope(DDSpan(spanData: span)))
-        } else {
+        case "test_session_end":
+            write(TestSessionEnvelope(DDTestSessionSpan(spanData: span)))
+        case "test_module_end":
+            write(TestModuleEnvelope(DDTestModuleSpan(spanData: span)))
+        case "test_suite_end":
+            write(TestSuiteEnvelope(DDTestSuiteSpan(spanData: span)))
+        default:
             write(SpanEnvelope(DDSpan(spanData: span)))
         }
     }

@@ -212,6 +212,7 @@
 		A7FC264D2BA1ED1200067E26 /* EventsExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1927D7790300F4018A /* EventsExporter.swift */; };
 		A7AB7C2026E7EB1100000001 /* OpenTelemetry+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB1100000002 /* OpenTelemetry+Extensions.swift */; };
 		A7AB7C2026E7EB1100000003 /* SpanComposites.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB1100000004 /* SpanComposites.swift */; };
+		A7AB7C2026E7EB110000000D /* TestLifecycleEncoders.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB110000000E /* TestLifecycleEncoders.swift */; };
 		A7FC26502BA1F1E600067E26 /* Recording in Frameworks */ = {isa = PBXBuildFile; productRef = A7FC26F82BA87E4000067E26 /* Recording */; };
 		A7FC26512BA1F1E600067E26 /* SigmaSwiftStatistics in Frameworks */ = {isa = PBXBuildFile; productRef = E157A71A256E9D1D00CBCA52 /* SigmaSwiftStatistics */; };
 		A7FC26552BA1F1F900067E26 /* EventsExporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25802BA1E87400067E26 /* EventsExporter.framework */; };
@@ -619,6 +620,7 @@
 		E143CF1927D7790300F4018A /* EventsExporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventsExporter.swift; sourceTree = "<group>"; };
 		A7AB7C2026E7EB1100000002 /* OpenTelemetry+Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "OpenTelemetry+Extensions.swift"; sourceTree = "<group>"; };
 		A7AB7C2026E7EB1100000004 /* SpanComposites.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpanComposites.swift; sourceTree = "<group>"; };
+		A7AB7C2026E7EB110000000E /* TestLifecycleEncoders.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TestLifecycleEncoders.swift; sourceTree = "<group>"; };
 		E143CF1C27D7790300F4018A /* DataUploader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataUploader.swift; sourceTree = "<group>"; };
 		E143CF1E27D7790300F4018A /* DataUploadWorker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataUploadWorker.swift; sourceTree = "<group>"; };
 		E143CF2027D7790300F4018A /* DataUploadDelay.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataUploadDelay.swift; sourceTree = "<group>"; };
@@ -1112,6 +1114,7 @@
 				E143CEFE27D7790200F4018A /* SpansExporter.swift */,
 				A7AB7C2026E7EB1100000004 /* SpanComposites.swift */,
 				E143CEFF27D7790200F4018A /* SpanEncoder.swift */,
+				A7AB7C2026E7EB110000000E /* TestLifecycleEncoders.swift */,
 				E1EBBD4627F1FFE70059BC3E /* SpanSanitizer.swift */,
 				A7D23AF72C9B10A8006AB41D /* SpanMetadata.swift */,
 			);
@@ -2087,6 +2090,7 @@
 				A79DA6442FB62618004BCA8C /* HTTPClient.swift in Sources */,
 				A7AB7C2026E7EB1100000001 /* OpenTelemetry+Extensions.swift in Sources */,
 				A7AB7C2026E7EB1100000003 /* SpanComposites.swift in Sources */,
+				A7AB7C2026E7EB110000000D /* TestLifecycleEncoders.swift in Sources */,
 				A79DA6452FB62618004BCA8C /* HTTPHeader.swift in Sources */,
 				A7FC26332BA1ECC500067E26 /* SpanEncoder.swift in Sources */,
 				A7FC26492BA1ECF800067E26 /* Directory.swift in Sources */,

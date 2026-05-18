@@ -11,7 +11,7 @@ import TestUtils
 import XCTest
 
 class LogsExporterTests: XCTestCase {
-    func testWhenExportSpanIsCalledAndSpanHasEvent_thenLogIsUploaded() throws {
+    func testWhenExportLogRecordsIsCalled_thenLogIsUploaded() throws {
         let server = MockBackend()
         try server.start()
         defer { server.stop() }
@@ -38,29 +38,28 @@ class LogsExporterTests: XCTestCase {
         )
         let logsExporter = try LogsExporter(config: configuration, api: api)
 
-        let spanData = createBasicSpanWithEvent()
-        logsExporter.exportLogs(fromSpan: spanData)
+        let record = makeLogRecord()
+        let result = logsExporter.export(logRecords: [record], explicitTimeout: nil)
 
+        XCTAssertEqual(result, .success)
         guard server.waitForLogs(timeout: 20) else {
             XCTFail("Request not received")
             return
         }
-
-        XCTAssertTrue(server.requests.allLogs.count == 1)
+        XCTAssertEqual(server.requests.allLogs.count, 1)
     }
 
-    private func createBasicSpanWithEvent() -> SpanData {
-        return SpanData(traceId: TraceId(),
-                        spanId: SpanId(),
-                        traceFlags: TraceFlags(),
-                        traceState: TraceState(),
-                        resource: Resource(),
-                        instrumentationScope: InstrumentationScopeInfo(),
-                        name: "spanName",
-                        kind: .server,
-                        startTime: Date(timeIntervalSinceReferenceDate: 3000),
-                        events: [SpanData.Event(name: "event", timestamp: Date(), attributes: ["attributeKey": AttributeValue.string("attributeValue")])],
-                        endTime: Date(timeIntervalSinceReferenceDate: 3001),
-                        hasRemoteParent: false)
+    private func makeLogRecord() -> ReadableLogRecord {
+        let spanContext = SpanContext.create(traceId: TraceId(),
+                                             spanId: SpanId(),
+                                             traceFlags: TraceFlags(),
+                                             traceState: TraceState())
+        return ReadableLogRecord(resource: Resource(),
+                                 instrumentationScopeInfo: InstrumentationScopeInfo(),
+                                 timestamp: Date(timeIntervalSinceReferenceDate: 3000),
+                                 spanContext: spanContext,
+                                 severity: .info,
+                                 body: .string("log body"),
+                                 attributes: ["attributeKey": AttributeValue.string("attributeValue")])
     }
 }

@@ -4,7 +4,6 @@
  * Copyright 2020-Present Datadog, Inc.
  */
 
-import CodeCoverageParser
 @testable import EventsExporter
 import OpenTelemetryApi
 @testable import OpenTelemetrySdk
@@ -14,7 +13,7 @@ import XCTest
 /// End-to-end integration test that drives all three exporter pipelines —
 /// stdout-style span-event logs (via `SpanEventsLogExporterAdapter`), native
 /// OTel `LogRecord` logs (via `LogsExporter.export(logRecords:)`), and code
-/// coverage records (via `CoverageExporter.export(coverageRecords:)`) — and
+/// coverage payloads (via `CoverageExporter.export(coverageData:)`) — and
 /// asserts the wire payloads carry the expected fields.
 class PipelineIntegrationTests: XCTestCase {
     func testStdoutLogsOTelLogsAndCoverage_arriveWithExpectedFields() throws {
@@ -85,12 +84,10 @@ class PipelineIntegrationTests: XCTestCase {
 
         span.end()
 
-        // -- 5c. Code coverage record ------------------------------------------
-        let coverageInfo = try JSONDecoder().decode(CoverageInfo.self,
-                                                   from: Data(#"{"files":{}}"#.utf8))
-        let coverageRecord = CoverageRecord(
+        // -- 5c. Code coverage payload -----------------------------------------
+        let coverageData = CoverageData(
             name: "integration-test",
-            coverage: coverageInfo,
+            files: [],
             workspacePath: URL(fileURLWithPath: "/Users/me/project"),
             resource: resource,
             instrumentationScopeInfo: InstrumentationScopeInfo(),
@@ -98,7 +95,7 @@ class PipelineIntegrationTests: XCTestCase {
                            suiteId: SpanId(id: 0x2222),
                            sessionId: SpanId(id: 0x3333))
         )
-        datadogExporter.export(coverageRecords: [coverageRecord])
+        datadogExporter.export(coverageData: [coverageData])
 
         // -- 6. Drain the pipelines --------------------------------------------
         _ = datadogExporter.flush()

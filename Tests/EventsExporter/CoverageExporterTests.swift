@@ -4,7 +4,6 @@
  * Copyright 2020-Present Datadog, Inc.
  */
 
-import CodeCoverageParser
 @testable import EventsExporter
 import OpenTelemetryApi
 @testable import OpenTelemetrySdk
@@ -12,7 +11,7 @@ import TestUtils
 import XCTest
 
 class CoverageExporterTests: XCTestCase {
-    func testExportCoverageRecords_uploadsParsedPayload() throws {
+    func testExportCoverageData_uploadsParsedPayload() throws {
         let server = MockBackend()
         try server.start()
         defer { server.stop() }
@@ -35,10 +34,9 @@ class CoverageExporterTests: XCTestCase {
                                                log: configuration.logger)
         let exporter = try CoverageExporter(config: configuration, api: api)
 
-        let info = try JSONDecoder().decode(CoverageInfo.self, from: Data(#"{"files":{}}"#.utf8))
-        let record = CoverageRecord(
+        let data = CoverageData(
             name: "MyTest",
-            coverage: info,
+            files: [],
             workspacePath: URL(fileURLWithPath: "/Users/me/project"),
             resource: Resource(),
             instrumentationScopeInfo: InstrumentationScopeInfo(),
@@ -47,7 +45,7 @@ class CoverageExporterTests: XCTestCase {
                            sessionId: SpanId(id: 0xDEAD))
         )
 
-        let result = exporter.export(coverageRecords: [record], explicitTimeout: nil)
+        let result = exporter.export(coverageData: [data], explicitTimeout: nil)
 
         XCTAssertEqual(result, .success)
         guard server.waitForCoverage(timeout: 20) else {
@@ -60,7 +58,7 @@ class CoverageExporterTests: XCTestCase {
         XCTAssertEqual(payload.spanId, 0xCAFE)
     }
 
-    func testExportSuiteCoverageRecord_writesZeroTestId() throws {
+    func testExportSuiteCoverageData_writesZeroTestId() throws {
         let server = MockBackend()
         try server.start()
         defer { server.stop() }
@@ -83,9 +81,9 @@ class CoverageExporterTests: XCTestCase {
                                                log: configuration.logger)
         let exporter = try CoverageExporter(config: configuration, api: api)
 
-        let record = CoverageRecord(
+        let data = CoverageData(
             name: "MySuite",
-            coverage: try JSONDecoder().decode(CoverageInfo.self, from: Data(#"{"files":{}}"#.utf8)),
+            files: [],
             workspacePath: nil,
             resource: Resource(),
             instrumentationScopeInfo: InstrumentationScopeInfo(),
@@ -93,7 +91,7 @@ class CoverageExporterTests: XCTestCase {
                             sessionId: SpanId(id: 0xDEAD))
         )
 
-        XCTAssertEqual(exporter.export(coverageRecords: [record], explicitTimeout: nil), .success)
+        XCTAssertEqual(exporter.export(coverageData: [data], explicitTimeout: nil), .success)
 
         guard server.waitForCoverage(timeout: 20) else {
             XCTFail("Coverage payload not received")

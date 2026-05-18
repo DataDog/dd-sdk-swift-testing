@@ -4,11 +4,16 @@
  * Copyright 2020-Present Datadog, Inc.
  */
 
-import XCTest
 import CodeCoverageParser
+@testable import DatadogSDKTesting
 @testable import EventsExporter
+import XCTest
 
-final class CodeCoverageModelTests: XCTestCase {
+/// Round-trip the bitmap-encoding logic that lives inside
+/// `SimpleCoverageProcessor` (extension on `CoverageFile` initialising
+/// from a `CoverageInfo.File`). The full file → bitmap → line set should
+/// be lossless for the segment shape produced by LLVM.
+final class CoverageBitmapTests: XCTestCase {
     func testBitmapGeneration() throws {
         let testJson = #"""
         { "files": {
@@ -57,21 +62,21 @@ final class CodeCoverageModelTests: XCTestCase {
             } }
         }
         """#
-        
-        let info = try JSONDecoder().decode(CoverageInfo.self, from: testJson.utf8Data)
-        let lines = info.files.values.first!.coveredLines
-        let converted = TestCodeCoverage(sessionId: 0, suiteId: 0, spanId: 0, workspace: nil, files: info.files.values)
-        
-        let bitmapLines = converted.files.first!.bitmap.enumerated().reduce(into: IndexSet()) { (indexes, current) in
+
+        let info = try JSONDecoder().decode(CoverageInfo.self, from: Data(testJson.utf8))
+        let infoFile = try XCTUnwrap(info.files.values.first)
+        let lines = infoFile.coveredLines
+        let coverageFile = CoverageFile(file: infoFile)
+
+        // Decode the bitmap back into the set of covered line numbers.
+        let bitmapLines = coverageFile.bitmap.enumerated().reduce(into: IndexSet()) { indexes, current in
             let (index, byte) = current
-            for bit in 1...8 {
-                if (byte >> (8 - bit)) & 1 != 0 {
-                    let line = index * 8 + bit
-                    indexes.insert(line)
-                }
+            for bit in 1...8 where (byte >> (8 - bit)) & 1 != 0 {
+                indexes.insert(index * 8 + bit)
             }
         }
-        
+
         XCTAssertEqual(lines, bitmapLines)
+        XCTAssertEqual(coverageFile.name, "Sources/OpenTelemetrySdk/Trace/SpanBuilderSdk.swift")
     }
 }

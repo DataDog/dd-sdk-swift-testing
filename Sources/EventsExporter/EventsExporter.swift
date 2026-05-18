@@ -84,7 +84,7 @@ public struct LibraryConfigurationCommunicationError: Error, CustomStringConvert
     }
 }
 
-public protocol EventsExporterProtocol: SpanExporter, LogRecordExporter {
+public protocol EventsExporterProtocol: SpanExporter, LogRecordExporter, CoverageExporterType {
     var endpointURLs: Set<String> { get }
     var maxObjectSize: UInt64 { get }
 
@@ -92,12 +92,6 @@ public protocol EventsExporterProtocol: SpanExporter, LogRecordExporter {
     /// rotate the writable file so the new header takes effect on the next
     /// batch.
     func setMetadata(_ metadata: SpanMetadata)
-
-    /// Hand off one or more pre-parsed `CoverageRecord`s for upload. Each record
-    /// becomes a `TestCodeCoverage` payload on disk and is shipped through the
-    /// coverage upload pipeline.
-    @discardableResult
-    func export(coverageRecords: [CoverageRecord]) -> ExportResult
 
     func searchCommits(
         repositoryURL: String, commits: [String]
@@ -177,8 +171,8 @@ public final class EventsExporter: EventsExporterProtocol {
     }
 
     @discardableResult
-    public func export(coverageRecords: [CoverageRecord]) -> ExportResult {
-        coverageExporter.export(coverageRecords: coverageRecords, explicitTimeout: nil)
+    public func export(coverageData: [CoverageData], explicitTimeout: TimeInterval?) -> ExportResult {
+        coverageExporter.export(coverageData: coverageData, explicitTimeout: explicitTimeout)
     }
 
     public func searchCommits(

@@ -5,6 +5,7 @@
  */
 
 import Foundation
+internal import OpenTelemetryApi
 internal import EventsExporter
 
 final class TestImpactAnalysis: TestHooksFeature {
@@ -12,16 +13,26 @@ final class TestImpactAnalysis: TestHooksFeature {
     
     let modules: [String: [String: Suite]]
     let correlationId: String?
-    let coverage: TestCoverageCollector?
     let swiftTestingEnabled: Bool
-    
+
     var skippedCount: UInt { _skippedCount.value }
-    
+
     var isSkippingEnabled: Bool { correlationId != nil }
-    var isCoverageEnabled: Bool { coverage != nil }
-    
+    var isCoverageEnabled: Bool { _coverage.use { $0.collector != nil } }
+
     private let _skippedCount: Synced<UInt>
-    
+    /// Single-slot state for the coverage collector and the currently-
+    /// running session. LLVM gathering is a process-global flag, so only
+    /// one session may be active at a time. If `testWillBegin` ever fires
+    /// while one is still in flight we end the prior session, log the
+    /// conflict, and nil out `collector` — once cleared it can't be
+    /// re-enabled for the rest of this run.
+    private struct CoverageState {
+        var collector: TestCoverageCollector?
+        var active: ActiveCoverage?
+    }
+    private let _coverage: Synced<CoverageState>
+
     init(tests: SkipTests?, coverage: TestCoverageCollector?, swiftTestingEnabled: Bool) {
         if let tests = tests { // we have skipping enabled
             var modules = [String: [String: Suite]]()
@@ -44,7 +55,7 @@ final class TestImpactAnalysis: TestHooksFeature {
         }
         self.swiftTestingEnabled = swiftTestingEnabled
         self._skippedCount = .init(0)
-        self.coverage = coverage
+        self._coverage = .init(.init(collector: coverage, active: nil))
     }
     
     func status(named test: String, suite: String, module: String, skippable: Bool) -> SkipStatus {
@@ -64,7 +75,7 @@ final class TestImpactAnalysis: TestHooksFeature {
         }
         if skippedCount == 0,
            session.metrics[DDTestSessionTags.testCoverageLines] == nil,
-           let linesCovered = DDCoverageHelper.getLineCodeCoverage()
+           let linesCovered = CodeCoverageProvider.getLineCodeCoverage()
         {
             session.set(metric: DDTestSessionTags.testCoverageLines, value: linesCovered)
         }
@@ -83,7 +94,7 @@ final class TestImpactAnalysis: TestHooksFeature {
         // Coverage lines: set on both module and session when no tests were skipped (XCTest hack)
         if skippedCount == 0,
            module.metrics[DDTestSessionTags.testCoverageLines] == nil,
-           let linesCovered = DDCoverageHelper.getLineCodeCoverage()
+           let linesCovered = CodeCoverageProvider.getLineCodeCoverage()
         {
             module.set(metric: DDTestSessionTags.testCoverageLines, value: linesCovered)
             module.session.set(metric: DDTestSessionTags.testCoverageLines, value: linesCovered)
@@ -132,7 +143,27 @@ final class TestImpactAnalysis: TestHooksFeature {
             test.set(tag: DDItrTags.itrUnskippable, value: "true")
         }
         if !info.skip.status.isSkipped {
-            coverage?.startTest()
+            let context = CoverageContext.test(testSpanId: test.id,
+                                               suiteId: test.suite.id,
+                                               sessionId: test.session.id)
+            _coverage.update { state in
+                guard let collector = state.collector else { return }
+                if let prior = state.active {
+                    Log.print("""
+                        Code coverage error: a coverage gathering session is already \
+                        active for \(prior.context). Disabling code coverage for the \
+                        rest of this run.
+                        """)
+                    // Stop LLVM gathering for the prior session so the
+                    // collector goes back to a clean idle state, then drop
+                    // the collector — coverage stays off for this run.
+                    prior.end()
+                    state.active = nil
+                    state.collector = nil
+                    return
+                }
+                state.active = collector.startCoverage(context: context)
+            }
         }
     }
     
@@ -159,9 +190,12 @@ final class TestImpactAnalysis: TestHooksFeature {
             return
         }
         if !info.skip.status.isSkipped {
-            coverage?.endTest(testSessionId: test.session.id,
-                              testSuiteId: test.suite.id,
-                              testSpanId: test.id)
+            let active: ActiveCoverage? = _coverage.update { state in
+                let was = state.active
+                state.active = nil
+                return was
+            }
+            active?.end()
         }
     }
     
@@ -180,7 +214,7 @@ final class TestImpactAnalysis: TestHooksFeature {
     }
     
     func stop() {
-        coverage?.stop()
+        _coverage.use { $0.collector }?.stop()
     }
 }
 
@@ -281,11 +315,11 @@ struct TestImpactAnalysisFactory: FeatureFactory {
     
     private func create(log: Logger, tests: SkipTests?) -> TestImpactAnalysis {
         let coverage = coverageConfig.flatMap { config in
-            DDCoverageHelper(storagePath: config.tempFolder,
-                             exporter: exporter,
-                             workspacePath: config.workspacePath,
-                             priority: config.priority,
-                             debug: config.debug)
+            CodeCoverageProvider(storagePath: config.tempFolder,
+                                 exporter: exporter,
+                                 workspacePath: config.workspacePath,
+                                 priority: config.priority,
+                                 debug: config.debug)
         }
         log.debug("Test Impact Analysis Enabled")
         if coverage != nil {

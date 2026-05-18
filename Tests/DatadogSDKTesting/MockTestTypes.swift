@@ -615,24 +615,37 @@ enum Mocks {
     final class CoverageCollector: TestCoverageCollector {
         nonisolated(unsafe) var testStarted: Bool = false
         nonisolated(unsafe) var tests: Set<String> = []
-        
-        func startTest() {
+
+        func startCoverage(context: CoverageContext) -> ActiveCoverage? {
             assert(!testStarted, "Test should not be started more than once")
             testStarted = true
-        }
-        
-        func endTest(testSessionId: SpanId, testSuiteId: SpanId, testSpanId: SpanId) {
-            assert(testStarted, "Test should not be stopped more than once")
-            testStarted = false
-            tests.insert(String(describing: (testSessionId.rawValue, testSuiteId.rawValue, testSpanId.rawValue)))
+            return Active(parent: self, context: context)
         }
 
         func has(testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64) -> Bool {
             return tests.contains(String(describing: (testSessionId, testSuiteId, spanId)))
         }
-        
+
         static var id: FeatureId { "CoverageCollector" }
         func stop() {}
+
+        fileprivate func finish(context: CoverageContext) {
+            assert(testStarted, "Test should not be stopped more than once")
+            testStarted = false
+            tests.insert(String(describing: (context.sessionId.rawValue,
+                                             context.suiteId.rawValue,
+                                             context.testId?.rawValue ?? 0)))
+        }
+
+        private final class Active: ActiveCoverage {
+            weak var parent: CoverageCollector?
+            let context: CoverageContext
+            init(parent: CoverageCollector, context: CoverageContext) {
+                self.parent = parent
+                self.context = context
+            }
+            func end() { parent?.finish(context: context) }
+        }
     }
     
     final actor SessionManager: TestSessionManager {

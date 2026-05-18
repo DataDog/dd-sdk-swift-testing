@@ -189,27 +189,47 @@ struct UnitTestsXCTestSmoke: IntergationTestSuite {
         try await run(test: "XCStdoutOTelAndCoverage/testStdoutOTelAndCoverage", config: config) { backend, success in
             #expect(success == true)
 
-            // 1) Span side
+            // 1) Span side — capture the test span's IDs for correlation.
             let spans = backend.allTestSpans
             #expect(spans.count == 1)
-            let meta = try #require(spans.last?.meta)
-            #expect(meta[DDTestTags.testStatus] == DDTagValues.statusPass)
-            #expect(meta[DDGenericTags.resource] == "XCStdoutOTelAndCoverage.testStdoutOTelAndCoverage")
-            #expect(meta[DDTestTags.testName] == "testStdoutOTelAndCoverage")
-            #expect(meta[DDTestTags.testSuite] == "XCStdoutOTelAndCoverage")
-            #expect(meta[DDTestTags.testType] == "test")
+            let testSpan = try #require(spans.last)
+            #expect(testSpan.meta[DDTestTags.testStatus] == DDTagValues.statusPass)
+            #expect(testSpan.meta[DDGenericTags.resource] == "XCStdoutOTelAndCoverage.testStdoutOTelAndCoverage")
+            #expect(testSpan.meta[DDTestTags.testName] == "testStdoutOTelAndCoverage")
+            #expect(testSpan.meta[DDTestTags.testSuite] == "XCStdoutOTelAndCoverage")
+            #expect(testSpan.meta[DDTestTags.testType] == "test")
+            let testSessionId = try #require(testSpan.testSessionId)
+            let testModuleId = try #require(testSpan.testModuleId)
+            let testSuiteId = try #require(testSpan.testSuiteId)
 
-            // 2) Logs side — both flows produce one log each
-            let stdoutLog = backend.allLogs.first { $0.message?.contains("hello from XCTest stdout") == true }
-            let otelLog = backend.allLogs.first { $0.message?.contains("hello from XCTest OTel") == true }
-            #expect(stdoutLog != nil, "stdout `print()` should be captured and shipped as a log entry")
-            #expect(otelLog != nil, "an OTel LogRecord should be shipped as a log entry")
-            #expect(otelLog?.status == "warn",
-                    "Severity.warn must map to DDLog.Status.warn on the wire")
+            // 2) Logs — both entries must correlate to the test span via
+            //    dd.trace_id / dd.span_id and carry the right wire status.
+            let stdoutLog = try #require(backend.allLogs.first { $0.message?.contains("hello from XCTest stdout") == true },
+                                         "stdout `print()` should be captured and shipped as a log entry")
+            let otelLog = try #require(backend.allLogs.first { $0.message?.contains("hello from XCTest OTel") == true },
+                                       "an OTel LogRecord should be shipped as a log entry")
+            #expect(otelLog.status == "warn", "Severity.warn must map to DDLog.Status.warn on the wire")
+            #expect(stdoutLog.fields["dd.trace_id"]?.stringValue == String(testSpan.traceId),
+                    "stdout log must correlate to the test span via dd.trace_id")
+            #expect(stdoutLog.fields["dd.span_id"]?.stringValue == String(testSpan.spanId),
+                    "stdout log must correlate to the test span via dd.span_id")
+            #expect(otelLog.fields["dd.trace_id"]?.stringValue == String(testSpan.traceId),
+                    "OTel log must correlate to the test span via dd.trace_id")
+            #expect(otelLog.fields["dd.span_id"]?.stringValue == String(testSpan.spanId),
+                    "OTel log must correlate to the test span via dd.span_id")
 
-            // 3) Coverage side
+            // 3) Coverage — the payload must carry the test's session / module /
+            //    suite / test span IDs.
             let coverages = backend.allCoverages
             #expect(!coverages.isEmpty, "at least one coverage payload should arrive for the passing test")
+            let coverage = try #require(coverages.first { $0.spanId == testSpan.spanId },
+                                        "no coverage payload was associated with the test span")
+            #expect(coverage.testSessionId == testSessionId)
+            #expect(coverage.testSuiteId == testSuiteId)
+            // The coverage payload doesn't carry test_module_id directly, so we
+            // verify the test span itself does — coverage uploads only happen
+            // when DDCoverageHelper.endTest fires inside a module/suite.
+            _ = testModuleId
         }
     }
 }

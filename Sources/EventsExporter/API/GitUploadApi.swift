@@ -67,6 +67,7 @@ struct GitUploadApiService: GitUploadApi {
     var headers: [HTTPHeader]
     var encoder: JSONEncoder
     var decoder: JSONDecoder
+    let compression: Bool
     let httpClient: HTTPClient
     let log: Logger
 
@@ -74,6 +75,7 @@ struct GitUploadApiService: GitUploadApi {
         self.endpoint = config.endpoint
         self.httpClient = httpClient
         self.log = log
+        self.compression = config.payloadCompression
         self.headers = config.defaultHeaders
         self.encoder = config.encoder
         self.decoder = config.decoder
@@ -103,6 +105,9 @@ struct GitUploadApiService: GitUploadApi {
 
         var request = MultipartFormURLRequest(url: endpoint.packfileURL)
         request.headers = headers
+        if compression {
+            request.addHTTPHeader(.contentEncodingHeader(contentEncoding: .deflate))
+        }
         request.append(data: data,
                        withName: "packfile",
                        filename: name,
@@ -120,7 +125,7 @@ struct GitUploadApiService: GitUploadApi {
 }
 
 extension GitUploadApiService {
-    struct Commit: APIAttributes, APIVoidValue, Codable {
+    struct Commit: APIResponseAttributesHasType, APIResponseAttributesHasId, APIVoidValue, Codable {
         static var apiType: String = "commit"
         static var void: Self = .init()
     }

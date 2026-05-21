@@ -201,7 +201,7 @@ extension SettingsApiService {
         static var apiType: String = "ci_app_test_service_libraries_settings"
     }
 
-    struct SettingsResponse: APIAttributes, Decodable {
+    struct SettingsResponse: APIResponseAttributesHasId, APIResponseAttributesHasType, Decodable {
         struct EFD: Decodable {
             let enabled: Bool
             let slowTestRetries: [String: UInt]

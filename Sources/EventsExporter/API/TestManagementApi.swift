@@ -118,7 +118,7 @@ extension TestManagementApiService {
         static var apiType: String = "ci_app_libraries_tests_request"
     }
 
-    struct TestsResponse: Decodable, APIAttributes {
+    struct TestsResponse: Decodable, APIResponseAttributesHasType, APIResponseAttributesBrokenId {
         let modules: [String: TestManagementTestsInfo.Module]
 
         static var apiType: String = "ci_app_libraries_tests"

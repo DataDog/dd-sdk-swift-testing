@@ -33,12 +33,14 @@ struct LogsApiService: LogsApi {
     var encoder: JSONEncoder
     var decoder: JSONDecoder
     let httpClient: HTTPClient
+    let compression: Bool
     let log: Logger
 
     init(config: APIServiceConfig, httpClient: HTTPClient, log: Logger) {
         self.endpoint = config.endpoint
         self.httpClient = httpClient
         self.log = log
+        self.compression = config.payloadCompression
         self.headers = config.defaultHeaders
         self.encoder = config.encoder
         self.decoder = config.decoder
@@ -54,6 +56,9 @@ struct LogsApiService: LogsApi {
         request.httpMethod = "POST"
         request.httpHeaders = headers
         request.setHTTPHeader(.contentTypeHeader(contentType: .applicationJSON))
+        if compression {
+            request.setHTTPHeader(.contentEncodingHeader(contentEncoding: .deflate))
+        }
         request.httpBody = data
         let log = self.log
         log.debug("Uploading logs...")

@@ -75,6 +75,7 @@ struct TestImpactAnalysisApiService: TestImpactAnalysisApi {
     var headers: [HTTPHeader]
     var encoder: JSONEncoder
     var decoder: JSONDecoder
+    let compression: Bool
     let httpClient: HTTPClient
     let log: Logger
 
@@ -82,6 +83,7 @@ struct TestImpactAnalysisApiService: TestImpactAnalysisApi {
         self.endpoint = config.endpoint
         self.httpClient = httpClient
         self.log = log
+        self.compression = config.payloadCompression
         self.headers = config.defaultHeaders
         self.encoder = config.encoder
         self.decoder = config.decoder
@@ -138,6 +140,9 @@ struct TestImpactAnalysisApiService: TestImpactAnalysisApi {
     func uploadCoverage(batch data: Data) async throws(HTTPClient.RequestError) {
         var request = MultipartFormURLRequest(url: endpoint.coverageURL)
         request.headers = headers
+        if compression {
+            request.addHTTPHeader(.contentEncodingHeader(contentEncoding: .deflate))
+        }
         request.append(data: data,
                        withName: "coverage",
                        filename: "CoverageBatch.json",
@@ -167,7 +172,7 @@ extension TestImpactAnalysisApiService {
         static var apiType: String = "test_params"
     }
 
-    struct TestsResponse: APIAttributes, Decodable {
+    struct TestsResponse: APIResponseAttributesNoId, APIResponseAttributesHasType, Decodable {
         struct Meta: Decodable {
             let correlationId: String
         }

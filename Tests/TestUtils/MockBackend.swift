@@ -198,7 +198,7 @@ public final class MockBackend {
             return (.ok, "application/json", Data("{}".utf8))
 
         case "/api/v2/citestcov":
-            if let payload = parseCoveragePayload(headers: request.head.headers, rawBody: request.body) {
+            if let payload = parseCoveragePayload(headers: request.head.headers, rawBody: body) {
                 _lock.withLock { _requests.coverage.append(payload) }
             }
             return (.ok, "application/json", Data("{}".utf8))

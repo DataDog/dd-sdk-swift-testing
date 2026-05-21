@@ -14,6 +14,11 @@ extension APIAttributes {
     var apiType: String { Self.apiType }
 }
 
+protocol APIResponseAttributes: APIAttributes {
+    static func isTypeValid(_ type: String) -> Bool
+    static func isIdValid(request rqid: String?, response rsid: String?) -> Bool
+}
+
 protocol APICommonData {
     associatedtype Meta
     associatedtype Attributes: APIAttributes
@@ -24,18 +29,25 @@ protocol APICommonData {
 }
 
 protocol APIRequestData: APICommonData, Encodable where Attributes: Encodable, Meta: Encodable {}
-protocol APIResponseData: APICommonData, Decodable where Attributes: Decodable, Meta: Decodable {
+protocol APIResponseData: APICommonData, Decodable where Attributes: Decodable & APIResponseAttributes, Meta: Decodable {
     var isTypeValid: Bool { get }
     func isIdValid(_ id: String?) -> Bool
 }
 
 extension APIResponseData {
-    var isTypeValid: Bool { type == Attributes.apiType }
-    func isIdValid(_ id: String?) -> Bool { id == self.id }
+    var isTypeValid: Bool { Attributes.isTypeValid(type) }
+    func isIdValid(_ id: String?) -> Bool { Attributes.isIdValid(request: id, response: self.id) }
 }
 
 extension Array: APIAttributes where Element: APIAttributes {
     static var apiType: String { Element.apiType }
+}
+
+extension Array: APIResponseAttributes where Element: APIResponseAttributes {
+    static func isTypeValid(_ type: String) -> Bool { Element.isTypeValid(type) }
+    static func isIdValid(request rqid: String?, response rsid: String?) -> Bool {
+        Element.isIdValid(request: rqid, response: rsid)
+    }
 }
 
 extension Array: APICommonData where Element: APICommonData {
@@ -104,6 +116,33 @@ extension APIAttributesUUID {
     static var nextId: String? { UUID().uuidString }
 }
 
+protocol APIResponseAttributesHasType: APIResponseAttributes {}
+
+extension APIResponseAttributesHasType {
+    static func isTypeValid(_ type: String) -> Bool { Self.apiType == type }
+}
+
+protocol APIResponseAttributesHasId: APIResponseAttributes {}
+extension APIResponseAttributesHasId {
+    static func isIdValid(request: String?, response: String?) -> Bool {
+        request != nil && response != nil && request == response
+    }
+}
+
+protocol APIResponseAttributesBrokenId: APIResponseAttributes {}
+extension APIResponseAttributesBrokenId {
+    static func isIdValid(request: String?, response: String?) -> Bool {
+        response != nil
+    }
+}
+
+protocol APIResponseAttributesNoId: APIResponseAttributes {}
+extension APIResponseAttributesNoId {
+    static func isIdValid(request: String?, response: String?) -> Bool {
+        response == nil
+    }
+}
+
 extension APIData where Attributes: APIVoidValue {
     init(id: String?) {
         self.init(id: id, attributes: .void)
@@ -146,7 +185,7 @@ extension APIData: Decodable where Attributes: Decodable {
 }
 
 extension APIData: APIRequestData where Meta: Encodable, Attributes: Encodable {}
-extension APIData: APIResponseData where Meta: Decodable, Attributes: Decodable {}
+extension APIData: APIResponseData where Meta: Decodable, Attributes: Decodable & APIResponseAttributes {}
 
 struct APIVoidMeta: APIVoidValue, Codable {
     static var void: Self { .init() }
@@ -287,8 +326,7 @@ internal struct APIServiceConfig {
             .traceIDHeader(traceID: clientId),
             .parentSpanIDHeader(parentSpanID: clientId),
             .samplingPriorityHeader()
-        ] + (payloadCompression ? [.contentEncodingHeader(contentEncoding: .deflate)] : []) +
-            (hostname != nil ? [.hostnameHeader(hostname: hostname!)] : [])
+        ] + (hostname != nil ? [.hostnameHeader(hostname: hostname!)] : [])
     }
 
     init(serviceName: String, environment: String,

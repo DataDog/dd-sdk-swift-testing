@@ -104,7 +104,6 @@
 		A7AB7C2026E7EB1100000005 /* SpanEventsLogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB1100000006 /* SpanEventsLogTests.swift */; };
 		A7AB7C2026E7EB1100000007 /* CoverageExporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB1100000008 /* CoverageExporterTests.swift */; };
 		A7AB7C2026E7EB1100000009 /* PipelineIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB110000000A /* PipelineIntegrationTests.swift */; };
-		A7AB7C2026E7EB110000000B /* OpenTelemetryApi in Frameworks */ = {isa = PBXBuildFile; productRef = A7AB7C2026E7EB110000000C /* OpenTelemetryApi */; };
 		A7AB7C2026E7EB110000000D /* TestSpan.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB110000000E /* TestSpan.swift */; };
 		A7AB7C2026E7EB1100000011 /* CoverageData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB1100000012 /* CoverageData.swift */; };
 		A7AB7C2026E7EB1100000013 /* CoverageProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB1100000014 /* CoverageProcessor.swift */; };
@@ -733,7 +732,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				A79DA5B72F929812004BCA8C /* DatadogSDKTesting.framework in Frameworks */,
-				A7AB7C2026E7EB110000000B /* OpenTelemetryApi in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1606,7 +1604,6 @@
 			);
 			name = "IntegrationTests-UnitTests";
 			packageProductDependencies = (
-				A7AB7C2026E7EB110000000C /* OpenTelemetryApi */,
 			);
 			productName = "IntegrationTests-UnitTests";
 			productReference = A7F3FC412F928191002EFFAB /* IntegrationTests-UnitTests.xctest */;
@@ -3219,11 +3216,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A7D7E64E2D074D9200B49C35 /* XCRemoteSwiftPackageReference "swift-code-coverage" */;
 			productName = CodeCoverage;
-		};
-		A7AB7C2026E7EB110000000C /* OpenTelemetryApi */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = A7B2671A2DB694B000505E7B /* XCRemoteSwiftPackageReference "opentelemetry-swift-core" */;
-			productName = OpenTelemetryApi;
 		};
 		A7B2671B2DB694B000505E7B /* OpenTelemetryApi */ = {
 			isa = XCSwiftPackageProductDependency;

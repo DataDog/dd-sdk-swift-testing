@@ -328,6 +328,7 @@ internal struct TelemetryApiService: TelemetryApi {
     var headers: [HTTPHeader]
     var encoder: JSONEncoder
     var decoder: JSONDecoder
+    let compression: Bool
     let httpClient: HTTPClient
     let log: Logger
 
@@ -355,6 +356,7 @@ internal struct TelemetryApiService: TelemetryApi {
                 return true
             }
         }
+        self.compression = config.payloadCompression
         self.encoder = config.encoder
         self.decoder = config.decoder
         self.runtimeId = config.clientId
@@ -454,6 +456,9 @@ internal struct TelemetryApiService: TelemetryApi {
                          forHTTPHeader: .ddClientLibraryLanguage)
         request.setValue(.constant(application.tracerVersion),
                          forHTTPHeader: .ddClientLibraryVersion)
+        if compression {
+            request.setHTTPHeader(.contentEncodingHeader(contentEncoding: .deflate))
+        }
         request.httpBody = body
 
         let log = self.log

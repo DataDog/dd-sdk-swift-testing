@@ -46,6 +46,10 @@ struct MultipartFormURLRequest {
         body.append(data)
         body.append(contentsOf: "\r\n".utf8)
     }
+    
+    mutating func addHTTPHeader(_ header: HTTPHeader) {
+        headers.append(header)
+    }
 
     var asURLRequest: URLRequest {
         var request = URLRequest(url: url)

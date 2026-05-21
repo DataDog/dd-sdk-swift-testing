@@ -94,18 +94,27 @@ final class HTTPClientRequestErrorDescriptionTests: XCTestCase {
 
 final class LibraryConfigurationServiceThrowTests: XCTestCase {
     private var server: HttpTestServer!
+    private var storages: [Directory] = []
 
     override func tearDown() {
         server?.stop()
         server = nil
+        for storage in storages { try? storage.delete() }
+        storages.removeAll()
         super.tearDown()
+    }
+
+    private func makeExporter(baseURL: URL) throws -> EventsExporter {
+        let storage = try Directory.temporary().createSubdirectory(path: UUID().uuidString)
+        storages.append(storage)
+        return try EventsExporter(config: makeConfig(baseURL: baseURL), storage: storage)
     }
 
     // MARK: - SettingsService
 
     func testSettingsService_throwsUnauthorizedOn401() throws {
         let baseURL = try startServer(replyingWith: status(401, reason: "Unauthorized"))
-        let exporter = try EventsExporter(config: makeConfig(baseURL: baseURL))
+        let exporter = try makeExporter(baseURL: baseURL)
 
         let error = expectError {
             _ = try exporter.tracerSettings(service: "service", env: "env",
@@ -121,7 +130,7 @@ final class LibraryConfigurationServiceThrowTests: XCTestCase {
 
     func testSettingsService_throwsCommunicationFailedOn500() throws {
         let baseURL = try startServer(replyingWith: status(500, reason: "Internal Server Error"))
-        let exporter = try EventsExporter(config: makeConfig(baseURL: baseURL))
+        let exporter = try makeExporter(baseURL: baseURL)
 
         let error = expectError {
             _ = try exporter.tracerSettings(service: "service", env: "env",
@@ -141,7 +150,7 @@ final class LibraryConfigurationServiceThrowTests: XCTestCase {
     func testSettingsService_throwsResponseDecodingFailedOnGarbageBody() throws {
         let body = Data("<not-json>".utf8)
         let baseURL = try startServer(replyingWith: status(200, reason: "OK"), body: body)
-        let exporter = try EventsExporter(config: makeConfig(baseURL: baseURL))
+        let exporter = try makeExporter(baseURL: baseURL)
 
         let error = expectError {
             _ = try exporter.tracerSettings(service: "service", env: "env",
@@ -159,7 +168,7 @@ final class LibraryConfigurationServiceThrowTests: XCTestCase {
 
     func testSettingsService_succeedsOnValidResponse() throws {
         let baseURL = try startServerEchoingRequestId { id in Self.validSettingsBody(id: id) }
-        let exporter = try EventsExporter(config: makeConfig(baseURL: baseURL))
+        let exporter = try makeExporter(baseURL: baseURL)
 
         let settings = try exporter.tracerSettings(service: "service", env: "env",
                                                    repositoryURL: "repo", branch: "main", sha: "abc",
@@ -174,7 +183,7 @@ final class LibraryConfigurationServiceThrowTests: XCTestCase {
 
     func testSkippableTestsService_throwsUnauthorizedOn403() throws {
         let baseURL = try startServer(replyingWith: status(403, reason: "Forbidden"))
-        let exporter = try EventsExporter(config: makeConfig(baseURL: baseURL))
+        let exporter = try makeExporter(baseURL: baseURL)
 
         let error = expectError {
             _ = try exporter.skippableTests(repositoryURL: "repo", sha: "abc",
@@ -189,7 +198,7 @@ final class LibraryConfigurationServiceThrowTests: XCTestCase {
 
     func testKnownTestsService_throwsCommunicationFailedOn500() throws {
         let baseURL = try startServer(replyingWith: status(500, reason: "Internal Server Error"))
-        let exporter = try EventsExporter(config: makeConfig(baseURL: baseURL))
+        let exporter = try makeExporter(baseURL: baseURL)
 
         let error = expectError {
             _ = try exporter.knownTests(service: "service", env: "env", repositoryURL: "repo",
@@ -204,7 +213,7 @@ final class LibraryConfigurationServiceThrowTests: XCTestCase {
     func testTestManagementService_throwsResponseDecodingFailedOnBadBody() throws {
         let body = Data("not-json".utf8)
         let baseURL = try startServer(replyingWith: status(200, reason: "OK"), body: body)
-        let exporter = try EventsExporter(config: makeConfig(baseURL: baseURL))
+        let exporter = try makeExporter(baseURL: baseURL)
 
         let error = expectError {
             _ = try exporter.testManagementTests(repositoryURL: "repo",
@@ -223,7 +232,7 @@ final class LibraryConfigurationServiceThrowTests: XCTestCase {
 
     func testSearchExistingCommits_throwsUnauthorizedOn401() throws {
         let baseURL = try startServer(replyingWith: status(401, reason: "Unauthorized"))
-        let exporter = try EventsExporter(config: makeConfig(baseURL: baseURL))
+        let exporter = try makeExporter(baseURL: baseURL)
 
         let error = expectError {
             _ = try exporter.searchCommits(repositoryURL: "repo", commits: ["abc"])

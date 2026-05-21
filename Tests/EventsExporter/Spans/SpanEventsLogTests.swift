@@ -33,7 +33,9 @@ class SpanEventsLogTests: XCTestCase {
         let api = LogsApiService(config: APIServiceConfig(configuration: configuration),
                                  httpClient: HTTPClient(debug: false),
                                  log: configuration.logger)
-        let logsExporter = try LogsExporter(config: configuration, api: api)
+        let storage = try Directory.temporary().createSubdirectory(path: UUID().uuidString)
+        defer { try? storage.delete() }
+        let logsExporter = try LogsExporter(config: configuration, storage: storage, api: api)
         let adapter = SpanEventsLogExporterAdapter(logRecordExporter: logsExporter)
 
         let span = makeSpanData(events: [

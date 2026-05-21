@@ -35,7 +35,9 @@ class PipelineIntegrationTests: XCTestCase {
             exporterId: "exporter",
             logger: Log()
         )
-        let datadogExporter = try EventsExporter(config: configuration)
+        let storage = try Directory.temporary().createSubdirectory(path: UUID().uuidString)
+        defer { try? storage.delete() }
+        let datadogExporter = try EventsExporter(config: configuration, storage: storage)
 
         // -- 2. Resource the encoders read service / version / env from ---------
         var resource = Resource()

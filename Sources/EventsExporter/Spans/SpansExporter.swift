@@ -8,17 +8,16 @@ import Foundation
 import OpenTelemetrySdk
 
 internal final class SpansExporter: SpanExporter {
-    let spansDirectory = "com.datadog.civisibility/spans/v1"
     let configuration: ExporterConfiguration
     let runtimeId: String
     let spansStorage: FeatureStoreAndUpload
     private let encoder: JSONEncoder
 
-    init(config: ExporterConfiguration, api: SpansApi) throws {
+    init(config: ExporterConfiguration, storage: Directory, api: SpansApi) throws {
         self.configuration = config
 
         let filesOrchestrator = FilesOrchestrator(
-            directory: try Directory(withSubdirectoryPath: spansDirectory),
+            directory: try storage.createSubdirectory(path: "v1"),
             performance: configuration.performancePreset,
             dateProvider: SystemDateProvider()
         )

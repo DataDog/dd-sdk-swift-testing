@@ -128,7 +128,7 @@ public final class EventsExporter: EventsExporterProtocol {
 
     public var maxObjectSize: UInt64 { configuration.performancePreset.maxObjectSize }
 
-    public init(config: ExporterConfiguration) throws {
+    public init(config: ExporterConfiguration, storage: Directory) throws {
         self.configuration = config
         Log.setLogger(config.logger)
 
@@ -138,11 +138,17 @@ public final class EventsExporter: EventsExporterProtocol {
             log: config.logger
         )
 
-        let spansExporter = try SpansExporter(config: configuration, api: api.spans)
-        let logsExporter = try LogsExporter(config: configuration, api: api.logs)
+        let spansExporter = try SpansExporter(config: configuration,
+                                              storage: try storage.createSubdirectory(path: "spans"),
+                                              api: api.spans)
+        let logsExporter = try LogsExporter(config: configuration,
+                                            storage: try storage.createSubdirectory(path: "logs"),
+                                            api: api.logs)
         self.spansExporter = spansExporter
         self.logsExporter = logsExporter
-        self.coverageExporter = try CoverageExporter(config: configuration, api: api.tia)
+        self.coverageExporter = try CoverageExporter(config: configuration,
+                                                     storage: try storage.createSubdirectory(path: "coverage"),
+                                                     api: api.tia)
         self.spanExporterComposite = OpenTelemetrySdk.MultiSpanExporter(spanExporters: [
             spansExporter,
             SpanEventsLogExporterAdapter(logRecordExporter: logsExporter),

@@ -22,15 +22,14 @@ internal enum LogConstants {
 }
 
 internal final class LogsExporter: LogRecordExporter {
-    let logsDirectory = "com.datadog.civisibility/logs/v1"
     let synchronousWrite: Bool
     let logsStorage: FeatureStoreAndUpload
 
-    init(config: ExporterConfiguration, api: LogsApi) throws {
+    init(config: ExporterConfiguration, storage: Directory, api: LogsApi) throws {
         self.synchronousWrite = config.performancePreset.synchronousWrite
 
         let filesOrchestrator = FilesOrchestrator(
-            directory: try Directory(withSubdirectoryPath: logsDirectory),
+            directory: try storage.createSubdirectory(path: "v1"),
             performance: config.performancePreset,
             dateProvider: SystemDateProvider()
         )

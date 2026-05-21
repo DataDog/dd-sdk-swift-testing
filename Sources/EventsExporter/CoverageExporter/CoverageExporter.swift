@@ -33,15 +33,14 @@ public extension CoverageExporterType {
 }
 
 internal final class CoverageExporter: CoverageExporterType {
-    let coverageDirectory = "com.datadog.civisibility/coverage/v1"
     let configuration: ExporterConfiguration
     let coverageStorage: FeatureStoreAndUpload
 
-    init(config: ExporterConfiguration, api: TestImpactAnalysisApi) throws {
+    init(config: ExporterConfiguration, storage: Directory, api: TestImpactAnalysisApi) throws {
         self.configuration = config
 
         let filesOrchestrator = FilesOrchestrator(
-            directory: try Directory(withSubdirectoryPath: coverageDirectory),
+            directory: try storage.createSubdirectory(path: "v1"),
             performance: PerformancePreset.instantDataDelivery,
             dateProvider: SystemDateProvider()
         )

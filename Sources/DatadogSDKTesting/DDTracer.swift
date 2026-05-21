@@ -159,7 +159,16 @@ internal class DDTracer {
             debug: .init(logNetworkRequests: conf.extraDebugNetwork,
                          saveCodeCoverageFiles: conf.extraDebugCodeCoverage)
         )
-        let eventsExporter = try? EventsExporter(config: exporterConfiguration)
+        // Exporter files live under the cache manager's session directory so
+        // they stay scoped to this test run and get cleaned up alongside the
+        // rest of the per-session state.
+        let eventsExporter: EventsExporter?
+        if let storage = try? DDTestMonitor.cacheManager?.session(feature: "exporter") {
+            eventsExporter = try? EventsExporter(config: exporterConfiguration, storage: storage)
+        } else {
+            Log.print("EventsExporter init skipped: cache manager unavailable")
+            eventsExporter = nil
+        }
 
         var resource = Resource()
         resource.applicationName = identifier

@@ -36,7 +36,9 @@ class SpansExporterTests: XCTestCase {
             httpClient: HTTPClient(debug: false),
             log: configuration.logger
         )
-        let spansExporter = try SpansExporter(config: configuration, api: api)
+        let storage = try Directory.temporary().createSubdirectory(path: UUID().uuidString)
+        defer { try? storage.delete() }
+        let spansExporter = try SpansExporter(config: configuration, storage: storage, api: api)
 
         let spanData = createBasicSpan()
         spansExporter.exportSpan(span: spanData)

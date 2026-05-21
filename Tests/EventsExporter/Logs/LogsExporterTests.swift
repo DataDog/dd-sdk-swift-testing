@@ -36,7 +36,9 @@ class LogsExporterTests: XCTestCase {
             httpClient: HTTPClient(debug: false),
             log: configuration.logger
         )
-        let logsExporter = try LogsExporter(config: configuration, api: api)
+        let storage = try Directory.temporary().createSubdirectory(path: UUID().uuidString)
+        defer { try? storage.delete() }
+        let logsExporter = try LogsExporter(config: configuration, storage: storage, api: api)
 
         let record = makeLogRecord()
         let result = logsExporter.export(logRecords: [record], explicitTimeout: nil)

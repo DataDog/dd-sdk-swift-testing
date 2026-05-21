@@ -193,7 +193,7 @@ struct UnitTestsXCTestSmoke: IntergationTestSuite {
     /// coverage payload.
     @Test func stdoutOTelAndCoverage() async throws {
         var config = XcodeTestRunner.Config()
-        config.backend.settings.itrEnabled = true
+        // Code Coverage is a standalone feature: enable it without TIA/ITR.
         config.backend.settings.codeCoverage = true
         config.environment["DD_CIVISIBILITY_CODE_COVERAGE_ENABLED"] = "true"
         // `enableStdoutInstrumentation` defaults to false; flipping the

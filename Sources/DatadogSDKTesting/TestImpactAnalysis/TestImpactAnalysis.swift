@@ -74,7 +74,7 @@ final class TestImpactAnalysis: TestHooksFeature {
             session.set(metric: DDTestSessionTags.testItrSkippingCount, value: Double(itrSkipped))
         }
         if skippedCount == 0,
-           session.metrics[DDTestSessionTags.testCoverageLines] == nil,
+           session.get(metric: DDTestSessionTags.testCoverageLines) == nil,
            let linesCovered = CodeCoverageProvider.getLineCodeCoverage()
         {
             session.set(metric: DDTestSessionTags.testCoverageLines, value: linesCovered)
@@ -93,7 +93,7 @@ final class TestImpactAnalysis: TestHooksFeature {
         }
         // Coverage lines: set on both module and session when no tests were skipped (XCTest hack)
         if skippedCount == 0,
-           module.metrics[DDTestSessionTags.testCoverageLines] == nil,
+           module.get(metric: DDTestSessionTags.testCoverageLines) == nil,
            let linesCovered = CodeCoverageProvider.getLineCodeCoverage()
         {
             module.set(metric: DDTestSessionTags.testCoverageLines, value: linesCovered)

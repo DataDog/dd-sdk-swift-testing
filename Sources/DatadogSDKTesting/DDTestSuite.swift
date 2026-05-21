@@ -6,32 +6,30 @@
 
 import Foundation
 @preconcurrency internal import OpenTelemetryApi
+@preconcurrency internal import OpenTelemetrySdk
 internal import EventsExporter
 
 @objc(DDTestSuite)
 public final class Suite: NSObject {
     struct MutableState {
-        var duration: UInt64 = 0
-        var meta: [String: String] = [:]
-        var metrics: [String: Double] = [:]
-        var status: TestStatus = .pass
         var testsStarted: Int = 0
     }
-    
+
     public let name: String
-    public let startTime: Date
     public let testFramework: TestFramework
     public let localization: String
-    
-    var duration: UInt64 { _state.value.duration }
-    var tags: [String: String] { _state.value.meta }
-    var metrics: [String: Double] { _state.value.metrics }
-    var status: TestStatus { _state.value.status }
+
+    var duration: UInt64 {
+        span.endTime?.timeIntervalSince(span.startTime).toNanoseconds ?? 0
+    }
+    var status: TestStatus { span.testStatus }
     var configuration: SessionConfig { _module.configuration }
-    
-    let id: SpanId
+
+    var id: SpanId { span.context.spanId }
+    let span: SpanSdk
     var module: TestModule { _module }
-    
+    var startTime: Date { span.startTime }
+
     private let _module: Module
     private let _state: Synced<MutableState>
 
@@ -40,34 +38,53 @@ public final class Suite: NSObject {
         self._module = module
         self.testFramework = framework
         self.localization = PlatformUtils.getLocalization()
-        var state = MutableState()
+
+        let state = MutableState()
+        let id: SpanId
+        let actualStartTime: Date
+        let isCrashed: Bool
         if let crash = module.configuration.crash?.suite, crash.name == name {
-            state.status = .fail
-            self.id = crash.id
-            self.startTime = crash.startTime
+            isCrashed = true
+            id = crash.id
+            actualStartTime = crash.startTime
         } else {
-            self.id = SpanId.random()
-            self.startTime = startTime ?? module.configuration.clock.now
+            isCrashed = false
+            id = SpanId.random()
+            actualStartTime = startTime ?? module.configuration.clock.now
         }
+
+        var attributes: [String: AttributeValue] = [
+            DDTestTags.testSuite: .string(name),
+            DDTestTags.testModule: .string(module.name),
+            DDTestTags.testFramework: .string(framework.name),
+            DDTestTags.testFrameworkVersion: .string(framework.version),
+            DDUISettingsTags.uiSettingsSuiteLocalization: .string(localization),
+            DDUISettingsTags.uiSettingsModuleLocalization: .string(module.localization),
+        ]
         
-        state.meta[DDGenericTags.type] = DDTagValues.typeSuiteEnd
-        state.meta[DDTestTags.testSuite] = name
-        state.meta[DDTestTags.testModule] = module.name
-        state.meta[DDTestTags.testFramework] = testFramework.name
-        state.meta[DDTestTags.testFrameworkVersion] = testFramework.version
-        state.meta[DDTestSuiteVisibilityTags.testSessionId] = String(module.session.id.rawValue)
-        state.meta[DDTestSuiteVisibilityTags.testModuleId] = String(module.id.rawValue)
-        state.meta[DDTestSuiteVisibilityTags.testSuiteId] = String(id.rawValue)
-        state.meta[DDUISettingsTags.uiSettingsSuiteLocalization] = localization
-        state.meta[DDUISettingsTags.uiSettingsModuleLocalization] = module.localization
-            
-        // Move to the global when we will support global metrics
-        state.metrics.merge(module.configuration.metrics) { _, new in new }
+        attributes.type = DDTagValues.typeSuiteEnd
+        attributes.resource = name
+        attributes.testSessionId = module.session.id
+        attributes.testModuleId = module.id
+        attributes.testSuiteId = id
         
+        for (key, value) in module.configuration.metrics {
+            attributes[key] = .double(value)
+        }
+
+        let span = DDTestMonitor.tracer.createLifecycleSpan(name: "\(framework.name).suite",
+                                                            spanId: id,
+                                                            startTime: actualStartTime,
+                                                            attributes: attributes)
+        if isCrashed {
+            span.applyStatus(.fail, errorDescription: "suite failed")
+        }
+        self.span = span
+
         self._state = .init(state)
-        
+
         super.init()
-        
+
         if let crash = module.configuration.crash?.suite,
            let error = crash.error, crash.name == name
         {
@@ -77,32 +94,17 @@ public final class Suite: NSObject {
 
     private func internalEnd(endTime: Date? = nil) {
         let endTime = endTime ?? configuration.clock.now
-        let duration = endTime.timeIntervalSince(startTime).toNanoseconds
-        let snapshot: (meta: [String: String], metrics: [String: Double], status: TestStatus, shouldExport: Bool) =
-            _state.update { state in
-                state.duration = duration
-                state.meta[DDTestTags.testStatus] = state.status.spanAttribute
-                return (state.meta, state.metrics, state.status, state.testsStarted > 0)
-            }
+        let shouldExport = _state.use { $0.testsStarted > 0 }
         // Don't emit a `test_suite_end` event for suites in which no tests
         // actually ran. This happens for container types that only enclose
         // nested @Suite types, and for XCTest's empty wrapper suites.
-        guard snapshot.shouldExport else {
+        guard shouldExport else {
             Log.debug("Skipped suite_end event for empty suite \(name) (id: \(self.id))")
             return
         }
 
-        var attributes: [String: AttributeValue] = ["resource": .string(name)]
-        for (key, value) in snapshot.meta { attributes[key] = .string(value) }
-        for (key, value) in snapshot.metrics { attributes[key] = .double(value) }
-
-        let span = DDTestMonitor.tracer.createLifecycleSpan(name: "\(testFramework.name).suite",
-                                                            spanId: id,
-                                                            startTime: startTime,
-                                                            attributes: attributes)
-        if snapshot.status == .fail {
-            span.status = .error(description: "suite failed")
-        }
+        // get-status -> set-status round-trip (see DDTestSession).
+        span.applyStatus(span.testStatus, errorDescription: "suite failed")
         span.end(time: endTime)
         Log.debug("Exported suite_end event suiteId: \(self.id)")
     }
@@ -111,7 +113,7 @@ public final class Suite: NSObject {
         _state.update { $0.testsStarted += 1 }
     }
 
-    /// Ends the test suite 
+    /// Ends the test suite
     /// - Parameters:
     ///   - endTime: Optional, the time where the suite ended
     @objc(endWithTime:) public func end(endTime: Date? = nil) { internalEnd(endTime: endTime) }
@@ -125,7 +127,7 @@ public final class Suite: NSObject {
     @objc public func setTag(key: String, value: Any) {
         trySet(tag: key, value: value)
     }
-    
+
     /// Starts a test in this suite
     /// - Parameters:
     ///   - name: name of the suite
@@ -134,7 +136,7 @@ public final class Suite: NSObject {
     @objc public func testStart(name: String, _ action: (Test) -> Any) -> Any {
         testStart(named: name, action)
     }
-    
+
     /// Starts a test in this suite
     /// - Parameters:
     ///   - name: name of the suite
@@ -143,13 +145,13 @@ public final class Suite: NSObject {
     @objc public func testStart(name: String, startTime: Date, _ action: (Test) -> Any) -> Any {
         testStart(named: name, at: startTime, action)
     }
-    
+
     public func testStart<T>(named name: String, at start: Date? = nil,
                              _ action: (Test) throws -> T) rethrows -> T
     {
         try Test.withActiveTest(named: name, in: self, at: start, action)
     }
-    
+
     public func testStart<T>(named name: String, at start: Date? = nil,
                              _ action: @Sendable (Test) async throws -> T) async rethrows -> T
     {
@@ -158,49 +160,42 @@ public final class Suite: NSObject {
 }
 
 extension Suite: TestSuite {
+    var attributes: [String: TestAttributeValue] { span.getAttributes().testAttributes }
+
     func set(tag name: String, value: SpanAttributeConvertible) {
-        _state.update {
-            $0.meta[name] = value.spanAttribute
-        }
+        span.setAttribute(key: name, value: .string(value.spanAttribute))
     }
-    
+
     func set(metric name: String, value: Double) {
-        _state.update {
-            $0.metrics[name] = value
-        }
+        span.setAttribute(key: name, value: .double(value))
     }
-    
+
     func set(skipped reason: String? = nil) {
-        _state.update {
-            $0.status = .skip
-            if let reason = reason {
-                $0.meta[DDTestTags.testSkipReason] = reason
-            }
+        if let reason = reason {
+            set(tag: DDTestTags.testSkipReason, value: reason)
         }
+        span.applyStatus(.skip, errorDescription: "")
     }
-    
+
     func set(failed reason: TestError?) {
-        _state.update {
-            $0.status = .fail
-        }
         var errorMessage = "Suite \(name) failed"
         if let error = reason {
             set(errorTags: error)
             errorMessage += ": \(error)"
         }
+        span.applyStatus(.fail, errorDescription: errorMessage)
         module.set(failed: .init(type: "SuiteFailed", message: errorMessage))
     }
-    
+
     func end(time: Date?) { end(endTime: time) }
 }
 
-extension Suite: TestRunProvider {    
+extension Suite: TestRunProvider {
     func withActiveTest<T>(named name: String, _ action: @Sendable (any TestRun) async throws -> T) async rethrows -> T {
         try await testStart(named: name, action)
     }
-    
+
     func withActiveTest<T>(named name: String, _ action: (any TestRun) throws -> T) rethrows -> T {
         try testStart(named: name, action)
     }
 }
-

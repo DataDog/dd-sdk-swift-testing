@@ -37,11 +37,11 @@ struct SwiftTestingObserver: SwiftTestingObserverType {
         suite.configuration.activeFeatures.testSuiteWillStart(suite: suite.suite,
                                                               testsCount: UInt(suite.testsCount))
     }
-    
+
     func willFinish(suite: borrowing SwiftTestingSuiteContext) async {
         suite.configuration.activeFeatures.testSuiteWillEnd(suite: suite.suite)
     }
-    
+
     func didFinish(suite: borrowing SwiftTestingSuiteContext, active: borrowing SwiftTestingSuiteContext?) async {
         let data1 = active.map { $0.suite.toCrashData }
         let data2 = suite.suite.toCrashData

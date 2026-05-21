@@ -77,20 +77,10 @@ public final class Test: NSObject {
     /// - Parameters:
     ///   - status: the status reported for this test
     @objc public func set(status: TestStatus) {
-        switch status {
-        case .pass:
-            span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusPass)
-            span.status = .ok
-        case .fail:
-            span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusFail)
-            if let error = errorInfo.value {
-                set(errorTags: error)
-            }
-            span.status = .error(description: "Test failed")
-        case .skip:
-            span.setAttribute(key: DDTestTags.testStatus, value: DDTagValues.statusSkip)
-            span.status = .ok
+        if status == .fail, let error = errorInfo.value {
+            set(errorTags: error)
         }
+        span.applyStatus(status, errorDescription: "Test failed")
     }
 
     /// Adds benchmark information to the test, it also changes the test to be of type
@@ -111,22 +101,19 @@ extension Test: TestRun {
     var id: SpanId { span.context.spanId }
     var startTime: Date { span.startTime }
     var duration: UInt64 { span.endTime?.timeIntervalSince(span.startTime).toNanoseconds ?? 0 }
-    
-    var status: TestStatus {
-        switch span.status {
-        case .unset, .ok: return .pass
-        case .error: return .fail
-        }
-    }
-    
+
+    var status: TestStatus { span.testStatus }
+
+    var attributes: [String: TestAttributeValue] { span.getAttributes().testAttributes }
+
     func set(tag name: String, value: SpanAttributeConvertible) {
         span.setAttribute(key: name, value: value.spanAttribute)
     }
-    
+
     func set(metric name: String, value: Double) {
         setTag(key: name, value: value)
     }
-    
+
     func add(error: TestError) {
         setErrorInfo(type: error.type, message: error.message ?? "", callstack: error.stack)
     }
@@ -176,8 +163,6 @@ extension Test {
     
     static func attributes(test name: String, in suite: Suite) -> [String: AttributeValue] {
         var attributes: [String: AttributeValue] = [
-            DDGenericTags.type: .string(DDTagValues.typeTest),
-            DDGenericTags.resource: .string("\(suite.name).\(name)"),
             DDTestTags.testName: .string(name),
             DDTestTags.testSuite: .string(suite.name),
             DDTestTags.testModule: .string(suite.module.name),
@@ -185,14 +170,17 @@ extension Test {
             DDTestTags.testFrameworkVersion: .string(suite.testFramework.version),
             DDTestTags.testType: .string(DDTagValues.typeTest),
             DDTestTags.testIsUITest: .string("false"),
-            DDTestSuiteVisibilityTags.testSessionId: .string(suite.session.id.hexString),
-            DDTestSuiteVisibilityTags.testModuleId: .string(suite.module.id.hexString),
-            DDTestSuiteVisibilityTags.testSuiteId: .string(suite.id.hexString),
             DDUISettingsTags.uiSettingsSuiteLocalization: .string(suite.localization),
             DDUISettingsTags.uiSettingsModuleLocalization: .string(suite.module.localization),
             DDTestTags.testExecutionOrder: .int(Int(suite.session.nextTestIndex())),
             DDTestTags.testExecutionProcessId: .int(Int(ProcessInfo.processInfo.processIdentifier))
         ]
+        
+        attributes.type = DDTagValues.typeTest
+        attributes.testSuiteId = suite.id
+        attributes.testModuleId = suite.module.id
+        attributes.testSessionId = suite.session.id
+        attributes.resource = "\(suite.name).\(name)"
         
         // TODO: Move to common medatada when we will have common metrics
         for metric in suite.configuration.metrics {

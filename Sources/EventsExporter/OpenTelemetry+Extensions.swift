@@ -73,6 +73,21 @@ public extension Dictionary where Key == String, Value == AttributeValue {
         get { decodeSpanIdAttribute("test_module_id") }
         set { self["test_module_id"] = newValue.map { .string($0.hexString) } }
     }
+    
+    var type: String? {
+        get { self["type"]?.description }
+        set { self["type"] = newValue.map { .string($0) } }
+    }
+    
+    var resource: String? {
+        get { self["resource"]?.description }
+        set { self["resource"] = newValue.map { .string($0) } }
+    }
+    
+    var itrCorrelationId: String? {
+        get { self["itr_correlation_id"]?.description }
+        set { self["itr_correlation_id"] = newValue.map { .string($0) } }
+    }
 
     private func decodeSpanIdAttribute(_ key: String) -> SpanId? {
         guard let raw = self[key]?.description else { return nil }

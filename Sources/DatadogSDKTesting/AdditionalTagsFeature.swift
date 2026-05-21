@@ -69,7 +69,7 @@ final class AdditionalTags: TestHooksFeature {
 
     func testSessionWillEnd(session: any TestSession) {
         // Coverage lines when TIA is not active (TIA handles this in its hook otherwise)
-        if codeCoverage, session.metrics[DDTestSessionTags.testCoverageLines] == nil,
+        if codeCoverage, session.get(metric: DDTestSessionTags.testCoverageLines) == nil,
            let linesCovered = CodeCoverageProvider.getLineCodeCoverage()
         {
             session.set(metric: DDTestSessionTags.testCoverageLines, value: linesCovered)
@@ -78,7 +78,7 @@ final class AdditionalTags: TestHooksFeature {
 
     func testModuleWillEnd(module: any TestModule) {
         // Coverage lines when TIA is not active (TIA handles this in its hook otherwise)
-        if codeCoverage, module.metrics[DDTestSessionTags.testCoverageLines] == nil,
+        if codeCoverage, module.get(metric: DDTestSessionTags.testCoverageLines) == nil,
            let linesCovered = CodeCoverageProvider.getLineCodeCoverage()
         {
             module.set(metric: DDTestSessionTags.testCoverageLines, value: linesCovered)

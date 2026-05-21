@@ -12,8 +12,7 @@ import Foundation
 protocol MockTestModuleInfo {
     var duration: UInt64 { get set }
     var status: TestStatus { get set }
-    var tags: [String: String] { get set }
-    var metrics: [String: Double] { get set }
+    var attributes: [String: TestAttributeValue] { get set }
     init()
 }
 
@@ -21,8 +20,7 @@ enum Mocks {
     struct ModuleInfo: MockTestModuleInfo {
         var duration: UInt64 = 0
         var status: TestStatus = .pass
-        var tags: [String: String] = [:]
-        var metrics: [String: Double] = [:]
+        var attributes: [String: TestAttributeValue] = [:]
     }
     
     struct AttachedTags: TestTags {
@@ -54,33 +52,34 @@ enum Mocks {
             set { _state.update { $0.duration = newValue } }
         }
         var status: TestStatus { _state.value.status }
-        var tags: [String: String] { _state.value.tags }
-        var metrics: [String: Double] { _state.value.metrics }
-        
+        var attributes: [String: TestAttributeValue] { _state.value.attributes }
+        var tags: [String: String] { _state.value.attributes.meta }
+        var metrics: [String: Double] { _state.value.attributes.metrics }
+
         init(name: String, startTime: Date = Date()) {
             self.name = name
             self.startTime = startTime
         }
-        
+
         func set(failed reason: TestError?) {
             _state.update { $0.status = .fail }
         }
-        
+
         func set(skipped reason: String? = nil) {
             _state.update {
                 $0.status = .skip
                 if let reason = reason {
-                    $0.tags[DDTestTags.testSkipReason] = reason
+                    $0.attributes[DDTestTags.testSkipReason] = .tag(reason)
                 }
             }
         }
-        
+
         func set(tag name: String, value: any SpanAttributeConvertible) {
             _state.update {
-                $0.tags[name] = value.spanAttribute
+                $0.attributes[name] = .tag(value.spanAttribute)
             }
         }
-        
+
         func end(time: Date?) {
             _state.update {
                 if $0.duration == 0 {
@@ -88,10 +87,10 @@ enum Mocks {
                 }
             }
         }
-        
+
         func set(metric name: String, value: Double) {
             _state.update {
-                $0.metrics[name] = value
+                $0.attributes[name] = .metric(value)
             }
         }
     }
@@ -100,8 +99,7 @@ enum Mocks {
         struct SessionInfo: MockTestModuleInfo {
             var duration: UInt64 = 0
             var status: TestStatus = .pass
-            var tags: [String: String] = [:]
-            var metrics: [String: Double] = [:]
+            var attributes: [String: TestAttributeValue] = [:]
             var testIndex: UInt = 0
             var testFrameworks: Set<String> = []
             var modules: [String: Module] = [:]
@@ -207,8 +205,7 @@ enum Mocks {
         struct ModuleInfo: MockTestModuleInfo {
             var duration: UInt64 = 0
             var status: TestStatus = .pass
-            var tags: [String: String] = [:]
-            var metrics: [String: Double] = [:]
+            var attributes: [String: TestAttributeValue] = [:]
             var testFrameworks: Set<String> = []
             var suites: [String: Suite] = [:]
             var localization: String = ""
@@ -276,8 +273,7 @@ enum Mocks {
         struct SuiteInfo: MockTestModuleInfo {
             var duration: UInt64 = 0
             var status: TestStatus = .pass
-            var tags: [String: String] = [:]
-            var metrics: [String: Double] = [:]
+            var attributes: [String: TestAttributeValue] = [:]
             var tests: [String: Group] = [:]
             var localization: String = ""
             var attachedTags: AttachedTags = .init()
@@ -491,8 +487,7 @@ enum Mocks {
         struct ModuleInfo: MockTestModuleInfo {
             var duration: UInt64 = 0
             var status: TestStatus = .pass
-            var tags: [String: String] = [:]
-            var metrics: [String: Double] = [:]
+            var attributes: [String: TestAttributeValue] = [:]
             var error: TestError? = nil
             var errorStatus: ErrorSuppressionStatus = .normal
         }
@@ -532,15 +527,19 @@ enum Mocks {
         func add(error: TestError) {
             _state.update { state in
                 state.error = error
-                state.tags[DDTags.errorType] = error.type
-                state.tags[DDTags.errorMessage] = error.message
-                state.tags[DDTags.errorStack] = error.stack
+                state.attributes[DDTags.errorType] = .tag(error.type)
+                if let message = error.message {
+                    state.attributes[DDTags.errorMessage] = .tag(message)
+                }
+                if let stack = error.stack {
+                    state.attributes[DDTags.errorStack] = .tag(stack)
+                }
             }
         }
-        
+
         func add(benchmark name: String, samples: [Double], info: String?) {
             _state.update {
-                $0.tags[DDTestTags.testType] = DDTagValues.typeBenchmark
+                $0.attributes[DDTestTags.testType] = .tag(DDTagValues.typeBenchmark)
             }
         }
         

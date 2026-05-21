@@ -12,25 +12,6 @@ internal enum Constants {
     static let ddsource = "ios"
 }
 
-internal struct CITestEnvelope: Encodable {
-    enum CodingKeys: String, CodingKey {
-        case spanType = "type"
-        case version
-        case content
-    }
-
-    let version: Int = 2
-
-    let spanType: String
-    let content: DDSpan
-
-    /// The initializer to encode single `Span` within an envelope.
-    init(_ content: DDSpan) {
-        self.spanType = "test"
-        self.content = content
-    }
-}
-
 internal struct SpanEnvelope: Encodable {
     enum CodingKeys: String, CodingKey {
         case spanType = "type"
@@ -39,7 +20,6 @@ internal struct SpanEnvelope: Encodable {
     }
 
     let version: Int = 1
-
     let spanType: String
     let content: DDSpan
 
@@ -50,7 +30,8 @@ internal struct SpanEnvelope: Encodable {
     }
 }
 
-/// `Encodable` representation of span.
+/// `Encodable` representation of a generic (non-test, non-lifecycle) span.
+/// Test/session/module/suite spans are encoded via `TestSpan` instead.
 internal struct DDSpan: Encodable {
     let traceID: TraceId
     let spanID: SpanId
@@ -65,10 +46,6 @@ internal struct DDSpan: Encodable {
     let errorType: String?
     let errorStack: String?
     let type: String
-    let sessionID: UInt64?
-    let moduleID: UInt64?
-    let suiteID: UInt64?
-    let itrCorrelationId: String?
 
     // MARK: - Meta
 
@@ -79,8 +56,7 @@ internal struct DDSpan: Encodable {
 
     static let filteredTagKeys: Set<String> = [
         "error.message", "error.type", "error.stack",
-        "test_module_id", "test_suite_id", "test_session_id",
-        "itr_correlation_id"
+        "resource", "type", "version"
     ]
 
     func encode(to encoder: Encoder) throws {
@@ -93,14 +69,14 @@ internal struct DDSpan: Encodable {
         self.spanID = spanData.spanId
         self.parentID = spanData.parentSpanId
 
-        if spanData.attributes["type"] != nil {
+        if spanData.attributes.type != nil {
             self.name = spanData.name
         } else {
             self.name = spanData.name + "." + spanData.kind.rawValue
         }
 
         self.serviceName = spanData.resource.service ?? ""
-        self.resource = spanData.attributes["resource"]?.description ?? spanData.name
+        self.resource = spanData.attributes.resource ?? spanData.name
         self.startTime = spanData.startTime.timeIntervalSince1970.toNanoseconds
         self.duration = spanData.endTime.timeIntervalSince(spanData.startTime).toNanoseconds
 
@@ -117,20 +93,8 @@ internal struct DDSpan: Encodable {
                 self.errorStack = nil
         }
 
-        let spanType = spanData.attributes["type"] ?? spanData.attributes["db.type"]
-        self.type = spanType?.description ?? spanData.kind.rawValue
-
-        if self.type == "test" {
-            self.sessionID = UInt64(spanData.attributes["test_session_id"]?.description ?? "0", radix: 16) ?? 0
-            self.moduleID = UInt64(spanData.attributes["test_module_id"]?.description ?? "0", radix: 16) ?? 0
-            self.suiteID = UInt64(spanData.attributes["test_suite_id"]?.description ?? "0", radix: 16) ?? 0
-            self.itrCorrelationId = spanData.attributes["itr_correlation_id"]?.description
-        } else {
-            self.sessionID = nil
-            self.moduleID = nil
-            self.suiteID = nil
-            self.itrCorrelationId = nil
-        }
+        let spanType = spanData.attributes.type ?? spanData.attributes["db.type"]?.description
+        self.type = spanType ?? spanData.kind.rawValue
 
         self.applicationVersion = spanData.resource.applicationVersion ?? ""
         self.tags = spanData.attributes.filter {
@@ -141,67 +105,60 @@ internal struct DDSpan: Encodable {
 
 /// Encodes `SpanData` to given encoder.
 internal struct SpanEncoder {
-    /// Coding keys for permanent `Span` attributes.
-    enum StaticCodingKeys: String, CodingKey {
-        // MARK: - Attributes
-
-        case traceID = "trace_id"
-        case spanID = "span_id"
-        case parentID = "parent_id"
-        case testSessionID = "test_session_id"
-        case testModuleID = "test_module_id"
-        case testSuiteID = "test_suite_id"
-        case name
-        case service
-        case resource
-        case type
-        case start
-        case duration
-        case error
-        case errorMessage = "error.message"
-        case errorType = "error.type"
-        case errorStack = "error.stack"
-        case itrCorrelationId = "itr_correlation_id"
+    /// Coding keys for `Span` attributes.
+    struct CodingKeys: CodingKey, ExpressibleByStringLiteral {
+        typealias StringLiteralType = String
+        let stringValue: String
+        
+        init?(stringValue: String) {
+            self.stringValue = stringValue
+        }
+        
+        init(stringLiteral value: String) {
+            stringValue = value
+        }
+        
+        init(_ string: String) {
+            self.init(stringLiteral: string)
+        }
+        
+        var intValue: Int? { nil }
+        init?(intValue: Int) { nil }
+        
+        static var traceID: Self { "trace_id" }
+        static var spanID: Self { "span_id" }
+        static var parentID: Self { "parent_id" }
+        static var name: Self { "name" }
+        static var service: Self { "service" }
+        static var resource: Self { "resource" }
+        static var type: Self { "type" }
+        static var start: Self { "start" }
+        static var duration: Self { "duration" }
+        static var error: Self { "error" }
+        static var errorMessage: Self { "error.message" }
+        static var errorType: Self { "error.type" }
+        static var errorStack: Self { "error.stack" }
 
         // MARK: - Metrics
 
-        case isRootSpan = "_top_level"
+        static var isRootSpan: Self { "_top_level" }
 
         // MARK: - Meta
 
-        case source = "_dd.source"
-        case applicationVersion = "version"
+        static var source: Self { "_dd.source" }
+        static var applicationVersion: Self { "version" }
 
-        case meta
-        case metrics
-    }
-
-    /// Coding keys for dynamic `Span` attributes specified by user.
-    private struct DynamicCodingKey: CodingKey {
-        var stringValue: String
-        var intValue: Int?
-        init?(stringValue: String) { self.stringValue = stringValue }
-        init?(intValue: Int) { return nil }
-        init(_ string: String) { self.stringValue = string }
+        static var meta: Self { "meta" }
+        static var metrics: Self { "metrics" }
     }
 
     func encode(_ span: DDSpan, to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: StaticCodingKeys.self)
+        var container = encoder.container(keyedBy: CodingKeys.self)
 
         try container.encode(span.traceID.rawLowerLong, forKey: .traceID)
         try container.encode(span.spanID.rawValue, forKey: .spanID)
         let parentSpanID = span.parentID ?? SpanId.invalid // 0 is a reserved ID for a root span (ref: DDTracer.java#L600)
         try container.encode(parentSpanID.rawValue, forKey: .parentID)
-
-        if let session = span.sessionID {
-            try container.encode(session, forKey: .testSessionID)
-        }
-        if let module = span.moduleID {
-            try container.encode(module, forKey: .testModuleID)
-        }
-        if let suite = span.suiteID {
-            try container.encode(suite, forKey: .testSuiteID)
-        }
 
         try container.encode(span.name, forKey: .name)
         try container.encode(span.serviceName, forKey: .service)
@@ -210,25 +167,15 @@ internal struct SpanEncoder {
 
         try container.encode(span.startTime, forKey: .start)
         try container.encode(span.duration, forKey: .duration)
-        
-        if let correlationId = span.itrCorrelationId {
-            try container.encode(correlationId, forKey: .itrCorrelationId)
-        }
 
-        var meta = container.nestedContainer(keyedBy: DynamicCodingKey.self, forKey: .meta)
-        var metrics = container.nestedContainer(keyedBy: DynamicCodingKey.self, forKey: .metrics)
+        var meta = container.nestedContainer(keyedBy: CodingKeys.self, forKey: .meta)
+        var metrics = container.nestedContainer(keyedBy: CodingKeys.self, forKey: .metrics)
 
         if span.error {
             try container.encode(1, forKey: .error)
-            if let message = span.errorMessage {
-                try meta.encode(message, forKey: DynamicCodingKey(StaticCodingKeys.errorMessage.stringValue))
-            }
-            if let type = span.errorType {
-                try meta.encode(type, forKey: DynamicCodingKey(StaticCodingKeys.errorType.stringValue))
-            }
-            if let stack = span.errorStack {
-                try meta.encode(stack, forKey: DynamicCodingKey(StaticCodingKeys.errorStack.stringValue))
-            }
+            try meta.encodeIfPresent(span.errorMessage, forKey: .errorMessage)
+            try meta.encodeIfPresent(span.errorType, forKey: .errorType)
+            try meta.encodeIfPresent(span.errorStack, forKey: .errorStack)
         } else {
             try container.encode(0, forKey: .error)
         }
@@ -239,38 +186,34 @@ internal struct SpanEncoder {
     }
 
     /// Encodes default `metrics.*` attributes
-    private func encodeDefaultMetrics(_ span: DDSpan, to metrics: inout KeyedEncodingContainer<DynamicCodingKey>) throws {
+    private func encodeDefaultMetrics(_ span: DDSpan, to metrics: inout KeyedEncodingContainer<CodingKeys>) throws {
         // NOTE: RUMM-299 only numeric values are supported for `metrics.*` attributes
         if span.parentID == nil {
-            try metrics.encode(1, forKey: DynamicCodingKey(StaticCodingKeys.isRootSpan.stringValue))
+            try metrics.encode(1, forKey: .isRootSpan)
         }
     }
 
     /// Encodes default `meta.*` attributes
-    private func encodeDefaultMeta(_ span: DDSpan, to meta: inout KeyedEncodingContainer<DynamicCodingKey>) throws {
+    private func encodeDefaultMeta(_ span: DDSpan, to meta: inout KeyedEncodingContainer<CodingKeys>) throws {
         // NOTE: RUMM-299 only string values are supported for `meta.*` attributes
-        try meta.encode(Constants.ddsource, forKey: DynamicCodingKey(StaticCodingKeys.source.stringValue))
-        try meta.encode(span.applicationVersion, forKey: DynamicCodingKey(StaticCodingKeys.applicationVersion.stringValue))
+        try meta.encode(Constants.ddsource, forKey: .source)
+        try meta.encode(span.applicationVersion, forKey: .applicationVersion)
     }
 
     /// Encodes `meta.*` attributes coming from user
     private func encodeCustomAttributes(_ span: DDSpan,
-                                        toMeta meta: inout KeyedEncodingContainer<DynamicCodingKey>,
-                                        metrics: inout KeyedEncodingContainer<DynamicCodingKey>) throws
+                                        toMeta meta: inout KeyedEncodingContainer<CodingKeys>,
+                                        metrics: inout KeyedEncodingContainer<CodingKeys>) throws
     {
         // NOTE: RUMM-299 only string values are supported for `meta.*` attributes
         try span.tags.forEach {
             switch $0.value {
-                case .int(let intValue):
-                    try metrics.encode(intValue, forKey: DynamicCodingKey($0.key))
-                case .double(let doubleValue):
-                    try metrics.encode(doubleValue, forKey: DynamicCodingKey($0.key))
-                case .string(let stringValue):
-                    try meta.encode(stringValue, forKey: DynamicCodingKey($0.key))
-                case .bool(let boolValue):
-                    try meta.encode(boolValue, forKey: DynamicCodingKey($0.key))
-                default:
-                    break
+            case .int(let intValue):
+                try metrics.encode(intValue, forKey: CodingKeys($0.key))
+            case .double(let doubleValue):
+                try metrics.encode(doubleValue, forKey: CodingKeys($0.key))
+            default:
+                try meta.encode($0.value.description, forKey: CodingKeys($0.key))
             }
         }
     }

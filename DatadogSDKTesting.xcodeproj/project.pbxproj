@@ -100,17 +100,19 @@
 		A7AB7C0F2F11AA1100000001 /* RunLoopWaiter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C0F2F11AA1100000002 /* RunLoopWaiter.swift */; };
 		A7AB7C0F2F11AA1200000001 /* MockHTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C0F2F11AA1200000002 /* MockHTTPClient.swift */; };
 		A7AB7C2026E7EB1100000001 /* OpenTelemetry+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB1100000002 /* OpenTelemetry+Extensions.swift */; };
-		A7AB7C2026E7EB1100000003 /* SpanComposites.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB1100000004 /* SpanComposites.swift */; };
-		A7AB7C2026E7EB1100000005 /* SpanCompositesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB1100000006 /* SpanCompositesTests.swift */; };
+		A7AB7C2026E7EB1100000003 /* SpanEventsLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB1100000004 /* SpanEventsLog.swift */; };
+		A7AB7C2026E7EB1100000005 /* SpanEventsLogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB1100000006 /* SpanEventsLogTests.swift */; };
 		A7AB7C2026E7EB1100000007 /* CoverageExporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB1100000008 /* CoverageExporterTests.swift */; };
 		A7AB7C2026E7EB1100000009 /* PipelineIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB110000000A /* PipelineIntegrationTests.swift */; };
 		A7AB7C2026E7EB110000000B /* OpenTelemetryApi in Frameworks */ = {isa = PBXBuildFile; productRef = A7AB7C2026E7EB110000000C /* OpenTelemetryApi */; };
-		A7AB7C2026E7EB110000000D /* TestLifecycleEncoders.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB110000000E /* TestLifecycleEncoders.swift */; };
+		A7AB7C2026E7EB110000000D /* TestSpan.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB110000000E /* TestSpan.swift */; };
 		A7AB7C2026E7EB1100000011 /* CoverageData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB1100000012 /* CoverageData.swift */; };
 		A7AB7C2026E7EB1100000013 /* CoverageProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB1100000014 /* CoverageProcessor.swift */; };
 		A7AB7C2026E7EB1100000015 /* BackgroundCoverageProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB1100000016 /* BackgroundCoverageProcessor.swift */; };
 		A7AB7C2026E7EB1100000017 /* LLVMCoverageProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB1100000018 /* LLVMCoverageProcessor.swift */; };
 		A7AB7C2026E7EB1100000019 /* CoverageBitmapTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB110000001A /* CoverageBitmapTests.swift */; };
+		A7AB7C2026E7EB110000001D /* TestSpanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB110000001C /* TestSpanTests.swift */; };
+		A7AB7C2026E7EB110000001F /* SpanSdk+TestStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB110000001E /* SpanSdk+TestStatus.swift */; };
 		A7B0120F2F364B97000270A4 /* InstrumentationUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B0120E2F364B8A000270A4 /* InstrumentationUtils.swift */; };
 		A7B012112F364BCE000270A4 /* URLSessionInstrumentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B012102F364BC2000270A4 /* URLSessionInstrumentation.swift */; };
 		A7B012132F364C04000270A4 /* URLSessionInstrumentationConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B012122F364C02000270A4 /* URLSessionInstrumentationConfiguration.swift */; };
@@ -508,16 +510,18 @@
 		A7AB7C0F2F11AA1100000002 /* RunLoopWaiter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunLoopWaiter.swift; sourceTree = "<group>"; };
 		A7AB7C0F2F11AA1200000002 /* MockHTTPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockHTTPClient.swift; sourceTree = "<group>"; };
 		A7AB7C2026E7EB1100000002 /* OpenTelemetry+Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "OpenTelemetry+Extensions.swift"; sourceTree = "<group>"; };
-		A7AB7C2026E7EB1100000004 /* SpanComposites.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpanComposites.swift; sourceTree = "<group>"; };
-		A7AB7C2026E7EB1100000006 /* SpanCompositesTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpanCompositesTests.swift; sourceTree = "<group>"; };
+		A7AB7C2026E7EB1100000004 /* SpanEventsLog.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpanEventsLog.swift; sourceTree = "<group>"; };
+		A7AB7C2026E7EB1100000006 /* SpanEventsLogTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpanEventsLogTests.swift; sourceTree = "<group>"; };
 		A7AB7C2026E7EB1100000008 /* CoverageExporterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoverageExporterTests.swift; sourceTree = "<group>"; };
 		A7AB7C2026E7EB110000000A /* PipelineIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PipelineIntegrationTests.swift; sourceTree = "<group>"; };
-		A7AB7C2026E7EB110000000E /* TestLifecycleEncoders.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TestLifecycleEncoders.swift; sourceTree = "<group>"; };
+		A7AB7C2026E7EB110000000E /* TestSpan.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TestSpan.swift; sourceTree = "<group>"; };
 		A7AB7C2026E7EB1100000012 /* CoverageData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CoverageData.swift; sourceTree = "<group>"; };
 		A7AB7C2026E7EB1100000014 /* CoverageProcessor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CoverageProcessor.swift; sourceTree = "<group>"; };
 		A7AB7C2026E7EB1100000016 /* BackgroundCoverageProcessor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BackgroundCoverageProcessor.swift; sourceTree = "<group>"; };
 		A7AB7C2026E7EB1100000018 /* LLVMCoverageProcessor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LLVMCoverageProcessor.swift; sourceTree = "<group>"; };
 		A7AB7C2026E7EB110000001A /* CoverageBitmapTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CoverageBitmapTests.swift; sourceTree = "<group>"; };
+		A7AB7C2026E7EB110000001C /* TestSpanTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TestSpanTests.swift; sourceTree = "<group>"; };
+		A7AB7C2026E7EB110000001E /* SpanSdk+TestStatus.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "SpanSdk+TestStatus.swift"; sourceTree = "<group>"; };
 		A7B0120E2F364B8A000270A4 /* InstrumentationUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstrumentationUtils.swift; sourceTree = "<group>"; };
 		A7B012102F364BC2000270A4 /* URLSessionInstrumentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLSessionInstrumentation.swift; sourceTree = "<group>"; };
 		A7B012122F364C02000270A4 /* URLSessionInstrumentationConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLSessionInstrumentationConfiguration.swift; sourceTree = "<group>"; };
@@ -1024,9 +1028,10 @@
 		E141EADC27EB3B9E0057D747 /* Spans */ = {
 			isa = PBXGroup;
 			children = (
-				A7AB7C2026E7EB1100000006 /* SpanCompositesTests.swift */,
+				A7AB7C2026E7EB1100000006 /* SpanEventsLogTests.swift */,
 				E1EBBD4E27F200A50059BC3E /* SpanSanitizerTests.swift */,
 				E141EADD27EB3B9E0057D747 /* SpansExporterTests.swift */,
+				A7AB7C2026E7EB110000001C /* TestSpanTests.swift */,
 			);
 			path = Spans;
 			sourceTree = "<group>";
@@ -1125,9 +1130,9 @@
 			isa = PBXGroup;
 			children = (
 				E143CEFE27D7790200F4018A /* SpansExporter.swift */,
-				A7AB7C2026E7EB1100000004 /* SpanComposites.swift */,
+				A7AB7C2026E7EB1100000004 /* SpanEventsLog.swift */,
 				E143CEFF27D7790200F4018A /* SpanEncoder.swift */,
-				A7AB7C2026E7EB110000000E /* TestLifecycleEncoders.swift */,
+				A7AB7C2026E7EB110000000E /* TestSpan.swift */,
 				E1EBBD4627F1FFE70059BC3E /* SpanSanitizer.swift */,
 				A7D23AF72C9B10A8006AB41D /* SpanMetadata.swift */,
 			);
@@ -1271,6 +1276,7 @@
 				E10034D92703599D00439C9C /* DDTestModule.swift */,
 				E1743F4C283E7D9E006CBFF8 /* DDTestSuite.swift */,
 				E1743F4D283E7DAE006CBFF8 /* DDTest.swift */,
+				A7AB7C2026E7EB110000001E /* SpanSdk+TestStatus.swift */,
 				E1ABA07125231F4700ED8AEF /* DDTags.swift */,
 				E1ABA08A252341EA00ED8AEF /* DDTestMonitor.swift */,
 				E1798CC52524B9BD008DEBB9 /* DDTracer.swift */,
@@ -2015,6 +2021,7 @@
 				A71E64762BAA0AA100F2ACA5 /* XcodeCI.swift in Sources */,
 				A7FC25D02BA1EB2900067E26 /* SimpleSpanData.swift in Sources */,
 				A7FC25BE2BA1EADF00067E26 /* DDTest.swift in Sources */,
+				A7AB7C2026E7EB110000001F /* SpanSdk+TestStatus.swift in Sources */,
 				A7FC260F2BA1EC0500067E26 /* BinaryParser.swift in Sources */,
 				A7FC25E02BA1EBF300067E26 /* StderrCapture.swift in Sources */,
 				A71E64732BAA0AA100F2ACA5 /* BitriseCI.swift in Sources */,
@@ -2104,8 +2111,8 @@
 				A7FC26372BA1ECCF00067E26 /* JSONGeneric.swift in Sources */,
 				A79DA6442FB62618004BCA8C /* HTTPClient.swift in Sources */,
 				A7AB7C2026E7EB1100000001 /* OpenTelemetry+Extensions.swift in Sources */,
-				A7AB7C2026E7EB1100000003 /* SpanComposites.swift in Sources */,
-				A7AB7C2026E7EB110000000D /* TestLifecycleEncoders.swift in Sources */,
+				A7AB7C2026E7EB1100000003 /* SpanEventsLog.swift in Sources */,
+				A7AB7C2026E7EB110000000D /* TestSpan.swift in Sources */,
 				A79DA6452FB62618004BCA8C /* HTTPHeader.swift in Sources */,
 				A7FC26332BA1ECC500067E26 /* SpanEncoder.swift in Sources */,
 				A7FC26492BA1ECF800067E26 /* Directory.swift in Sources */,
@@ -2170,7 +2177,8 @@
 				A7FC268C2BA1F82300067E26 /* HTTPClientTests.swift in Sources */,
 				A7FC26742BA1F80000067E26 /* JSONEncoderTests.swift in Sources */,
 				A7FC266F2BA1F7FA00067E26 /* SpanSanitizerTests.swift in Sources */,
-				A7AB7C2026E7EB1100000005 /* SpanCompositesTests.swift in Sources */,
+				A7AB7C2026E7EB1100000005 /* SpanEventsLogTests.swift in Sources */,
+				A7AB7C2026E7EB110000001D /* TestSpanTests.swift in Sources */,
 				A7FC26842BA1F81D00067E26 /* Encoding.swift in Sources */,
 				A7FC26762BA1F80000067E26 /* SpawnTests.swift in Sources */,
 				A7AB7C2026E7EB1100000007 /* CoverageExporterTests.swift in Sources */,

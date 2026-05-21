@@ -10,7 +10,7 @@ import OpenTelemetryApi
 import TestUtils
 import XCTest
 
-class SpanCompositesTests: XCTestCase {
+class SpanEventsLogTests: XCTestCase {
     func testSpanEventsLogExporterAdapter_writesOneLogPerSpanEvent() throws {
         let server = MockBackend()
         try server.start()

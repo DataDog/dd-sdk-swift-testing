@@ -48,37 +48,29 @@ internal struct SimpleSpanData: Codable, Equatable {
 
 extension TestModule {
     var toCrashData: SimpleSpanData {
-        var attributes = tags
-        for metric in metrics {
-            attributes[metric.key] = String(metric.value)
-        }
-        return .init(traceIdHi: 0,
-                     traceIdLo: 0,
-                     spanId: id.rawValue,
-                     name: name,
-                     startTime: startTime,
-                     stringAttributes: attributes,
-                     sessionStartTime: session.startTime,
-                     moduleStartTime: startTime)
+        .init(traceIdHi: 0,
+              traceIdLo: 0,
+              spanId: id.rawValue,
+              name: name,
+              startTime: startTime,
+              stringAttributes: attributes.mapValues(\.asString),
+              sessionStartTime: session.startTime,
+              moduleStartTime: startTime)
     }
 }
 
 
 extension TestSuite {
     var toCrashData: SimpleSpanData {
-        var attributes = tags
-        for metric in metrics {
-            attributes[metric.key] = String(metric.value)
-        }
-        return .init(traceIdHi: 0,
-                     traceIdLo: 0,
-                     spanId: id.rawValue,
-                     name: name,
-                     startTime: startTime,
-                     stringAttributes: attributes,
-                     sessionStartTime: session.startTime,
-                     moduleStartTime: module.startTime,
-                     suiteStartTime: startTime)
+        .init(traceIdHi: 0,
+              traceIdLo: 0,
+              spanId: id.rawValue,
+              name: name,
+              startTime: startTime,
+              stringAttributes: attributes.mapValues(\.asString),
+              sessionStartTime: session.startTime,
+              moduleStartTime: module.startTime,
+              suiteStartTime: startTime)
     }
 }
 

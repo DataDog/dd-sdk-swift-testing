@@ -81,6 +81,14 @@
       {
         "key" : "DD_TRACE_DEBUG",
         "value" : "$(DD_TRACE_DEBUG)"
+      },
+      {
+        "key" : "DD_CIVISIBILITY_LOGS_ENABLED",
+        "value" : "$(DD_CIVISIBILITY_LOGS_ENABLED)"
+      },
+      {
+        "key" : "DD_CIVISIBILITY_CODE_COVERAGE_ENABLED",
+        "value" : "$(DD_CIVISIBILITY_CODE_COVERAGE_ENABLED)"
       }
     ],
     "codeCoverage" : true,

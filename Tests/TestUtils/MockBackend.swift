@@ -205,11 +205,11 @@ public final class MockBackend {
 
         case "/api/v2/libraries/tests/services/setting":
             _lock.withLock { _requests.settings.append(body) }
-            return (.ok, "application/json", buildSettingsResponse())
+            return (.ok, "application/json", buildSettingsResponse(requestId: extractRequestId(from: body)))
 
         case "/api/v2/ci/libraries/tests":
             _lock.withLock { _requests.knownTests.append(body) }
-            return (.ok, "application/json", buildKnownTestsResponse())
+            return (.ok, "application/json", buildKnownTestsResponse(requestId: extractRequestId(from: body)))
 
         case "/api/v2/ci/tests/skippable":
             _lock.withLock { _requests.skippableTests.append(body) }
@@ -225,7 +225,7 @@ public final class MockBackend {
 
         case "/api/v2/test/libraries/test-management/tests":
             _lock.withLock { _requests.testManagement.append(body) }
-            return (.ok, "application/json", buildTestManagementResponse())
+            return (.ok, "application/json", buildTestManagementResponse(requestId: extractRequestId(from: body)))
 
         default:
             return (.notFound, "application/json", Data("{}".utf8))
@@ -234,11 +234,24 @@ public final class MockBackend {
 
     // MARK: - Response Builders
 
-    private func buildSettingsResponse() -> Data {
+    /// JSON:API requests echo their `data.id` back in the response. Pull it
+    /// out of the incoming body so each response carries the matching id —
+    /// the SDK rejects responses whose id doesn't match the request.
+    private func extractRequestId(from body: Data) -> String {
+        if let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any],
+           let data = json["data"] as? [String: Any],
+           let id = data["id"] as? String
+        {
+            return id
+        }
+        return "1"
+    }
+
+    private func buildSettingsResponse(requestId: String) -> Data {
         let s = configuration.settings
         let payload: [String: Any] = [
             "data": [
-                "id": "1",
+                "id": requestId,
                 "type": "ci_app_tracers_test_service_settings",
                 "attributes": [
                     "itr_enabled": s.itrEnabled,
@@ -262,12 +275,12 @@ public final class MockBackend {
         return (try? JSONSerialization.data(withJSONObject: payload)) ?? Data()
     }
 
-    private func buildKnownTestsResponse() -> Data {
+    private func buildKnownTestsResponse(requestId: String) -> Data {
         let knownTests = configuration.knownTests
         let totalTests = knownTests.values.flatMap { $0.values }.flatMap { $0 }.count
         let payload: [String: Any] = [
             "data": [
-                "id": "1",
+                "id": requestId,
                 "type": "ci_app_libraries_tests",
                 "attributes": [
                     "tests": knownTests,
@@ -302,7 +315,7 @@ public final class MockBackend {
         return (try? JSONSerialization.data(withJSONObject: payload)) ?? Data()
     }
 
-    private func buildTestManagementResponse() -> Data {
+    private func buildTestManagementResponse(requestId: String) -> Data {
         var modulesDict: [String: Any] = [:]
         for (moduleName, suites) in configuration.testManagement {
             var suitesDict: [String: Any] = [:]
@@ -323,7 +336,7 @@ public final class MockBackend {
         }
         let payload: [String: Any] = [
             "data": [
-                "id": "1",
+                "id": requestId,
                 "type": "ci_app_libraries_tests",
                 "attributes": ["modules": modulesDict]
             ] as [String: Any]

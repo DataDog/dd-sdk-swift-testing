@@ -113,6 +113,7 @@
 		A7AB7C2026E7EB1100000019 /* CoverageBitmapTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB110000001A /* CoverageBitmapTests.swift */; };
 		A7AB7C2026E7EB110000001D /* TestSpanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB110000001C /* TestSpanTests.swift */; };
 		A7AB7C2026E7EB110000001F /* SpanSdk+TestStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB110000001E /* SpanSdk+TestStatus.swift */; };
+		A7AB7C2026E7EB1100000021 /* CodeCoverage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB1100000020 /* CodeCoverage.swift */; };
 		A7B0120F2F364B97000270A4 /* InstrumentationUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B0120E2F364B8A000270A4 /* InstrumentationUtils.swift */; };
 		A7B012112F364BCE000270A4 /* URLSessionInstrumentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B012102F364BC2000270A4 /* URLSessionInstrumentation.swift */; };
 		A7B012132F364C04000270A4 /* URLSessionInstrumentationConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B012122F364C02000270A4 /* URLSessionInstrumentationConfiguration.swift */; };
@@ -522,6 +523,7 @@
 		A7AB7C2026E7EB110000001A /* CoverageBitmapTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CoverageBitmapTests.swift; sourceTree = "<group>"; };
 		A7AB7C2026E7EB110000001C /* TestSpanTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TestSpanTests.swift; sourceTree = "<group>"; };
 		A7AB7C2026E7EB110000001E /* SpanSdk+TestStatus.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "SpanSdk+TestStatus.swift"; sourceTree = "<group>"; };
+		A7AB7C2026E7EB1100000020 /* CodeCoverage.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CodeCoverage.swift; sourceTree = "<group>"; };
 		A7B0120E2F364B8A000270A4 /* InstrumentationUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstrumentationUtils.swift; sourceTree = "<group>"; };
 		A7B012102F364BC2000270A4 /* URLSessionInstrumentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLSessionInstrumentation.swift; sourceTree = "<group>"; };
 		A7B012122F364C02000270A4 /* URLSessionInstrumentationConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLSessionInstrumentationConfiguration.swift; sourceTree = "<group>"; };
@@ -786,6 +788,7 @@
 			children = (
 				81EDADB2292698A200279027 /* LLVMTotalsCoverageFormat.swift */,
 				E1C8DEF4268363EC005B5411 /* CodeCoverageProvider.swift */,
+				A7AB7C2026E7EB1100000020 /* CodeCoverage.swift */,
 				A7AB7C2026E7EB1100000018 /* LLVMCoverageProcessor.swift */,
 				A7AB7C2026E7EB1100000016 /* BackgroundCoverageProcessor.swift */,
 				A7A98C1F2C8F44BC00C93E59 /* CoverageSettings.swift */,
@@ -1951,6 +1954,7 @@
 				A71E64722BAA0AA100F2ACA5 /* BuildkiteCI.swift in Sources */,
 				A7FC260B2BA1EC0500067E26 /* InternalError.swift in Sources */,
 				A7FC25BF2BA1EAEB00067E26 /* CodeCoverageProvider.swift in Sources */,
+				A7AB7C2026E7EB1100000021 /* CodeCoverage.swift in Sources */,
 				A7AB7C2026E7EB1100000015 /* BackgroundCoverageProcessor.swift in Sources */,
 				A7AB7C2026E7EB1100000017 /* LLVMCoverageProcessor.swift in Sources */,
 				A7FC25B52BA1EADF00067E26 /* DDInstrumentationControl.swift in Sources */,

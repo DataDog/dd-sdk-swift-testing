@@ -85,6 +85,7 @@ private let ddCrashIsWritingReportCallback: @convention(c) (
         try? data.write(to: url, options: .atomic)
     }
     DDTestMonitor.instance?.tia?.stop()
+    DDTestMonitor.instance?.coverage?.stop()
     Log.print("Crash detected! Exiting...")
 }
 

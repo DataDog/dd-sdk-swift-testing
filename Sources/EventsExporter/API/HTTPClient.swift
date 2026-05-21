@@ -7,8 +7,10 @@
 import Foundation
 
 internal protocol HTTPClientType: AnyObject {
-    func send(request: URLRequest, completion: @escaping (Result<HTTPURLResponse, HTTPClient.RequestError>) -> Void)
-    func sendWithResult(request: URLRequest, completion: @escaping (Result<Data, HTTPClient.RequestError>) -> Void)
+    /// Send the request and return the response (no body).
+    func send(request: URLRequest) async throws(HTTPClient.RequestError) -> HTTPURLResponse
+    /// Send the request and return the response body.
+    func sendWithResponse(request: URLRequest) async throws(HTTPClient.RequestError) -> Data
 }
 
 /// Client for sending requests over HTTP.
@@ -77,43 +79,43 @@ public final class HTTPClient: HTTPClientType {
         self.debug = debug
     }
 
-    func send(request: URLRequest, completion: @escaping (Result<HTTPURLResponse, RequestError>) -> Void) {
-        let task = session.dataTask(with: request) { data, response, error in
-            self.log(request: request, response: (data, response, error))
-            completion(httpClientResult(for: (data, response, error)))
-        }
-        task.resume()
-    }
-
-    func sendWithResult(request: URLRequest, completion: @escaping (Result<Data, RequestError>) -> Void) {
-        let task = session.dataTask(with: request) { data, response, error in
-            self.log(request: request, response: (data, response, error))
-            completion(httpClientResultWithData(for: (data, response, error)))
-        }
-        task.resume()
-    }
-
-    /// Async variant returning the HTTP response (no body). Used by the API wrappers.
+    /// Send the request and return the response (no body).
     func send(request: URLRequest) async throws(RequestError) -> HTTPURLResponse {
-        try await runAsync { completion in
-            self.send(request: request, completion: completion)
-        }
+        try await perform(request) { httpClientResult(for: $0) }
     }
 
-    /// Async variant returning the response body. Used by the API wrappers.
+    /// Send the request and return the response body.
     func sendWithResponse(request: URLRequest) async throws(RequestError) -> Data {
-        try await runAsync { completion in
-            self.sendWithResult(request: request, completion: completion)
-        }
+        try await perform(request) { httpClientResultWithData(for: $0) }
     }
 
-    private func runAsync<T>(
-        _ work: @escaping (@escaping (Result<T, RequestError>) -> Void) -> Void
+    private func perform<T>(
+        _ request: URLRequest,
+        _ resultMapping: @escaping (_ taskResult: (Data?, URLResponse?, Error?)) -> Result<T, RequestError>
     ) async throws(RequestError) -> T {
+        let request = deflate(request)
         let result: Result<T, RequestError> = await withCheckedContinuation { continuation in
-            work { res in continuation.resume(returning: res) }
+            let task = session.dataTask(with: request) { data, response, error in
+                self.log(request: request, response: (data, response, error))
+                continuation.resume(returning: resultMapping((data, response, error)))
+            }
+            task.resume()
         }
         return try result.get()
+    }
+    
+    private func deflate(_ request: URLRequest) -> URLRequest {
+        if request.value(forHTTPHeader: .contentEncodingHeaderField) == ContentEncoding.deflate.rawValue {
+            var request = request
+            guard let body = request.httpBody, let deflated = body.deflated else {
+                request.setValue(nil, forHTTPHeader: .contentEncodingHeaderField)
+                Log.print("HTTP payload compression failed. Sending uncompressed.")
+                return request
+            }
+            request.httpBody = deflated
+            return request
+        }
+        return request
     }
 
     private func log(request: URLRequest, response: (Data?, URLResponse?, Error?)) {

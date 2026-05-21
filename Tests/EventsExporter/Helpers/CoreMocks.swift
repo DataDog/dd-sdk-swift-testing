@@ -169,19 +169,15 @@ internal struct MockClosureDataUploader: DataUploaderType {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.httpBody = data
-        var status: DataUploadStatus = .retry
-        let waiter = DispatchSemaphore(value: 0)
-        httpClient.send(request: request) { result in
-            switch result {
-            case .success(let response):
-                status = DataUploadStatus(httpResponse: response)
-            case .failure(let error):
-                status = DataUploadStatus(networkError: error)
+        let httpClient = self.httpClient
+        do {
+            let response = try waitForAsync { () async throws(HTTPClient.RequestError) -> HTTPURLResponse in
+                try await httpClient.send(request: request)
             }
-            waiter.signal()
+            return DataUploadStatus(httpResponse: response)
+        } catch {
+            return DataUploadStatus(networkError: error)
         }
-        waiter.wait()
-        return status
     }
 }
 

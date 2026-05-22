@@ -19,13 +19,27 @@ protocol APIResponseAttributes: APIAttributes {
     static func isIdValid(request rqid: String?, response rsid: String?) -> Bool
 }
 
-protocol APICommonData {
+protocol APICommonData: CustomDebugStringConvertible {
     associatedtype Meta
     associatedtype Attributes: APIAttributes
 
     var id: String? { get }
     var type: String { get }
     var attributes: Attributes { get }
+}
+
+extension APICommonData {
+    var debugDescription: String {
+        var out: String = #"{"type": "\#(type)""#
+        if let id {
+            out.append(#", "id": "\#(id)""#)
+        }
+        if attributes as? APIVoidValue == nil {
+            out.append(#", "attributes": \#(attributes)"#)
+        }
+        out.append("}")
+        return out
+    }
 }
 
 protocol APIRequestData: APICommonData, Encodable where Attributes: Encodable, Meta: Encodable {}
@@ -192,7 +206,7 @@ struct APIVoidMeta: APIVoidValue, Codable {
     static var void: Self { .init() }
 }
 
-struct APIEnvelope<Data: APICommonData> {
+struct APIEnvelope<Data: APICommonData>: CustomDebugStringConvertible {
     let meta: Data.Meta
     let data: Data
 
@@ -204,6 +218,14 @@ struct APIEnvelope<Data: APICommonData> {
     enum CodingKeys: CodingKey {
         case meta
         case data
+    }
+    
+    var debugDescription: String {
+        if meta as? APIVoidValue == nil {
+            return #"{"data": \#(data)}"#
+        } else {
+            return #"{"meta": \#(meta), "data": \#(data)}"#
+        }
     }
 }
 

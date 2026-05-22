@@ -86,7 +86,7 @@ struct GitUploadApiService: GitUploadApi {
         let meta = CommitRequestMeta(repositoryUrl: repositoryURL)
         let request = commits.map { APIData<CommitRequestMeta, Commit>(id: $0) }
         let log = self.log
-        log.debug("Search commits request: [meta: \(meta), data: \(request)]")
+        log.debug(#"Search commits request: {"meta": \#(meta), "data": \#(request)}"#)
         let response = try await httpClient.call(CommitsCall.self,
                                                  url: endpoint.searchCommitsURL,
                                                  meta: meta, data: request,
@@ -125,13 +125,20 @@ struct GitUploadApiService: GitUploadApi {
 }
 
 extension GitUploadApiService {
-    struct Commit: APIResponseAttributesHasType, APIResponseAttributesNoId, APIVoidValue, Codable {
+    struct Commit: APIResponseAttributesHasType, APIResponseAttributesNoId,
+                   APIVoidValue, Codable, CustomDebugStringConvertible
+    {
         static var apiType: String = "commit"
         static var void: Self = .init()
+        var debugDescription: String { "" }
     }
 
-    struct CommitRequestMeta: Encodable {
+    struct CommitRequestMeta: Encodable, CustomDebugStringConvertible {
         let repositoryUrl: String
+        
+        var debugDescription: String {
+            #"{"repository_url": "\#(repositoryUrl)"}"#
+        }
     }
 }
 

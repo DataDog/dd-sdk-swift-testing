@@ -146,7 +146,7 @@ struct TestImpactAnalysisApiService: TestImpactAnalysisApi {
         request.append(data: data,
                        withName: "coverage",
                        contentType: .applicationJSON)
-        request.append(data: Data("{\"dummy\": true}".utf8),
+        request.append(data: Data(#"{"dummy": true}"#.utf8),
                        withName: "event",
                        contentType: .applicationJSON)
         let log = self.log
@@ -159,7 +159,7 @@ struct TestImpactAnalysisApiService: TestImpactAnalysisApi {
 }
 
 extension TestImpactAnalysisApiService {
-    struct TestsRequest: APIAttributesNoId, Encodable {
+    struct TestsRequest: APIAttributesNoId, Encodable, CustomDebugStringConvertible {
         let env: String
         let service: String
         let repositoryUrl: String
@@ -168,11 +168,27 @@ extension TestImpactAnalysisApiService {
         let testLevel: ITRTestLevel
 
         static var apiType: String = "test_params"
+
+        var debugDescription: String {
+            let configs = JSONGeneric.object(configurations).debugDescription
+            return #"{"env": "\#(env)""#
+                + #", "service": "\#(service)""#
+                + #", "repository_url": "\#(repositoryUrl)""#
+                + #", "sha": "\#(sha)""#
+                + #", "configurations": \#(configs)"#
+                + #", "test_level": "\#(testLevel.rawValue)"}"#
+        }
     }
 
-    struct TestsResponse: APIResponseAttributesNoId, APIResponseAttributesHasType, Decodable {
-        struct Meta: Decodable {
+    struct TestsResponse: APIResponseAttributesNoId, APIResponseAttributesHasType,
+                          Decodable, CustomDebugStringConvertible
+    {
+        struct Meta: Decodable, CustomDebugStringConvertible {
             let correlationId: String
+
+            var debugDescription: String {
+                #"{"correlation_id": "\#(correlationId)"}"#
+            }
         }
 
         let name: String
@@ -181,6 +197,15 @@ extension TestImpactAnalysisApiService {
         let configurations: [String: JSONGeneric]?
 
         static var apiType: String = "test"
+
+        var debugDescription: String {
+            let params = parameters.map { #""\#($0)""# } ?? "null"
+            let configs = configurations.map { JSONGeneric.object($0).debugDescription } ?? "null"
+            return #"{"name": "\#(name)""#
+                + #", "suite": "\#(suite)""#
+                + #", "parameters": \#(params)"#
+                + #", "configurations": \#(configs)}"#
+        }
     }
 }
 

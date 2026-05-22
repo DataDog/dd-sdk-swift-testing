@@ -108,7 +108,7 @@ struct TestManagementApiService: TestManagementApi {
 }
 
 extension TestManagementApiService {
-    struct TestsRequest: Encodable, APIAttributesUUID {
+    struct TestsRequest: Encodable, APIAttributesUUID, CustomDebugStringConvertible {
         let repositoryUrl: String
         let commitMessage: String?
         let module: String?
@@ -116,12 +116,47 @@ extension TestManagementApiService {
         let sha: String?
 
         static var apiType: String = "ci_app_libraries_tests_request"
+
+        var debugDescription: String {
+            func opt(_ value: String?) -> String { value.map { #""\#($0)""# } ?? "null" }
+            return #"{"repository_url": "\#(repositoryUrl)""#
+                + #", "commit_message": \#(opt(commitMessage))"#
+                + #", "module": \#(opt(module))"#
+                + #", "branch": \#(opt(branch))"#
+                + #", "sha": \#(opt(sha))}"#
+        }
     }
 
-    struct TestsResponse: Decodable, APIResponseAttributesHasType, APIResponseAttributesBrokenId {
+    struct TestsResponse: Decodable, APIResponseAttributesHasType,
+                          APIResponseAttributesBrokenId, CustomDebugStringConvertible
+    {
         let modules: [String: TestManagementTestsInfo.Module]
 
         static var apiType: String = "ci_app_libraries_tests"
+
+        var debugDescription: String {
+            let entries = modules.map { name, mod in renderModule(name, mod) }
+                .joined(separator: ", ")
+            return #"{"modules": {\#(entries)}}"#
+        }
+
+        private func renderModule(_ name: String, _ mod: TestManagementTestsInfo.Module) -> String {
+            let suites = mod.suites.map { renderSuite($0, $1) }.joined(separator: ", ")
+            return #""\#(name)": {"suites": {\#(suites)}}"#
+        }
+
+        private func renderSuite(_ name: String, _ suite: TestManagementTestsInfo.Suite) -> String {
+            let tests = suite.tests.map { renderTest($0, $1) }.joined(separator: ", ")
+            return #""\#(name)": {"tests": {\#(tests)}}"#
+        }
+
+        private func renderTest(_ name: String, _ test: TestManagementTestsInfo.Test) -> String {
+            let p = test.properties
+            return #""\#(name)": {"properties": "#
+                + #"{"disabled": \#(p.disabled)"#
+                + #", "quarantined": \#(p.quarantined)"#
+                + #", "attempt_to_fix": \#(p.attemptToFix)}}"#
+        }
     }
 }
 

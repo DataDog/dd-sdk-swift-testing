@@ -31,15 +31,17 @@ struct MultipartFormURLRequest {
 
     mutating func append(data: Data,
                          withName name: String,
-                         filename: String,
+                         fileName: String? =  nil,
                          contentType: ContentType)
     {
         body.append(contentsOf: "--".utf8)
         body.append(contentsOf: boundary.utf8)
         body.append(contentsOf: "\r\nContent-Disposition: form-data; name=\"".utf8)
         body.append(name.data(using: .ascii, allowLossyConversion: true)!)
-        body.append(contentsOf: "\"; filename=\"".utf8)
-        body.append(filename.data(using: .ascii, allowLossyConversion: true)!)
+        if let fileName {
+            body.append(contentsOf: "\"; filename=\"".utf8)
+            body.append(fileName.data(using: .ascii, allowLossyConversion: true)!)
+        }
         body.append(contentsOf: "\"\r\nContent-Type: ".utf8)
         body.append(contentsOf: contentType.rawValue.utf8)
         body.append(contentsOf: "\r\n\r\n".utf8)

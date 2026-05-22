@@ -145,11 +145,9 @@ struct TestImpactAnalysisApiService: TestImpactAnalysisApi {
         }
         request.append(data: data,
                        withName: "coverage",
-                       filename: "CoverageBatch.json",
                        contentType: .applicationJSON)
         request.append(data: Data("{\"dummy\": true}".utf8),
                        withName: "event",
-                       filename: "DummyEvent.json",
                        contentType: .applicationJSON)
         let log = self.log
         log.debug("Uploading coverage batch...")

@@ -111,11 +111,10 @@ struct GitUploadApiService: GitUploadApi {
         }
         request.append(data: pushedData,
                        withName: "pushedSha",
-                       filename: name + ".json",
                        contentType: .applicationJSON)
         request.append(data: data,
                        withName: "packfile",
-                       filename: name,
+                       fileName: name,
                        contentType: .applicationOctetStream)
         log.debug("Uploading packfile \(name) for commit \(commit)")
         let _ = try await httpClient.send(request: request)

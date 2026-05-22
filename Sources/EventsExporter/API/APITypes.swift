@@ -39,15 +39,12 @@ extension APIResponseData {
     func isIdValid(_ id: String?) -> Bool { Attributes.isIdValid(request: id, response: self.id) }
 }
 
-extension Array: APIAttributes where Element: APIAttributes {
+extension Array: APIAttributes, APIAttributesAutoId, APIAttributesNoId where Element: APIAttributes {
     static var apiType: String { Element.apiType }
 }
 
-extension Array: APIResponseAttributes where Element: APIResponseAttributes {
+extension Array: APIResponseAttributes, APIResponseAttributesNoId where Element: APIResponseAttributes {
     static func isTypeValid(_ type: String) -> Bool { Element.isTypeValid(type) }
-    static func isIdValid(request rqid: String?, response rsid: String?) -> Bool {
-        Element.isIdValid(request: rqid, response: rsid)
-    }
 }
 
 extension Array: APICommonData where Element: APICommonData {
@@ -117,9 +114,13 @@ extension APIAttributesUUID {
 }
 
 protocol APIResponseAttributesHasType: APIResponseAttributes {}
-
 extension APIResponseAttributesHasType {
     static func isTypeValid(_ type: String) -> Bool { Self.apiType == type }
+}
+
+protocol APIResponseAttributesIgnoreType: APIResponseAttributes {}
+extension APIResponseAttributesIgnoreType {
+    static func isTypeValid(_ type: String) -> Bool { true }
 }
 
 protocol APIResponseAttributesHasId: APIResponseAttributes {}

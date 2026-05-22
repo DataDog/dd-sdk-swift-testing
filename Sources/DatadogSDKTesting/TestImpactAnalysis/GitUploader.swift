@@ -32,12 +32,6 @@ final class GitUploader {
         self.gitDirectory = gitDirectory
         self.exporter = exporter
         self.unshallowEnabled = unshallowEnabled
-        
-        guard !commitFolder.hasFile(named: Self.uploadedCommitFile) else {
-            log.debug("GitUploader: git information alredy uploaded")
-            return nil
-        }
-        
         self.packFilesDirectory = packFilesDir
         self.commitFolder = commitFolder
         self.log = log
@@ -48,6 +42,11 @@ final class GitUploader {
     }
     
     func sendGitInfo(repositoryURL: URL?, commit: String) -> Bool {
+        guard !commitFolder.hasFile(named: Self.uploadedCommitFile) else {
+            log.debug("GitUploader: git information alredy uploaded")
+            return true
+        }
+        
         let repository: String
         if let url = repositoryURL {
             repository = url.spanAttribute
@@ -247,7 +246,7 @@ final class GitUploader {
         }
 
         return log.measure(name: "packObjects") {
-            var uploadPackfileDirectory = packFilesDirectory.url.path + "/" + UUID().uuidString
+            var uploadPackfileDirectory = packFilesDirectory.url.path + "/" + UUID().uuidString + "/"
             let commitList = commits.joined(separator: "\n")
 
             if generate(gitDirectory, uploadPackfileDirectory, commitList) {
@@ -256,7 +255,7 @@ final class GitUploader {
 
             log.debug("Can't write packfile to cache path. Trying to git directory...")
 
-            uploadPackfileDirectory = gitDirectory + "/" + UUID().uuidString
+            uploadPackfileDirectory = gitDirectory + "/" + UUID().uuidString + "/"
             if generate(gitDirectory, uploadPackfileDirectory, commitList) {
                 return Directory(url: URL(fileURLWithPath: uploadPackfileDirectory, isDirectory: true))
             }

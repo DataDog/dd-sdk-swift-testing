@@ -47,10 +47,11 @@ extension GitUploadApi {
             try await withThrowingTaskGroup(of: Void.self) { group in
                 for file in files {
                     group.addTask {
-                        try await uploadPackFile(file: file, commit: commit, repositoryURL: repositoryURL)
+                        try await self.uploadPackFile(file: file, commit: commit,
+                                                      repositoryURL: repositoryURL)
                     }
                 }
-                return try await group.next()
+                while try await group.next() != nil {}
             }
         } catch let err as APICallError {
             throw err
@@ -108,14 +109,14 @@ struct GitUploadApiService: GitUploadApi {
         if compression {
             request.addHTTPHeader(.contentEncodingHeader(contentEncoding: .deflate))
         }
-        request.append(data: data,
-                       withName: "packfile",
-                       filename: name,
-                       contentType: .applicationOctetStream)
         request.append(data: pushedData,
                        withName: "pushedSha",
                        filename: name + ".json",
                        contentType: .applicationJSON)
+        request.append(data: data,
+                       withName: "packfile",
+                       filename: name,
+                       contentType: .applicationOctetStream)
         log.debug("Uploading packfile \(name) for commit \(commit)")
         let _ = try await httpClient.send(request: request)
         log.debug("Packfile upload succeeded for \(name)")
@@ -125,7 +126,7 @@ struct GitUploadApiService: GitUploadApi {
 }
 
 extension GitUploadApiService {
-    struct Commit: APIResponseAttributesHasType, APIResponseAttributesHasId, APIVoidValue, Codable {
+    struct Commit: APIResponseAttributesHasType, APIResponseAttributesNoId, APIVoidValue, Codable {
         static var apiType: String = "commit"
         static var void: Self = .init()
     }

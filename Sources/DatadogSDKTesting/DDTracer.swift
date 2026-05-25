@@ -22,6 +22,10 @@ internal class DDTracer {
     let tracerProviderSdk: TracerProviderSdk
     let maxObjectSize: UInt64
     var eventsExporter: EventsExporterProtocol?
+    /// Backend APIs owned by the SDK (not by the exporter). Held here so
+    /// feature factories don't need to reach through `eventsExporter` to talk
+    /// to the backend.
+    var api: TestOptimizationApi
 
     /// Logger used to emit `print()`/stderr captures and test-error context as
     /// first-class OTel `LogRecord`s through the registered LoggerProvider.
@@ -42,12 +46,14 @@ internal class DDTracer {
         return launchSpanContext != nil
     }
     
-    init(id: String, version: String, exporter: EventsExporterProtocol?, enabled: Bool, launchContext: SpanContext?,
+    init(id: String, version: String, exporter: EventsExporterProtocol?,
+         api: TestOptimizationApi, enabled: Bool, launchContext: SpanContext?,
          resource: Resource = Resource(),
          logRecordExporter: LogRecordExporter? = nil)
     {
         self.launchSpanContext = launchContext
         self.eventsExporter = exporter
+        self.api = api
         self.maxObjectSize = exporter?.maxObjectSize ?? 262144
 
         let spanExporterToUse: SpanExporter
@@ -142,29 +148,32 @@ internal class DDTracer {
         let metadata = SpanMetadata(libraryVersion: DDTestMonitor.tracerVersion,
                                     env: DDTestMonitor.env,
                                     capabilities: .libraryCapabilities)
-        
+
         let exporterConfiguration = ExporterConfiguration(
-            serviceName: env.service,
-            applicationName: identifier,
-            applicationVersion: version,
             environment: env.environment,
+            metadata: metadata,
+            performancePreset: .instantDataDelivery,
+            logger: Log.instance
+        )
+        let api = TestOptimizationApiService(
+            serviceName: env.service,
+            environment: env.environment,
+            applicationName: identifier,
+            version: version,
             hostname: hostnameToReport,
             apiKey: conf.apiKey ?? "",
             endpoint: conf.endpoint.exporterEndpoint,
-            metadata: metadata,
+            clientId: String(SpanId.random().rawValue),
             payloadCompression: payloadCompression,
-            performancePreset: .instantDataDelivery,
-            exporterId: String(SpanId.random().rawValue),
             logger: Log.instance,
-            debug: .init(logNetworkRequests: conf.extraDebugNetwork,
-                         saveCodeCoverageFiles: conf.extraDebugCodeCoverage)
+            debugNetworkRequests: conf.extraDebugNetwork
         )
         // Exporter files live under the cache manager's session directory so
         // they stay scoped to this test run and get cleaned up alongside the
         // rest of the per-session state.
         let eventsExporter: EventsExporter?
         if let storage = try? DDTestMonitor.cacheManager?.session(feature: "exporter") {
-            eventsExporter = try? EventsExporter(config: exporterConfiguration, storage: storage)
+            eventsExporter = try? EventsExporter(config: exporterConfiguration, api: api, storage: storage)
         } else {
             Log.print("EventsExporter init skipped: cache manager unavailable")
             eventsExporter = nil
@@ -180,6 +189,7 @@ internal class DDTracer {
         resource.sdkVersion = DDTestMonitor.tracerVersion
 
         self.init(id: identifier, version: version, exporter: eventsExporter,
+                  api: api,
                   enabled: !conf.disableTracesExporting, launchContext: launchSpanContext,
                   resource: resource,
                   logRecordExporter: logRecordExporter)
@@ -492,7 +502,7 @@ internal class DDTracer {
     }
 
     func endpointURLs() -> Set<String> {
-        return eventsExporter?.endpointURLs ?? Set<String>()
+        Set(api.endpointURLs.map { $0.absoluteString })
     }
 }
 

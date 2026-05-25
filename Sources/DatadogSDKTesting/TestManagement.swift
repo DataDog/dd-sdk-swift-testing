@@ -190,43 +190,38 @@ struct TestManagementFactory: FeatureFactory {
     let branch: String?
     let attemptToFixRetries: UInt
     let cacheFolder: Directory
-    let exporter: EventsExporterProtocol
+    let api: TestManagementApi
     let module: String
-    let libraryConfigurationErrors: LibraryConfigurationErrors
 
     init(repository: String, commitSha: String, commitMessage: String?, branch: String?,
          module: String, attemptToFixRetries: UInt,
-         exporter: EventsExporterProtocol, cache: Directory,
-         libraryConfigurationErrors: LibraryConfigurationErrors
-    ) {
+         api: TestManagementApi, cache: Directory)
+    {
         self.cacheFolder = cache
         self.repository = repository
         self.commitSha = commitSha
         self.commitMessage = commitMessage
         self.branch = branch
         self.attemptToFixRetries = attemptToFixRetries
-        self.exporter = exporter
+        self.api = api
         self.module = module
-        self.libraryConfigurationErrors = libraryConfigurationErrors
     }
-    
+
     static func isEnabled(config: Config, env: Environment, remote: TracerSettings) -> Bool {
         remote.testManagement.enabled && config.testManagementEnabled
     }
-    
-    func create(log: Logger) -> TestManagement? {
+
+    func create(log: Logger) async throws -> TestManagement {
         if let tests = loadTestsFromDisk(log: log) {
             log.debug("Test Management Enabled")
             return TestManagement(tests: tests, attemptToFixRetries: attemptToFixRetries, module: module)
         }
-        guard let tests = getTests(exporter: exporter, log: log) else {
-            return nil
-        }
+        let tests = try await fetchTests()
         saveTests(tests: tests)
         log.debug("Test Management Enabled")
         return TestManagement(tests: tests, attemptToFixRetries: attemptToFixRetries, module: module)
     }
-    
+
     private func loadTestsFromDisk(log: Logger) -> TestManagementTestsInfo? {
         let fileName = "\(module)_\(cacheFileName)"
         guard cacheFolder.hasFile(named: fileName) else { return nil }
@@ -243,23 +238,25 @@ struct TestManagementFactory: FeatureFactory {
             return nil
         }
     }
-    
-    private func getTests(exporter: EventsExporterProtocol, log: Logger) -> TestManagementTestsInfo? {
+
+    private func fetchTests() async throws -> TestManagementTestsInfo {
         let tests: TestManagementTestsInfo
         do {
-            tests = try exporter.testManagementTests(repositoryURL: repository, sha: commitSha,
-                                                     commitMessage: commitMessage, module: module, branch: branch)
+            tests = try await api.tests(repositoryURL: repository, sha: commitSha,
+                                        commitMessage: commitMessage, branch: branch,
+                                        module: module)
         } catch {
-            log.print("\(error)")
-            libraryConfigurationErrors.recordCommunicationError(.testManagementTests)
-            return nil
+            throw LibraryConfigurationCommunicationError(
+                requestName: "Test Management Tests Request",
+                payload: "repo: \(repository)",
+                error: error
+            )
         }
-        log.debug("Test Management: tests: \(tests)")
         // if we have empty array we can disable Test Management functionality
-        guard tests.modules.count > 0 else { return nil }
+        guard tests.modules.count > 0 else { throw FeatureEmptyResponseError(featureName: "Test Management") }
         return tests
     }
-    
+
     private func saveTests(tests: TestManagementTestsInfo) {
         if let data = try? JSONEncoder().encode(tests) {
             let testsFile = try? cacheFolder.createFile(named: "\(module)_\(cacheFileName)")

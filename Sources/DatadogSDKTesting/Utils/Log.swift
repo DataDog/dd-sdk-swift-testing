@@ -35,18 +35,33 @@ final class Log: Logger, @unchecked Sendable {
         }
     }
     
-    func measure<T>(name: String, _ operation: () throws -> T) rethrows -> T {
+    func measure<T, E: Error>(name: String, _ operation: () throws(E) -> T) throws(E) -> T {
         if isDebug {
             let startTime = CFAbsoluteTimeGetCurrent()
             defer {
-                let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
-                print(prefix: "[Debug][DatadogSDKTesting] ",
-                      message: "Time elapsed for \(name): \(String(format: "%.5f", timeElapsed))s.")
+                print(name: name, time: CFAbsoluteTimeGetCurrent() - startTime)
             }
             return try operation()
         } else {
             return try operation()
         }
+    }
+    
+    func measure<T, E: Error>(name: String, _ operation: @Sendable () async throws(E) -> T) async throws(E) -> T {
+        if isDebug {
+            let startTime = CFAbsoluteTimeGetCurrent()
+            defer {
+                print(name: name, time: CFAbsoluteTimeGetCurrent() - startTime)
+            }
+            return try await operation()
+        } else {
+            return try await operation()
+        }
+    }
+    
+    private func print(name: String, time: TimeInterval) {
+        print(prefix: "[Debug][DatadogSDKTesting] ",
+              message: "Time elapsed for \(name): \(String(format: "%.5f", time))s.")
     }
 
     private func print(prefix: String, message: String) {
@@ -77,7 +92,7 @@ extension Log {
         instance.print(message)
     }
 
-    static func measure<T>(name: String, _ operation: () throws -> T) rethrows -> T {
+    static func measure<T, E: Error>(name: String, _ operation: () throws(E) -> T) throws(E) -> T {
         try instance.measure(name: name, operation)
     }
     

@@ -10,7 +10,22 @@ public protocol Logger {
     var isDebug: Bool { get }
     func print(_ message: String)
     func debug(_ wrapped: @autoclosure () -> String)
-    func measure<T>(name: String, _ operation: () throws -> T) rethrows -> T
+    func measure<T, E: Error>(name: String, _ operation: () throws(E) -> T) throws(E) -> T
+    func measure<T, E: Error>(name: String, _ operation: @Sendable () async throws(E) -> T) async throws(E) -> T
+}
+
+public extension Logger {
+    func measure<T>(name: String, _ operation: () -> T) -> T {
+        measure(name: name) { () throws(Never) in
+            operation()
+        }
+    }
+    
+    func measure<T>(name: String, _ operation: @Sendable () async -> T) async -> T {
+        await measure(name: name) { () async throws(Never) in
+            await operation()
+        }
+    }
 }
 
 struct Log {

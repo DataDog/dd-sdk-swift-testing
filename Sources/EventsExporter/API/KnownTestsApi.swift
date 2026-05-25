@@ -43,7 +43,7 @@ public struct KnownTestsPageInfo {
     }
 }
 
-internal protocol KnownTestsApi: APIService {
+public protocol KnownTestsApi: APIService {
     /// Fetch a single page of known tests for the provided cursor.
     func tests(
         service: String, env: String, repositoryURL: String,
@@ -61,7 +61,7 @@ internal protocol KnownTestsApi: APIService {
 }
 
 extension KnownTestsApi {
-    func tests(
+    public func tests(
         service: String, env: String, repositoryURL: String,
         configurations: [String: String],
         customConfigurations: [String: String]
@@ -92,7 +92,7 @@ extension KnownTestsApi {
     }
 }
 
-struct KnownTestsApiService: KnownTestsApi {
+struct KnownTestsApiService: KnownTestsApi, APIServiceConstructible {
     typealias KnownTestsCall = APICall<APIDataNoMeta<TestsRequest>, APIDataNoMeta<TestsResponse>>
 
     var endpoint: Endpoint

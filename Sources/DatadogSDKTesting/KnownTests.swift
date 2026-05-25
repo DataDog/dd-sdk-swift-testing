@@ -75,42 +75,37 @@ struct KnownTestsFactory: FeatureFactory {
     let configurations: [String: String]
     let customConfigurations: [String: String]
     let cacheFolder: Directory
-    let exporter: EventsExporterProtocol
-    let libraryConfigurationErrors: LibraryConfigurationErrors
+    let api: KnownTestsApi
     let cacheFileName = "known_tests.json"
 
     init(repository: String, service: String, environment: String,
          configurations: [String: String], custom: [String: String],
-         exporter: EventsExporterProtocol, cache: Directory,
-         libraryConfigurationErrors: LibraryConfigurationErrors
-    ) {
+         api: KnownTestsApi, cache: Directory)
+    {
         self.configurations = configurations
         self.customConfigurations = custom
         self.cacheFolder = cache
         self.repository = repository
         self.service = service
         self.environment = environment
-        self.exporter = exporter
-        self.libraryConfigurationErrors = libraryConfigurationErrors
+        self.api = api
     }
-    
+
     static func isEnabled(config: Config, env: Environment, remote: TracerSettings) -> Bool {
         remote.knownTestsEnabled
     }
-    
-    func create(log: Logger) -> KnownTests? {
+
+    func create(log: Logger) async throws -> KnownTests {
         if let tests = loadTestsFromDisk(log: log) {
             log.debug("Known Tests Enabled")
             return KnownTests(tests: tests)
         }
-        guard let tests = getTests(exporter: exporter, log: log) else {
-            return nil
-        }
+        let tests = try await fetchTests()
         saveTests(tests: tests)
         log.debug("Known Tests Enabled")
         return KnownTests(tests: tests)
     }
-    
+
     private func loadTestsFromDisk(log: Logger) -> KnownTestsMap? {
         guard cacheFolder.hasFile(named: cacheFileName) else { return nil }
         guard let data = try? cacheFolder.file(named: cacheFileName).read() else {
@@ -126,25 +121,26 @@ struct KnownTestsFactory: FeatureFactory {
             return nil
         }
     }
-    
-    private func getTests(exporter: EventsExporterProtocol, log: Logger) -> KnownTestsMap? {
+
+    private func fetchTests() async throws -> KnownTestsMap {
         let tests: KnownTestsMap
         do {
-            tests = try exporter.knownTests(
-                service: service, env: environment, repositoryURL: repository,
-                configurations: configurations, customConfigurations: customConfigurations
-            )
+            tests = try await api.tests(service: service, env: environment,
+                                        repositoryURL: repository,
+                                        configurations: configurations,
+                                        customConfigurations: customConfigurations).tests
         } catch {
-            log.print("\(error)")
-            libraryConfigurationErrors.recordCommunicationError(.knownTests)
-            return nil
+            throw LibraryConfigurationCommunicationError(
+                requestName: "Known Tests Request",
+                payload: "service: \(service), env: \(environment)",
+                error: error
+            )
         }
-        log.debug("Known Tests: tests: \(tests)")
         // if we have empty array we should disable Known Tests functionality
-        guard tests.count > 0 else { return nil }
+        guard tests.count > 0 else { throw FeatureEmptyResponseError(featureName: "Known Tests") }
         return tests
     }
-    
+
     private func saveTests(tests: KnownTestsMap) {
         if let data = try? JSONEncoder().encode(tests) {
             let testsFile = try? cacheFolder.createFile(named: cacheFileName)

@@ -261,7 +261,7 @@ public enum TelemetryBatchItem {
 
 // MARK: - Protocol
 
-internal protocol TelemetryApi: APIService {
+public protocol TelemetryApi: APIService {
     /// Send the one-time `app-started` event. Per spec this should be sent
     /// exactly once per tracer lifecycle, after init. All payload fields are
     /// optional and `nil` ones are omitted from the wire payload.
@@ -306,7 +306,7 @@ internal protocol TelemetryApi: APIService {
 }
 
 extension TelemetryApi {
-    func send(batch url: URL) async throws(APICallError) {
+    public func send(batch url: URL) async throws(APICallError) {
         let data: Data
         do {
             data = try Data(contentsOf: url, options: [.mappedIfSafe])
@@ -323,7 +323,7 @@ extension TelemetryApi {
 
 // MARK: - Service
 
-internal struct TelemetryApiService: TelemetryApi {
+internal struct TelemetryApiService: TelemetryApi, APIServiceConstructible {
     var endpoint: Endpoint
     var headers: [HTTPHeader]
     var encoder: JSONEncoder

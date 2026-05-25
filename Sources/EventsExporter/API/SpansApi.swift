@@ -6,13 +6,13 @@
 
 import Foundation
 
-internal protocol SpansApi: APIService {
+public protocol SpansApi: APIService {
     func uploadSpans(batch url: URL) async throws(APICallError)
     func uploadSpans(batch data: Data) async throws(HTTPClient.RequestError)
 }
 
 extension SpansApi {
-    func uploadSpans(batch url: URL) async throws(APICallError) {
+    public func uploadSpans(batch url: URL) async throws(APICallError) {
         let data: Data
         do {
             data = try Data(contentsOf: url, options: [.mappedIfSafe])
@@ -27,7 +27,7 @@ extension SpansApi {
     }
 }
 
-struct SpansApiService: SpansApi {
+struct SpansApiService: SpansApi, APIServiceConstructible {
     var endpoint: Endpoint
     var headers: [HTTPHeader]
     var encoder: JSONEncoder

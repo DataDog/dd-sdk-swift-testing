@@ -16,21 +16,10 @@ class SpanEventsLogTests: XCTestCase {
         try server.start()
         defer { server.stop() }
 
-        let configuration = ExporterConfiguration(serviceName: "service",
-                                                  applicationName: "app",
-                                                  applicationVersion: "1.0",
-                                                  environment: "test",
-                                                  hostname: nil,
-                                                  apiKey: "apikey",
-                                                  endpoint: .other(
-                                                    testsBaseURL: server.baseURL,
-                                                    logsBaseURL: server.baseURL
-                                                  ),
-                                                  metadata: .init(),
-                                                  performancePreset: .readAllFiles,
-                                                  exporterId: "exporter",
-                                                  logger: Log())
-        let api = LogsApiService(config: APIServiceConfig(configuration: configuration),
+        let configuration = ExporterConfiguration.mock(environment: "test",
+                                                       performancePreset: .readAllFiles)
+        let endpoint: Endpoint = .other(testsBaseURL: server.baseURL, logsBaseURL: server.baseURL)
+        let api = LogsApiService(config: APIServiceConfig.mock(endpoint: endpoint),
                                  httpClient: HTTPClient(debug: false),
                                  log: configuration.logger)
         let storage = try Directory.temporary().createSubdirectory(path: UUID().uuidString)

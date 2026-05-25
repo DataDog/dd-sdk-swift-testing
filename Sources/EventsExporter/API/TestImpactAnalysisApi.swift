@@ -42,7 +42,7 @@ public struct SkipTestPublicFormat: CustomStringConvertible, Codable {
     }
 }
 
-internal protocol TestImpactAnalysisApi: APIService {
+public protocol TestImpactAnalysisApi: APIService {
     func skippableTests(repositoryURL: String, sha: String,
                         environment: String, service: String,
                         testLevel: ITRTestLevel, configurations: [String: String],
@@ -53,7 +53,7 @@ internal protocol TestImpactAnalysisApi: APIService {
 }
 
 extension TestImpactAnalysisApi {
-    func uploadCoverage(batch url: URL) async throws(APICallError) {
+    public func uploadCoverage(batch url: URL) async throws(APICallError) {
         let data: Data
         do {
             data = try Data(contentsOf: url, options: [.mappedIfSafe])
@@ -68,7 +68,7 @@ extension TestImpactAnalysisApi {
     }
 }
 
-struct TestImpactAnalysisApiService: TestImpactAnalysisApi {
+struct TestImpactAnalysisApiService: TestImpactAnalysisApi, APIServiceConstructible {
     typealias TestsCall = APICall<APIDataNoMeta<TestsRequest>, [APIData<TestsResponse.Meta, TestsResponse>]>
 
     var endpoint: Endpoint

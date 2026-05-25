@@ -236,13 +236,8 @@ internal class DDTestMonitor {
         DDTestMonitor.instance?.gitUploadQueue.addOperation {
             if DDTestMonitor.config.gitUploadEnabled {
                 Log.debug("Git Upload Enabled")
-                guard let exporter = DDTestMonitor.tracer.eventsExporter else {
-                    Log.print("GitUpload error: event exporter is nil")
-                    self.isGitUploadSucceded = false
-                    return
-                }
                 DDTestMonitor.instance?.gitUploader = GitUploader(
-                    log: Log.instance, exporter: exporter, gitDirectory: gitDirectory,
+                    log: Log.instance, api: DDTestMonitor.tracer.api.git, gitDirectory: gitDirectory,
                     commitFolder: try? DDTestMonitor.cacheManager?.commit(feature: "git"),
                     unshallowEnabled: DDTestMonitor.config.gitUnshallowEnabled
                 )
@@ -251,10 +246,15 @@ internal class DDTestMonitor {
                 self.isGitUploadSucceded = false
                 return
             }
-            
-            self.isGitUploadSucceded = DDTestMonitor.instance?.gitUploader?.sendGitInfo(
-                repositoryURL: DDTestMonitor.env.git.repositoryURL, commit: commit
-            ) ?? false
+
+            let repositoryURL = DDTestMonitor.env.git.repositoryURL
+            guard let uploader = DDTestMonitor.instance?.gitUploader else {
+                self.isGitUploadSucceded = false
+                return
+            }
+            self.isGitUploadSucceded = waitForAsync { () async -> Bool in
+                await uploader.sendGitInfo(repositoryURL: repositoryURL, commit: commit)
+            }
         }
     }
 
@@ -275,26 +275,59 @@ internal class DDTestMonitor {
             return
         }
         
-        let getTracerConfig = { [self] (log: String) -> TracerSettings? in
-            guard let eventsExporter = DDTestMonitor.tracer.eventsExporter else {
-                return nil
-            }
+        func getTracerConfig(_ log: String) -> TracerSettings? {
+            let settingsApi = DDTestMonitor.tracer.api.settings
+            let env = DDTestMonitor.env.environment
+            let baseConfigurations = DDTestMonitor.env.baseConfigurations
+            let customConfigurations = DDTestMonitor.config.customConfigurations
             do {
-                return try Log.measure(name: log) {
-                    try eventsExporter.tracerSettings(
-                        service: service,
-                        env: DDTestMonitor.env.environment,
-                        repositoryURL: repository,
-                        branch: branchOrTag,
-                        sha: commit,
-                        testLevel: .test,
-                        configurations: DDTestMonitor.env.baseConfigurations,
-                        customConfigurations: DDTestMonitor.config.customConfigurations
-                    )
+                return try Log.measure(name: log) { () throws(APICallError) -> TracerSettings in
+                    try waitForAsync { () async throws(APICallError) -> TracerSettings in
+                        try await settingsApi.tracerSettings(
+                            service: service,
+                            env: env,
+                            repositoryURL: repository,
+                            branch: branchOrTag,
+                            sha: commit,
+                            testLevel: .test,
+                            configurations: baseConfigurations,
+                            customConfigurations: customConfigurations
+                        )
+                    }
                 }
             } catch {
-                Log.print("\(error)")
+                let err = LibraryConfigurationCommunicationError(
+                    requestName: "SettingsRequest",
+                    payload: "service: \(service), env: \(env)",
+                    error: error
+                )
+                Log.print("\(err)")
                 self.libraryConfigurationErrors.recordCommunicationError(.settings)
+                return nil
+            }
+        }
+
+        /// Drive a throwing async factory from the sync `BlockOperation`
+        /// context. Communication errors propagate to `libraryConfigurationErrors`
+        /// (tagged with `errorKind`); empty-response is treated as the feature
+        /// being unavailable but is not a comm error.
+        func runFactory<F: FeatureFactory>(
+            _ factory: F,
+            errorKind: LibraryConfigurationErrors.Kind? = nil
+        ) -> F.FT? {
+            do {
+                return try waitForAsync { try await factory.create(log: Log.instance) }
+            } catch let err as FeatureEmptyResponseError {
+                Log.debug("\(err)")
+                return nil
+            } catch let err as LibraryConfigurationCommunicationError {
+                Log.print("\(err)")
+                if let errorKind {
+                    self.libraryConfigurationErrors.recordCommunicationError(errorKind)
+                }
+                return nil
+            } catch {
+                Log.print("\(F.FT.id): \(error)")
                 return nil
             }
         }
@@ -337,7 +370,8 @@ internal class DDTestMonitor {
                 Log.print("ATR: disabled")
                 return
             }
-            self.atr = AutomaticTestRetriesFactory(config: DDTestMonitor.config).create(log: Log.instance)
+            let factory = AutomaticTestRetriesFactory(config: DDTestMonitor.config)
+            self.atr = runFactory(factory)
         }
         automaticTestRetries.addDependency(updateTracerConfig)
         testOptimizationSetupQueue.addOperation(automaticTestRetries)
@@ -354,10 +388,6 @@ internal class DDTestMonitor {
                 Log.print("Known Tests: disabled")
                 return
             }
-            guard let eventsExporter = DDTestMonitor.tracer.eventsExporter else {
-                Log.print("Known Tests: init failed. Exporter is nil")
-                return
-            }
             guard let cache = try? DDTestMonitor.cacheManager?.session(feature: "known_tests") else {
                 Log.print("Known Tests: init failed. Can't create cache directiry.")
                 return
@@ -366,9 +396,8 @@ internal class DDTestMonitor {
                                             environment: DDTestMonitor.env.environment,
                                             configurations: DDTestMonitor.env.baseConfigurations,
                                             custom: DDTestMonitor.config.customConfigurations,
-                                            exporter: eventsExporter, cache: cache,
-                                            libraryConfigurationErrors: self.libraryConfigurationErrors)
-            self.knownTests = factory.create(log: Log.instance)
+                                            api: DDTestMonitor.tracer.api.knownTests, cache: cache)
+            self.knownTests = runFactory(factory, errorKind: .knownTests)
         }
         knownTestsSetup.addDependency(updateTracerConfig)
         testOptimizationSetupQueue.addOperation(knownTestsSetup)
@@ -387,7 +416,8 @@ internal class DDTestMonitor {
                 Log.print("EFD: init failed. Known Tests is nil")
                 return
             }
-            self.efd = EarlyFlakeDetectionFactory(knownTests: knownTests, settings: remote.efd).create(log: Log.instance)
+            let factory = EarlyFlakeDetectionFactory(knownTests: knownTests, settings: remote.efd)
+            self.efd = runFactory(factory)
         }
         efdSetup.addDependency(knownTestsSetup)
         testOptimizationSetupQueue.addOperation(efdSetup)
@@ -402,10 +432,6 @@ internal class DDTestMonitor {
                                                   remote: remote)
             else {
                 Log.print("Test Management is disabled")
-                return
-            }
-            guard let eventsExporter = DDTestMonitor.tracer.eventsExporter else {
-                Log.print("Test Management: init failed. Exporter is nil")
                 return
             }
             guard let cache = try? DDTestMonitor.cacheManager?.session(feature: "test_management") else {
@@ -427,10 +453,9 @@ internal class DDTestMonitor {
                                                 branch: branch,
                                                 module: module,
                                                 attemptToFixRetries: attemptToFixRetryCount,
-                                                exporter: eventsExporter,
-                                                cache: cache,
-                                                libraryConfigurationErrors: self.libraryConfigurationErrors)
-            self.testManagement = factory.create(log: Log.instance)
+                                                api: DDTestMonitor.tracer.api.testManagement,
+                                                cache: cache)
+            self.testManagement = runFactory(factory, errorKind: .testManagementTests)
         }
         testManagementSetup.addDependency(updateTracerConfig)
         testOptimizationSetupQueue.addOperation(testManagementSetup)
@@ -447,24 +472,21 @@ internal class DDTestMonitor {
                 Log.print("TIA: disabled")
                 return
             }
-            guard let eventsExporter = DDTestMonitor.tracer.eventsExporter else {
-                Log.print("TIA: init failed. Exporter is nil")
-                return
-            }
             guard let cache = try? DDTestMonitor.cacheManager?.session(feature: "tia") else {
                 Log.print("TIA: init failed. Can't create cache directiry.")
                 return
             }
             let factory = TestImpactAnalysisFactory(configurations: DDTestMonitor.env.baseConfigurations,
                                                     custom: DDTestMonitor.config.customConfigurations,
-                                                    exporter: eventsExporter,
+                                                    api: DDTestMonitor.tracer.api.tia,
+                                                    service: service,
+                                                    environment: DDTestMonitor.env.environment,
                                                     commit: commit,
                                                     repository: repository,
                                                     cache: cache,
                                                     skippingEnabled: remote.itr.testsSkipping,
-                                                    swiftTestingEnabled: DDTestMonitor.env.tiaSwiftTestingEnabled,
-                                                    libraryConfigurationErrors: self.libraryConfigurationErrors)
-            self.tia = factory.create(log: Log.instance)
+                                                    swiftTestingEnabled: DDTestMonitor.env.tiaSwiftTestingEnabled)
+            self.tia = runFactory(factory, errorKind: .skippableTests)
         }
         tiaSetup.addDependency(updateTracerConfig)
         testOptimizationSetupQueue.addOperation(tiaSetup)
@@ -498,7 +520,7 @@ internal class DDTestMonitor {
                                               debug: DDTestMonitor.config.extraDebugCodeCoverage,
                                               exporter: eventsExporter,
                                               swiftTestingEnabled: DDTestMonitor.env.tiaSwiftTestingEnabled)
-            self.coverage = factory.create(log: Log.instance)
+            self.coverage = runFactory(factory)
         }
         coverageSetup.addDependency(updateTracerConfig)
         testOptimizationSetupQueue.addOperation(coverageSetup)

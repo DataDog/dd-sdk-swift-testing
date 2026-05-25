@@ -16,23 +16,10 @@ class LogsExporterTests: XCTestCase {
         try server.start()
         defer { server.stop() }
 
-        let configuration = ExporterConfiguration(serviceName: "serviceName",
-                                                  applicationName: "applicationName",
-                                                  applicationVersion: "applicationVersion",
-                                                  environment: "environment",
-                                                  hostname: "hostname",
-                                                  apiKey: "apikey",
-                                                  endpoint: .other(
-                                                    testsBaseURL: server.baseURL,
-                                                    logsBaseURL: server.baseURL
-                                                  ),
-                                                  metadata: .init(),
-                                                  performancePreset: .readAllFiles,
-                                                  exporterId: "exporterId",
-                                                  logger: Log())
-
+        let configuration = ExporterConfiguration.mock(performancePreset: .readAllFiles)
+        let endpoint: Endpoint = .other(testsBaseURL: server.baseURL, logsBaseURL: server.baseURL)
         let api = LogsApiService(
-            config: APIServiceConfig(configuration: configuration),
+            config: APIServiceConfig.mock(endpoint: endpoint),
             httpClient: HTTPClient(debug: false),
             log: configuration.logger
         )

@@ -115,16 +115,12 @@ struct CodeCoverageFactory: FeatureFactory {
         config.codeCoverageEnabled && remote.itr.codeCoverage
     }
 
-    func create(log: Logger) -> CodeCoverage? {
-        guard let provider = CodeCoverageProvider(storagePath: tempFolder,
-                                                  exporter: exporter,
-                                                  workspacePath: workspacePath,
-                                                  priority: priority,
-                                                  debug: debug)
-        else {
-            log.print("Code Coverage init failed.")
-            return nil
-        }
+    func create(log: Logger) async throws -> CodeCoverage {
+        let provider = try CodeCoverageProvider(storagePath: tempFolder,
+                                                exporter: exporter,
+                                                workspacePath: workspacePath,
+                                                priority: priority,
+                                                debug: debug)
         log.debug("Code Coverage Enabled")
         return CodeCoverage(collector: provider, swiftTestingEnabled: swiftTestingEnabled)
     }

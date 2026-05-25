@@ -593,7 +593,7 @@ enum Mocks {
             }
         }
         
-        func measure<T>(name: String, _ operation: () throws -> T) rethrows -> T {
+        func measure<T, E: Error>(name: String, _ operation: () throws(E) -> T) throws(E) -> T {
             if isDebug {
                 let startTime = CFAbsoluteTimeGetCurrent()
                 defer {
@@ -605,7 +605,20 @@ enum Mocks {
                 return try operation()
             }
         }
-        
+
+        func measure<T, E: Error>(name: String, _ operation: @Sendable () async throws(E) -> T) async throws(E) -> T {
+            if isDebug {
+                let startTime = CFAbsoluteTimeGetCurrent()
+                defer {
+                    let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
+                    print(prefix: "[Debug][DatadogSDKTesting] ", message: "Time elapsed for \(name): \(timeElapsed) s.")
+                }
+                return try await operation()
+            } else {
+                return try await operation()
+            }
+        }
+
         private func print(prefix: String, message: String) {
             logs.update { $0.append("\(prefix)\(message)") }
         }

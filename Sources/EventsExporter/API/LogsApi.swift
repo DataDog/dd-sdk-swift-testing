@@ -6,13 +6,13 @@
 
 import Foundation
 
-internal protocol LogsApi: APIService {
+public protocol LogsApi: APIService {
     func uploadLogs(batch url: URL) async throws(APICallError)
     func uploadLogs(batch data: Data) async throws(HTTPClient.RequestError)
 }
 
 extension LogsApi {
-    func uploadLogs(batch url: URL) async throws(APICallError) {
+    public func uploadLogs(batch url: URL) async throws(APICallError) {
         let data: Data
         do {
             data = try Data(contentsOf: url, options: [.mappedIfSafe])
@@ -27,7 +27,7 @@ extension LogsApi {
     }
 }
 
-struct LogsApiService: LogsApi {
+struct LogsApiService: LogsApi, APIServiceConstructible {
     var endpoint: Endpoint
     var headers: [HTTPHeader]
     var encoder: JSONEncoder

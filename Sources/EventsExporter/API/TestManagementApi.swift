@@ -6,7 +6,7 @@
 
 import Foundation
 
-internal protocol TestManagementApi: APIService {
+public protocol TestManagementApi: APIService {
     func tests(
         repositoryURL: String, sha: String?, commitMessage: String?, branch: String?, module: String?
     ) async throws(APICallError) -> TestManagementTestsInfo
@@ -66,7 +66,7 @@ public struct TestManagementTestsInfo: Codable {
     }
 }
 
-struct TestManagementApiService: TestManagementApi {
+struct TestManagementApiService: TestManagementApi, APIServiceConstructible {
     typealias TestsCall = APICall<APIDataNoMeta<TestsRequest>, APIDataNoMeta<TestsResponse>>
 
     var endpoint: Endpoint

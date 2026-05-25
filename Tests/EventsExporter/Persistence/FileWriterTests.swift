@@ -21,12 +21,16 @@ class FileWriterTests: XCTestCase {
     func testItWritesDataToSingleFile() throws {
         let expectation = self.expectation(description: "write completed")
         let writer = FileWriter(
-            dataFormat: DataFormat(prefix: "[", suffix: "]", separator: ","),
+            entity: "testfilewriter",
+            dataFormat: DataFormat(prefix: Data("[".utf8),
+                                   suffix: Data("]".utf8),
+                                   separator: Data(",".utf8)),
             orchestrator: FilesOrchestrator(
                 directory: temporaryDirectory,
                 performance: PerformancePreset.default,
                 dateProvider: SystemDateProvider()
-            )
+            ),
+            encoder: JSONEncoder.apiEncoder
         )
 
         writer.write(value: ["key1": "value1"])
@@ -38,7 +42,7 @@ class FileWriterTests: XCTestCase {
         XCTAssertEqual(try temporaryDirectory.files().count, 1)
         XCTAssertEqual(
             try temporaryDirectory.files()[0].read(),
-            #"{"key1":"value1"},{"key2":"value3"},{"key3":"value3"}"# .utf8Data
+            #"[{"key1":"value1"},{"key2":"value3"},{"key3":"value3"}"# .utf8Data
         )
     }
 
@@ -47,7 +51,8 @@ class FileWriterTests: XCTestCase {
         let expectation2 = self.expectation(description: "second write completed")
 
         let writer = FileWriter(
-            dataFormat: .mockWith(prefix: "[", suffix: "]"),
+            entity: "testfilewriter",
+            dataFormat: DataFormat.mockWith(prefix: "[", suffix: "]"),
             orchestrator: FilesOrchestrator(
                 directory: temporaryDirectory,
                 performance: StoragePerformanceMock(
@@ -61,20 +66,21 @@ class FileWriterTests: XCTestCase {
                     synchronousWrite: true
                 ),
                 dateProvider: SystemDateProvider()
-            )
+            ),
+            encoder: JSONEncoder.apiEncoder
         )
 
         writer.write(value: ["key1": "value1"]) // will be written
 
         waitForWritesCompletion(on: writer.queue, thenFulfill: expectation1)
         wait(for: [expectation1], timeout: 1)
-        XCTAssertEqual(try temporaryDirectory.files()[0].read(), #"{"key1":"value1"}"# .utf8Data)
+        XCTAssertEqual(try temporaryDirectory.files()[0].read(), #"[{"key1":"value1"}"# .utf8Data)
 
         writer.write(value: ["key2": "value3 that makes it exceed 17 bytes"]) // will be dropped
 
         waitForWritesCompletion(on: writer.queue, thenFulfill: expectation2)
         wait(for: [expectation2], timeout: 1)
-        XCTAssertEqual(try temporaryDirectory.files()[0].read(), #"{"key1":"value1"}"# .utf8Data) // same content as before
+        XCTAssertEqual(try temporaryDirectory.files()[0].read(), #"[{"key1":"value1"}"# .utf8Data) // same content as before
     }
 
     /// NOTE: Test added after incident-4797
@@ -83,10 +89,13 @@ class FileWriterTests: XCTestCase {
         // global queue can stuck for couple of minutes
         // seems as some bug of virtualization
         try XCTSkipIf(isGithub)
-        
+
         let expectation = self.expectation(description: "write completed")
         let writer = FileWriter(
-            dataFormat: DataFormat(prefix: "[", suffix: "]", separator: ","),
+            entity: "testfilewriter",
+            dataFormat: DataFormat(prefix: Data("[".utf8),
+                                   suffix: Data("]".utf8),
+                                   separator: Data(",".utf8)),
             orchestrator: FilesOrchestrator(
                 directory: temporaryDirectory,
                 performance: StoragePerformanceMock(
@@ -100,7 +109,8 @@ class FileWriterTests: XCTestCase {
                     synchronousWrite: true
                 ),
                 dateProvider: SystemDateProvider()
-            )
+            ),
+            encoder: JSONEncoder.apiEncoder
         )
 
         let ioInterruptionQueue = DispatchQueue(
@@ -134,8 +144,9 @@ class FileWriterTests: XCTestCase {
         let fileData = try temporaryDirectory.files().first!.read()
         let jsonDecoder = JSONDecoder()
 
-        // Assert that data written is not malformed
-        let writtenData = try jsonDecoder.decode([Foo].self, from: "[".utf8Data + fileData + "]".utf8Data)
+        // The writer prepends `[` to the first entry and `,` between subsequent
+        // entries. We close the array ourselves before decoding.
+        let writtenData = try jsonDecoder.decode([Foo].self, from: fileData + "]".utf8Data)
         // Assert that some (including all) `Foo`s were written
         XCTAssertGreaterThan(writtenData.count, 0)
         XCTAssertLessThanOrEqual(writtenData.count, 300)
@@ -144,7 +155,7 @@ class FileWriterTests: XCTestCase {
     private func waitForWritesCompletion(on queue: DispatchQueue, thenFulfill expectation: XCTestExpectation) {
         queue.async { expectation.fulfill() }
     }
-    
+
     private var isGithub: Bool {
         ProcessInfo.processInfo.environment["GITHUB_ACTION"] ?? "" != "" ||
         ProcessInfo.processInfo.environment["GITHUB_ACTIONS"] ?? "" != ""

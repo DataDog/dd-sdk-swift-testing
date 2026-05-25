@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        xcode: ["Xcode_26.1", "Xcode_26.2", "Xcode_26.4"]
+        xcode: ["Xcode_26.2", "Xcode_26.4"]
         platform: ["macOS", "iOSsim", "tvOSsim", "watchOSsim", "visionOSsim"]
     runs-on: macos-26
     steps:

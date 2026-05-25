@@ -47,10 +47,11 @@ extension GitUploadApi {
             try await withThrowingTaskGroup(of: Void.self) { group in
                 for file in files {
                     group.addTask {
-                        try await uploadPackFile(file: file, commit: commit, repositoryURL: repositoryURL)
+                        try await self.uploadPackFile(file: file, commit: commit,
+                                                      repositoryURL: repositoryURL)
                     }
                 }
-                return try await group.next()
+                while try await group.next() != nil {}
             }
         } catch let err as APICallError {
             throw err
@@ -67,6 +68,7 @@ struct GitUploadApiService: GitUploadApi {
     var headers: [HTTPHeader]
     var encoder: JSONEncoder
     var decoder: JSONDecoder
+    let compression: Bool
     let httpClient: HTTPClient
     let log: Logger
 
@@ -74,6 +76,7 @@ struct GitUploadApiService: GitUploadApi {
         self.endpoint = config.endpoint
         self.httpClient = httpClient
         self.log = log
+        self.compression = config.payloadCompression
         self.headers = config.defaultHeaders
         self.encoder = config.encoder
         self.decoder = config.decoder
@@ -83,7 +86,7 @@ struct GitUploadApiService: GitUploadApi {
         let meta = CommitRequestMeta(repositoryUrl: repositoryURL)
         let request = commits.map { APIData<CommitRequestMeta, Commit>(id: $0) }
         let log = self.log
-        log.debug("Search commits request: [meta: \(meta), data: \(request)]")
+        log.debug(#"Search commits request: {"meta": \#(meta), "data": \#(request)}"#)
         let response = try await httpClient.call(CommitsCall.self,
                                                  url: endpoint.searchCommitsURL,
                                                  meta: meta, data: request,
@@ -103,14 +106,16 @@ struct GitUploadApiService: GitUploadApi {
 
         var request = MultipartFormURLRequest(url: endpoint.packfileURL)
         request.headers = headers
-        request.append(data: data,
-                       withName: "packfile",
-                       filename: name,
-                       contentType: .applicationOctetStream)
+        if compression {
+            request.addHTTPHeader(.contentEncodingHeader(contentEncoding: .deflate))
+        }
         request.append(data: pushedData,
                        withName: "pushedSha",
-                       filename: name + ".json",
                        contentType: .applicationJSON)
+        request.append(data: data,
+                       withName: "packfile",
+                       fileName: name,
+                       contentType: .applicationOctetStream)
         log.debug("Uploading packfile \(name) for commit \(commit)")
         let _ = try await httpClient.send(request: request)
         log.debug("Packfile upload succeeded for \(name)")
@@ -120,13 +125,20 @@ struct GitUploadApiService: GitUploadApi {
 }
 
 extension GitUploadApiService {
-    struct Commit: APIAttributes, APIVoidValue, Codable {
+    struct Commit: APIResponseAttributesHasType, APIResponseAttributesNoId,
+                   APIVoidValue, Codable, CustomDebugStringConvertible
+    {
         static var apiType: String = "commit"
         static var void: Self = .init()
+        var debugDescription: String { "" }
     }
 
-    struct CommitRequestMeta: Encodable {
+    struct CommitRequestMeta: Encodable, CustomDebugStringConvertible {
         let repositoryUrl: String
+        
+        var debugDescription: String {
+            #"{"repository_url": "\#(repositoryUrl)"}"#
+        }
     }
 }
 

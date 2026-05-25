@@ -8,45 +8,36 @@
 import XCTest
 
 class HTTPClientTests: XCTestCase {
-    func testWhenRequestIsDelivered_itReturnsHTTPResponse() {
+    @MainActor
+    func testWhenRequestIsDelivered_itReturnsHTTPResponse() async throws {
         let server = ServerMock(delivery: .success(response: .mockResponseWith(statusCode: 200)))
-        let expectation = self.expectation(description: "receive response")
         let client = HTTPClient(session: server.getInterceptedURLSession(), debug: false)
 
-        client.send(request: .mockAny()) { result in
-            switch result {
-            case .success(let httpResponse):
-                XCTAssertEqual(httpResponse.statusCode, 200)
-                expectation.fulfill()
-            case .failure:
-                break
-            }
-        }
+        let httpResponse = try await client.send(request: .mockAny())
+        XCTAssertEqual(httpResponse.statusCode, 200)
 
-        waitForExpectations(timeout: 5, handler: nil)
         server.waitFor(requestsCompletion: 1)
     }
 
-    func testWhenRequestIsNotDelivered_itReturnsHTTPRequestDeliveryError() throws {
+    @MainActor
+    func testWhenRequestIsNotDelivered_itReturnsHTTPRequestDeliveryError() async throws {
         // Same watchOS URLProtocol bypass as `DataUploaderTests`: the request
         // reaches the real network rather than `ServerMockProtocol`, so the
         // mocked failure is never delivered to the completion handler.
         try XCTSkipIf(isWatchOS, "watchOS URLSession bypasses URLProtocol mocks for sync dispatch")
         let mockError = NSError(domain: "network", code: 999, userInfo: [NSLocalizedDescriptionKey: "no internet connection"])
         let server = ServerMock(delivery: .failure(error: mockError))
-        let expectation = self.expectation(description: "receive response")
         let client = HTTPClient(session: server.getInterceptedURLSession(), debug: false)
 
-        client.send(request: .mockAny()) { result in
-            switch result {
-            case .failure(.transport(let error)):
-                XCTAssertEqual((error as NSError).localizedDescription, "no internet connection")
-                expectation.fulfill()
-            default: break
-            }
+        do {
+            _ = try await client.send(request: .mockAny())
+            XCTFail("Expected transport failure")
+        } catch HTTPClient.RequestError.transport(let error) {
+            XCTAssertEqual((error as NSError).localizedDescription, "no internet connection")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
         }
 
-        waitForExpectations(timeout: 5, handler: nil)
         server.waitFor(requestsCompletion: 1)
     }
 }

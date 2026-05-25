@@ -6,7 +6,6 @@
 
 import Foundation
 import OpenTelemetrySdk
-import CodeCoverageParser
 
 /// Thrown by `EventsExporterProtocol` requests that need to surface a
 /// backend communication failure to the caller — library configuration
@@ -85,16 +84,18 @@ public struct LibraryConfigurationCommunicationError: Error, CustomStringConvert
     }
 }
 
-public protocol EventsExporterProtocol: SpanExporter {
+public protocol EventsExporterProtocol: SpanExporter, LogRecordExporter, CoverageExporterType {
     var endpointURLs: Set<String> { get }
     var maxObjectSize: UInt64 { get }
 
-    func exportEvent<T: Encodable>(event: T)
+    /// Rebuild the spans file header from the supplied `SpanMetadata` and
+    /// rotate the writable file so the new header takes effect on the next
+    /// batch.
+    func setMetadata(_ metadata: SpanMetadata)
+
     func searchCommits(
         repositoryURL: String, commits: [String]
     ) throws(LibraryConfigurationCommunicationError) -> [String]
-    func export(coverage: URL, parser: CoverageParser, workspacePath: String?,
-                testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64)
     func uploadPackFiles(packFilesDirectory: Directory, commit: String, repository: String) throws
     func skippableTests(repositoryURL: String, sha: String, testLevel: ITRTestLevel,
                         configurations: [String: String], customConfigurations: [String: String]
@@ -114,81 +115,70 @@ public protocol EventsExporterProtocol: SpanExporter {
 
 public final class EventsExporter: EventsExporterProtocol {
     let configuration: ExporterConfiguration
-    var spansExporter: SpansExporter
-    var logsExporter: LogsExporter
-    var coverageExporter: CoverageExporter
+    let spansExporter: SpansExporter
+    let logsExporter: LogsExporter
+    let coverageExporter: CoverageExporter
 
     let api: TestOptimizationApiService
 
+    /// Composite that fans `SpanExporter.export(spans:)` out to both the spans
+    /// pipeline and a `SpanEventsLogExporterAdapter` so span events end up in
+    /// the logs pipeline transparently. Sampling-gated by the public facade.
+    private let spanExporterComposite: SpanExporter
+
     public var maxObjectSize: UInt64 { configuration.performancePreset.maxObjectSize }
 
-    public init(config: ExporterConfiguration) throws {
+    public init(config: ExporterConfiguration, storage: Directory) throws {
         self.configuration = config
         Log.setLogger(config.logger)
-        spansExporter = try SpansExporter(config: configuration)
-        logsExporter = try LogsExporter(config: configuration)
-        coverageExporter = try CoverageExporter(config: configuration)
 
-        let apiConfig = APIServiceConfig(
-            serviceName: config.serviceName,
-            environment: config.environment,
-            applicationName: config.applicationName,
-            version: config.version,
-            device: .current,
-            hostname: config.hostname,
-            apiKey: config.apiKey,
-            endpoint: config.endpoint,
-            clientId: config.exporterId,
-            payloadCompression: false
-        )
         self.api = TestOptimizationApiService(
-            config: apiConfig,
+            config: APIServiceConfig(configuration: config),
             httpClient: HTTPClient(debug: config.debug.logNetworkRequests),
             log: config.logger
         )
+
+        let spansExporter = try SpansExporter(config: configuration,
+                                              storage: try storage.createSubdirectory(path: "spans"),
+                                              api: api.spans)
+        let logsExporter = try LogsExporter(config: configuration,
+                                            storage: try storage.createSubdirectory(path: "logs"),
+                                            api: api.logs)
+        self.spansExporter = spansExporter
+        self.logsExporter = logsExporter
+        self.coverageExporter = try CoverageExporter(config: configuration,
+                                                     storage: try storage.createSubdirectory(path: "coverage"),
+                                                     api: api.tia)
+        self.spanExporterComposite = OpenTelemetrySdk.MultiSpanExporter(spanExporters: [
+            spansExporter,
+            SpanEventsLogExporterAdapter(logRecordExporter: logsExporter),
+        ])
 
         Log.debug("EventsExporter created: \(spansExporter.runtimeId), endpoint: \(config.endpoint)")
     }
 
     public func export(spans: [SpanData], explicitTimeout: TimeInterval?) -> SpanExporterResultCode {
         // TODO: Honor the timeout
-        spans.forEach {
-            if $0.traceFlags.sampled {
-                spansExporter.exportSpan(span: $0)
-            }
-            if $0.traceFlags.sampled {
-                logsExporter.exportLogs(fromSpan: $0)
-            }
-        }
-        return .success
+        let sampled = spans.filter { $0.traceFlags.sampled }
+        guard !sampled.isEmpty else { return .success }
+        return spanExporterComposite.export(spans: sampled, explicitTimeout: explicitTimeout)
     }
 
-    public func exportEvent<T: Encodable>(event: T) {
-        if configuration.performancePreset.synchronousWrite {
-            spansExporter.spansStorage.writer.writeSync(value: event)
-        } else {
-            spansExporter.spansStorage.writer.write(value: event)
-        }
+    public func setMetadata(_ metadata: SpanMetadata) {
+        spansExporter.setMetadata(metadata)
     }
 
     public func flush(explicitTimeout: TimeInterval?) -> SpanExporterResultCode {
         // TODO: Honor the timeout
-        logsExporter.logsStorage.writer.queue.sync {}
-        spansExporter.spansStorage.writer.queue.sync {}
-        coverageExporter.coverageStorage.writer.queue.sync {}
-
-        _ = logsExporter.logsUpload.uploader.flush()
-        _ = spansExporter.spansUpload.uploader.flush()
-        _ = coverageExporter.coverageUpload.uploader.flush()
-
-        return .success
+        let logsOK = (try? logsExporter.logsStorage.flush()) ?? false
+        let spansOK = (try? spansExporter.spansStorage.flush()) ?? false
+        let covOK = (try? coverageExporter.coverageStorage.flush()) ?? false
+        return (logsOK && spansOK && covOK) ? .success : .failure
     }
 
-    public func export(coverage: URL, parser: CoverageParser, workspacePath: String?,
-                       testSessionId: UInt64, testSuiteId: UInt64, spanId: UInt64)
-    {
-        coverageExporter.exportCoverage(coverage: coverage, parser: parser, workspacePath: workspacePath,
-                                        testSessionId: testSessionId, testSuiteId: testSuiteId, spanId: spanId)
+    @discardableResult
+    public func export(coverageData: [CoverageData], explicitTimeout: TimeInterval?) -> ExportResult {
+        coverageExporter.export(coverageData: coverageData, explicitTimeout: explicitTimeout)
     }
 
     public func searchCommits(
@@ -295,6 +285,21 @@ public final class EventsExporter: EventsExporterProtocol {
         ])
         urls.formUnion(api.endpointURLs.map { $0.absoluteString })
         return urls
+    }
+
+    /// OTel `LogRecordExporter` conformance — forwarded to the wrapped
+    /// `LogsExporter`. Lets a consumer register the `EventsExporter` as the
+    /// `LogRecordExporter` on a `LoggerProviderSdk`, so logs emitted through
+    /// `OpenTelemetry.instance.loggerProvider` flow into the same upload
+    /// pipeline as span-event-derived logs. `shutdown(explicitTimeout:)` is
+    /// already provided for the `SpanExporter` conformance and satisfies
+    /// `LogRecordExporter`'s requirement of the same signature.
+    public func export(logRecords: [ReadableLogRecord], explicitTimeout: TimeInterval?) -> ExportResult {
+        logsExporter.export(logRecords: logRecords, explicitTimeout: explicitTimeout)
+    }
+
+    public func forceFlush(explicitTimeout: TimeInterval?) -> ExportResult {
+        logsExporter.forceFlush(explicitTimeout: explicitTimeout)
     }
 
     /// Drive an async API call from the synchronous public surface, mapping

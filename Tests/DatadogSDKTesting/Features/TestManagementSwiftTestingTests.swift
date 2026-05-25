@@ -657,7 +657,7 @@ final class TestManagementSwiftTestingTests: XCTestCase {
         let skipped = SkipTests(
             correlationId: "abacaba",
             tests: skip.map { .init(name: $0, suite: "TMSuite", configuration: ["test.bundle": "TMModule"]) })
-        let tia = TestImpactAnalysis(tests: skipped, coverage: nil, swiftTestingEnabled: true)
+        let tia = TestImpactAnalysis(tests: skipped, swiftTestingEnabled: true)
         var features = runner.features.features
         features.insert(tia, at: features.count - 1)
         runner.features = features

@@ -16,14 +16,18 @@ protocol TestModel: AnyObject, Sendable {
     var duration: UInt64 { get }
     var status: TestStatus { get }
     
+    // This call is pretty slow so try to avoid it
+    var attributes: [String: TestAttributeValue] { get }
+    
+    // These calls are pretty slow so try to avoid them
+    func get(tag name: String) -> String?
+    func get(metric name: String) -> Double?
+    
     func set(tag name: String, value: any SpanAttributeConvertible)
     func set(metric name: String, value: Double)
 }
 
 protocol TestContainer: TestModel {
-    var tags: [String: String] { get }
-    var metrics: [String: Double] { get }
-    
     func set(failed reason: TestError?)
     func set(skipped reason: String?)
     
@@ -168,10 +172,51 @@ extension TestStatus: SpanAttributeConvertible {
         case .skip: return DDTagValues.statusSkip
         }
     }
+
+    init?(spanAttribute: String) {
+        switch spanAttribute {
+        case DDTagValues.statusPass: self = .pass
+        case DDTagValues.statusFail: self = .fail
+        case DDTagValues.statusSkip: self = .skip
+        default: return nil
+        }
+    }
 }
 
 extension TestStatus: CustomDebugStringConvertible {
     public var debugDescription: String { spanAttribute }
+}
+
+enum TestAttributeValue: Equatable, Hashable, Sendable, CustomDebugStringConvertible {
+    case tag(String)
+    case metric(Double)
+    
+    init(otel: AttributeValue) {
+        switch otel {
+        case .double(let d): self = .metric(d)
+        case .int(let i): self = .metric(Double(i))
+        default: self = .tag(otel.description)
+        }
+    }
+    
+    var isTag: Bool {
+        guard case .tag = self else { return false }
+        return true
+    }
+    
+    var isMetric: Bool {
+        guard case .metric = self else { return false }
+        return true
+    }
+    
+    var asString: String {
+        switch self {
+        case .metric(let m): return String(m)
+        case .tag(let t): return t
+        }
+    }
+    
+    var debugDescription: String { asString }
 }
 
 struct TestError: Error, CustomDebugStringConvertible {
@@ -310,6 +355,16 @@ public struct TestFramework: Sendable {
 }
 
 extension TestModel {
+    func get(tag name: String) -> String? {
+        guard case .tag(let value) = attributes[name] else { return nil }
+        return value
+    }
+    
+    func get(metric name: String) -> Double? {
+        guard case .metric(let value) = attributes[name] else { return nil }
+        return value
+    }
+    
     internal var endTime: Date {
         startTime.addingTimeInterval(.fromNanoseconds(Int64(duration)))
     }
@@ -409,6 +464,26 @@ extension TestRun {
         self.set(tag: DDTestTags.testParameters, value: value)
     }
     
+}
+
+extension Dictionary where Key == String, Value == AttributeValue {
+    var testAttributes: [String: TestAttributeValue] {
+        Dictionary<String, TestAttributeValue>(attributes: self)
+    }
+}
+
+extension Dictionary where Key == String, Value == TestAttributeValue {
+    init(attributes: [String: AttributeValue]) {
+        self = attributes.mapValues(TestAttributeValue.init(otel:))
+    }
+
+    var meta: [String: String] {
+        compactMapValues { if case .tag(let s) = $0 { return s } else { return nil } }
+    }
+
+    var metrics: [String: Double] {
+        compactMapValues { if case .metric(let d) = $0 { return d } else { return nil } }
+    }
 }
 
 @TaskLocal private var _activeTestRun: (any TestRun)? = nil

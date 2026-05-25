@@ -189,7 +189,7 @@ struct SettingsApiService: SettingsApi {
 }
 
 extension SettingsApiService {
-    struct SettingsRequest: APIAttributesUUID, Encodable {
+    struct SettingsRequest: APIAttributesUUID, Encodable, CustomDebugStringConvertible {
         let service: String
         let env: String
         let repositoryUrl: String
@@ -199,22 +199,46 @@ extension SettingsApiService {
         let testLevel: ITRTestLevel
 
         static var apiType: String = "ci_app_test_service_libraries_settings"
+
+        var debugDescription: String {
+            let configs = JSONGeneric.object(configurations).debugDescription
+            return #"{"service": "\#(service)""#
+                + #", "env": "\#(env)""#
+                + #", "repository_url": "\#(repositoryUrl)""#
+                + #", "branch": "\#(branch)""#
+                + #", "sha": "\#(sha)""#
+                + #", "configurations": \#(configs)"#
+                + #", "test_level": "\#(testLevel.rawValue)"}"#
+        }
     }
 
-    struct SettingsResponse: APIAttributes, Decodable {
-        struct EFD: Decodable {
+    struct SettingsResponse: APIResponseAttributesHasType, APIResponseAttributesHasId,
+                             Decodable, CustomDebugStringConvertible
+    {
+        struct EFD: Decodable, CustomDebugStringConvertible {
             let enabled: Bool
             let slowTestRetries: [String: UInt]
             let faultySessionThreshold: Double
+
+            var debugDescription: String {
+                let retries = slowTestRetries.map { #""\#($0)": \#($1)"# }.joined(separator: ", ")
+                return #"{"enabled": \#(enabled)"#
+                    + #", "slow_test_retries": {\#(retries)}"#
+                    + #", "faulty_session_threshold": \#(faultySessionThreshold)}"#
+            }
         }
 
-        struct TestManagement: Decodable {
+        struct TestManagement: Decodable, CustomDebugStringConvertible {
             let enabled: Bool
             let attemptToFixRetries: UInt
 
             init(enabled: Bool = false, attemptToFixRetries: UInt = 0) {
                 self.enabled = enabled
                 self.attemptToFixRetries = attemptToFixRetries
+            }
+
+            var debugDescription: String {
+                #"{"enabled": \#(enabled), "attempt_to_fix_retries": \#(attemptToFixRetries)}"#
             }
         }
 
@@ -228,6 +252,17 @@ extension SettingsApiService {
         let testManagement: TestManagement
 
         static var apiType: String = "ci_app_tracers_test_service_settings"
+
+        var debugDescription: String {
+            #"{"itr_enabled": \#(itrEnabled)"#
+                + #", "code_coverage": \#(codeCoverage)"#
+                + #", "tests_skipping": \#(testsSkipping)"#
+                + #", "known_tests_enabled": \#(knownTestsEnabled)"#
+                + #", "require_git": \#(requireGit)"#
+                + #", "flaky_test_retries_enabled": \#(flakyTestRetriesEnabled)"#
+                + #", "early_flake_detection": \#(earlyFlakeDetection)"#
+                + #", "test_management": \#(testManagement)}"#
+        }
     }
 }
 

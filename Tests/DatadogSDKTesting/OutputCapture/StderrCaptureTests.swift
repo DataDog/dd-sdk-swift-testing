@@ -5,18 +5,33 @@
  */
 
 @testable import DatadogSDKTesting
-import OpenTelemetrySdk
+@testable import OpenTelemetrySdk
 import XCTest
 
 class StderrCaptureTests: XCTestCase {
+    private var originalTracer: DDTracer!
+
     override func setUp() {
         DDTestMonitor._env_recreate(env: ["DD_API_KEY": "fakeToken", "DD_DISABLE_TEST_INSTRUMENTING": "1"])
+        originalTracer = DDTestMonitor.tracer
     }
 
-    override func tearDown() {}
+    override func tearDown() {
+        DDTestMonitor.tracer = originalTracer
+    }
 
-    func testWhenWhenErrorHappens_errorIsCapturedAndConvertedToEvents() {
-        let tracer = DDTracer()
+    /// Install a DDTracer wired to an in-memory `LogRecordExporter` as
+    /// the global `DDTestMonitor.tracer` (which `StderrCapture` routes
+    /// through) so the test can introspect what the SDK emitted.
+    private func installCapturingTracer(_ exporter: InMemoryLogRecordExporter) -> DDTracer {
+        let tracer = DDTracer(logRecordExporter: exporter)
+        DDTestMonitor.tracer = tracer
+        return tracer
+    }
+
+    func testWhenErrorHappens_messageIsForwardedAsLogRecord() {
+        let logExporter = InMemoryLogRecordExporter()
+        let tracer = installCapturingTracer(logExporter)
         let stringToCapture = "2020-10-22 12:01:33.161546+0200 xctest[91153:14310375] This should be captured"
 
         let spanData = tracer.withActiveSpan(name: "Unnamed", attributes: [:]) { span in
@@ -26,30 +41,42 @@ class StderrCaptureTests: XCTestCase {
             return span.toSpanData()
         }
 
-        XCTAssertEqual(spanData.events.count, 1)
-        XCTAssertEqual(spanData.events.first?.attributes["message"]?.description, "This should be captured")
+        XCTAssertEqual(spanData.events.count, 0,
+                       "stderr is now emitted as an OTel LogRecord, not as a span event")
 
-        let timeToCheck = StderrCapture.logDateFormatter.date(from: "2020-10-22 12:01:33.161546+0200")!
-        XCTAssertEqual(spanData.events.first?.timestamp, timeToCheck)
+        let records = logExporter.getFinishedLogRecords()
+        XCTAssertEqual(records.count, 1)
+        let record = records[0]
+        XCTAssertEqual(record.body?.description, "This should be captured",
+                       "system-log prefix is stripped before forwarding")
+        XCTAssertEqual(record.severity, .info)
+        let expectedTimestamp = StderrCapture.logDateFormatter.date(from: "2020-10-22 12:01:33.161546+0200")!
+        XCTAssertEqual(record.timestamp, expectedTimestamp)
+        XCTAssertEqual(record.spanContext?.spanId, spanData.spanId)
+        XCTAssertEqual(record.spanContext?.traceId, spanData.traceId)
     }
 
-    func testWhenWhenUIStepHappens_messageIsCapturedAndConvertedToEvents() {
-        let tracer = DDTracer()
+    func testWhenUIStepHappens_messageIsForwardedAsLogRecord() {
+        let logExporter = InMemoryLogRecordExporter()
+        let tracer = installCapturingTracer(logExporter)
         let stringToCapture = "    t =     0.50s Open com.datadoghq.DemoSwift"
-        let date = Date()
+        let spanStart = Date()
 
-        let spanData = tracer.withActiveSpan(name: "Unnamed", attributes: [:], startTime: date) { span in
+        let spanData = tracer.withActiveSpan(name: "Unnamed", attributes: [:], startTime: spanStart) { span in
             StderrCapture.stderrMessage(string: stringToCapture)
             Thread.sleep(forTimeInterval: 0.5)
             span.status = .ok
             return span.toSpanData()
         }
 
-        XCTAssertEqual(spanData.events.count, 1)
-        XCTAssertEqual(spanData.events.first?.attributes["message"]?.description, "Open com.datadoghq.DemoSwift")
+        XCTAssertEqual(spanData.events.count, 0)
 
-        let timeToCheck = date.addingTimeInterval(0.5)
-        XCTAssertEqual(spanData.events.first?.timestamp, timeToCheck)
+        let records = logExporter.getFinishedLogRecords()
+        XCTAssertEqual(records.count, 1)
+        let record = records[0]
+        XCTAssertEqual(record.body?.description, "Open com.datadoghq.DemoSwift")
+        XCTAssertEqual(record.timestamp, spanStart.addingTimeInterval(0.5))
+        XCTAssertEqual(record.spanContext?.spanId, spanData.spanId)
     }
 
     func testStderrInitialises() {

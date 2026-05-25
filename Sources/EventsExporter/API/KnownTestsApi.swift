@@ -145,18 +145,28 @@ struct KnownTestsApiService: KnownTestsApi {
 }
 
 extension KnownTestsApiService {
-    struct PageInfoRequest: Encodable {
+    struct PageInfoRequest: Encodable, CustomDebugStringConvertible {
         let pageSize: Int
         let pageState: String?
+
+        var debugDescription: String {
+            let state = pageState.map { #""\#($0)""# } ?? "null"
+            return #"{"page_size": \#(pageSize), "page_state": \#(state)}"#
+        }
     }
 
-    struct PageInfoResponse: Decodable {
+    struct PageInfoResponse: Decodable, CustomDebugStringConvertible {
         let cursor: String?
         let size: Int
         let hasNext: Bool
+
+        var debugDescription: String {
+            let cursorStr = cursor.map { #""\#($0)""# } ?? "null"
+            return #"{"cursor": \#(cursorStr), "size": \#(size), "has_next": \#(hasNext)}"#
+        }
     }
 
-    struct TestsRequest: Encodable, APIAttributesUUID {
+    struct TestsRequest: Encodable, APIAttributesUUID, CustomDebugStringConvertible {
         let repositoryUrl: String
         let env: String
         let service: String
@@ -164,13 +174,35 @@ extension KnownTestsApiService {
         let pageInfo: PageInfoRequest
 
         static var apiType: String = "ci_app_libraries_tests_request"
+
+        var debugDescription: String {
+            let configs = JSONGeneric.object(configurations).debugDescription
+            return #"{"repository_url": "\#(repositoryUrl)""#
+                + #", "env": "\#(env)""#
+                + #", "service": "\#(service)""#
+                + #", "configurations": \#(configs)"#
+                + #", "page_info": \#(pageInfo)}"#
+        }
     }
 
-    struct TestsResponse: Decodable, APIAttributes {
+    struct TestsResponse: Decodable, APIResponseAttributesHasType,
+                          APIResponseAttributesBrokenId, CustomDebugStringConvertible
+    {
         let tests: KnownTestsMap
         let pageInfo: PageInfoResponse
 
         static var apiType: String = "ci_app_libraries_tests"
+
+        var debugDescription: String {
+            let modules = tests.map { module, suites -> String in
+                let suiteEntries = suites.map { suite, names -> String in
+                    let testList = names.map { #""\#($0)""# }.joined(separator: ", ")
+                    return #""\#(suite)": [\#(testList)]"#
+                }.joined(separator: ", ")
+                return #""\#(module)": {\#(suiteEntries)}"#
+            }.joined(separator: ", ")
+            return #"{"tests": {\#(modules)}, "page_info": \#(pageInfo)}"#
+        }
     }
 }
 

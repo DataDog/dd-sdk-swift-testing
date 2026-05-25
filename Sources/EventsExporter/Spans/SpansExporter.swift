@@ -7,93 +7,98 @@
 import Foundation
 import OpenTelemetrySdk
 
-internal class SpansExporter {
-    let spansDirectory = "com.datadog.civisibility/spans/v1"
+internal final class SpansExporter: SpanExporter {
     let configuration: ExporterConfiguration
-    let spansStorage: FeatureStorage
-    let spansUpload: FeatureUpload
     let runtimeId: String
+    let spansStorage: FeatureStoreAndUpload
+    private let encoder: JSONEncoder
 
-    init(config: ExporterConfiguration) throws {
+    init(config: ExporterConfiguration, storage: Directory, api: SpansApi) throws {
         self.configuration = config
 
         let filesOrchestrator = FilesOrchestrator(
-            directory: try Directory(withSubdirectoryPath: spansDirectory),
+            directory: try storage.createSubdirectory(path: "v1"),
             performance: configuration.performancePreset,
             dateProvider: SystemDateProvider()
         )
-        
+
         var metadata = config.metadata
-        
         self.runtimeId = metadata[string: "runtime-id"] ?? UUID().uuidString.lowercased()
         metadata[string: "runtime-id"] = self.runtimeId
-        
-        let encodedMetadata = String(data: try JSONEncoder().encode(metadata.metadata), encoding: .utf8)!
-        
-        let prefix = """
-        {
-        "version": 1,
-        "metadata": \(encodedMetadata),
-        "events": [
-        """
 
-        let suffix = "]\n}"
+        let encoder = api.encoder
+        self.encoder = encoder
+        let dataFormat = try DataFormat(header: Header(metadata: metadata.metadata),
+                                        encoder: encoder)
 
-        let dataFormat = DataFormat(prefix: prefix, suffix: suffix, separator: ",")
+        let writer = FileWriter(entity: "spans",
+                                dataFormat: dataFormat,
+                                orchestrator: filesOrchestrator,
+                                encoder: encoder)
+        let reader = FileReader(dataFormat: dataFormat, orchestrator: filesOrchestrator)
+        let upload: ClosureDataUploader.UploadCallback = { (data: Data) async throws(HTTPClient.RequestError) -> Void in
+            try await api.uploadSpans(batch: data)
+        }
+        let uploader = ClosureDataUploader(upload: upload)
+        self.spansStorage = FeatureStoreAndUpload(featureName: "spans",
+                                                  reader: reader,
+                                                  writer: writer,
+                                                  performance: configuration.performancePreset,
+                                                  uploader: uploader)
+    }
 
-        let spanFileWriter = FileWriter(
-            dataFormat: dataFormat,
-            orchestrator: filesOrchestrator
-        )
-
-        let spanFileReader = FileReader(
-            dataFormat: dataFormat,
-            orchestrator: filesOrchestrator
-        )
-
-        spansStorage = FeatureStorage(writer: spanFileWriter, reader: spanFileReader)
-
-        let requestBuilder = SingleRequestBuilder(
-            url: configuration.endpoint.spansURL,
-            queryItems: [],
-            headers: [
-                .contentTypeHeader(contentType: .applicationJSON),
-                .userAgentHeader(
-                    appName: configuration.applicationName,
-                    appVersion: configuration.version,
-                    device: Device.current
-                ),
-                .apiKeyHeader(apiKey: config.apiKey) ] +
-            (configuration.payloadCompression ? [HTTPHeader.contentEncodingHeader(contentEncoding: .deflate)] : []) +
-            ((configuration.hostname != nil) ? [HTTPHeader.hostnameHeader(hostname: configuration.hostname!)] : [])
-        )
-
-        spansUpload = FeatureUpload(featureName: "spansUpload",
-                                    storage: spansStorage,
-                                    requestBuilder: requestBuilder,
-                                    performance: configuration.performancePreset,
-                                    debug: config.debug.logNetworkRequests)
+    /// Rebuild the file header (which embeds the per-feature `SpanMetadata`)
+    /// and rotate the writable file so the new header takes effect on the
+    /// next batch. The runtime-id stays pinned across updates.
+    func setMetadata(_ meta: SpanMetadata) {
+        var meta = meta
+        meta[string: "runtime-id"] = self.runtimeId
+        // `try!` is safe: `Header` is a fixed-shape struct that always encodes.
+        let dataFormat = try! DataFormat(header: Header(metadata: meta.metadata),
+                                         encoder: encoder)
+        spansStorage.update(dataFormat: dataFormat)
     }
 
     func exportSpan(span: SpanData) {
-        if span.attributes["type"]?.description == "test" {
-            let ciTestEnvelope = CITestEnvelope(DDSpan(spanData: span, serviceName: configuration.serviceName, applicationVersion: configuration.version))
-            if configuration.performancePreset.synchronousWrite {
-                spansStorage.writer.writeSync(value: ciTestEnvelope)
-            } else {
-                spansStorage.writer.write(value: ciTestEnvelope)
-            }
+        if let typeStr = span.attributes.type,
+           let type = TestSpan.SpanType(rawValue: typeStr)
+        {
+            write(TestSpanEnvelope(TestSpan(spanData: span, spanType: type)))
         } else {
-            let spanEnvelope = SpanEnvelope(DDSpan(spanData: span, serviceName: configuration.serviceName, applicationVersion: configuration.version))
-            if configuration.performancePreset.synchronousWrite {
-                spansStorage.writer.writeSync(value: spanEnvelope)
-            } else {
-                spansStorage.writer.write(value: spanEnvelope)
-            }
+            write(SpanEnvelope(DDSpan(spanData: span)))
         }
     }
-    
-    func shutdown() {
-        spansUpload.shutdown()
+
+    private func write<T: Encodable>(_ value: T) {
+        if configuration.performancePreset.synchronousWrite {
+            try? spansStorage.writeSync(value: value)
+        } else {
+            spansStorage.write(value: value)
+        }
+    }
+
+    // MARK: - OpenTelemetrySdk.SpanExporter
+
+    func export(spans: [SpanData], explicitTimeout: TimeInterval?) -> SpanExporterResultCode {
+        for span in spans {
+            exportSpan(span: span)
+        }
+        return .success
+    }
+
+    func flush(explicitTimeout: TimeInterval?) -> SpanExporterResultCode {
+        (try? spansStorage.flush()) == true ? .success : .failure
+    }
+
+    func shutdown(explicitTimeout: TimeInterval?) {
+        spansStorage.stop()
+    }
+}
+
+extension SpansExporter {
+    struct Header: JSONFileHeader {
+        let version: Int = 1
+        let metadata: [String: [String: SpanMetadata.Value]]
+        static var batchFieldName: String { "events" }
     }
 }

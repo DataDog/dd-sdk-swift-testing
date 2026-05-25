@@ -21,71 +21,61 @@ internal enum LogConstants {
     static let ddProduct = "datadog.product:citest"
 }
 
-internal class LogsExporter {
-    let logsDirectory = "com.datadog.civisibility/logs/v1"
-    let configuration: ExporterConfiguration
-    let logsStorage: FeatureStorage
-    let logsUpload: FeatureUpload
+internal final class LogsExporter: LogRecordExporter {
+    let synchronousWrite: Bool
+    let logsStorage: FeatureStoreAndUpload
 
-    init(config: ExporterConfiguration) throws {
-        self.configuration = config
+    init(config: ExporterConfiguration, storage: Directory, api: LogsApi) throws {
+        self.synchronousWrite = config.performancePreset.synchronousWrite
 
         let filesOrchestrator = FilesOrchestrator(
-            directory: try Directory(withSubdirectoryPath: logsDirectory),
-            performance: configuration.performancePreset,
+            directory: try storage.createSubdirectory(path: "v1"),
+            performance: config.performancePreset,
             dateProvider: SystemDateProvider()
         )
 
-        let dataFormat = DataFormat(prefix: "[", suffix: "]", separator: ",")
+        let encoder = api.encoder
+        let dataFormat = DataFormat.jsonArray
 
-        let logsFileWriter = FileWriter(
-            dataFormat: dataFormat,
-            orchestrator: filesOrchestrator
-        )
-
-        let logsFileReader = FileReader(
-            dataFormat: dataFormat,
-            orchestrator: filesOrchestrator
-        )
-
-        logsStorage = FeatureStorage(writer: logsFileWriter, reader: logsFileReader)
-
-        let requestBuilder = SingleRequestBuilder(
-            url: configuration.endpoint.logsURL,
-            queryItems: [
-                .ddsource(source: LogConstants.ddSource),
-                .ddtags(tags: [LogConstants.ddProduct])
-            ],
-            headers: [
-                .contentTypeHeader(contentType: .applicationJSON),
-                .userAgentHeader(
-                    appName: configuration.applicationName,
-                    appVersion: configuration.version,
-                    device: Device.current
-                ),
-                .apiKeyHeader(apiKey: configuration.apiKey)
-            ] + (configuration.payloadCompression ? [HTTPHeader.contentEncodingHeader(contentEncoding: .deflate)] : [])
-        )
-
-        logsUpload = FeatureUpload(featureName: "logsUpload",
-                                   storage: logsStorage,
-                                   requestBuilder: requestBuilder,
-                                   performance: configuration.performancePreset,
-                                   debug: config.debug.logNetworkRequests)
+        let writer = FileWriter(entity: "logs",
+                                dataFormat: dataFormat,
+                                orchestrator: filesOrchestrator,
+                                encoder: encoder)
+        let reader = FileReader(dataFormat: dataFormat, orchestrator: filesOrchestrator)
+        let upload: ClosureDataUploader.UploadCallback = { (data: Data) async throws(HTTPClient.RequestError) -> Void in
+            try await api.uploadLogs(batch: data)
+        }
+        let uploader = ClosureDataUploader(upload: upload)
+        self.logsStorage = FeatureStoreAndUpload(featureName: "logs",
+                                                 reader: reader,
+                                                 writer: writer,
+                                                 performance: config.performancePreset,
+                                                 uploader: uploader)
     }
 
-    func exportLogs(fromSpan span: SpanData) {
-        span.events.forEach {
-            let log = DDLog(event: $0, span: span, configuration: configuration)
-            if configuration.performancePreset.synchronousWrite {
-                logsStorage.writer.writeSync(value: log)
-            } else {
-                logsStorage.writer.write(value: log)
-            }
+    private func writeLog(_ log: DDLog) {
+        if synchronousWrite {
+            try? logsStorage.writeSync(value: log)
+        } else {
+            logsStorage.write(value: log)
         }
     }
-    
-    func shutdown() {
-        logsUpload.shutdown()
+
+    // MARK: - OpenTelemetrySdk.LogRecordExporter
+
+    func export(logRecords: [ReadableLogRecord], explicitTimeout: TimeInterval?) -> ExportResult {
+        for record in logRecords {
+            guard let context = record.spanContext else { continue }
+            writeLog(DDLog(log: record, span: context))
+        }
+        return .success
+    }
+
+    func forceFlush(explicitTimeout: TimeInterval?) -> ExportResult {
+        (try? logsStorage.flush()) == true ? .success : .failure
+    }
+
+    func shutdown(explicitTimeout: TimeInterval?) {
+        logsStorage.stop()
     }
 }

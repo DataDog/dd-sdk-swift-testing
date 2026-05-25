@@ -259,8 +259,9 @@ final class TestImpactAnalysisSwiftTestingTests: XCTestCase {
                                                         suite: "TIASuite",
                                                         configuration: ["test.bundle": "TIAModule"]) })
         let collector = Mocks.CoverageCollector()
-        let tia = TestImpactAnalysis(tests: skipped, coverage: collector, swiftTestingEnabled: true)
-        return (Mocks.STRunner(features: [tia, AdditionalTags()], tests: ["TIAModule": ["TIASuite": .init(tests: tests)]]), tia, collector)
+        let tia = TestImpactAnalysis(tests: skipped, swiftTestingEnabled: true)
+        let coverage = CodeCoverage(collector: collector, swiftTestingEnabled: true)
+        return (Mocks.STRunner(features: [tia, coverage, AdditionalTags()], tests: ["TIAModule": ["TIASuite": .init(tests: tests)]]), tia, collector)
     }
 
     func tiaSwiftTestingDisabledRunner(skip: [String], tests: KeyValuePairs<String, Mocks.Runner.TestMethod>) -> (Mocks.STRunner, TestImpactAnalysis, Mocks.CoverageCollector) {
@@ -269,8 +270,9 @@ final class TestImpactAnalysisSwiftTestingTests: XCTestCase {
                                                         suite: "TIASuite",
                                                         configuration: ["test.bundle": "TIAModule"]) })
         let collector = Mocks.CoverageCollector()
-        let tia = TestImpactAnalysis(tests: skipped, coverage: collector, swiftTestingEnabled: false)
-        return (Mocks.STRunner(features: [tia, AdditionalTags()], tests: ["TIAModule": ["TIASuite": .init(tests: tests)]]), tia, collector)
+        let tia = TestImpactAnalysis(tests: skipped, swiftTestingEnabled: false)
+        let coverage = CodeCoverage(collector: collector, swiftTestingEnabled: false)
+        return (Mocks.STRunner(features: [tia, coverage, AdditionalTags()], tests: ["TIAModule": ["TIASuite": .init(tests: tests)]]), tia, collector)
     }
 
     func tiaAndEfdRunner(skip: [String], known: [String], tests: KeyValuePairs<String, Mocks.Runner.TestMethod>) -> (Mocks.STRunner, TestImpactAnalysis, Mocks.CoverageCollector) {

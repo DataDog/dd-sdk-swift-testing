@@ -93,6 +93,7 @@ internal class DDTestMonitor {
     // Advanced features
     var gitUploader: GitUploader? = nil
     var tia: TestImpactAnalysis? = nil
+    var coverage: CodeCoverage? = nil
     var knownTests: KnownTests? = nil
     var efd: EarlyFlakeDetection? = nil
     var atr: AutomaticTestRetries? = nil
@@ -204,6 +205,7 @@ internal class DDTestMonitor {
         efd?.stop()
         atr?.stop()
         tia?.stop()
+        coverage?.stop()
         knownTests?.stop()
         testManagement?.stop()
         DDTestMonitor.tracer.flush()
@@ -453,17 +455,6 @@ internal class DDTestMonitor {
                 Log.print("TIA: init failed. Can't create cache directiry.")
                 return
             }
-            var coverage: TestImpactAnalysisFactory.Coverage? = nil
-            if DDTestMonitor.config.codeCoverageEnabled && remote.itr.codeCoverage {
-                guard let temp = try? DDTestMonitor.cacheManager?.temp(feature: "coverage") else {
-                    Log.print("Code Coverage init failed. Can't create temp directory.")
-                    return
-                }
-                coverage = .init(workspacePath: DDTestMonitor.env.workspacePath,
-                                 priority: DDTestMonitor.config.codeCoveragePriority,
-                                 tempFolder: temp,
-                                 debug: DDTestMonitor.config.extraDebugCodeCoverage)
-            }
             let factory = TestImpactAnalysisFactory(configurations: DDTestMonitor.env.baseConfigurations,
                                                     custom: DDTestMonitor.config.customConfigurations,
                                                     exporter: eventsExporter,
@@ -472,12 +463,45 @@ internal class DDTestMonitor {
                                                     cache: cache,
                                                     skippingEnabled: remote.itr.testsSkipping,
                                                     swiftTestingEnabled: DDTestMonitor.env.tiaSwiftTestingEnabled,
-                                                    coverage: coverage,
                                                     libraryConfigurationErrors: self.libraryConfigurationErrors)
             self.tia = factory.create(log: Log.instance)
         }
         tiaSetup.addDependency(updateTracerConfig)
         testOptimizationSetupQueue.addOperation(tiaSetup)
+
+        // Code Coverage is independent of TIA: it has its own enable gate
+        // (`DD_CIVISIBILITY_CODE_COVERAGE_ENABLED` plus the backend's
+        // `code_coverage` setting) and runs as its own `TestHooksFeature`.
+        let coverageSetup = BlockOperation { [self] in
+            guard let remote = tracerBackendConfig else {
+                Log.print("Code Coverage: error: backend config can't be loaded")
+                return
+            }
+            guard CodeCoverageFactory.isEnabled(config: DDTestMonitor.config,
+                                                env: DDTestMonitor.env,
+                                                remote: remote)
+            else {
+                Log.print("Code Coverage: disabled")
+                return
+            }
+            guard let eventsExporter = DDTestMonitor.tracer.eventsExporter else {
+                Log.print("Code Coverage: init failed. Exporter is nil")
+                return
+            }
+            guard let temp = try? DDTestMonitor.cacheManager?.temp(feature: "coverage") else {
+                Log.print("Code Coverage init failed. Can't create temp directory.")
+                return
+            }
+            let factory = CodeCoverageFactory(workspacePath: DDTestMonitor.env.workspacePath,
+                                              priority: DDTestMonitor.config.codeCoveragePriority,
+                                              tempFolder: temp,
+                                              debug: DDTestMonitor.config.extraDebugCodeCoverage,
+                                              exporter: eventsExporter,
+                                              swiftTestingEnabled: DDTestMonitor.env.tiaSwiftTestingEnabled)
+            self.coverage = factory.create(log: Log.instance)
+        }
+        coverageSetup.addDependency(updateTracerConfig)
+        testOptimizationSetupQueue.addOperation(coverageSetup)
     }
 
     func startInstrumenting() {
@@ -652,8 +676,8 @@ internal class DDTestMonitor {
     var activeFeatures: any TestHooksFeatures {
         testOptimizationSetupQueue.waitUntilAllOperationsAreFinished()
         let features: [(any TestHooksFeature)?] = [
-            testManagement, tia, efd, atr, knownTests,
-            AdditionalTags(codeCoverage: tia == nil,
+            testManagement, tia, coverage, efd, atr, knownTests,
+            AdditionalTags(codeCoverage: coverage == nil,
                            bundleFunctions: bundleFunctionInfo,
                            codeOwners: codeOwners,
                            workspacePath: DDTestMonitor.env.workspacePath),

@@ -11,14 +11,6 @@ import XCTest
 import TestUtils
 
 class SpansExporterTests: XCTestCase {
-    override func setUp() {
-        super.setUp()
-    }
-
-    override func tearDown() {
-        super.tearDown()
-    }
-
     func testWhenExportSpanIsCalled_thenTraceIsUploaded() throws {
         let server = MockBackend()
         try server.start()
@@ -39,18 +31,24 @@ class SpansExporterTests: XCTestCase {
                                                   exporterId: "exporterId",
                                                   logger: Log())
 
-        let spansExporter = try SpansExporter(config: configuration)
+        let api = SpansApiService(
+            config: APIServiceConfig(configuration: configuration),
+            httpClient: HTTPClient(debug: false),
+            log: configuration.logger
+        )
+        let storage = try Directory.temporary().createSubdirectory(path: UUID().uuidString)
+        defer { try? storage.delete() }
+        let spansExporter = try SpansExporter(config: configuration, storage: storage, api: api)
 
         let spanData = createBasicSpan()
         spansExporter.exportSpan(span: spanData)
-        
+
         guard server.waitForSpans(timeout: 30) else {
             XCTFail("No request received")
             return
         }
-        
-        let spans = server.requests.allInfoSpans
 
+        let spans = server.requests.allInfoSpans
         XCTAssertTrue(spans.count == 1)
     }
 

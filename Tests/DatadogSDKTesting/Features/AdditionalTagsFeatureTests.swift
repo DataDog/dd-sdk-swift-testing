@@ -27,7 +27,7 @@ final class AdditionalTagsSuiteCodeownersTests: XCTestCase {
         let session = await runSession(bundleFunctions: bundleFunctions, codeOwners: codeOwners,
                                        tests: [module: ["MySuite": ["testA": .pass(), "testB": .pass()]]])
 
-        XCTAssertEqual(session[module]?["MySuite"]?.tags[DDTestTags.testCodeowners],
+        XCTAssertEqual(session[module]?["MySuite"]?.get(tag: DDTestTags.testCodeowners),
                        "[\"@foo-team\"]")
     }
 
@@ -42,7 +42,7 @@ final class AdditionalTagsSuiteCodeownersTests: XCTestCase {
                                        tests: [module: ["MySuite": ["testA": .pass(), "testB": .pass()]]])
 
         // Owners are accumulated in test-execution order, deduped.
-        XCTAssertEqual(session[module]?["MySuite"]?.tags[DDTestTags.testCodeowners],
+        XCTAssertEqual(session[module]?["MySuite"]?.get(tag: DDTestTags.testCodeowners),
                        "[\"@foo-team\",\"@bar-team\"]")
     }
 
@@ -61,7 +61,7 @@ final class AdditionalTagsSuiteCodeownersTests: XCTestCase {
                                            "testC": .pass(),
                                        ]]])
 
-        XCTAssertEqual(session[module]?["MySuite"]?.tags[DDTestTags.testCodeowners],
+        XCTAssertEqual(session[module]?["MySuite"]?.get(tag: DDTestTags.testCodeowners),
                        "[\"@foo-team\"]")
     }
 
@@ -79,7 +79,7 @@ final class AdditionalTagsSuiteCodeownersTests: XCTestCase {
                                            "testC": .pass(),
                                        ]]])
 
-        XCTAssertEqual(session[module]?["MySuite"]?.tags[DDTestTags.testCodeowners],
+        XCTAssertEqual(session[module]?["MySuite"]?.get(tag: DDTestTags.testCodeowners),
                        "[\"@bar-team\"]")
     }
 
@@ -89,7 +89,7 @@ final class AdditionalTagsSuiteCodeownersTests: XCTestCase {
         let session = await runSession(bundleFunctions: [:], codeOwners: codeOwners,
                                        tests: [module: ["MySuite": ["testA": .pass()]]])
 
-        XCTAssertNil(session[module]?["MySuite"]?.tags[DDTestTags.testCodeowners])
+        XCTAssertNil(session[module]?["MySuite"]?.get(tag: DDTestTags.testCodeowners))
     }
 
     func testSuiteTagIsNilWhenCodeOwnersIsNil() async throws {
@@ -100,7 +100,7 @@ final class AdditionalTagsSuiteCodeownersTests: XCTestCase {
         let session = await runSession(bundleFunctions: bundleFunctions, codeOwners: nil,
                                        tests: [module: ["MySuite": ["testA": .pass()]]])
 
-        XCTAssertNil(session[module]?["MySuite"]?.tags[DDTestTags.testCodeowners])
+        XCTAssertNil(session[module]?["MySuite"]?.get(tag: DDTestTags.testCodeowners))
     }
 
     func testOwnersAreScopedPerSuite() async throws {
@@ -118,9 +118,9 @@ final class AdditionalTagsSuiteCodeownersTests: XCTestCase {
                                            "BazSuite": ["testC": .pass()],
                                        ]])
 
-        XCTAssertEqual(session[module]?["FooSuite"]?.tags[DDTestTags.testCodeowners], "[\"@foo-team\"]")
-        XCTAssertEqual(session[module]?["BarSuite"]?.tags[DDTestTags.testCodeowners], "[\"@bar-team\"]")
-        XCTAssertEqual(session[module]?["BazSuite"]?.tags[DDTestTags.testCodeowners], "[\"@baz-team\"]")
+        XCTAssertEqual(session[module]?["FooSuite"]?.get(tag: DDTestTags.testCodeowners), "[\"@foo-team\"]")
+        XCTAssertEqual(session[module]?["BarSuite"]?.get(tag: DDTestTags.testCodeowners), "[\"@bar-team\"]")
+        XCTAssertEqual(session[module]?["BazSuite"]?.get(tag: DDTestTags.testCodeowners), "[\"@baz-team\"]")
     }
 
     // MARK: helpers

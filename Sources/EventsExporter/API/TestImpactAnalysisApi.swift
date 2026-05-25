@@ -47,6 +47,25 @@ internal protocol TestImpactAnalysisApi: APIService {
                         environment: String, service: String,
                         testLevel: ITRTestLevel, configurations: [String: String],
                         customConfigurations: [String: String]) async throws(APICallError) -> SkipTests
+
+    func uploadCoverage(batch url: URL) async throws(APICallError)
+    func uploadCoverage(batch data: Data) async throws(HTTPClient.RequestError)
+}
+
+extension TestImpactAnalysisApi {
+    func uploadCoverage(batch url: URL) async throws(APICallError) {
+        let data: Data
+        do {
+            data = try Data(contentsOf: url, options: [.mappedIfSafe])
+        } catch {
+            throw .fileSystem(error)
+        }
+        do {
+            try await uploadCoverage(batch: data)
+        } catch {
+            throw APICallError(from: error)
+        }
+    }
 }
 
 struct TestImpactAnalysisApiService: TestImpactAnalysisApi {
@@ -56,6 +75,7 @@ struct TestImpactAnalysisApiService: TestImpactAnalysisApi {
     var headers: [HTTPHeader]
     var encoder: JSONEncoder
     var decoder: JSONDecoder
+    let compression: Bool
     let httpClient: HTTPClient
     let log: Logger
 
@@ -63,6 +83,7 @@ struct TestImpactAnalysisApiService: TestImpactAnalysisApi {
         self.endpoint = config.endpoint
         self.httpClient = httpClient
         self.log = log
+        self.compression = config.payloadCompression
         self.headers = config.defaultHeaders
         self.encoder = config.encoder
         self.decoder = config.decoder
@@ -116,11 +137,29 @@ struct TestImpactAnalysisApiService: TestImpactAnalysisApi {
         return SkipTests(correlationId: correlationId, tests: tests)
     }
 
-    var endpointURLs: Set<URL> { [endpoint.skippableTestsURL] }
+    func uploadCoverage(batch data: Data) async throws(HTTPClient.RequestError) {
+        var request = MultipartFormURLRequest(url: endpoint.coverageURL)
+        request.headers = headers
+        if compression {
+            request.addHTTPHeader(.contentEncodingHeader(contentEncoding: .deflate))
+        }
+        request.append(data: data,
+                       withName: "coverage",
+                       contentType: .applicationJSON)
+        request.append(data: Data(#"{"dummy": true}"#.utf8),
+                       withName: "event",
+                       contentType: .applicationJSON)
+        let log = self.log
+        log.debug("Uploading coverage batch...")
+        let response = try await httpClient.send(request: request)
+        log.debug("Coverage batch upload response: \(response.statusCode)")
+    }
+
+    var endpointURLs: Set<URL> { [endpoint.skippableTestsURL, endpoint.coverageURL] }
 }
 
 extension TestImpactAnalysisApiService {
-    struct TestsRequest: APIAttributesNoId, Encodable {
+    struct TestsRequest: APIAttributesNoId, Encodable, CustomDebugStringConvertible {
         let env: String
         let service: String
         let repositoryUrl: String
@@ -129,11 +168,27 @@ extension TestImpactAnalysisApiService {
         let testLevel: ITRTestLevel
 
         static var apiType: String = "test_params"
+
+        var debugDescription: String {
+            let configs = JSONGeneric.object(configurations).debugDescription
+            return #"{"env": "\#(env)""#
+                + #", "service": "\#(service)""#
+                + #", "repository_url": "\#(repositoryUrl)""#
+                + #", "sha": "\#(sha)""#
+                + #", "configurations": \#(configs)"#
+                + #", "test_level": "\#(testLevel.rawValue)"}"#
+        }
     }
 
-    struct TestsResponse: APIAttributes, Decodable {
-        struct Meta: Decodable {
+    struct TestsResponse: APIResponseAttributesNoId, APIResponseAttributesHasType,
+                          Decodable, CustomDebugStringConvertible
+    {
+        struct Meta: Decodable, CustomDebugStringConvertible {
             let correlationId: String
+
+            var debugDescription: String {
+                #"{"correlation_id": "\#(correlationId)"}"#
+            }
         }
 
         let name: String
@@ -142,6 +197,15 @@ extension TestImpactAnalysisApiService {
         let configurations: [String: JSONGeneric]?
 
         static var apiType: String = "test"
+
+        var debugDescription: String {
+            let params = parameters.map { #""\#($0)""# } ?? "null"
+            let configs = configurations.map { JSONGeneric.object($0).debugDescription } ?? "null"
+            return #"{"name": "\#(name)""#
+                + #", "suite": "\#(suite)""#
+                + #", "parameters": \#(params)"#
+                + #", "configurations": \#(configs)}"#
+        }
     }
 }
 

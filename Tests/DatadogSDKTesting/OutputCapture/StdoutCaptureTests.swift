@@ -5,20 +5,35 @@
  */
 
 @testable import DatadogSDKTesting
-import OpenTelemetrySdk
+@testable import OpenTelemetrySdk
 import XCTest
 
 class StdoutCaptureTests: XCTestCase {
+    private var originalTracer: DDTracer!
+
     override func setUp() {
         DDTestMonitor._env_recreate(env: ["DD_API_KEY": "fakeToken", "DD_DISABLE_TEST_INSTRUMENTING": "1"])
+        originalTracer = DDTestMonitor.tracer
     }
 
     override func tearDown() {
+        DDTestMonitor.tracer = originalTracer
         DDTestMonitor._env_recreate()
     }
 
-    func testWhenPrintIsCalledAndIsCapturing_stringIsCapturedAndConvertedToEvents() {
-        let tracer = DDTracer()
+    /// Install a DDTracer wired to an in-memory `LogRecordExporter` as
+    /// the global `DDTestMonitor.tracer` (which `StdoutCapture` /
+    /// `StderrCapture` route through) so the test can introspect what the SDK
+    /// emitted.
+    private func installCapturingTracer(_ exporter: InMemoryLogRecordExporter) -> DDTracer {
+        let tracer = DDTracer(logRecordExporter: exporter)
+        DDTestMonitor.tracer = tracer
+        return tracer
+    }
+
+    func testWhenPrintIsCalledAndIsCapturing_stringIsForwardedAsLogRecord() {
+        let logExporter = InMemoryLogRecordExporter()
+        let tracer = installCapturingTracer(logExporter)
         let stringToCapture = "This should be captured"
 
         StdoutCapture.startCapturing()
@@ -29,13 +44,24 @@ class StdoutCaptureTests: XCTestCase {
         }
         StdoutCapture.stopCapturing()
 
-        XCTAssertTrue(StdoutCapture.stdoutBuffer.isEmpty)
-        XCTAssertEqual(spanData.events.count, 1)
-        XCTAssertEqual(spanData.events.first?.attributes["message"]?.description, stringToCapture + "\n")
+        XCTAssertTrue(StdoutCapture.stdoutBuffer.isEmpty,
+                      "buffer should be drained on newline")
+        XCTAssertEqual(spanData.events.count, 0,
+                       "stdout is now emitted as an OTel LogRecord, not as a span event")
+
+        let records = logExporter.getFinishedLogRecords()
+        XCTAssertEqual(records.count, 1)
+        let record = records[0]
+        XCTAssertEqual(record.body?.description, stringToCapture + "\n")
+        XCTAssertEqual(record.severity, .info)
+        XCTAssertEqual(record.spanContext?.spanId, spanData.spanId,
+                       "log record must carry the active test span context")
+        XCTAssertEqual(record.spanContext?.traceId, spanData.traceId)
     }
 
-    func testWhenPrintIsCalledAndIsNotCapturing_stringIsNotCaptured() {
-        let tracer = DDTracer()
+    func testWhenPrintIsCalledAndIsNotCapturing_stringIsNotForwarded() {
+        let logExporter = InMemoryLogRecordExporter()
+        let tracer = installCapturingTracer(logExporter)
         let stringToCapture = "This should be captured"
 
         StdoutCapture.startCapturing()
@@ -47,10 +73,12 @@ class StdoutCaptureTests: XCTestCase {
         }
         XCTAssertTrue(StdoutCapture.stdoutBuffer.isEmpty)
         XCTAssertEqual(spanData.events.count, 0)
+        XCTAssertEqual(logExporter.getFinishedLogRecords().count, 0)
     }
 
-    func testWhenSomeCharactersAreWrittenToStdoutWithoutNewLines_charactersAreCapturedButNotConvertedToEvents() {
-        let tracer = DDTestMonitor.tracer
+    func testWhenSomeCharactersAreWrittenToStdoutWithoutNewLines_charactersAreCapturedButNotForwarded() {
+        let logExporter = InMemoryLogRecordExporter()
+        let tracer = installCapturingTracer(logExporter)
         let stringToCapture = "This should  not be captured"
 
         StdoutCapture.startCapturing()
@@ -65,5 +93,7 @@ class StdoutCaptureTests: XCTestCase {
         XCTAssertFalse(StdoutCapture.stdoutBuffer.isEmpty)
         XCTAssertEqual(StdoutCapture.stdoutBuffer, stringToCapture)
         XCTAssertEqual(spanData.events.count, 0)
+        XCTAssertEqual(logExporter.getFinishedLogRecords().count, 0,
+                       "without a trailing newline the capture hook doesn't flush, so nothing reaches the logger")
     }
 }

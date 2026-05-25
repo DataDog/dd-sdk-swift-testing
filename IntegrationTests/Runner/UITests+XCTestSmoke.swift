@@ -17,9 +17,10 @@ struct UITestsXCTestSmoke: IntergationTestSuite {
             let spans = backend.allTestSpans
             #expect(success == true)
             #expect(spans.count == 1)
-            let meta = try #require(spans.last?.meta)
+            let span = try #require(spans.last)
+            let meta = span.meta
             #expect(meta[DDTestTags.testStatus] == DDTagValues.statusPass)
-            #expect(meta[DDGenericTags.resource] == "UIEnvironmentPassed.testEnvironmentPassed")
+            #expect(span.resource == "UIEnvironmentPassed.testEnvironmentPassed")
             #expect(meta[DDTestTags.testName] == "testEnvironmentPassed")
             #expect(meta[DDTestTags.testSuite] == "UIEnvironmentPassed")
             #expect(meta[DDTestTags.testType] == "test")

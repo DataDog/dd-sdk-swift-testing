@@ -29,6 +29,17 @@ internal struct DDLog: Encodable {
         case warn
         case error
         case critical
+
+        init(status: Severity) {
+            switch status {
+            case .trace, .trace2, .trace3, .trace4: self = .notice
+            case .debug, .debug2, .debug3, .debug4: self = .debug
+            case .info, .info2, .info3, .info4: self = .info
+            case .warn, .warn2, .warn3, .warn4: self = .warn
+            case .error, .error2, .error3, .error4: self = .error
+            case .fatal, .fatal2, .fatal3, .fatal4: self = .critical
+            }
+        }
     }
 
     let date: Date
@@ -63,48 +74,59 @@ internal struct DDLog: Encodable {
         self.tags = tags
     }
 
-    internal init(event: SpanData.Event, span: SpanData, configuration: ExporterConfiguration) {
-        var attributes = event.attributes
+    /// Common initializer used by `init(event:span:)` and `init(log:span:)`:
+    /// service / env / logger / version come from the OTel `Resource`, and
+    /// dd.trace_id / dd.span_id are stitched in as internal attributes.
+    internal init(spanId: SpanId, traceId: TraceId,
+                  timestamp: Date, status: Status,
+                  message: String, resource: Resource,
+                  attributes: [String: AttributeValue])
+    {
+        var attributes = attributes
 
-        // set tracing attributes
-        let internalAttributes = [
-            TracingAttributes.traceID: "\(span.traceId.rawLowerLong)",
-            TracingAttributes.spanID: "\(span.spanId.rawValue)"
-        ]
-
-        self.date = event.timestamp
-        self.status = Status(rawValue: event.attributes["status"]?.description ?? "info") ?? .info
-        self.message = attributes.removeValue(forKey: "message")?.description ?? "Span event"
-        self.serviceName = configuration.serviceName
-        self.environment = configuration.environment
-        self.loggerName = attributes.removeValue(forKey: "loggerName")?.description ?? "logger"
-        self.loggerVersion = "1.0" // loggerVersion
-        self.threadName = attributes.removeValue(forKey: "threadName")?.description ?? "unkown"
-        self.applicationVersion = configuration.version
+        self.date = timestamp
+        self.status = status
+        self.message = message
+        self.serviceName = resource.service ?? ""
+        self.environment = resource.environment ?? ""
+        self.loggerName = resource.sdkName ?? ""
+        self.loggerVersion = resource.sdkVersion ?? ""
+        self.threadName = attributes.removeValue(forKey: SemanticConventions.Thread.name.rawValue)?.description ?? "unknown"
+        self.applicationVersion = resource.applicationVersion ?? ""
 
         let userAttributes: [String: Encodable] = attributes.mapValues {
             switch $0 {
-                case let .string(value):
-                    return value
-                case let .bool(value):
-                    return value
-                case let .int(value):
-                    return value
-                case let .double(value):
-                    return value
-                case let .stringArray(value):
-                    return value
-                case let .boolArray(value):
-                    return value
-                case let .intArray(value):
-                    return value
-                case let .doubleArray(value):
-                    return value
-                default: fatalError("Found user attribute of unsupported type")
+            case let .string(value): return value
+            case let .bool(value): return value
+            case let .int(value): return value
+            case let .double(value): return value
+            case let .stringArray(value): return value
+            case let .boolArray(value): return value
+            case let .intArray(value): return value
+            case let .doubleArray(value): return value
+            default: fatalError("Found user attribute of unsupported type")
             }
         }
+
+        let internalAttributes = [
+            TracingAttributes.traceID: "\(traceId.rawLowerLong)",
+            TracingAttributes.spanID: "\(spanId.rawValue)"
+        ]
+
         self.attributes = LogAttributes(userAttributes: userAttributes, internalAttributes: internalAttributes)
-        self.tags = nil // tags
+        self.tags = nil
+    }
+
+    internal init(log: ReadableLogRecord, span: SpanContext) {
+        var attributes = log.attributes
+        self.init(spanId: span.spanId, traceId: span.traceId,
+                  timestamp: log.observedTimestamp ?? log.timestamp,
+                  status: log.severity.map { .init(status: $0) } ?? .info,
+                  message: log.body?.description
+                      ?? attributes.removeValue(forKey: "message")?.description
+                      ?? log.eventName ?? "Log event",
+                  resource: log.resource,
+                  attributes: attributes)
     }
 }
 

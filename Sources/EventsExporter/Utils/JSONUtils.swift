@@ -6,19 +6,6 @@
 
 import Foundation
 
-extension JSONEncoder {
-    static func `default`() -> JSONEncoder {
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .custom { date, encoder in
-            var container = encoder.singleValueContainer()
-            let formatted = iso8601DateFormatter.string(from: date)
-            try container.encode(formatted)
-        }
-        encoder.outputFormatting = [.withoutEscapingSlashes]
-        return encoder
-    }
-}
-
 protocol JSONable {
     var jsonData: Data? { get }
     var jsonString: String { get }
@@ -26,7 +13,7 @@ protocol JSONable {
 
 extension JSONable where Self: Encodable {
     var jsonData: Data? {
-        return try? JSONEncoder().encode(self)
+        return try? JSONEncoder.apiEncoder.encode(self)
     }
 
     var jsonString: String {

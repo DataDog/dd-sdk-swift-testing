@@ -11,74 +11,27 @@ internal protocol DataUploaderType {
     func upload(data: Data) -> DataUploadStatus
 }
 
-/// Synchronously uploads data to server using `HTTPClient`.
-internal final class DataUploader: DataUploaderType {
-    /// An unreachable upload status - only meant to satisfy the compiler.
-    private static let unreachableUploadStatus = DataUploadStatus(needsRetry: false)
+/// Uploads data to the server via an async closure (typically a call to one of
+/// the typed API services in `EventsExporter/API/`). The closure throws
+/// `HTTPClient.RequestError`; the result is mapped to a `DataUploadStatus`.
+internal struct ClosureDataUploader: DataUploaderType {
+    typealias UploadCallback = @Sendable (Data) async throws(HTTPClient.RequestError) -> Void
 
-    private let httpClient: any HTTPClientType
-    private let requestBuilder: RequestBuilder
+    private let _upload: UploadCallback
 
-    init(httpClient: any HTTPClientType, requestBuilder: RequestBuilder) {
-        self.httpClient = httpClient
-        self.requestBuilder = requestBuilder
+    init(upload: @escaping UploadCallback) {
+        self._upload = upload
     }
 
-    /// Uploads data synchronously (will block current thread) and returns the upload status.
-    /// Uses timeout configured for `HTTPClient`.
-    ///
-    /// Uses `RunLoopWaiter` rather than a bare `DispatchSemaphore`: on the main thread we
-    /// spin the run loop instead of blocking it, which is required on watchOS where the
-    /// URL-loading machinery (and `URLProtocol`-based test mocks) is dispatched on the
-    /// caller's run loop.
     func upload(data: Data) -> DataUploadStatus {
-        let request = createRequest(with: data)
-        var uploadStatus: DataUploadStatus?
-
-        let waiter = RunLoopWaiter()
-
-        httpClient.send(request: request) { result in
-            switch result {
-            case .success(let httpResponse):
-                uploadStatus = DataUploadStatus(httpResponse: httpResponse)
-            case .failure(let error):
-                uploadStatus = DataUploadStatus(networkError: error)
+        let upload = self._upload
+        do {
+            try waitForAsync { () async throws(HTTPClient.RequestError) -> Void in
+                try await upload(data)
             }
-
-            waiter.signal()
+            return .success
+        } catch let error {
+            return DataUploadStatus(networkError: error)
         }
-
-        waiter.wait()
-
-        return uploadStatus ?? DataUploader.unreachableUploadStatus
-    }
-
-    /// Uploads data synchronously (will block current thread) and returns the response data
-    /// Uses timeout configured for `HTTPClient`.
-    func uploadWithResponse(data: Data) -> Data? {
-        try? uploadWithResult(data: data).get()
-    }
-
-    /// Uploads data synchronously and returns the response data on success
-    /// or the underlying transport/HTTP error so callers can distinguish a
-    /// communication failure from an empty/invalid response.
-    func uploadWithResult(data: Data) -> Result<Data, HTTPClient.RequestError> {
-        let request = createRequest(with: data)
-        var result: Result<Data, HTTPClient.RequestError>?
-
-        let waiter = RunLoopWaiter()
-
-        httpClient.sendWithResult(request: request) { httpResult in
-            result = httpResult
-            waiter.signal()
-        }
-
-        waiter.wait()
-
-        return result ?? .failure(.inconsistentSession)
-    }
-
-    private func createRequest(with data: Data) -> URLRequest {
-        return requestBuilder.uploadRequest(with: data)
     }
 }

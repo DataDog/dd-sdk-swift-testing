@@ -18,7 +18,6 @@
 		8EF6F88255506A4CEE6D36B6 /* GitUploadApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F3AA8F51FDDEF0C319080E8 /* GitUploadApi.swift */; };
 		98D8D496CC4210A0D1D07F93 /* Synced.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12536CCE14EC1D3DAAC8DB81 /* Synced.swift */; };
 		A70B91132DF0AE19003F284F /* AutoTestRetriesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A70B91122DF0AE11003F284F /* AutoTestRetriesTests.swift */; };
-		A7183A782E9030630093C831 /* CodeCoverageParser in Frameworks */ = {isa = PBXBuildFile; productRef = A7183A772E9030630093C831 /* CodeCoverageParser */; };
 		A718EC2D2CBD5DCE00C5F0D9 /* EarlyFlakeDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A718EC2C2CBD5DCE00C5F0D9 /* EarlyFlakeDetection.swift */; };
 		A718EC2F2CBD73F300C5F0D9 /* CacheManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A718EC2E2CBD73F300C5F0D9 /* CacheManager.swift */; };
 		A718EC352CC7F32A00C5F0D9 /* EarlyFlakeDetectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A718EC342CC7F32A00C5F0D9 /* EarlyFlakeDetectionTests.swift */; };
@@ -52,7 +51,6 @@
 		A74246002BFF94FA00F7EC64 /* TestImpactAnalysisSkippabble.swift in Sources */ = {isa = PBXBuildFile; fileRef = A74245FF2BFF94FA00F7EC64 /* TestImpactAnalysisSkippabble.swift */; };
 		A74C91CA2E67278800B10681 /* DroneCI.swift in Sources */ = {isa = PBXBuildFile; fileRef = A74C91C92E67278800B10681 /* DroneCI.swift */; };
 		A74EB8E02D0AE8A600FAD9B8 /* CodeCoverage in Frameworks */ = {isa = PBXBuildFile; productRef = A74EB8DF2D0AE8A600FAD9B8 /* CodeCoverage */; };
-		A74EB8E42D0AFD3C00FAD9B8 /* CodeCoverageModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A74EB8E32D0AFD3C00FAD9B8 /* CodeCoverageModelTests.swift */; };
 		A74EB8E62D0B449300FAD9B8 /* TestCodeCoverage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A74EB8E52D0B449300FAD9B8 /* TestCodeCoverage.swift */; };
 		A754BB0A2F86CD3B001613EB /* MockSwiftTesting.swift in Sources */ = {isa = PBXBuildFile; fileRef = A754BB092F86CD34001613EB /* MockSwiftTesting.swift */; };
 		A754BB0C2F8958A6001613EB /* TestManagementSwiftTestingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A754BB0B2F8958A6001613EB /* TestManagementSwiftTestingTests.swift */; };
@@ -101,6 +99,20 @@
 		A7A98C202C8F44BC00C93E59 /* CoverageSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7A98C1F2C8F44BC00C93E59 /* CoverageSettings.swift */; };
 		A7AB7C0F2F11AA1100000001 /* RunLoopWaiter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C0F2F11AA1100000002 /* RunLoopWaiter.swift */; };
 		A7AB7C0F2F11AA1200000001 /* MockHTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C0F2F11AA1200000002 /* MockHTTPClient.swift */; };
+		A7AB7C2026E7EB1100000001 /* OpenTelemetry+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB1100000002 /* OpenTelemetry+Extensions.swift */; };
+		A7AB7C2026E7EB1100000003 /* SpanEventsLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB1100000004 /* SpanEventsLog.swift */; };
+		A7AB7C2026E7EB1100000005 /* SpanEventsLogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB1100000006 /* SpanEventsLogTests.swift */; };
+		A7AB7C2026E7EB1100000007 /* CoverageExporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB1100000008 /* CoverageExporterTests.swift */; };
+		A7AB7C2026E7EB1100000009 /* PipelineIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB110000000A /* PipelineIntegrationTests.swift */; };
+		A7AB7C2026E7EB110000000D /* TestSpan.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB110000000E /* TestSpan.swift */; };
+		A7AB7C2026E7EB1100000011 /* CoverageData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB1100000012 /* CoverageData.swift */; };
+		A7AB7C2026E7EB1100000013 /* CoverageProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB1100000014 /* CoverageProcessor.swift */; };
+		A7AB7C2026E7EB1100000015 /* BackgroundCoverageProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB1100000016 /* BackgroundCoverageProcessor.swift */; };
+		A7AB7C2026E7EB1100000017 /* LLVMCoverageProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB1100000018 /* LLVMCoverageProcessor.swift */; };
+		A7AB7C2026E7EB1100000019 /* CoverageBitmapTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB110000001A /* CoverageBitmapTests.swift */; };
+		A7AB7C2026E7EB110000001D /* TestSpanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB110000001C /* TestSpanTests.swift */; };
+		A7AB7C2026E7EB110000001F /* SpanSdk+TestStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB110000001E /* SpanSdk+TestStatus.swift */; };
+		A7AB7C2026E7EB1100000021 /* CodeCoverage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AB7C2026E7EB1100000020 /* CodeCoverage.swift */; };
 		A7B0120F2F364B97000270A4 /* InstrumentationUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B0120E2F364B8A000270A4 /* InstrumentationUtils.swift */; };
 		A7B012112F364BCE000270A4 /* URLSessionInstrumentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B012102F364BC2000270A4 /* URLSessionInstrumentation.swift */; };
 		A7B012132F364C04000270A4 /* URLSessionInstrumentationConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B012122F364C02000270A4 /* URLSessionInstrumentationConfiguration.swift */; };
@@ -149,7 +161,7 @@
 		A7FC25BC2BA1EADF00067E26 /* FrameworkLoadHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABA07225231F4700ED8AEF /* FrameworkLoadHandler.swift */; };
 		A7FC25BD2BA1EADF00067E26 /* DDTestSuite.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1743F4C283E7D9E006CBFF8 /* DDTestSuite.swift */; };
 		A7FC25BE2BA1EADF00067E26 /* DDTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1743F4D283E7DAE006CBFF8 /* DDTest.swift */; };
-		A7FC25BF2BA1EAEB00067E26 /* DDCoverageHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C8DEF4268363EC005B5411 /* DDCoverageHelper.swift */; };
+		A7FC25BF2BA1EAEB00067E26 /* CodeCoverageProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C8DEF4268363EC005B5411 /* CodeCoverageProvider.swift */; };
 		A7FC25C02BA1EAEB00067E26 /* LLVMTotalsCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81EDADB2292698A200279027 /* LLVMTotalsCoverageFormat.swift */; };
 		A7FC25C12BA1EAF500067E26 /* GitUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E146BC392869AEA80057C37B /* GitUploader.swift */; };
 		A7FC25C22BA1EAF500067E26 /* TestImpactAnalysis.swift in Sources */ = {isa = PBXBuildFile; fileRef = E137366128A3BE3600420E26 /* TestImpactAnalysis.swift */; };
@@ -178,9 +190,6 @@
 		A7FC26192BA1EC5A00067E26 /* DataUploadDelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF2027D7790300F4018A /* DataUploadDelay.swift */; };
 		A7FC261A2BA1EC5A00067E26 /* DataUploadStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF2127D7790300F4018A /* DataUploadStatus.swift */; };
 		A7FC261B2BA1EC5A00067E26 /* DataUploadWorker.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1E27D7790300F4018A /* DataUploadWorker.swift */; };
-		A7FC261C2BA1EC5A00067E26 /* RequestBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF1B27D7790300F4018A /* RequestBuilder.swift */; };
-		A7FC261D2BA1EC5A00067E26 /* MultipartFormDataRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C3F529284E150C00A2C2F8 /* MultipartFormDataRequest.swift */; };
-		A7FC262E2BA1ECBD00067E26 /* LLVMSimpleCoverageFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = E10A7E0D2806D68F00B464C9 /* LLVMSimpleCoverageFormat.swift */; };
 		A7FC26302BA1ECBD00067E26 /* CoverageExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1743F5628490141006CBFF8 /* CoverageExporter.swift */; };
 		A7FC26322BA1ECC500067E26 /* SpansExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CEFE27D7790200F4018A /* SpansExporter.swift */; };
 		A7FC26332BA1ECC500067E26 /* SpanEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CEFF27D7790200F4018A /* SpanEncoder.swift */; };
@@ -452,7 +461,6 @@
 		A722B7D82EA6785700F00FA6 /* HttpTestServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HttpTestServer.swift; sourceTree = "<group>"; };
 		A74245FF2BFF94FA00F7EC64 /* TestImpactAnalysisSkippabble.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestImpactAnalysisSkippabble.swift; sourceTree = "<group>"; };
 		A74C91C92E67278800B10681 /* DroneCI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DroneCI.swift; sourceTree = "<group>"; };
-		A74EB8E32D0AFD3C00FAD9B8 /* CodeCoverageModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeCoverageModelTests.swift; sourceTree = "<group>"; };
 		A74EB8E52D0B449300FAD9B8 /* TestCodeCoverage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestCodeCoverage.swift; sourceTree = "<group>"; };
 		A754BB092F86CD34001613EB /* MockSwiftTesting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockSwiftTesting.swift; sourceTree = "<group>"; };
 		A754BB0B2F8958A6001613EB /* TestManagementSwiftTestingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestManagementSwiftTestingTests.swift; sourceTree = "<group>"; };
@@ -501,6 +509,20 @@
 		A7A98C1F2C8F44BC00C93E59 /* CoverageSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoverageSettings.swift; sourceTree = "<group>"; };
 		A7AB7C0F2F11AA1100000002 /* RunLoopWaiter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunLoopWaiter.swift; sourceTree = "<group>"; };
 		A7AB7C0F2F11AA1200000002 /* MockHTTPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockHTTPClient.swift; sourceTree = "<group>"; };
+		A7AB7C2026E7EB1100000002 /* OpenTelemetry+Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "OpenTelemetry+Extensions.swift"; sourceTree = "<group>"; };
+		A7AB7C2026E7EB1100000004 /* SpanEventsLog.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpanEventsLog.swift; sourceTree = "<group>"; };
+		A7AB7C2026E7EB1100000006 /* SpanEventsLogTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpanEventsLogTests.swift; sourceTree = "<group>"; };
+		A7AB7C2026E7EB1100000008 /* CoverageExporterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoverageExporterTests.swift; sourceTree = "<group>"; };
+		A7AB7C2026E7EB110000000A /* PipelineIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PipelineIntegrationTests.swift; sourceTree = "<group>"; };
+		A7AB7C2026E7EB110000000E /* TestSpan.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TestSpan.swift; sourceTree = "<group>"; };
+		A7AB7C2026E7EB1100000012 /* CoverageData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CoverageData.swift; sourceTree = "<group>"; };
+		A7AB7C2026E7EB1100000014 /* CoverageProcessor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CoverageProcessor.swift; sourceTree = "<group>"; };
+		A7AB7C2026E7EB1100000016 /* BackgroundCoverageProcessor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BackgroundCoverageProcessor.swift; sourceTree = "<group>"; };
+		A7AB7C2026E7EB1100000018 /* LLVMCoverageProcessor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LLVMCoverageProcessor.swift; sourceTree = "<group>"; };
+		A7AB7C2026E7EB110000001A /* CoverageBitmapTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CoverageBitmapTests.swift; sourceTree = "<group>"; };
+		A7AB7C2026E7EB110000001C /* TestSpanTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TestSpanTests.swift; sourceTree = "<group>"; };
+		A7AB7C2026E7EB110000001E /* SpanSdk+TestStatus.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "SpanSdk+TestStatus.swift"; sourceTree = "<group>"; };
+		A7AB7C2026E7EB1100000020 /* CodeCoverage.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CodeCoverage.swift; sourceTree = "<group>"; };
 		A7B0120E2F364B8A000270A4 /* InstrumentationUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstrumentationUtils.swift; sourceTree = "<group>"; };
 		A7B012102F364BC2000270A4 /* URLSessionInstrumentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLSessionInstrumentation.swift; sourceTree = "<group>"; };
 		A7B012122F364C02000270A4 /* URLSessionInstrumentationConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLSessionInstrumentationConfiguration.swift; sourceTree = "<group>"; };
@@ -549,7 +571,6 @@
 		D969899DDA68AF3C690F7FF8 /* LogsApi.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LogsApi.swift; sourceTree = "<group>"; };
 		E0B522400A21CABC6BB4F1CA /* TestOptimizationApi.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TestOptimizationApi.swift; sourceTree = "<group>"; };
 		E10034D92703599D00439C9C /* DDTestModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDTestModule.swift; sourceTree = "<group>"; };
-		E10A7E0D2806D68F00B464C9 /* LLVMSimpleCoverageFormat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LLVMSimpleCoverageFormat.swift; sourceTree = "<group>"; };
 		E11295BA25F2483D002719E7 /* FileLocator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileLocator.swift; sourceTree = "<group>"; };
 		E116D7DA25248C390022779D /* SwiftExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftExtensions.swift; sourceTree = "<group>"; };
 		E117CFC626307B9A00ACE977 /* SpySpanProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpySpanProcessor.swift; sourceTree = "<group>"; };
@@ -611,7 +632,6 @@
 		E143CF1727D7790300F4018A /* Directory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Directory.swift; sourceTree = "<group>"; };
 		E143CF1827D7790300F4018A /* File.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = File.swift; sourceTree = "<group>"; };
 		E143CF1927D7790300F4018A /* EventsExporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventsExporter.swift; sourceTree = "<group>"; };
-		E143CF1B27D7790300F4018A /* RequestBuilder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RequestBuilder.swift; sourceTree = "<group>"; };
 		E143CF1C27D7790300F4018A /* DataUploader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataUploader.swift; sourceTree = "<group>"; };
 		E143CF1E27D7790300F4018A /* DataUploadWorker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataUploadWorker.swift; sourceTree = "<group>"; };
 		E143CF2027D7790300F4018A /* DataUploadDelay.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataUploadDelay.swift; sourceTree = "<group>"; };
@@ -651,8 +671,7 @@
 		E1BB54AC25401E85007C2D93 /* StdoutCaptureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StdoutCaptureTests.swift; sourceTree = "<group>"; };
 		E1BB54C325408E92007C2D93 /* StderrCaptureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StderrCaptureTests.swift; sourceTree = "<group>"; };
 		E1C189B8270F193F00188C0E /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
-		E1C3F529284E150C00A2C2F8 /* MultipartFormDataRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipartFormDataRequest.swift; sourceTree = "<group>"; };
-		E1C8DEF4268363EC005B5411 /* DDCoverageHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDCoverageHelper.swift; sourceTree = "<group>"; };
+		E1C8DEF4268363EC005B5411 /* CodeCoverageProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeCoverageProvider.swift; sourceTree = "<group>"; };
 		E1C8DEF7268367AB005B5411 /* BinaryImages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinaryImages.swift; sourceTree = "<group>"; };
 		E1D476A525DD369F00832592 /* BinaryParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinaryParser.swift; sourceTree = "<group>"; };
 		E1EBBD4627F1FFE70059BC3E /* SpanSanitizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpanSanitizer.swift; sourceTree = "<group>"; };
@@ -745,7 +764,6 @@
 			files = (
 				A7E2330F2BC6F4E70087D8F8 /* CDatadogSDKTesting.framework in Frameworks */,
 				A7B2671C2DB694B000505E7B /* OpenTelemetryApi in Frameworks */,
-				A7183A782E9030630093C831 /* CodeCoverageParser in Frameworks */,
 				A7B2671E2DB694B000505E7B /* OpenTelemetrySdk in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -767,7 +785,10 @@
 			isa = PBXGroup;
 			children = (
 				81EDADB2292698A200279027 /* LLVMTotalsCoverageFormat.swift */,
-				E1C8DEF4268363EC005B5411 /* DDCoverageHelper.swift */,
+				E1C8DEF4268363EC005B5411 /* CodeCoverageProvider.swift */,
+				A7AB7C2026E7EB1100000020 /* CodeCoverage.swift */,
+				A7AB7C2026E7EB1100000018 /* LLVMCoverageProcessor.swift */,
+				A7AB7C2026E7EB1100000016 /* BackgroundCoverageProcessor.swift */,
 				A7A98C1F2C8F44BC00C93E59 /* CoverageSettings.swift */,
 			);
 			path = Coverage;
@@ -873,6 +894,14 @@
 				A79DA5F62F99327B004BCA8C /* IntegrationTests_UITests_AppApp.swift */,
 			);
 			path = App;
+			sourceTree = "<group>";
+		};
+		A7AB7C2026E7EB110000001B /* Coverage */ = {
+			isa = PBXGroup;
+			children = (
+				A7AB7C2026E7EB110000001A /* CoverageBitmapTests.swift */,
+			);
+			path = Coverage;
 			sourceTree = "<group>";
 		};
 		A7B39C6B2BCFC799007F98B2 /* Frameworks */ = {
@@ -991,7 +1020,8 @@
 				A7FC26E42BA8648300067E26 /* EventsExporter.xctestplan */,
 				E141EAE727EB3B9E0057D747 /* EventsExporterTests.swift */,
 				A7EE000000010000000000A1 /* LibraryConfigurationErrorsTests.swift */,
-				A74EB8E32D0AFD3C00FAD9B8 /* CodeCoverageModelTests.swift */,
+				A7AB7C2026E7EB1100000008 /* CoverageExporterTests.swift */,
+				A7AB7C2026E7EB110000000A /* PipelineIntegrationTests.swift */,
 			);
 			path = EventsExporter;
 			sourceTree = "<group>";
@@ -999,8 +1029,10 @@
 		E141EADC27EB3B9E0057D747 /* Spans */ = {
 			isa = PBXGroup;
 			children = (
+				A7AB7C2026E7EB1100000006 /* SpanEventsLogTests.swift */,
 				E1EBBD4E27F200A50059BC3E /* SpanSanitizerTests.swift */,
 				E141EADD27EB3B9E0057D747 /* SpansExporterTests.swift */,
+				A7AB7C2026E7EB110000001C /* TestSpanTests.swift */,
 			);
 			path = Spans;
 			sourceTree = "<group>";
@@ -1090,6 +1122,7 @@
 				E143CF1627D7790300F4018A /* Files */,
 				E143CF0C27D7790300F4018A /* ExporterConfiguration.swift */,
 				E143CF1927D7790300F4018A /* EventsExporter.swift */,
+				A7AB7C2026E7EB1100000002 /* OpenTelemetry+Extensions.swift */,
 			);
 			path = EventsExporter;
 			sourceTree = "<group>";
@@ -1098,7 +1131,9 @@
 			isa = PBXGroup;
 			children = (
 				E143CEFE27D7790200F4018A /* SpansExporter.swift */,
+				A7AB7C2026E7EB1100000004 /* SpanEventsLog.swift */,
 				E143CEFF27D7790200F4018A /* SpanEncoder.swift */,
+				A7AB7C2026E7EB110000000E /* TestSpan.swift */,
 				E1EBBD4627F1FFE70059BC3E /* SpanSanitizer.swift */,
 				A7D23AF72C9B10A8006AB41D /* SpanMetadata.swift */,
 			);
@@ -1162,8 +1197,6 @@
 		E143CF1A27D7790300F4018A /* Upload */ = {
 			isa = PBXGroup;
 			children = (
-				E1C3F529284E150C00A2C2F8 /* MultipartFormDataRequest.swift */,
-				E143CF1B27D7790300F4018A /* RequestBuilder.swift */,
 				E143CF1C27D7790300F4018A /* DataUploader.swift */,
 				E143CF1E27D7790300F4018A /* DataUploadWorker.swift */,
 				E143CF2027D7790300F4018A /* DataUploadDelay.swift */,
@@ -1194,8 +1227,9 @@
 		E1743F552849012A006CBFF8 /* CoverageExporter */ = {
 			isa = PBXGroup;
 			children = (
-				E10A7E0D2806D68F00B464C9 /* LLVMSimpleCoverageFormat.swift */,
 				E1743F5628490141006CBFF8 /* CoverageExporter.swift */,
+				A7AB7C2026E7EB1100000012 /* CoverageData.swift */,
+				A7AB7C2026E7EB1100000014 /* CoverageProcessor.swift */,
 				A74EB8E52D0B449300FAD9B8 /* TestCodeCoverage.swift */,
 			);
 			path = CoverageExporter;
@@ -1243,6 +1277,7 @@
 				E10034D92703599D00439C9C /* DDTestModule.swift */,
 				E1743F4C283E7D9E006CBFF8 /* DDTestSuite.swift */,
 				E1743F4D283E7DAE006CBFF8 /* DDTest.swift */,
+				A7AB7C2026E7EB110000001E /* SpanSdk+TestStatus.swift */,
 				E1ABA07125231F4700ED8AEF /* DDTags.swift */,
 				E1ABA08A252341EA00ED8AEF /* DDTestMonitor.swift */,
 				E1798CC52524B9BD008DEBB9 /* DDTracer.swift */,
@@ -1309,6 +1344,7 @@
 				A77C123A2D941F27009C2BA1 /* Features */,
 				E171DC90270DBC6A00A12B79 /* ObjCApi */,
 				E1FB4843253891E70083B263 /* Crashes */,
+				A7AB7C2026E7EB110000001B /* Coverage */,
 				E1AD0737252E1E1A003705C1 /* NetworkInstrumentation */,
 				E1AD0746252E1F63003705C1 /* Objc */,
 				E1BB54AB25401E47007C2D93 /* OutputCapture */,
@@ -1567,6 +1603,8 @@
 				A79DA5B62F929807004BCA8C /* PBXTargetDependency */,
 			);
 			name = "IntegrationTests-UnitTests";
+			packageProductDependencies = (
+			);
 			productName = "IntegrationTests-UnitTests";
 			productReference = A7F3FC412F928191002EFFAB /* IntegrationTests-UnitTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -1633,14 +1671,12 @@
 			buildRules = (
 			);
 			dependencies = (
-				A7183A762E90305A0093C831 /* PBXTargetDependency */,
 				A7E233122BC6F4E70087D8F8 /* PBXTargetDependency */,
 			);
 			name = EventsExporter;
 			packageProductDependencies = (
 				A7B2671B2DB694B000505E7B /* OpenTelemetryApi */,
 				A7B2671D2DB694B000505E7B /* OpenTelemetrySdk */,
-				A7183A772E9030630093C831 /* CodeCoverageParser */,
 			);
 			productName = EventsExporter;
 			productReference = A7FC25802BA1E87400067E26 /* EventsExporter.framework */;
@@ -1914,7 +1950,10 @@
 				A7675D4B2F64742C00A05B5F /* SwiftTestingContext.swift in Sources */,
 				A71E64722BAA0AA100F2ACA5 /* BuildkiteCI.swift in Sources */,
 				A7FC260B2BA1EC0500067E26 /* InternalError.swift in Sources */,
-				A7FC25BF2BA1EAEB00067E26 /* DDCoverageHelper.swift in Sources */,
+				A7FC25BF2BA1EAEB00067E26 /* CodeCoverageProvider.swift in Sources */,
+				A7AB7C2026E7EB1100000021 /* CodeCoverage.swift in Sources */,
+				A7AB7C2026E7EB1100000015 /* BackgroundCoverageProcessor.swift in Sources */,
+				A7AB7C2026E7EB1100000017 /* LLVMCoverageProcessor.swift in Sources */,
 				A7FC25B52BA1EADF00067E26 /* DDInstrumentationControl.swift in Sources */,
 				A71E646E2BAA0AA100F2ACA5 /* GithubCI.swift in Sources */,
 				A7675D492F631DF400A05B5F /* SwiftTestingTrait.swift in Sources */,
@@ -1983,6 +2022,7 @@
 				A71E64762BAA0AA100F2ACA5 /* XcodeCI.swift in Sources */,
 				A7FC25D02BA1EB2900067E26 /* SimpleSpanData.swift in Sources */,
 				A7FC25BE2BA1EADF00067E26 /* DDTest.swift in Sources */,
+				A7AB7C2026E7EB110000001F /* SpanSdk+TestStatus.swift in Sources */,
 				A7FC260F2BA1EC0500067E26 /* BinaryParser.swift in Sources */,
 				A7FC25E02BA1EBF300067E26 /* StderrCapture.swift in Sources */,
 				A71E64732BAA0AA100F2ACA5 /* BitriseCI.swift in Sources */,
@@ -2022,6 +2062,7 @@
 				A7FC266E2BA1F70200067E26 /* DDXCTestObserverTests.swift in Sources */,
 				A7675D742F6CA00000A05B5F /* SessionManagerTests.swift in Sources */,
 				A7FC266C2BA1F70200067E26 /* FrameworkLoadHandlerTests.swift in Sources */,
+				A7AB7C2026E7EB1100000019 /* CoverageBitmapTests.swift in Sources */,
 				A75DAB9C2DEE18DD00F1B8A7 /* MockTestRunner.swift in Sources */,
 				A718EC352CC7F32A00C5F0D9 /* EarlyFlakeDetectionTests.swift in Sources */,
 				300F42B595C3462AB9656B0C /* EarlyFlakeDetectionSwiftTestingTests.swift in Sources */,
@@ -2053,14 +2094,12 @@
 				A7FC26452BA1ECEF00067E26 /* FileReader.swift in Sources */,
 				A7FC264C2BA1ED0C00067E26 /* ExporterConfiguration.swift in Sources */,
 				A7FC26422BA1ECE400067E26 /* LogsExporter.swift in Sources */,
-				A7FC261C2BA1EC5A00067E26 /* RequestBuilder.swift in Sources */,
 				A7FC263E2BA1ECCF00067E26 /* Device.swift in Sources */,
 				A7AB7C0F2F11AA1100000001 /* RunLoopWaiter.swift in Sources */,
 				A7FC26162BA1EC5A00067E26 /* DataUploader.swift in Sources */,
 				A7FC26442BA1ECE400067E26 /* LogEncoder.swift in Sources */,
 				A7FC26432BA1ECE400067E26 /* LogSanitizer.swift in Sources */,
 				A7FC263D2BA1ECCF00067E26 /* AttributesSanitizer.swift in Sources */,
-				A7FC261D2BA1EC5A00067E26 /* MultipartFormDataRequest.swift in Sources */,
 				A7FC26322BA1ECC500067E26 /* SpansExporter.swift in Sources */,
 				A7FC26462BA1ECEF00067E26 /* FilesOrchestrator.swift in Sources */,
 				A7FC26482BA1ECEF00067E26 /* FileWriter.swift in Sources */,
@@ -2071,8 +2110,10 @@
 				A7FC26352BA1ECCF00067E26 /* PerformancePreset.swift in Sources */,
 				A7FC261B2BA1EC5A00067E26 /* DataUploadWorker.swift in Sources */,
 				A7FC26372BA1ECCF00067E26 /* JSONGeneric.swift in Sources */,
-				A7FC262E2BA1ECBD00067E26 /* LLVMSimpleCoverageFormat.swift in Sources */,
 				A79DA6442FB62618004BCA8C /* HTTPClient.swift in Sources */,
+				A7AB7C2026E7EB1100000001 /* OpenTelemetry+Extensions.swift in Sources */,
+				A7AB7C2026E7EB1100000003 /* SpanEventsLog.swift in Sources */,
+				A7AB7C2026E7EB110000000D /* TestSpan.swift in Sources */,
 				A79DA6452FB62618004BCA8C /* HTTPHeader.swift in Sources */,
 				A7FC26332BA1ECC500067E26 /* SpanEncoder.swift in Sources */,
 				A7FC26492BA1ECF800067E26 /* Directory.swift in Sources */,
@@ -2081,6 +2122,8 @@
 				A7FC264A2BA1ECF800067E26 /* File.swift in Sources */,
 				A7FC264D2BA1ED1200067E26 /* EventsExporter.swift in Sources */,
 				A7FC26302BA1ECBD00067E26 /* CoverageExporter.swift in Sources */,
+				A7AB7C2026E7EB1100000011 /* CoverageData.swift in Sources */,
+				A7AB7C2026E7EB1100000013 /* CoverageProcessor.swift in Sources */,
 				A7FC263B2BA1ECCF00067E26 /* Feature.swift in Sources */,
 				A7FC26342BA1ECC500067E26 /* SpanSanitizer.swift in Sources */,
 				A7FC26382BA1ECCF00067E26 /* Spawn.swift in Sources */,
@@ -2135,9 +2178,12 @@
 				A7FC268C2BA1F82300067E26 /* HTTPClientTests.swift in Sources */,
 				A7FC26742BA1F80000067E26 /* JSONEncoderTests.swift in Sources */,
 				A7FC266F2BA1F7FA00067E26 /* SpanSanitizerTests.swift in Sources */,
+				A7AB7C2026E7EB1100000005 /* SpanEventsLogTests.swift in Sources */,
+				A7AB7C2026E7EB110000001D /* TestSpanTests.swift in Sources */,
 				A7FC26842BA1F81D00067E26 /* Encoding.swift in Sources */,
 				A7FC26762BA1F80000067E26 /* SpawnTests.swift in Sources */,
-				A74EB8E42D0AFD3C00FAD9B8 /* CodeCoverageModelTests.swift in Sources */,
+				A7AB7C2026E7EB1100000007 /* CoverageExporterTests.swift in Sources */,
+				A7AB7C2026E7EB1100000009 /* PipelineIntegrationTests.swift in Sources */,
 				A7FC267F2BA1F81D00067E26 /* TestsDirectory.swift in Sources */,
 				A7FC26892BA1F81D00067E26 /* ServerMock.swift in Sources */,
 				A7AB7C0F2F11AA1200000001 /* MockHTTPClient.swift in Sources */,
@@ -2150,10 +2196,6 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		A7183A762E90305A0093C831 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			productRef = A7183A752E90305A0093C831 /* CodeCoverageParser */;
-		};
 		A722B7E32EA6787C00F00FA6 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = A722B7CF2EA6783300F00FA6 /* TestUtils */;
@@ -3119,7 +3161,7 @@
 			repositoryURL = "https://github.com/open-telemetry/opentelemetry-swift-core.git";
 			requirement = {
 				kind = upToNextMinorVersion;
-				minimumVersion = 2.3.0;
+				minimumVersion = 2.4.0;
 			};
 		};
 		A7D7E64E2D074D9200B49C35 /* XCRemoteSwiftPackageReference "swift-code-coverage" */ = {
@@ -3165,16 +3207,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		A7183A752E90305A0093C831 /* CodeCoverageParser */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = A7D7E64E2D074D9200B49C35 /* XCRemoteSwiftPackageReference "swift-code-coverage" */;
-			productName = CodeCoverageParser;
-		};
-		A7183A772E9030630093C831 /* CodeCoverageParser */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = A7D7E64E2D074D9200B49C35 /* XCRemoteSwiftPackageReference "swift-code-coverage" */;
-			productName = CodeCoverageParser;
-		};
 		A74EB8DD2D0A010A00FAD9B8 /* CodeCoverage */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = A7D7E64E2D074D9200B49C35 /* XCRemoteSwiftPackageReference "swift-code-coverage" */;

@@ -28,18 +28,14 @@ private enum HTTPResponseStatusCode: Int {
     /// An unexpected status code.
     case unexpected = -999
 
-    /// If it makes sense to retry the upload finished with this status code, e.g. if data upload failed due to `503` HTTP error, we should retry it later.
+    /// Whether the upload should be retried for this status (e.g. 503 — try again later).
     var needsRetry: Bool {
         switch self {
         case .accepted, .badRequest, .unauthorized, .forbidden, .payloadTooLarge:
-            // No retry - it's either success or a client error which won't be fixed in next upload.
             return false
         case .requestTimeout, .tooManyRequests, .internalServerError, .serviceUnavailable:
-            // Retry - it's a temporary server or connection issue that might disappear on next attempt.
             return true
         case .unexpected:
-            // This shouldn't happen, but if receiving an unexpected status code we do not retry.
-            // This is safer than retrying as we don't know if the issue is coming from the client or server.
             return false
         }
     }
@@ -47,11 +43,13 @@ private enum HTTPResponseStatusCode: Int {
 
 /// The status of a single upload attempt.
 internal struct DataUploadStatus {
-    /// If upload needs to be retried (`true`) because its associated data was not delivered but it may succeed
-    /// in the next attempt (i.e. it failed due to device leaving signal range or a temporary server unavailability occured).
-    /// If set to `false` then data associated with the upload should be deleted as it does not need any more upload
-    /// attempts (i.e. the upload succeeded or failed due to unrecoverable client error).
+    /// If upload needs to be retried because its associated data was not delivered but it may succeed
+    /// in the next attempt (i.e. it failed due to device leaving signal range or a temporary server unavailability).
+    /// If `false` then data should be deleted as it does not need any more upload attempts.
     let needsRetry: Bool
+
+    /// Server-supplied retry-after (in seconds) when available.
+    let waitTime: TimeInterval?
 }
 
 extension DataUploadStatus {
@@ -59,16 +57,34 @@ extension DataUploadStatus {
 
     init(httpResponse: HTTPURLResponse) {
         let statusCode = HTTPResponseStatusCode(rawValue: httpResponse.statusCode) ?? .unexpected
-        self.init(needsRetry: statusCode.needsRetry)
+        self.init(needsRetry: statusCode.needsRetry, waitTime: nil)
+    }
+
+    init(httpCode: Int, headers: [HTTPHeader.Field: String]) {
+        let statusCode = HTTPResponseStatusCode(rawValue: httpCode) ?? .unexpected
+        switch statusCode {
+        case .tooManyRequests:
+            var waitTime: TimeInterval? = nil
+            if let retryAfter = headers[.retryAfterHeaderField], let retry = TimeInterval(retryAfter) {
+                waitTime = retry
+            } else if let rateLimit = headers[.rateLimitResetHeaderField], let retry = TimeInterval(rateLimit) {
+                waitTime = retry
+            }
+            self.init(needsRetry: true, waitTime: waitTime)
+        default:
+            self.init(needsRetry: statusCode.needsRetry, waitTime: nil)
+        }
     }
 
     init(networkError: HTTPClient.RequestError) {
         switch networkError {
-        case .http(code: let code, headers: _, body: nil):
-            let statusCode = HTTPResponseStatusCode(rawValue: code) ?? .unexpected
-            self.init(needsRetry: statusCode.needsRetry)
-        default:
-            self.init(needsRetry: true)
+        case .http(code: let code, headers: let headers, body: _):
+            self.init(httpCode: code, headers: headers)
+        case .transport, .inconsistentSession:
+            self.init(needsRetry: true, waitTime: nil)
         }
     }
+
+    static var success: DataUploadStatus { .init(needsRetry: false, waitTime: nil) }
+    static var retry: DataUploadStatus { .init(needsRetry: true, waitTime: nil) }
 }

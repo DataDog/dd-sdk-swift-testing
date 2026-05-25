@@ -14,7 +14,12 @@ extension APIAttributes {
     var apiType: String { Self.apiType }
 }
 
-protocol APICommonData {
+protocol APIResponseAttributes: APIAttributes {
+    static func isTypeValid(_ type: String) -> Bool
+    static func isIdValid(request rqid: String?, response rsid: String?) -> Bool
+}
+
+protocol APICommonData: CustomDebugStringConvertible {
     associatedtype Meta
     associatedtype Attributes: APIAttributes
 
@@ -23,19 +28,37 @@ protocol APICommonData {
     var attributes: Attributes { get }
 }
 
+extension APICommonData {
+    var debugDescription: String {
+        var out: String = #"{"type": "\#(type)""#
+        if let id {
+            out.append(#", "id": "\#(id)""#)
+        }
+        if attributes as? APIVoidValue == nil {
+            out.append(#", "attributes": \#(attributes)"#)
+        }
+        out.append("}")
+        return out
+    }
+}
+
 protocol APIRequestData: APICommonData, Encodable where Attributes: Encodable, Meta: Encodable {}
-protocol APIResponseData: APICommonData, Decodable where Attributes: Decodable, Meta: Decodable {
+protocol APIResponseData: APICommonData, Decodable where Attributes: Decodable & APIResponseAttributes, Meta: Decodable {
     var isTypeValid: Bool { get }
     func isIdValid(_ id: String?) -> Bool
 }
 
 extension APIResponseData {
-    var isTypeValid: Bool { type == Attributes.apiType }
-    func isIdValid(_ id: String?) -> Bool { id == self.id }
+    var isTypeValid: Bool { Attributes.isTypeValid(type) }
+    func isIdValid(_ id: String?) -> Bool { Attributes.isIdValid(request: id, response: self.id) }
 }
 
-extension Array: APIAttributes where Element: APIAttributes {
+extension Array: APIAttributes, APIAttributesAutoId, APIAttributesNoId where Element: APIAttributes {
     static var apiType: String { Element.apiType }
+}
+
+extension Array: APIResponseAttributes, APIResponseAttributesNoId where Element: APIResponseAttributes {
+    static func isTypeValid(_ type: String) -> Bool { Element.isTypeValid(type) }
 }
 
 extension Array: APICommonData where Element: APICommonData {
@@ -104,6 +127,37 @@ extension APIAttributesUUID {
     static var nextId: String? { UUID().uuidString }
 }
 
+protocol APIResponseAttributesHasType: APIResponseAttributes {}
+extension APIResponseAttributesHasType {
+    static func isTypeValid(_ type: String) -> Bool { Self.apiType == type }
+}
+
+protocol APIResponseAttributesIgnoreType: APIResponseAttributes {}
+extension APIResponseAttributesIgnoreType {
+    static func isTypeValid(_ type: String) -> Bool { true }
+}
+
+protocol APIResponseAttributesHasId: APIResponseAttributes {}
+extension APIResponseAttributesHasId {
+    static func isIdValid(request: String?, response: String?) -> Bool {
+        request != nil && response != nil && request == response
+    }
+}
+
+protocol APIResponseAttributesBrokenId: APIResponseAttributes {}
+extension APIResponseAttributesBrokenId {
+    static func isIdValid(request: String?, response: String?) -> Bool {
+        response != nil
+    }
+}
+
+protocol APIResponseAttributesNoId: APIResponseAttributes {}
+extension APIResponseAttributesNoId {
+    static func isIdValid(request: String?, response: String?) -> Bool {
+        response == nil
+    }
+}
+
 extension APIData where Attributes: APIVoidValue {
     init(id: String?) {
         self.init(id: id, attributes: .void)
@@ -146,13 +200,13 @@ extension APIData: Decodable where Attributes: Decodable {
 }
 
 extension APIData: APIRequestData where Meta: Encodable, Attributes: Encodable {}
-extension APIData: APIResponseData where Meta: Decodable, Attributes: Decodable {}
+extension APIData: APIResponseData where Meta: Decodable, Attributes: Decodable & APIResponseAttributes {}
 
 struct APIVoidMeta: APIVoidValue, Codable {
     static var void: Self { .init() }
 }
 
-struct APIEnvelope<Data: APICommonData> {
+struct APIEnvelope<Data: APICommonData>: CustomDebugStringConvertible {
     let meta: Data.Meta
     let data: Data
 
@@ -164,6 +218,14 @@ struct APIEnvelope<Data: APICommonData> {
     enum CodingKeys: CodingKey {
         case meta
         case data
+    }
+    
+    var debugDescription: String {
+        if meta as? APIVoidValue == nil {
+            return #"{"data": \#(data)}"#
+        } else {
+            return #"{"meta": \#(meta), "data": \#(data)}"#
+        }
     }
 }
 
@@ -287,8 +349,7 @@ internal struct APIServiceConfig {
             .traceIDHeader(traceID: clientId),
             .parentSpanIDHeader(parentSpanID: clientId),
             .samplingPriorityHeader()
-        ] + (payloadCompression ? [.contentEncodingHeader(contentEncoding: .deflate)] : []) +
-            (hostname != nil ? [.hostnameHeader(hostname: hostname!)] : [])
+        ] + (hostname != nil ? [.hostnameHeader(hostname: hostname!)] : [])
     }
 
     init(serviceName: String, environment: String,
@@ -307,15 +368,33 @@ internal struct APIServiceConfig {
         self.clientId = clientId
         self.payloadCompression = payloadCompression
     }
+
+    init(configuration: ExporterConfiguration, device: Device = .current) {
+        self.init(serviceName: configuration.serviceName,
+                  environment: configuration.environment,
+                  applicationName: configuration.applicationName,
+                  version: configuration.version,
+                  device: device,
+                  hostname: configuration.hostname,
+                  apiKey: configuration.apiKey,
+                  endpoint: configuration.endpoint,
+                  clientId: configuration.exporterId,
+                  payloadCompression: configuration.payloadCompression)
+    }
 }
 
 extension JSONEncoder {
     internal static let apiEncoder: JSONEncoder = {
         let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
+        encoder.dateEncodingStrategy = .custom { date, encoder in
+            var container = encoder.singleValueContainer()
+            let formatted = iso8601DateFormatter.string(from: date)
+            try container.encode(formatted)
+        }
         encoder.dataEncodingStrategy = .base64
         encoder.keyEncodingStrategy = .convertToSnakeCase
         encoder.nonConformingFloatEncodingStrategy = .throw
+        encoder.outputFormatting = [.withoutEscapingSlashes]
         return encoder
     }()
 
@@ -333,7 +412,15 @@ extension JSONEncoder {
 extension JSONDecoder {
     internal static let apiDecoder: JSONDecoder = {
         let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+            let string = try container.decode(String.self)
+            guard let date = iso8601DateFormatter.date(from: string) else {
+                throw DecodingError.dataCorruptedError(in: container,
+                                                       debugDescription: "Bad date: \(string)")
+            }
+            return date
+        }
         decoder.keyDecodingStrategy = .convertFromSnakeCase
         decoder.dataDecodingStrategy = .base64
         return decoder

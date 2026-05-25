@@ -6,32 +6,30 @@
 
 import Foundation
 @preconcurrency internal import OpenTelemetryApi
+@preconcurrency internal import OpenTelemetrySdk
 internal import EventsExporter
 
 @objc(DDTestModule)
-public final class Module: NSObject, Encodable {
+public final class Module: NSObject {
     struct MutableState {
-        var duration: UInt64 = 0
-        var meta: [String: String] = [:]
-        var metrics: [String: Double] = [:]
-        var status: TestStatus = .pass
         var testFrameworks: Set<String> = []
     }
-    
+
     public let name: String
-    public let startTime: Date
     public let localization: String
-    
+
     public var testFrameworks: Set<String> { _state.value.testFrameworks }
-    public var duration: UInt64 { _state.value.duration }
-    public var tags: [String: String] { _state.value.meta }
-    public var metrics: [String: Double] { _state.value.metrics }
-    public var status: TestStatus { _state.value.status }
-    
-    let id: SpanId
+    public var duration: UInt64 {
+        span.endTime?.timeIntervalSince(span.startTime).toNanoseconds ?? 0
+    }
+    public var status: TestStatus { span.testStatus }
+
+    var id: SpanId { span.context.spanId }
+    let span: SpanSdk
     var session: TestSession { _session }
     var configuration: SessionConfig { _session.configuration }
-    
+    var startTime: Date { span.startTime }
+
     private let _session: Session
     private let _state: Synced<MutableState>
 
@@ -39,45 +37,70 @@ public final class Module: NSObject, Encodable {
         self.name = name
         self._session = session
 
-        var state = MutableState()
-        let moduleStartTime = startTime ?? session.configuration.clock.now
+        let state = MutableState()
+        let id: SpanId
+        let actualStartTime: Date
+        let isCrashed: Bool
         if let crash = session.configuration.crash?.module, crash.name == name {
-            state.status = .fail
-            self.id = crash.id
-            self.startTime = crash.startTime
+            isCrashed = true
+            id = crash.id
+            actualStartTime = crash.startTime
         } else {
-            self.id = SpanId.random()
-            self.startTime = moduleStartTime
+            isCrashed = false
+            id = SpanId.random()
+            actualStartTime = startTime ?? session.configuration.clock.now
         }
         self.localization = PlatformUtils.getLocalization()
+
+        var attributes: [String: AttributeValue] = [
+            DDTestTags.testModule: .string(name),
+            DDUISettingsTags.uiSettingsModuleLocalization: .string(localization),
+        ]
         
-        state.meta[DDGenericTags.type] = DDTagValues.typeModuleEnd
-        state.meta[DDTestTags.testModule] = name
-        state.meta[DDTestSuiteVisibilityTags.testModuleId] = String(id.rawValue)
-        state.meta[DDTestSuiteVisibilityTags.testSessionId] = String(session.id.rawValue)
-        state.meta[DDUISettingsTags.uiSettingsModuleLocalization] = localization
+        attributes.type = DDTagValues.typeModuleEnd
+        attributes.resource = name
+        attributes.testSessionId = session.id
+        attributes.testModuleId = id
         
-        // Move to the global when we will support global metrics
-        state.metrics.merge(session.configuration.metrics) { _, new in new }
-        
+        for (key, value) in session.configuration.metrics {
+            attributes[key] = .double(value)
+        }
+
+        let span = DDTestMonitor.tracer.createLifecycleSpan(name: "Swift.module",
+                                                            spanId: id,
+                                                            startTime: actualStartTime,
+                                                            attributes: attributes)
+        if isCrashed {
+            span.applyStatus(.fail, errorDescription: "module failed")
+        }
+        self.span = span
+
         self._state = .init(state)
         super.init()
-        
+
         if let crash = session.configuration.crash?.module,
            let error = crash.error, crash.name == name
         {
             set(failed: error)
         }
     }
-    
+
     private func internalEnd(endTime: Date? = nil) {
-        let duration = (endTime ?? configuration.clock.now).timeIntervalSince(startTime).toNanoseconds
-        _state.update { state in
-            state.duration = duration
-            state.meta[DDTestTags.testFramework] = state.testFrameworks.joined(separator: ",")
-            state.meta[DDTestTags.testStatus] = state.status.spanAttribute
+        let endTime = endTime ?? configuration.clock.now
+
+        let framework = _state.use { state -> String in
+            state.testFrameworks.count == 1
+                ? "\(state.testFrameworks.first!).module"
+                : "Swift.module"
         }
-        DDTestMonitor.tracer.eventsExporter?.exportEvent(event: ModuleEnvelope(self))
+
+        span.setAttribute(key: DDTestTags.testFramework,
+                          value: .string(_state.value.testFrameworks.joined(separator: ",")))
+        span.name = framework
+        // get-status -> set-status round-trip (see DDTestSession).
+        span.applyStatus(span.testStatus, errorDescription: "module failed")
+        span.end(time: endTime)
+
         configuration.log.debug("Exported module_end event moduleId: \(self.id)")
     }
 
@@ -123,39 +146,33 @@ public extension Module {
 }
 
 extension Module: TestModule {
+    var attributes: [String: TestAttributeValue] { span.getAttributes().testAttributes }
+
     func set(tag name: String, value: SpanAttributeConvertible) {
-        _state.update {
-            $0.meta[name] = value.spanAttribute
-        }
+        span.setAttribute(key: name, value: .string(value.spanAttribute))
     }
-    
+
     func set(metric name: String, value: Double) {
-        _state.update {
-            $0.metrics[name] = value
-        }
+        span.setAttribute(key: name, value: .double(value))
     }
-    
+
     func set(skipped reason: String? = nil) {
-        _state.update {
-            $0.status = .skip
-            if let reason = reason {
-                $0.meta[DDTestTags.testSkipReason] = reason
-            }
+        if let reason = reason {
+            set(tag: DDTestTags.testSkipReason, value: reason)
         }
+        span.applyStatus(.skip, errorDescription: "")
     }
-    
+
     func set(failed reason: TestError?) {
-        _state.update {
-            $0.status = .fail
-        }
         var errorMessage = "Module \(name) failed"
         if let error = reason {
             set(errorTags: error)
             errorMessage += ": \(error)"
         }
+        span.applyStatus(.fail, errorDescription: errorMessage)
         session.set(failed: .init(type: "ModuleFailed", message: errorMessage))
     }
-    
+
     func end(time: Date?) { end(endTime: time) }
 }
 
@@ -163,57 +180,5 @@ extension Module: TestSuiteProvider {
     func startSuite(named name: String, at start: Date?, framework: TestFramework) -> any TestRunProvider & TestSuite {
         addFramework(framework.name)
         return Suite(name: name, module: self, framework: framework, startTime: start)
-    }
-}
-
-extension Module {
-    enum StaticCodingKeys: String, CodingKey {
-        case test_session_id
-        case test_module_id
-        case start
-        case duration
-        case meta
-        case metrics
-        case error
-        case name
-        case resource
-        case service
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: StaticCodingKeys.self)
-        try _state.use { state in
-            try container.encode(session.id.rawValue, forKey: .test_session_id)
-            try container.encode(id.rawValue, forKey: .test_module_id)
-            try container.encode(startTime.timeIntervalSince1970.toNanoseconds, forKey: .start)
-            try container.encode(state.duration, forKey: .duration)
-            try container.encode(state.meta, forKey: .meta)
-            try container.encode(state.metrics, forKey: .metrics)
-            try container.encode(state.status == .fail ? 1 : 0, forKey: .error)
-            if state.testFrameworks.count == 1, let framework = state.testFrameworks.first {
-                try container.encode("\(framework).module", forKey: .name)
-            } else {
-                try container.encode("Swift.module", forKey: .name)
-            }
-            try container.encode(name, forKey: .resource)
-            try container.encode(DDTestMonitor.env.service, forKey: .service)
-        }
-    }
-
-    struct ModuleEnvelope: Encodable {
-        enum CodingKeys: String, CodingKey {
-            case type
-            case version
-            case content
-        }
-
-        let version: Int = 1
-
-        let type: String = DDTagValues.typeModuleEnd
-        let content: Module
-
-        init(_ content: Module) {
-            self.content = content
-        }
     }
 }

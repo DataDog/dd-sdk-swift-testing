@@ -92,10 +92,19 @@ extension DataFormat {
         separator: String = .mockAny()
     ) -> DataFormat {
         return DataFormat(
-            prefix: prefix,
-            suffix: suffix,
-            separator: separator
+            prefix: Data(prefix.utf8),
+            suffix: Data(suffix.utf8),
+            separator: Data(separator.utf8)
         )
+    }
+
+    /// Build the on-disk representation of a sequence of pre-encoded entries
+    /// exactly as `FileWriter` would lay them out: `prefix + entries[0] +
+    /// separator + entries[1] + ...` (no suffix — the reader appends that).
+    /// Useful for seeding a file before exercising `FileReader` directly.
+    func formatFileContents(_ entries: [Data]) -> Data {
+        guard let first = entries.first else { return Data() }
+        return entries.dropFirst().reduce(into: prefix + first) { $0 += separator + $1 }
     }
 }
 
@@ -138,23 +147,37 @@ class RelativeDateProvider: DateProvider {
     }
 }
 
-extension SingleRequestBuilder: AnyMockable {
-    static func mockAny() -> SingleRequestBuilder {
-        return mockWith()
-    }
-
-    static func mockWith(
-        url: URL = .mockAny(),
-        queryItems: [QueryItem] = [],
-        headers: [HTTPHeader] = []
-    ) -> SingleRequestBuilder {
-        return SingleRequestBuilder(url: url, queryItems: queryItems, headers: headers)
-    }
-}
-
 extension HTTPClient {
     static func mockAny() -> HTTPClient {
         return HTTPClient(session: URLSession(configuration: URLSessionConfiguration.default), debug: false)
+    }
+}
+
+/// A `DataUploaderType` backed by a `MockHTTPClient` so worker/uploader tests
+/// can keep using `MockHTTPClient.waitAndReturnRequests(...)`. Wraps each
+/// upload in a `URLRequest` carrying the raw batch as its `httpBody`.
+internal struct MockClosureDataUploader: DataUploaderType {
+    let httpClient: MockHTTPClient
+    let url: URL
+
+    init(httpClient: MockHTTPClient, url: URL = .mockAny()) {
+        self.httpClient = httpClient
+        self.url = url
+    }
+
+    func upload(data: Data) -> DataUploadStatus {
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.httpBody = data
+        let httpClient = self.httpClient
+        do {
+            let response = try waitForAsync { () async throws(HTTPClient.RequestError) -> HTTPURLResponse in
+                try await httpClient.send(request: request)
+            }
+            return DataUploadStatus(httpResponse: response)
+        } catch {
+            return DataUploadStatus(networkError: error)
+        }
     }
 }
 
@@ -189,14 +212,14 @@ struct DataUploaderMock: DataUploaderType {
 
 extension DataUploadStatus: RandomMockable {
     static func mockRandom() -> DataUploadStatus {
-        let retryRandom: Bool = .random()
-        return DataUploadStatus(needsRetry: retryRandom)
+        return DataUploadStatus(needsRetry: .random(), waitTime: nil)
     }
 
     static func mockWith(
         needsRetry: Bool = .mockAny(),
+        waitTime: TimeInterval? = nil,
         accepted: Bool = true
     ) -> DataUploadStatus {
-        return DataUploadStatus(needsRetry: needsRetry)
+        return DataUploadStatus(needsRetry: needsRetry, waitTime: waitTime)
     }
 }

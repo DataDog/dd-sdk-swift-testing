@@ -6,7 +6,7 @@
 
 @testable import DatadogSDKTesting
 import OpenTelemetryApi
-import OpenTelemetrySdk
+@testable import OpenTelemetrySdk
 import XCTest
 
 class DDTracerTests: XCTestCase {
@@ -196,23 +196,40 @@ class DDTracerTests: XCTestCase {
         XCTAssertEqual(spanData.endTime, spanData.startTime.addingTimeInterval(TimeInterval.fromMicroseconds(1)))
     }
 
+    /// When the host app is launched from a UI test there's no active span,
+    /// but the harness passes a launch trace/span pair via env. `logString`
+    /// must emit the captured text as a `LogRecord` carrying that launch
+    /// context — it must NOT synthesize an aux span (the old implementation
+    /// did, but that polluted the trace stream).
     func testLogStringAppUI() throws {
         let testTraceId = TraceId(fromHexString: "ff000000000000000000000000000041")
         let testSpanId = SpanId(fromHexString: "ff00000000000042")
-        
+
         setEnv(env: ["ENVIRONMENT_TRACER_TRACEID": testTraceId.hexString,
                      "ENVIRONMENT_TRACER_SPANID": testSpanId.hexString])
 
-        let tracer = DDTracer()
+        let logExporter = InMemoryLogRecordExporter()
+        let tracer = DDTracer(logRecordExporter: logExporter)
         let testSpanProcessor = SpySpanProcessor()
         tracer.tracerProviderSdk.addSpanProcessor(testSpanProcessor)
 
-        tracer.logString(string: "Hello World", date: Date(timeIntervalSince1970: 1212))
+        let timestamp = Date(timeIntervalSince1970: 1212)
+        tracer.logString(string: "Hello World", date: timestamp)
         tracer.flush()
-        let span = try XCTUnwrap(testSpanProcessor.lastProcessedSpan)
 
-        let spanData = span.toSpanData()
-        XCTAssertEqual(spanData.events.count, 1)
+        XCTAssertNil(testSpanProcessor.lastProcessedSpan,
+                     "no span should be produced — the message must go out as a LogRecord")
+
+        let records = logExporter.getFinishedLogRecords()
+        XCTAssertEqual(records.count, 1)
+        let record = records[0]
+        XCTAssertEqual(record.body?.description, "Hello World")
+        XCTAssertEqual(record.severity, .info)
+        XCTAssertEqual(record.timestamp, timestamp)
+        XCTAssertEqual(record.spanContext?.traceId, testTraceId,
+                       "launch traceId from env must be propagated onto the log record")
+        XCTAssertEqual(record.spanContext?.spanId, testSpanId,
+                       "launch spanId from env must be propagated onto the log record")
     }
 
     func testEnvironmentConstantPropagation() {

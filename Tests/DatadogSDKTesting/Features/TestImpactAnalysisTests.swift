@@ -389,12 +389,13 @@ class TestImpactAnalysisTests: XCTestCase {
                                                         suite: "TIASuite",
                                                         configuration: ["test.bundle": "TIAModule"]) })
         let collector = Mocks.CoverageCollector()
-        let tia = TestImpactAnalysis(tests: skipped, coverage: collector, swiftTestingEnabled: false)
-        return (Mocks.Runner(features: [tia, AdditionalTags()], tests: ["TIAModule": ["TIASuite": .init(tests: tests)]]), tia, collector)
+        let tia = TestImpactAnalysis(tests: skipped, swiftTestingEnabled: false)
+        let coverage = CodeCoverage(collector: collector, swiftTestingEnabled: false)
+        return (Mocks.Runner(features: [tia, coverage, AdditionalTags()], tests: ["TIAModule": ["TIASuite": .init(tests: tests)]]), tia, collector)
     }
 
     func tiaDisabledRunner(tests: KeyValuePairs<String, Mocks.Runner.TestMethod>) -> (Mocks.Runner, TestImpactAnalysis) {
-        let tia = TestImpactAnalysis(tests: nil, coverage: nil, swiftTestingEnabled: false)
+        let tia = TestImpactAnalysis(tests: nil, swiftTestingEnabled: false)
         return (Mocks.Runner(features: [tia, AdditionalTags()], tests: ["TIAModule": ["TIASuite": .init(tests: tests)]]), tia)
     }
     

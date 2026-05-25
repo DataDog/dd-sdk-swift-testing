@@ -6,126 +6,145 @@
 
 import Foundation
 @preconcurrency internal import OpenTelemetryApi
+@preconcurrency internal import OpenTelemetrySdk
 internal import EventsExporter
 
 @objc(DDTestSession)
-public final class Session: NSObject, Encodable {
+public final class Session: NSObject {
     struct MutableState {
-        var duration: UInt64 = 0
-        var meta: [String: String] = [:]
-        var metrics: [String: Double] = [:]
-        var status: TestStatus = .pass
         var testRunsCount: UInt = 0
         var testFrameworks: Set<String> = []
     }
-    
+
     public let name: String
-    public let startTime: Date
     public var testFrameworks: Set<String> { _state.value.testFrameworks }
-    public var duration: UInt64 { _state.value.duration }
-    public var tags: [String: String] { _state.value.meta }
-    public var metrics: [String: Double] { _state.value.metrics }
-    public var status: TestStatus { _state.value.status }
-    
-    let id: SpanId
+    public var duration: UInt64 {
+        span.endTime?.timeIntervalSince(span.startTime).toNanoseconds ?? 0
+    }
+    public var status: TestStatus { span.testStatus }
+
+    var id: SpanId { span.context.spanId }
     let configuration: SessionConfig
+    let span: SpanSdk
+    var startTime: Date { span.startTime }
     var testRunsCount: UInt { _state.value.testRunsCount }
-    
+
     private let _state: Synced<MutableState>
     private let _moduleManager: any TestModuleManagerSession
-    
+
     init(name: String, config: SessionConfig, modules: any TestModuleManagerSession, startTime: Date? = nil) {
         self.name = name
         self.configuration = config
         self._moduleManager = modules
-        
-        var state = MutableState()
-        state.meta[DDTestTags.testCommand] = config.command
-        
-        let sessionStartTime = startTime ?? config.clock.now
+
+        let state = MutableState()
+        let id: SpanId
+        let actualStartTime: Date
+        let isCrashed: Bool
         if let crash = config.crash?.session {
-            state.status = .fail
-            self.id = crash.id
-            self.startTime = crash.startTime
+            isCrashed = true
+            id = crash.id
+            actualStartTime = crash.startTime
         } else {
-            self.id = SpanId.random()
-            self.startTime = sessionStartTime
+            isCrashed = false
+            id = SpanId.random()
+            actualStartTime = startTime ?? config.clock.now
         }
+
+        var attributes: [String: AttributeValue] = [
+            DDTestSessionTags.testToolchain: .string(config.platform.runtimeName.lowercased()
+                                                     + "-" + config.platform.runtimeVersion),
+        ]
         
-        state.meta[DDGenericTags.type] = DDTagValues.typeSessionEnd
-        state.meta[DDTestSuiteVisibilityTags.testSessionId] = String(id.rawValue)
-        state.meta[DDTestSessionTags.testToolchain] = configuration.platform.runtimeName.lowercased() + "-" + configuration.platform.runtimeVersion
+        attributes.type = DDTagValues.typeSessionEnd
+        attributes.resource = name
+        attributes.testSessionId = id
         
-        // Move to the global when we will support global metrics
-        state.metrics.merge(configuration.metrics) { _, new in new }
-        
+        if let command = config.command {
+            attributes[DDTestTags.testCommand] = .string(command)
+        }
+        for (key, value) in config.metrics {
+            attributes[key] = .double(value)
+        }
+
+        // Span name gets the framework-aware value at internalEnd; until then
+        // we use a placeholder.
+        let span = DDTestMonitor.tracer.createLifecycleSpan(name: "Swift.session",
+                                                            spanId: id,
+                                                            startTime: actualStartTime,
+                                                            attributes: attributes)
+        if isCrashed {
+            span.applyStatus(.fail, errorDescription: "session failed")
+        }
+        self.span = span
         self._state = .init(state)
     }
-    
+
     private func internalEnd(endTime: Date? = nil) {
-        let duration = (endTime ?? configuration.clock.now).timeIntervalSince(startTime).toNanoseconds
+        let endTime = endTime ?? configuration.clock.now
         _moduleManager.stop()
-        
+
         // If there is a Sanitizer message, we fail the session so error can be shown
         if let sanitizerInfo = SanitizerHelper.getSaniziterInfo() {
             self.set(failed: .init(type: "Sanitizer Error", stack: sanitizerInfo))
         }
-        
-        // Update meta tags to the latest state
-        _state.update { state in
-            state.duration = duration
-            state.meta[DDTestTags.testFramework] = state.testFrameworks.joined(separator: ",")
-            state.meta[DDTestTags.testStatus] = state.status.spanAttribute
+
+        let framework = _state.use { state -> String in
+            state.testFrameworks.count == 1
+                ? "\(state.testFrameworks.first!).session"
+                : "Swift.session"
         }
-        // export it
-        DDTestMonitor.tracer.eventsExporter?.exportEvent(event: SessionEnvelope(self))
+
+        span.setAttribute(key: DDTestTags.testFramework,
+                          value: .string(_state.value.testFrameworks.joined(separator: ",")))
+        span.name = framework
+        // get-status -> set-status round-trip: writes the canonical
+        // `test.status` tag (even if it was only visible through
+        // `span.status` set by some other code path).
+        span.applyStatus(span.testStatus, errorDescription: "session failed")
+        span.end(time: endTime)
+
         configuration.log.debug("Exported session_end event sessionId: \(self.id)")
         DDTestMonitor.tracer.flush()
     }
-    
+
     func addFramework(_ name: String) {
         let _ = _state.update { $0.testFrameworks.insert(name) }
     }
 }
 
 extension Session: TestSession {
+    var attributes: [String: TestAttributeValue] { span.getAttributes().testAttributes }
+
     func set(tag name: String, value: any SpanAttributeConvertible) {
-        _state.update {
-            $0.meta[name] = value.spanAttribute
-        }
+        span.setAttribute(key: name, value: .string(value.spanAttribute))
     }
-    
+
     func set(metric name: String, value: Double) {
-        _state.update {
-            $0.metrics[name] = value
-        }
+        span.setAttribute(key: name, value: .double(value))
     }
-    
+
     func set(failed reason: TestError?) {
-        _state.update {
-            $0.status = .fail
-        }
         if let error = reason {
             set(errorTags: error)
         }
+        span.applyStatus(.fail, errorDescription: "session failed")
     }
-    
+
     func set(skipped reason: String? = nil) {
-        _state.update {
-            $0.status = .skip
-            if let reason = reason {
-                $0.meta[DDTestTags.testSkipReason] = reason
-            }
+        if let reason = reason {
+            set(tag: DDTestTags.testSkipReason, value: reason)
         }
+        span.applyStatus(.skip, errorDescription: "")
     }
-    
+
     func nextTestIndex() -> UInt {
         _state.update { state in
             defer { state.testRunsCount += 1}
             return state.testRunsCount
         }
     }
-    
+
     func end(time: Date?) { end(endTime: time) }
 }
 
@@ -164,7 +183,7 @@ public extension Session {
     @objc static func start(name: String) -> Session {
         return start(name: name, command: nil)
     }
-    
+
     /// Ends the session
     /// - Parameters:
     ///   - endTime: Optional, the time where the session ended
@@ -208,59 +227,8 @@ extension Session: TestModuleManager {
     func module(named name: String) -> any TestModule & TestSuiteProvider {
         moduleStart(name: name, startTime: configuration.clock.now)
     }
-    
+
     func end(module: any TestModule) {
         _moduleManager.end(module: module, at: configuration.clock.now)
     }
 }
-
-extension Session {
-    enum StaticCodingKeys: String, CodingKey {
-        case test_session_id
-        case name
-        case resource
-        case error
-        case meta
-        case metrics
-        case start
-        case duration
-        case service
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: StaticCodingKeys.self)
-        try _state.use { state in
-            try container.encode(id.rawValue, forKey: .test_session_id)
-            try container.encode(startTime.timeIntervalSince1970.toNanoseconds, forKey: .start)
-            try container.encode(state.duration, forKey: .duration)
-            try container.encode(state.meta, forKey: .meta)
-            try container.encode(state.metrics, forKey: .metrics)
-            try container.encode(state.status == .fail ? 1 : 0, forKey: .error)
-            if state.testFrameworks.count == 1, let framework = state.testFrameworks.first {
-                try container.encode("\(framework).session", forKey: .name)
-            } else {
-                try container.encode("Swift.session", forKey: .name)
-            }
-            try container.encode(name, forKey: .resource)
-            try container.encode(configuration.service, forKey: .service)
-        }
-    }
-
-    struct SessionEnvelope: Encodable {
-        enum CodingKeys: String, CodingKey {
-            case type
-            case version
-            case content
-        }
-
-        let version: Int = 1
-
-        let type: String = DDTagValues.typeSessionEnd
-        let content: Session
-
-        init(_ content: Session) {
-            self.content = content
-        }
-    }
-}
-

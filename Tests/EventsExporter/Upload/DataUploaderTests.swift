@@ -8,25 +8,24 @@
 import XCTest
 
 extension DataUploadStatus: @retroactive Equatable {}
-extension DataUploadStatus: EquatableInTests {}
+extension DataUploadStatus: EquatableInTests {
+    public static func == (lhs: DataUploadStatus, rhs: DataUploadStatus) -> Bool {
+        lhs.needsRetry == rhs.needsRetry && lhs.waitTime == rhs.waitTime
+    }
+}
 
 class DataUploaderTests: XCTestCase {
     func testWhenUploadCompletesWithSuccess_itReturnsExpectedUploadStatus() {
         // Given
         let randomResponse: HTTPURLResponse = .mockResponseWith(statusCode: (100 ... 399).randomElement()!)
-
         let httpClient = MockHTTPClient(delivery: .success(response: randomResponse))
-        let uploader = DataUploader(
-            httpClient: httpClient,
-            requestBuilder: SingleRequestBuilder.mockWith(headers: [])
-        )
+        let uploader = MockClosureDataUploader(httpClient: httpClient)
 
         // When
         let uploadStatus = uploader.upload(data: .mockAny())
 
         // Then
         let expectedUploadStatus = DataUploadStatus(httpResponse: randomResponse)
-
         XCTAssertEqual(uploadStatus, expectedUploadStatus)
         httpClient.waitFor(requestsCompletion: 1)
     }
@@ -34,20 +33,16 @@ class DataUploaderTests: XCTestCase {
     func testWhenUploadCompletesWithFailure_itReturnsExpectedUploadStatus() {
         // Given
         let randomErrorDescription: String = .mockRandom()
-        let randomError = NSError(domain: .mockRandom(), code: .mockRandom(), userInfo: [NSLocalizedDescriptionKey: randomErrorDescription])
-
+        let randomError = NSError(domain: .mockRandom(), code: .mockRandom(),
+                                  userInfo: [NSLocalizedDescriptionKey: randomErrorDescription])
         let httpClient = MockHTTPClient(delivery: .failure(error: .transport(randomError)))
-        let uploader = DataUploader(
-            httpClient: httpClient,
-            requestBuilder: SingleRequestBuilder.mockAny()
-        )
+        let uploader = MockClosureDataUploader(httpClient: httpClient)
 
         // When
         let uploadStatus = uploader.upload(data: .mockAny())
 
         // Then
         let expectedUploadStatus = DataUploadStatus(networkError: .transport(randomError))
-
         XCTAssertEqual(uploadStatus, expectedUploadStatus)
         httpClient.waitFor(requestsCompletion: 1)
     }

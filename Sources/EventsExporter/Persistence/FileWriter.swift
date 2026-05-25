@@ -7,51 +7,68 @@
 import Foundation
 
 internal final class FileWriter {
-    /// Data writting format.
-    private let dataFormat: DataFormat
+    /// Data writing format.
+    private var dataFormat: DataFormatType
     /// Orchestrator producing reference to writable file.
-    private let orchestrator: FilesOrchestrator
+    private let orchestrator: FilesOrchestratorType
     /// JSON encoder used to encode data.
-    private let jsonEncoder: JSONEncoder
-    /// Queue used to synchronize files access (read / write) and perform decoding on background thread.
-    internal let queue = DispatchQueue(label: "civisibility.filewriter", target: .global(qos: .userInteractive))
+    private let encoder: JSONEncoder
+    /// Queue used to synchronize files access (read / write).
+    internal let queue: DispatchQueue
 
-    init(dataFormat: DataFormat, orchestrator: FilesOrchestrator) {
+    init(entity: String,
+         dataFormat: DataFormatType,
+         orchestrator: FilesOrchestratorType,
+         encoder: JSONEncoder)
+    {
         self.dataFormat = dataFormat
         self.orchestrator = orchestrator
-        self.jsonEncoder = JSONEncoder.default()
+        self.encoder = encoder
+        self.queue = DispatchQueue(label: "datadogtest.filewriter.\(entity)",
+                                   target: .global(qos: .userInteractive))
+    }
+
+    /// Replaces the current data format and closes the writable file so the
+    /// next write starts a new file with the new header.
+    func update(dataFormat: DataFormatType) {
+        queue.sync(flags: .barrier) {
+            orchestrator.closeWritableFile()
+            self.dataFormat = dataFormat
+        }
+    }
+
+    /// Closes the current writable file. The next write will open a new file.
+    /// Required before `FileReader.getAllReadableFiles()` so the in-progress
+    /// file isn't returned mid-write.
+    func closeCurrentFile() {
+        queue.sync(flags: .barrier) { orchestrator.closeWritableFile() }
     }
 
     // MARK: - Writing data
 
-    /// Encodes given value to JSON data and writes it to file.
-    /// Comma is used to separate consecutive values in the file.
-
+    /// Encodes and writes `value` asynchronously. Errors are logged and swallowed.
     func write<T: Encodable>(value: T) {
         queue.async { [weak self] in
-            self?.synchronizedWrite(value: value)
-        }
-    }
-
-    func writeSync<T: Encodable>(value: T) {
-        queue.sync { [weak self] in
-            self?.synchronizedWrite(value: value, syncOnEnd: true)
-        }
-    }
-
-    private func synchronizedWrite<T: Encodable>(value: T, syncOnEnd: Bool = false) {
-        do {
-            let data = try jsonEncoder.encode(value)
-            let file = try orchestrator.getWritableFile(writeSize: UInt64(data.count))
-
-            if try file.size() == 0 {
-                try file.append(data: data, synchronized: syncOnEnd)
-            } else {
-                let atomicData = dataFormat.separatorData + data
-                try file.append(data: atomicData, synchronized: syncOnEnd)
+            do {
+                try self?.write(value: value, sync: false)
+            } catch {
+                Log.print("🔥 Failed to write file: \(error)")
             }
-        } catch {
-            Log.print("🔥 Failed to write file: \(error)")
+        }
+    }
+
+    /// Encodes and writes `value` synchronously, surfacing errors to the caller.
+    func writeSync<T: Encodable>(value: T) throws {
+        try queue.sync { try write(value: value, sync: true) }
+    }
+
+    private func write<T: Encodable>(value: T, sync: Bool) throws {
+        let data = try encoder.encode(value)
+        let writable = try orchestrator.getWritableFile(writeSize: UInt64(data.count))
+        if writable.isNew {
+            try writable.file.append(data: dataFormat.prefix + data, synchronized: sync)
+        } else {
+            try writable.file.append(data: dataFormat.separator + data, synchronized: sync)
         }
     }
 }

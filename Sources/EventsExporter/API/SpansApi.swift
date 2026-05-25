@@ -32,6 +32,7 @@ struct SpansApiService: SpansApi {
     var headers: [HTTPHeader]
     var encoder: JSONEncoder
     var decoder: JSONDecoder
+    let compression: Bool
     let httpClient: HTTPClient
     let log: Logger
 
@@ -39,6 +40,7 @@ struct SpansApiService: SpansApi {
         self.endpoint = config.endpoint
         self.httpClient = httpClient
         self.log = log
+        self.compression = config.payloadCompression
         self.headers = config.defaultHeaders
         self.encoder = config.encoder
         self.decoder = config.decoder
@@ -49,6 +51,9 @@ struct SpansApiService: SpansApi {
         request.httpMethod = "POST"
         request.httpHeaders = headers
         request.setHTTPHeader(.contentTypeHeader(contentType: .applicationJSON))
+        if compression {
+            request.setHTTPHeader(.contentEncodingHeader(contentEncoding: .deflate))
+        }
         request.httpBody = data
         let log = self.log
         log.debug("Uploading spans...")

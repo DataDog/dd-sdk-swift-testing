@@ -171,7 +171,7 @@ internal struct MockClosureDataUploader: DataUploaderType {
         request.httpBody = data
         let httpClient = self.httpClient
         do {
-            let response = try waitForAsync { () async throws(HTTPClient.RequestError) -> HTTPURLResponse in
+            let response = try waitForAsync { [request] () async throws(HTTPClient.RequestError) -> HTTPURLResponse in
                 try await httpClient.send(request: request)
             }
             return DataUploadStatus(httpResponse: response)

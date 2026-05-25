@@ -64,41 +64,13 @@ internal final class FileWriter {
 
     private func write<T: Encodable>(value: T, sync: Bool) throws {
         let data = try encoder.encode(value)
-        do {
-            try appendOnce(data: data, sync: sync)
-        } catch {
-            // The upload worker reads-and-deletes files on its own queue. If
-            // it picks up the writable file between `getWritableFile` and the
-            // `append` call, the append throws ENOENT because the file
-            // vanished. Drop the now-dangling `_currentFile` reference and
-            // retry once with a freshly allocated file so the value isn't
-            // lost. Other IO errors (permission denied, disk full, etc.)
-            // propagate as before.
-            guard Self.isMissingFileError(error) else { throw error }
-            orchestrator.closeWritableFile()
-            try appendOnce(data: data, sync: sync)
-        }
-    }
-
-    private func appendOnce(data: Data, sync: Bool) throws {
-        let writable = try orchestrator.getWritableFile(writeSize: UInt64(data.count))
-        let payload = writable.isNew ? (dataFormat.prefix + data) : (dataFormat.separator + data)
-        try writable.file.append(data: payload, synchronized: sync)
-    }
-
-    /// `true` if `error` indicates the target file was missing — Cocoa surfaces
-    /// this as `NSFileNoSuchFileError` / `NSFileReadNoSuchFileError`, POSIX as
-    /// `ENOENT`. Used to distinguish a deleted-out-from-under-us file from
-    /// real IO failures.
-    private static func isMissingFileError(_ error: Error) -> Bool {
-        let ns = error as NSError
-        switch ns.domain {
-        case NSCocoaErrorDomain:
-            return ns.code == NSFileNoSuchFileError || ns.code == NSFileReadNoSuchFileError
-        case NSPOSIXErrorDomain:
-            return ns.code == Int(ENOENT)
-        default:
-            return false
+        // `withWritableFile` claims the file for the duration of `body`, so
+        // the upload worker's reader cannot list-and-delete the file mid-
+        // write. Once the closure returns, the file becomes visible to the
+        // reader.
+        try orchestrator.withWritableFile(writeSize: UInt64(data.count)) { writable, isNew in
+            let payload = isNew ? (dataFormat.prefix + data) : (dataFormat.separator + data)
+            try writable.append(data: payload, synchronized: sync)
         }
     }
 }

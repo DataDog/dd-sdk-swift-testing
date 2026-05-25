@@ -29,12 +29,25 @@ class FilesOrchestratorTests: XCTestCase {
         )
     }
 
+    /// Test-only adapter that pulls the chosen `WritableFile` out of
+    /// `withWritableFile(...)`'s scope so existing single-threaded tests can
+    /// keep using a `getWritableFile`-style call.
+    private func obtainWritableFile(_ orchestrator: FilesOrchestratorType,
+                                    writeSize: UInt64) throws -> WritableFile
+    {
+        var captured: WritableFile!
+        try orchestrator.withWritableFile(writeSize: writeSize) { file, _ in
+            captured = file
+        }
+        return captured
+    }
+
     // MARK: - Writable file tests
 
     func testGivenDefaultWriteConditions_whenUsedFirstTime_itCreatesNewWritableFile() throws {
         let dateProvider = RelativeDateProvider()
         let orchestrator = configureOrchestrator(using: dateProvider)
-        _ = try orchestrator.getWritableFile(writeSize: 1)
+        _ = try obtainWritableFile(orchestrator, writeSize: 1)
 
         XCTAssertEqual(try temporaryDirectory.files().count, 1)
         XCTAssertNotNil(try? temporaryDirectory.file(named: dateProvider.currentDate().toFileName))
@@ -42,8 +55,8 @@ class FilesOrchestratorTests: XCTestCase {
 
     func testGivenDefaultWriteConditions_whenUsedNextTime_itReusesWritableFile() throws {
         let orchestrator = configureOrchestrator(using: RelativeDateProvider(advancingBySeconds: 1))
-        let file1 = try orchestrator.getWritableFile(writeSize: 1).file
-        let file2 = try orchestrator.getWritableFile(writeSize: 1).file
+        let file1 = try obtainWritableFile(orchestrator, writeSize: 1)
+        let file2 = try obtainWritableFile(orchestrator, writeSize: 1)
 
         XCTAssertEqual(try temporaryDirectory.files().count, 1)
         XCTAssertEqual(file1.name, file2.name)
@@ -51,16 +64,16 @@ class FilesOrchestratorTests: XCTestCase {
 
     func testGivenDefaultWriteConditions_whenFileCanNotBeUsedMoreTimes_itCreatesNewFile() throws {
         let orchestrator = configureOrchestrator(using: RelativeDateProvider(advancingBySeconds: 0.001))
-        var previousFile: WritableFile = try orchestrator.getWritableFile(writeSize: 1).file
+        var previousFile: WritableFile = try obtainWritableFile(orchestrator, writeSize: 1)
         var nextFile: WritableFile
 
         for _ in (0..<performance.maxObjectsInFile).dropLast() {
-            nextFile = try orchestrator.getWritableFile(writeSize: 1).file
+            nextFile = try obtainWritableFile(orchestrator, writeSize: 1)
             XCTAssertEqual(nextFile.name, previousFile.name)
             previousFile = nextFile
         }
 
-        nextFile = try orchestrator.getWritableFile(writeSize: 1).file
+        nextFile = try obtainWritableFile(orchestrator, writeSize: 1)
         XCTAssertNotEqual(nextFile.name, previousFile.name)
     }
 
@@ -71,9 +84,9 @@ class FilesOrchestratorTests: XCTestCase {
             maxChunkSize: performance.maxObjectSize
         )
 
-        let file1 = try orchestrator.getWritableFile(writeSize: performance.maxObjectSize).file
+        let file1 = try obtainWritableFile(orchestrator, writeSize: performance.maxObjectSize)
         try chunkedData.forEach { chunk in try file1.append(data: chunk, synchronized: false) }
-        let file2 = try orchestrator.getWritableFile(writeSize: 1).file
+        let file2 = try obtainWritableFile(orchestrator, writeSize: 1)
 
         XCTAssertNotEqual(file1.name, file2.name)
     }
@@ -82,9 +95,9 @@ class FilesOrchestratorTests: XCTestCase {
         let dateProvider = RelativeDateProvider()
         let orchestrator = configureOrchestrator(using: dateProvider)
 
-        let file1 = try orchestrator.getWritableFile(writeSize: 1).file
+        let file1 = try obtainWritableFile(orchestrator, writeSize: 1)
         dateProvider.advance(bySeconds: 1 + performance.maxFileAgeForWrite)
-        let file2 = try orchestrator.getWritableFile(writeSize: 1).file
+        let file2 = try obtainWritableFile(orchestrator, writeSize: 1)
 
         XCTAssertNotEqual(file1.name, file2.name)
     }
@@ -92,9 +105,9 @@ class FilesOrchestratorTests: XCTestCase {
     func testWhenCurrentWritableFileIsDeleted_itCreatesNewOne() throws {
         let orchestrator = configureOrchestrator(using: RelativeDateProvider(advancingBySeconds: 1))
 
-        let file1 = try orchestrator.getWritableFile(writeSize: 1).file
+        let file1 = try obtainWritableFile(orchestrator, writeSize: 1)
         try temporaryDirectory.files().forEach { try $0.delete() }
-        let file2 = try orchestrator.getWritableFile(writeSize: 1).file
+        let file2 = try obtainWritableFile(orchestrator, writeSize: 1)
 
         XCTAssertNotEqual(file1.name, file2.name)
     }
@@ -107,10 +120,10 @@ class FilesOrchestratorTests: XCTestCase {
             using: RelativeDateProvider(startingFrom: Date().secondsAgo(0.01))
         )
 
-        _ = try orchestrator1.getWritableFile(writeSize: 1)
+        _ = try obtainWritableFile(orchestrator1, writeSize: 1)
         XCTAssertEqual(try temporaryDirectory.files().count, 1)
 
-        _ = try orchestrator2.getWritableFile(writeSize: 1)
+        _ = try obtainWritableFile(orchestrator2, writeSize: 1)
         XCTAssertEqual(try temporaryDirectory.files().count, 2)
     }
 
@@ -132,24 +145,24 @@ class FilesOrchestratorTests: XCTestCase {
             dateProvider: RelativeDateProvider(advancingBySeconds: 1)
         )
 
-        let file1 = try orchestrator.getWritableFile(writeSize: oneMB).file
+        let file1 = try obtainWritableFile(orchestrator, writeSize: oneMB)
         try file1.append(data: .mock(ofSize: oneMB), synchronized: false)
 
-        let file2 = try orchestrator.getWritableFile(writeSize: oneMB).file
+        let file2 = try obtainWritableFile(orchestrator, writeSize: oneMB)
         try file2.append(data: .mock(ofSize: oneMB), synchronized: true)
 
-        let file3 = try orchestrator.getWritableFile(writeSize: oneMB + 1).file
+        let file3 = try obtainWritableFile(orchestrator, writeSize: oneMB + 1)
         try file3.append(data: .mock(ofSize: oneMB + 1), synchronized: false)
 
         XCTAssertEqual(try temporaryDirectory.files().count, 3)
 
         // Directory has reached its maximum size — the next request should purge the oldest.
-        let file4 = try orchestrator.getWritableFile(writeSize: oneMB).file
+        let file4 = try obtainWritableFile(orchestrator, writeSize: oneMB)
         XCTAssertEqual(try temporaryDirectory.files().count, 3)
         XCTAssertNil(try? temporaryDirectory.file(named: file1.name))
         try file4.append(data: .mock(ofSize: oneMB + 1), synchronized: true)
 
-        _ = try orchestrator.getWritableFile(writeSize: oneMB)
+        _ = try obtainWritableFile(orchestrator, writeSize: oneMB)
         XCTAssertEqual(try temporaryDirectory.files().count, 3)
         XCTAssertNil(try? temporaryDirectory.file(named: file2.name))
     }

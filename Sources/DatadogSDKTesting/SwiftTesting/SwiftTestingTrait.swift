@@ -18,14 +18,14 @@ public struct DatadogSwiftTestingTrait: TestTrait, SuiteTrait {
     private let _actions: any DatadogSwiftTestingTestActions
     
     init(provider: (any SwiftTestingSuiteProviderType)? = nil,
-         actions: any DatadogSwiftTestingTestActions = DatadogSwiftTestingScopeProvider.Actions())
+         actions: any DatadogSwiftTestingTestActions = TestScopeProvider.Actions())
     {
         self._provider = provider
         self._actions = actions
     }
     
     public func prepare(for test: Testing.Test) async throws {
-        try await prepare(test: DatadogSwiftTestingScopeProvider.SwiftTest(test: test))
+        try await prepare(test: TestScopeProvider.SwiftTest(test: test))
     }
     
     public func scopeProvider(for test: Testing.Test, testCase: Testing.Test.Case?) -> TestScopeProvider? {
@@ -58,16 +58,26 @@ public struct DatadogSwiftTestingScopeProvider: TestScoping {
     public func provideScope(for test: Testing.Test, testCase: Testing.Test.Case?,
                              performing function: @Sendable () async throws -> Void) async throws
     {
-        if let testCase {
-            // This is a concrete test run
-            try await provideScope(run: SwiftTestRun(test: test, testCase: testCase),
-                                   performing: function)
-        } else if test.isSuite {
-            // This is a suite
-            try await provideScope(suite: SwiftTest(test: test), performing: function)
-        } else {
-            // Test scope
-            try await provideScope(test: SwiftTest(test: test), performing: function)
+        let testId = TestID(test: test, testCase: testCase)
+        // check that scope was not applied to this test/testCase.
+        // it can happen if we have two .datadogTesting traits applied to
+        // nested suites or suite and test
+        guard Self.lastTestTraitApplied != testId else {
+            return try await function()
+        }
+        // save testId to the scope so we can check it
+        try await Self.$lastTestTraitApplied.withValue(testId) {
+            if let testCase {
+                // This is a concrete test run
+                try await provideScope(run: SwiftTestRun(test: test, testCase: testCase),
+                                       performing: function)
+            } else if test.isSuite {
+                // This is a suite
+                try await provideScope(suite: SwiftTest(test: test), performing: function)
+            } else {
+                // Test scope
+                try await provideScope(test: SwiftTest(test: test), performing: function)
+            }
         }
     }
     
@@ -152,6 +162,7 @@ public struct DatadogSwiftTestingScopeProvider: TestScoping {
     
     @TaskLocal static var datadogSuite: SwiftTestingSuiteContext? = nil
     @TaskLocal static var datadogTest: SwiftTestingTestContext? = nil
+    @TaskLocal static var lastTestTraitApplied: TestID? = nil
 }
 
 protocol DatadogSwiftTestingTestActions: Sendable {
@@ -203,12 +214,16 @@ extension DatadogSwiftTestingScopeProvider {
         var attachedTags: any TestTags { test.attachedTags }
 
         var parameters: TestRunParameters {
-            guard isParameterized else { return .init(arguments: .nil, metadata: nil) }
-            let parameters = Self.parseSwiftTestCaseParameters(from: String(describing: testCase))
-            let args: [JSONGeneric] = parameters.map {
+            // Skip the Mirror walk entirely for non-parameterized cases —
+            // `ddArguments` would return `nil` anyway, but `isParameterized`
+            // is cheap and avoids the reflection on the hot path.
+            guard isParameterized, let args = testCase.ddArguments else {
+                return .init(arguments: .nil, metadata: nil)
+            }
+            let mapped: [JSONGeneric] = args.map {
                 .object(["name": .string($0.name), "value": .string($0.value), "type": .string($0.type)])
             }
-            return .init(arguments: .array(args), metadata: nil)
+            return .init(arguments: .array(mapped), metadata: nil)
         }
     }
     
@@ -223,6 +238,168 @@ extension DatadogSwiftTestingScopeProvider {
         func fail(reason: String, location: SwiftTestingSourceLocation) {
             Issue.record(Comment(rawValue: reason), sourceLocation: location.asSwift)
         }
+    }
+    
+    struct TestID: Equatable, Sendable {
+        let test: Testing.Test.ID
+        let testCase: CaseID?
+
+        init(test: borrowing Testing.Test, testCase: borrowing Testing.Test.Case?) {
+            self.test = test.id
+            self.testCase = testCase.map { $0.ddID }
+        }
+    }
+
+    /// Mirror-derived shadow of `Testing.Test.Case.ID`.
+    ///
+    /// `Test.Case.ID`, `Test.Case.arguments`, `Test.Case.discriminator`, and
+    /// `Test.Case.isStable` are all marked `@_spi(ForToolsIntegrationOnly)` —
+    /// not usable from regular client code. `Test.Case` stores everything we
+    /// need in a single private property `_kind: _Kind` (an enum with
+    /// `.nonParameterized` and `.parameterized(arguments:, discriminator:,
+    /// isStable:)`). We walk `Mirror(reflecting: testCase)` to read those
+    /// values without taking the SPI dependency, then reconstruct the same
+    /// `(argumentIDs, discriminator, isStable)` triple Swift Testing uses for
+    /// `Test.Case.ID`. Equality / hashing mirrors `Test.Case.ID`'s own.
+    ///
+    /// If a future Swift Testing release reshapes `_kind`, the Mirror walk
+    /// degrades to `(nil, nil, true)`. That matches a non-parameterized case
+    /// and would cause parameterized cases of the same test to share a
+    /// `TestID` — `SwiftTestingTraitTests.testParameterized(p1:p2:)`
+    /// (expects three independent runs) is the canary for that regression.
+    struct CaseID: Equatable, Hashable, Sendable {
+        /// Raw bytes of each `Test.Case.Argument.ID`, in the order they
+        /// appear in `Test.Case.arguments`. `nil` for non-parameterized cases.
+        let argumentIDs: [[UInt8]]?
+        /// Distinguishes cases that share `argumentIDs` (e.g.
+        /// `@Test(arguments: [1, 1])`). `nil` for non-parameterized cases.
+        let discriminator: Int?
+        /// Whether Swift Testing was able to derive a stable encoded
+        /// representation of every argument; mirrors `Test.Case.ID.isStable`.
+        let isStable: Bool
+    }
+}
+
+extension Testing.Test.Case {
+    /// Mirror-extracted argument-id bytes. `nil` for non-parameterized cases.
+    /// Expected layout: `_kind.parameterized(arguments: [Argument], …)` where
+    /// each `Argument.id.bytes` is `[UInt8]`. Returns `nil` if any step of
+    /// that walk fails so a layout drift surfaces as a uniform `nil` (caught
+    /// by `testParameterized`).
+    var ddArgumentIDs: [[UInt8]]? {
+        guard let arguments = ddKindAssociatedValue(named: "arguments") else { return nil }
+        var ids: [[UInt8]] = []
+        for argChild in Mirror(reflecting: arguments).children {
+            guard let bytes = Mirror(reflecting: argChild.value).descendant("id", "bytes") as? [UInt8]
+            else { return nil }
+            ids.append(bytes)
+        }
+        return ids
+    }
+
+    /// `Test.Case.discriminator`, extracted via `Mirror`. `nil` for
+    /// non-parameterized cases.
+    var ddDiscriminator: Int? {
+        ddKindAssociatedValue(named: "discriminator") as? Int
+    }
+
+    /// `Test.Case.isStable`, extracted via `Mirror`. Defaults to `true` for
+    /// non-parameterized cases (which Swift Testing also treats as stable).
+    var ddIsStable: Bool {
+        (ddKindAssociatedValue(named: "isStable") as? Bool) ?? true
+    }
+
+    /// Mirror-derived equivalent of `Test.Case.ID`, safe to use as a hash key.
+    var ddID: DatadogSwiftTestingScopeProvider.CaseID {
+        .init(argumentIDs: ddArgumentIDs,
+              discriminator: ddDiscriminator,
+              isStable: ddIsStable)
+    }
+
+    /// Mirror-extracted argument metadata, one entry per argument in
+    /// declaration order. Each entry carries:
+    ///
+    ///   - `value`: `String(reflecting:)` of the argument value. Strings come
+    ///     back quoted (`"\"hello\""`) to match the encoding `SwiftTestRun`
+    ///     was previously deriving from `String(describing: testCase)`.
+    ///   - `name`: parameter `firstName`, joined with `secondName` by a
+    ///     space when the second name is present (e.g. `"for count"`).
+    ///   - `type`: fully-qualified type name (e.g. `"Swift.Int"`), derived
+    ///     by walking `TypeInfo._kind` — `TypeInfo` itself is also
+    ///     `@_spi(ForToolsIntegrationOnly)` and can't be named directly.
+    ///
+    /// Returns `nil` for non-parameterized cases or when the Mirror walk
+    /// fails.
+    var ddArguments: [DDArgument]? {
+        guard let arguments = ddKindAssociatedValue(named: "arguments") else { return nil }
+        var result: [DDArgument] = []
+        for argChild in Mirror(reflecting: arguments).children {
+            guard let argument = Self.ddExtractArgument(from: argChild.value) else { return nil }
+            result.append(argument)
+        }
+        return result
+    }
+
+    private static func ddExtractArgument(from any: Any) -> DDArgument? {
+        let argMirror = Mirror(reflecting: any)
+        guard let value = argMirror.descendant("value"),
+              let parameterAny = argMirror.descendant("parameter")
+        else { return nil }
+        let paramMirror = Mirror(reflecting: parameterAny)
+        guard let firstName = paramMirror.descendant("firstName") as? String else { return nil }
+
+        var name = firstName
+        // `secondName` is `Optional<String>`
+        if let secondName = (paramMirror.descendant("secondName") as? String?).flatMap({$0}) {
+            name = "\(firstName) \(secondName)"
+        }
+
+        let type = paramMirror.descendant("typeInfo").flatMap(Self.ddExtractTypeName(from:)) ?? "<unknown>"
+        return DDArgument(value: String(reflecting: value), name: name, type: type)
+    }
+
+    /// Walks a `Testing.TypeInfo` value via `Mirror` to recover its fully-
+    /// qualified name without depending on the SPI type. `TypeInfo._kind` is
+    /// either `.type(Any.Type)` (for which `String(reflecting:)` yields the
+    /// module-prefixed name) or `.nameOnly(fullyQualifiedComponents: [String],
+    /// …)` (for which we join the components with `.`).
+    private static func ddExtractTypeName(from typeInfo: Any) -> String? {
+        let mirror = Mirror(reflecting: typeInfo)
+        guard let kind = mirror.descendant("_kind") else { return nil }
+        let kindMirror = Mirror(reflecting: kind)
+        guard kindMirror.displayStyle == .enum,
+              let child = kindMirror.children.first
+        else { return nil }
+        switch child.label {
+        case "type": return String(reflecting: child.value)
+        case "nameOnly":
+            let assoc = Mirror(reflecting: child.value)
+            return (assoc.descendant("fullyQualifiedComponents") as? [String])?
+                .joined(separator: ".")
+        default:
+            return nil
+        }
+    }
+
+    /// Walks `Mirror(self)` → `_kind` → the labelled element of the
+    /// `.parameterized(...)` case's associated-values tuple matching `name`.
+    /// Returns `nil` for `.nonParameterized` or any layout mismatch.
+    private func ddKindAssociatedValue(named name: String) -> Any? {
+        guard isParameterized, let kind = Mirror(reflecting: self).descendant("_kind") else { return nil }
+        let kindMirror = Mirror(reflecting: kind)
+        guard kindMirror.displayStyle == .enum,
+              let parameterized = kindMirror.children.first(where: { $0.label == "parameterized" })
+        else { return nil }
+        return Mirror(reflecting: parameterized.value)
+            .children
+            .first(where: { $0.label == name })?
+            .value
+    }
+
+    struct DDArgument: Sendable {
+        let value: String
+        let name: String
+        let type: String
     }
 }
 
@@ -345,45 +522,6 @@ extension Error {
     var isSwiftTestingSkip: Bool {
         String(reflecting: type(of: self)) == "Testing.SkipInfo"
     }
-}
-
-extension DatadogSwiftTestingScopeProvider.SwiftTestRun {
-    // Parses a Testing.Test.Case description string into (name, value, type) triples.
-    // name = firstName joined with secondName (when present) using a space.
-    // Exposed as `internal` so unit tests can exercise it directly without
-    // requiring the Swift Testing runtime.
-    static func parseSwiftTestCaseParameters(from description: String) -> [(name: String, value: String, type: String)] {
-        _swiftTestCaseParametersRegex
-            .matches(in: description, range: NSRange(description.startIndex..., in: description))
-            .compactMap { match in
-                guard let valueRange     = Range(match.range(at: 1), in: description),
-                      let firstNameRange = Range(match.range(at: 2), in: description) else {
-                    return nil
-                }
-                var name = String(description[firstNameRange])
-                if let secondNameRange = Range(match.range(at: 3), in: description) {
-                    name += " " + description[secondNameRange]
-                }
-                let type: String
-                if let typeRange = Range(match.range(at: 4), in: description) {
-                    type = String(description[typeRange])
-                } else {
-                    type = "<unknown>"
-                }
-                return (name: name, value: String(description[valueRange]), type: type)
-            }
-    }
-
-    // Matches each Testing.Test.Case.Argument, capturing:
-    //   group 1 — argument value (up to ", id: Testing.Test.Case.Argument.ID")
-    //   group 2 — parameter firstName
-    //   group 3 — parameter secondName (absent when secondName is nil);
-    //             handles `Optional("name")` form only (nil = absent)
-    //   group 4 — parameter typeInfo (absent when not present)
-    private static let _swiftTestCaseParametersRegex = try! NSRegularExpression(
-        pattern: #"Argument\(value: (.*?), id: (?:.*?), parameter: \S*Parameter\(index: \d+, firstName: "([^"]*)", secondName: (?:nil|Optional\("([^"]*)"\))[^)]*?(?:, typeInfo: ([^)]+))?\)"#,
-        options: []
-    )
 }
 
 #endif

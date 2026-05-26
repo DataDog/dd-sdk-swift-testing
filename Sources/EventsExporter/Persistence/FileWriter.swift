@@ -64,11 +64,13 @@ internal final class FileWriter {
 
     private func write<T: Encodable>(value: T, sync: Bool) throws {
         let data = try encoder.encode(value)
-        let writable = try orchestrator.getWritableFile(writeSize: UInt64(data.count))
-        if writable.isNew {
-            try writable.file.append(data: dataFormat.prefix + data, synchronized: sync)
-        } else {
-            try writable.file.append(data: dataFormat.separator + data, synchronized: sync)
+        // `withWritableFile` claims the file for the duration of `body`, so
+        // the upload worker's reader cannot list-and-delete the file mid-
+        // write. Once the closure returns, the file becomes visible to the
+        // reader.
+        try orchestrator.withWritableFile(writeSize: UInt64(data.count)) { writable, isNew in
+            let payload = isNew ? (dataFormat.prefix + data) : (dataFormat.separator + data)
+            try writable.append(data: payload, synchronized: sync)
         }
     }
 }

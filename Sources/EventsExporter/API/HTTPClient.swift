@@ -6,7 +6,7 @@
 
 import Foundation
 
-internal protocol HTTPClientType: AnyObject {
+internal protocol HTTPClientType: AnyObject, Sendable {
     /// Send the request and return the response (no body).
     func send(request: URLRequest) async throws(HTTPClient.RequestError) -> HTTPURLResponse
     /// Send the request and return the response body.

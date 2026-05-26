@@ -50,25 +50,20 @@ final class CodeCoverageProvider: TestCoverageCollector {
     let storagePath: Directory
     let debug: Bool
 
-    init?(storagePath: Directory, exporter: EventsExporterProtocol,
-          workspacePath: String?, priority: CodeCoveragePriority, debug: Bool)
+    init(storagePath: Directory, exporter: EventsExporterProtocol,
+         workspacePath: String?, priority: CodeCoveragePriority, debug: Bool) throws
     {
-        do {
-            let llvm = try LLVMCoverageProcessor(for: PlatformUtils.xcodeVersion,
-                                                 temp: storagePath.url)
-            self.llvmProcessor = llvm
-            self.processor = BackgroundCoverageProcessor(exporter: exporter,
-                                                         parser: llvm.parser,
-                                                         priority: priority,
-                                                         cleanupCoverageFiles: !debug)
-            self.debug = debug
-            self.storagePath = storagePath
-            self.workspacePath = workspacePath
-            setFileLimit()
-        } catch {
-            Log.print("Coverage initialisation error: \(error)")
-            return nil
-        }
+        let llvm = try LLVMCoverageProcessor(for: PlatformUtils.xcodeVersion,
+                                             temp: storagePath.url)
+        self.llvmProcessor = llvm
+        self.processor = BackgroundCoverageProcessor(exporter: exporter,
+                                                     parser: llvm.parser,
+                                                     priority: priority,
+                                                     cleanupCoverageFiles: !debug)
+        self.debug = debug
+        self.storagePath = storagePath
+        self.workspacePath = workspacePath
+        setFileLimit()
     }
 
     func startCoverage(context: CoverageContext) -> ActiveCoverage? {

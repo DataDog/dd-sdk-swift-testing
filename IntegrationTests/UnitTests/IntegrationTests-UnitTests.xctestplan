@@ -8,67 +8,61 @@
           "containerPath" : "container:DatadogSDKTesting.xcodeproj",
           "identifier" : "A7F3FC402F928191002EFFAB",
           "name" : "IntegrationTests-UnitTests"
-        }
+        },
+        "uiTestingScreenshotsLifetime" : "keepNever"
       }
     }
   ],
   "defaultOptions" : {
+    "codeCoverage" : true,
     "environmentVariableEntries" : [
       {
-        "key" : "GITHUB_REPOSITORY",
-        "value" : "$(GITHUB_REPOSITORY)"
+        "key" : "GITHUB_ACTIONS",
+        "value" : "$(GITHUB_ACTIONS)"
       },
       {
-        "key" : "DD_CIVISIBILITY_AGENTLESS_URL",
-        "value" : "$(DD_CIVISIBILITY_AGENTLESS_URL)"
+        "key" : "GITHUB_BASE_REF",
+        "value" : "$(GITHUB_BASE_REF)"
       },
       {
-        "key" : "GITHUB_REF",
-        "value" : "$(GITHUB_REF)"
+        "key" : "GITHUB_EVENT_PATH",
+        "value" : "$(GITHUB_EVENT_PATH)"
+      },
+      {
+        "key" : "GITHUB_JOB",
+        "value" : "$(GITHUB_JOB)"
       },
       {
         "key" : "GITHUB_HEAD_REF",
         "value" : "$(GITHUB_HEAD_REF)"
       },
       {
-        "key" : "GITHUB_ACTIONS",
-        "value" : "$(GITHUB_ACTIONS)"
+        "key" : "GITHUB_REPOSITORY",
+        "value" : "$(GITHUB_REPOSITORY)"
       },
       {
-        "key" : "DD_ENV",
-        "value" : "$(DD_ENV)"
+        "key" : "GITHUB_REF",
+        "value" : "$(GITHUB_REF)"
       },
       {
-        "key" : "DD_SERVICE",
-        "value" : "$(DD_SERVICE)"
-      },
-      {
-        "key" : "SRCROOT",
-        "value" : "$(SRCROOT)"
-      },
-      {
-        "key" : "DD_API_KEY",
-        "value" : "$(DD_API_KEY)"
+        "key" : "GITHUB_RUN_ATTEMPT",
+        "value" : "$(GITHUB_RUN_ATTEMPT)"
       },
       {
         "key" : "GITHUB_RUN_ID",
         "value" : "$(GITHUB_RUN_ID)"
       },
       {
-        "key" : "DD_ENABLE_NETWORK_CALL_STACK_SYMBOLICATED",
-        "value" : "$(DD_ENABLE_NETWORK_CALL_STACK_SYMBOLICATED)"
-      },
-      {
         "key" : "GITHUB_RUN_NUMBER",
         "value" : "$(GITHUB_RUN_NUMBER)"
       },
       {
-        "key" : "GITHUB_SHA",
-        "value" : "$(GITHUB_SHA)"
+        "key" : "GITHUB_SERVER_URL",
+        "value" : "$(GITHUB_SERVER_URL)"
       },
       {
-        "key" : "DD_TEST_RUNNER",
-        "value" : "$(DD_TEST_RUNNER)"
+        "key" : "GITHUB_SHA",
+        "value" : "$(GITHUB_SHA)"
       },
       {
         "key" : "GITHUB_WORKSPACE",
@@ -79,8 +73,40 @@
         "value" : "$(GITHUB_WORKFLOW)"
       },
       {
+        "key" : "JOB_CHECK_RUN_ID",
+        "value" : "$(JOB_CHECK_RUN_ID)"
+      },
+      {
+        "key" : "DD_TEST_RUNNER",
+        "value" : "$(DD_TEST_RUNNER)"
+      },
+      {
+        "key" : "DD_API_KEY",
+        "value" : "$(DD_API_KEY)"
+      },
+      {
+        "key" : "SRCROOT",
+        "value" : "$(SRCROOT)"
+      },
+      {
+        "key" : "DD_ENV",
+        "value" : "$(DD_ENV)"
+      },
+      {
+        "key" : "DD_SERVICE",
+        "value" : "$(DD_SERVICE)"
+      },
+      {
         "key" : "DD_TRACE_DEBUG",
         "value" : "$(DD_TRACE_DEBUG)"
+      },
+      {
+        "key" : "DD_ENABLE_NETWORK_CALL_STACK_SYMBOLICATED",
+        "value" : "$(DD_ENABLE_NETWORK_CALL_STACK_SYMBOLICATED)"
+      },
+      {
+        "key" : "DD_CIVISIBILITY_AGENTLESS_URL",
+        "value" : "$(DD_CIVISIBILITY_AGENTLESS_URL)"
       },
       {
         "key" : "DD_CIVISIBILITY_LOGS_ENABLED",
@@ -91,7 +117,6 @@
         "value" : "$(DD_CIVISIBILITY_CODE_COVERAGE_ENABLED)"
       }
     ],
-    "codeCoverage" : true,
     "performanceAntipatternCheckerEnabled" : true
   },
   "testTargets" : [

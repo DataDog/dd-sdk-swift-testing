@@ -171,7 +171,7 @@ internal struct MockClosureDataUploader: DataUploaderType {
         request.httpBody = data
         let httpClient = self.httpClient
         do {
-            let response = try waitForAsync { () async throws(HTTPClient.RequestError) -> HTTPURLResponse in
+            let response = try waitForAsync { [request] () async throws(HTTPClient.RequestError) -> HTTPURLResponse in
                 try await httpClient.send(request: request)
             }
             return DataUploadStatus(httpResponse: response)
@@ -207,6 +207,66 @@ struct DataUploaderMock: DataUploaderType {
     func upload(data: Data) -> DataUploadStatus {
         onUpload?()
         return uploadStatus
+    }
+}
+
+// MARK: - ExporterConfiguration / APIServiceConfig builders
+
+extension ExporterConfiguration {
+    /// Test-only convenience builder. Production callers build the
+    /// `ExporterConfiguration` directly.
+    static func mock(environment: String = "environment",
+                     metadata: SpanMetadata = .init(),
+                     performancePreset: PerformancePreset = .default,
+                     logger: Logger = Log()) -> ExporterConfiguration
+    {
+        ExporterConfiguration(environment: environment,
+                              metadata: metadata,
+                              performancePreset: performancePreset,
+                              logger: logger)
+    }
+}
+
+extension APIServiceConfig {
+    /// Test-only convenience builder for the now-test-private API config.
+    static func mock(serviceName: String = "service",
+                     environment: String = "environment",
+                     applicationName: String = "app",
+                     version: String = "1.0",
+                     hostname: String? = nil,
+                     apiKey: String = "apikey",
+                     endpoint: Endpoint = .us1,
+                     clientId: String = "client",
+                     payloadCompression: Bool = false) -> APIServiceConfig
+    {
+        APIServiceConfig(serviceName: serviceName, environment: environment,
+                         applicationName: applicationName, version: version,
+                         device: .current, hostname: hostname, apiKey: apiKey,
+                         endpoint: endpoint, clientId: clientId,
+                         payloadCompression: payloadCompression)
+    }
+}
+
+extension TestOptimizationApiService {
+    /// Test-only convenience builder. Production callers build the
+    /// `TestOptimizationApiService` directly.
+    static func mock(serviceName: String = "service",
+                     environment: String = "environment",
+                     applicationName: String = "app",
+                     version: String = "1.0",
+                     hostname: String? = nil,
+                     apiKey: String = "apikey",
+                     endpoint: Endpoint = .us1,
+                     clientId: String = "client",
+                     payloadCompression: Bool = false,
+                     logger: Logger = Log()) -> TestOptimizationApiService
+    {
+        TestOptimizationApiService(serviceName: serviceName, environment: environment,
+                                   applicationName: applicationName, version: version,
+                                   hostname: hostname, apiKey: apiKey,
+                                   endpoint: endpoint, clientId: clientId,
+                                   payloadCompression: payloadCompression,
+                                   logger: logger)
     }
 }
 

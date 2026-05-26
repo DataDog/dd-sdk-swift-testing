@@ -11,7 +11,7 @@ import Foundation
 /// is implemented by spinning the run loop (see `RunLoopWaiter`), which is
 /// required on watchOS where the URL-loading machinery is dispatched on the
 /// caller's run loop.
-public func waitForAsync<V, E>(_ function: @Sendable @escaping () async throws(E) -> V) throws(E) -> V {
+public func waitForAsync<V, E: Error>(_ function: @Sendable @escaping () async throws(E) -> V) throws(E) -> V {
     let waiter = RunLoopWaiter()
     var result: Result<V, E>! = nil
     Task<Void, Never>.detached(priority: .high) {

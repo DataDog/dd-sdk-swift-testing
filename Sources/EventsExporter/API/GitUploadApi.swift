@@ -6,7 +6,7 @@
 
 import Foundation
 
-internal protocol GitUploadApi: APIService {
+public protocol GitUploadApi: APIService {
     func searchCommits(repositoryURL: String, commits: [String]) async throws(APICallError) -> [String]
 
     func uploadPackFile(file: URL, commit: String, repositoryURL: String) async throws(APICallError)
@@ -18,7 +18,7 @@ internal protocol GitUploadApi: APIService {
 }
 
 extension GitUploadApi {
-    func uploadPackFile(file: URL, commit: String, repositoryURL: String) async throws(APICallError) {
+    public func uploadPackFile(file: URL, commit: String, repositoryURL: String) async throws(APICallError) {
         let data: Data
         do {
             data = try Data(contentsOf: file, options: [.mappedIfSafe])
@@ -33,7 +33,7 @@ extension GitUploadApi {
         }
     }
 
-    func uploadPackFiles(directory: URL, commit: String, repositoryURL: String) async throws(APICallError) {
+    public func uploadPackFiles(directory: URL, commit: String, repositoryURL: String) async throws(APICallError) {
         let files: [URL]
         do {
             files = try FileManager.default
@@ -61,7 +61,7 @@ extension GitUploadApi {
     }
 }
 
-struct GitUploadApiService: GitUploadApi {
+struct GitUploadApiService: GitUploadApi, APIServiceConstructible {
     typealias CommitsCall = APICall<[APIData<CommitRequestMeta, Commit>], [APIDataNoMeta<Commit>]>
 
     var endpoint: Endpoint

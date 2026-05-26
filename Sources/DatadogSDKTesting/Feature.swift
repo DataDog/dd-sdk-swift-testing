@@ -85,9 +85,18 @@ protocol TestHooksFeature: Feature, Sendable {
 
 protocol FeatureFactory {
     associatedtype FT: Feature
-    
+
     static func isEnabled(config: Config, env: Environment, remote: TracerSettings) -> Bool
-    func create(log: Logger) -> FT?
+    func create(log: Logger) async throws -> FT
+}
+
+/// Thrown by a `FeatureFactory.create` when the backend returned an empty
+/// payload. The feature is effectively unavailable for this run and the
+/// caller should treat it as disabled without recording a communication
+/// failure.
+struct FeatureEmptyResponseError: Error, CustomStringConvertible {
+    let featureName: String
+    var description: String { "\(featureName): backend returned an empty response" }
 }
 
 enum RetryGroupConfiguration: Equatable, Hashable {

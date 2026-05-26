@@ -22,22 +22,13 @@ class PipelineIntegrationTests: XCTestCase {
         defer { server.stop() }
 
         // -- 1. Build the EventsExporter facade pointing at MockBackend ----------
-        let configuration = ExporterConfiguration(
-            serviceName: "service",
-            applicationName: "app",
-            applicationVersion: "1.2.3",
-            environment: "ci",
-            hostname: nil,
-            apiKey: "apikey",
-            endpoint: .other(testsBaseURL: server.baseURL, logsBaseURL: server.baseURL),
-            metadata: .init(),
-            performancePreset: .readAllFiles,
-            exporterId: "exporter",
-            logger: Log()
-        )
+        let configuration = ExporterConfiguration.mock(environment: "ci",
+                                                       performancePreset: .readAllFiles)
+        let endpoint: Endpoint = .other(testsBaseURL: server.baseURL, logsBaseURL: server.baseURL)
+        let api = TestOptimizationApiService.mock(endpoint: endpoint)
         let storage = try Directory.temporary().createSubdirectory(path: UUID().uuidString)
         defer { try? storage.delete() }
-        let datadogExporter = try EventsExporter(config: configuration, storage: storage)
+        let datadogExporter = try EventsExporter(config: configuration, api: api, storage: storage)
 
         // -- 2. Resource the encoders read service / version / env from ---------
         var resource = Resource()

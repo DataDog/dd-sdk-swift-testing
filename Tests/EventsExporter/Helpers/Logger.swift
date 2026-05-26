@@ -22,7 +22,11 @@ class Log: Logger {
         }
     }
     
-    func measure<T>(name: String, _ operation: () throws -> T) rethrows -> T {
+    func measure<T, E: Error>(name: String, _ operation: () throws(E) -> T) throws(E) -> T {
         try operation()
+    }
+
+    func measure<T, E: Error>(name: String, _ operation: @Sendable () async throws(E) -> T) async throws(E) -> T {
+        try await operation()
     }
 }

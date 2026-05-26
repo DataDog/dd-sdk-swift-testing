@@ -6,7 +6,7 @@
 
 import Foundation
 
-internal protocol SettingsApi: APIService {
+public protocol SettingsApi: APIService {
     func tracerSettings(service: String, env: String,
                         repositoryURL: String, branch: String, sha: String,
                         testLevel: ITRTestLevel,
@@ -140,7 +140,7 @@ public struct TracerSettings {
     }
 }
 
-struct SettingsApiService: SettingsApi {
+struct SettingsApiService: SettingsApi, APIServiceConstructible {
     typealias SettingsCall = APICall<APIDataNoMeta<SettingsRequest>, APIDataNoMeta<SettingsResponse>>
 
     var endpoint: Endpoint

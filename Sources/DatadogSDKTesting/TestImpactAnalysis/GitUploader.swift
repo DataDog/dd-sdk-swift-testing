@@ -13,13 +13,13 @@ final class GitUploader {
 
     private let gitDirectory: String
     private let log: Logger
-    private let exporter: EventsExporterProtocol
+    private let api: GitUploadApi
     private let unshallowEnabled: Bool
 
     private let commitFolder: Directory
     private let packFilesDirectory: Directory
 
-    init?(log: Logger, exporter: EventsExporterProtocol, gitDirectory: String,
+    init?(log: Logger, api: GitUploadApi, gitDirectory: String,
           commitFolder: Directory?, unshallowEnabled: Bool = true)
     {
         guard !gitDirectory.isEmpty,
@@ -30,7 +30,7 @@ final class GitUploader {
             return nil
         }
         self.gitDirectory = gitDirectory
-        self.exporter = exporter
+        self.api = api
         self.unshallowEnabled = unshallowEnabled
         self.packFilesDirectory = packFilesDir
         self.commitFolder = commitFolder
@@ -41,12 +41,12 @@ final class GitUploader {
         try? packFilesDirectory.delete()
     }
     
-    func sendGitInfo(repositoryURL: URL?, commit: String) -> Bool {
+    func sendGitInfo(repositoryURL: URL?, commit: String) async -> Bool {
         guard !commitFolder.hasFile(named: Self.uploadedCommitFile) else {
             log.debug("GitUploader: git information alredy uploaded")
             return true
         }
-        
+
         let repository: String
         if let url = repositoryURL {
             repository = url.spanAttribute
@@ -57,13 +57,13 @@ final class GitUploader {
             }
             repository = pURL.spanAttribute
         }
-        
-        guard var newCommits = searchForNewCommits(repositoryURL: repository) else {
+
+        guard var newCommits = await searchForNewCommits(repositoryURL: repository) else {
             log.print("Can't obtain new commits")
             return false
         }
         log.debug("New commits: \(newCommits)")
-        
+
         guard let commitsFile = try? commitFolder.createFile(named: Self.uploadedCommitFile) else {
             log.print("Can't create commits file")
             return false
@@ -72,7 +72,7 @@ final class GitUploader {
             saveCommits(file: commitsFile, commits: newCommits)
             return true
         }
-        
+
         /// Check if the repository is a shallow clone, if so fetch more info and calculate one more time
         switch (isShallowRepository, unshallowEnabled) {
         case (true, true):
@@ -80,7 +80,7 @@ final class GitUploader {
                 handleShallowClone()
             }
             if unshallowed {
-                guard let newCommitsUnshallow = searchForNewCommits(repositoryURL: repository) else {
+                guard let newCommitsUnshallow = await searchForNewCommits(repositoryURL: repository) else {
                     log.print("Can't obtain new commits after unshallow")
                     try? commitsFile.delete()
                     return false
@@ -96,25 +96,32 @@ final class GitUploader {
             log.debug("Shallow repository detected but unshallow is disabled. Proceeding with available commits.")
         default: break
         }
-        
+
         // Generate pack files for the new commits
         guard let directory = generatePackFilesFromCommits(commits: newCommits, repository: repository) else {
             try? commitsFile.delete()
             return false
         }
-        
+
         // Upload pack files for the new commits
         do {
-            try log.measure(name: "uploadExistingPackfiles") {
-                try exporter.uploadPackFiles(packFilesDirectory: directory, commit: commit, repository: repository)
+            try await log.measure(name: "uploadExistingPackfiles") { () async throws(APICallError) in
+                try await api.uploadPackFiles(directory: directory.url,
+                                              commit: commit,
+                                              repositoryURL: repository)
             }
         } catch {
-            log.print("packfiles upload failed: \(error)")
+            let err = LibraryConfigurationCommunicationError(
+                requestName: "PackFileRequest",
+                payload: "commit: \(commit)",
+                error: error
+            )
+            log.print("packfiles upload failed: \(err)")
             try? commitsFile.delete()
             try? directory.delete()
             return false
         }
-        
+
         try? directory.delete()
         saveCommits(file: commitsFile, commits: newCommits)
         return true
@@ -131,7 +138,7 @@ final class GitUploader {
         return status.isEmpty
     }
     
-    private func searchForNewCommits(repositoryURL: String) -> [String]? {
+    private func searchForNewCommits(repositoryURL: String) async -> [String]? {
         guard let latestCommits = log.measure(name: "getLatestCommits", getLatestCommits),
               !latestCommits.isEmpty else
         {
@@ -140,11 +147,17 @@ final class GitUploader {
         }
         let existingCommits: [String]
         do {
-            existingCommits = try log.measure(name: "searchRepositoryCommits") {
-                try exporter.searchCommits(repositoryURL: repositoryURL, commits: latestCommits)
+            existingCommits = try await log.measure(name: "searchRepositoryCommits") { () async throws(APICallError) in
+                try await api.searchCommits(repositoryURL: repositoryURL,
+                                            commits: latestCommits)
             }
         } catch {
-            log.print("\(error)")
+            let err = LibraryConfigurationCommunicationError(
+                requestName: "SearchCommitsRequest",
+                payload: "commits: \(latestCommits)",
+                error: error
+            )
+            log.print("\(err)")
             return nil
         }
         let commits = Set(latestCommits).subtracting(existingCommits)

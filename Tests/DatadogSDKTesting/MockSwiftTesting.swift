@@ -98,10 +98,10 @@ extension Mocks {
             for module in tests {
                 for suite in module.value {
                     for test in suite.value.tests {
-                        try await suiteProvider.registry.register(test: STTest(name: test.name,
-                                                                               module: module.key,
-                                                                               suite: suite.key,
-                                                                               attachedTags: test.method.tags))
+                        await suiteProvider.registry.register(test: STTest(name: test.name,
+                                                                           module: module.key,
+                                                                           suite: suite.key,
+                                                                           attachedTags: test.method.tags))
                     }
                 }
             }

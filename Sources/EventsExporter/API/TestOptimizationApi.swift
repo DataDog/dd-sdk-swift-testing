@@ -6,7 +6,7 @@
 
 import Foundation
 
-internal protocol TestOptimizationApi: APIService {
+public protocol TestOptimizationApi: APIService {
     var settings: SettingsApi { get }
     var knownTests: KnownTestsApi { get }
     var git: GitUploadApi { get }
@@ -17,8 +17,8 @@ internal protocol TestOptimizationApi: APIService {
     var telemetry: TelemetryApi { get }
 }
 
-internal struct TestOptimizationApiService: TestOptimizationApi {
-    var endpoint: Endpoint {
+public struct TestOptimizationApiService: TestOptimizationApi {
+    public var endpoint: Endpoint {
         get { settings.endpoint }
         set {
             settings.endpoint = newValue
@@ -31,7 +31,7 @@ internal struct TestOptimizationApiService: TestOptimizationApi {
             telemetry.endpoint = newValue
         }
     }
-    var headers: [HTTPHeader] {
+    public var headers: [HTTPHeader] {
         get { settings.headers }
         set {
             settings.headers = newValue
@@ -45,7 +45,7 @@ internal struct TestOptimizationApiService: TestOptimizationApi {
         }
     }
 
-    var encoder: JSONEncoder {
+    public var encoder: JSONEncoder {
         get { settings.encoder }
         set {
             settings.encoder = newValue
@@ -59,7 +59,7 @@ internal struct TestOptimizationApiService: TestOptimizationApi {
         }
     }
 
-    var decoder: JSONDecoder {
+    public var decoder: JSONDecoder {
         get { settings.decoder }
         set {
             settings.decoder = newValue
@@ -73,16 +73,16 @@ internal struct TestOptimizationApiService: TestOptimizationApi {
         }
     }
 
-    var settings: SettingsApi
-    var knownTests: KnownTestsApi
-    var git: GitUploadApi
-    var tia: TestImpactAnalysisApi
-    var testManagement: TestManagementApi
-    var spans: SpansApi
-    var logs: LogsApi
-    var telemetry: TelemetryApi
+    public private(set) var settings: SettingsApi
+    public private(set) var knownTests: KnownTestsApi
+    public private(set) var git: GitUploadApi
+    public private(set) var tia: TestImpactAnalysisApi
+    public private(set) var testManagement: TestManagementApi
+    public private(set) var spans: SpansApi
+    public private(set) var logs: LogsApi
+    public private(set) var telemetry: TelemetryApi
 
-    init(config: APIServiceConfig, httpClient: HTTPClient, log: Logger) {
+    internal init(config: APIServiceConfig, httpClient: HTTPClient, log: Logger) {
         settings = SettingsApiService(config: config, httpClient: httpClient, log: log)
         knownTests = KnownTestsApiService(config: config, httpClient: httpClient, log: log)
         git = GitUploadApiService(config: config, httpClient: httpClient, log: log)
@@ -93,7 +93,28 @@ internal struct TestOptimizationApiService: TestOptimizationApi {
         telemetry = TelemetryApiService(config: config, httpClient: httpClient, log: log)
     }
 
-    var endpointURLs: Set<URL> {
+    /// Build the full set of test-optimization API services that share one
+    /// `HTTPClient` and one set of identity headers. Callers (the SDK) own the
+    /// resulting value and pass it to `EventsExporter`.
+    public init(serviceName: String, environment: String,
+                applicationName: String, version: String,
+                hostname: String?, apiKey: String,
+                endpoint: Endpoint, clientId: String,
+                payloadCompression: Bool,
+                logger: Logger,
+                debugNetworkRequests: Bool = false)
+    {
+        let config = APIServiceConfig(serviceName: serviceName, environment: environment,
+                                      applicationName: applicationName, version: version,
+                                      device: .current, hostname: hostname, apiKey: apiKey,
+                                      endpoint: endpoint, clientId: clientId,
+                                      payloadCompression: payloadCompression)
+        self.init(config: config,
+                  httpClient: HTTPClient(debug: debugNetworkRequests),
+                  log: logger)
+    }
+
+    public var endpointURLs: Set<URL> {
         settings.endpointURLs
             .union(knownTests.endpointURLs)
             .union(git.endpointURLs)

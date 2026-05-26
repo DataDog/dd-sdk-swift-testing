@@ -178,28 +178,30 @@ struct TestImpactAnalysisFactory: FeatureFactory {
     let cacheFolder: Directory
     let commitSha: String
     let repository: String
-    let exporter: EventsExporterProtocol
+    let service: String
+    let environment: String
+    let api: TestImpactAnalysisApi
     let skippingEnabled: Bool
     let swiftTestingEnabled: Bool
-    let libraryConfigurationErrors: LibraryConfigurationErrors
 
     init(configurations: [String: String],
          custom: [String: String],
-         exporter: EventsExporterProtocol,
+         api: TestImpactAnalysisApi,
+         service: String, environment: String,
          commit: String, repository: String,
          cache: Directory, skippingEnabled: Bool,
-         swiftTestingEnabled: Bool,
-         libraryConfigurationErrors: LibraryConfigurationErrors)
+         swiftTestingEnabled: Bool)
     {
         self.configurations = configurations
         self.customConfigurations = custom
         self.cacheFolder = cache
-        self.exporter = exporter
+        self.api = api
+        self.service = service
+        self.environment = environment
         self.repository = repository
         self.commitSha = commit
         self.skippingEnabled = skippingEnabled
         self.swiftTestingEnabled = swiftTestingEnabled
-        self.libraryConfigurationErrors = libraryConfigurationErrors
     }
 
     static func isEnabled(config: Config, env: Environment, remote: TracerSettings) -> Bool {
@@ -229,16 +231,14 @@ struct TestImpactAnalysisFactory: FeatureFactory {
         return !isExcluded(branch)
     }
 
-    func create(log: Logger) -> TestImpactAnalysis? {
+    func create(log: Logger) async throws -> TestImpactAnalysis {
         guard skippingEnabled else {
             return create(log: log, tests: nil)
         }
         if let tests = loadTestsFromDisk(log: log) {
             return create(log: log, tests: tests)
         }
-        guard let tests = getTests(exporter: exporter, log: log) else {
-            return nil
-        }
+        let tests = try await fetchTests()
         saveTests(tests: tests)
         return create(log: log, tests: tests)
     }
@@ -247,7 +247,7 @@ struct TestImpactAnalysisFactory: FeatureFactory {
         log.debug("Test Impact Analysis Enabled")
         return TestImpactAnalysis(tests: tests, swiftTestingEnabled: swiftTestingEnabled)
     }
-    
+
     private func loadTestsFromDisk(log: Logger) -> SkipTests? {
         guard cacheFolder.hasFile(named: cacheFileName) else { return nil }
         guard let data = try? cacheFolder.file(named: cacheFileName).read() else {
@@ -263,29 +263,29 @@ struct TestImpactAnalysisFactory: FeatureFactory {
             return nil
         }
     }
-    
-    private func getTests(exporter: EventsExporterProtocol, log: Logger) -> SkipTests? {
-        let tests: SkipTests
+
+    private func fetchTests() async throws -> SkipTests {
         do {
-            tests = try exporter.skippableTests(
-                repositoryURL: repository.spanAttribute, sha: commitSha, testLevel: .test,
-                configurations: configurations, customConfigurations: customConfigurations
-            )
+            return try await api.skippableTests(repositoryURL: repository.spanAttribute,
+                                                sha: commitSha,
+                                                environment: environment, service: service,
+                                                testLevel: .test,
+                                                configurations: configurations,
+                                                customConfigurations: customConfigurations)
         } catch {
-            log.print("\(error)")
-            libraryConfigurationErrors.recordCommunicationError(.skippableTests)
-            return nil
+            throw LibraryConfigurationCommunicationError(
+                requestName: "SkipTestsRequest",
+                payload: "sha: \(commitSha)",
+                error: error
+            )
         }
-        log.debug("TIA: tests: \(tests)")
-        return tests
     }
-    
+
     private func saveTests(tests: SkipTests) {
         if let data = try? JSONEncoder().encode(tests) {
             let testsFile = try? cacheFolder.createFile(named: cacheFileName)
             try? testsFile?.append(data: data)
         }
     }
-    
 }
 

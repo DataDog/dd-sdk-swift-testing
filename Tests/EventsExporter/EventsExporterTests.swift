@@ -27,24 +27,13 @@ class EventsExporterTests: XCTestCase {
         let instrumentationLibraryName = "SimpleExporter"
         let instrumentationLibraryVersion = "semver:0.1.0"
         
-        let exporterConfiguration = ExporterConfiguration(serviceName: "serviceName",
-                                                          applicationName: "applicationName",
-                                                          applicationVersion: "applicationVersion",
-                                                          environment: "environment",
-                                                          hostname: "hostname",
-                                                          apiKey: "apikey",
-                                                          endpoint: .other(
-                                                            testsBaseURL: server.baseURL,
-                                                            logsBaseURL: server.baseURL
-                                                          ),
-                                                          metadata: .init(),
-                                                          performancePreset: .readAllFiles,
-                                                          exporterId: "exporterId",
-                                                          logger: Log())
-        
+        let exporterConfiguration = ExporterConfiguration.mock(performancePreset: .readAllFiles)
+        let endpoint: Endpoint = .other(testsBaseURL: server.baseURL, logsBaseURL: server.baseURL)
+        let api = TestOptimizationApiService.mock(endpoint: endpoint)
+
         let storage = try! Directory.temporary().createSubdirectory(path: UUID().uuidString)
         defer { try? storage.delete() }
-        let datadogExporter = try! EventsExporter(config: exporterConfiguration, storage: storage)
+        let datadogExporter = try! EventsExporter(config: exporterConfiguration, api: api, storage: storage)
         
         let spanProcessor = SimpleSpanProcessor(spanExporter: datadogExporter)
         defer { spanProcessor.shutdown() }

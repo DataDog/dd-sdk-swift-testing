@@ -181,7 +181,7 @@ struct EarlyFlakeDetectionFactory: FeatureFactory {
         self.settings = settings
     }
     
-    func create(log: Logger) -> EarlyFlakeDetection? {
+    func create(log: Logger) async throws -> EarlyFlakeDetection {
         log.debug("Early Flake Detection Enabled")
         return EarlyFlakeDetection(knownTests: knownTests,
                                    slowTestRetries: settings.slowTestRetries,

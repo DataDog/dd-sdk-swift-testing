@@ -75,14 +75,16 @@ extension Array: APIResponseData where Element: APIResponseData {
     var isTypeValid: Bool { allSatisfy { $0.isTypeValid } }
 }
 
-internal protocol APIService {
+public protocol APIService {
     var endpoint: Endpoint { get set }
     var headers: [HTTPHeader] { get set }
     var encoder: JSONEncoder { get set }
     var decoder: JSONDecoder { get set }
 
     var endpointURLs: Set<URL> { get }
+}
 
+internal protocol APIServiceConstructible: APIService {
     init(config: APIServiceConfig, httpClient: HTTPClient, log: Logger)
 }
 
@@ -284,7 +286,7 @@ struct APICall<Request: APIRequestData, Response: APIResponseData> {
     private init() {}
 }
 
-internal enum APICallError: Error {
+public enum APICallError: Error {
     case transport(any Error)
     case httpError(code: Int, headers: [HTTPHeader.Field: String], body: Data?)
     case encoding(value: any Encodable, error: EncodingError)
@@ -305,7 +307,7 @@ internal enum APICallError: Error {
         }
     }
 
-    var isUnauthorized: Bool {
+    public var isUnauthorized: Bool {
         switch self {
         case .httpError(code: 401, headers: _, body: _),
              .httpError(code: 403, headers: _, body: _):
@@ -367,19 +369,6 @@ internal struct APIServiceConfig {
         self.endpoint = endpoint
         self.clientId = clientId
         self.payloadCompression = payloadCompression
-    }
-
-    init(configuration: ExporterConfiguration, device: Device = .current) {
-        self.init(serviceName: configuration.serviceName,
-                  environment: configuration.environment,
-                  applicationName: configuration.applicationName,
-                  version: configuration.version,
-                  device: device,
-                  hostname: configuration.hostname,
-                  apiKey: configuration.apiKey,
-                  endpoint: configuration.endpoint,
-                  clientId: configuration.exporterId,
-                  payloadCompression: configuration.payloadCompression)
     }
 }
 

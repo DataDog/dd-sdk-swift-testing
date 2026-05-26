@@ -11,10 +11,6 @@
   "defaultOptions" : {
     "environmentVariableEntries" : [
       {
-        "key" : "GITHUB_REPOSITORY",
-        "value" : "$(GITHUB_REPOSITORY)"
-      },
-      {
         "key" : "INTEGRATION_TESTS_LOG_PATH",
         "value" : "$(INTEGRATION_TESTS_LOG_PATH)"
       },
@@ -27,52 +23,52 @@
         "value" : "$(INTEGRATION_TESTS_PLATFORM)"
       },
       {
-        "key" : "GITHUB_REF",
-        "value" : "$(GITHUB_REF)"
+        "key" : "GITHUB_ACTIONS",
+        "value" : "$(GITHUB_ACTIONS)"
+      },
+      {
+        "key" : "GITHUB_BASE_REF",
+        "value" : "$(GITHUB_BASE_REF)"
+      },
+      {
+        "key" : "GITHUB_EVENT_PATH",
+        "value" : "$(GITHUB_EVENT_PATH)"
+      },
+      {
+        "key" : "GITHUB_JOB",
+        "value" : "$(GITHUB_JOB)"
       },
       {
         "key" : "GITHUB_HEAD_REF",
         "value" : "$(GITHUB_HEAD_REF)"
       },
       {
-        "key" : "GITHUB_ACTIONS",
-        "value" : "$(GITHUB_ACTIONS)"
+        "key" : "GITHUB_REPOSITORY",
+        "value" : "$(GITHUB_REPOSITORY)"
       },
       {
-        "key" : "DD_ENV",
-        "value" : "integration-tests"
+        "key" : "GITHUB_REF",
+        "value" : "$(GITHUB_REF)"
       },
       {
-        "key" : "DD_SERVICE",
-        "value" : "dd-sdk-swift-testing"
-      },
-      {
-        "key" : "SRCROOT",
-        "value" : "$(SRCROOT)"
-      },
-      {
-        "key" : "DD_API_KEY",
-        "value" : "$(DD_API_KEY)"
+        "key" : "GITHUB_RUN_ATTEMPT",
+        "value" : "$(GITHUB_RUN_ATTEMPT)"
       },
       {
         "key" : "GITHUB_RUN_ID",
         "value" : "$(GITHUB_RUN_ID)"
       },
       {
-        "key" : "DD_ENABLE_NETWORK_CALL_STACK_SYMBOLICATED",
-        "value" : "0"
-      },
-      {
         "key" : "GITHUB_RUN_NUMBER",
         "value" : "$(GITHUB_RUN_NUMBER)"
       },
       {
-        "key" : "GITHUB_SHA",
-        "value" : "$(GITHUB_SHA)"
+        "key" : "GITHUB_SERVER_URL",
+        "value" : "$(GITHUB_SERVER_URL)"
       },
       {
-        "key" : "DD_TEST_RUNNER",
-        "value" : "$(DD_TEST_RUNNER)"
+        "key" : "GITHUB_SHA",
+        "value" : "$(GITHUB_SHA)"
       },
       {
         "key" : "GITHUB_WORKSPACE",
@@ -83,8 +79,36 @@
         "value" : "$(GITHUB_WORKFLOW)"
       },
       {
+        "key" : "JOB_CHECK_RUN_ID",
+        "value" : "$(JOB_CHECK_RUN_ID)"
+      },
+      {
+        "key" : "DD_TEST_RUNNER",
+        "value" : "$(DD_TEST_RUNNER)"
+      },
+      {
+        "key" : "DD_API_KEY",
+        "value" : "$(DD_API_KEY)"
+      },
+      {
+        "key" : "SRCROOT",
+        "value" : "$(SRCROOT)"
+      },
+      {
+        "key" : "DD_ENV",
+        "value" : "integration-tests"
+      },
+      {
+        "key" : "DD_SERVICE",
+        "value" : "dd-sdk-swift-testing"
+      },
+      {
         "key" : "DD_TRACE_DEBUG",
         "value" : "1"
+      },
+      {
+        "key" : "DD_ENABLE_NETWORK_CALL_STACK_SYMBOLICATED",
+        "value" : "0"
       }
     ],
     "performanceAntipatternCheckerEnabled" : true,
@@ -92,7 +116,8 @@
       "containerPath" : "container:DatadogSDKTesting.xcodeproj",
       "identifier" : "A7F3FC132F924521002EFFAB",
       "name" : "IntegrationTests"
-    }
+    },
+    "uiTestingScreenshotsLifetime" : "keepNever"
   },
   "testTargets" : [
     {

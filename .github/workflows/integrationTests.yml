@@ -43,3 +43,25 @@ jobs:
       with:
         name: ${{ matrix.xcode }}-${{ matrix.platform }}-integration-log
         path: "logs-integration/*.log"
+    - name: Collect xcresult bundles
+      if: failure()
+      run: |
+        set -euo pipefail
+        mkdir -p xcresults-integration
+        # Grab every xcresult produced during this job (outer test bundle
+        # and any inner build-for-testing/test-without-building runs) and
+        # zip each one to keep the artifact upload fast — xcresult is a
+        # bundle of thousands of small files otherwise.
+        derived_data="$HOME/Library/Developer/Xcode/DerivedData"
+        find "$derived_data" -type d -name '*.xcresult' -print0 \
+          | while IFS= read -r -d '' bundle; do
+              name=$(basename "$bundle" .xcresult)
+              (cd "$(dirname "$bundle")" && zip -qry "$GITHUB_WORKSPACE/xcresults-integration/$name.zip" "$(basename "$bundle")")
+            done
+    - name: Attach xcresult bundles
+      if: failure()
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+      with:
+        name: ${{ matrix.xcode }}-${{ matrix.platform }}-integration-xcresult
+        path: "xcresults-integration/*.zip"
+        if-no-files-found: ignore

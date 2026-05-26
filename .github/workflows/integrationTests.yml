@@ -48,16 +48,22 @@ jobs:
       run: |
         set -euo pipefail
         mkdir -p xcresults-integration
-        # Grab every xcresult produced during this job (outer test bundle
-        # and any inner build-for-testing/test-without-building runs) and
-        # zip each one to keep the artifact upload fast — xcresult is a
-        # bundle of thousands of small files otherwise.
-        derived_data="$HOME/Library/Developer/Xcode/DerivedData"
-        find "$derived_data" -type d -name '*.xcresult' -print0 \
-          | while IFS= read -r -d '' bundle; do
-              name=$(basename "$bundle" .xcresult)
-              (cd "$(dirname "$bundle")" && zip -qry "$GITHUB_WORKSPACE/xcresults-integration/$name.zip" "$(basename "$bundle")")
-            done
+        # Grab every xcresult produced during this job and zip each one to
+        # keep the artifact upload fast (xcresult is a bundle of thousands
+        # of small files otherwise). Two source locations:
+        #   - default DerivedData under $HOME: outer `xcodebuild test` bundle.
+        #   - $GITHUB_WORKSPACE/build/integration-DerivedData: inner
+        #     `xcodebuild test-without-building` bundles spawned by the
+        #     runner. Inner builds use an isolated DerivedData so the
+        #     outer SWBBuildService can't evict their cache.
+        for root in "$HOME/Library/Developer/Xcode/DerivedData" "$GITHUB_WORKSPACE/build/integration-DerivedData"; do
+          [ -d "$root" ] || continue
+          find "$root" -type d -name '*.xcresult' -print0 \
+            | while IFS= read -r -d '' bundle; do
+                name=$(basename "$bundle" .xcresult)
+                (cd "$(dirname "$bundle")" && zip -qry "$GITHUB_WORKSPACE/xcresults-integration/$name.zip" "$(basename "$bundle")")
+              done
+        done
     - name: Attach xcresult bundles
       if: failure()
       uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0

@@ -148,6 +148,13 @@ struct XcodeTestRunner: Sendable {
             if shouldCloseStdOut { try? stdOut.close() }
         }
         
+        // Isolate inner xcodebuild DerivedData from the outer test bundle's.
+        // When both share `~/Library/Developer/Xcode/DerivedData` the inner
+        // SWBBuildService evicts cached build descriptions out from under
+        // the outer process and prints duplicate-blueprint warnings; this
+        // has caused random mid-build failures and aborted test sessions.
+        let derivedDataPath = "\(workdir)/build/integration-DerivedData"
+
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/env", isDirectory: false)
         process.standardOutput = stdOut
@@ -159,7 +166,8 @@ struct XcodeTestRunner: Sendable {
             "xcodebuild",
             "-scheme", module,
             "-sdk", sdk,
-            "-destination", platform
+            "-destination", platform,
+            "-derivedDataPath", derivedDataPath,
         ] + action
         
         try process.run()
@@ -263,14 +271,22 @@ struct BuildProvider: SuiteTrait, TestScoping {
         self.testBundle = testBundle ?? module
     }
 
+    // Only boot the simulator in `prepare`. The actual `xcodebuild
+    // build-for-testing` is deferred to `provideScope` because xcodebuild
+    // gates the test-runner "ready to run" handshake on trait preparation
+    // finishing within a short window (~5 minutes on Xcode 26). Inner
+    // builds can run several minutes, so doing them here trips the
+    // "test runner timed out while preparing to run tests" failure.
     func prepare(for test: Testing.Test) async throws {
-        try await XcodeTestRunner(module: module, testBundle: testBundle).build()
+        try await XcodeTestRunner(module: module, testBundle: testBundle).bootSimulator()
     }
 
     func provideScope(for test: Testing.Test, testCase: Testing.Test.Case?,
                       performing function: @concurrent @Sendable () async throws -> Void) async throws
     {
-        try await Self.$testRunner.withValue(XcodeTestRunner(module: module, testBundle: testBundle), operation: function)
+        let runner = XcodeTestRunner(module: module, testBundle: testBundle)
+        try await runner.build()
+        try await Self.$testRunner.withValue(runner, operation: function)
     }
 
     @TaskLocal static var testRunner: XcodeTestRunner?

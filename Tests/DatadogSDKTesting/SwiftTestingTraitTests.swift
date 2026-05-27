@@ -78,8 +78,8 @@ struct SwiftTestingTraitTests {
     }
 
     @Test(arguments: zip([1, 2, 3], ["1", "2", "3"]))
-    func testParameterized(p1: Int, p2: String) async throws {
-        #expect("\(p1)" == p2)
+    func testParameterized(p1: Int, p2 second: String) async throws {
+        #expect("\(p1)" == second)
     }
 
 }
@@ -154,6 +154,24 @@ struct DDSuiteNamingTests {
             @Test func doublyNestedSuiteName() async throws {
                 #expect(Testing.Test.current?.ddSuite == "DDSuiteNamingTests.NestedSuite.DoublyNestedSuite")
             }
+        }
+    }
+}
+
+/// Regression test for https://github.com/DataDog/dd-sdk-swift-testing/issues/257.
+/// When both an outer and an inner `@Suite` carry `.datadogTesting`, Swift
+/// Testing chains a separate trait instance for each annotation level around
+/// the inner scope. Without dedupe each instance creates its own retry group
+/// for the test, producing a second `runs` entry (which surfaced as a
+/// duplicate test result in the Datadog UI). The trait scope provider must
+/// short-circuit when an outer trait instance already provides scope for the
+/// same suite / test / run.
+@Suite(.observerTester, .datadogTesting)
+struct DDNestedAnnotatedSuiteTests {
+    @Suite(.observerTester, .datadogTesting)
+    struct InnerAnnotated {
+        @Test func nestedTraitTest() async throws {
+            #expect(Testing.Test.current?.ddSuite == "DDNestedAnnotatedSuiteTests.InnerAnnotated")
         }
     }
 }
@@ -363,6 +381,7 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
             "DDSuiteNamingTests.topLevelSuiteName": ([.pass], nil, nil),
             "DDSuiteNamingTests.NestedSuite.nestedSuiteName": ([.pass], nil, nil),
             "DDSuiteNamingTests.NestedSuite.DoublyNestedSuite.doublyNestedSuiteName": ([.pass], nil, nil),
+            "DDNestedAnnotatedSuiteTests.InnerAnnotated.nestedTraitTest": ([.pass], nil, nil),
             "[SwiftTestingTraitTests].testFuncRetryErrorShouldFail": (Array(repeating: .fail, count: 5), 1, nil),
             "[SwiftTestingTraitTests].testFuncRegistration": ([.pass], nil, nil),
             "[SwiftTestingTraitTests].zzzzFuncCancel": ([.skip], nil, true)
@@ -397,9 +416,9 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
             // Arguments are zip([1,2,3], ["1","2","3"]); the String value appears
             // with its surrounding quotes in the description, so it is JSON-escaped.
             let expectedParams: [TestParameters] = [
-                [(name: "p1", value: "1", type: "Swift.Int"), (name: "p2", value:"\"1\"", type:"Swift.String")],
-                [(name: "p1", value: "2", type: "Swift.Int"), (name: "p2", value:"\"2\"", type:"Swift.String")],
-                [(name: "p1", value: "3", type: "Swift.Int"), (name: "p2", value:"\"3\"", type:"Swift.String")]
+                [(name: "p1", value: "1", type: "Swift.Int"), (name: "p2 second", value:"\"1\"", type:"Swift.String")],
+                [(name: "p1", value: "2", type: "Swift.Int"), (name: "p2 second", value:"\"2\"", type:"Swift.String")],
+                [(name: "p1", value: "3", type: "Swift.Int"), (name: "p2 second", value:"\"3\"", type:"Swift.String")]
             ]
             for (run, expected) in zip(params, expectedParams) {
                 #expect(run == expected)

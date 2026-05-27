@@ -158,7 +158,7 @@ struct UnitTestsXCTestSmoke: IntergationTestSuite {
             #expect(failed[DDTags.errorCrashLog + ".00"] != nil)
             
             // save all error tags to our test span so we can inspect them in the DD UI
-            if let test = DatadogSDKTesting.Test.current {
+            if let test = DDTest.current {
                 let tags = [DDTags.errorType, DDTags.errorMessage, DDTags.errorStack,
                             DDTags.errorCrashLog + ".00", DDTags.errorCrashLog + ".01",
                             DDTags.errorCrashLog + ".02", DDTags.errorCrashLog + ".03",

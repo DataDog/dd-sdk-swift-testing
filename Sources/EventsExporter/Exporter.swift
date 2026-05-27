@@ -7,7 +7,7 @@
 import Foundation
 import OpenTelemetrySdk
 
-public protocol EventsExporterProtocol: SpanExporter, LogRecordExporter, CoverageExporterType {
+public protocol ExporterProtocol: SpanExporter, LogRecordExporter, CoverageExporterType {
     var maxObjectSize: UInt64 { get }
 
     /// Rebuild the spans file header from the supplied `SpanMetadata` and
@@ -16,7 +16,7 @@ public protocol EventsExporterProtocol: SpanExporter, LogRecordExporter, Coverag
     func setMetadata(_ metadata: SpanMetadata)
 }
 
-public final class EventsExporter: EventsExporterProtocol {
+public final class Exporter: ExporterProtocol {
     let configuration: ExporterConfiguration
     let spansExporter: SpansExporter
     let logsExporter: LogsExporter
@@ -52,7 +52,7 @@ public final class EventsExporter: EventsExporterProtocol {
             SpanEventsLogExporterAdapter(logRecordExporter: logsExporter),
         ])
 
-        Log.debug("EventsExporter created: \(spansExporter.runtimeId)")
+        Log.debug("Exporter created: \(spansExporter.runtimeId)")
     }
 
     public func export(spans: [SpanData], explicitTimeout: TimeInterval?) -> SpanExporterResultCode {

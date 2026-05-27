@@ -50,7 +50,7 @@ final class CodeCoverageProvider: TestCoverageCollector {
     let storagePath: Directory
     let debug: Bool
 
-    init(storagePath: Directory, exporter: EventsExporterProtocol,
+    init(storagePath: Directory, exporter: ExporterProtocol,
          workspacePath: String?, priority: CodeCoveragePriority, debug: Bool) throws
     {
         let llvm = try LLVMCoverageProcessor(for: PlatformUtils.xcodeVersion,

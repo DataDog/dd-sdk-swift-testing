@@ -18,7 +18,7 @@ import OpenTelemetryApi
 @Suite(.datadogTesting) struct STBasicSkip {
     @Test func basicSkip() throws {
 #if compiler(>=6.3)
-        try Testing.Test.cancel("skip")
+        try Test.cancel("skip")
 #endif
     }
 }
@@ -39,7 +39,7 @@ import OpenTelemetryApi
     @Test func asynchronousSkip() async throws {
         try await Task.sleep(nanoseconds: 1_000_000_000)
 #if compiler(>=6.3)
-        try Testing.Test.cancel("skip")
+        try Test.cancel("skip")
 #endif
     }
 }

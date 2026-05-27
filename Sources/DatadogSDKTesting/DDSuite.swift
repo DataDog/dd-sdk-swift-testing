@@ -9,8 +9,8 @@ import Foundation
 @preconcurrency internal import OpenTelemetrySdk
 internal import EventsExporter
 
-@objc(DDTestSuite)
-public final class Suite: NSObject {
+@objc
+public final class DDSuite: NSObject {
     struct MutableState {
         var testsStarted: Int = 0
     }
@@ -30,10 +30,10 @@ public final class Suite: NSObject {
     var module: TestModule { _module }
     var startTime: Date { span.startTime }
 
-    private let _module: Module
+    private let _module: DDModule
     private let _state: Synced<MutableState>
 
-    init(name: String, module: Module, framework: TestFramework, startTime: Date? = nil) {
+    init(name: String, module: DDModule, framework: TestFramework, startTime: Date? = nil) {
         self.name = name
         self._module = module
         self.testFramework = framework
@@ -103,7 +103,7 @@ public final class Suite: NSObject {
             return
         }
 
-        // get-status -> set-status round-trip (see DDTestSession).
+        // get-status -> set-status round-trip (see DDSession).
         span.applyStatus(span.testStatus, errorDescription: "suite failed")
         span.end(time: endTime)
         Log.debug("Exported suite_end event suiteId: \(self.id)")
@@ -133,7 +133,7 @@ public final class Suite: NSObject {
     ///   - name: name of the suite
     ///   - action: callback with test. Test will be ended automatically after call end
     @discardableResult
-    @objc public func testStart(name: String, _ action: (Test) -> Any) -> Any {
+    @objc public func testStart(name: String, _ action: (DDTest) -> Any) -> Any {
         testStart(named: name, action)
     }
 
@@ -142,24 +142,24 @@ public final class Suite: NSObject {
     ///   - name: name of the suite
     ///   - startTime: start time for the test
     ///   - action: callback with test. Test will be ended automatically after call end
-    @objc public func testStart(name: String, startTime: Date, _ action: (Test) -> Any) -> Any {
+    @objc public func testStart(name: String, startTime: Date, _ action: (DDTest) -> Any) -> Any {
         testStart(named: name, at: startTime, action)
     }
 
     public func testStart<T>(named name: String, at start: Date? = nil,
-                             _ action: (Test) throws -> T) rethrows -> T
+                             _ action: (DDTest) throws -> T) rethrows -> T
     {
-        try Test.withActiveTest(named: name, in: self, at: start, action)
+        try DDTest.withActiveTest(named: name, in: self, at: start, action)
     }
 
     public func testStart<T>(named name: String, at start: Date? = nil,
-                             _ action: @Sendable (Test) async throws -> T) async rethrows -> T
+                             _ action: @Sendable (DDTest) async throws -> T) async rethrows -> T
     {
-        try await Test.withActiveTest(named: name, in: self, at: start, action)
+        try await DDTest.withActiveTest(named: name, in: self, at: start, action)
     }
 }
 
-extension Suite: TestSuite {
+extension DDSuite: TestSuite {
     var attributes: [String: TestAttributeValue] { span.getAttributes().testAttributes }
 
     func set(tag name: String, value: SpanAttributeConvertible) {
@@ -190,7 +190,7 @@ extension Suite: TestSuite {
     func end(time: Date?) { end(endTime: time) }
 }
 
-extension Suite: TestRunProvider {
+extension DDSuite: TestRunProvider {
     func withActiveTest<T>(named name: String, _ action: @Sendable (any TestRun) async throws -> T) async rethrows -> T {
         try await testStart(named: name, action)
     }

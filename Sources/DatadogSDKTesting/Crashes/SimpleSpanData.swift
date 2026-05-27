@@ -74,7 +74,7 @@ extension TestSuite {
     }
 }
 
-extension Test {
+extension DDTest {
     var toCrashData: SimpleSpanData {
         .init(spanData: span.toSpanData(),
               sessionStartTime: session.startTime,

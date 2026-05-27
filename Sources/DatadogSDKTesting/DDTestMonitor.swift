@@ -665,7 +665,7 @@ internal class DDTestMonitor {
             switch msgid {
                 case DDCFMessageID.setCustomTags:
                 if let data = data as Data?, let decoded = try? JSONDecoder().decode([String: JSONGeneric].self, from: data) {
-                        if let test = Test.active {
+                        if let test = DDTest.active {
                             decoded.forEach {
                                 test.set(tag: $0.key, value: $0.value)
                             }
@@ -673,7 +673,7 @@ internal class DDTestMonitor {
                     }
                 case DDCFMessageID.enableRUM:
                     DDTestMonitor.instance?.isRumActive = true
-                    Test.active?.set(tag: DDTestTags.testIsRUMActive, value: true)
+                    DDTest.active?.set(tag: DDTestTags.testIsRUMActive, value: true)
                 case DDCFMessageID.forceFlush:
                     Log.debug("CFMessagePort forceFlush")
                 default:

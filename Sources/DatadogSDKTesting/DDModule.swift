@@ -9,8 +9,8 @@ import Foundation
 @preconcurrency internal import OpenTelemetrySdk
 internal import EventsExporter
 
-@objc(DDTestModule)
-public final class Module: NSObject {
+@objc
+public final class DDModule: NSObject {
     struct MutableState {
         var testFrameworks: Set<String> = []
     }
@@ -30,10 +30,10 @@ public final class Module: NSObject {
     var configuration: SessionConfig { _session.configuration }
     var startTime: Date { span.startTime }
 
-    private let _session: Session
+    private let _session: DDSession
     private let _state: Synced<MutableState>
 
-    init(name: String, session: Session, startTime: Date?) {
+    init(name: String, session: DDSession, startTime: Date?) {
         self.name = name
         self._session = session
 
@@ -97,7 +97,7 @@ public final class Module: NSObject {
         span.setAttribute(key: DDTestTags.testFramework,
                           value: .string(_state.value.testFrameworks.joined(separator: ",")))
         span.name = framework
-        // get-status -> set-status round-trip (see DDTestSession).
+        // get-status -> set-status round-trip (see DDSession).
         span.applyStatus(span.testStatus, errorDescription: "module failed")
         span.end(time: endTime)
 
@@ -110,8 +110,8 @@ public final class Module: NSObject {
     }
 }
 
-/// Public interface for DDTestModule
-public extension Module {
+/// Public interface for DDModule
+public extension DDModule {
     /// Ends the module
     /// - Parameters:
     ///   - endTime: Optional, the time where the module ended
@@ -136,16 +136,16 @@ public extension Module {
     /// - Parameters:
     ///   - name: name of the suite
     ///   - startTime: Optional, the time where the suite started
-    @objc func suiteStart(name: String, startTime: Date? = nil) -> Suite {
-        startSuite(named: name, at: startTime, framework: .init(name: "SwiftManual", version: "0.0.0")) as! Suite
+    @objc func suiteStart(name: String, startTime: Date? = nil) -> DDSuite {
+        startSuite(named: name, at: startTime, framework: .init(name: "SwiftManual", version: "0.0.0")) as! DDSuite
     }
 
-    @objc func suiteStart(name: String) -> Suite {
+    @objc func suiteStart(name: String) -> DDSuite {
         return suiteStart(name: name, startTime: nil)
     }
 }
 
-extension Module: TestModule {
+extension DDModule: TestModule {
     var attributes: [String: TestAttributeValue] { span.getAttributes().testAttributes }
 
     func set(tag name: String, value: SpanAttributeConvertible) {
@@ -176,9 +176,9 @@ extension Module: TestModule {
     func end(time: Date?) { end(endTime: time) }
 }
 
-extension Module: TestSuiteProvider {
+extension DDModule: TestSuiteProvider {
     func startSuite(named name: String, at start: Date?, framework: TestFramework) -> any TestRunProvider & TestSuite {
         addFramework(framework.name)
-        return Suite(name: name, module: self, framework: framework, startTime: start)
+        return DDSuite(name: name, module: self, framework: framework, startTime: start)
     }
 }

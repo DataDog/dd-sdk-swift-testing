@@ -9,8 +9,8 @@ import Foundation
 @preconcurrency internal import OpenTelemetrySdk
 internal import EventsExporter
 
-@objc(DDTestSession)
-public final class Session: NSObject {
+@objc
+public final class DDSession: NSObject {
     struct MutableState {
         var testRunsCount: UInt = 0
         var testFrameworks: Set<String> = []
@@ -113,7 +113,7 @@ public final class Session: NSObject {
     }
 }
 
-extension Session: TestSession {
+extension DDSession: TestSession {
     var attributes: [String: TestAttributeValue] { span.getAttributes().testAttributes }
 
     func set(tag name: String, value: any SpanAttributeConvertible) {
@@ -148,14 +148,14 @@ extension Session: TestSession {
     func end(time: Date?) { end(endTime: time) }
 }
 
-/// Public interface for Session
-public extension Session {
+/// Public interface for DDSession
+public extension DDSession {
     /// Starts the test session
     /// - Parameters:
     ///   - name: name of the session
     ///   - command: Optional, test command that started this session
     ///   - startTime: Optional, the time where the session started
-    @objc static func start(name: String, command: String? = nil, startTime: Date? = nil) -> Session {
+    @objc static func start(name: String, command: String? = nil, startTime: Date? = nil) -> DDSession {
         if DDTestMonitor.instance == nil  {
             let _ = DDTestMonitor.installTestMonitor()
         }
@@ -174,13 +174,13 @@ public extension Session {
                 DDTestMonitor.clock = DateClock()
             }
         }
-        return Session(name: name, config: config,
-                       modules: Module.StatelessManager(config: config,
-                                                        observer: SessionAndModuleObserver()),
-                       startTime: startTime)
+        return DDSession(name: name, config: config,
+                         modules: DDModule.StatelessManager(config: config,
+                                                            observer: SessionAndModuleObserver()),
+                         startTime: startTime)
     }
 
-    @objc static func start(name: String) -> Session {
+    @objc static func start(name: String) -> DDSession {
         return start(name: name, command: nil)
     }
 
@@ -208,22 +208,22 @@ public extension Session {
     /// - Parameters:
     ///   - name: name of the module
     ///   - startTime: Optional, the time where the module started
-    @objc func moduleStart(name: String, startTime: Date? = nil) -> Module {
-        return _moduleManager.module(named: name, at: startTime, provider: self) as! Module
+    @objc func moduleStart(name: String, startTime: Date? = nil) -> DDModule {
+        return _moduleManager.module(named: name, at: startTime, provider: self) as! DDModule
     }
 
-    @objc func moduleStart(name: String) -> Module {
+    @objc func moduleStart(name: String) -> DDModule {
         return moduleStart(name: name, startTime: nil)
     }
 }
 
-extension Session: TestModuleProvider {
+extension DDSession: TestModuleProvider {
     func startModule(named name: String, at start: Date?) -> any TestModule & TestSuiteProvider {
-        Module(name: name, session: self, startTime: start)
+        DDModule(name: name, session: self, startTime: start)
     }
 }
 
-extension Session: TestModuleManager {
+extension DDSession: TestModuleManager {
     func module(named name: String) -> any TestModule & TestSuiteProvider {
         moduleStart(name: name, startTime: configuration.clock.now)
     }

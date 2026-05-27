@@ -33,7 +33,7 @@ class EventsExporterTests: XCTestCase {
 
         let storage = try! Directory.temporary().createSubdirectory(path: UUID().uuidString)
         defer { try? storage.delete() }
-        let datadogExporter = try! EventsExporter(config: exporterConfiguration, api: api, storage: storage)
+        let datadogExporter = try! Exporter(config: exporterConfiguration, api: api, storage: storage)
         
         let spanProcessor = SimpleSpanProcessor(spanExporter: datadogExporter)
         defer { spanProcessor.shutdown() }

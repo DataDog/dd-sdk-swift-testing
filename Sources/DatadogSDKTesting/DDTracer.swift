@@ -21,7 +21,7 @@ internal class DDTracer {
     let tracerSdk: TracerSdk
     let tracerProviderSdk: TracerProviderSdk
     let maxObjectSize: UInt64
-    var eventsExporter: EventsExporterProtocol?
+    var eventsExporter: ExporterProtocol?
     /// Backend APIs owned by the SDK (not by the exporter). Held here so
     /// feature factories don't need to reach through `eventsExporter` to talk
     /// to the backend.
@@ -36,7 +36,7 @@ internal class DDTracer {
     private var launchSpanContext: SpanContext?
     private let attributeCountLimit: UInt = 1024
 
-    static var activeSpan: Span? { OpenTelemetry.instance.contextProvider.activeSpan ?? Test.current?.span }
+    static var activeSpan: Span? { OpenTelemetry.instance.contextProvider.activeSpan ?? DDTest.current?.span }
 
     var propagationContext: SpanContext? {
         return DDTracer.activeSpan?.context ?? launchSpanContext
@@ -46,7 +46,7 @@ internal class DDTracer {
         return launchSpanContext != nil
     }
     
-    init(id: String, version: String, exporter: EventsExporterProtocol?,
+    init(id: String, version: String, exporter: ExporterProtocol?,
          api: TestOptimizationApi, enabled: Bool, launchContext: SpanContext?,
          resource: Resource = Resource(),
          logRecordExporter: LogRecordExporter? = nil)
@@ -171,11 +171,11 @@ internal class DDTracer {
         // Exporter files live under the cache manager's session directory so
         // they stay scoped to this test run and get cleaned up alongside the
         // rest of the per-session state.
-        let eventsExporter: EventsExporter?
+        let eventsExporter: Exporter?
         if let storage = try? DDTestMonitor.cacheManager?.session(feature: "exporter") {
-            eventsExporter = try? EventsExporter(config: exporterConfiguration, api: api, storage: storage)
+            eventsExporter = try? Exporter(config: exporterConfiguration, api: api, storage: storage)
         } else {
-            Log.print("EventsExporter init skipped: cache manager unavailable")
+            Log.print("Exporter init skipped: cache manager unavailable")
             eventsExporter = nil
         }
 
@@ -362,7 +362,7 @@ internal class DDTracer {
     }
 
     private func testAttributes() -> [String: AttributeValue] {
-        guard let currentTest = Test.active else {
+        guard let currentTest = DDTest.active else {
             return [:]
         }
         return [DDTestTags.testName: AttributeValue.string(currentTest.name),

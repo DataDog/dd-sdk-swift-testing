@@ -28,7 +28,7 @@ class PipelineIntegrationTests: XCTestCase {
         let api = TestOptimizationApiService.mock(endpoint: endpoint)
         let storage = try Directory.temporary().createSubdirectory(path: UUID().uuidString)
         defer { try? storage.delete() }
-        let datadogExporter = try EventsExporter(config: configuration, api: api, storage: storage)
+        let datadogExporter = try Exporter(config: configuration, api: api, storage: storage)
 
         // -- 2. Resource the encoders read service / version / env from ---------
         var resource = Resource()

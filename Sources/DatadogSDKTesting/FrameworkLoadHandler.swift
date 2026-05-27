@@ -36,7 +36,7 @@ enum FrameworkLoadHandler {
         if config.isInTestMode {
             if config.isTestObserverNeeded && !config.disableTestInstrumenting {
                 let manager = SessionManager(log: Log.instance,
-                                             provider: Session.Provider(),
+                                             provider: DDSession.Provider(),
                                              observer: SessionAndModuleObserver())
                 sessionManager = manager
                 

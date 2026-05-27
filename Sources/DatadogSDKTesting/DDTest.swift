@@ -10,8 +10,8 @@ import Foundation
 internal import SigmaSwiftStatistics
 internal import EventsExporter
 
-@objc(DDTest)
-public final class Test: NSObject {
+@objc
+public final class DDTest: NSObject {
     let name: String
     let span: SpanSdk
 
@@ -94,10 +94,10 @@ public final class Test: NSObject {
     }
     
     /// Current active test
-    @objc public static var current: Test? { Self.active as? Test }
+    @objc public static var current: DDTest? { Self.active as? DDTest }
 }
 
-extension Test: TestRun {
+extension DDTest: TestRun {
     var id: SpanId { span.context.spanId }
     var startTime: Date { span.startTime }
     var duration: UInt64 { span.endTime?.timeIntervalSince(span.startTime).toNanoseconds ?? 0 }
@@ -119,7 +119,7 @@ extension Test: TestRun {
     }
 }
 
-extension Test {
+extension DDTest {
     func internalEnd(endTime: Date) {
         guard span.endTime == nil else { return }
         StderrCapture.syncData()
@@ -127,8 +127,8 @@ extension Test {
         DDTestMonitor.instance?.networkInstrumentation?.endAndCleanAliveSpans()
     }
     
-    static func withActiveTest<T>(named name: String, in suite: Suite, at start: Date? = nil,
-                               _ action: @Sendable (Test) async throws -> T) async rethrows -> T
+    static func withActiveTest<T>(named name: String, in suite: DDSuite, at start: Date? = nil,
+                               _ action: @Sendable (DDTest) async throws -> T) async rethrows -> T
     {
         let testStartTime = start ?? suite.configuration.clock.now
         suite.recordTestStarted()
@@ -144,8 +144,8 @@ extension Test {
         }
     }
 
-    static func withActiveTest<T>(named name: String, in suite: Suite, at start: Date? = nil,
-                               _ action: (Test) throws -> T) rethrows -> T
+    static func withActiveTest<T>(named name: String, in suite: DDSuite, at start: Date? = nil,
+                               _ action: (DDTest) throws -> T) rethrows -> T
     {
         let testStartTime = start ?? suite.configuration.clock.now
         suite.recordTestStarted()
@@ -161,7 +161,7 @@ extension Test {
         }
     }
     
-    static func attributes(test name: String, in suite: Suite) -> [String: AttributeValue] {
+    static func attributes(test name: String, in suite: DDSuite) -> [String: AttributeValue] {
         var attributes: [String: AttributeValue] = [
             DDTestTags.testName: .string(name),
             DDTestTags.testSuite: .string(suite.name),

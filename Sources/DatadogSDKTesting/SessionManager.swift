@@ -96,15 +96,15 @@ extension SessionManager {
     }
 }
 
-extension Session {
+extension DDSession {
     struct Provider: TestSessionProvider {
         func startSession(named name: String, config: SessionConfig, startTime: Date,
                           observer: (any TestModuleManagerObserver)?) async throws -> any TestModuleManager & TestSession
         {
-            Session(name: name, config: config,
-                    modules: Module.StatefulManager(config: config,
-                                                    observer: observer),
-                    startTime: startTime)
+            DDSession(name: name, config: config,
+                      modules: DDModule.StatefulManager(config: config,
+                                                        observer: observer),
+                      startTime: startTime)
         }
     }
 }
@@ -115,7 +115,7 @@ protocol TestModuleManagerSession: Sendable {
     func stop()
 }
 
-extension Module {
+extension DDModule {
     struct StatelessManager: TestModuleManagerSession, Sendable {
         let config: SessionConfig
         let observer: (any TestModuleManagerObserver)?

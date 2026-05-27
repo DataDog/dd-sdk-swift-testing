@@ -80,7 +80,7 @@ private let ddCrashIsWritingReportCallback: @convention(c) (
     if let info = SanitizerHelper.getSaniziterInfo(), let url = DDCrashes.sanitizerURL {
         try? info.write(to: url, atomically: true, encoding: .utf8)
     }
-    if let url = DDCrashes.spanURL, let test = Test.current {
+    if let url = DDCrashes.spanURL, let test = DDTest.current {
         let data = SimpleSpanSerializer.serializeSpan(simpleSpan: test.toCrashData)
         try? data.write(to: url, options: .atomic)
     }

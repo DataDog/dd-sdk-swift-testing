@@ -108,7 +108,7 @@ struct CodeCoverageFactory: FeatureFactory {
     let priority: CodeCoveragePriority
     let tempFolder: Directory
     let debug: Bool
-    let exporter: EventsExporterProtocol
+    let exporter: ExporterProtocol
     let swiftTestingEnabled: Bool
 
     static func isEnabled(config: Config, env: Environment, remote: TracerSettings) -> Bool {

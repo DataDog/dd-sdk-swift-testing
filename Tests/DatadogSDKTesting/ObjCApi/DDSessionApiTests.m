@@ -8,16 +8,16 @@
 #import <XCTest/XCTest.h>
 @import DatadogSDKTesting;
 
-@interface DDTestModuleApiTests : XCTestCase
+@interface DDSessionApiTests : XCTestCase
 
 @end
 
-@implementation DDTestModuleApiTests
+@implementation DDSessionApiTests
 
 - (void)testApiIsAccessible {
-    DDTestSession* session = [DDTestSession startWithName: @"ManualObjcTestingSession"];
-    DDTestModule *module = [session moduleStartWithName:@"ManualObjcTestingModule" startTime:nil];
-    DDTestSuite *suite = [module suiteStartWithName:@"ManualObjcTestingSuite" startTime:nil];
+    DDSession* session = [DDSession startWithName: @"ManualObjcTestingSession"];
+    DDModule *module = [session moduleStartWithName:@"ManualObjcTestingModule" startTime:nil];
+    DDSuite *suite = [module suiteStartWithName:@"ManualObjcTestingSuite" startTime:nil];
     [suite testStartWithName:@"ManualObjcTestingTest" :^id(DDTest* test) {
         [test setTagWithKey:@"key" value:@"value"];
         [test setErrorInfoWithType:@"errorType" message:@"error Message" callstack:nil];

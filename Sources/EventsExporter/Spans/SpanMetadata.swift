@@ -111,8 +111,8 @@ public extension SpanMetadata {
             case .none: try container.encodeNil()
             case .int(let i): try container.encode(i)
             case .double(let d): try container.encode(d)
-            case .string(let s): try container.encode(s)
-            case .bool(let b): try container.encode(b ? "true" : "false")
+            case .string(let s): try container.encode(truncateMetaStringValue(s))
+            case .bool(let b): try container.encode(truncateMetaStringValue(b ? "true" : "false"))
             }
         }
         

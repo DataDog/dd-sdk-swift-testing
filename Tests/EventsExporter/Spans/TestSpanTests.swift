@@ -136,6 +136,64 @@ final class TestSpanTests: XCTestCase {
         XCTAssertEqual(metrics["_top_level"], 1)
     }
 
+    func testTest_truncatesMetaStringValuesAndPreservesMetricsAndTopLevelIds() throws {
+        let longValue = String(repeating: "a", count: maxMetaStringValueLength + 1)
+        let exactValue = String(repeating: "b", count: maxMetaStringValueLength)
+        let span = SpanData(traceId: TraceId.random(),
+                            spanId: SpanId(id: 0x7777),
+                            traceFlags: TraceFlags(),
+                            traceState: TraceState(),
+                            parentSpanId: nil,
+                            resource: Resource(),
+                            instrumentationScope: InstrumentationScopeInfo(),
+                            name: "MyFramework.test",
+                            kind: .internal,
+                            startTime: Date(timeIntervalSinceReferenceDate: 1000),
+                            attributes: [
+                                "type": .string("test"),
+                                "test_session_id": .string(SpanId(id: 0x1111).hexString),
+                                "test_module_id": .string(SpanId(id: 0x2222).hexString),
+                                "test_suite_id": .string(SpanId(id: 0x3333).hexString),
+                                "custom.long": .string(longValue),
+                                "custom.exact": .string(exactValue),
+                                "custom.metric": .int(42),
+                            ],
+                            endTime: Date(timeIntervalSinceReferenceDate: 1001),
+                            hasRemoteParent: false)
+
+        let json = try encode(TestSpan(spanData: span, spanType: .test))
+        let meta = try XCTUnwrap(json["meta"] as? [String: String])
+        let metrics = try XCTUnwrap(json["metrics"] as? [String: Double])
+
+        XCTAssertEqual(meta["custom.long"], String(longValue.prefix(maxMetaStringValueLength)))
+        XCTAssertEqual(meta["custom.long"]?.count, maxMetaStringValueLength)
+        XCTAssertEqual(meta["custom.exact"], exactValue)
+        XCTAssertEqual(metrics["custom.metric"], 42)
+        XCTAssertNil(meta["test_session_id"])
+        XCTAssertNil(meta["test_module_id"])
+        XCTAssertNil(meta["test_suite_id"])
+        XCTAssertEqual(json["test_session_id"] as? UInt64, 0x1111)
+        XCTAssertEqual(json["test_module_id"] as? UInt64, 0x2222)
+        XCTAssertEqual(json["test_suite_id"] as? UInt64, 0x3333)
+    }
+
+    func testSession_truncatesMetaStringValues() throws {
+        let longValue = String(repeating: "s", count: maxMetaStringValueLength + 1)
+        let span = makeSpan(spanId: SpanId(id: 0x8888), attributes: [
+            "type": .string("test_session_end"),
+            "test_session_id": .string(SpanId(id: 0x8888).hexString),
+            "custom.long": .string(longValue),
+        ])
+
+        let json = try encode(TestSpan(spanData: span, spanType: .sessionEnd))
+        let meta = try XCTUnwrap(json["meta"] as? [String: String])
+
+        XCTAssertEqual(meta["custom.long"], String(longValue.prefix(maxMetaStringValueLength)))
+        XCTAssertEqual(meta["custom.long"]?.count, maxMetaStringValueLength)
+        XCTAssertNil(meta["test_session_id"])
+        XCTAssertEqual(json["test_session_id"] as? UInt64, 0x8888)
+    }
+
     func testTest_omitsTopLevelMetric_whenSpanHasParent() throws {
         var resource = Resource()
         resource.service = "service"

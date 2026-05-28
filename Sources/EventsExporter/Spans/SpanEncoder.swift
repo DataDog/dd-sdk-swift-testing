@@ -173,9 +173,9 @@ internal struct SpanEncoder {
 
         if span.error {
             try container.encode(1, forKey: .error)
-            try meta.encodeIfPresent(span.errorMessage, forKey: .errorMessage)
-            try meta.encodeIfPresent(span.errorType, forKey: .errorType)
-            try meta.encodeIfPresent(span.errorStack, forKey: .errorStack)
+            try meta.encodeIfPresent(span.errorMessage.map(truncateMetaStringValue), forKey: .errorMessage)
+            try meta.encodeIfPresent(span.errorType.map(truncateMetaStringValue), forKey: .errorType)
+            try meta.encodeIfPresent(span.errorStack.map(truncateMetaStringValue), forKey: .errorStack)
         } else {
             try container.encode(0, forKey: .error)
         }
@@ -196,8 +196,8 @@ internal struct SpanEncoder {
     /// Encodes default `meta.*` attributes
     private func encodeDefaultMeta(_ span: DDSpan, to meta: inout KeyedEncodingContainer<CodingKeys>) throws {
         // NOTE: RUMM-299 only string values are supported for `meta.*` attributes
-        try meta.encode(Constants.ddsource, forKey: .source)
-        try meta.encode(span.applicationVersion, forKey: .applicationVersion)
+        try meta.encode(truncateMetaStringValue(Constants.ddsource), forKey: .source)
+        try meta.encode(truncateMetaStringValue(span.applicationVersion), forKey: .applicationVersion)
     }
 
     /// Encodes `meta.*` attributes coming from user
@@ -213,7 +213,7 @@ internal struct SpanEncoder {
             case .double(let doubleValue):
                 try metrics.encode(doubleValue, forKey: CodingKeys($0.key))
             default:
-                try meta.encode($0.value.description, forKey: CodingKeys($0.key))
+                try meta.encode(truncateMetaStringValue($0.value.description), forKey: CodingKeys($0.key))
             }
         }
     }

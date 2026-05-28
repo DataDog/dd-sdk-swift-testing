@@ -151,7 +151,7 @@ struct TestSpan: Encodable {
             }
         }
 
-        self.meta = meta
+        self.meta = meta.truncatingMetaStringValues()
         self.metrics = metrics
     }
 

@@ -424,14 +424,18 @@ class TelemetryMetricExporterTests: XCTestCase {
 
     // MARK: - Aggregation temporality
 
-    func testGetAggregationTemporality_returnsCumulative() throws {
+    func testGetAggregationTemporality_deltaForCountersAndHistograms() throws {
         let server = MockBackend()
         try server.start()
         defer { server.stop() }
 
         let exporter = try makeExporter(server: server)
-        for instrument in InstrumentType.allCases {
-            XCTAssertEqual(exporter.getAggregationTemporality(for: instrument), .cumulative)
+        // Up/down counters → DD gauge: keep cumulative (current running total).
+        XCTAssertEqual(exporter.getAggregationTemporality(for: .upDownCounter), .cumulative)
+        XCTAssertEqual(exporter.getAggregationTemporality(for: .observableUpDownCounter), .cumulative)
+        // Everything else → DD count / distributions: per-interval delta.
+        for instrument in [InstrumentType.counter, .observableCounter, .histogram, .gauge, .observableGauge] {
+            XCTAssertEqual(exporter.getAggregationTemporality(for: instrument), .delta)
         }
     }
 }

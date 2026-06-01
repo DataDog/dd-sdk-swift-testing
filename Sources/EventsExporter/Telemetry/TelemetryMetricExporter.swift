@@ -48,7 +48,18 @@ internal final class TelemetryMetricExporter: MetricExporter {
     }
 
     func getAggregationTemporality(for instrument: InstrumentType) -> AggregationTemporality {
-        .cumulative
+        switch instrument {
+        case .upDownCounter, .observableUpDownCounter:
+            // These map to a DD gauge, where the current running total is the value
+            // we want to report — so keep them cumulative.
+            return .cumulative
+        default:
+            // Counters map to DD `count` (summed per interval) and histograms map to
+            // `distributions` (raw samples per interval). Both expect per-interval
+            // deltas; cumulative running totals would inflate counts and re-emit the
+            // full sample set on every collection. Request delta temporality.
+            return .delta
+        }
     }
 }
 

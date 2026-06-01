@@ -108,10 +108,11 @@ struct TestSpan: Encodable {
         self.resource = spanData.attributes.resource ?? spanData.name
         self.service = spanData.resource.service ?? ""
 
-        // Sanitize attribute keys (escape over-deep dot paths) before
-        // splitting into meta/metrics.
+        // Sanitize attribute keys (escape over-deep dot paths) and trim
+        // over-long string values before splitting into meta/metrics.
         let filtered = spanData.attributes.filter { !Self.filteredKeys.contains($0.key) }
-        let sanitized = AttributesSanitizer(featureName: "TestSpan").sanitizeKeys(for: filtered)
+        let sanitizer = AttributesSanitizer(featureName: "TestSpan")
+        let sanitized = sanitizer.sanitizeValues(for: sanitizer.sanitizeKeys(for: filtered))
         
         var meta = sanitized.meta
         var metrics = sanitized.metrics

@@ -5,16 +5,20 @@
  */
 
 import Foundation
+import OpenTelemetryApi
 
 /// Common attributes sanitizer for all features.
-internal struct AttributesSanitizer {
-    enum Constraints {
+public struct AttributesSanitizer {
+    public enum Constraints {
         /// Maximum number of nested levels in attribute name. E.g. `person.address.street` has 3 levels.
         /// If attribute name exceeds this number, extra levels are escaped by using `_` character (`one.two.(...).nine.ten_eleven_twelve`).
         static let maxNestedLevelsInAttributeName: Int = 10
         /// Maximum number of attributes in log.
         /// If this number is exceeded, extra attributes will be ignored.
         static let maxNumberOfAttributes: Int = 256
+        /// Maximum number of characters the backend accepts per attribute value
+        /// (and per span tag / metadata key). Longer string values are truncated.
+        public static let maxAttributeValueLength: Int = 5_000
     }
 
     let featureName: String
@@ -56,5 +60,30 @@ internal struct AttributesSanitizer {
             }
         }
         return sanitized
+    }
+
+    // MARK: - Attribute values sanitization
+
+    /// Trims attribute values to `Constraints.maxAttributeValueLength` characters
+    /// to match the backend per-tag length limit.
+    func sanitizeValues(for attributes: [String: AttributeValue]) -> [String: AttributeValue] {
+        attributes.mapValues { Self.trim($0) }
+    }
+
+    /// Trims a single attribute value to `Constraints.maxAttributeValueLength` characters.
+    ///
+    /// Numeric values (`.int` / `.double`) are sent as numbers and left unchanged.
+    /// Every other value is serialized to its `description` (the same representation
+    /// the encoders emit), so it is converted to `.string` here and truncated, ensuring
+    /// the value that actually reaches the backend respects the length limit.
+    static func trim(_ value: AttributeValue) -> AttributeValue {
+        switch value {
+        case .int, .double:
+            return value
+        default:
+            let maxLength = Constraints.maxAttributeValueLength
+            let string = value.description
+            return .string(string.count > maxLength ? String(string.prefix(maxLength)) : string)
+        }
     }
 }

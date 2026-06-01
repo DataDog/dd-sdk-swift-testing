@@ -266,6 +266,40 @@ class TelemetryMetricExporterTests: XCTestCase {
         XCTAssertEqual(points[6], 120.0, accuracy: 0.001) // overflow → max
     }
 
+    func testExport_histogram_noMinMax_fallsBackToBoundaries() throws {
+        let server = MockBackend()
+        try server.start()
+        defer { server.stop() }
+
+        let exporter = try makeExporter(server: server)
+        // Boundaries [10, 100], counts [1, 1, 1], no min/max available:
+        //   bucket 0 (underflow, no min): falls back to first boundary → 10.0
+        //   bucket 1 [10,100): midpoint 55.0
+        //   bucket 2 (overflow, no max): falls back to last boundary → 100.0
+        let point = histogramPoint(count: 3, sum: 0, endNanos: 1_000_000_000,
+                                   boundaries: [10, 100], counts: [1, 1, 1],
+                                   hasMin: false, hasMax: false)
+        let metric = MetricData.createHistogram(
+            resource: Resource(),
+            instrumentationScopeInfo: InstrumentationScopeInfo(name: "test"),
+            name: "latency",
+            description: "",
+            unit: "ms",
+            data: HistogramData(aggregationTemporality: .cumulative, points: [point])
+        )
+
+        XCTAssertEqual(exporter.export(metrics: [metric]), .success)
+        guard server.waitForTelemetry(timeout: 10) else { XCTFail("No telemetry received"); return }
+
+        let series = try receivedDistSeries(from: server)
+        XCTAssertEqual(series.count, 1)
+        let points = try XCTUnwrap(series[0]["points"] as? [Double])
+        XCTAssertEqual(points.count, 3)
+        XCTAssertEqual(points[0], 10.0, accuracy: 0.001)  // underflow → first boundary
+        XCTAssertEqual(points[1], 55.0, accuracy: 0.001)  // [10,100) midpoint
+        XCTAssertEqual(points[2], 100.0, accuracy: 0.001) // overflow → last boundary
+    }
+
     func testExport_histogram_doesNotProduceGenerateMetricsSeries() throws {
         let server = MockBackend()
         try server.start()

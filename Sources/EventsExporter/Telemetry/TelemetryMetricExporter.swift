@@ -170,7 +170,7 @@ private extension TelemetryDistribution.Series {
 
     // Reconstruct approximate sample values from explicit-boundary histogram buckets.
     // For each bucket, the representative value is:
-    //   - underflow (first) bucket: min if available, else 0
+    //   - underflow (first) bucket: min if available, else the first boundary
     //   - interior buckets: midpoint of the two boundaries
     //   - overflow (last) bucket: max if available, else the upper boundary
     private static func fromHistogram(_ points: [HistogramPointData],
@@ -203,7 +203,7 @@ private extension TelemetryDistribution.Series {
             guard count > 0 else { continue }
             let midpoint: Double
             if i == 0 {
-                midpoint = point.hasMin ? point.min : 0
+                midpoint = point.hasMin ? point.min : boundaries[0]
             } else if i == boundaries.count {
                 midpoint = point.hasMax ? point.max : boundaries[boundaries.count - 1]
             } else {

@@ -49,13 +49,21 @@ public extension Resource {
         set { attributes[SemanticConventions.Deployment.environmentName.rawValue] = newValue.map { .string($0) } }
     }
 
-    /// Datadog telemetry namespace hint for metrics produced by a meter provider.
-    /// The metric exporter uses this as the per-series namespace when it's valid for
-    /// the target payload. The value should match a `TelemetryMetric.Namespace` /
-    /// `TelemetryDistribution.Namespace` raw value (e.g. `"tracers"`, `"general"`).
-    var telemetryNamespace: String? {
-        get { attributes["dd.telemetry.namespace"]?.description }
-        set { attributes["dd.telemetry.namespace"] = newValue.map { .string($0) } }
+    /// Datadog telemetry namespace for `generate-metrics` series (gauge / count /
+    /// summary) produced by a meter provider. Used by the metric exporter as the
+    /// per-series namespace override.
+    var telemetryMetricNamespace: TelemetryMetric.Namespace? {
+        get { (attributes["dd.telemetry.metric.namespace"]?.description).flatMap(TelemetryMetric.Namespace.init(rawValue:)) }
+        set { attributes["dd.telemetry.metric.namespace"] = newValue.map { .string($0.rawValue) } }
+    }
+
+    /// Datadog telemetry namespace for `distributions` series (histograms) produced
+    /// by a meter provider. Used by the metric exporter as the per-series namespace
+    /// override. Kept separate from `telemetryMetricNamespace` because the two
+    /// payload types accept different namespace value sets.
+    var telemetryDistributionNamespace: TelemetryDistribution.Namespace? {
+        get { (attributes["dd.telemetry.distribution.namespace"]?.description).flatMap(TelemetryDistribution.Namespace.init(rawValue:)) }
+        set { attributes["dd.telemetry.distribution.namespace"] = newValue.map { .string($0.rawValue) } }
     }
 }
 

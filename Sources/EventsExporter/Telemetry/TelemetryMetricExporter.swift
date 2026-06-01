@@ -107,7 +107,7 @@ private enum MetricConversion {
 private extension TelemetryMetric.Series {
     // Returns nil for histogram types — those go to TelemetryDistribution instead.
     static func from(_ metric: MetricData) -> [TelemetryMetric.Series]? {
-        let namespace = metric.resource.telemetryNamespace.flatMap(TelemetryMetric.Namespace.init(rawValue:))
+        let namespace = metric.resource.telemetryMetricNamespace
         switch metric.type {
         case .LongGauge, .DoubleGauge:
             return scalar(metric.data.points, name: metric.name, type: .gauge, namespace: namespace)
@@ -176,7 +176,7 @@ private extension TelemetryMetric.Series {
 private extension TelemetryDistribution.Series {
     // Returns nil for non-histogram types.
     static func from(_ metric: MetricData) -> [TelemetryDistribution.Series]? {
-        let namespace = metric.resource.telemetryNamespace.flatMap(TelemetryDistribution.Namespace.init(rawValue:))
+        let namespace = metric.resource.telemetryDistributionNamespace
         switch metric.type {
         case .Histogram:
             return fromHistogram(metric.data.points as! [HistogramPointData],

@@ -424,14 +424,26 @@ class TelemetryMetricExporterTests: XCTestCase {
 
     // MARK: - Namespace from Resource
 
-    func testExport_resourceNamespace_setsPerSeriesNamespace() throws {
+    func testResourceNamespaceAccessors_roundTrip() {
+        var resource = Resource(attributes: [:])
+        resource.telemetryMetricNamespace = .iast
+        resource.telemetryDistributionNamespace = .rum
+        XCTAssertEqual(resource.telemetryMetricNamespace, .iast)
+        XCTAssertEqual(resource.telemetryDistributionNamespace, .rum)
+
+        // A malformed raw value (e.g. from a deserialized resource) decodes to nil.
+        let bad = Resource(attributes: ["dd.telemetry.metric.namespace": .string("not-a-namespace")])
+        XCTAssertNil(bad.telemetryMetricNamespace)
+    }
+
+    func testExport_metricResourceNamespace_setsPerSeriesNamespace() throws {
         let server = MockBackend()
         try server.start()
         defer { server.stop() }
 
         let exporter = try makeExporter(server: server)
         var resource = Resource(attributes: [:])
-        resource.telemetryNamespace = "general"
+        resource.telemetryMetricNamespace = .general
         let metric = MetricData.createLongGauge(
             resource: resource,
             instrumentationScopeInfo: InstrumentationScopeInfo(name: "test"),
@@ -450,14 +462,14 @@ class TelemetryMetricExporterTests: XCTestCase {
         XCTAssertEqual(series[0]["namespace"] as? String, "general")
     }
 
-    func testExport_resourceNamespace_setsDistributionSeriesNamespace() throws {
+    func testExport_distributionResourceNamespace_setsDistributionSeriesNamespace() throws {
         let server = MockBackend()
         try server.start()
         defer { server.stop() }
 
         let exporter = try makeExporter(server: server)
         var resource = Resource(attributes: [:])
-        resource.telemetryNamespace = "appsec"
+        resource.telemetryDistributionNamespace = .appsec
         let point = histogramPoint(count: 2, sum: 4, endNanos: 1_000_000_000)
         let metric = MetricData.createHistogram(
             resource: resource,
@@ -476,57 +488,48 @@ class TelemetryMetricExporterTests: XCTestCase {
         XCTAssertEqual(series[0]["namespace"] as? String, "appsec")
     }
 
-    func testExport_unrecognizedResourceNamespace_omitsSeriesNamespace() throws {
+    func testExport_metricAndDistributionNamespacesAreIndependent() throws {
+        // A single resource carries both keys; the scalar series picks up the
+        // metric namespace and the histogram series the distribution namespace.
         let server = MockBackend()
         try server.start()
         defer { server.stop() }
 
         let exporter = try makeExporter(server: server)
         var resource = Resource(attributes: [:])
-        resource.telemetryNamespace = "not-a-namespace"
-        let metric = MetricData.createLongGauge(
+        resource.telemetryMetricNamespace = .general
+        resource.telemetryDistributionNamespace = .profilers
+
+        let gauge = MetricData.createLongGauge(
             resource: resource,
             instrumentationScopeInfo: InstrumentationScopeInfo(name: "test"),
-            name: "m",
-            description: "",
-            unit: "",
+            name: "g", description: "", unit: "",
             data: GaugeData(aggregationTemporality: .cumulative,
                             points: [longPoint(value: 1, endNanos: 1_000_000_000)])
         )
-
-        XCTAssertEqual(exporter.export(metrics: [metric]), .success)
-        guard server.waitForTelemetry(timeout: 10) else { XCTFail("No telemetry received"); return }
-
-        let series = try receivedSeries(from: server)
-        XCTAssertEqual(series.count, 1)
-        XCTAssertNil(series[0]["namespace"], "Unrecognized namespace should fall back (no per-series override)")
-    }
-
-    func testExport_distributionRejectsMetricOnlyNamespace() throws {
-        // "general" is valid for generate-metrics but not for distributions.
-        let server = MockBackend()
-        try server.start()
-        defer { server.stop() }
-
-        let exporter = try makeExporter(server: server)
-        var resource = Resource(attributes: [:])
-        resource.telemetryNamespace = "general"
-        let point = histogramPoint(count: 1, sum: 1, endNanos: 1_000_000_000)
-        let metric = MetricData.createHistogram(
+        let hist = MetricData.createHistogram(
             resource: resource,
             instrumentationScopeInfo: InstrumentationScopeInfo(name: "test"),
-            name: "h",
-            description: "",
-            unit: "",
-            data: HistogramData(aggregationTemporality: .cumulative, points: [point])
+            name: "h", description: "", unit: "",
+            data: HistogramData(aggregationTemporality: .cumulative,
+                                points: [histogramPoint(count: 1, sum: 1, endNanos: 1_000_000_000)])
         )
 
-        XCTAssertEqual(exporter.export(metrics: [metric]), .success)
-        guard server.waitForTelemetry(timeout: 10) else { XCTFail("No telemetry received"); return }
+        XCTAssertEqual(exporter.export(metrics: [gauge, hist]), .success)
+        guard server.waitForTelemetry(count: 2, timeout: 10) else { XCTFail("No telemetry received"); return }
 
-        let series = try receivedDistSeries(from: server)
-        XCTAssertEqual(series.count, 1)
-        XCTAssertNil(series[0]["namespace"], "Namespace not valid for distributions should be omitted")
+        // The two payloads may arrive in separate requests, so scan all of them.
+        let entries = try server.requests.telemetry.flatMap { raw -> [[String: Any]] in
+            let json = try XCTUnwrap(JSONSerialization.jsonObject(with: raw) as? [String: Any])
+            return (json["payload"] as? [[String: Any]]) ?? []
+        }
+        func series(forRequestType type: String) throws -> [[String: Any]] {
+            let entry = try XCTUnwrap(entries.first { $0["request_type"] as? String == type })
+            return try XCTUnwrap((entry["payload"] as? [String: Any])?["series"] as? [[String: Any]])
+        }
+
+        XCTAssertEqual(try series(forRequestType: "generate-metrics")[0]["namespace"] as? String, "general")
+        XCTAssertEqual(try series(forRequestType: "distributions")[0]["namespace"] as? String, "profilers")
     }
 
     // MARK: - Aggregation temporality

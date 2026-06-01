@@ -444,12 +444,7 @@ extension HTTPClient {
         }
         request.httpBody = requestData
 
-        let body: Data
-        do {
-            body = try await sendWithResponse(request: request)
-        } catch let err {
-            throw APICallError(from: err)
-        }
+        let body: Data = try await sendWithResponse(api: request)
         return try call.response(from: body, requestId: requestId, coder: coders.1)
     }
 
@@ -462,5 +457,29 @@ extension HTTPClient {
     where Request: APIRequestData, Response: APIResponseData, Request.Meta: APIVoidValue
     {
         try await self.call(call, url: url, meta: .void, data: data, headers: headers, coders: coders)
+    }
+    
+    func send(api request: URLRequest) async throws(APICallError) -> HTTPURLResponse {
+        do {
+            return try await send(request: request)
+        } catch {
+            throw APICallError(from: error)
+        }
+    }
+    
+    func sendWithResponse(api request: URLRequest) async throws(APICallError) -> Data {
+        do {
+            return try await sendWithResponse(request: request)
+        } catch {
+            throw APICallError(from: error)
+        }
+    }
+    
+    func send(api request: MultipartFormURLRequest) async throws(APICallError) -> HTTPURLResponse {
+        try await send(api: request.asURLRequest)
+    }
+
+    func sendWithResponse(api request: MultipartFormURLRequest) async throws(APICallError) -> Data {
+        try await sendWithResponse(api: request.asURLRequest)
     }
 }

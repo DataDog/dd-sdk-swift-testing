@@ -49,7 +49,7 @@ public protocol TestImpactAnalysisApi: APIService {
                         customConfigurations: [String: String]) async throws(APICallError) -> SkipTests
 
     func uploadCoverage(batch url: URL) async throws(APICallError)
-    func uploadCoverage(batch data: Data) async throws(HTTPClient.RequestError)
+    func uploadCoverage(batch data: Data) async throws(APICallError)
 }
 
 extension TestImpactAnalysisApi {
@@ -60,11 +60,7 @@ extension TestImpactAnalysisApi {
         } catch {
             throw .fileSystem(error)
         }
-        do {
-            try await uploadCoverage(batch: data)
-        } catch {
-            throw APICallError(from: error)
-        }
+        try await uploadCoverage(batch: data)
     }
 }
 
@@ -137,7 +133,7 @@ struct TestImpactAnalysisApiService: TestImpactAnalysisApi, APIServiceConstructi
         return SkipTests(correlationId: correlationId, tests: tests)
     }
 
-    func uploadCoverage(batch data: Data) async throws(HTTPClient.RequestError) {
+    func uploadCoverage(batch data: Data) async throws(APICallError) {
         var request = MultipartFormURLRequest(url: endpoint.coverageURL)
         request.headers = headers
         if compression {
@@ -151,8 +147,8 @@ struct TestImpactAnalysisApiService: TestImpactAnalysisApi, APIServiceConstructi
                        contentType: .applicationJSON)
         let log = self.log
         log.debug("Uploading coverage batch...")
-        let response = try await httpClient.send(request: request)
-        log.debug("Coverage batch upload response: \(response.statusCode)")
+        let _ = try await httpClient.send(api: request)
+        log.debug("Coverage batch accepted...")
     }
 
     var endpointURLs: Set<URL> { [endpoint.skippableTestsURL, endpoint.coverageURL] }

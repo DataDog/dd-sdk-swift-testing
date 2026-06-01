@@ -75,13 +75,14 @@ extension DataUploadStatus {
             self.init(needsRetry: statusCode.needsRetry, waitTime: nil)
         }
     }
-
-    init(networkError: HTTPClient.RequestError) {
-        switch networkError {
-        case .http(code: let code, headers: let headers, body: _):
+    
+    init(api error: APICallError) {
+        switch error {
+        case .httpError(code: let code, headers: let headers, body: _):
             self.init(httpCode: code, headers: headers)
-        case .transport, .inconsistentSession:
+        case .transport, .fileSystem, .idMismatch, .decoding:
             self.init(needsRetry: true, waitTime: nil)
+        default: self.init(needsRetry: false, waitTime: nil)
         }
     }
 

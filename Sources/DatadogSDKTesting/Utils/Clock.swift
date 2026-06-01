@@ -11,8 +11,13 @@ internal import Kronos
 #endif
 internal import OpenTelemetrySdk
 
-protocol Clock: OpenTelemetrySdk.Clock, Sendable {
+protocol Clock: OpenTelemetrySdk.Clock, Sendable, DateProvider {
     func sync() async throws
+}
+
+extension Clock {
+    @inlinable
+    func currentDate() -> Date { self.now }
 }
 
 #if !os(watchOS)

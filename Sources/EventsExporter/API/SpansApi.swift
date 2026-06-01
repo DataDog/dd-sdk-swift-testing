@@ -8,7 +8,7 @@ import Foundation
 
 public protocol SpansApi: APIService {
     func uploadSpans(batch url: URL) async throws(APICallError)
-    func uploadSpans(batch data: Data) async throws(HTTPClient.RequestError)
+    func uploadSpans(batch data: Data) async throws(APICallError)
 }
 
 extension SpansApi {
@@ -19,11 +19,7 @@ extension SpansApi {
         } catch {
             throw .fileSystem(error)
         }
-        do {
-            try await uploadSpans(batch: data)
-        } catch {
-            throw APICallError(from: error)
-        }
+        try await uploadSpans(batch: data)
     }
 }
 
@@ -46,7 +42,7 @@ struct SpansApiService: SpansApi, APIServiceConstructible {
         self.decoder = config.decoder
     }
 
-    func uploadSpans(batch data: Data) async throws(HTTPClient.RequestError) {
+    func uploadSpans(batch data: Data) async throws(APICallError) {
         var request = URLRequest(url: endpoint.spansURL)
         request.httpMethod = "POST"
         request.httpHeaders = headers
@@ -57,7 +53,7 @@ struct SpansApiService: SpansApi, APIServiceConstructible {
         request.httpBody = data
         let log = self.log
         log.debug("Uploading spans...")
-        let _ = try await httpClient.send(request: request)
+        let _ = try await httpClient.send(api: request)
         log.debug("Spans upload succeeded")
     }
 

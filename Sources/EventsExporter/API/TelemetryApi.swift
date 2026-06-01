@@ -13,8 +13,22 @@ import Glibc
 
 // MARK: - Public domain types
 
+public protocol TelemetryPayload: Encodable {
+    var requestType: TelemetryRequestType { get }
+}
+
+/// The set of telemetry request_types this service implements.
+public enum TelemetryRequestType: String, Codable {
+    case generateMetrics = "generate-metrics"
+    case logs
+    case messageBatch = "message-batch"
+    case appStarted = "app-started"
+    case appHeartbeat = "app-heartbeat"
+    case appClosing = "app-closing"
+}
+
 /// A single telemetry metric series for `generate-metrics`.
-public struct TelemetryMetric {
+public struct TelemetryMetric: TelemetryPayload, Codable {
     /// Per-tracer metric namespace (`dd.instrumentation_telemetry_data.{namespace}.*`).
     public enum Namespace: String, Codable {
         case tracers, general, telemetry, iast, appsec
@@ -76,6 +90,16 @@ public struct TelemetryMetric {
             self.namespace = namespace
         }
     }
+    
+    public var namespace: Namespace?
+    public var series: [Series]
+    
+    public init(namespace: Namespace?, series: [Series]) {
+        self.namespace = namespace
+        self.series = series
+    }
+    
+    public var requestType: TelemetryRequestType { .generateMetrics }
 }
 
 /// A single telemetry log message for the `logs` request type.
@@ -100,7 +124,7 @@ public struct TelemetryLog: Codable {
     public var stackTrace: String?
     /// Per-log unix-seconds timestamp. When `nil`, the envelope's `tracer_time` is used.
     public var tracerTime: Int64?
-
+    
     public init(message: String,
                 level: Level,
                 count: Int? = nil,
@@ -120,6 +144,22 @@ public struct TelemetryLog: Codable {
         case message, level, count, tags
         case stackTrace = "stack_trace"
         case tracerTime = "tracer_time"
+    }
+    
+    public struct Logs: TelemetryPayload, ExpressibleByArrayLiteral, Codable {
+        public typealias ArrayLiteralElement = TelemetryLog
+        
+        public var logs: [TelemetryLog]
+        
+        public init(_ logs: [TelemetryLog]) {
+            self.logs = logs
+        }
+        
+        public init(arrayLiteral elements: TelemetryLog...) {
+            self.logs = elements
+        }
+        
+        public var requestType: TelemetryRequestType { .logs }
     }
 }
 
@@ -243,20 +283,106 @@ public struct TelemetryInstallSignature: Codable {
     }
 }
 
-/// A single entry inside a `message-batch` telemetry payload.
-///
-/// Each entry is one of the concrete telemetry request types that this SDK
-/// supports today. Adding a new variant here is the only change needed to
-/// let it ride in a batch.
-public enum TelemetryBatchItem {
-    case metrics(series: [TelemetryMetric.Series], namespace: TelemetryMetric.Namespace?)
-    case logs([TelemetryLog])
-    case appStarted(products: TelemetryProducts? = nil,
-                    configuration: [TelemetryConfigItem]? = nil,
-                    error: TelemetryError? = nil,
-                    installSignature: TelemetryInstallSignature? = nil)
-    case appHeartbeat
-    case appClosing
+/// Wire shape for `app-started` payload. All fields optional; `Encodable`
+/// default behavior skips them when `nil`.
+public struct TelemetryAppStarted: TelemetryPayload, Codable {
+    var products: TelemetryProducts?
+    var configuration: [TelemetryConfigItem]?
+    var error: TelemetryError?
+    var installSignature: TelemetryInstallSignature?
+    
+    public init(products: TelemetryProducts? = nil,
+                configuration: [TelemetryConfigItem]? = nil,
+                error: TelemetryError? = nil,
+                installSignature: TelemetryInstallSignature? = nil)
+    {
+        self.products = products
+        self.configuration = configuration
+        self.error = error
+        self.installSignature = installSignature
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case products, configuration, error
+        case installSignature = "install_signature"
+    }
+    
+    public var requestType: TelemetryRequestType { .appStarted }
+}
+
+public struct TelemetryAppHeartbeat: TelemetryPayload, Codable {
+    public init() {}
+    public var requestType: TelemetryRequestType { .appHeartbeat }
+}
+
+public struct TelemetryAppClosing: TelemetryPayload, Codable {
+    public init() {}
+    public var requestType: TelemetryRequestType { .appClosing }
+}
+
+public struct TelemetryMessageBatch: TelemetryPayload, Codable {
+    public struct Message: Codable {
+        var message: any TelemetryPayload
+        
+        enum CodingKeys: String, CodingKey {
+            case requestType = "request_type"
+            case payload
+        }
+        
+        public init(_ message: any TelemetryPayload) {
+            self.message = message
+        }
+        
+        public init(from decoder: any Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            let requestType = try container.decode(TelemetryRequestType.self, forKey: .requestType)
+            switch requestType {
+            case .appStarted:
+                message = try container.decode(TelemetryAppStarted.self, forKey: .payload)
+            case .appHeartbeat:
+                message = try container.decode(TelemetryAppHeartbeat.self, forKey: .payload)
+            case .appClosing:
+                message = try container.decode(TelemetryAppClosing.self, forKey: .payload)
+            case .logs:
+                message = try container.decode(TelemetryLog.Logs.self, forKey: .payload)
+            case .generateMetrics:
+                message = try container.decode(TelemetryMetric.self, forKey: .payload)
+            case .messageBatch:
+                message = try container.decode(TelemetryMessageBatch.self, forKey: .payload)
+            }
+        }
+        
+        public func encode(to encoder: any Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(message.requestType, forKey: .requestType)
+            try container.encode(message, forKey: .payload)
+        }
+    }
+    
+    var messages: [any TelemetryPayload]
+    
+    public init(messages: [any TelemetryPayload]) {
+        self.messages = messages
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case requestType = "request_type"
+        case payload
+    }
+    
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let messages = try container.decode([Message].self)
+        self.messages = messages.map(\.message)
+    }
+    
+    public func encode(to encoder: any Encoder) throws {
+        let messages = self.messages.map(Message.init)
+        var container = encoder.singleValueContainer()
+        try container.encode(messages)
+    }
+    
+    public var requestType: TelemetryRequestType { .messageBatch }
 }
 
 // MARK: - Protocol
@@ -268,41 +394,45 @@ public protocol TelemetryApi: APIService {
     func sendAppStarted(products: TelemetryProducts?,
                         configuration: [TelemetryConfigItem]?,
                         error: TelemetryError?,
-                        installSignature: TelemetryInstallSignature?) async throws(HTTPClient.RequestError)
+                        installSignature: TelemetryInstallSignature?) async throws(APICallError)
 
     /// Send an `app-heartbeat` event. Per spec callers should schedule this
     /// once per minute after `sendAppStarted` for as long as the app is alive,
     /// even if other telemetry events were sent in the same window.
-    func sendAppHeartbeat() async throws(HTTPClient.RequestError)
+    func sendAppHeartbeat() async throws(APICallError)
 
     /// Send the `app-closing` event when the app is about to terminate.
     /// Should use a short timeout so it doesn't delay shutdown.
-    func sendAppClosing() async throws(HTTPClient.RequestError)
+    func sendAppClosing() async throws(APICallError)
 
     /// Send a batch of metric series via the `generate-metrics` request type.
     func sendMetrics(_ series: [TelemetryMetric.Series],
-                     namespace: TelemetryMetric.Namespace?) async throws(HTTPClient.RequestError)
+                     namespace: TelemetryMetric.Namespace?) async throws(APICallError)
 
     /// Send a batch of log messages via the `logs` request type.
-    func sendLogs(_ logs: [TelemetryLog]) async throws(HTTPClient.RequestError)
+    func sendLogs(_ logs: [TelemetryLog]) async throws(APICallError)
 
     /// Send a mixed batch of telemetry items via the `message-batch` request
     /// type. Items keep their original request_type tag inside the batch and
     /// share the outer envelope's `application`/`host`/`runtime_id`/`seq_id`.
     /// An empty `items` array is a no-op and does not hit the network.
-    func send(batch items: [TelemetryBatchItem]) async throws(HTTPClient.RequestError)
+    func send(batch items: [any TelemetryPayload]) async throws(APICallError)
 
-    /// Send a pre-built `message-batch` HTTP body from a file. The file must
-    /// hold a complete telemetry envelope (`api_version` / `request_type` /
-    /// `runtime_id` / `seq_id` / `tracer_time` / `application` / `host` /
-    /// `payload`) — bytes are POSTed verbatim. Use this when replaying a
-    /// telemetry payload that was queued to disk upstream. Note that any
-    /// timestamp / sequence-id fields baked into the file are used as-is.
+    /// Send a batch of pre-encoded `TelemetryBatchEntry` values stored in a
+    /// file. The file must contain one or more JSON-encoded batch entries
+    /// separated by commas with no surrounding array brackets — the format
+    /// written by `TelemetryExporter`. The service wraps them with a fresh
+    /// `message-batch` envelope (current timestamp, next `seq_id`, full
+    /// `application` / `host` identity) before POSTing.
     func send(batch url: URL) async throws(APICallError)
 
-    /// Send pre-built `message-batch` HTTP body bytes directly. Same
-    /// semantics as the URL variant — `data` is POSTed as the body verbatim.
-    func send(batch data: Data) async throws(HTTPClient.RequestError)
+    /// Send a batch of pre-encoded `TelemetryBatchEntry` values. `data` must
+    /// contain one or more JSON-encoded batch entries separated by commas with
+    /// no surrounding array brackets — the format written by
+    /// `TelemetryExporter`. The service wraps them with a fresh
+    /// `message-batch` envelope (current timestamp, next `seq_id`, full
+    /// `application` / `host` identity) before POSTing.
+    func send(batch data: Data) async throws(APICallError)
 }
 
 extension TelemetryApi {
@@ -313,17 +443,13 @@ extension TelemetryApi {
         } catch {
             throw .fileSystem(error)
         }
-        do {
-            try await send(batch: data)
-        } catch {
-            throw APICallError(from: error)
-        }
+        try await send(batch: data)
     }
 }
 
 // MARK: - Service
 
-internal struct TelemetryApiService: TelemetryApi, APIServiceConstructible {
+internal struct TelemetryApiService: TelemetryApi {
     var endpoint: Endpoint
     var headers: [HTTPHeader]
     var encoder: JSONEncoder
@@ -331,6 +457,7 @@ internal struct TelemetryApiService: TelemetryApi, APIServiceConstructible {
     let compression: Bool
     let httpClient: HTTPClient
     let log: Logger
+    let dateProvider: DateProvider
 
     /// Stable identifier for this tracer session. Reused as the telemetry
     /// `runtime_id` so backend can correlate telemetry with traces.
@@ -342,10 +469,11 @@ internal struct TelemetryApiService: TelemetryApi, APIServiceConstructible {
     /// telemetry requests within a runtime.
     private let seq: Synced<UInt64>
 
-    init(config: APIServiceConfig, httpClient: HTTPClient, log: Logger) {
+    init(config: APIServiceConfig, httpClient: HTTPClient, dateProvider: DateProvider, log: Logger) {
         self.endpoint = config.endpoint
         self.httpClient = httpClient
         self.log = log
+        self.dateProvider = dateProvider
         // The telemetry intake does NOT accept the trace-style headers — strip
         // them. Keep the auth / user-agent / hostname additions.
         self.headers = config.defaultHeaders.filter { header in
@@ -365,84 +493,91 @@ internal struct TelemetryApiService: TelemetryApi, APIServiceConstructible {
         self.seq = Synced<UInt64>(0)
     }
 
+    func sendAppStarted(products: TelemetryProducts?,
+                        configuration: [TelemetryConfigItem]?,
+                        error: TelemetryError?,
+                        installSignature: TelemetryInstallSignature?) async throws(APICallError)
+    {
+        let payload = TelemetryAppStarted(products: products, configuration: configuration,
+                                          error: error, installSignature: installSignature)
+        try await send(payload: payload)
+    }
+
+    func sendAppHeartbeat() async throws(APICallError) {
+        try await send(payload: TelemetryAppHeartbeat())
+    }
+
+    func sendAppClosing() async throws(APICallError) {
+        try await send(payload: TelemetryAppClosing())
+    }
+
+    func sendMetrics(_ series: [TelemetryMetric.Series],
+                     namespace: TelemetryMetric.Namespace?) async throws(APICallError)
+    {
+        let payload = TelemetryMetric(namespace: namespace, series: series)
+        try await send(payload: payload)
+    }
+
+    func sendLogs(_ logs: [TelemetryLog]) async throws(APICallError) {
+        guard !logs.isEmpty else { return }
+        try await send(payload: TelemetryLog.Logs(logs))
+    }
+
+    func send(batch items: [any TelemetryPayload]) async throws(APICallError) {
+        guard !items.isEmpty else { return }
+        try await send(payload: TelemetryMessageBatch(messages: items))
+    }
+
+    func send(batch data: Data) async throws(APICallError) {
+        // Wrap the raw comma-separated batch entries with a fresh envelope:
+        // prefix = {"api_version":…,"payload":[ and suffix = ]}
+        let header = makeEnvelope(payload: TelemetryVoidBatch())
+        let dataFormat: DataFormat
+        do {
+            dataFormat = try DataFormat(header: header, encoder: encoder)
+        } catch {
+            throw .transport(error)
+        }
+        try await send(requestType: .messageBatch,
+                       body: dataFormat.prefix + data + dataFormat.suffix)
+    }
+
+    var endpointURLs: Set<URL> { [endpoint.telemetryURL] }
+    
     private func nextSeqId() -> UInt64 {
         seq.update { value in
             value &+= 1
             return value
         }
     }
-
-    func sendAppStarted(products: TelemetryProducts?,
-                        configuration: [TelemetryConfigItem]?,
-                        error: TelemetryError?,
-                        installSignature: TelemetryInstallSignature?) async throws(HTTPClient.RequestError)
-    {
-        let payload = TelemetryAppStartedPayload(products: products,
-                                                 configuration: configuration,
-                                                 error: error,
-                                                 installSignature: installSignature)
-        try await send(requestType: .appStarted, payload: payload)
-    }
-
-    func sendAppHeartbeat() async throws(HTTPClient.RequestError) {
-        try await send(requestType: .appHeartbeat, payload: TelemetryEmptyPayload())
-    }
-
-    func sendAppClosing() async throws(HTTPClient.RequestError) {
-        try await send(requestType: .appClosing, payload: TelemetryEmptyPayload())
-    }
-
-    func sendMetrics(_ series: [TelemetryMetric.Series],
-                     namespace: TelemetryMetric.Namespace?) async throws(HTTPClient.RequestError)
-    {
-        let payload = TelemetryMetricsPayload(namespace: namespace, series: series)
-        try await send(requestType: .generateMetrics, payload: payload)
-    }
-
-    func sendLogs(_ logs: [TelemetryLog]) async throws(HTTPClient.RequestError) {
-        let payload = TelemetryLogsPayload(logs: logs)
-        try await send(requestType: .logs, payload: payload)
-    }
-
-    func send(batch items: [TelemetryBatchItem]) async throws(HTTPClient.RequestError) {
-        guard !items.isEmpty else { return }
-        try await send(requestType: .messageBatch,
-                       payload: items.map(TelemetryBatchEntry.init(item:)))
-    }
-
-    func send(batch data: Data) async throws(HTTPClient.RequestError) {
-        try await send(requestType: .messageBatch, body: data)
-    }
-
-    var endpointURLs: Set<URL> { [endpoint.telemetryURL] }
-
-    private func send<Payload: Encodable>(
-        requestType: TelemetryRequestType,
-        payload: Payload
-    ) async throws(HTTPClient.RequestError) {
-        let envelope = TelemetryEnvelope(
-            requestType: requestType,
-            tracerTime: Int64(Date().timeIntervalSince1970),
+    
+    private func makeEnvelope<Payload: TelemetryPayload>(payload: Payload) -> TelemetryEnvelope<Payload> {
+        TelemetryEnvelope(
+            requestType: payload.requestType,
+            tracerTime: UInt64(dateProvider.currentDate().timeIntervalSince1970),
             runtimeId: runtimeId,
             seqId: nextSeqId(),
             application: application,
             host: host,
             payload: payload
         )
+    }
+
+    private func send<Payload: TelemetryPayload>(payload: Payload) async throws(APICallError) {
+        let envelope = makeEnvelope(payload: payload)
         let data: Data
         do {
             data = try encoder.encode(envelope)
+        } catch let err as EncodingError {
+            throw .encoding(value: envelope, error: err)
         } catch {
-            // The intake never produces a decoding error, but if our own
-            // encoding fails we surface it through `.transport` since the
-            // wire protocol is throws(HTTPClient.RequestError).
-            throw .transport(error)
+            throw .unknownError(error)
         }
-        try await send(requestType: requestType, body: data)
+        try await send(requestType: payload.requestType, body: data)
     }
 
     private func send(requestType: TelemetryRequestType,
-                      body: Data) async throws(HTTPClient.RequestError)
+                      body: Data) async throws(APICallError)
     {
         var request = URLRequest(url: endpoint.telemetryURL)
         request.httpMethod = "POST"
@@ -463,82 +598,17 @@ internal struct TelemetryApiService: TelemetryApi, APIServiceConstructible {
 
         let log = self.log
         log.debug("Telemetry \(requestType.rawValue) sending \(body.count) bytes...")
-        let _ = try await httpClient.send(request: request)
+        let _ = try await httpClient.send(api: request)
         log.debug("Telemetry \(requestType.rawValue) accepted")
     }
 }
 
 // MARK: - Wire types
 
-/// The set of telemetry request_types this service implements.
-private enum TelemetryRequestType: String, Encodable {
-    case generateMetrics = "generate-metrics"
-    case logs
-    case messageBatch = "message-batch"
-    case appStarted = "app-started"
-    case appHeartbeat = "app-heartbeat"
-    case appClosing = "app-closing"
-}
-
-/// One entry of a `message-batch` payload. The case itself is the
-/// discriminator: each variant carries its concrete inner payload, and
-/// `encode(to:)` emits the matching `request_type` tag.
-private enum TelemetryBatchEntry: Encodable {
-    case metrics(TelemetryMetricsPayload)
-    case logs(TelemetryLogsPayload)
-    case appStarted(TelemetryAppStartedPayload)
-    case appHeartbeat
-    case appClosing
-
-    init(item: TelemetryBatchItem) {
-        switch item {
-        case .metrics(let series, let namespace):
-            self = .metrics(TelemetryMetricsPayload(namespace: namespace, series: series))
-        case .logs(let logs):
-            self = .logs(TelemetryLogsPayload(logs: logs))
-        case let .appStarted(products, configuration, error, installSignature):
-            self = .appStarted(TelemetryAppStartedPayload(products: products,
-                                                          configuration: configuration,
-                                                          error: error,
-                                                          installSignature: installSignature))
-        case .appHeartbeat:
-            self = .appHeartbeat
-        case .appClosing:
-            self = .appClosing
-        }
-    }
-
-    enum CodingKeys: String, CodingKey {
-        case requestType = "request_type"
-        case payload
-    }
-
-    func encode(to encoder: any Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        switch self {
-        case .metrics(let payload):
-            try container.encode(TelemetryRequestType.generateMetrics, forKey: .requestType)
-            try container.encode(payload, forKey: .payload)
-        case .logs(let payload):
-            try container.encode(TelemetryRequestType.logs, forKey: .requestType)
-            try container.encode(payload, forKey: .payload)
-        case .appStarted(let payload):
-            try container.encode(TelemetryRequestType.appStarted, forKey: .requestType)
-            try container.encode(payload, forKey: .payload)
-        case .appHeartbeat:
-            try container.encode(TelemetryRequestType.appHeartbeat, forKey: .requestType)
-            try container.encode(TelemetryEmptyPayload(), forKey: .payload)
-        case .appClosing:
-            try container.encode(TelemetryRequestType.appClosing, forKey: .requestType)
-            try container.encode(TelemetryEmptyPayload(), forKey: .payload)
-        }
-    }
-}
-
-private struct TelemetryEnvelope<Payload: Encodable>: Encodable {
+internal struct TelemetryEnvelope<Payload: Encodable>: Encodable {
     let apiVersion: String = TelemetryHeaders.apiVersion
     let requestType: TelemetryRequestType
-    let tracerTime: Int64
+    let tracerTime: UInt64
     let runtimeId: String
     let seqId: UInt64
     let application: TelemetryApplication
@@ -555,9 +625,27 @@ private struct TelemetryEnvelope<Payload: Encodable>: Encodable {
         case host
         case payload
     }
+
+    func encode(to encoder: any Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(apiVersion, forKey: .apiVersion)
+        try c.encode(requestType, forKey: .requestType)
+        try c.encode(tracerTime, forKey: .tracerTime)
+        try c.encode(runtimeId, forKey: .runtimeId)
+        try c.encode(seqId, forKey: .seqId)
+        try c.encode(application, forKey: .application)
+        try c.encode(host, forKey: .host)
+        if payload as? any APIVoidValue == nil {
+            try c.encode(payload, forKey: .payload)
+        }
+    }
 }
 
-private struct TelemetryApplication: Encodable {
+extension TelemetryEnvelope: JSONFileHeader {
+    static var batchFieldName: String { "payload" }
+}
+
+internal struct TelemetryApplication: Encodable {
     let serviceName: String
     let env: String
     let serviceVersion: String
@@ -590,7 +678,7 @@ private struct TelemetryApplication: Encodable {
     }
 }
 
-private struct TelemetryHost: Encodable {
+internal struct TelemetryHost: Encodable {
     let hostname: String
     let os: String
     let osVersion: String
@@ -619,35 +707,12 @@ private struct TelemetryHost: Encodable {
     }
 }
 
-private struct TelemetryMetricsPayload: Encodable {
-    let namespace: TelemetryMetric.Namespace?
-    let series: [TelemetryMetric.Series]
-}
-
-private struct TelemetryLogsPayload: Encodable {
-    let logs: [TelemetryLog]
-}
-
-/// Wire shape for `app-started` payload. All fields optional; `Encodable`
-/// default behavior skips them when `nil`.
-private struct TelemetryAppStartedPayload: Encodable {
-    let products: TelemetryProducts?
-    let configuration: [TelemetryConfigItem]?
-    let error: TelemetryError?
-    let installSignature: TelemetryInstallSignature?
-
-    enum CodingKeys: String, CodingKey {
-        case products, configuration, error
-        case installSignature = "install_signature"
-    }
-}
-
-/// Empty `{}` payload used by `app-heartbeat` and `app-closing`. The schema
-/// description says payload is required even when there's nothing to send;
-/// emitting an empty object satisfies that contract.
-private struct TelemetryEmptyPayload: Encodable {}
-
 // MARK: - Helpers
+
+private struct TelemetryVoidBatch: TelemetryPayload, APIVoidValue, Encodable {
+    var requestType: TelemetryRequestType { .messageBatch }
+    static var void: TelemetryVoidBatch { .init() }
+}
 
 private enum TelemetryHeaders {
     static let apiVersion = "v2"

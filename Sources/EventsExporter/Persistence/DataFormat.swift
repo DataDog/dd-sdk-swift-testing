@@ -7,9 +7,9 @@
 import Foundation
 
 internal protocol DataFormatType {
-    var prefix: Data { get }
-    var suffix: Data { get }
-    var separator: Data { get }
+    var prefix: Data { get throws }
+    var suffix: Data { get throws }
+    var separator: Data { get throws }
 }
 
 internal protocol JSONFileHeader: Encodable {

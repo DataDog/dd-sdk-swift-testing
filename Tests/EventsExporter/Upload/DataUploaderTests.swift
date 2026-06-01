@@ -42,7 +42,7 @@ class DataUploaderTests: XCTestCase {
         let uploadStatus = uploader.upload(data: .mockAny())
 
         // Then
-        let expectedUploadStatus = DataUploadStatus(networkError: .transport(randomError))
+        let expectedUploadStatus = DataUploadStatus(api: .transport(randomError))
         XCTAssertEqual(uploadStatus, expectedUploadStatus)
         httpClient.waitFor(requestsCompletion: 1)
     }

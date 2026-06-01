@@ -69,7 +69,7 @@ internal final class FileWriter {
         // write. Once the closure returns, the file becomes visible to the
         // reader.
         try orchestrator.withWritableFile(writeSize: UInt64(data.count)) { writable, isNew in
-            let payload = isNew ? (dataFormat.prefix + data) : (dataFormat.separator + data)
+            let payload = try isNew ? (dataFormat.prefix + data) : (dataFormat.separator + data)
             try writable.append(data: payload, synchronized: sync)
         }
     }

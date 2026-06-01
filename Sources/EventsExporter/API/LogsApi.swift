@@ -8,7 +8,7 @@ import Foundation
 
 public protocol LogsApi: APIService {
     func uploadLogs(batch url: URL) async throws(APICallError)
-    func uploadLogs(batch data: Data) async throws(HTTPClient.RequestError)
+    func uploadLogs(batch data: Data) async throws(APICallError)
 }
 
 extension LogsApi {
@@ -19,11 +19,7 @@ extension LogsApi {
         } catch {
             throw .fileSystem(error)
         }
-        do {
-            try await uploadLogs(batch: data)
-        } catch {
-            throw APICallError(from: error)
-        }
+        try await uploadLogs(batch: data)
     }
 }
 
@@ -46,7 +42,7 @@ struct LogsApiService: LogsApi, APIServiceConstructible {
         self.decoder = config.decoder
     }
 
-    func uploadLogs(batch data: Data) async throws(HTTPClient.RequestError) {
+    func uploadLogs(batch data: Data) async throws(APICallError) {
         var url = endpoint.logsURL
         url.appendQueryItems([
             .ddsource(source: LogQueryValues.ddsource),
@@ -62,7 +58,7 @@ struct LogsApiService: LogsApi, APIServiceConstructible {
         request.httpBody = data
         let log = self.log
         log.debug("Uploading logs...")
-        let _ = try await httpClient.send(request: request)
+        let _ = try await httpClient.send(api: request)
         log.debug("Logs upload succeeded")
     }
 

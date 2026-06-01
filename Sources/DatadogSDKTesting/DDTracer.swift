@@ -166,6 +166,7 @@ internal class DDTracer {
             clientId: String(SpanId.random().rawValue),
             payloadCompression: payloadCompression,
             logger: Log.instance,
+            dateProvider: DDTestMonitor.clock,
             debugNetworkRequests: conf.extraDebugNetwork
         )
         // Exporter files live under the cache manager's session directory so

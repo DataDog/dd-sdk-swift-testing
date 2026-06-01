@@ -203,7 +203,6 @@
 		A7FC26372BA1ECCF00067E26 /* JSONGeneric.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F69C2028C648000042156E /* JSONGeneric.swift */; };
 		A7FC26382BA1ECCF00067E26 /* Spawn.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1665A7225D12D7500BA53CD /* Spawn.swift */; };
 		A7FC26392BA1ECCF00067E26 /* DateProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0427D7790200F4018A /* DateProvider.swift */; };
-		A7FC263A2BA1ECCF00067E26 /* EncodableValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0627D7790200F4018A /* EncodableValue.swift */; };
 		A7FC263B2BA1ECCF00067E26 /* Feature.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0327D7790200F4018A /* Feature.swift */; };
 		A7FC263C2BA1ECCF00067E26 /* DataCompression.swift in Sources */ = {isa = PBXBuildFile; fileRef = E143CF0827D7790200F4018A /* DataCompression.swift */; };
 		A7FC263D2BA1ECCF00067E26 /* AttributesSanitizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EBBD4A27F200210059BC3E /* AttributesSanitizer.swift */; };
@@ -245,7 +244,6 @@
 		A7FC266F2BA1F7FA00067E26 /* SpanSanitizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EBBD4E27F200A50059BC3E /* SpanSanitizerTests.swift */; };
 		A7FC26702BA1F7FA00067E26 /* SpansExporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EADD27EB3B9E0057D747 /* SpansExporterTests.swift */; };
 		A7FC26712BA1F80000067E26 /* DateFormattingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAE327EB3B9E0057D747 /* DateFormattingTests.swift */; };
-		A7FC26722BA1F80000067E26 /* EncodableValueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EADF27EB3B9E0057D747 /* EncodableValueTests.swift */; };
 		A7FC26732BA1F80000067E26 /* DeviceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAE227EB3B9E0057D747 /* DeviceTests.swift */; };
 		A7FC26742BA1F80000067E26 /* JSONEncoderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAE027EB3B9E0057D747 /* JSONEncoderTests.swift */; };
 		A7FC26752BA1F80000067E26 /* PerformancePresetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAE127EB3B9E0057D747 /* PerformancePresetTests.swift */; };
@@ -262,7 +260,6 @@
 		A7FC26802BA1F81D00067E26 /* DatadogExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAF327EB3B9E0057D747 /* DatadogExtensions.swift */; };
 		A7FC26822BA1F81D00067E26 /* DeviceMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAFA27EB3B9E0057D747 /* DeviceMock.swift */; };
 		A7FC26832BA1F81D00067E26 /* CoreMocks.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAF727EB3B9E0057D747 /* CoreMocks.swift */; };
-		A7FC26842BA1F81D00067E26 /* Encoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAF027EB3B9E0057D747 /* Encoding.swift */; };
 		A7FC26852BA1F81D00067E26 /* FoundationMocks.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAF427EB3B9E0057D747 /* FoundationMocks.swift */; };
 		A7FC26862BA1F81D00067E26 /* EquatableInTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAF827EB3B9E0057D747 /* EquatableInTests.swift */; };
 		A7FC26872BA1F81D00067E26 /* LoggingFeatureMocks.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141EAF527EB3B9E0057D747 /* LoggingFeatureMocks.swift */; };
@@ -592,7 +589,6 @@
 		E13D0BC92546E29C00C37D56 /* SignalUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalUtils.swift; sourceTree = "<group>"; };
 		E141CF5F256FD513008B6B70 /* PlatformUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformUtils.swift; sourceTree = "<group>"; };
 		E141EADD27EB3B9E0057D747 /* SpansExporterTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpansExporterTests.swift; sourceTree = "<group>"; };
-		E141EADF27EB3B9E0057D747 /* EncodableValueTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EncodableValueTests.swift; sourceTree = "<group>"; };
 		E141EAE027EB3B9E0057D747 /* JSONEncoderTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JSONEncoderTests.swift; sourceTree = "<group>"; };
 		E141EAE127EB3B9E0057D747 /* PerformancePresetTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PerformancePresetTests.swift; sourceTree = "<group>"; };
 		E141EAE227EB3B9E0057D747 /* DeviceTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeviceTests.swift; sourceTree = "<group>"; };
@@ -605,7 +601,6 @@
 		E141EAEB27EB3B9E0057D747 /* FilesOrchestratorTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FilesOrchestratorTests.swift; sourceTree = "<group>"; };
 		E141EAED27EB3B9E0057D747 /* FileTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileTests.swift; sourceTree = "<group>"; };
 		E141EAEE27EB3B9E0057D747 /* DirectoryTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DirectoryTests.swift; sourceTree = "<group>"; };
-		E141EAF027EB3B9E0057D747 /* Encoding.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Encoding.swift; sourceTree = "<group>"; };
 		E141EAF127EB3B9E0057D747 /* SwiftExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwiftExtensions.swift; sourceTree = "<group>"; };
 		E141EAF227EB3B9E0057D747 /* TestsDirectory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TestsDirectory.swift; sourceTree = "<group>"; };
 		E141EAF327EB3B9E0057D747 /* DatadogExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DatadogExtensions.swift; sourceTree = "<group>"; };
@@ -626,7 +621,6 @@
 		E143CF0327D7790200F4018A /* Feature.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Feature.swift; sourceTree = "<group>"; };
 		E143CF0427D7790200F4018A /* DateProvider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DateProvider.swift; sourceTree = "<group>"; };
 		E143CF0527D7790200F4018A /* DateFormatting.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DateFormatting.swift; sourceTree = "<group>"; };
-		E143CF0627D7790200F4018A /* EncodableValue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EncodableValue.swift; sourceTree = "<group>"; };
 		E143CF0827D7790200F4018A /* DataCompression.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataCompression.swift; sourceTree = "<group>"; };
 		E143CF0927D7790200F4018A /* Device.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Device.swift; sourceTree = "<group>"; };
 		E143CF0C27D7790300F4018A /* ExporterConfiguration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExporterConfiguration.swift; sourceTree = "<group>"; };
@@ -1068,7 +1062,6 @@
 			children = (
 				E141EAE327EB3B9E0057D747 /* DateFormattingTests.swift */,
 				E141EAE227EB3B9E0057D747 /* DeviceTests.swift */,
-				E141EADF27EB3B9E0057D747 /* EncodableValueTests.swift */,
 				E141EAE027EB3B9E0057D747 /* JSONEncoderTests.swift */,
 				E141EAE127EB3B9E0057D747 /* PerformancePresetTests.swift */,
 				E12248C62643EF4200305968 /* SpawnTests.swift */,
@@ -1111,7 +1104,6 @@
 				E141EAF727EB3B9E0057D747 /* CoreMocks.swift */,
 				E141EAFA27EB3B9E0057D747 /* DeviceMock.swift */,
 				E141EAF327EB3B9E0057D747 /* DatadogExtensions.swift */,
-				E141EAF027EB3B9E0057D747 /* Encoding.swift */,
 				E141EAF827EB3B9E0057D747 /* EquatableInTests.swift */,
 				E141EAF427EB3B9E0057D747 /* FoundationMocks.swift */,
 				E141EAF527EB3B9E0057D747 /* LoggingFeatureMocks.swift */,
@@ -1181,7 +1173,6 @@
 				E1F69C2028C648000042156E /* JSONGeneric.swift */,
 				E143CF0427D7790200F4018A /* DateProvider.swift */,
 				E143CF0527D7790200F4018A /* DateFormatting.swift */,
-				E143CF0627D7790200F4018A /* EncodableValue.swift */,
 				E143CF0927D7790200F4018A /* Device.swift */,
 				A7AB7C0F2F11AA1100000002 /* RunLoopWaiter.swift */,
 				A7E233342BCD39E30087D8F8 /* Swift+C.swift */,
@@ -2136,7 +2127,6 @@
 				A7FC263C2BA1ECCF00067E26 /* DataCompression.swift in Sources */,
 				A7D23AF82C9B10A8006AB41D /* SpanMetadata.swift in Sources */,
 				A7FC261A2BA1EC5A00067E26 /* DataUploadStatus.swift in Sources */,
-				A7FC263A2BA1ECCF00067E26 /* EncodableValue.swift in Sources */,
 				A7FC26352BA1ECCF00067E26 /* PerformancePreset.swift in Sources */,
 				A7FC261B2BA1EC5A00067E26 /* DataUploadWorker.swift in Sources */,
 				A7FC26372BA1ECCF00067E26 /* JSONGeneric.swift in Sources */,
@@ -2204,7 +2194,6 @@
 				A7FC267A2BA1F80E00067E26 /* FileReaderTests.swift in Sources */,
 				A7B747C02C60E1E7009B4B93 /* SwiftUtilsTests.swift in Sources */,
 				A7FC26822BA1F81D00067E26 /* DeviceMock.swift in Sources */,
-				A7FC26722BA1F80000067E26 /* EncodableValueTests.swift in Sources */,
 				86137D23E1704D17A7B6D486 /* TelemetryExporterTests.swift in Sources */,
 				A7FC26702BA1F7FA00067E26 /* SpansExporterTests.swift in Sources */,
 				A7FC268C2BA1F82300067E26 /* HTTPClientTests.swift in Sources */,
@@ -2212,7 +2201,6 @@
 				A7FC266F2BA1F7FA00067E26 /* SpanSanitizerTests.swift in Sources */,
 				A7AB7C2026E7EB1100000005 /* SpanEventsLogTests.swift in Sources */,
 				A7AB7C2026E7EB110000001D /* TestSpanTests.swift in Sources */,
-				A7FC26842BA1F81D00067E26 /* Encoding.swift in Sources */,
 				A7FC26762BA1F80000067E26 /* SpawnTests.swift in Sources */,
 				A7AB7C2026E7EB1100000007 /* CoverageExporterTests.swift in Sources */,
 				A7AB7C2026E7EB1100000009 /* PipelineIntegrationTests.swift in Sources */,

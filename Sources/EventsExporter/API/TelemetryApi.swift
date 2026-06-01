@@ -535,8 +535,10 @@ internal struct TelemetryApiService: TelemetryApi {
         let dataFormat: DataFormat
         do {
             dataFormat = try DataFormat(header: header, encoder: encoder)
+        } catch let error as EncodingError {
+            throw .encoding(value: header, error: error)
         } catch {
-            throw .transport(error)
+            throw .unknownError(error)
         }
         try await send(requestType: .messageBatch,
                        body: dataFormat.prefix + data + dataFormat.suffix)

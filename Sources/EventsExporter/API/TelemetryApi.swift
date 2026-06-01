@@ -20,6 +20,7 @@ public protocol TelemetryPayload: Encodable {
 /// The set of telemetry request_types this service implements.
 public enum TelemetryRequestType: String, Codable {
     case generateMetrics = "generate-metrics"
+    case distributions
     case logs
     case messageBatch = "message-batch"
     case appStarted = "app-started"
@@ -100,6 +101,52 @@ public struct TelemetryMetric: TelemetryPayload, Codable {
     }
     
     public var requestType: TelemetryRequestType { .generateMetrics }
+}
+
+/// A single telemetry distribution payload for `distributions`.
+///
+/// Unlike `generate-metrics`, distribution series carry raw sample values
+/// (not `[timestamp, value]` pairs), and the backend computes the statistical
+/// summary (p50/p75/p90/p95/p99/max). The namespace set is also distinct.
+public struct TelemetryDistribution: TelemetryPayload, Codable {
+    /// Namespace for distribution metrics.
+    public enum Namespace: String, Codable {
+        case tracers, profilers, rum, appsec
+    }
+
+    /// A distribution series with one or more raw sample values.
+    public struct Series: Codable {
+        public var metric: String
+        /// Raw sample values — the backend computes the distribution.
+        public var points: [Double]
+        public var tags: [String]?
+        public var common: Bool?
+        /// Per-series override for the payload-level namespace.
+        public var namespace: Namespace?
+
+        public init(metric: String,
+                    points: [Double],
+                    tags: [String]? = nil,
+                    common: Bool? = nil,
+                    namespace: Namespace? = nil)
+        {
+            self.metric = metric
+            self.points = points
+            self.tags = tags
+            self.common = common
+            self.namespace = namespace
+        }
+    }
+
+    public var namespace: Namespace?
+    public var series: [Series]
+
+    public init(namespace: Namespace?, series: [Series]) {
+        self.namespace = namespace
+        self.series = series
+    }
+
+    public var requestType: TelemetryRequestType { .distributions }
 }
 
 /// A single telemetry log message for the `logs` request type.
@@ -347,6 +394,8 @@ public struct TelemetryMessageBatch: TelemetryPayload, Codable {
                 message = try container.decode(TelemetryLog.Logs.self, forKey: .payload)
             case .generateMetrics:
                 message = try container.decode(TelemetryMetric.self, forKey: .payload)
+            case .distributions:
+                message = try container.decode(TelemetryDistribution.self, forKey: .payload)
             case .messageBatch:
                 message = try container.decode(TelemetryMessageBatch.self, forKey: .payload)
             }
@@ -408,6 +457,10 @@ public protocol TelemetryApi: APIService {
     /// Send a batch of metric series via the `generate-metrics` request type.
     func sendMetrics(_ series: [TelemetryMetric.Series],
                      namespace: TelemetryMetric.Namespace?) async throws(APICallError)
+
+    /// Send a batch of distribution series via the `distributions` request type.
+    func sendDistributions(_ series: [TelemetryDistribution.Series],
+                           namespace: TelemetryDistribution.Namespace?) async throws(APICallError)
 
     /// Send a batch of log messages via the `logs` request type.
     func sendLogs(_ logs: [TelemetryLog]) async throws(APICallError)
@@ -515,6 +568,13 @@ internal struct TelemetryApiService: TelemetryApi {
                      namespace: TelemetryMetric.Namespace?) async throws(APICallError)
     {
         let payload = TelemetryMetric(namespace: namespace, series: series)
+        try await send(payload: payload)
+    }
+
+    func sendDistributions(_ series: [TelemetryDistribution.Series],
+                           namespace: TelemetryDistribution.Namespace?) async throws(APICallError)
+    {
+        let payload = TelemetryDistribution(namespace: namespace, series: series)
         try await send(payload: payload)
     }
 

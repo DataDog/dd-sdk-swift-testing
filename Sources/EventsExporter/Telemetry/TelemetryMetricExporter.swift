@@ -63,33 +63,9 @@ internal final class TelemetryMetricExporter: MetricExporter {
     }
 }
 
-// MARK: - Resource-driven configuration
-
-internal enum TelemetryMetricResourceKeys {
-    /// Resource attribute key whose value selects the telemetry namespace for the
-    /// metrics / distributions produced from a meter provider. The value must match
-    /// a `TelemetryMetric.Namespace` / `TelemetryDistribution.Namespace` raw value
-    /// (e.g. `"tracers"`, `"general"`). When absent or unrecognized, the exporter's
-    /// configured payload-level namespace is used instead.
-    static let namespace = "dd.telemetry.namespace"
-}
-
 // MARK: - Shared helpers
 
 private enum MetricConversion {
-    // Per-metric namespace override read from the metric's Resource, if present.
-    static func metricNamespace(from resource: Resource) -> TelemetryMetric.Namespace? {
-        namespaceString(from: resource).flatMap(TelemetryMetric.Namespace.init(rawValue:))
-    }
-
-    static func distributionNamespace(from resource: Resource) -> TelemetryDistribution.Namespace? {
-        namespaceString(from: resource).flatMap(TelemetryDistribution.Namespace.init(rawValue:))
-    }
-
-    private static func namespaceString(from resource: Resource) -> String? {
-        resource.attributes[TelemetryMetricResourceKeys.namespace]?.description
-    }
-
     // Group an array of PointData by their sorted attribute string so that
     // points with the same label set land in the same series.
     static func groupByAttributes<P: PointData>(_ points: [P]) -> [([String: AttributeValue], [P])] {
@@ -131,7 +107,7 @@ private enum MetricConversion {
 private extension TelemetryMetric.Series {
     // Returns nil for histogram types — those go to TelemetryDistribution instead.
     static func from(_ metric: MetricData) -> [TelemetryMetric.Series]? {
-        let namespace = MetricConversion.metricNamespace(from: metric.resource)
+        let namespace = metric.resource.telemetryNamespace.flatMap(TelemetryMetric.Namespace.init(rawValue:))
         switch metric.type {
         case .LongGauge, .DoubleGauge:
             return scalar(metric.data.points, name: metric.name, type: .gauge, namespace: namespace)
@@ -200,7 +176,7 @@ private extension TelemetryMetric.Series {
 private extension TelemetryDistribution.Series {
     // Returns nil for non-histogram types.
     static func from(_ metric: MetricData) -> [TelemetryDistribution.Series]? {
-        let namespace = MetricConversion.distributionNamespace(from: metric.resource)
+        let namespace = metric.resource.telemetryNamespace.flatMap(TelemetryDistribution.Namespace.init(rawValue:))
         switch metric.type {
         case .Histogram:
             return fromHistogram(metric.data.points as! [HistogramPointData],

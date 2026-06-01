@@ -48,6 +48,15 @@ public extension Resource {
         get { attributes[SemanticConventions.Deployment.environmentName.rawValue]?.description }
         set { attributes[SemanticConventions.Deployment.environmentName.rawValue] = newValue.map { .string($0) } }
     }
+
+    /// Datadog telemetry namespace hint for metrics produced by a meter provider.
+    /// The metric exporter uses this as the per-series namespace when it's valid for
+    /// the target payload. The value should match a `TelemetryMetric.Namespace` /
+    /// `TelemetryDistribution.Namespace` raw value (e.g. `"tracers"`, `"general"`).
+    var telemetryNamespace: String? {
+        get { attributes["dd.telemetry.namespace"]?.description }
+        set { attributes["dd.telemetry.namespace"] = newValue.map { .string($0) } }
+    }
 }
 
 // MARK: - Test-attribute accessors on SpanData / AttributeValue dictionaries

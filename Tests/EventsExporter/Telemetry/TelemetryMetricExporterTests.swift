@@ -430,7 +430,8 @@ class TelemetryMetricExporterTests: XCTestCase {
         defer { server.stop() }
 
         let exporter = try makeExporter(server: server)
-        let resource = Resource(attributes: [TelemetryMetricResourceKeys.namespace: .string("general")])
+        var resource = Resource(attributes: [:])
+        resource.telemetryNamespace = "general"
         let metric = MetricData.createLongGauge(
             resource: resource,
             instrumentationScopeInfo: InstrumentationScopeInfo(name: "test"),
@@ -455,7 +456,8 @@ class TelemetryMetricExporterTests: XCTestCase {
         defer { server.stop() }
 
         let exporter = try makeExporter(server: server)
-        let resource = Resource(attributes: [TelemetryMetricResourceKeys.namespace: .string("appsec")])
+        var resource = Resource(attributes: [:])
+        resource.telemetryNamespace = "appsec"
         let point = histogramPoint(count: 2, sum: 4, endNanos: 1_000_000_000)
         let metric = MetricData.createHistogram(
             resource: resource,
@@ -480,7 +482,8 @@ class TelemetryMetricExporterTests: XCTestCase {
         defer { server.stop() }
 
         let exporter = try makeExporter(server: server)
-        let resource = Resource(attributes: [TelemetryMetricResourceKeys.namespace: .string("not-a-namespace")])
+        var resource = Resource(attributes: [:])
+        resource.telemetryNamespace = "not-a-namespace"
         let metric = MetricData.createLongGauge(
             resource: resource,
             instrumentationScopeInfo: InstrumentationScopeInfo(name: "test"),
@@ -506,7 +509,8 @@ class TelemetryMetricExporterTests: XCTestCase {
         defer { server.stop() }
 
         let exporter = try makeExporter(server: server)
-        let resource = Resource(attributes: [TelemetryMetricResourceKeys.namespace: .string("general")])
+        var resource = Resource(attributes: [:])
+        resource.telemetryNamespace = "general"
         let point = histogramPoint(count: 1, sum: 1, endNanos: 1_000_000_000)
         let metric = MetricData.createHistogram(
             resource: resource,

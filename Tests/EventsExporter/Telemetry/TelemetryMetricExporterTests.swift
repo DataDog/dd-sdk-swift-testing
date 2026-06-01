@@ -47,12 +47,27 @@ class TelemetryMetricExporterTests: XCTestCase {
     }
 
     private func histogramPoint(count: UInt64, sum: Double, endNanos: UInt64,
+                                boundaries: [Double] = [],
+                                counts: [Int]? = nil,
+                                min: Double = 0, max: Double = 0,
+                                hasMin: Bool = false, hasMax: Bool = false,
                                 attributes: [String: AttributeValue] = [:]) -> HistogramPointData
     {
-        HistogramPointData(startEpochNanos: 0, endEpochNanos: endNanos,
-                           attributes: attributes, exemplars: [],
-                           sum: sum, count: count, min: 0, max: sum,
-                           boundaries: [], counts: [Int(count)], hasMin: false, hasMax: false)
+        let bucketCounts = counts ?? [Int(count)]
+        return HistogramPointData(startEpochNanos: 0, endEpochNanos: endNanos,
+                                  attributes: attributes, exemplars: [],
+                                  sum: sum, count: count, min: min, max: max,
+                                  boundaries: boundaries, counts: bucketCounts,
+                                  hasMin: hasMin, hasMax: hasMax)
+    }
+
+    private func receivedDistSeries(from server: MockBackend) throws -> [[String: Any]] {
+        let raw = try XCTUnwrap(server.requests.telemetry.first)
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: raw) as? [String: Any])
+        let payload = try XCTUnwrap(json["payload"] as? [[String: Any]])
+        let distEntry = try XCTUnwrap(payload.first(where: { $0["request_type"] as? String == "distributions" }))
+        let distPayload = try XCTUnwrap(distEntry["payload"] as? [String: Any])
+        return try XCTUnwrap(distPayload["series"] as? [[String: Any]])
     }
 
     // MARK: - Empty input
@@ -181,15 +196,17 @@ class TelemetryMetricExporterTests: XCTestCase {
         XCTAssertEqual(series[0]["type"] as? String, "gauge")
     }
 
-    // MARK: - Histogram
+    // MARK: - Histogram → distributions
 
-    func testExport_histogram_producesCountAndSumSeries() throws {
+    func testExport_histogram_noBoundaries_producesDistributionSeriesWithAvgRepeated() throws {
         let server = MockBackend()
         try server.start()
         defer { server.stop() }
 
         let exporter = try makeExporter(server: server)
-        let point = histogramPoint(count: 10, sum: 55.5, endNanos: 1_000_000_000)
+        // No boundaries: 4 samples, sum=10 → avg=2.5 repeated 4 times
+        let point = histogramPoint(count: 4, sum: 10, endNanos: 1_000_000_000,
+                                   boundaries: [], counts: [4])
         let metric = MetricData.createHistogram(
             resource: Resource(),
             instrumentationScopeInfo: InstrumentationScopeInfo(name: "test"),
@@ -202,19 +219,77 @@ class TelemetryMetricExporterTests: XCTestCase {
         XCTAssertEqual(exporter.export(metrics: [metric]), .success)
         guard server.waitForTelemetry(timeout: 10) else { XCTFail("No telemetry received"); return }
 
-        let series = try receivedSeries(from: server)
-        XCTAssertEqual(series.count, 2)
-        let names = Set(series.compactMap { $0["metric"] as? String })
-        XCTAssertEqual(names, ["request.duration.count", "request.duration.sum"])
+        let series = try receivedDistSeries(from: server)
+        XCTAssertEqual(series.count, 1)
+        XCTAssertEqual(series[0]["metric"] as? String, "request.duration")
+        let points = try XCTUnwrap(series[0]["points"] as? [Double])
+        XCTAssertEqual(points.count, 4)
+        XCTAssertEqual(points[0], 2.5, accuracy: 0.001)
+    }
 
-        let countSeries = try XCTUnwrap(series.first(where: { $0["metric"] as? String == "request.duration.count" }))
-        XCTAssertEqual(countSeries["type"] as? String, "count")
-        let countRawPoints = try XCTUnwrap(countSeries["points"] as? [[Double]])
-        XCTAssertEqual(try XCTUnwrap(countRawPoints.first).last, 10.0)
+    func testExport_histogram_withBoundaries_reconstructsSamplesFromMidpoints() throws {
+        let server = MockBackend()
+        try server.start()
+        defer { server.stop() }
 
-        let sumSeries = try XCTUnwrap(series.first(where: { $0["metric"] as? String == "request.duration.sum" }))
-        let sumRawPoints = try XCTUnwrap(sumSeries["points"] as? [[Double]])
-        XCTAssertEqual(try XCTUnwrap(sumRawPoints.first).last ?? 0, 55.5, accuracy: 0.001)
+        let exporter = try makeExporter(server: server)
+        // Boundaries [0, 10, 100], counts [1, 2, 3, 1]:
+        //   bucket 0 (underflow, hasMin=true, min=0): 1 sample → 0.0
+        //   bucket 1 [0,10): midpoint 5.0: 2 samples
+        //   bucket 2 [10,100): midpoint 55.0: 3 samples
+        //   bucket 3 (overflow, hasMax=true, max=120): 1 sample → 120.0
+        let point = histogramPoint(count: 7, sum: 0, endNanos: 1_000_000_000,
+                                   boundaries: [0, 10, 100], counts: [1, 2, 3, 1],
+                                   min: 0, max: 120, hasMin: true, hasMax: true)
+        let metric = MetricData.createHistogram(
+            resource: Resource(),
+            instrumentationScopeInfo: InstrumentationScopeInfo(name: "test"),
+            name: "latency",
+            description: "",
+            unit: "ms",
+            data: HistogramData(aggregationTemporality: .cumulative, points: [point])
+        )
+
+        XCTAssertEqual(exporter.export(metrics: [metric]), .success)
+        guard server.waitForTelemetry(timeout: 10) else { XCTFail("No telemetry received"); return }
+
+        let series = try receivedDistSeries(from: server)
+        XCTAssertEqual(series.count, 1)
+        let points = try XCTUnwrap(series[0]["points"] as? [Double])
+        XCTAssertEqual(points.count, 7)
+        XCTAssertEqual(points[0], 0.0, accuracy: 0.001)   // underflow → min
+        XCTAssertEqual(points[1], 5.0, accuracy: 0.001)   // bucket [0,10) midpoint
+        XCTAssertEqual(points[2], 5.0, accuracy: 0.001)
+        XCTAssertEqual(points[3], 55.0, accuracy: 0.001)  // bucket [10,100) midpoint
+        XCTAssertEqual(points[4], 55.0, accuracy: 0.001)
+        XCTAssertEqual(points[5], 55.0, accuracy: 0.001)
+        XCTAssertEqual(points[6], 120.0, accuracy: 0.001) // overflow → max
+    }
+
+    func testExport_histogram_doesNotProduceGenerateMetricsSeries() throws {
+        let server = MockBackend()
+        try server.start()
+        defer { server.stop() }
+
+        let exporter = try makeExporter(server: server)
+        let point = histogramPoint(count: 3, sum: 9, endNanos: 1_000_000_000)
+        let metric = MetricData.createHistogram(
+            resource: Resource(),
+            instrumentationScopeInfo: InstrumentationScopeInfo(name: "test"),
+            name: "h",
+            description: "",
+            unit: "",
+            data: HistogramData(aggregationTemporality: .cumulative, points: [point])
+        )
+
+        XCTAssertEqual(exporter.export(metrics: [metric]), .success)
+        guard server.waitForTelemetry(timeout: 10) else { XCTFail("No telemetry received"); return }
+
+        let raw = try XCTUnwrap(server.requests.telemetry.first)
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: raw) as? [String: Any])
+        let payload = try XCTUnwrap(json["payload"] as? [[String: Any]])
+        let hasMetrics = payload.contains(where: { $0["request_type"] as? String == "generate-metrics" })
+        XCTAssertFalse(hasMetrics, "Histogram must not produce generate-metrics entries")
     }
 
     // MARK: - Attributes → Tags

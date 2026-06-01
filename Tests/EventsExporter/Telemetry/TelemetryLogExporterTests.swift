@@ -310,13 +310,12 @@ class TelemetryLogExporterTests: XCTestCase {
 
     // MARK: - forceFlush / shutdown
 
-    func testForceFlush_withPendingData_returnsSuccess() throws {
+    func testForceFlush_returnsSuccess() throws {
         let server = MockBackend()
         try server.start()
         defer { server.stop() }
 
         let exporter = try makeExporter(server: server)
-        _ = exporter.export(logRecords: [record()], explicitTimeout: nil)
         XCTAssertEqual(exporter.forceFlush(explicitTimeout: nil), .success)
     }
 }

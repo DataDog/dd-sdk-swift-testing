@@ -422,6 +422,109 @@ class TelemetryMetricExporterTests: XCTestCase {
         XCTAssertEqual(names, ["gauge.one", "counter.two"])
     }
 
+    // MARK: - Namespace from Resource
+
+    func testExport_resourceNamespace_setsPerSeriesNamespace() throws {
+        let server = MockBackend()
+        try server.start()
+        defer { server.stop() }
+
+        let exporter = try makeExporter(server: server)
+        let resource = Resource(attributes: [TelemetryMetricResourceKeys.namespace: .string("general")])
+        let metric = MetricData.createLongGauge(
+            resource: resource,
+            instrumentationScopeInfo: InstrumentationScopeInfo(name: "test"),
+            name: "m",
+            description: "",
+            unit: "",
+            data: GaugeData(aggregationTemporality: .cumulative,
+                            points: [longPoint(value: 1, endNanos: 1_000_000_000)])
+        )
+
+        XCTAssertEqual(exporter.export(metrics: [metric]), .success)
+        guard server.waitForTelemetry(timeout: 10) else { XCTFail("No telemetry received"); return }
+
+        let series = try receivedSeries(from: server)
+        XCTAssertEqual(series.count, 1)
+        XCTAssertEqual(series[0]["namespace"] as? String, "general")
+    }
+
+    func testExport_resourceNamespace_setsDistributionSeriesNamespace() throws {
+        let server = MockBackend()
+        try server.start()
+        defer { server.stop() }
+
+        let exporter = try makeExporter(server: server)
+        let resource = Resource(attributes: [TelemetryMetricResourceKeys.namespace: .string("appsec")])
+        let point = histogramPoint(count: 2, sum: 4, endNanos: 1_000_000_000)
+        let metric = MetricData.createHistogram(
+            resource: resource,
+            instrumentationScopeInfo: InstrumentationScopeInfo(name: "test"),
+            name: "h",
+            description: "",
+            unit: "",
+            data: HistogramData(aggregationTemporality: .cumulative, points: [point])
+        )
+
+        XCTAssertEqual(exporter.export(metrics: [metric]), .success)
+        guard server.waitForTelemetry(timeout: 10) else { XCTFail("No telemetry received"); return }
+
+        let series = try receivedDistSeries(from: server)
+        XCTAssertEqual(series.count, 1)
+        XCTAssertEqual(series[0]["namespace"] as? String, "appsec")
+    }
+
+    func testExport_unrecognizedResourceNamespace_omitsSeriesNamespace() throws {
+        let server = MockBackend()
+        try server.start()
+        defer { server.stop() }
+
+        let exporter = try makeExporter(server: server)
+        let resource = Resource(attributes: [TelemetryMetricResourceKeys.namespace: .string("not-a-namespace")])
+        let metric = MetricData.createLongGauge(
+            resource: resource,
+            instrumentationScopeInfo: InstrumentationScopeInfo(name: "test"),
+            name: "m",
+            description: "",
+            unit: "",
+            data: GaugeData(aggregationTemporality: .cumulative,
+                            points: [longPoint(value: 1, endNanos: 1_000_000_000)])
+        )
+
+        XCTAssertEqual(exporter.export(metrics: [metric]), .success)
+        guard server.waitForTelemetry(timeout: 10) else { XCTFail("No telemetry received"); return }
+
+        let series = try receivedSeries(from: server)
+        XCTAssertEqual(series.count, 1)
+        XCTAssertNil(series[0]["namespace"], "Unrecognized namespace should fall back (no per-series override)")
+    }
+
+    func testExport_distributionRejectsMetricOnlyNamespace() throws {
+        // "general" is valid for generate-metrics but not for distributions.
+        let server = MockBackend()
+        try server.start()
+        defer { server.stop() }
+
+        let exporter = try makeExporter(server: server)
+        let resource = Resource(attributes: [TelemetryMetricResourceKeys.namespace: .string("general")])
+        let point = histogramPoint(count: 1, sum: 1, endNanos: 1_000_000_000)
+        let metric = MetricData.createHistogram(
+            resource: resource,
+            instrumentationScopeInfo: InstrumentationScopeInfo(name: "test"),
+            name: "h",
+            description: "",
+            unit: "",
+            data: HistogramData(aggregationTemporality: .cumulative, points: [point])
+        )
+
+        XCTAssertEqual(exporter.export(metrics: [metric]), .success)
+        guard server.waitForTelemetry(timeout: 10) else { XCTFail("No telemetry received"); return }
+
+        let series = try receivedDistSeries(from: server)
+        XCTAssertEqual(series.count, 1)
+        XCTAssertNil(series[0]["namespace"], "Namespace not valid for distributions should be omitted")
+    }
+
     // MARK: - Aggregation temporality
 
     func testGetAggregationTemporality_deltaForCountersAndHistograms() throws {

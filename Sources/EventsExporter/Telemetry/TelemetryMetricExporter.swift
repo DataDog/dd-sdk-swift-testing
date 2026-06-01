@@ -63,9 +63,33 @@ internal final class TelemetryMetricExporter: MetricExporter {
     }
 }
 
+// MARK: - Resource-driven configuration
+
+internal enum TelemetryMetricResourceKeys {
+    /// Resource attribute key whose value selects the telemetry namespace for the
+    /// metrics / distributions produced from a meter provider. The value must match
+    /// a `TelemetryMetric.Namespace` / `TelemetryDistribution.Namespace` raw value
+    /// (e.g. `"tracers"`, `"general"`). When absent or unrecognized, the exporter's
+    /// configured payload-level namespace is used instead.
+    static let namespace = "dd.telemetry.namespace"
+}
+
 // MARK: - Shared helpers
 
 private enum MetricConversion {
+    // Per-metric namespace override read from the metric's Resource, if present.
+    static func metricNamespace(from resource: Resource) -> TelemetryMetric.Namespace? {
+        namespaceString(from: resource).flatMap(TelemetryMetric.Namespace.init(rawValue:))
+    }
+
+    static func distributionNamespace(from resource: Resource) -> TelemetryDistribution.Namespace? {
+        namespaceString(from: resource).flatMap(TelemetryDistribution.Namespace.init(rawValue:))
+    }
+
+    private static func namespaceString(from resource: Resource) -> String? {
+        resource.attributes[TelemetryMetricResourceKeys.namespace]?.description
+    }
+
     // Group an array of PointData by their sorted attribute string so that
     // points with the same label set land in the same series.
     static func groupByAttributes<P: PointData>(_ points: [P]) -> [([String: AttributeValue], [P])] {
@@ -107,15 +131,17 @@ private enum MetricConversion {
 private extension TelemetryMetric.Series {
     // Returns nil for histogram types — those go to TelemetryDistribution instead.
     static func from(_ metric: MetricData) -> [TelemetryMetric.Series]? {
+        let namespace = MetricConversion.metricNamespace(from: metric.resource)
         switch metric.type {
         case .LongGauge, .DoubleGauge:
-            return scalar(metric.data.points, name: metric.name, type: .gauge)
+            return scalar(metric.data.points, name: metric.name, type: .gauge, namespace: namespace)
         case .LongSum, .DoubleSum:
             return scalar(metric.data.points, name: metric.name,
-                         type: metric.isMonotonic ? .count : .gauge)
+                         type: metric.isMonotonic ? .count : .gauge, namespace: namespace)
         case .Summary:
             return countAndSum(metric.data.points as! [SummaryPointData],
                                name: metric.name,
+                               namespace: namespace,
                                countOf: { Double($0.count) },
                                sumOf: { $0.sum })
         case .Histogram, .ExponentialHistogram:
@@ -124,7 +150,8 @@ private extension TelemetryMetric.Series {
     }
 
     private static func scalar(_ points: [PointData], name: String,
-                               type: TelemetryMetric.MetricType) -> [TelemetryMetric.Series]
+                               type: TelemetryMetric.MetricType,
+                               namespace: TelemetryMetric.Namespace?) -> [TelemetryMetric.Series]
     {
         MetricConversion.groupByAttributes(points).map { attrs, pts in
             TelemetryMetric.Series(
@@ -132,7 +159,8 @@ private extension TelemetryMetric.Series {
                 points: pts.map { .init(timestamp: MetricConversion.epochSeconds($0),
                                         value: MetricConversion.scalarValue($0)) },
                 type: type,
-                tags: MetricConversion.tags(attrs)
+                tags: MetricConversion.tags(attrs),
+                namespace: namespace
             )
         }
     }
@@ -141,6 +169,7 @@ private extension TelemetryMetric.Series {
     private static func countAndSum<P: PointData>(
         _ points: [P],
         name: String,
+        namespace: TelemetryMetric.Namespace?,
         countOf: (P) -> Double,
         sumOf: (P) -> Double
     ) -> [TelemetryMetric.Series] {
@@ -151,13 +180,15 @@ private extension TelemetryMetric.Series {
                     metric: "\(name).count",
                     points: pts.map { .init(timestamp: MetricConversion.epochSeconds($0), value: countOf($0)) },
                     type: .count,
-                    tags: tags
+                    tags: tags,
+                    namespace: namespace
                 ),
                 TelemetryMetric.Series(
                     metric: "\(name).sum",
                     points: pts.map { .init(timestamp: MetricConversion.epochSeconds($0), value: sumOf($0)) },
                     type: .count,
-                    tags: tags
+                    tags: tags,
+                    namespace: namespace
                 ),
             ]
         }
@@ -169,11 +200,14 @@ private extension TelemetryMetric.Series {
 private extension TelemetryDistribution.Series {
     // Returns nil for non-histogram types.
     static func from(_ metric: MetricData) -> [TelemetryDistribution.Series]? {
+        let namespace = MetricConversion.distributionNamespace(from: metric.resource)
         switch metric.type {
         case .Histogram:
-            return fromHistogram(metric.data.points as! [HistogramPointData], name: metric.name)
+            return fromHistogram(metric.data.points as! [HistogramPointData],
+                                 name: metric.name, namespace: namespace)
         case .ExponentialHistogram:
-            return fromExponentialHistogram(metric.data.points as! [ExponentialHistogramPointData], name: metric.name)
+            return fromExponentialHistogram(metric.data.points as! [ExponentialHistogramPointData],
+                                            name: metric.name, namespace: namespace)
         default:
             return nil
         }
@@ -185,7 +219,8 @@ private extension TelemetryDistribution.Series {
     //   - interior buckets: midpoint of the two boundaries
     //   - overflow (last) bucket: max if available, else the upper boundary
     private static func fromHistogram(_ points: [HistogramPointData],
-                                      name: String) -> [TelemetryDistribution.Series]
+                                      name: String,
+                                      namespace: TelemetryDistribution.Namespace?) -> [TelemetryDistribution.Series]
     {
         MetricConversion.groupByAttributes(points).compactMap { attrs, pts -> TelemetryDistribution.Series? in
             let samples = pts.flatMap { reconstructSamples(from: $0) }
@@ -193,7 +228,8 @@ private extension TelemetryDistribution.Series {
             return TelemetryDistribution.Series(
                 metric: name,
                 points: samples,
-                tags: MetricConversion.tags(attrs)
+                tags: MetricConversion.tags(attrs),
+                namespace: namespace
             )
         }
     }
@@ -229,7 +265,8 @@ private extension TelemetryDistribution.Series {
     // Base = 2^(2^-scale); each bucket i covers [base^(offset+i), base^(offset+i+1)).
     // Representative value: geometric midpoint = base^(offset+i+0.5).
     private static func fromExponentialHistogram(_ points: [ExponentialHistogramPointData],
-                                                 name: String) -> [TelemetryDistribution.Series]
+                                                 name: String,
+                                                 namespace: TelemetryDistribution.Namespace?) -> [TelemetryDistribution.Series]
     {
         MetricConversion.groupByAttributes(points).compactMap { attrs, pts -> TelemetryDistribution.Series? in
             let samples = pts.flatMap { reconstructSamples(from: $0) }
@@ -237,7 +274,8 @@ private extension TelemetryDistribution.Series {
             return TelemetryDistribution.Series(
                 metric: name,
                 points: samples,
-                tags: MetricConversion.tags(attrs)
+                tags: MetricConversion.tags(attrs),
+                namespace: namespace
             )
         }
     }

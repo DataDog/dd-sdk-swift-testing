@@ -56,12 +56,12 @@ internal final class FileReader {
             return nil
         }
         let data = try file.read()
-        return Batch(data: data + dataFormat.suffix, file: file)
+        return try Batch(data: data + dataFormat.suffix, file: file)
     }
 
     func getRemainingBatches() throws -> Batch.Iterator {
         let files = try orchestrator.getAllReadableFiles()
-        return Batch.Iterator(files.makeIterator(), suffix: dataFormat.suffix)
+        return try Batch.Iterator(files.makeIterator(), suffix: dataFormat.suffix)
     }
 
     // MARK: - Accepting batches

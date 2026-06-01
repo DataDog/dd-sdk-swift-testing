@@ -69,6 +69,8 @@ public final class MockBackend {
         public var searchCommits: [Data] = []
         /// All packfiles received so far.
         public var packfile: [Data] = []
+        /// Raw bodies of all telemetry (apmtelemetry) requests.
+        public var telemetry: [Data] = []
 
         /// All spans across all received envelopes.
         public var allSpans: [Span] { spanEnvelopes.flatMap(\.allSpans) }
@@ -170,6 +172,12 @@ public final class MockBackend {
         poll(timeout: timeout) { self._lock.withLock { self._requests.settings.count >= count } }
     }
 
+    /// Blocks until at least `count` telemetry batches have been received, or `timeout` elapses.
+    @discardableResult
+    public func waitForTelemetry(count: Int = 1, timeout: TimeInterval = 10) -> Bool {
+        poll(timeout: timeout) { self._lock.withLock { self._requests.telemetry.count >= count } }
+    }
+
     private func poll(timeout: TimeInterval, condition: () -> Bool) -> Bool {
         let deadline = Date(timeIntervalSinceNow: timeout)
         while Date() < deadline {
@@ -221,6 +229,10 @@ public final class MockBackend {
 
         case "/api/v2/git/repository/packfile":
             _lock.withLock { _requests.packfile.append(body) }
+            return (.ok, "application/json", Data("{}".utf8))
+
+        case "/api/v2/apmtelemetry":
+            _lock.withLock { _requests.telemetry.append(body) }
             return (.ok, "application/json", Data("{}".utf8))
 
         case "/api/v2/test/libraries/test-management/tests":

@@ -12,7 +12,7 @@ public protocol GitUploadApi: APIService {
     func uploadPackFile(file: URL, commit: String, repositoryURL: String) async throws(APICallError)
 
     func uploadPackFile(name: String, data: Data, commit: String,
-                        repositoryURL: String) async throws(HTTPClient.RequestError)
+                        repositoryURL: String) async throws(APICallError)
 
     func uploadPackFiles(directory: URL, commit: String, repositoryURL: String) async throws(APICallError)
 }
@@ -25,12 +25,8 @@ extension GitUploadApi {
         } catch {
             throw APICallError.fileSystem(error)
         }
-        do {
-            try await uploadPackFile(name: file.lastPathComponent, data: data,
-                                     commit: commit, repositoryURL: repositoryURL)
-        } catch {
-            throw APICallError(from: error)
-        }
+        try await uploadPackFile(name: file.lastPathComponent, data: data,
+                                 commit: commit, repositoryURL: repositoryURL)
     }
 
     public func uploadPackFiles(directory: URL, commit: String, repositoryURL: String) async throws(APICallError) {
@@ -97,7 +93,7 @@ struct GitUploadApiService: GitUploadApi, APIServiceConstructible {
     }
 
     func uploadPackFile(name: String, data: Data, commit: String,
-                        repositoryURL: String) async throws(HTTPClient.RequestError)
+                        repositoryURL: String) async throws(APICallError)
     {
         let log = self.log
         let meta = CommitRequestMeta(repositoryUrl: repositoryURL)
@@ -117,7 +113,7 @@ struct GitUploadApiService: GitUploadApi, APIServiceConstructible {
                        fileName: name,
                        contentType: .applicationOctetStream)
         log.debug("Uploading packfile \(name) for commit \(commit)")
-        let _ = try await httpClient.send(request: request)
+        let _ = try await httpClient.send(api: request)
         log.debug("Packfile upload succeeded for \(name)")
     }
 

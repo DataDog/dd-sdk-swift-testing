@@ -132,38 +132,47 @@ internal struct DDLog: Encodable {
 
 /// Encodes `Log` to given encoder.
 internal struct LogEncoder {
-    /// Coding keys for permanent `Log` attributes.
-    enum StaticCodingKeys: String, CodingKey {
-        case date
-        case status
-        case message
-        case serviceName = "service"
-        case tags = "ddtags"
-        case hostname
-        case product = "datadog.product"
+    /// Coding keys for `Log` attributes.
+    struct CodingKeys: CodingKey, ExpressibleByStringLiteral {
+        typealias StringLiteralType = String
+        let stringValue: String
+        
+        init?(stringValue: String) {
+            self.stringValue = stringValue
+        }
+        
+        init(stringLiteral value: String) {
+            stringValue = value
+        }
+        
+        init(_ string: String) {
+            self.init(stringLiteral: string)
+        }
+        
+        var intValue: Int? { nil }
+        init?(intValue: Int) { nil }
+        
+        static var date: Self { "date" }
+        static var status: Self { "status" }
+        static var message: Self { "message" }
+        static var serviceName: Self { "service" }
+        static var tags: Self { "ddtags" }
+        static var hostname: Self { "hostname" }
+        static var product: Self { "datadog.product" }
 
         // MARK: - Application info
 
-        case applicationVersion = "version"
+        static var applicationVersion: Self { "version" }
 
         // MARK: - Logger info
 
-        case loggerName = "logger.name"
-        case loggerVersion = "logger.version"
-        case threadName = "logger.thread_name"
-    }
-
-    /// Coding keys for dynamic `Log` attributes specified by user.
-    private struct DynamicCodingKey: CodingKey {
-        var stringValue: String
-        var intValue: Int?
-        init?(stringValue: String) { self.stringValue = stringValue }
-        init?(intValue: Int) { return nil }
-        init(_ string: String) { self.stringValue = string }
+        static var loggerName: Self { "logger.name" }
+        static var loggerVersion: Self { "logger.version" }
+        static var threadName: Self { "logger.thread_name" }
     }
 
     func encode(_ log: DDLog, to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: StaticCodingKeys.self)
+        var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(log.date, forKey: .date)
         try container.encode(log.status, forKey: .status)
         try container.encode(log.message, forKey: .message)
@@ -177,22 +186,19 @@ internal struct LogEncoder {
 
         // Encode application info
         try container.encode(log.applicationVersion, forKey: .applicationVersion)
-
+        
         // Encode attributes...
-        var attributesContainer = encoder.container(keyedBy: DynamicCodingKey.self)
-
+        
         // ... first, user attributes ...
-        let encodableUserAttributes = Dictionary(
-            uniqueKeysWithValues: log.attributes.userAttributes.map { name, value in (name, EncodableValue(value)) }
-        )
-        try encodableUserAttributes.forEach { try attributesContainer.encode($0.value, forKey: DynamicCodingKey($0.key)) }
-
+        for (key, value) in log.attributes.userAttributes {
+            try container.encode(value, forKey: .init(key))
+        }
+        
         // ... then, internal attributes:
         if let internalAttributes = log.attributes.internalAttributes {
-            let encodableInternalAttributes = Dictionary(
-                uniqueKeysWithValues: internalAttributes.map { name, value in (name, EncodableValue(value)) }
-            )
-            try encodableInternalAttributes.forEach { try attributesContainer.encode($0.value, forKey: DynamicCodingKey($0.key)) }
+            for (key, value) in internalAttributes {
+                try container.encode(value, forKey: .init(key))
+            }
         }
 
         // Encode tags

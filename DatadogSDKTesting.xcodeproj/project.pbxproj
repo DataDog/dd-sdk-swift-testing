@@ -77,6 +77,7 @@
 		A77C12392D8DD2A9009C2BA1 /* Feature.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77C12382D8DD2A9009C2BA1 /* Feature.swift */; };
 		A77C123C2D9425C7009C2BA1 /* KnownTestsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77C123B2D9425C7009C2BA1 /* KnownTestsTests.swift */; };
 		A77C123E2D9474E6009C2BA1 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77C123D2D9474E6009C2BA1 /* Models.swift */; };
+		A7926AEF2FCDCBFE007834F2 /* TelemetryLogExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7926AEE2FCDCBFE007834F2 /* TelemetryLogExporter.swift */; };
 		A794A8FF2E7990D20044FE3C /* TestManagementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A794A8FE2E7990C40044FE3C /* TestManagementTests.swift */; };
 		A79DA5B42F928F87004BCA8C /* SwiftTestingSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A79DA5B32F928F87004BCA8C /* SwiftTestingSmokeTests.swift */; };
 		A79DA5B72F929812004BCA8C /* DatadogSDKTesting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */; };
@@ -489,6 +490,7 @@
 		A77C12382D8DD2A9009C2BA1 /* Feature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Feature.swift; sourceTree = "<group>"; };
 		A77C123B2D9425C7009C2BA1 /* KnownTestsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnownTestsTests.swift; sourceTree = "<group>"; };
 		A77C123D2D9474E6009C2BA1 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		A7926AEE2FCDCBFE007834F2 /* TelemetryLogExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelemetryLogExporter.swift; sourceTree = "<group>"; };
 		A794A8FE2E7990C40044FE3C /* TestManagementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestManagementTests.swift; sourceTree = "<group>"; };
 		A79DA5B22F928F71004BCA8C /* IntegrationTests-UnitTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = "IntegrationTests-UnitTests.xctestplan"; sourceTree = "<group>"; };
 		A79DA5B32F928F87004BCA8C /* SwiftTestingSmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftTestingSmokeTests.swift; sourceTree = "<group>"; };
@@ -983,6 +985,7 @@
 			isa = PBXGroup;
 			children = (
 				BC161A86B91745F4BDC88FF1 /* TelemetryExporter.swift */,
+				A7926AEE2FCDCBFE007834F2 /* TelemetryLogExporter.swift */,
 			);
 			path = Telemetry;
 			sourceTree = "<group>";
@@ -2138,6 +2141,7 @@
 				A7FC261B2BA1EC5A00067E26 /* DataUploadWorker.swift in Sources */,
 				A7FC26372BA1ECCF00067E26 /* JSONGeneric.swift in Sources */,
 				A79DA6442FB62618004BCA8C /* HTTPClient.swift in Sources */,
+				A7926AEF2FCDCBFE007834F2 /* TelemetryLogExporter.swift in Sources */,
 				A7AB7C2026E7EB1100000001 /* OpenTelemetry+Extensions.swift in Sources */,
 				A7AB7C2026E7EB1100000003 /* SpanEventsLog.swift in Sources */,
 				A7AB7C2026E7EB110000000D /* TestSpan.swift in Sources */,

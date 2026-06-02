@@ -12,21 +12,15 @@ class JSONEncoderTests: XCTestCase {
 
     func testDateEncoding() throws {
         let encodedDate = try jsonEncoder.encode(
-            EncodingContainer(Date.mockDecember15th2019At10AMUTC(addingTimeInterval: 0.123))
+            Date.mockDecember15th2019At10AMUTC(addingTimeInterval: 0.123)
         )
-
-        XCTAssertEqual(encodedDate.utf8String, #"{"value":"2019-12-15T10:00:00.123Z"}"#)
+        XCTAssertEqual(encodedDate.utf8String, #""2019-12-15T10:00:00.123Z""#)
     }
 
     func testURLEncoding() throws {
         let encodedURL = try jsonEncoder.encode(
-            EncodingContainer(URL(string: "https://example.com/foo")!)
+            URL(string: "https://example.com/foo")!
         )
-
-        if #available(OSX 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
-            XCTAssertEqual(encodedURL.utf8String, #"{"value":"https://example.com/foo"}"#)
-        } else {
-            XCTAssertEqual(encodedURL.utf8String, #"{"value":"https:\/\/example.com\/foo"}"#)
-        }
+        XCTAssertEqual(encodedURL.utf8String, #""https://example.com/foo""#)
     }
 }

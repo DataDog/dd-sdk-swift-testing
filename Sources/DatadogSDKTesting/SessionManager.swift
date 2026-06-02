@@ -6,6 +6,7 @@
 
 import Foundation
 internal import EventsExporter
+internal import OpenTelemetrySdk
 
 final actor SessionManager: TestSessionManager {
     typealias SessionWithConfig = (session: any TestModuleManager & TestSession,
@@ -42,6 +43,7 @@ final actor SessionManager: TestSessionManager {
         session.session.end()
         await observer?.didFinish(session: session.session, with: session.config)
         DDTestMonitor.removeTestMonitor()
+        session.config.telemetry?.shutdown()
         DDTestMonitor.tracer.flush()
     }
     
@@ -70,7 +72,12 @@ final actor SessionManager: TestSessionManager {
         log.measure(name: "Setup crash handler") {
             monitor.setupCrashHandler()
         }
-        
+
+        // Common telemetry manager, shared with every feature through the
+        // session config. Gated by `DD_INSTRUMENTATION_TELEMETRY_ENABLED`
+        // (default true); `nil` when disabled or storage is unavailable.
+        let telemetry = DDTestMonitor.config.instrumentationTelemetryEnabled ? makeTelemetry() : nil
+
         let config = SessionConfig(
             activeFeatures: monitor.activeFeatures,
             platform: DDTestMonitor.env.platform,
@@ -79,7 +86,8 @@ final actor SessionManager: TestSessionManager {
             command: DDTestMonitor.env.testCommand,
             service: DDTestMonitor.env.service,
             metrics: DDTestMonitor.env.baseMetrics,
-            log: log
+            log: log,
+            telemetry: telemetry
         )
         
         let session = try await provider.startSession(named: "Swift.session", config: config,
@@ -93,6 +101,43 @@ extension SessionManager {
     enum BoostrapError: Error {
         case monitorInitFailed
         case monitorIsNil
+    }
+
+    /// Build the common telemetry manager wired to the SDK's telemetry intake,
+    /// reusing the tracer's API client, cache directory and resource. Returns
+    /// `nil` when the backing storage or exporter can't be created, in which
+    /// case telemetry is simply not gathered.
+    private func makeTelemetry() -> Telemetry? {
+        let tracer = DDTestMonitor.tracer
+
+        guard let cacheManager = DDTestMonitor.cacheManager,
+              let storage = try? cacheManager.session(feature: "telemetry")
+        else {
+            log.print("Telemetry init skipped: cache manager unavailable")
+            return nil
+        }
+
+        let configuration = ExporterConfiguration(
+            environment: DDTestMonitor.env.environment,
+            metadata: SpanMetadata(),
+            performancePreset: .instantDataDelivery,
+            logger: log
+        )
+
+        guard let telemetryExporter = try? TelemetryExporter(config: configuration,
+                                                             storage: storage,
+                                                             api: tracer.api.telemetry)
+        else {
+            log.print("Telemetry init skipped: telemetry exporter unavailable")
+            return nil
+        }
+
+        let metricExporter = TelemetryMetricExporter(telemetryExporter: telemetryExporter,
+                                                     namespace: .civisibility,
+                                                     distributionNamespace: .civisibility)
+        return Telemetry(exporter: metricExporter,
+                         resource: tracer.resource,
+                         exportInterval: DDTestMonitor.config.telemetryHeartbeatInterval)
     }
 }
 

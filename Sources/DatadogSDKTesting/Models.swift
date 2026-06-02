@@ -332,6 +332,30 @@ struct SessionConfig: Sendable {
     let service: String
     let metrics: [String: Double]
     let log: Logger
+    /// Common telemetry manager shared with all features so they can record
+    /// SDK self-metrics. `nil` when instrumentation telemetry is disabled.
+    let telemetry: Telemetry?
+
+    init(activeFeatures: TestHooksFeatures,
+         platform: Environment.Platform,
+         clock: Clock,
+         crash: CrashInformation?,
+         command: String?,
+         service: String,
+         metrics: [String: Double],
+         log: Logger,
+         telemetry: Telemetry? = nil)
+    {
+        self.activeFeatures = activeFeatures
+        self.platform = platform
+        self.clock = clock
+        self.crash = crash
+        self.command = command
+        self.service = service
+        self.metrics = metrics
+        self.log = log
+        self.telemetry = telemetry
+    }
 }
 
 struct TestRunParameters: Encodable {

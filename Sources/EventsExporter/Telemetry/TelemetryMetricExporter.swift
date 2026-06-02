@@ -8,21 +8,21 @@ import Foundation
 import OpenTelemetryApi
 import OpenTelemetrySdk
 
-internal final class TelemetryMetricExporter: MetricExporter {
+public final class TelemetryMetricExporter: MetricExporter {
     let telemetryExporter: TelemetryExporter
     let namespace: TelemetryMetric.Namespace?
     let distributionNamespace: TelemetryDistribution.Namespace?
 
-    init(telemetryExporter: TelemetryExporter,
-         namespace: TelemetryMetric.Namespace? = nil,
-         distributionNamespace: TelemetryDistribution.Namespace? = nil)
+    public init(telemetryExporter: TelemetryExporter,
+                namespace: TelemetryMetric.Namespace? = nil,
+                distributionNamespace: TelemetryDistribution.Namespace? = nil)
     {
         self.telemetryExporter = telemetryExporter
         self.namespace = namespace
         self.distributionNamespace = distributionNamespace
     }
 
-    func export(metrics: [MetricData]) -> ExportResult {
+    public func export(metrics: [MetricData]) -> ExportResult {
         guard !metrics.isEmpty else { return .success }
 
         let scalarSeries = metrics.compactMap(TelemetryMetric.Series.from(_:)).flatMap { $0 }
@@ -38,16 +38,16 @@ internal final class TelemetryMetricExporter: MetricExporter {
         return .success
     }
 
-    func flush() -> ExportResult {
+    public func flush() -> ExportResult {
         telemetryExporter.flush() ? .success : .failure
     }
 
-    func shutdown() -> ExportResult {
+    public func shutdown() -> ExportResult {
         telemetryExporter.shutdown()
         return .success
     }
 
-    func getAggregationTemporality(for instrument: InstrumentType) -> AggregationTemporality {
+    public func getAggregationTemporality(for instrument: InstrumentType) -> AggregationTemporality {
         switch instrument {
         case .upDownCounter, .observableUpDownCounter:
             // These map to a DD gauge, where the current running total is the value

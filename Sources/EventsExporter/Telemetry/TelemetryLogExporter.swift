@@ -8,24 +8,24 @@ import Foundation
 import OpenTelemetryApi
 import OpenTelemetrySdk
 
-internal final class TelemetryLogExporter: LogRecordExporter {
+public final class TelemetryLogExporter: LogRecordExporter {
     let telemetryExporter: TelemetryExporter
 
-    init(telemetryExporter: TelemetryExporter) {
+    public init(telemetryExporter: TelemetryExporter) {
         self.telemetryExporter = telemetryExporter
     }
 
-    func export(logRecords: [ReadableLogRecord], explicitTimeout: TimeInterval?) -> ExportResult {
+    public func export(logRecords: [ReadableLogRecord], explicitTimeout: TimeInterval?) -> ExportResult {
         guard !logRecords.isEmpty else { return .success }
         telemetryExporter.export(item: TelemetryLog.Logs(logRecords.map(TelemetryLog.init(_:))))
         return .success
     }
 
-    func forceFlush(explicitTimeout: TimeInterval?) -> ExportResult {
+    public func forceFlush(explicitTimeout: TimeInterval?) -> ExportResult {
         telemetryExporter.flush() ? .success : .failure
     }
 
-    func shutdown(explicitTimeout: TimeInterval?) {
+    public func shutdown(explicitTimeout: TimeInterval?) {
         telemetryExporter.shutdown()
     }
 }

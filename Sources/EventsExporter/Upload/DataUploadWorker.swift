@@ -86,7 +86,7 @@ internal final class DataUploadWorker: DataUploadWorkerType {
     /// Drains all pending batches synchronously. Holds the upload queue for
     /// the duration so the periodic worker can't interleave reads with the flush.
     func flush() throws -> Bool {
-        var result = false
+        var result = true
         try queue.sync {
             var iterator = try fileReader.getRemainingBatches()
             while let batchRes = iterator.next() {

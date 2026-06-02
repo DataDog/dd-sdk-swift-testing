@@ -70,6 +70,39 @@ class TelemetryExporterTests: XCTestCase {
         XCTAssertEqual(payload[0]["request_type"] as? String, "generate-metrics")
     }
 
+    func testExportDistributions_uploadsWellFormedEnvelope() throws {
+        let server = MockBackend()
+        try server.start()
+        defer { server.stop() }
+
+        let (exporter, storage) = try makeExporter(performancePreset: .readAllFiles, server: server)
+        defer { try? storage.delete() }
+
+        let series = TelemetryDistribution.Series(
+            metric: "test.dist",
+            points: [0, 1, 2, 3, 4, 5],
+            tags: ["env:test"]
+        )
+        exporter.export(item: TelemetryDistribution(namespace: .tracers, series: [series]))
+
+        guard server.waitForTelemetry(timeout: 30) else {
+            XCTFail("No telemetry batch received")
+            return
+        }
+
+        let raw = try XCTUnwrap(server.requests.telemetry.first)
+        try assertValidEnvelope(raw, expectedEntryCount: 1)
+        let payload = try XCTUnwrap(
+            (JSONSerialization.jsonObject(with: raw) as? [String: Any])?["payload"] as? [[String: Any]]
+        )
+        XCTAssertEqual(payload[0]["request_type"] as? String, "distributions")
+        let distPayload = try XCTUnwrap(payload[0]["payload"] as? [String: Any])
+        XCTAssertEqual(distPayload["namespace"] as? String, "tracers")
+        let distSeries = try XCTUnwrap(distPayload["series"] as? [[String: Any]])
+        XCTAssertEqual(distSeries[0]["metric"] as? String, "test.dist")
+        XCTAssertEqual(distSeries[0]["points"] as? [Double], [0, 1, 2, 3, 4, 5])
+    }
+
     func testExportLogs_uploadsWellFormedEnvelope() throws {
         let server = MockBackend()
         try server.start()
@@ -107,9 +140,11 @@ class TelemetryExporterTests: XCTestCase {
         defer { try? storage.delete() }
 
         let series = TelemetryMetric.Series(metric: "m", points: [.init(timestamp: 1, value: 1)])
+        let dist = TelemetryDistribution.Series(metric: "d", points: [1, 2, 3])
         let log = TelemetryLog(message: "msg", level: .debug)
         exporter.export(items: [
             TelemetryMetric(namespace: .general, series: [series]),
+            TelemetryDistribution(namespace: .tracers, series: [dist]),
             TelemetryLog.Logs([log]),
             TelemetryAppHeartbeat(),
         ])
@@ -123,14 +158,13 @@ class TelemetryExporterTests: XCTestCase {
         XCTAssertEqual(server.requests.telemetry.count, 1, "All entries should be in one envelope")
 
         let raw = try XCTUnwrap(server.requests.telemetry.first)
-        try assertValidEnvelope(raw, expectedEntryCount: 3)
+        try assertValidEnvelope(raw, expectedEntryCount: 4)
 
         let payload = try XCTUnwrap(
             (JSONSerialization.jsonObject(with: raw) as? [String: Any])?["payload"] as? [[String: Any]]
         )
-        print("PAYLOAD", payload)
         let types = Set(payload.compactMap { $0["request_type"] as? String })
-        XCTAssertEqual(types, ["generate-metrics", "logs", "app-heartbeat"])
+        XCTAssertEqual(types, ["generate-metrics", "distributions", "logs", "app-heartbeat"])
     }
 
     // MARK: - Multiple entries across separate files
@@ -149,15 +183,17 @@ class TelemetryExporterTests: XCTestCase {
         defer { try? storage.delete() }
 
         let series = TelemetryMetric.Series(metric: "m", points: [.init(timestamp: 1, value: 1)])
+        let dist = TelemetryDistribution.Series(metric: "d", points: [1, 2, 3])
         let log = TelemetryLog(message: "msg", level: .debug)
         exporter.export(items: [
             TelemetryMetric(namespace: .general, series: [series]),
+            TelemetryDistribution(namespace: .tracers, series: [dist]),
             TelemetryLog.Logs([log]),
             TelemetryAppHeartbeat(),
         ])
 
-        guard server.waitForTelemetry(count: 3, timeout: 30) else {
-            XCTFail("Expected 3 telemetry batches, got \(server.requests.telemetry.count)")
+        guard server.waitForTelemetry(count: 4, timeout: 30) else {
+            XCTFail("Expected 4 telemetry batches, got \(server.requests.telemetry.count)")
             return
         }
 
@@ -171,6 +207,6 @@ class TelemetryExporterTests: XCTestCase {
             let payload = try XCTUnwrap(json["payload"] as? [[String: Any]])
             return payload.compactMap { $0["request_type"] as? String }
         }
-        XCTAssertEqual(Set(allTypes), ["generate-metrics", "logs", "app-heartbeat"])
+        XCTAssertEqual(Set(allTypes), ["generate-metrics", "distributions", "logs", "app-heartbeat"])
     }
 }

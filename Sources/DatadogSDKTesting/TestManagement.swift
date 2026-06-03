@@ -255,6 +255,10 @@ struct TestManagementFactory: FeatureFactory {
                 error: error
             )
         }
+        if let telemetry {
+            let totalTests = tests.modules.values.flatMap { $0.suites.values }.reduce(0) { $0 + $1.tests.count }
+            telemetry.metrics.testManagementTests.responseTests.record(Double(totalTests))
+        }
         // if we have empty array we can disable Test Management functionality
         guard tests.modules.count > 0 else { throw FeatureEmptyResponseError(featureName: "Test Management") }
         return tests

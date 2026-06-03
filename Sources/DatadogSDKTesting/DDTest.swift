@@ -183,7 +183,7 @@ extension DDTest {
         attributes.resource = "\(suite.name).\(name)"
         
         // TODO: Move to common medatada when we will have common metrics
-        for metric in suite.configuration.metrics {
+        for metric in suite.configuration.env.baseMetrics {
             attributes[metric.key] = .double(metric.value)
         }
         

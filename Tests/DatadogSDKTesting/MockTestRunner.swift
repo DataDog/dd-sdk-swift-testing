@@ -138,12 +138,11 @@ extension Mocks {
             }
             let observer = SessionAndModuleObserver()
             let config = SessionConfig(activeFeatures: features,
-                                       platform: DDTestMonitor.env.platform,
+                                       env: DDTestMonitor.env,
+                                       config: DDTestMonitor.config,
                                        clock: DateClock(),
                                        crash: nil,
                                        command: "test command",
-                                       service: "test-runner",
-                                       metrics: [:],
                                        log: Mocks.CatchLogger(isDebug: false))
             let session = Session(name: "MockTestSession",
                                   testTags: Dictionary(uniqueKeysWithValues: tags),

@@ -38,7 +38,7 @@ final class SessionManagerTests: XCTestCase {
         let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider(), observer: nil)
         let config1 = try await manager.config
         let config2 = try await manager.config
-        XCTAssertEqual(config1.service, config2.service)
+        XCTAssertEqual(config1.env.service, config2.env.service)
         await manager.stop()
     }
 

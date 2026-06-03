@@ -68,7 +68,7 @@ public final class DDSuite: NSObject {
         attributes.testModuleId = module.id
         attributes.testSuiteId = id
         
-        for (key, value) in module.configuration.metrics {
+        for (key, value) in module.configuration.env.baseMetrics {
             attributes[key] = .double(value)
         }
 
@@ -134,7 +134,8 @@ public final class DDSuite: NSObject {
     ///   - action: callback with test. Test will be ended automatically after call end
     @discardableResult
     @objc public func testStart(name: String, _ action: (DDTest) -> Any) -> Any {
-        testStart(named: name, action)
+        configuration.telemetry?.metrics.events.manualApiEvents.add(eventType: .test)
+        return testStart(named: name, action)
     }
 
     /// Starts a test in this suite
@@ -143,7 +144,8 @@ public final class DDSuite: NSObject {
     ///   - startTime: start time for the test
     ///   - action: callback with test. Test will be ended automatically after call end
     @objc public func testStart(name: String, startTime: Date, _ action: (DDTest) -> Any) -> Any {
-        testStart(named: name, at: startTime, action)
+        configuration.telemetry?.metrics.events.manualApiEvents.add(eventType: .test)
+        return testStart(named: name, at: startTime, action)
     }
 
     public func testStart<T>(named name: String, at start: Date? = nil,

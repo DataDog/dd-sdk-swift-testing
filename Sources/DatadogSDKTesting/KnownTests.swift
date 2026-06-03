@@ -139,6 +139,10 @@ struct KnownTestsFactory: FeatureFactory {
                 error: error
             )
         }
+        if let telemetry {
+            let totalTests = tests.values.flatMap { $0.values }.reduce(0) { $0 + $1.count }
+            telemetry.metrics.knownTests.responseTests.record(Double(totalTests))
+        }
         // if we have empty array we should disable Known Tests functionality
         guard tests.count > 0 else { throw FeatureEmptyResponseError(featureName: "Known Tests") }
         return tests

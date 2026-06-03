@@ -77,12 +77,11 @@ final actor SessionManager: TestSessionManager {
         // through the session config. `nil` when telemetry is disabled.
         let config = SessionConfig(
             activeFeatures: monitor.activeFeatures,
-            platform: DDTestMonitor.env.platform,
+            env: DDTestMonitor.env,
+            config: DDTestMonitor.config,
             clock: DDTestMonitor.clock,
             crash: monitor.crashInfo,
             command: DDTestMonitor.env.testCommand,
-            service: DDTestMonitor.env.service,
-            metrics: DDTestMonitor.env.baseMetrics,
             log: log,
             telemetry: DDTestMonitor.tracer.telemetry
         )

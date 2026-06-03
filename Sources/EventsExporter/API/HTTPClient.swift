@@ -123,6 +123,7 @@ public final class HTTPClient: HTTPClientType {
                                              requestBytes: requestBytes,
                                              responseBytes: data?.count ?? 0,
                                              statusCode: statusCode,
+                                             transportError: statusCode == nil ? error : nil,
                                              failed: !success)
                 }
                 continuation.resume(returning: resultMapping((data, response, error)))

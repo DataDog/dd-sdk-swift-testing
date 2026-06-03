@@ -41,6 +41,7 @@ extension TestContainer {
 
 protocol TestSession: TestContainer {
     var testFrameworks: Set<String> { get }
+    var configuration: SessionConfig { get }
     func nextTestIndex() -> UInt
 }
 
@@ -76,6 +77,7 @@ protocol TestModule: TestContainer {
     var session: any TestSession { get }
     var testFrameworks: Set<String> { get }
     var localization: String { get }
+    var configuration: SessionConfig { get }
 }
 
 protocol TestModuleProvider: Sendable {
@@ -98,6 +100,7 @@ protocol TestSuite: TestContainer {
     var module: any TestModule { get }
     var localization: String { get }
     var testFramework: TestFramework { get }
+    var configuration: SessionConfig { get }
 }
 
 protocol TestSuiteProvider: Sendable {
@@ -325,34 +328,31 @@ struct TestError: Error, CustomDebugStringConvertible {
 
 struct SessionConfig: Sendable {
     let activeFeatures: TestHooksFeatures
-    let platform: Environment.Platform
+    nonisolated(unsafe) let env: Environment
+    nonisolated(unsafe) let config: Config
     let clock: Clock
     let crash: CrashInformation?
     let command: String?
-    let service: String
-    let metrics: [String: Double]
     let log: Logger
     /// Common telemetry manager shared with all features so they can record
     /// SDK self-metrics. `nil` when instrumentation telemetry is disabled.
     let telemetry: Telemetry?
 
     init(activeFeatures: TestHooksFeatures,
-         platform: Environment.Platform,
+         env: Environment,
+         config: Config,
          clock: Clock,
          crash: CrashInformation?,
          command: String?,
-         service: String,
-         metrics: [String: Double],
          log: Logger,
          telemetry: Telemetry? = nil)
     {
         self.activeFeatures = activeFeatures
-        self.platform = platform
+        self.env = env
+        self.config = config
         self.clock = clock
         self.crash = crash
         self.command = command
-        self.service = service
-        self.metrics = metrics
         self.log = log
         self.telemetry = telemetry
     }

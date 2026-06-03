@@ -54,7 +54,8 @@ final class GitUploader {
         if let url = repositoryURL {
             repository = url.spanAttribute
         } else {
-            guard let rURL = git("ls-remote --get-url"), let pURL = URL(string: rURL) else {
+            guard let rURL = gitTimed("ls-remote --get-url", command: .getRepository),
+                  let pURL = URL(string: rURL) else {
                 log.print("sendGitInfo failed, repository URL not found")
                 return false
             }
@@ -104,6 +105,13 @@ final class GitUploader {
         guard let directory = generatePackFilesFromCommits(commits: newCommits, repository: repository) else {
             try? commitsFile.delete()
             return false
+        }
+
+        // Report pack file count before upload
+        if let telemetry {
+            let packFileCount = (try? FileManager.default.contentsOfDirectory(atPath: directory.url.path))
+                .map { $0.filter { $0.hasSuffix(".pack") }.count } ?? 0
+            telemetry.metrics.gitRequests.objectsPackFiles.record(Double(packFileCount))
         }
 
         // Upload pack files for the new commits
@@ -174,7 +182,7 @@ final class GitUploader {
     
     private var isShallowRepository: Bool {
         // Check if is a shallow repository
-        guard let isShallow = git("rev-parse --is-shallow-repository") else {
+        guard let isShallow = gitTimed("rev-parse --is-shallow-repository", command: .checkShallow) else {
             return false
         }
         log.debug("isShallow: \(isShallow)")
@@ -216,34 +224,70 @@ final class GitUploader {
         Spawn.output(try: "git -c safe.directory=\"\(gitDirectory)\" -C \"\(gitDirectory)\" \(cmd)", log: log)
     }
 
-    private func getLatestCommits() -> [String]? {
-        git(#"log --format=%H -n 1000 --since="1 month ago""#)?.components(separatedBy: .newlines)
+    /// Runs `body`, records `git.command` + `git.commandMs`, and on failure
+    /// records `git.commandErrors` with the real exit code. Returns `nil` on failure.
+    @discardableResult
+    private func recordedGitCommand<T>(_ command: Telemetry.GitCommand,
+                                        cmd: String,
+                                        _ body: () throws -> T) -> T? {
+        let start = Date()
+        do {
+            let result = try body()
+            let ms = Date().timeIntervalSince(start) * 1000
+            telemetry?.metrics.git.command.add(command: command)
+            telemetry?.metrics.git.commandMs.record(ms, command: command)
+            return result
+        } catch let err as Spawn.RunError {
+            let ms = Date().timeIntervalSince(start) * 1000
+            log.debug("Command \(cmd) failed: \(err)")
+            telemetry?.metrics.git.command.add(command: command)
+            telemetry?.metrics.git.commandMs.record(ms, command: command)
+            telemetry?.metrics.git.commandErrors.add(command: command, exitCode: err.exitCode)
+            return nil
+        } catch {
+            let ms = Date().timeIntervalSince(start) * 1000
+            log.debug("Command \(cmd) failed: \(error)")
+            telemetry?.metrics.git.command.add(command: command)
+            telemetry?.metrics.git.commandMs.record(ms, command: command)
+            telemetry?.metrics.git.commandErrors.add(command: command, exitCode: 1)
+            return nil
+        }
     }
-    
+
+    @discardableResult
+    private func gitTimed(_ cmd: String, command: Telemetry.GitCommand) -> String? {
+        let fullCmd = "git -c safe.directory=\"\(gitDirectory)\" -C \"\(gitDirectory)\" \(cmd)"
+        return recordedGitCommand(command, cmd: fullCmd) { try Spawn.output(fullCmd) }
+    }
+
+    private func getLatestCommits() -> [String]? {
+        gitTimed(#"log --format=%H -n 1000 --since="1 month ago""#, command: .getLocalCommits)?.components(separatedBy: .newlines)
+    }
+
     private func getCommitsAndTrees(included: [String], excluded: [String]) -> [String]? {
         let incl = included.joined(separator: " ")
         let excl = excluded.map { "^\($0)" }.joined(separator: " ")
-        
+
         let cmd = """
         rev-list --objects --no-object-names --filter=blob:none \
         --since="1 month ago" \(excl) \(incl)
         """
         Log.debug("rev-list command: \(cmd)")
-        
-        guard let missingCommits = git(cmd) else {
+
+        guard let missingCommits = gitTimed(cmd, command: .getObjects) else {
             return nil
         }
         Log.debug("rev-list result: \(missingCommits)")
-        
+
         return missingCommits.components(separatedBy: .newlines)
     }
-    
+
     private func unshallow(_ remote: String, _ head: String?) -> String? {
         let cmd = """
         fetch --shallow-since="1 month ago" --update-shallow --filter="blob:none" \
         --recurse-submodules=no \(remote)\(head.map{" "+$0} ?? "")
         """
-        return git(cmd)
+        return gitTimed(cmd, command: .unshallow)
     }
 
     private func generatePackFilesFromCommits(commits: [String], repository: String) -> Directory? {
@@ -256,7 +300,12 @@ final class GitUploader {
             let cmd = """
             git -c safe.directory="\(gitDir)" -C "\(gitDir)" pack-objects --quiet --compression=9 --max-pack-size=3m "\(dir)" <<< "\(list)"
             """
-            guard let (_, err) = Spawn.command(try: cmd, log: self.log), !err.contains("fatal:") else {
+            guard let _ = self.recordedGitCommand(.packObjects, cmd: cmd, {
+                let (_, stderr) = try Spawn.command(cmd)
+                if let stderr, stderr.contains("fatal:") {
+                    throw Spawn.RunError.code(1, "", stderr)
+                }
+            }) else {
                 try? FileManager.default.removeItem(atPath: dir)
                 return false
             }

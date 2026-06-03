@@ -52,8 +52,8 @@ public final class DDSession: NSObject {
         }
 
         var attributes: [String: AttributeValue] = [
-            DDTestSessionTags.testToolchain: .string(config.platform.runtimeName.lowercased()
-                                                     + "-" + config.platform.runtimeVersion),
+            DDTestSessionTags.testToolchain: .string(config.env.platform.runtimeName.lowercased()
+                                                     + "-" + config.env.platform.runtimeVersion),
         ]
         
         attributes.type = DDTagValues.typeSessionEnd
@@ -63,7 +63,7 @@ public final class DDSession: NSObject {
         if let command = config.command {
             attributes[DDTestTags.testCommand] = .string(command)
         }
-        for (key, value) in config.metrics {
+        for (key, value) in config.env.baseMetrics {
             attributes[key] = .double(value)
         }
 
@@ -160,13 +160,13 @@ public extension DDSession {
             let _ = DDTestMonitor.installTestMonitor()
         }
         let config = SessionConfig(activeFeatures: DDTestMonitor.instance?.activeFeatures ?? [],
-                                   platform: DDTestMonitor.env.platform,
+                                   env: DDTestMonitor.env,
+                                   config: DDTestMonitor.config,
                                    clock: DDTestMonitor.clock,
                                    crash: DDTestMonitor.instance?.crashInfo,
                                    command: command,
-                                   service: DDTestMonitor.env.service,
-                                   metrics: DDTestMonitor.env.baseMetrics,
-                                   log: Log.instance)
+                                   log: Log.instance,
+                                   telemetry: DDTestMonitor.tracer.telemetry)
         waitForAsync {
             do {
                 try await DDTestMonitor.clock.sync()
@@ -174,10 +174,14 @@ public extension DDSession {
                 DDTestMonitor.clock = DateClock()
             }
         }
-        return DDSession(name: name, config: config,
-                         modules: DDModule.StatelessManager(config: config,
-                                                            observer: SessionAndModuleObserver()),
-                         startTime: startTime)
+        let session = DDSession(name: name, config: config,
+                                modules: DDModule.StatelessManager(config: config,
+                                                                   observer: SessionAndModuleObserver()),
+                                startTime: startTime)
+        DDTestMonitor.tracer.telemetry?.metrics.session.started.add(
+            provider: config.env.ci?.provider, autoInjected: false)
+        DDTestMonitor.tracer.telemetry?.metrics.events.manualApiEvents.add(eventType: .session)
+        return session
     }
 
     @objc static func start(name: String) -> DDSession {
@@ -209,6 +213,7 @@ public extension DDSession {
     ///   - name: name of the module
     ///   - startTime: Optional, the time where the module started
     @objc func moduleStart(name: String, startTime: Date? = nil) -> DDModule {
+        configuration.telemetry?.metrics.events.manualApiEvents.add(eventType: .module)
         return _moduleManager.module(named: name, at: startTime, provider: self) as! DDModule
     }
 

@@ -17,9 +17,13 @@ internal import EventsExporter
 /// mapping lives here so every call site agrees on it.
 extension Telemetry {
     /// Maps an HTTP status code (or its absence) to the telemetry `error_type`.
-    /// A `nil` status code means a transport failure with no response.
-    static func errorType(statusCode: Int?) -> ErrorType {
-        guard let code = statusCode else { return .network }
+    /// When `statusCode` is `nil` (transport failure), checks `transportError`:
+    /// a `URLError.timedOut` maps to `.timeout`; everything else maps to `.network`.
+    static func errorType(statusCode: Int?, transportError: (any Error)? = nil) -> ErrorType {
+        guard let code = statusCode else {
+            if (transportError as? URLError)?.code == .timedOut { return .timeout }
+            return .network
+        }
         switch code {
         case 400 ..< 500: return .statusCode4xx
         case 500 ..< 600: return .statusCode5xx
@@ -42,12 +46,12 @@ extension Telemetry {
         var onError: (@Sendable (ErrorType) -> Void)? = nil
 
         func requestFinished(durationMs: Double, requestBytes: Int, responseBytes: Int,
-                             statusCode: Int?, failed: Bool) {
+                             statusCode: Int?, transportError: (any Error)?, failed: Bool) {
             onRequest?()
             onDurationMs?(durationMs)
             onRequestBytes?(requestBytes)
             onResponseBytes?(responseBytes)
-            if failed { onError?(Telemetry.errorType(statusCode: statusCode)) }
+            if failed { onError?(Telemetry.errorType(statusCode: statusCode, transportError: transportError)) }
         }
     }
 
@@ -65,10 +69,15 @@ extension Telemetry {
         }
     }
 
-    /// Bridges payload serialization facts (`events_count` /
-    /// `events_serialization_ms`) to a closure.
+    /// Bridges payload serialization facts (`events_enqueued_for_serialization`,
+    /// `events_count`, `events_serialization_ms`) to closures.
     struct PayloadMetricsObserver: PayloadObserver {
+        var onEnqueued: (@Sendable () -> Void)? = nil
         var onFinalized: (@Sendable (_ eventCount: Int, _ serializationMs: Double) -> Void)? = nil
+
+        func eventEnqueued() {
+            onEnqueued?()
+        }
 
         func payloadFinalized(eventCount: Int, serializationMs: Double) {
             onFinalized?(eventCount, serializationMs)

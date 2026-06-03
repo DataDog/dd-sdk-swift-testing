@@ -85,7 +85,8 @@ internal final class FileWriter {
     }
 
     private func write<T: Encodable>(value: T, sync: Bool) throws {
-        let encodeStart = observer != nil ? DispatchTime.now() : nil
+        observer?.eventEnqueued()
+        let encodeStart = observer.map { _ in DispatchTime.now() }
         let data = try encoder.encode(value)
         let eventMs = encodeStart.map {
             Double(DispatchTime.now().uptimeNanoseconds - $0.uptimeNanoseconds) / 1_000_000

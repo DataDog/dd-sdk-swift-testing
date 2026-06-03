@@ -37,6 +37,7 @@ public struct TracerSettings {
     public var flakyTestRetriesEnabled: Bool
     public var knownTestsEnabled: Bool
     public var testManagement: TestManagement
+    public var impactedTestsDetectionEnabled: Bool
 
     public var efdIsEnabled: Bool {
         knownTestsEnabled && efd.enabled
@@ -139,13 +140,15 @@ public struct TracerSettings {
 
     public init(itr: ITR, efd: EFD,
                 flakyTestRetriesEnabled: Bool, knownTestsEnabled: Bool,
-                testManagement: TestManagement)
+                testManagement: TestManagement,
+                impactedTestsDetectionEnabled: Bool = false)
     {
         self.itr = itr
         self.efd = efd
         self.flakyTestRetriesEnabled = flakyTestRetriesEnabled
         self.knownTestsEnabled = knownTestsEnabled
         self.testManagement = testManagement
+        self.impactedTestsDetectionEnabled = impactedTestsDetectionEnabled
     }
 
     init(response: SettingsApiService.SettingsResponse) {
@@ -153,7 +156,8 @@ public struct TracerSettings {
                   efd: EFD(response: response.earlyFlakeDetection),
                   flakyTestRetriesEnabled: response.flakyTestRetriesEnabled,
                   knownTestsEnabled: response.knownTestsEnabled,
-                  testManagement: TestManagement(response: response.testManagement))
+                  testManagement: TestManagement(response: response.testManagement),
+                  impactedTestsDetectionEnabled: response.impactedTestsEnabled)
     }
 }
 
@@ -269,6 +273,7 @@ extension SettingsApiService {
         let flakyTestRetriesEnabled: Bool
         let earlyFlakeDetection: EFD
         let testManagement: TestManagement
+        let impactedTestsEnabled: Bool
 
         static var apiType: String = "ci_app_tracers_test_service_settings"
 
@@ -280,7 +285,8 @@ extension SettingsApiService {
                 + #", "require_git": \#(requireGit)"#
                 + #", "flaky_test_retries_enabled": \#(flakyTestRetriesEnabled)"#
                 + #", "early_flake_detection": \#(earlyFlakeDetection)"#
-                + #", "test_management": \#(testManagement)}"#
+                + #", "test_management": \#(testManagement)"#
+                + #", "impacted_tests_enabled": \#(impactedTestsEnabled)}"#
         }
     }
 }

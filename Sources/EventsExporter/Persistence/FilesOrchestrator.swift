@@ -148,30 +148,34 @@ internal final class FilesOrchestrator: FilesOrchestratorType {
 
         // MARK: - Reader
 
+        /// Reader results paired with the byte sizes of any files dropped
+        /// (deleted for exceeding `maxFileAgeForRead`) during the scan. The
+        /// caller reports the drops *outside* the state lock.
         func oldestReadableFile(directory: borrowing Directory,
                                 performance: borrowing StoragePerformancePreset,
-                                dateProvider: borrowing DateProvider) throws -> ReadableFile?
+                                dateProvider: borrowing DateProvider) throws -> (file: ReadableFile?, droppedBytes: [Int])
         {
-            guard let oldest = try fileInfos(directory: directory,
-                                             performance: performance,
-                                             dateProvider: dateProvider).first
-            else { return nil }
+            let (infos, droppedBytes) = try fileInfos(directory: directory,
+                                                      performance: performance,
+                                                      dateProvider: dateProvider)
+            guard let oldest = infos.first else { return (nil, droppedBytes) }
             let age = dateProvider.currentDate().timeIntervalSince(oldest.creationDate)
-            return age >= performance.minFileAgeForRead ? oldest.file : nil
+            return (age >= performance.minFileAgeForRead ? oldest.file : nil, droppedBytes)
         }
 
         func allReadableFiles(directory: borrowing Directory,
                               performance: borrowing StoragePerformancePreset,
-                              dateProvider: borrowing DateProvider) throws -> [ReadableFile]
+                              dateProvider: borrowing DateProvider) throws -> (files: [ReadableFile], droppedBytes: [Int])
         {
-            try fileInfos(directory: directory,
-                          performance: performance,
-                          dateProvider: dateProvider).map { $0.file }
+            let (infos, droppedBytes) = try fileInfos(directory: directory,
+                                                      performance: performance,
+                                                      dateProvider: dateProvider)
+            return (infos.map { $0.file }, droppedBytes)
         }
 
         private func fileInfos(directory: borrowing Directory,
                                performance: borrowing StoragePerformancePreset,
-                               dateProvider: borrowing DateProvider) throws -> [FileInfo]
+                               dateProvider: borrowing DateProvider) throws -> (files: [FileInfo], droppedBytes: [Int])
         {
             let allFiles = try directory.files()
                 .filter { !activeWrites.contains($0.name) }
@@ -179,16 +183,20 @@ internal final class FilesOrchestrator: FilesOrchestratorType {
 
             var readableFiles: [FileInfo] = []
             readableFiles.reserveCapacity(allFiles.count)
+            var droppedBytes: [Int] = []
             for info in allFiles {
                 let fileAge = dateProvider.currentDate().timeIntervalSince(info.creationDate)
                 if fileAge > performance.maxFileAgeForRead {
+                    // Too old to ever upload — count it as a dropped payload.
+                    let size = (try? info.file.size()).map(Int.init) ?? 0
                     try info.file.delete()
+                    droppedBytes.append(size)
                 } else {
                     readableFiles.append(info)
                 }
             }
 
-            return readableFiles.sorted()
+            return (readableFiles.sorted(), droppedBytes)
         }
     }
 
@@ -200,14 +208,20 @@ internal final class FilesOrchestrator: FilesOrchestratorType {
     private let directory: Directory
     private let dateProvider: DateProvider
     private let performance: StoragePerformancePreset
+    /// Invoked (outside the state lock) with the byte size of each file removed
+    /// without being uploaded — too old (`maxFileAgeForRead`) or purged to keep
+    /// the directory under `maxDirectorySize`. Wired to `endpoint_payload.dropped`.
+    private let onDrop: (@Sendable (Int) -> Void)?
 
     init(directory: Directory,
          performance: StoragePerformancePreset,
-         dateProvider: DateProvider)
+         dateProvider: DateProvider,
+         onDrop: (@Sendable (Int) -> Void)? = nil)
     {
         self.directory = directory
         self.dateProvider = dateProvider
         self.performance = performance
+        self.onDrop = onDrop
         self.state = Synced(.init())
     }
 
@@ -245,15 +259,30 @@ internal final class FilesOrchestrator: FilesOrchestratorType {
     // MARK: - `ReadableFile` orchestration
 
     func getReadableFile() throws -> ReadableFile? {
-        try state.use { try $0.oldestReadableFile(directory: directory,
-                                                  performance: performance,
-                                                  dateProvider: dateProvider) }
+        let (file, droppedBytes) = try state.use {
+            try $0.oldestReadableFile(directory: directory,
+                                      performance: performance,
+                                      dateProvider: dateProvider)
+        }
+        reportDrops(droppedBytes)
+        return file
     }
 
     func getAllReadableFiles() throws -> [ReadableFile] {
-        try state.use { try $0.allReadableFiles(directory: directory,
-                                                performance: performance,
-                                                dateProvider: dateProvider) }
+        let (files, droppedBytes) = try state.use {
+            try $0.allReadableFiles(directory: directory,
+                                    performance: performance,
+                                    dateProvider: dateProvider)
+        }
+        reportDrops(droppedBytes)
+        return files
+    }
+
+    /// Report dropped-payload sizes. Called outside the state lock so the
+    /// observer (which may touch its own locks) can't contend with file ops.
+    private func reportDrops(_ droppedBytes: [Int]) {
+        guard let onDrop else { return }
+        droppedBytes.forEach(onDrop)
     }
 
     func delete(readableFile: ReadableFile) throws {
@@ -272,7 +301,10 @@ internal final class FilesOrchestrator: FilesOrchestratorType {
             .compactMap { (info) -> FileInfo? in
                 let fileAge = dateProvider.currentDate().timeIntervalSince(info.creationDate)
                 if fileAge > performance.maxFileAgeForRead {
+                    // Too old to ever upload — count it as a dropped payload.
+                    let size = (try? info.file.size()).map(Int.init) ?? 0
                     try info.file.delete()
+                    onDrop?(size)
                     return nil
                 }
                 return info
@@ -286,6 +318,8 @@ internal final class FilesOrchestrator: FilesOrchestratorType {
                 let fileWithSize = filesWithSize.removeFirst()
                 try fileWithSize.file.delete()
                 sizeFreed += fileWithSize.size
+                // Purged to stay under the directory size limit — also a drop.
+                onDrop?(Int(fileWithSize.size))
             }
         }
     }

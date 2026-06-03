@@ -144,10 +144,14 @@ methods are the protocol requirements; no-observer convenience methods are
 
 ### Gathered (3776)
 - **`endpoint_payload.*`** — `requests`, `requests_ms`, `bytes` (request size),
-  `requests_errors`, `events_count`, `events_serialization_ms`, tagged
+  `requests_errors`, `events_count`, `events_serialization_ms`, `dropped`, tagged
   `test_cycle` (spans) / `code_coverage` (coverage). Wired in
   `DDTracer.endpointPayloadObservers(...)`. This family has **no feature call
-  site** — the observers are its only home.
+  site** — the observers are its only home. `dropped` is reported from
+  `FilesOrchestrator` (via its `onDrop` callback → `UploadObserver.uploadDropped`)
+  when a stored batch is removed without being uploaded: too old
+  (`maxFileAgeForRead`) or purged to keep the directory under `maxDirectorySize`.
+  Successful upload deletions (`delete(readableFile:)`) are **not** drops.
 - **API request families** — `git_requests.{settings,search_commits,objects_pack}`
   (+ `_ms`, `_errors`, and `objects_pack_bytes`), `itr_skippable_tests.{request,
   request_ms,request_errors,response_bytes}`, `known_tests.{request,request_ms,
@@ -164,12 +168,7 @@ methods are the protocol requirements; no-observer convenience methods are
    - `itr_skippable_tests.response_tests` / `response_suites`
    - `known_tests.response_tests`
    - `test_management_tests.response_tests`
-2. **`endpoint_payload.dropped`** — the `UploadObserver.uploadDropped` hook exists
-   but the worker has no retry-exhaustion drop today; failed batches stay on disk
-   and are age-purged by `FilesOrchestrator`. Wire `dropped` from the purge path
-   (or add an explicit drop) — see `DDTracer.endpointPayloadObservers` where
-   `onDropped` is already mapped to `endpointPayload.dropped`.
-3. **Local feature metrics** — emitted directly via `SessionConfig.telemetry` /
+2. **Local feature metrics** — emitted directly via `SessionConfig.telemetry` /
    the feature's injected `Telemetry`, at the feature instrumentation sites:
    - `events.created` / `events.finished` (+ all their tags: `event_type`,
      `test_framework`, `is_new`, `is_modified`, `is_retry`, `retry_reason`,
@@ -182,9 +181,9 @@ methods are the protocol requirements; no-observer convenience methods are
    - `git.commit_sha_match` / `git.commit_sha_discrepancy` — git info providers.
    - `itr.skipped` / `itr.unskippable` / `itr.forced_run` — `TestImpactAnalysis`.
    - `code_coverage.{started,finished,is_empty,errors,files}` — coverage feature.
-4. **`impacted_tests_detection.*`** — no feature/API exists yet; instruments are
+3. **`impacted_tests_detection.*`** — no feature/API exists yet; instruments are
    defined but unused.
-5. **`error_type` granularity** — `Telemetry.errorType(statusCode:)` maps `nil`
+4. **`error_type` granularity** — `Telemetry.errorType(statusCode:)` maps `nil`
    status to `.network`; it cannot distinguish `timeout` from `network` without
    the underlying `URLError`. Refine if needed.
 

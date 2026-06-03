@@ -40,10 +40,12 @@ internal final class CoverageExporter: CoverageExporterType {
          observers: ExporterObservers.Feature = .init()) throws {
         self.configuration = config
 
+        let uploadObserver = observers.upload
         let filesOrchestrator = FilesOrchestrator(
             directory: try storage.createSubdirectory(path: "v1"),
             performance: PerformancePreset.instantDataDelivery,
-            dateProvider: SystemDateProvider()
+            dateProvider: SystemDateProvider(),
+            onDrop: uploadObserver.map { obs in { obs.uploadDropped(payloadBytes: $0) } }
         )
 
         let encoder = api.encoder

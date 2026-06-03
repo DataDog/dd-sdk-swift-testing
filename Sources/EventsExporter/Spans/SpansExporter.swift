@@ -17,10 +17,12 @@ internal final class SpansExporter: SpanExporter {
          observers: ExporterObservers.Feature = .init()) throws {
         self.configuration = config
 
+        let uploadObserver = observers.upload
         let filesOrchestrator = FilesOrchestrator(
             directory: try storage.createSubdirectory(path: "v1"),
             performance: configuration.performancePreset,
-            dateProvider: SystemDateProvider()
+            dateProvider: SystemDateProvider(),
+            onDrop: uploadObserver.map { obs in { obs.uploadDropped(payloadBytes: $0) } }
         )
 
         var metadata = SpanSanitizer().sanitize(metadata: config.metadata)

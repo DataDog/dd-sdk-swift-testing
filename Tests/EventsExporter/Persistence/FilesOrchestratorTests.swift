@@ -223,6 +223,47 @@ class FilesOrchestratorTests: XCTestCase {
         XCTAssertEqual(try temporaryDirectory.files().count, 0)
     }
 
+    func testGivenFileTooOld_whenScanned_itReportsDropWithSize() throws {
+        final class Box: @unchecked Sendable { var sizes: [Int] = [] }
+        let box = Box()
+        let dateProvider = RelativeDateProvider()
+        let orchestrator = FilesOrchestrator(
+            directory: temporaryDirectory,
+            performance: performance,
+            dateProvider: dateProvider,
+            onDrop: { box.sizes.append($0) }
+        )
+        let file = try temporaryDirectory.createFile(named: dateProvider.currentDate().toFileName)
+        try file.append(data: Data("hello".utf8)) // 5 bytes
+
+        dateProvider.advance(bySeconds: 2 * performance.maxFileAgeForRead)
+
+        // Scanning for a readable file finds it too old, deletes it, and reports
+        // the drop with the file's size.
+        XCTAssertNil(try orchestrator.getReadableFile())
+        XCTAssertEqual(try temporaryDirectory.files().count, 0)
+        XCTAssertEqual(box.sizes, [5])
+    }
+
+    func testGivenSuccessfulRead_whenDeleted_itDoesNotReportDrop() throws {
+        final class Box: @unchecked Sendable { var sizes: [Int] = [] }
+        let box = Box()
+        let dateProvider = RelativeDateProvider()
+        let orchestrator = FilesOrchestrator(
+            directory: temporaryDirectory,
+            performance: performance,
+            dateProvider: dateProvider,
+            onDrop: { box.sizes.append($0) }
+        )
+        _ = try temporaryDirectory.createFile(named: dateProvider.currentDate().toFileName)
+        dateProvider.advance(bySeconds: 1 + performance.minFileAgeForRead)
+
+        let readableFile = try orchestrator.getReadableFile().unwrapOrThrow()
+        try orchestrator.delete(readableFile: readableFile) // marked-as-read, not a drop
+
+        XCTAssertEqual(box.sizes, [], "Successful upload deletion must not be reported as a drop")
+    }
+
     func testItDeletesReadableFile() throws {
         let dateProvider = RelativeDateProvider()
         let orchestrator = configureOrchestrator(using: dateProvider)

@@ -82,7 +82,7 @@ public struct TestOptimizationApiService: TestOptimizationApi {
     public private(set) var logs: LogsApi
     public private(set) var telemetry: TelemetryApi
 
-    internal init(config: APIServiceConfig, httpClient: HTTPClient, log: Logger,
+    internal init(config: APIServiceConfig, httpClient: any HTTPClientType, log: Logger,
                   dateProvider: DateProvider = SystemDateProvider())
     {
         settings = SettingsApiService(config: config, httpClient: httpClient, log: log)

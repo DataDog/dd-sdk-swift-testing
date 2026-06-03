@@ -76,11 +76,12 @@ struct KnownTestsFactory: FeatureFactory {
     let customConfigurations: [String: String]
     let cacheFolder: Directory
     let api: KnownTestsApi
+    let telemetry: Telemetry?
     let cacheFileName = "known_tests.json"
 
     init(repository: String, service: String, environment: String,
          configurations: [String: String], custom: [String: String],
-         api: KnownTestsApi, cache: Directory)
+         api: KnownTestsApi, cache: Directory, telemetry: Telemetry? = nil)
     {
         self.configurations = configurations
         self.customConfigurations = custom
@@ -89,6 +90,7 @@ struct KnownTestsFactory: FeatureFactory {
         self.service = service
         self.environment = environment
         self.api = api
+        self.telemetry = telemetry
     }
 
     static func isEnabled(config: Config, env: Environment, remote: TracerSettings) -> Bool {
@@ -128,7 +130,8 @@ struct KnownTestsFactory: FeatureFactory {
             tests = try await api.tests(service: service, env: environment,
                                         repositoryURL: repository,
                                         configurations: configurations,
-                                        customConfigurations: customConfigurations).tests
+                                        customConfigurations: customConfigurations,
+                                        observer: telemetry?.knownTestsRequestObserver).tests
         } catch {
             throw LibraryConfigurationCommunicationError(
                 requestName: "Known Tests Request",

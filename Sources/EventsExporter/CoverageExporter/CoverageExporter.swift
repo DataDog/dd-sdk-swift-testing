@@ -36,7 +36,8 @@ internal final class CoverageExporter: CoverageExporterType {
     let configuration: ExporterConfiguration
     let coverageStorage: FeatureStoreAndUpload
 
-    init(config: ExporterConfiguration, storage: Directory, api: TestImpactAnalysisApi) throws {
+    init(config: ExporterConfiguration, storage: Directory, api: TestImpactAnalysisApi,
+         observers: ExporterObservers.Feature = .init()) throws {
         self.configuration = config
 
         let filesOrchestrator = FilesOrchestrator(
@@ -51,17 +52,20 @@ internal final class CoverageExporter: CoverageExporterType {
         let writer = FileWriter(entity: "coverage",
                                 dataFormat: dataFormat,
                                 orchestrator: filesOrchestrator,
-                                encoder: encoder)
+                                encoder: encoder,
+                                observer: observers.payload)
         let reader = FileReader(dataFormat: dataFormat, orchestrator: filesOrchestrator)
+        let requestObserver = observers.request
         let upload: ClosureDataUploader.UploadCallback = { (data: Data) async throws(APICallError) -> Void in
-            try await api.uploadCoverage(batch: data)
+            try await api.uploadCoverage(batch: data, observer: requestObserver)
         }
         let uploader = ClosureDataUploader(upload: upload)
         self.coverageStorage = FeatureStoreAndUpload(featureName: "coverage",
                                                      reader: reader,
                                                      writer: writer,
                                                      performance: configuration.performancePreset,
-                                                     uploader: uploader)
+                                                     uploader: uploader,
+                                                     observer: observers.upload)
     }
 
     @discardableResult

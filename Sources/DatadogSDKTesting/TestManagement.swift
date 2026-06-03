@@ -192,10 +192,11 @@ struct TestManagementFactory: FeatureFactory {
     let cacheFolder: Directory
     let api: TestManagementApi
     let module: String
+    let telemetry: Telemetry?
 
     init(repository: String, commitSha: String, commitMessage: String?, branch: String?,
          module: String, attemptToFixRetries: UInt,
-         api: TestManagementApi, cache: Directory)
+         api: TestManagementApi, cache: Directory, telemetry: Telemetry? = nil)
     {
         self.cacheFolder = cache
         self.repository = repository
@@ -205,6 +206,7 @@ struct TestManagementFactory: FeatureFactory {
         self.attemptToFixRetries = attemptToFixRetries
         self.api = api
         self.module = module
+        self.telemetry = telemetry
     }
 
     static func isEnabled(config: Config, env: Environment, remote: TracerSettings) -> Bool {
@@ -244,7 +246,8 @@ struct TestManagementFactory: FeatureFactory {
         do {
             tests = try await api.tests(repositoryURL: repository, sha: commitSha,
                                         commitMessage: commitMessage, branch: branch,
-                                        module: module)
+                                        module: module,
+                                        observer: telemetry?.testManagementRequestObserver)
         } catch {
             throw LibraryConfigurationCommunicationError(
                 requestName: "Test Management Tests Request",

@@ -35,17 +35,21 @@ internal final class DataUploadWorker: DataUploadWorkerType {
     private var delay: Delay
     /// Upload work scheduled by this worker.
     private var uploadWork: DispatchWorkItem?
+    /// Optional telemetry observer notified about upload attempts / drops.
+    private let observer: UploadObserver?
 
     init(
         fileReader: FileReader,
         dataUploader: DataUploaderType,
         delay: Delay,
         featureName: String,
-        priority: DispatchQoS
+        priority: DispatchQoS,
+        observer: UploadObserver? = nil
     ) {
         self.fileReader = fileReader
         self.dataUploader = dataUploader
         self.delay = delay
+        self.observer = observer
         self.queue = DispatchQueue(label: "datadogtest.datauploadworker.\(featureName)",
                                    target: .global(qos: priority.qosClass))
         self.featureName = featureName
@@ -123,21 +127,29 @@ internal final class DataUploadWorker: DataUploadWorkerType {
     }
 
     private func upload(data: Data) -> UploadResult {
+        let start = observer != nil ? DispatchTime.now() : nil
         let uploadStatus = self.dataUploader.upload(data: data)
+        let result: UploadResult
         if uploadStatus.needsRetry {
             if let waitTime = uploadStatus.waitTime {
-                return delay.set(delay: waitTime) ? .retry : .failed
+                result = delay.set(delay: waitTime) ? .retry : .failed
             } else {
                 delay.increase()
-                return .retry
+                result = .retry
             }
         } else {
             delay.decrease()
-            return .success
+            result = .success
         }
+        if let observer, let start {
+            let durationMs = Double(DispatchTime.now().uptimeNanoseconds - start.uptimeNanoseconds) / 1_000_000
+            observer.uploadAttempt(payloadBytes: data.count, durationMs: durationMs,
+                                   success: result == .success, retriable: result == .retry)
+        }
+        return result
     }
 
-    private enum UploadResult {
+    private enum UploadResult: Equatable {
         case success
         case retry
         case failed

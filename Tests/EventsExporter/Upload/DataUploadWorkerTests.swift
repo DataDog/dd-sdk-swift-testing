@@ -121,6 +121,37 @@ class DataUploadWorkerTests: XCTestCase {
         XCTAssertEqual(try temporaryDirectory.files().count, 1, "When upload finishes with `needsRetry: true`, data should be preserved")
     }
 
+    // MARK: - Telemetry observer
+
+    func testItReportsUploadAttemptToObserver() {
+        let attemptExpectation = expectation(description: "upload attempt reported")
+        attemptExpectation.assertForOverFulfill = false
+        let observer = RecordingUploadObserver { attemptExpectation.fulfill() }
+        let mockDataUploader = DataUploaderMock(uploadStatus: .mockWith(needsRetry: false))
+
+        // Given
+        try? writer.writeSync(value: ["key": "value"])
+
+        // When
+        let worker = DataUploadWorker(
+            fileReader: reader,
+            dataUploader: mockDataUploader,
+            delay: DataUploadDelay(performance: UploadPerformanceMock.veryQuick),
+            featureName: .mockAny(),
+            priority: .userInteractive,
+            observer: observer
+        )
+        wait(for: [attemptExpectation], timeout: 5.0)
+        worker.stop()
+
+        // Then
+        let attempts = observer.attempts
+        XCTAssertGreaterThanOrEqual(attempts.count, 1)
+        XCTAssertEqual(attempts.first?.success, true)
+        XCTAssertEqual(attempts.first?.retriable, false)
+        XCTAssertGreaterThan(attempts.first?.payloadBytes ?? 0, 0)
+    }
+
     // MARK: - Upload Interval Changes
 
     func testWhenThereIsNoBatch_thenIntervalIncreases() {
@@ -287,5 +318,32 @@ struct MockDelay: Delay {
         // tests don't exercise server-driven retry delay; treat as "can't accept"
         // so the worker falls through to its default retry/back-off path.
         return false
+    }
+}
+
+/// Records `UploadObserver` callbacks (which arrive on the worker's queue) for
+/// assertions. `onAttempt` fires for each recorded attempt so tests can await it.
+private final class RecordingUploadObserver: UploadObserver, @unchecked Sendable {
+    typealias Attempt = (payloadBytes: Int, durationMs: Double, success: Bool, retriable: Bool)
+
+    private let lock = NSLock()
+    private var _attempts: [Attempt] = []
+    private var _dropped: [Int] = []
+    private let onAttempt: @Sendable () -> Void
+
+    init(onAttempt: @escaping @Sendable () -> Void = {}) {
+        self.onAttempt = onAttempt
+    }
+
+    var attempts: [Attempt] { lock.withLock { _attempts } }
+    var dropped: [Int] { lock.withLock { _dropped } }
+
+    func uploadAttempt(payloadBytes: Int, durationMs: Double, success: Bool, retriable: Bool) {
+        lock.withLock { _attempts.append((payloadBytes, durationMs, success, retriable)) }
+        onAttempt()
+    }
+
+    func uploadDropped(payloadBytes: Int) {
+        lock.withLock { _dropped.append(payloadBytes) }
     }
 }

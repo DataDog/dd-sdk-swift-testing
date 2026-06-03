@@ -15,12 +15,14 @@ final class GitUploader {
     private let log: Logger
     private let api: GitUploadApi
     private let unshallowEnabled: Bool
+    private let telemetry: Telemetry?
 
     private let commitFolder: Directory
     private let packFilesDirectory: Directory
 
     init?(log: Logger, api: GitUploadApi, gitDirectory: String,
-          commitFolder: Directory?, unshallowEnabled: Bool = true)
+          commitFolder: Directory?, unshallowEnabled: Bool = true,
+          telemetry: Telemetry? = nil)
     {
         guard !gitDirectory.isEmpty,
               let commitFolder = commitFolder,
@@ -32,6 +34,7 @@ final class GitUploader {
         self.gitDirectory = gitDirectory
         self.api = api
         self.unshallowEnabled = unshallowEnabled
+        self.telemetry = telemetry
         self.packFilesDirectory = packFilesDir
         self.commitFolder = commitFolder
         self.log = log
@@ -108,7 +111,8 @@ final class GitUploader {
             try await log.measure(name: "uploadExistingPackfiles") { () async throws(APICallError) in
                 try await api.uploadPackFiles(directory: directory.url,
                                               commit: commit,
-                                              repositoryURL: repository)
+                                              repositoryURL: repository,
+                                              observer: telemetry?.gitObjectsPackRequestObserver)
             }
         } catch {
             let err = LibraryConfigurationCommunicationError(
@@ -149,7 +153,8 @@ final class GitUploader {
         do {
             existingCommits = try await log.measure(name: "searchRepositoryCommits") { () async throws(APICallError) in
                 try await api.searchCommits(repositoryURL: repositoryURL,
-                                            commits: latestCommits)
+                                            commits: latestCommits,
+                                            observer: telemetry?.gitSearchCommitsRequestObserver)
             }
         } catch {
             let err = LibraryConfigurationCommunicationError(

@@ -239,7 +239,8 @@ internal class DDTestMonitor {
                 DDTestMonitor.instance?.gitUploader = GitUploader(
                     log: Log.instance, api: DDTestMonitor.tracer.api.git, gitDirectory: gitDirectory,
                     commitFolder: try? DDTestMonitor.cacheManager?.commit(feature: "git"),
-                    unshallowEnabled: DDTestMonitor.config.gitUnshallowEnabled
+                    unshallowEnabled: DDTestMonitor.config.gitUnshallowEnabled,
+                    telemetry: DDTestMonitor.tracer.telemetry
                 )
             } else {
                 Log.debug("Git Upload Disabled")
@@ -291,7 +292,8 @@ internal class DDTestMonitor {
                             sha: commit,
                             testLevel: .test,
                             configurations: baseConfigurations,
-                            customConfigurations: customConfigurations
+                            customConfigurations: customConfigurations,
+                            observer: DDTestMonitor.tracer.telemetry?.gitSettingsRequestObserver
                         )
                     }
                 }
@@ -396,7 +398,8 @@ internal class DDTestMonitor {
                                             environment: DDTestMonitor.env.environment,
                                             configurations: DDTestMonitor.env.baseConfigurations,
                                             custom: DDTestMonitor.config.customConfigurations,
-                                            api: DDTestMonitor.tracer.api.knownTests, cache: cache)
+                                            api: DDTestMonitor.tracer.api.knownTests, cache: cache,
+                                            telemetry: DDTestMonitor.tracer.telemetry)
             self.knownTests = runFactory(factory, errorKind: .knownTests)
         }
         knownTestsSetup.addDependency(updateTracerConfig)
@@ -454,7 +457,8 @@ internal class DDTestMonitor {
                                                 module: module,
                                                 attemptToFixRetries: attemptToFixRetryCount,
                                                 api: DDTestMonitor.tracer.api.testManagement,
-                                                cache: cache)
+                                                cache: cache,
+                                                telemetry: DDTestMonitor.tracer.telemetry)
             self.testManagement = runFactory(factory, errorKind: .testManagementTests)
         }
         testManagementSetup.addDependency(updateTracerConfig)
@@ -485,7 +489,8 @@ internal class DDTestMonitor {
                                                     repository: repository,
                                                     cache: cache,
                                                     skippingEnabled: remote.itr.testsSkipping,
-                                                    swiftTestingEnabled: DDTestMonitor.env.tiaSwiftTestingEnabled)
+                                                    swiftTestingEnabled: DDTestMonitor.env.tiaSwiftTestingEnabled,
+                                                    telemetry: DDTestMonitor.tracer.telemetry)
             self.tia = runFactory(factory, errorKind: .skippableTests)
         }
         tiaSetup.addDependency(updateTracerConfig)

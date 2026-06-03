@@ -508,7 +508,7 @@ internal struct TelemetryApiService: TelemetryApi {
     var encoder: JSONEncoder
     var decoder: JSONDecoder
     let compression: Bool
-    let httpClient: HTTPClient
+    let httpClient: any HTTPClientType
     let log: Logger
     let dateProvider: DateProvider
 
@@ -522,7 +522,7 @@ internal struct TelemetryApiService: TelemetryApi {
     /// telemetry requests within a runtime.
     private let seq: Synced<UInt64>
 
-    init(config: APIServiceConfig, httpClient: HTTPClient, dateProvider: DateProvider, log: Logger) {
+    init(config: APIServiceConfig, httpClient: any HTTPClientType, dateProvider: DateProvider, log: Logger) {
         self.endpoint = config.endpoint
         self.httpClient = httpClient
         self.log = log

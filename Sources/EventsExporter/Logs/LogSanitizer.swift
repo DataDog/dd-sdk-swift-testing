@@ -22,6 +22,9 @@ internal struct LogSanitizer {
         /// Maximum number of attributes in log.
         /// If this number is exceeded, extra attributes will be ignored.
         static let maxNumberOfAttributes: Int = 256
+        /// Maximum number of characters the backend accepts per attribute value.
+        /// String values exceeding this length will be truncated.
+        static let maxAttributeValueLength: Int = AttributesSanitizer.Constraints.maxAttributeValueLength
         /// Allowed first character of a tag name (given as ASCII values ranging from lowercased `a` to `z`) .
         /// Tags with name starting with different character will be dropped.
         static let allowedTagNameFirstCharacterASCIIRange: [UInt8] = Array(97 ... 122)
@@ -62,6 +65,7 @@ internal struct LogSanitizer {
         userAttributes = removeInvalidAttributes(userAttributes)
         userAttributes = removeReservedAttributes(userAttributes)
         userAttributes = sanitizeAttributeNames(userAttributes)
+        userAttributes = limitAttributeValueLength(userAttributes)
         let userAttributesLimit = Constraints.maxNumberOfAttributes - (rawAttributes.internalAttributes?.count ?? 0)
         userAttributes = limitToMaxNumberOfAttributes(userAttributes, limit: userAttributesLimit)
 
@@ -117,6 +121,17 @@ internal struct LogSanitizer {
             }
         }
         return sanitized
+    }
+
+    private func limitAttributeValueLength(_ attributes: [String: Encodable]) -> [String: Encodable] {
+        // Only string values can realistically exceed the limit; other types are left untouched.
+        return attributes.mapValues { value in
+            guard let string = value as? String, string.count > Constraints.maxAttributeValueLength else {
+                return value
+            }
+            Log.print("Attribute value exceeds the limit of \(Constraints.maxAttributeValueLength) characters. It will be truncated.")
+            return String(string.prefix(Constraints.maxAttributeValueLength))
+        }
     }
 
     private func limitToMaxNumberOfAttributes(_ attributes: [String: Encodable], limit: Int) -> [String: Encodable] {

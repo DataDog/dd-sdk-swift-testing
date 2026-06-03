@@ -11,11 +11,16 @@ internal struct SpanSanitizer {
     private let attributesSanitizer = AttributesSanitizer(featureName: "Span")
 
     func sanitize(span: DDSpan) -> DDSpan {
-        // Sanitize attribute names
+        // Sanitize attribute names, then trim values to the backend per-tag length limit.
         let sanitizedTags = attributesSanitizer.sanitizeKeys(for: span.tags)
 
         var sanitizedSpan = span
-        sanitizedSpan.tags = sanitizedTags
+        sanitizedSpan.tags = attributesSanitizer.sanitizeValues(for: sanitizedTags)
         return sanitizedSpan
+    }
+
+    /// Trims span metadata keys and string values to the backend per-tag length limit.
+    func sanitize(metadata: SpanMetadata) -> SpanMetadata {
+        metadata.trimmed(toMaxLength: AttributesSanitizer.Constraints.maxAttributeValueLength)
     }
 }

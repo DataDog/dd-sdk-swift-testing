@@ -22,7 +22,7 @@ internal final class SpansExporter: SpanExporter {
             dateProvider: SystemDateProvider()
         )
 
-        var metadata = config.metadata
+        var metadata = SpanSanitizer().sanitize(metadata: config.metadata)
         self.runtimeId = metadata[string: "runtime-id"] ?? UUID().uuidString.lowercased()
         metadata[string: "runtime-id"] = self.runtimeId
 
@@ -51,7 +51,7 @@ internal final class SpansExporter: SpanExporter {
     /// and rotate the writable file so the new header takes effect on the
     /// next batch. The runtime-id stays pinned across updates.
     func setMetadata(_ meta: SpanMetadata) {
-        var meta = meta
+        var meta = SpanSanitizer().sanitize(metadata: meta)
         meta[string: "runtime-id"] = self.runtimeId
         // `try!` is safe: `Header` is a fixed-shape struct that always encodes.
         let dataFormat = try! DataFormat(header: Header(metadata: meta.metadata),

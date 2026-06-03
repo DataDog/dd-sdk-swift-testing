@@ -48,6 +48,24 @@ public struct SpanMetadata {
             return mapped.count > 0 ? mapped : nil
         }
     }
+
+    /// Returns a copy with every metadata key and string value truncated to
+    /// `maxLength` characters, to satisfy the backend per-tag length limit.
+    func trimmed(toMaxLength maxLength: Int) -> SpanMetadata {
+        var result = SpanMetadata()
+        for (type, values) in meta {
+            let spanType = SpanType(type)
+            for (key, value) in values {
+                let trimmedKey = key.count > maxLength ? String(key.prefix(maxLength)) : key
+                if case .string(let string) = value, string.count > maxLength {
+                    result[spanType, trimmedKey] = .string(String(string.prefix(maxLength)))
+                } else {
+                    result[spanType, trimmedKey] = value
+                }
+            }
+        }
+        return result
+    }
 }
 
 public extension SpanMetadata {

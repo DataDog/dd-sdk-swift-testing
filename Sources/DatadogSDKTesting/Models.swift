@@ -233,7 +233,7 @@ struct TestError: Error, CustomDebugStringConvertible {
             self.crashLog = nil
             return
         }
-        if stack.count < 5000 {
+        if stack.count < AttributesSanitizer.Constraints.maxAttributeValueLength {
             self.message = message
             self.stack = stack
             self.crashLog = nil
@@ -241,7 +241,7 @@ struct TestError: Error, CustomDebugStringConvertible {
             self.message = message.map { $0 + ". " } ?? ""
                 + "Check error.crash_log for the full crash log."
             self.stack = DDSymbolicator.calculateCrashedThread(stack: stack)
-            self.crashLog = stack.split(by: 5000)
+            self.crashLog = stack.split(by: AttributesSanitizer.Constraints.maxAttributeValueLength)
         }
     }
     

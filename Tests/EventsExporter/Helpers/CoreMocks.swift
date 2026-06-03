@@ -57,11 +57,17 @@ struct StoragePerformanceMock: StoragePerformancePreset {
     /// All writes accumulate in the same file until it is explicitly closed via
     /// `flush()`. Use this to test that the uploader correctly assembles a
     /// `message-batch` from several entries that share one on-disk batch.
+    ///
+    /// `minFileAgeForRead` is effectively infinite so the periodic upload worker
+    /// never picks up the still-open file mid-write (which would race with the
+    /// writes and split the batch across uploads). `flush()` drains regardless of
+    /// file age, so it remains the only path that uploads here — exactly the
+    /// behaviour under test.
     static let appendToOneFile = StoragePerformanceMock(
         maxFileSize: .max,
         maxDirectorySize: .max,
         maxFileAgeForWrite: .greatestFiniteMagnitude,
-        minFileAgeForRead: readAllFiles.minFileAgeForRead,
+        minFileAgeForRead: .greatestFiniteMagnitude,
         maxFileAgeForRead: readAllFiles.maxFileAgeForRead,
         maxObjectsInFile: .max,
         maxObjectSize: .max,

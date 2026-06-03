@@ -32,7 +32,7 @@ public enum TelemetryRequestType: String, Codable {
 public struct TelemetryMetric: TelemetryPayload, Codable {
     /// Per-tracer metric namespace (`dd.instrumentation_telemetry_data.{namespace}.*`).
     public enum Namespace: String, Codable {
-        case tracers, general, telemetry, iast, appsec
+        case tracers, general, telemetry, iast, appsec, civisibility
     }
 
     /// The metric kind. The intake defaults to `.gauge` when omitted.
@@ -111,7 +111,7 @@ public struct TelemetryMetric: TelemetryPayload, Codable {
 public struct TelemetryDistribution: TelemetryPayload, Codable {
     /// Namespace for distribution metrics.
     public enum Namespace: String, Codable {
-        case tracers, profilers, rum, appsec
+        case tracers, profilers, rum, appsec, civisibility
     }
 
     /// A distribution series with one or more raw sample values.

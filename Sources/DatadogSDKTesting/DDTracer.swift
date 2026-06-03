@@ -21,6 +21,10 @@ internal class DDTracer {
     let tracerSdk: TracerSdk
     let tracerProviderSdk: TracerProviderSdk
     let maxObjectSize: UInt64
+    /// OTel `Resource` describing this SDK (service / version / env / sdk.* tags).
+    /// Reused by the telemetry meter provider so self-metrics carry the same
+    /// identity as spans and logs.
+    let resource: Resource
     var eventsExporter: ExporterProtocol?
     /// Backend APIs owned by the SDK (not by the exporter). Held here so
     /// feature factories don't need to reach through `eventsExporter` to talk
@@ -54,6 +58,7 @@ internal class DDTracer {
         self.launchSpanContext = launchContext
         self.eventsExporter = exporter
         self.api = api
+        self.resource = resource
         self.maxObjectSize = exporter?.maxObjectSize ?? 262144
 
         let spanExporterToUse: SpanExporter

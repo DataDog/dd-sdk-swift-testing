@@ -84,4 +84,47 @@ final class TelemetryTests: XCTestCase {
         let point = try XCTUnwrap(metric.data.points.first as? LongPointData)
         XCTAssertEqual(point.value, 7)
     }
+
+    // MARK: - Observer adapters
+
+    func testErrorTypeMapping() {
+        XCTAssertEqual(Telemetry.errorType(statusCode: nil), .network)
+        XCTAssertEqual(Telemetry.errorType(statusCode: 404), .statusCode4xx)
+        XCTAssertEqual(Telemetry.errorType(statusCode: 503), .statusCode5xx)
+        XCTAssertEqual(Telemetry.errorType(statusCode: 200), .network)
+    }
+
+    func testRequestMetricsObserverForwardsFactsAndDerivesErrorType() {
+        final class Box: @unchecked Sendable {
+            var requests = 0
+            var durationMs: Double?
+            var requestBytes: Int?
+            var responseBytes: Int?
+            var error: Telemetry.ErrorType?
+        }
+        let box = Box()
+        let observer = Telemetry.RequestMetricsObserver(
+            onRequest: { box.requests += 1 },
+            onDurationMs: { box.durationMs = $0 },
+            onRequestBytes: { box.requestBytes = $0 },
+            onResponseBytes: { box.responseBytes = $0 },
+            onError: { box.error = $0 }
+        )
+
+        // A failed request forwards all facts and derives the error type.
+        observer.requestFinished(durationMs: 12, requestBytes: 100, responseBytes: 200,
+                                 statusCode: 503, failed: true)
+        XCTAssertEqual(box.requests, 1)
+        XCTAssertEqual(box.durationMs, 12)
+        XCTAssertEqual(box.requestBytes, 100)
+        XCTAssertEqual(box.responseBytes, 200)
+        XCTAssertEqual(box.error, .statusCode5xx)
+
+        // A successful request does not report an error.
+        box.error = nil
+        observer.requestFinished(durationMs: 1, requestBytes: 1, responseBytes: 1,
+                                 statusCode: 202, failed: false)
+        XCTAssertEqual(box.requests, 2)
+        XCTAssertNil(box.error)
+    }
 }

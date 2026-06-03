@@ -183,6 +183,7 @@ struct TestImpactAnalysisFactory: FeatureFactory {
     let api: TestImpactAnalysisApi
     let skippingEnabled: Bool
     let swiftTestingEnabled: Bool
+    let telemetry: Telemetry?
 
     init(configurations: [String: String],
          custom: [String: String],
@@ -190,7 +191,7 @@ struct TestImpactAnalysisFactory: FeatureFactory {
          service: String, environment: String,
          commit: String, repository: String,
          cache: Directory, skippingEnabled: Bool,
-         swiftTestingEnabled: Bool)
+         swiftTestingEnabled: Bool, telemetry: Telemetry? = nil)
     {
         self.configurations = configurations
         self.customConfigurations = custom
@@ -202,6 +203,7 @@ struct TestImpactAnalysisFactory: FeatureFactory {
         self.commitSha = commit
         self.skippingEnabled = skippingEnabled
         self.swiftTestingEnabled = swiftTestingEnabled
+        self.telemetry = telemetry
     }
 
     static func isEnabled(config: Config, env: Environment, remote: TracerSettings) -> Bool {
@@ -271,7 +273,8 @@ struct TestImpactAnalysisFactory: FeatureFactory {
                                                 environment: environment, service: service,
                                                 testLevel: .test,
                                                 configurations: configurations,
-                                                customConfigurations: customConfigurations)
+                                                customConfigurations: customConfigurations,
+                                                observer: telemetry?.skippableTestsRequestObserver)
         } catch {
             throw LibraryConfigurationCommunicationError(
                 requestName: "SkipTestsRequest",

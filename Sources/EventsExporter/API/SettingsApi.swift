@@ -11,7 +11,24 @@ public protocol SettingsApi: APIService {
                         repositoryURL: String, branch: String, sha: String,
                         testLevel: ITRTestLevel,
                         configurations: [String: String],
+                        customConfigurations: [String: String],
+                        observer: RequestObserver?) async throws(APICallError) -> TracerSettings
+}
+
+public extension SettingsApi {
+    /// Convenience without a telemetry observer.
+    @inlinable
+    func tracerSettings(service: String, env: String,
+                        repositoryURL: String, branch: String, sha: String,
+                        testLevel: ITRTestLevel,
+                        configurations: [String: String],
                         customConfigurations: [String: String]) async throws(APICallError) -> TracerSettings
+    {
+        try await tracerSettings(service: service, env: env, repositoryURL: repositoryURL,
+                                 branch: branch, sha: sha, testLevel: testLevel,
+                                 configurations: configurations,
+                                 customConfigurations: customConfigurations, observer: nil)
+    }
 }
 
 public struct TracerSettings {
@@ -147,10 +164,10 @@ struct SettingsApiService: SettingsApi, APIServiceConstructible {
     var headers: [HTTPHeader]
     var encoder: JSONEncoder
     var decoder: JSONDecoder
-    let httpClient: HTTPClient
+    let httpClient: any HTTPClientType
     let log: Logger
 
-    init(config: APIServiceConfig, httpClient: HTTPClient, log: Logger) {
+    init(config: APIServiceConfig, httpClient: any HTTPClientType, log: Logger) {
         self.endpoint = config.endpoint
         self.httpClient = httpClient
         self.log = log
@@ -163,7 +180,8 @@ struct SettingsApiService: SettingsApi, APIServiceConstructible {
                         repositoryURL: String, branch: String, sha: String,
                         testLevel: ITRTestLevel,
                         configurations: [String: String],
-                        customConfigurations: [String: String]) async throws(APICallError) -> TracerSettings
+                        customConfigurations: [String: String],
+                        observer: RequestObserver?) async throws(APICallError) -> TracerSettings
     {
         var configurations: [String: JSONGeneric] = configurations.mapValues { .string($0) }
         configurations["custom"] = JSONGeneric(customConfigurations)
@@ -180,7 +198,8 @@ struct SettingsApiService: SettingsApi, APIServiceConstructible {
                                                  url: endpoint.settingsURL,
                                                  data: .init(attributes: request),
                                                  headers: headers + [.contentTypeHeader(contentType: .applicationJSON)],
-                                                 coders: (encoder, decoder))
+                                                 coders: (encoder, decoder),
+                                                 observer: observer)
         log.debug("Tracer settings response: \(response.data.attributes)")
         return TracerSettings(response: response.data.attributes)
     }

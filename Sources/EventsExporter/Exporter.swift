@@ -31,14 +31,16 @@ public final class Exporter: ExporterProtocol {
 
     public init(config: ExporterConfiguration,
                 api: TestOptimizationApi,
-                storage: Directory) throws
+                storage: Directory,
+                observers: ExporterObservers = .init()) throws
     {
         self.configuration = config
         Log.setLogger(config.logger)
 
         let spansExporter = try SpansExporter(config: configuration,
                                               storage: try storage.createSubdirectory(path: "spans"),
-                                              api: api.spans)
+                                              api: api.spans,
+                                              observers: observers.spans)
         let logsExporter = try LogsExporter(config: configuration,
                                             storage: try storage.createSubdirectory(path: "logs"),
                                             api: api.logs)
@@ -46,7 +48,8 @@ public final class Exporter: ExporterProtocol {
         self.logsExporter = logsExporter
         self.coverageExporter = try CoverageExporter(config: configuration,
                                                      storage: try storage.createSubdirectory(path: "coverage"),
-                                                     api: api.tia)
+                                                     api: api.tia,
+                                                     observers: observers.coverage)
         self.spanExporterComposite = OpenTelemetrySdk.MultiSpanExporter(spanExporters: [
             spansExporter,
             SpanEventsLogExporterAdapter(logRecordExporter: logsExporter),

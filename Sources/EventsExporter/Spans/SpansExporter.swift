@@ -13,7 +13,8 @@ internal final class SpansExporter: SpanExporter {
     let spansStorage: FeatureStoreAndUpload
     private let encoder: JSONEncoder
 
-    init(config: ExporterConfiguration, storage: Directory, api: SpansApi) throws {
+    init(config: ExporterConfiguration, storage: Directory, api: SpansApi,
+         observers: ExporterObservers.Feature = .init()) throws {
         self.configuration = config
 
         let filesOrchestrator = FilesOrchestrator(
@@ -34,17 +35,20 @@ internal final class SpansExporter: SpanExporter {
         let writer = FileWriter(entity: "spans",
                                 dataFormat: dataFormat,
                                 orchestrator: filesOrchestrator,
-                                encoder: encoder)
+                                encoder: encoder,
+                                observer: observers.payload)
         let reader = FileReader(dataFormat: dataFormat, orchestrator: filesOrchestrator)
+        let requestObserver = observers.request
         let upload: ClosureDataUploader.UploadCallback = { (data: Data) async throws(APICallError) -> Void in
-            try await api.uploadSpans(batch: data)
+            try await api.uploadSpans(batch: data, observer: requestObserver)
         }
         let uploader = ClosureDataUploader(upload: upload)
         self.spansStorage = FeatureStoreAndUpload(featureName: "spans",
                                                   reader: reader,
                                                   writer: writer,
                                                   performance: configuration.performancePreset,
-                                                  uploader: uploader)
+                                                  uploader: uploader,
+                                                  observer: observers.upload)
     }
 
     /// Rebuild the file header (which embeds the per-feature `SpanMetadata`)

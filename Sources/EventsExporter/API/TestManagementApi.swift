@@ -8,8 +8,20 @@ import Foundation
 
 public protocol TestManagementApi: APIService {
     func tests(
-        repositoryURL: String, sha: String?, commitMessage: String?, branch: String?, module: String?
+        repositoryURL: String, sha: String?, commitMessage: String?, branch: String?, module: String?,
+        observer: RequestObserver?
     ) async throws(APICallError) -> TestManagementTestsInfo
+}
+
+public extension TestManagementApi {
+    /// Convenience without a telemetry observer.
+    @inlinable
+    func tests(
+        repositoryURL: String, sha: String?, commitMessage: String?, branch: String?, module: String?
+    ) async throws(APICallError) -> TestManagementTestsInfo {
+        try await tests(repositoryURL: repositoryURL, sha: sha, commitMessage: commitMessage,
+                        branch: branch, module: module, observer: nil)
+    }
 }
 
 public struct TestManagementTestsInfo: Codable {
@@ -73,10 +85,10 @@ struct TestManagementApiService: TestManagementApi, APIServiceConstructible {
     var headers: [HTTPHeader]
     var encoder: JSONEncoder
     var decoder: JSONDecoder
-    let httpClient: HTTPClient
+    let httpClient: any HTTPClientType
     let log: Logger
 
-    init(config: APIServiceConfig, httpClient: HTTPClient, log: Logger) {
+    init(config: APIServiceConfig, httpClient: any HTTPClientType, log: Logger) {
         self.endpoint = config.endpoint
         self.httpClient = httpClient
         self.log = log
@@ -86,7 +98,8 @@ struct TestManagementApiService: TestManagementApi, APIServiceConstructible {
     }
 
     func tests(repositoryURL: String, sha: String?, commitMessage: String?,
-               branch: String?, module: String?) async throws(APICallError) -> TestManagementTestsInfo
+               branch: String?, module: String?,
+               observer: RequestObserver?) async throws(APICallError) -> TestManagementTestsInfo
     {
         let request = TestsRequest(repositoryUrl: repositoryURL,
                                    commitMessage: commitMessage,
@@ -99,7 +112,8 @@ struct TestManagementApiService: TestManagementApi, APIServiceConstructible {
                                                  url: endpoint.testManagementTestsURL,
                                                  data: .init(attributes: request),
                                                  headers: headers + [.contentTypeHeader(contentType: .applicationJSON)],
-                                                 coders: (encoder, decoder))
+                                                 coders: (encoder, decoder),
+                                                 observer: observer)
         log.debug("TestManagement tests response: \(response.data.attributes)")
         return TestManagementTestsInfo(modules: response.data.attributes.modules)
     }

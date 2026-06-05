@@ -112,7 +112,8 @@ readers, the `TelemetryMetricExporter` bridge) was dropped.
   interval is `DD_TELEMETRY_HEARTBEAT_INTERVAL` (seconds, clamped 1…3600,
   default 60). Metric drain cadence is `DD_TELEMETRY_FLUSH_INTERVAL` (seconds,
   clamped 1…3600, default 10) and the distribution force-flush threshold is
-  `DD_TELEMETRY_DISTRIBUTION_BUFFER_SIZE` (samples, clamped ≥ 1, default 2048).
+  `DD_TELEMETRY_DISTRIBUTION_BUFFER_SIZE` (samples, clamped ≥ 1, default 65536 —
+  a backstop for bursts; ~512 KB of `Double`s).
 - Exposed as `DDTracer.telemetry`; `SessionConfig.telemetry` is sourced from it
   (so `DDSession`/`Module`/`Suite`/`Test` and observers all share one instance).
 - The exporter + telemetry share a single `ExporterConfiguration` on the

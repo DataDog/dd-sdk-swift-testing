@@ -70,8 +70,10 @@ final class Config {
     /// How often accumulated telemetry metrics are drained to the exporter, in
     /// seconds. Kept short so a crash loses at most one interval. Clamped to 1...3600.
     var telemetryFlushInterval: TimeInterval = 10
-    /// Buffered telemetry distribution samples that force an early drain. Clamped to >= 1.
-    var telemetryDistributionBufferSize: Int = 2048
+    /// Buffered telemetry distribution samples that force an early drain (a
+    /// safety backstop for bursts; the timer does the normal draining). Generous
+    /// since each sample is just an 8-byte `Double` — 65536 ≈ 512 KB. Clamped to >= 1.
+    var telemetryDistributionBufferSize: Int = 65536
 
     /// Avoids configuring the traces exporter
     var disableTracesExporting: Bool = false

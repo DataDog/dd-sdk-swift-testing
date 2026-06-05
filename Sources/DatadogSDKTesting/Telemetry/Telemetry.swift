@@ -53,7 +53,7 @@ final class Telemetry: @unchecked Sendable {
          exporter: any TelemetryPayloadExporter,
          flushInterval: TimeInterval = 10,
          heartbeatInterval: TimeInterval = 60,
-         distributionCap: Int = 2048,
+         distributionCap: Int = 65536,
          configuration: [TelemetryConfigItem] = [])
     {
         let store = MetricStore(exporter: exporter, distributionCap: distributionCap)

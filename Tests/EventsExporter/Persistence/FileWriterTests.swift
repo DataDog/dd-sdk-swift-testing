@@ -201,8 +201,13 @@ class FileWriterTests: XCTestCase {
 private final class RecordingPayloadObserver: PayloadObserver, @unchecked Sendable {
     private let lock = NSLock()
     private var _finalized: [(eventCount: Int, serializationMs: Double)] = []
+    private(set) var enqueuedCount: Int = 0
 
     var finalized: [(eventCount: Int, serializationMs: Double)] { lock.withLock { _finalized } }
+
+    func eventEnqueued() {
+        lock.withLock { enqueuedCount += 1 }
+    }
 
     func payloadFinalized(eventCount: Int, serializationMs: Double) {
         lock.withLock { _finalized.append((eventCount, serializationMs)) }

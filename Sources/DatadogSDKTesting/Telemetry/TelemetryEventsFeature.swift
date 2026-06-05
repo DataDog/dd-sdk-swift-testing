@@ -23,6 +23,7 @@ final class TelemetryEventsFeature: TestHooksFeature {
             provider: session.configuration.env.ci?.provider, autoInjected: false)
         let fw = session.testFrameworks.sorted().joined(separator: ",")
         telemetry.metrics.events.created.add(testFramework: fw, eventType: .session)
+        emitGitShaCheck(session.configuration.env.git)
     }
 
     func testSessionWillEnd(session: any TestSession) {
@@ -79,6 +80,16 @@ final class TelemetryEventsFeature: TestHooksFeature {
     }
 
     func stop() {}
+
+    private func emitGitShaCheck(_ git: Environment.Git) {
+        telemetry.metrics.git.commitShaMatch.add(matched: git.shaMatched)
+        for d in git.discrepancies {
+            telemetry.metrics.git.commitShaDiscrepancy.add(
+                expectedProvider: d.expectedProvider,
+                discrepantProvider: d.discrepantProvider,
+                type: d.type)
+        }
+    }
 
     private func telemetryRetryReason(from string: String?) -> Telemetry.RetryReason? {
         switch string {

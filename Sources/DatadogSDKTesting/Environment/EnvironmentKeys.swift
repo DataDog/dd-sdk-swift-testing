@@ -54,6 +54,8 @@ internal enum EnvironmentKey: String, CaseIterable {
     case testManagementEnabled = "DD_TEST_MANAGEMENT_ENABLED"
     case instrumentationTelemetryEnabled = "DD_INSTRUMENTATION_TELEMETRY_ENABLED"
     case telemetryHeartbeatInterval = "DD_TELEMETRY_HEARTBEAT_INTERVAL"
+    case telemetryFlushInterval = "DD_TELEMETRY_FLUSH_INTERVAL"
+    case telemetryDistributionBufferSize = "DD_TELEMETRY_DISTRIBUTION_BUFFER_SIZE"
     case testManagementAttemptToFixRetries = "DD_TEST_MANAGEMENT_ATTEMPT_TO_FIX_RETRIES"
     case disableSourceLocation = "DD_DISABLE_SOURCE_LOCATION"
     case localTestEnvironmentPort = "DD_LOCAL_TEST_ENVIRONMENT_PORT"

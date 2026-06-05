@@ -108,9 +108,11 @@ readers, the `TelemetryMetricExporter` bridge) was dropped.
   API client and **before** the `Exporter` — so the exporter can be handed the
   telemetry observers, and so the feature factories can reach it. See
   `DDTracer.makeTelemetry(...)`.
-- Gated by `DD_INSTRUMENTATION_TELEMETRY_ENABLED` (default `true`). Heartbeat /
-  export interval is `DD_TELEMETRY_HEARTBEAT_INTERVAL` (seconds, clamped 1…3600,
-  default 60).
+- Gated by `DD_INSTRUMENTATION_TELEMETRY_ENABLED` (default `true`). Heartbeat
+  interval is `DD_TELEMETRY_HEARTBEAT_INTERVAL` (seconds, clamped 1…3600,
+  default 60). Metric drain cadence is `DD_TELEMETRY_FLUSH_INTERVAL` (seconds,
+  clamped 1…3600, default 10) and the distribution force-flush threshold is
+  `DD_TELEMETRY_DISTRIBUTION_BUFFER_SIZE` (samples, clamped ≥ 1, default 2048).
 - Exposed as `DDTracer.telemetry`; `SessionConfig.telemetry` is sourced from it
   (so `DDSession`/`Module`/`Suite`/`Test` and observers all share one instance).
 - The exporter + telemetry share a single `ExporterConfiguration` on the

@@ -187,7 +187,10 @@ internal class DDTracer {
         // Build the telemetry manager before the exporter so its observers can
         // be wired into the exporter's upload/serialization pipeline.
         let telemetry: Telemetry? = conf.instrumentationTelemetryEnabled
-            ? DDTracer.makeTelemetry(api: api, configuration: exporterConfiguration)
+            ? DDTracer.makeTelemetry(api: api, configuration: exporterConfiguration,
+                                     flushInterval: conf.telemetryFlushInterval,
+                                     heartbeatInterval: conf.telemetryHeartbeatInterval,
+                                     distributionCap: conf.telemetryDistributionBufferSize)
             : nil
 
         // Exporter files live under the cache manager's session directory so
@@ -214,7 +217,9 @@ internal class DDTracer {
     /// reusing the exporter's configuration. Returns `nil` when the backing
     /// storage or exporter can't be created, in which case telemetry is simply
     /// not gathered.
-    private static func makeTelemetry(api: TestOptimizationApi, configuration: ExporterConfiguration) -> Telemetry?
+    private static func makeTelemetry(api: TestOptimizationApi, configuration: ExporterConfiguration,
+                                      flushInterval: TimeInterval, heartbeatInterval: TimeInterval,
+                                      distributionCap: Int) -> Telemetry?
     {
         guard let cacheManager = DDTestMonitor.cacheManager,
               let storage = try? cacheManager.session(feature: "telemetry")
@@ -233,7 +238,9 @@ internal class DDTracer {
 
         return Telemetry(api: api.telemetry,
                          exporter: telemetryExporter,
-                         exportInterval: exportInterval,
+                         flushInterval: flushInterval,
+                         heartbeatInterval: heartbeatInterval,
+                         distributionCap: distributionCap,
                          configuration: Self.telemetryConfiguration())
     }
 

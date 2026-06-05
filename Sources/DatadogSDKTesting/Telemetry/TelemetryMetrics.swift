@@ -5,6 +5,7 @@
  */
 
 import Foundation
+internal import EventsExporter
 
 // MARK: - Low-level instrument handles
 

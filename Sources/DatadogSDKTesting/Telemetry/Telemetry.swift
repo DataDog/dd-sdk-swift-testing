@@ -43,13 +43,16 @@ final class Telemetry: @unchecked Sendable {
     ///   - api: direct telemetry API used for the unbatched `app-started` call.
     ///   - exporter: durable telemetry queue drained metrics, heartbeats, and the
     ///     closing event are written to.
-    ///   - exportInterval: metric drain cadence and heartbeat period, in seconds.
+    ///   - flushInterval: metric drain cadence, in seconds. Kept short so a crash
+    ///     loses at most one interval of metrics.
+    ///   - heartbeatInterval: `app-heartbeat` period, in seconds.
     ///   - distributionCap: total buffered distribution samples that force an
     ///     early drain (so a burst is persisted rather than waiting for the timer).
     ///   - configuration: SDK config snapshot reported in the `app-started` payload.
     init(api: TelemetryApi,
          exporter: any TelemetryPayloadExporter,
-         exportInterval: TimeInterval = 60,
+         flushInterval: TimeInterval = 10,
+         heartbeatInterval: TimeInterval = 60,
          distributionCap: Int = 2048,
          configuration: [TelemetryConfigItem] = [])
     {
@@ -69,14 +72,14 @@ final class Telemetry: @unchecked Sendable {
         // Drain accumulated metrics to the exporter on every interval.
         let flush = DispatchSource.makeTimerSource(
             queue: DispatchQueue(label: "com.datadoghq.civisibility.telemetry"))
-        flush.schedule(deadline: .now() + exportInterval, repeating: exportInterval)
+        flush.schedule(deadline: .now() + flushInterval, repeating: flushInterval)
         flush.setEventHandler { [weak self] in self?.store.flush() }
         self.flushTimer = flush
         flush.activate()
 
         // Enqueue a heartbeat into the batch on every interval.
         let heartbeat = DispatchSource.makeTimerSource(queue: .global(qos: .utility))
-        heartbeat.schedule(deadline: .now() + exportInterval, repeating: exportInterval)
+        heartbeat.schedule(deadline: .now() + heartbeatInterval, repeating: heartbeatInterval)
         heartbeat.setEventHandler { [weak self] in
             self?.exporter.export(item: TelemetryAppHeartbeat())
         }

@@ -112,6 +112,9 @@ final class Telemetry: @unchecked Sendable {
         heartbeatTimer = nil
         store.flush()
         exporter.export(item: TelemetryAppClosing())
+        // Synchronously upload the final batch (metrics + app-closing) before
+        // tearing the worker down — otherwise it sits on disk unsent at exit.
+        _ = exporter.flush()
         exporter.shutdown()
     }
 

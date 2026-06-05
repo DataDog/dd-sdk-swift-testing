@@ -7,9 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		02DF858038394B24B4534C49 /* TelemetryEventsFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BC8A25D6F0A4B818594FE62 /* TelemetryEventsFeature.swift */; };
 		1F26679E6F497C3AEF3A4845 /* MetricObservers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5687C35EB7CCAF30113528FC /* MetricObservers.swift */; };
 		1FB416017E14C140B15E1D97 /* Async.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F3EB9ACD93007FC43F039EE /* Async.swift */; };
 		300F42B595C3462AB9656B0C /* EarlyFlakeDetectionSwiftTestingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC931D86ADB841B6969C7A7A /* EarlyFlakeDetectionSwiftTestingTests.swift */; };
+		3300465F32C8F7EFB93A9D26 /* MockBackendTelemetryParsingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 637F01E90EBE5A82DE309F1A /* MockBackendTelemetryParsingTests.swift */; };
 		3592750B292103668D7668F7 /* MultipartFormURLRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EE92A3947C2E5BD2183BB4E /* MultipartFormURLRequest.swift */; };
 		3B086A157E782A8DCA702976 /* LogsApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = D969899DDA68AF3C690F7FF8 /* LogsApi.swift */; };
 		476CBA69A1DF07E74A0E7311 /* KnownTestsApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1531A96019132E3E9E96A3A7 /* KnownTestsApi.swift */; };
@@ -18,7 +20,6 @@
 		56B58A2FC91F21D1ABB0155E /* TelemetryApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01EB970146040DD4967C7411 /* TelemetryApi.swift */; };
 		7972B04FB1DFA64DC20032AE /* Telemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E11F924F40C94461C2B6B27 /* Telemetry.swift */; };
 		7C6CBEE99C831DBEBB28BD67 /* TelemetryObservers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26CA2B1C720A94291E83285B /* TelemetryObservers.swift */; };
-		02DF858038394B24B4534C49 /* TelemetryEventsFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BC8A25D6F0A4B818594FE62 /* TelemetryEventsFeature.swift */; };
 		821FA0CC8B62245A4949FDBB /* APITypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85241CF97F1B6DAA49ECA23 /* APITypes.swift */; };
 		86137D23E1704D17A7B6D486 /* TelemetryExporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04DFE52D135C457D9160920A /* TelemetryExporterTests.swift */; };
 		8EF6F88255506A4CEE6D36B6 /* GitUploadApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F3AA8F51FDDEF0C319080E8 /* GitUploadApi.swift */; };
@@ -432,11 +433,12 @@
 		1495758A45B516A2C584B845 /* TestImpactAnalysisApi.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TestImpactAnalysisApi.swift; sourceTree = "<group>"; };
 		1531A96019132E3E9E96A3A7 /* KnownTestsApi.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = KnownTestsApi.swift; sourceTree = "<group>"; };
 		26CA2B1C720A94291E83285B /* TelemetryObservers.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TelemetryObservers.swift; sourceTree = "<group>"; };
-		6BC8A25D6F0A4B818594FE62 /* TelemetryEventsFeature.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TelemetryEventsFeature.swift; sourceTree = "<group>"; };
 		2E11F924F40C94461C2B6B27 /* Telemetry.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Telemetry.swift; sourceTree = "<group>"; };
 		31F8747157604DB48FE692EB /* AutoTestRetriesSwiftTestingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoTestRetriesSwiftTestingTests.swift; sourceTree = "<group>"; };
 		5687C35EB7CCAF30113528FC /* MetricObservers.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MetricObservers.swift; sourceTree = "<group>"; };
 		5F3AA8F51FDDEF0C319080E8 /* GitUploadApi.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GitUploadApi.swift; sourceTree = "<group>"; };
+		637F01E90EBE5A82DE309F1A /* MockBackendTelemetryParsingTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MockBackendTelemetryParsingTests.swift; sourceTree = "<group>"; };
+		6BC8A25D6F0A4B818594FE62 /* TelemetryEventsFeature.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TelemetryEventsFeature.swift; sourceTree = "<group>"; };
 		6F3EB9ACD93007FC43F039EE /* Async.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Async.swift; sourceTree = "<group>"; };
 		81894A4E29B0A28B00108C51 /* Retrying.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Retrying.swift; sourceTree = "<group>"; };
 		8194A2242940B33100B4B592 /* DDSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDSession.swift; sourceTree = "<group>"; };
@@ -921,6 +923,7 @@
 				A7EE000000020000000000A1 /* LibraryConfigurationErrorTagsTests.swift */,
 				A7EE000000020000000000A3 /* AdditionalTagsFeatureTests.swift */,
 				C8BF04956AA1E2FADBB80244 /* TelemetryTests.swift */,
+				637F01E90EBE5A82DE309F1A /* MockBackendTelemetryParsingTests.swift */,
 			);
 			path = Features;
 			sourceTree = "<group>";
@@ -2137,6 +2140,7 @@
 				A7FC26632BA1F6BF00067E26 /* StderrCaptureTests.swift in Sources */,
 				A754BB0A2F86CD3B001613EB /* MockSwiftTesting.swift in Sources */,
 				4CCD47B30A3B513F26C8936E /* TelemetryTests.swift in Sources */,
+				3300465F32C8F7EFB93A9D26 /* MockBackendTelemetryParsingTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

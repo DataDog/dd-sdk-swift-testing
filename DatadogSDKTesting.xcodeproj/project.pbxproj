@@ -84,8 +84,6 @@
 		A77C123C2D9425C7009C2BA1 /* KnownTestsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77C123B2D9425C7009C2BA1 /* KnownTestsTests.swift */; };
 		A77C123E2D9474E6009C2BA1 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77C123D2D9474E6009C2BA1 /* Models.swift */; };
 		A7926AEF2FCDCBFE007834F2 /* TelemetryLogExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7926AEE2FCDCBFE007834F2 /* TelemetryLogExporter.swift */; };
-		A7926AF12FCDD411007834F2 /* TelemetryMetricExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7926AF02FCDD411007834F2 /* TelemetryMetricExporter.swift */; };
-		A7926AF42FCDD411007834F2 /* TelemetryMetricExporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7926AF32FCDD411007834F2 /* TelemetryMetricExporterTests.swift */; };
 		A7926AF62FCDD411007834F2 /* TelemetryLogExporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7926AF52FCDD411007834F2 /* TelemetryLogExporterTests.swift */; };
 		A794A8FF2E7990D20044FE3C /* TestManagementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A794A8FE2E7990C40044FE3C /* TestManagementTests.swift */; };
 		A79DA5B42F928F87004BCA8C /* SwiftTestingSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A79DA5B32F928F87004BCA8C /* SwiftTestingSmokeTests.swift */; };
@@ -503,8 +501,6 @@
 		A77C123B2D9425C7009C2BA1 /* KnownTestsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnownTestsTests.swift; sourceTree = "<group>"; };
 		A77C123D2D9474E6009C2BA1 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		A7926AEE2FCDCBFE007834F2 /* TelemetryLogExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelemetryLogExporter.swift; sourceTree = "<group>"; };
-		A7926AF02FCDD411007834F2 /* TelemetryMetricExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelemetryMetricExporter.swift; sourceTree = "<group>"; };
-		A7926AF32FCDD411007834F2 /* TelemetryMetricExporterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelemetryMetricExporterTests.swift; sourceTree = "<group>"; };
 		A7926AF52FCDD411007834F2 /* TelemetryLogExporterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelemetryLogExporterTests.swift; sourceTree = "<group>"; };
 		A794A8FE2E7990C40044FE3C /* TestManagementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestManagementTests.swift; sourceTree = "<group>"; };
 		A79DA5B22F928F71004BCA8C /* IntegrationTests-UnitTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = "IntegrationTests-UnitTests.xctestplan"; sourceTree = "<group>"; };
@@ -832,7 +828,6 @@
 			isa = PBXGroup;
 			children = (
 				04DFE52D135C457D9160920A /* TelemetryExporterTests.swift */,
-				A7926AF32FCDD411007834F2 /* TelemetryMetricExporterTests.swift */,
 				A7926AF52FCDD411007834F2 /* TelemetryLogExporterTests.swift */,
 			);
 			path = Telemetry;
@@ -1015,7 +1010,6 @@
 			children = (
 				BC161A86B91745F4BDC88FF1 /* TelemetryExporter.swift */,
 				A7926AEE2FCDCBFE007834F2 /* TelemetryLogExporter.swift */,
-				A7926AF02FCDD411007834F2 /* TelemetryMetricExporter.swift */,
 				5687C35EB7CCAF30113528FC /* MetricObservers.swift */,
 			);
 			path = Telemetry;
@@ -2185,7 +2179,6 @@
 				A7FC264A2BA1ECF800067E26 /* File.swift in Sources */,
 				A7FC264D2BA1ED1200067E26 /* Exporter.swift in Sources */,
 				A7FC26302BA1ECBD00067E26 /* CoverageExporter.swift in Sources */,
-				A7926AF12FCDD411007834F2 /* TelemetryMetricExporter.swift in Sources */,
 				A7AB7C2026E7EB1100000011 /* CoverageData.swift in Sources */,
 				A7AB7C2026E7EB1100000013 /* CoverageProcessor.swift in Sources */,
 				A7FC263B2BA1ECCF00067E26 /* Feature.swift in Sources */,
@@ -2239,7 +2232,6 @@
 				A7B747C02C60E1E7009B4B93 /* SwiftUtilsTests.swift in Sources */,
 				A7FC26822BA1F81D00067E26 /* DeviceMock.swift in Sources */,
 				86137D23E1704D17A7B6D486 /* TelemetryExporterTests.swift in Sources */,
-				A7926AF42FCDD411007834F2 /* TelemetryMetricExporterTests.swift in Sources */,
 				A7926AF62FCDD411007834F2 /* TelemetryLogExporterTests.swift in Sources */,
 				A7FC26702BA1F7FA00067E26 /* SpansExporterTests.swift in Sources */,
 				A7FC268C2BA1F82300067E26 /* HTTPClientTests.swift in Sources */,

@@ -5,84 +5,123 @@
  */
 
 @testable import DatadogSDKTesting
-import EventsExporter
-import OpenTelemetryApi
-@testable import OpenTelemetrySdk
+@testable import EventsExporter
 import XCTest
 
 final class TelemetryTests: XCTestCase {
-    /// Captures the `MetricData` pushed on flush so we can assert what the
-    /// manager produced without touching the network pipeline.
-    final class InMemoryMetricExporter: MetricExporter {
-        private(set) var exported: [MetricData] = []
+    /// Captures the payloads the manager drains on flush so we can assert what
+    /// it produced without touching the file/network pipeline.
+    final class CaptureExporter: TelemetryPayloadExporter, @unchecked Sendable {
+        private let lock = NSLock()
+        private var _items: [any TelemetryPayload] = []
 
-        func export(metrics: [MetricData]) -> ExportResult {
-            exported.append(contentsOf: metrics)
-            return .success
-        }
+        var items: [any TelemetryPayload] { lock.withLock { _items } }
+        var metrics: [TelemetryMetric] { items.compactMap { $0 as? TelemetryMetric } }
+        var distributions: [TelemetryDistribution] { items.compactMap { $0 as? TelemetryDistribution } }
 
-        func flush() -> ExportResult { .success }
-        func shutdown() -> ExportResult { .success }
-        func getAggregationTemporality(for instrument: InstrumentType) -> AggregationTemporality {
-            .delta
-        }
+        func export(item: any TelemetryPayload) { lock.withLock { _items.append(item) } }
+        func export(items: [any TelemetryPayload]) { lock.withLock { _items.append(contentsOf: items) } }
+        func flush() -> Bool { true }
+        func shutdown() {}
     }
 
-    private func makeTelemetry(_ exporter: MetricExporter) -> Telemetry {
-        Telemetry(metricOnlyExporter: exporter, resource: Resource(), exportInterval: 3600)
+    /// A long interval keeps the periodic timers (flush + heartbeat) out of the
+    /// way; tests drive `flush()` explicitly. `NoopTelemetryApi` swallows the
+    /// `app-started` call.
+    private func makeTelemetry(_ exporter: CaptureExporter, distributionCap: Int = 2048) -> Telemetry {
+        Telemetry(api: NoopTelemetryApi(), exporter: exporter,
+                  exportInterval: 3600, distributionCap: distributionCap)
     }
 
-    func testRecordsCounterWithTypedTags() throws {
-        let exporter = InMemoryMetricExporter()
+    // MARK: - Counters
+
+    func testRecordsCounterAsCountSeriesWithTypedTags() throws {
+        let exporter = CaptureExporter()
         let telemetry = makeTelemetry(exporter)
 
         telemetry.metrics.git.command.add(command: .getRepository)
         telemetry.metrics.endpointPayload.requestsErrors.add(errorType: .timeout, endpoint: .testCycle)
 
-        XCTAssertTrue(telemetry.flush())
+        telemetry.flush()
 
-        let byName = Dictionary(exporter.exported.map { ($0.name, $0) }) { a, _ in a }
+        let series = exporter.metrics.flatMap(\.series)
+        let byName = Dictionary(series.map { ($0.metric, $0) }) { a, _ in a }
 
         let gitCommand = try XCTUnwrap(byName["git.command"])
-        XCTAssertEqual(gitCommand.resource.telemetryMetricNamespace, .civisibility)
-        let gitPoint = try XCTUnwrap(gitCommand.data.points.first)
-        XCTAssertEqual(gitPoint.attributes["command"]?.description, "get_repository")
+        XCTAssertEqual(gitCommand.type, .count)
+        XCTAssertEqual(gitCommand.points.first?.value, 1)
+        XCTAssertEqual(gitCommand.tags, ["command:get_repository"])
+        XCTAssertEqual(exporter.metrics.first?.namespace, .civisibility)
 
         let errors = try XCTUnwrap(byName["endpoint_payload.requests_errors"])
-        let errPoint = try XCTUnwrap(errors.data.points.first)
-        XCTAssertEqual(errPoint.attributes["error_type"]?.description, "timeout")
-        XCTAssertEqual(errPoint.attributes["endpoint"]?.description, "test_cycle")
+        XCTAssertEqual(errors.tags, ["endpoint:test_cycle", "error_type:timeout"])
     }
 
-    func testRecordsDistributionWithCivisibilityNamespace() throws {
-        let exporter = InMemoryMetricExporter()
-        let telemetry = makeTelemetry(exporter)
-
-        telemetry.metrics.endpointPayload.bytes.record(2048, endpoint: .codeCoverage)
-        telemetry.metrics.knownTests.responseTests.record(42)
-
-        XCTAssertTrue(telemetry.flush())
-
-        let names = Set(exporter.exported.map(\.name))
-        XCTAssertTrue(names.contains("endpoint_payload.bytes"))
-        XCTAssertTrue(names.contains("known_tests.response_tests"))
-
-        for metric in exporter.exported {
-            XCTAssertEqual(metric.resource.telemetryDistributionNamespace, .civisibility)
-        }
-    }
-
-    func testCounterIncrementsByGivenValue() throws {
-        let exporter = InMemoryMetricExporter()
+    func testCounterAccumulatesDeltaPerInterval() throws {
+        let exporter = CaptureExporter()
         let telemetry = makeTelemetry(exporter)
 
         telemetry.metrics.itrSkippableTests.responseTests.add(7)
+        telemetry.metrics.itrSkippableTests.responseTests.add(3)
 
-        XCTAssertTrue(telemetry.flush())
+        telemetry.flush()
 
-        let metric = try XCTUnwrap(exporter.exported.first { $0.name == "itr_skippable_tests.response_tests" })
-        let point = try XCTUnwrap(metric.data.points.first as? LongPointData)
-        XCTAssertEqual(point.value, 7)
+        let series = try XCTUnwrap(exporter.metrics.flatMap(\.series)
+            .first { $0.metric == "itr_skippable_tests.response_tests" })
+        XCTAssertEqual(series.points.first?.value, 10)
+    }
+
+    func testFlushClearsBuffersSoNothingIsReEmitted() {
+        let exporter = CaptureExporter()
+        let telemetry = makeTelemetry(exporter)
+
+        telemetry.metrics.itrSkippableTests.request.add()
+        telemetry.flush()
+        telemetry.flush()
+
+        // Second flush has nothing to drain — only the first produced a payload.
+        XCTAssertEqual(exporter.metrics.flatMap(\.series).count, 1)
+    }
+
+    // MARK: - Distributions
+
+    func testRecordsDistributionAsRawSamples() throws {
+        let exporter = CaptureExporter()
+        let telemetry = makeTelemetry(exporter)
+
+        telemetry.metrics.endpointPayload.bytes.record(2048, endpoint: .codeCoverage)
+        telemetry.metrics.endpointPayload.bytes.record(4096, endpoint: .codeCoverage)
+        telemetry.metrics.knownTests.responseTests.record(42)
+
+        telemetry.flush()
+
+        let series = exporter.distributions.flatMap(\.series)
+        let byName = Dictionary(series.map { ($0.metric, $0) }) { a, _ in a }
+
+        let bytes = try XCTUnwrap(byName["endpoint_payload.bytes"])
+        // Raw samples, verbatim — no bucketing/reconstruction.
+        XCTAssertEqual(bytes.points.sorted(), [2048, 4096])
+        XCTAssertEqual(bytes.tags, ["endpoint:code_coverage"])
+
+        XCTAssertTrue(byName.keys.contains("known_tests.response_tests"))
+        XCTAssertEqual(exporter.distributions.first?.namespace, .civisibility)
+    }
+
+    func testFullDistributionBufferForcesEarlyFlush() {
+        let exporter = CaptureExporter()
+        // Cap of 3 samples forces a drain on the third record, before any flush().
+        let telemetry = makeTelemetry(exporter, distributionCap: 3)
+
+        telemetry.metrics.knownTests.responseTests.record(1)
+        telemetry.metrics.knownTests.responseTests.record(2)
+        XCTAssertTrue(exporter.distributions.isEmpty, "not yet at the cap")
+
+        telemetry.metrics.knownTests.responseTests.record(3)
+
+        let points = exporter.distributions.flatMap(\.series)
+            .filter { $0.metric == "known_tests.response_tests" }
+            .flatMap(\.points)
+        XCTAssertEqual(points.sorted(), [1, 2, 3])
     }
 
     // MARK: - Observer adapters
@@ -131,19 +170,8 @@ final class TelemetryTests: XCTestCase {
 
 // MARK: - Test helpers
 
-/// Convenience init that sets up only the OTel metric pipeline, skipping
-/// app-lifecycle calls (app-started, heartbeat, app-closing). Lives here so
-/// production Telemetry.swift stays free of test-only code.
-extension Telemetry {
-    convenience init(metricOnlyExporter exporter: MetricExporter, resource: Resource,
-                     exportInterval: TimeInterval = 60)
-    {
-        self.init(api: NoopTelemetryApi(), telemetryExporter: nil,
-                  metricExporter: exporter, resource: resource,
-                  exportInterval: exportInterval)
-    }
-}
-
+/// Swallows the direct `app-started` call so tests exercise only the metric
+/// collector. Lives here so production `Telemetry.swift` stays free of test-only code.
 private struct NoopTelemetryApi: TelemetryApi {
     var endpoint: EventsExporter.Endpoint = .us1
     var headers: [HTTPHeader] = []

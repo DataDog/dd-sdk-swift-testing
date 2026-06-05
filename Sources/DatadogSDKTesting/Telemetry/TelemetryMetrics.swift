@@ -5,9 +5,6 @@
  */
 
 import Foundation
-internal import EventsExporter
-internal import OpenTelemetryApi
-internal import OpenTelemetrySdk
 
 // MARK: - Low-level instrument handles
 
@@ -17,32 +14,36 @@ extension Telemetry {
     /// the wire value.
     typealias Tags = [String: any SpanAttributeConvertible]
 
-    /// Thin handle over a telemetry counter instrument. Metric types wrap one of
-    /// these and expose a typed `add(...)`; callers don't use this directly.
+    /// Thin handle over a telemetry counter. Metric types wrap one of these and
+    /// expose a typed `add(...)`; callers don't use this directly. Recording
+    /// accumulates a per-interval delta in the shared `MetricStore`.
     struct Counter {
-        fileprivate let sdk: LongCounterSdk
+        fileprivate let store: MetricStore
+        fileprivate let name: String
         fileprivate func add(_ value: Int, _ tags: Tags) {
-            sdk.add(value: value, attributes: tags.mapValues { .string($0.spanAttribute) })
+            store.addCount(name: name, value: value, tags: Telemetry.renderTags(tags))
         }
     }
 
-    /// Thin handle over a telemetry distribution (histogram) instrument.
+    /// Thin handle over a telemetry distribution. Each recorded value is kept as
+    /// a raw sample in the shared `MetricStore`; the backend computes the summary.
     struct Distribution {
-        fileprivate let sdk: DoubleHistogramMeterSdk
+        fileprivate let store: MetricStore
+        fileprivate let name: String
         fileprivate func record(_ value: Double, _ tags: Tags) {
-            sdk.record(value: value, attributes: tags.mapValues { .string($0.spanAttribute) })
+            store.record(name: name, value: value, tags: Telemetry.renderTags(tags))
         }
     }
 
-    /// Builds named instruments from a meter; threaded through the metrics tree
-    /// so every metric registers itself once at construction.
+    /// Names instruments against the shared store; threaded through the metrics
+    /// tree so every metric registers itself once at construction.
     struct Factory {
-        let meter: MeterSdk
+        let store: MetricStore
         func counter(_ name: String) -> Counter {
-            Counter(sdk: meter.counterBuilder(name: name).build())
+            Counter(store: store, name: name)
         }
         func distribution(_ name: String) -> Distribution {
-            Distribution(sdk: meter.histogramBuilder(name: name).build())
+            Distribution(store: store, name: name)
         }
     }
 }

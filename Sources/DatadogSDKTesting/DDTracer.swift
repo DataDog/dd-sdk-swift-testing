@@ -187,8 +187,7 @@ internal class DDTracer {
         // Build the telemetry manager before the exporter so its observers can
         // be wired into the exporter's upload/serialization pipeline.
         let telemetry: Telemetry? = conf.instrumentationTelemetryEnabled
-            ? DDTracer.makeTelemetry(api: api, configuration: exporterConfiguration, resource: resource,
-                                     exportInterval: conf.telemetryHeartbeatInterval)
+            ? DDTracer.makeTelemetry(api: api, configuration: exporterConfiguration)
             : nil
 
         // Exporter files live under the cache manager's session directory so
@@ -215,8 +214,7 @@ internal class DDTracer {
     /// reusing the exporter's configuration. Returns `nil` when the backing
     /// storage or exporter can't be created, in which case telemetry is simply
     /// not gathered.
-    private static func makeTelemetry(api: TestOptimizationApi, configuration: ExporterConfiguration,
-                                      resource: Resource, exportInterval: TimeInterval) -> Telemetry?
+    private static func makeTelemetry(api: TestOptimizationApi, configuration: ExporterConfiguration) -> Telemetry?
     {
         guard let cacheManager = DDTestMonitor.cacheManager,
               let storage = try? cacheManager.session(feature: "telemetry")
@@ -233,11 +231,8 @@ internal class DDTracer {
             return nil
         }
 
-        let metricExporter = TelemetryMetricExporter(telemetryExporter: telemetryExporter,
-                                                     namespace: .civisibility,
-                                                     distributionNamespace: .civisibility)
-        return Telemetry(api: api.telemetry, telemetryExporter: telemetryExporter,
-                         metricExporter: metricExporter, resource: resource,
+        return Telemetry(api: api.telemetry,
+                         exporter: telemetryExporter,
                          exportInterval: exportInterval,
                          configuration: Self.telemetryConfiguration())
     }

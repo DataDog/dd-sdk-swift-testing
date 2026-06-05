@@ -47,12 +47,7 @@ final actor SessionManager: TestSessionManager {
     }
     
     private func bootstrapSession() async throws -> SessionWithConfig {
-        do {
-            try await DDTestMonitor.clock.sync()
-        } catch {
-            log.print("Clock sync failed: \(error)")
-            DDTestMonitor.clock = DateClock()
-        }
+        await DDTestMonitor.clock.sync()
         
         let startTime = DDTestMonitor.clock.now
         

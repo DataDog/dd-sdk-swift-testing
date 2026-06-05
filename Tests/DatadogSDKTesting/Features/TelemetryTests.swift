@@ -29,7 +29,7 @@ final class TelemetryTests: XCTestCase {
     }
 
     private func makeTelemetry(_ exporter: MetricExporter) -> Telemetry {
-        Telemetry(testMetricExporter: exporter, resource: Resource(), exportInterval: 3600)
+        Telemetry(metricOnlyExporter: exporter, resource: Resource(), exportInterval: 3600)
     }
 
     func testRecordsCounterWithTypedTags() throws {
@@ -127,4 +127,40 @@ final class TelemetryTests: XCTestCase {
         XCTAssertEqual(box.requests, 2)
         XCTAssertNil(box.error)
     }
+}
+
+// MARK: - Test helpers
+
+/// Convenience init that sets up only the OTel metric pipeline, skipping
+/// app-lifecycle calls (app-started, heartbeat, app-closing). Lives here so
+/// production Telemetry.swift stays free of test-only code.
+extension Telemetry {
+    convenience init(metricOnlyExporter exporter: MetricExporter, resource: Resource,
+                     exportInterval: TimeInterval = 60)
+    {
+        self.init(api: NoopTelemetryApi(), telemetryExporter: nil,
+                  metricExporter: exporter, resource: resource,
+                  exportInterval: exportInterval)
+    }
+}
+
+private struct NoopTelemetryApi: TelemetryApi {
+    var endpoint: EventsExporter.Endpoint = .us1
+    var headers: [HTTPHeader] = []
+    var encoder: JSONEncoder = JSONEncoder()
+    var decoder: JSONDecoder = JSONDecoder()
+    var endpointURLs: Set<URL> { [] }
+
+    func sendAppStarted(products: TelemetryProducts?, configuration: [TelemetryConfigItem]?,
+                        error: TelemetryError?,
+                        installSignature: TelemetryInstallSignature?) async throws(APICallError) {}
+    func sendAppHeartbeat() async throws(APICallError) {}
+    func sendAppClosing() async throws(APICallError) {}
+    func sendMetrics(_ series: [TelemetryMetric.Series],
+                     namespace: TelemetryMetric.Namespace?) async throws(APICallError) {}
+    func sendDistributions(_ series: [TelemetryDistribution.Series],
+                           namespace: TelemetryDistribution.Namespace?) async throws(APICallError) {}
+    func sendLogs(_ logs: [TelemetryLog]) async throws(APICallError) {}
+    func send(batch items: [any TelemetryPayload]) async throws(APICallError) {}
+    func send(batch data: Data) async throws(APICallError) {}
 }

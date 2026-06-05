@@ -167,13 +167,7 @@ public extension DDSession {
                                    command: command,
                                    log: Log.instance,
                                    telemetry: DDTestMonitor.tracer.telemetry)
-        waitForAsync {
-            do {
-                try await DDTestMonitor.clock.sync()
-            } catch {
-                DDTestMonitor.clock = DateClock()
-            }
-        }
+        waitForAsync { await DDTestMonitor.clock.sync() }
         let session = DDSession(name: name, config: config,
                                 modules: DDModule.StatelessManager(config: config,
                                                                    observer: SessionAndModuleObserver()),

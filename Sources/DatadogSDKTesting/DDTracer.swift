@@ -93,14 +93,6 @@ internal class DDTracer {
         }
 
         // sync clock
-        waitForAsync {
-            do {
-                try await DDTestMonitor.clock.sync()
-            } catch {
-                DDTestMonitor.clock = DateClock()
-            }
-        }
-
         tracerProviderSdk = TracerProviderBuilder().with(sampler: Samplers.alwaysOn)
             .with(spanLimits: SpanLimits().settingAttributeCountLimit(attributeCountLimit))
             .with(clock: DDTestMonitor.clock)
@@ -159,6 +151,10 @@ internal class DDTracer {
         let metadata = SpanMetadata(libraryVersion: DDTestMonitor.tracerVersion,
                                     env: DDTestMonitor.env,
                                     capabilities: .libraryCapabilities)
+
+        // Sync the clock before creating the API service so its date provider
+        // is ready. SyncingClock absorbs NTP failures internally — no replacement needed.
+        waitForAsync { await DDTestMonitor.clock.sync() }
 
         let exporterConfiguration = ExporterConfiguration(
             environment: env.environment,

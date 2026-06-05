@@ -86,6 +86,29 @@ final class NTPClock: Clock {
 
 final class DateClock: Clock {
     func sync() async {}
-    
+
     var now: Date { Date() }
+}
+
+/// A clock that wraps an inner clock and falls back to the system wall clock
+/// if the inner clock hasn't synced successfully. Captures are always safe:
+/// `now` never crashes regardless of sync state, and `sync()` never throws
+/// — failures are absorbed internally. This removes the need to replace the
+/// clock reference after a failed NTP sync.
+final class SyncingClock: Clock, @unchecked Sendable {
+    private let inner:  Synced<any Clock>
+
+    init(_ inner: any Clock) {
+        self.inner = .init(inner)
+    }
+
+    func sync() async {
+        do {
+            try await inner.value.sync()
+        } catch {
+            inner.update { $0 = DateClock() }
+        }
+    }
+
+    var now: Date { inner.value.now }
 }

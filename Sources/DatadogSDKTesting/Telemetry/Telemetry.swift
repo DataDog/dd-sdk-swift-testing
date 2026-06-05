@@ -34,7 +34,7 @@ final class Telemetry: @unchecked Sendable {
     let metrics: Metrics
 
     private let meterProvider: MeterProviderSdk
-    private let telemetryExporter: TelemetryExporter
+    private let telemetryExporter: TelemetryExporter?
     private var heartbeatSource: (any DispatchSourceTimer)?
 
     /// - Parameters:
@@ -85,10 +85,37 @@ final class Telemetry: @unchecked Sendable {
         let source = DispatchSource.makeTimerSource(queue: .global(qos: .utility))
         source.schedule(deadline: .now() + exportInterval, repeating: exportInterval)
         source.setEventHandler { [weak self] in
-            self?.telemetryExporter.export(item: TelemetryAppHeartbeat())
+            self?.telemetryExporter?.export(item: TelemetryAppHeartbeat())
         }
         source.resume()
         self.heartbeatSource = source
+    }
+
+    /// Test-only initializer: sets up only the metric pipeline, skipping
+    /// app-lifecycle calls (app-started, heartbeat, app-closing).
+    init(testMetricExporter exporter: MetricExporter, resource: Resource,
+         exportInterval: TimeInterval = 60)
+    {
+        var resource = resource
+        resource.telemetryMetricNamespace = .civisibility
+        resource.telemetryDistributionNamespace = .civisibility
+
+        let reader = PeriodicMetricReaderBuilder(exporter: exporter)
+            .setInterval(timeInterval: exportInterval)
+            .build()
+
+        let provider = MeterProviderSdk.builder()
+            .registerView(selector: InstrumentSelectorBuilder().build(),
+                          view: View.builder().build())
+            .registerMetricReader(reader: reader)
+            .setResource(resource: resource)
+            .build()
+        self.meterProvider = provider
+        self.telemetryExporter = nil
+        self.heartbeatSource = nil
+
+        let meter = provider.get(name: Telemetry.instrumentationScopeName)
+        self.metrics = Metrics(Factory(meter: meter))
     }
 
     /// Collect and export the current metric values immediately.
@@ -102,7 +129,7 @@ final class Telemetry: @unchecked Sendable {
     func shutdown() {
         heartbeatSource?.cancel()
         heartbeatSource = nil
-        telemetryExporter.export(item: TelemetryAppClosing())
+        telemetryExporter?.export(item: TelemetryAppClosing())
         _ = meterProvider.shutdown()
     }
 }

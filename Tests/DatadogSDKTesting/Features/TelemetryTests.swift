@@ -29,7 +29,7 @@ final class TelemetryTests: XCTestCase {
     }
 
     private func makeTelemetry(_ exporter: MetricExporter) -> Telemetry {
-        Telemetry(exporter: exporter, resource: Resource(), exportInterval: 3600)
+        Telemetry(testMetricExporter: exporter, resource: Resource(), exportInterval: 3600)
     }
 
     func testRecordsCounterWithTypedTags() throws {
@@ -113,7 +113,7 @@ final class TelemetryTests: XCTestCase {
 
         // A failed request forwards all facts and derives the error type.
         observer.requestFinished(durationMs: 12, requestBytes: 100, responseBytes: 200,
-                                 statusCode: 503, failed: true)
+                                 statusCode: 503, transportError: nil, failed: true)
         XCTAssertEqual(box.requests, 1)
         XCTAssertEqual(box.durationMs, 12)
         XCTAssertEqual(box.requestBytes, 100)
@@ -123,7 +123,7 @@ final class TelemetryTests: XCTestCase {
         // A successful request does not report an error.
         box.error = nil
         observer.requestFinished(durationMs: 1, requestBytes: 1, responseBytes: 1,
-                                 statusCode: 202, failed: false)
+                                 statusCode: 202, transportError: nil, failed: false)
         XCTAssertEqual(box.requests, 2)
         XCTAssertNil(box.error)
     }

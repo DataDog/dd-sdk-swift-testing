@@ -280,7 +280,8 @@ public final class MockBackend {
                     "test_management": [
                         "enabled": s.testManagement.enabled,
                         "attempt_to_fix_retries": s.testManagement.attemptToFixRetries
-                    ] as [String: Any]
+                    ] as [String: Any],
+                    "impacted_tests_enabled": s.impactedTestsEnabled
                 ] as [String: Any]
             ] as [String: Any]
         ]
@@ -781,16 +782,19 @@ extension MockBackend {
         public var flakyTestRetriesEnabled: Bool
         public var earlyFlakeDetection: EFDConfig
         public var testManagement: TestManagementConfig
+        public var impactedTestsEnabled: Bool
 
         public init(
             itrEnabled: Bool = false, codeCoverage: Bool = false, testsSkipping: Bool = false,
             knownTestsEnabled: Bool = false, requireGit: Bool = false, flakyTestRetriesEnabled: Bool = false,
-            earlyFlakeDetection: EFDConfig = .init(), testManagement: TestManagementConfig = .init()
+            earlyFlakeDetection: EFDConfig = .init(), testManagement: TestManagementConfig = .init(),
+            impactedTestsEnabled: Bool = false
         ) {
             self.itrEnabled = itrEnabled; self.codeCoverage = codeCoverage
             self.testsSkipping = testsSkipping; self.knownTestsEnabled = knownTestsEnabled
             self.requireGit = requireGit; self.flakyTestRetriesEnabled = flakyTestRetriesEnabled
             self.earlyFlakeDetection = earlyFlakeDetection; self.testManagement = testManagement
+            self.impactedTestsEnabled = impactedTestsEnabled
         }
     }
 

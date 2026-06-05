@@ -23,7 +23,6 @@ public final class DDSuite: NSObject {
         span.endTime?.timeIntervalSince(span.startTime).toNanoseconds ?? 0
     }
     var status: TestStatus { span.testStatus }
-    var configuration: SessionConfig { _module.configuration }
 
     var id: SpanId { span.context.spanId }
     let span: SpanSdk

@@ -77,7 +77,10 @@ protocol TestModule: TestContainer {
     var session: any TestSession { get }
     var testFrameworks: Set<String> { get }
     var localization: String { get }
-    var configuration: SessionConfig { get }
+}
+
+extension TestModule {
+    var configuration: SessionConfig { session.configuration }
 }
 
 protocol TestModuleProvider: Sendable {
@@ -100,7 +103,6 @@ protocol TestSuite: TestContainer {
     var module: any TestModule { get }
     var localization: String { get }
     var testFramework: TestFramework { get }
-    var configuration: SessionConfig { get }
 }
 
 protocol TestSuiteProvider: Sendable {
@@ -114,7 +116,8 @@ protocol TestRunProvider: Sendable {
 
 extension TestSuite {
     var session: any TestSession { module.session }
-    
+    var configuration: SessionConfig { module.configuration }
+
     func set(status: TestStatus) {
         switch status {
         case .fail: set(failed: nil)

@@ -222,7 +222,6 @@ enum Mocks {
         var session: any TestSession { _session }
         var testFrameworks: Set<String> { _state.value.testFrameworks }
         var suites: [String: Suite] { _state.value.suites }
-        var configuration: SessionConfig { _session.configuration }
         var localization: String {
             get { _state.value.localization }
             set { _state.update { $0.localization = newValue } }
@@ -291,7 +290,6 @@ enum Mocks {
         let testTags: [String: AttachedTags]
         
         var module: any TestModule { _module }
-        var configuration: SessionConfig { _module.configuration }
         var localization: String {
             get { _state.value.localization }
             set { _state.update { $0.localization = newValue } }

@@ -27,7 +27,6 @@ public final class DDModule: NSObject {
     var id: SpanId { span.context.spanId }
     let span: SpanSdk
     var session: TestSession { _session }
-    var configuration: SessionConfig { _session.configuration }
     var startTime: Date { span.startTime }
 
     private let _session: DDSession

@@ -58,19 +58,8 @@ protocol TestSessionProvider: Sendable {
 
 protocol TestSessionManager: Sendable {
     var session: any TestSession & TestModuleManager { get async throws }
-    var config: SessionConfig { get async throws }
-    var sessionAndConfig: (session: any TestSession & TestModuleManager, config: SessionConfig) { get async throws }
-    
-    func stop() async
-}
 
-extension TestSessionManager {
-    var session: any TestSession & TestModuleManager {
-        get async throws { try await sessionAndConfig.session }
-    }
-    var config: SessionConfig {
-        get async throws { try await sessionAndConfig.config }
-    }
+    func stop() async
 }
 
 protocol TestModule: TestContainer {

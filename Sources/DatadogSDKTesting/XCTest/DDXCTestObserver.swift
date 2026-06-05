@@ -52,10 +52,9 @@ final class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate
         let bundleName = testBundle.name.replacingOccurrences(of: "_", with: "-")
 
         do {
-            let session = try waitForAsync { try await manager.sessionAndConfig }
-            let module = session.session.module(named: bundleName)
-            state = .module(module: module, context: ModuleContext(session: session.session,
-                                                                   config: session.config))
+            let session = try waitForAsync { try await manager.session }
+            let module = session.module(named: bundleName)
+            state = .module(module: module, context: ModuleContext(session: session))
             log.debug("testBundleWillStart: \(bundleName)")
         } catch {
             log.print("Session initialisation failed: \(error)")
@@ -433,13 +432,11 @@ extension DDXCTestObserver {
     
     final class ModuleContext {
         let session: any TestSession & TestModuleManager
-        let config: SessionConfig
-        
-        var features: any TestHooksFeatures { config.activeFeatures }
-        
-        init(session: any TestSession & TestModuleManager, config: SessionConfig) {
+
+        var features: any TestHooksFeatures { session.configuration.activeFeatures }
+
+        init(session: any TestSession & TestModuleManager) {
             self.session = session
-            self.config = config
         }
     }
     

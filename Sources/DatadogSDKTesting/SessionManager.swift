@@ -8,22 +8,19 @@ import Foundation
 internal import EventsExporter
 
 final actor SessionManager: TestSessionManager {
-    typealias SessionWithConfig = (session: any TestModuleManager & TestSession,
-                                   config: SessionConfig)
-    
-    private var _session: Task<SessionWithConfig, any Error>?
+    private var _session: Task<any TestModuleManager & TestSession, any Error>?
     let observer: (any TestSessionManagerObserver & TestModuleManagerObserver)?
     let provider: any TestSessionProvider
     let log: Logger
-    
+
     init(log: Logger, provider: any TestSessionProvider, observer: (any TestSessionManagerObserver & TestModuleManagerObserver)?) {
         self._session = nil
         self.log = log
         self.provider = provider
         self.observer = observer
     }
-    
-    var sessionAndConfig: SessionWithConfig {
+
+    var session: any TestModuleManager & TestSession {
         get async throws {
             if let session = _session {
                 return try await session.value
@@ -32,21 +29,21 @@ final actor SessionManager: TestSessionManager {
             return try await _session!.value
         }
     }
-    
+
     func stop() async {
         guard let session = try? await _session?.value else {
             return
         }
-        await observer?.willFinish(session: session.session)
+        await observer?.willFinish(session: session)
         _session = nil
-        session.session.end()
-        await observer?.didFinish(session: session.session)
+        session.end()
+        await observer?.didFinish(session: session)
         DDTestMonitor.removeTestMonitor()
-        session.config.telemetry?.shutdown()
+        session.configuration.telemetry?.shutdown()
         DDTestMonitor.tracer.flush()
     }
-    
-    private func bootstrapSession() async throws -> SessionWithConfig {
+
+    private func bootstrapSession() async throws -> any TestModuleManager & TestSession {
         await DDTestMonitor.clock.sync()
         
         let startTime = DDTestMonitor.clock.now
@@ -84,7 +81,7 @@ final actor SessionManager: TestSessionManager {
         let session = try await provider.startSession(named: "Swift.session", config: config,
                                                       startTime: startTime, observer: observer)
         await observer?.didStart(session: session)
-        return (session, config)
+        return session
     }
 }
 

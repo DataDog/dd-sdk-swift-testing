@@ -36,8 +36,8 @@ final class SessionManagerTests: XCTestCase {
 
     func testSessionConfigIsAvailableAfterBootstrap() async throws {
         let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider(), observer: nil)
-        let config1 = try await manager.config
-        let config2 = try await manager.config
+        let config1 = try await manager.session.configuration
+        let config2 = try await manager.session.configuration
         XCTAssertEqual(config1.env.service, config2.env.service)
         await manager.stop()
     }

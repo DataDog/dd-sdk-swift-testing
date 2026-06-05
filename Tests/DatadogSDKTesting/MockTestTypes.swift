@@ -662,10 +662,7 @@ enum Mocks {
     }
     
     final actor SessionManager: TestSessionManager {
-        typealias SessionWithConfig = (session: any TestModuleManager & TestSession,
-                                       config: SessionConfig)
-
-        private var _session: Task<SessionWithConfig, any Error>?
+        private var _session: Task<any TestModuleManager & TestSession, any Error>?
         private var _stopped: Bool = false
         let provider: any TestSessionProvider
         let _config: SessionConfig
@@ -679,7 +676,7 @@ enum Mocks {
             self._observer = observer
         }
 
-        var sessionAndConfig: SessionWithConfig {
+        var session: any TestModuleManager & TestSession {
             get async throws {
                 if let session = _session {
                     return try await session.value
@@ -692,7 +689,7 @@ enum Mocks {
                     let session = try await provider.startSession(named: "Mock.session", config: config,
                                                                   startTime: startTime, observer: observer)
                     await observer?.didStart(session: session)
-                    return (session, config) as SessionWithConfig
+                    return session
                 }
                 return try await _session!.value
             }
@@ -701,11 +698,11 @@ enum Mocks {
         func stop() async {
             guard !_stopped else { return }
             _stopped = true
-            guard let sc = try? await _session?.value else { return }
-            await _observer?.willFinish(session: sc.session)
-            sc.session.end()
-            await _observer?.didFinish(session: sc.session)
-            // Keep _session set so concurrent readers calling sessionAndConfig
+            guard let session = try? await _session?.value else { return }
+            await _observer?.willFinish(session: session)
+            session.end()
+            await _observer?.didFinish(session: session)
+            // Keep _session set so concurrent readers calling `session`
             // after stop() see the same (now-ended) session instead of bootstrapping
             // a fresh empty one — that would race with parallel verification blocks
             // inspecting session.modules.

@@ -633,19 +633,18 @@ extension SpanMetadata {
         self.init()
         self[string: DDGenericTags.language] = "swift"
         self[string: DDGenericTags.libraryVersion] = libraryVersion
-        for type in SpanType.allTest {
-            for tag in tags {
-                self[string: type, tag.key] = tag.value
-            }
-            for tag in git {
-                self[string: type, tag.key] = tag.value
-            }
-            for tag in ci {
-                self[string: type, tag.key] = tag.value
-            }
-            self[string: type, DDTestSessionTags.testSessionName] = sessionName
-            self[bool: type, DDTags.isUserProvidedService] = isUserProvidedService
+        for tag in tags {
+            self[string: .allTest, tag.key] = tag.value
         }
+        for tag in git {
+            self[string: .allTest, tag.key] = tag.value
+        }
+        for tag in ci {
+            self[string: .allTest, tag.key] = tag.value
+        }
+        self[string: .allTest, DDTestSessionTags.testSessionName] = sessionName
+        self[bool: .allTest, DDTags.isUserProvidedService] = isUserProvidedService
+        
         for capability in capabilities {
             let (key, val) = capability.metadata
             self[string: .test, key] = val
@@ -658,6 +657,5 @@ extension SpanMetadata.SpanType {
     static var session: Self { .init(DDTagValues.typeSessionEnd) }
     static var suite: Self { .init(DDTagValues.typeSuiteEnd) }
     static var test: Self { .init(DDTagValues.typeTest) }
-    
-    static var allTest: [Self] { [module, session, suite, test] }
+    static var allTest: Self { "test_levels" }
 }

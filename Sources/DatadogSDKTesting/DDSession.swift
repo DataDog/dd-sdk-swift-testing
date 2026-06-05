@@ -181,13 +181,7 @@ public extension DDSession {
         if let telemetry = DDTestMonitor.tracer.telemetry {
             telemetry.metrics.session.started.add(provider: config.env.ci?.provider, autoInjected: false)
             telemetry.metrics.events.manualApiEvents.add(eventType: .session)
-            telemetry.metrics.git.commitShaMatch.add(matched: config.env.git.shaMatched)
-            for d in config.env.git.discrepancies {
-                telemetry.metrics.git.commitShaDiscrepancy.add(
-                    expectedProvider: d.expectedProvider,
-                    discrepantProvider: d.discrepantProvider,
-                    type: d.type)
-            }
+            session.emitGitShaCheck(to: telemetry)
         }
         return session
     }

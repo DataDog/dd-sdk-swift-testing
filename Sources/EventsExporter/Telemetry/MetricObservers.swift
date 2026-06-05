@@ -22,12 +22,13 @@ import Foundation
 /// `requestBytes` is the size of the serialized request payload that was sent
 /// (some metrics, e.g. `endpoint_payload.bytes` / `git_requests.objects_pack_bytes`,
 /// track the request size); `responseBytes` is the size of the received body.
-/// `statusCode` is `nil` for transport-level failures (no HTTP response, e.g.
-/// timeout or connection error); `failed` is `true` whenever the request did
-/// not complete successfully.
+/// `statusCode` is `nil` for transport-level failures (no HTTP response);
+/// `transportError` carries the raw `URLError` in those cases (e.g. `.timedOut`,
+/// `.notConnectedToInternet`) and is `nil` when an HTTP response was received.
+/// `failed` is `true` whenever the request did not complete successfully.
 public protocol RequestObserver: Sendable {
     func requestFinished(durationMs: Double, requestBytes: Int, responseBytes: Int,
-                         statusCode: Int?, failed: Bool)
+                         statusCode: Int?, transportError: (any Error)?, failed: Bool)
 }
 
 /// Observes the background upload pipeline that drains stored batches to the
@@ -45,10 +46,13 @@ public protocol UploadObserver: Sendable {
 }
 
 /// Observes payload serialization at the storage layer (one observer per feature
-/// store). `payloadFinalized` is reported once when a file is closed/rolled,
-/// carrying the number of events that ended up in that payload (`events_count`)
-/// and the summed time spent serializing them (`events_serialization_ms`).
+/// store). `eventEnqueued` is reported once per event as it is encoded and sent
+/// for writing (the source for `events_enqueued_for_serialization`).
+/// `payloadFinalized` is reported once when a file is closed/rolled, carrying
+/// the number of events in that payload (`events_count`) and the summed time
+/// spent serializing them (`events_serialization_ms`).
 public protocol PayloadObserver: Sendable {
+    func eventEnqueued()
     func payloadFinalized(eventCount: Int, serializationMs: Double)
 }
 

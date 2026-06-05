@@ -51,7 +51,8 @@ final class CodeCoverageProvider: TestCoverageCollector {
     let debug: Bool
 
     init(storagePath: Directory, exporter: ExporterProtocol,
-         workspacePath: String?, priority: CodeCoveragePriority, debug: Bool) throws
+         workspacePath: String?, priority: CodeCoveragePriority, debug: Bool,
+         telemetry: Telemetry? = nil) throws
     {
         let llvm = try LLVMCoverageProcessor(for: PlatformUtils.xcodeVersion,
                                              temp: storagePath.url)
@@ -59,7 +60,8 @@ final class CodeCoverageProvider: TestCoverageCollector {
         self.processor = BackgroundCoverageProcessor(exporter: exporter,
                                                      parser: llvm.parser,
                                                      priority: priority,
-                                                     cleanupCoverageFiles: !debug)
+                                                     cleanupCoverageFiles: !debug,
+                                                     telemetry: telemetry)
         self.debug = debug
         self.storagePath = storagePath
         self.workspacePath = workspacePath

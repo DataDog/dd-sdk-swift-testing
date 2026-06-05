@@ -18,6 +18,7 @@
 		56B58A2FC91F21D1ABB0155E /* TelemetryApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01EB970146040DD4967C7411 /* TelemetryApi.swift */; };
 		7972B04FB1DFA64DC20032AE /* Telemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E11F924F40C94461C2B6B27 /* Telemetry.swift */; };
 		7C6CBEE99C831DBEBB28BD67 /* TelemetryObservers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26CA2B1C720A94291E83285B /* TelemetryObservers.swift */; };
+		02DF858038394B24B4534C49 /* TelemetryEventsFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BC8A25D6F0A4B818594FE62 /* TelemetryEventsFeature.swift */; };
 		821FA0CC8B62245A4949FDBB /* APITypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85241CF97F1B6DAA49ECA23 /* APITypes.swift */; };
 		86137D23E1704D17A7B6D486 /* TelemetryExporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04DFE52D135C457D9160920A /* TelemetryExporterTests.swift */; };
 		8EF6F88255506A4CEE6D36B6 /* GitUploadApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F3AA8F51FDDEF0C319080E8 /* GitUploadApi.swift */; };
@@ -433,6 +434,7 @@
 		1495758A45B516A2C584B845 /* TestImpactAnalysisApi.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TestImpactAnalysisApi.swift; sourceTree = "<group>"; };
 		1531A96019132E3E9E96A3A7 /* KnownTestsApi.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = KnownTestsApi.swift; sourceTree = "<group>"; };
 		26CA2B1C720A94291E83285B /* TelemetryObservers.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TelemetryObservers.swift; sourceTree = "<group>"; };
+		6BC8A25D6F0A4B818594FE62 /* TelemetryEventsFeature.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TelemetryEventsFeature.swift; sourceTree = "<group>"; };
 		2E11F924F40C94461C2B6B27 /* Telemetry.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Telemetry.swift; sourceTree = "<group>"; };
 		31F8747157604DB48FE692EB /* AutoTestRetriesSwiftTestingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoTestRetriesSwiftTestingTests.swift; sourceTree = "<group>"; };
 		5687C35EB7CCAF30113528FC /* MetricObservers.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MetricObservers.swift; sourceTree = "<group>"; };
@@ -808,6 +810,7 @@
 				843CE17ADB4681EE3DC4FF9B /* TelemetryMetrics.swift */,
 				E714A2777988AA4DA1AACB5C /* TelemetryTags.swift */,
 				26CA2B1C720A94291E83285B /* TelemetryObservers.swift */,
+				6BC8A25D6F0A4B818594FE62 /* TelemetryEventsFeature.swift */,
 			);
 			path = Telemetry;
 			sourceTree = "<group>";
@@ -2092,6 +2095,7 @@
 				A0EC035461740BCF6DFB8171 /* TelemetryMetrics.swift in Sources */,
 				E42959C85F3B9BAB313984F7 /* TelemetryTags.swift in Sources */,
 				7C6CBEE99C831DBEBB28BD67 /* TelemetryObservers.swift in Sources */,
+				02DF858038394B24B4534C49 /* TelemetryEventsFeature.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

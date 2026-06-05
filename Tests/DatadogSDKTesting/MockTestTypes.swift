@@ -122,6 +122,7 @@ enum Mocks {
 
         var modules: [String: Module] { _state.value.modules }
         var testFrameworks: Set<String> { _state.value.testFrameworks }
+        var configuration: SessionConfig { _sessionConfig! }
 
         func nextTestIndex() -> UInt {
             _state.update { state in
@@ -167,17 +168,17 @@ enum Mocks {
                 state.modules[name] = module
                 return (module, true)
             }
-            if let config = _sessionConfig, started {
-                _moduleObserver?.didStart(module: module, with: config)
+            if _sessionConfig != nil, started {
+                _moduleObserver?.didStart(module: module)
             }
             return module
         }
 
         func end(module: any TestModule) {
-            if let config = _sessionConfig {
-                _moduleObserver?.willFinish(module: module, with: config)
+            if _sessionConfig != nil {
+                _moduleObserver?.willFinish(module: module)
                 module.end()
-                _moduleObserver?.didFinish(module: module, with: config)
+                _moduleObserver?.didFinish(module: module)
             } else {
                 module.end()
             }
@@ -661,10 +662,7 @@ enum Mocks {
     }
     
     final actor SessionManager: TestSessionManager {
-        typealias SessionWithConfig = (session: any TestModuleManager & TestSession,
-                                       config: SessionConfig)
-
-        private var _session: Task<SessionWithConfig, any Error>?
+        private var _session: Task<any TestModuleManager & TestSession, any Error>?
         private var _stopped: Bool = false
         let provider: any TestSessionProvider
         let _config: SessionConfig
@@ -678,7 +676,7 @@ enum Mocks {
             self._observer = observer
         }
 
-        var sessionAndConfig: SessionWithConfig {
+        var session: any TestModuleManager & TestSession {
             get async throws {
                 if let session = _session {
                     return try await session.value
@@ -690,8 +688,8 @@ enum Mocks {
                     let startTime = config.clock.now
                     let session = try await provider.startSession(named: "Mock.session", config: config,
                                                                   startTime: startTime, observer: observer)
-                    await observer?.didStart(session: session, with: config)
-                    return (session, config) as SessionWithConfig
+                    await observer?.didStart(session: session)
+                    return session
                 }
                 return try await _session!.value
             }
@@ -700,11 +698,11 @@ enum Mocks {
         func stop() async {
             guard !_stopped else { return }
             _stopped = true
-            guard let sc = try? await _session?.value else { return }
-            await _observer?.willFinish(session: sc.session, with: sc.config)
-            sc.session.end()
-            await _observer?.didFinish(session: sc.session, with: sc.config)
-            // Keep _session set so concurrent readers calling sessionAndConfig
+            guard let session = try? await _session?.value else { return }
+            await _observer?.willFinish(session: session)
+            session.end()
+            await _observer?.didFinish(session: session)
+            // Keep _session set so concurrent readers calling `session`
             // after stop() see the same (now-ended) session instead of bootstrapping
             // a fresh empty one — that would race with parallel verification blocks
             // inspecting session.modules.

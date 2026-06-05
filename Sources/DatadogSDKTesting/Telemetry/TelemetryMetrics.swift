@@ -5,6 +5,7 @@
  */
 
 import Foundation
+internal import EventsExporter
 internal import OpenTelemetryApi
 internal import OpenTelemetrySdk
 
@@ -446,6 +447,18 @@ extension Telemetry.Metrics {
                     "known_tests_enabled": knownTestsEnabled,
                     "impacted_tests_detection_enabled": impactedTestsDetectionEnabled,
                 ])
+            }
+
+            func add(_ count: Int = 1, config: TracerSettings) {
+                add(count,
+                    coverageEnabled: config.itr.codeCoverage,
+                    itrskipEnabled: config.itr.testsSkipping,
+                    requireGit: config.itr.requireGit,
+                    itrEnabled: config.itr.itrEnabled,
+                    earlyFlakeDetectionEnabled: config.efd.enabled,
+                    flakyTestRetriesEnabled: config.flakyTestRetriesEnabled,
+                    knownTestsEnabled: config.knownTestsEnabled,
+                    impactedTestsDetectionEnabled: config.impactedTestsDetectionEnabled)
             }
         }
     }

@@ -28,15 +28,18 @@ final class BackgroundCoverageProcessor: CoverageProcessor {
     private let parser: CoverageParser
     private let workQueue: OperationQueue
     private let cleanupCoverageFiles: Bool
+    private let telemetry: Telemetry?
 
     init(exporter: any CoverageExporterType,
          parser: CoverageParser,
          priority: CodeCoveragePriority,
-         cleanupCoverageFiles: Bool = true)
+         cleanupCoverageFiles: Bool = true,
+         telemetry: Telemetry? = nil)
     {
         self.exporter = exporter
         self.parser = parser
         self.cleanupCoverageFiles = cleanupCoverageFiles
+        self.telemetry = telemetry
         let queue = OperationQueue()
         queue.qualityOfService = priority.qos
         queue.maxConcurrentOperationCount = max(ProcessInfo.processInfo.activeProcessorCount - 1, 1)
@@ -47,6 +50,7 @@ final class BackgroundCoverageProcessor: CoverageProcessor {
         let parser = self.parser
         let exporter = self.exporter
         let cleanup = self.cleanupCoverageFiles
+        let telemetry = self.telemetry
         workQueue.addOperation {
             guard FileManager.default.fileExists(atPath: record.coverageFileURL.path) else {
                 Log.debug("Coverage file is missing at: \(record.coverageFileURL.path)")
@@ -64,9 +68,18 @@ final class BackgroundCoverageProcessor: CoverageProcessor {
                 info = try parser.filesCovered(in: record.coverageFileURL)
             } catch {
                 Log.print("Coverage parsing failed for \(record.name): \(error)")
+                telemetry?.metrics.codeCoverage.errors.add()
                 return
             }
             let files = info.files.values.map { CoverageFile(file: $0) }
+
+            telemetry?.metrics.codeCoverage.finished.add()
+            if files.isEmpty {
+                telemetry?.metrics.codeCoverage.isEmpty.add()
+            } else {
+                telemetry?.metrics.codeCoverage.files.record(Double(files.count))
+            }
+
             let data = CoverageData(name: record.name,
                                     files: files,
                                     workspacePath: record.workspacePath,

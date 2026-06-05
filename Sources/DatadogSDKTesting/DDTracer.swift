@@ -93,14 +93,6 @@ internal class DDTracer {
         }
 
         // sync clock
-        waitForAsync {
-            do {
-                try await DDTestMonitor.clock.sync()
-            } catch {
-                DDTestMonitor.clock = DateClock()
-            }
-        }
-
         tracerProviderSdk = TracerProviderBuilder().with(sampler: Samplers.alwaysOn)
             .with(spanLimits: SpanLimits().settingAttributeCountLimit(attributeCountLimit))
             .with(clock: DDTestMonitor.clock)
@@ -159,6 +151,10 @@ internal class DDTracer {
         let metadata = SpanMetadata(libraryVersion: DDTestMonitor.tracerVersion,
                                     env: DDTestMonitor.env,
                                     capabilities: .libraryCapabilities)
+
+        // Sync the clock before creating the API service so its date provider
+        // is ready. SyncingClock absorbs NTP failures internally — no replacement needed.
+        waitForAsync { await DDTestMonitor.clock.sync() }
 
         let exporterConfiguration = ExporterConfiguration(
             environment: env.environment,
@@ -240,7 +236,34 @@ internal class DDTracer {
         let metricExporter = TelemetryMetricExporter(telemetryExporter: telemetryExporter,
                                                      namespace: .civisibility,
                                                      distributionNamespace: .civisibility)
-        return Telemetry(exporter: metricExporter, resource: resource, exportInterval: exportInterval)
+        return Telemetry(api: api.telemetry, telemetryExporter: telemetryExporter,
+                         metricExporter: metricExporter, resource: resource,
+                         exportInterval: exportInterval,
+                         configuration: Self.telemetryConfiguration())
+    }
+
+    /// Snapshot the current SDK configuration as `TelemetryConfigItem` values for
+    /// the `app-started` payload. Origin is `.envVar` when the user set the key
+    /// explicitly, `.default` otherwise.
+    private static func telemetryConfiguration() -> [TelemetryConfigItem] {
+        let conf = DDTestMonitor.config
+        let env  = DDTestMonitor.envReader
+
+        func item(_ key: EnvironmentKey, _ value: JSONGeneric) -> TelemetryConfigItem {
+            TelemetryConfigItem(name: key.rawValue, value: value,
+                                origin: env.has(key) ? .envVar : .default)
+        }
+
+        return [
+            item(.enableCiVisibilityGitUpload,     .bool(conf.gitUploadEnabled)),
+            item(.enableCiVisibilityGitUnshallow,  .bool(conf.gitUnshallowEnabled)),
+            item(.enableCiVisibilityCodeCoverage,  .bool(conf.codeCoverageEnabled)),
+            item(.enableCiVisibilityITR,            .bool(conf.tiaEnabled)),
+            item(.enableCiVisibilityEFD,            .bool(conf.efdEnabled)),
+            item(.enableCiVisibilityFlakyRetries,  .bool(conf.testRetriesEnabled)),
+            item(.testManagementEnabled,            .bool(conf.testManagementEnabled)),
+            item(.instrumentationTelemetryEnabled, .bool(conf.instrumentationTelemetryEnabled)),
+        ]
     }
 
     /// Build the exporter's telemetry observers, mapping each upload feature to
@@ -257,7 +280,13 @@ internal class DDTracer {
     private static func endpointPayloadObservers(telemetry: Telemetry,
                                                  endpoint: Telemetry.Endpoint) -> ExporterObservers.Feature
     {
-        ExporterObservers.Feature(
+        let onEnqueued: (@Sendable () -> Void)?
+        if endpoint == .testCycle {
+            onEnqueued = { telemetry.metrics.events.enqueuedForSerialization.add(1) }
+        } else {
+            onEnqueued = nil
+        }
+        return ExporterObservers.Feature(
             // Transport facts (size sent, duration, status) come from the upload
             // request itself.
             request: Telemetry.RequestMetricsObserver(
@@ -272,6 +301,7 @@ internal class DDTracer {
             ),
             // Serialization happens at the storage layer.
             payload: Telemetry.PayloadMetricsObserver(
+                onEnqueued: onEnqueued,
                 onFinalized: { count, serializationMs in
                     telemetry.metrics.endpointPayload.eventsCount.record(Double(count), endpoint: endpoint)
                     telemetry.metrics.endpointPayload.eventsSerializationMs.record(serializationMs, endpoint: endpoint)

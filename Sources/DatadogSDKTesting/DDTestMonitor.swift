@@ -26,11 +26,11 @@ internal import OpenTelemetrySdk
 
 internal class DDTestMonitor {
     static var instance: DDTestMonitor?
-    static var clock: Clock = {
+    static var clock: any Clock = {
         #if os(watchOS)
             return DateClock()
         #else
-            return DDTestMonitor.config.disableNTPClock ? DateClock() as Clock : NTPClock()
+            return config.disableNTPClock ? DateClock() as Clock : FallbackClock(NTPClock()) { DateClock() }
         #endif
     }()
 
@@ -282,7 +282,7 @@ internal class DDTestMonitor {
             let baseConfigurations = DDTestMonitor.env.baseConfigurations
             let customConfigurations = DDTestMonitor.config.customConfigurations
             do {
-                return try Log.measure(name: log) { () throws(APICallError) -> TracerSettings in
+                let config = try Log.measure(name: log) { () throws(APICallError) -> TracerSettings in
                     try waitForAsync { () async throws(APICallError) -> TracerSettings in
                         try await settingsApi.tracerSettings(
                             service: service,
@@ -297,6 +297,8 @@ internal class DDTestMonitor {
                         )
                     }
                 }
+                DDTestMonitor.tracer.telemetry?.metrics.gitRequests.settingsResponse.add(config: config)
+                return config
             } catch {
                 let err = LibraryConfigurationCommunicationError(
                     requestName: "SettingsRequest",
@@ -524,7 +526,8 @@ internal class DDTestMonitor {
                                               tempFolder: temp,
                                               debug: DDTestMonitor.config.extraDebugCodeCoverage,
                                               exporter: eventsExporter,
-                                              swiftTestingEnabled: DDTestMonitor.env.tiaSwiftTestingEnabled)
+                                              swiftTestingEnabled: DDTestMonitor.env.tiaSwiftTestingEnabled,
+                                              telemetry: DDTestMonitor.tracer.telemetry)
             self.coverage = runFactory(factory)
         }
         coverageSetup.addDependency(updateTracerConfig)
@@ -702,13 +705,15 @@ internal class DDTestMonitor {
     
     var activeFeatures: any TestHooksFeatures {
         testOptimizationSetupQueue.waitUntilAllOperationsAreFinished()
+        let telemetryEvents = DDTestMonitor.tracer.telemetry.map { TelemetryEventsFeature(telemetry: $0) }
         let features: [(any TestHooksFeature)?] = [
             testManagement, tia, coverage, efd, atr, knownTests,
             AdditionalTags(codeCoverage: coverage == nil,
                            bundleFunctions: bundleFunctionInfo,
                            codeOwners: codeOwners,
                            workspacePath: DDTestMonitor.env.workspacePath),
-            LibraryConfigurationErrorTags(errors: libraryConfigurationErrors)
+            LibraryConfigurationErrorTags(errors: libraryConfigurationErrors),
+            telemetryEvents
         ]
         return features.compactMap { $0 }
     }

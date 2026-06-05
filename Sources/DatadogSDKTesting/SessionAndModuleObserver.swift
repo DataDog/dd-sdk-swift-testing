@@ -7,32 +7,32 @@
 import Foundation
 
 struct SessionAndModuleObserver: TestSessionManagerObserver, TestModuleManagerObserver {
-    func didStart(session: any TestSession, with config: SessionConfig) async {
-        config.activeFeatures.testSessionWillStart(session: session)
+    func didStart(session: any TestSession) async {
+        session.configuration.activeFeatures.testSessionWillStart(session: session)
     }
-    
-    func willFinish(session: any TestSession, with config: SessionConfig) async {
-        config.activeFeatures.testSessionWillEnd(session: session)
+
+    func willFinish(session: any TestSession) async {
+        session.configuration.activeFeatures.testSessionWillEnd(session: session)
     }
-    
-    func didFinish(session: any TestSession, with config: SessionConfig) async {
-        config.activeFeatures.testSessionDidEnd(session: session)
+
+    func didFinish(session: any TestSession) async {
+        session.configuration.activeFeatures.testSessionDidEnd(session: session)
         #if canImport(Testing)
             DatadogSwiftTestingTrait.sharedSuiteProvider = nil
         #endif
     }
-    
-    func didStart(module: any TestModule, with config: SessionConfig) {
+
+    func didStart(module: any TestModule) {
         DDCrashes.setCurrent(spanData: module.toCrashData)
-        config.activeFeatures.testModuleWillStart(module: module)
+        module.configuration.activeFeatures.testModuleWillStart(module: module)
     }
-    
-    func willFinish(module: any TestModule, with config: SessionConfig) {
-        config.activeFeatures.testModuleWillEnd(module: module)
+
+    func willFinish(module: any TestModule) {
+        module.configuration.activeFeatures.testModuleWillEnd(module: module)
     }
-    
-    func didFinish(module: any TestModule, with config: SessionConfig) {
+
+    func didFinish(module: any TestModule) {
         DDCrashes.setCurrent(spanData: nil)
-        config.activeFeatures.testModuleDidEnd(module: module)
+        module.configuration.activeFeatures.testModuleDidEnd(module: module)
     }
 }

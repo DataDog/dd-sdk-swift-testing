@@ -8,22 +8,19 @@ import Foundation
 internal import EventsExporter
 
 final actor SessionManager: TestSessionManager {
-    typealias SessionWithConfig = (session: any TestModuleManager & TestSession,
-                                   config: SessionConfig)
-    
-    private var _session: Task<SessionWithConfig, any Error>?
+    private var _session: Task<any TestModuleManager & TestSession, any Error>?
     let observer: (any TestSessionManagerObserver & TestModuleManagerObserver)?
     let provider: any TestSessionProvider
     let log: Logger
-    
+
     init(log: Logger, provider: any TestSessionProvider, observer: (any TestSessionManagerObserver & TestModuleManagerObserver)?) {
         self._session = nil
         self.log = log
         self.provider = provider
         self.observer = observer
     }
-    
-    var sessionAndConfig: SessionWithConfig {
+
+    var session: any TestModuleManager & TestSession {
         get async throws {
             if let session = _session {
                 return try await session.value
@@ -32,27 +29,22 @@ final actor SessionManager: TestSessionManager {
             return try await _session!.value
         }
     }
-    
+
     func stop() async {
         guard let session = try? await _session?.value else {
             return
         }
-        await observer?.willFinish(session: session.session, with: session.config)
+        await observer?.willFinish(session: session)
         _session = nil
-        session.session.end()
-        await observer?.didFinish(session: session.session, with: session.config)
+        session.end()
+        await observer?.didFinish(session: session)
         DDTestMonitor.removeTestMonitor()
-        session.config.telemetry?.shutdown()
+        session.configuration.telemetry?.shutdown()
         DDTestMonitor.tracer.flush()
     }
-    
-    private func bootstrapSession() async throws -> SessionWithConfig {
-        do {
-            try await DDTestMonitor.clock.sync()
-        } catch {
-            log.print("Clock sync failed: \(error)")
-            DDTestMonitor.clock = DateClock()
-        }
+
+    private func bootstrapSession() async throws -> any TestModuleManager & TestSession {
+        await DDTestMonitor.clock.sync()
         
         let startTime = DDTestMonitor.clock.now
         
@@ -77,20 +69,19 @@ final actor SessionManager: TestSessionManager {
         // through the session config. `nil` when telemetry is disabled.
         let config = SessionConfig(
             activeFeatures: monitor.activeFeatures,
-            platform: DDTestMonitor.env.platform,
+            env: DDTestMonitor.env,
+            config: DDTestMonitor.config,
             clock: DDTestMonitor.clock,
             crash: monitor.crashInfo,
             command: DDTestMonitor.env.testCommand,
-            service: DDTestMonitor.env.service,
-            metrics: DDTestMonitor.env.baseMetrics,
             log: log,
             telemetry: DDTestMonitor.tracer.telemetry
         )
         
         let session = try await provider.startSession(named: "Swift.session", config: config,
                                                       startTime: startTime, observer: observer)
-        await observer?.didStart(session: session, with: config)
-        return (session, config)
+        await observer?.didStart(session: session)
+        return session
     }
 }
 
@@ -107,8 +98,7 @@ extension DDSession {
                           observer: (any TestModuleManagerObserver)?) async throws -> any TestModuleManager & TestSession
         {
             DDSession(name: name, config: config,
-                      modules: DDModule.StatefulManager(config: config,
-                                                        observer: observer),
+                      modules: DDModule.StatefulManager(observer: observer),
                       startTime: startTime)
         }
     }
@@ -122,27 +112,25 @@ protocol TestModuleManagerSession: Sendable {
 
 extension DDModule {
     struct StatelessManager: TestModuleManagerSession, Sendable {
-        let config: SessionConfig
         let observer: (any TestModuleManagerObserver)?
-        
-        init(config: SessionConfig, observer: (any TestModuleManagerObserver)?) {
-            self.config = config
+
+        init(observer: (any TestModuleManagerObserver)?) {
             self.observer = observer
         }
-        
+
         func module(named name: String,
                     at start: Date?,
                     provider: any TestModuleProvider) -> any TestModule & TestSuiteProvider
         {
             let module = provider.startModule(named: name, at: start)
-            observer?.didStart(module: module, with: config)
+            observer?.didStart(module: module)
             return module
         }
-        
+
         func end(module: any TestModule, at end: Date?) {
-            observer?.willFinish(module: module, with: config)
+            observer?.willFinish(module: module)
             module.end(time: end)
-            observer?.didFinish(module: module, with: config)
+            observer?.didFinish(module: module)
         }
         
         func stop() {}
@@ -150,12 +138,10 @@ extension DDModule {
     
     struct StatefulManager: TestModuleManagerSession, @unchecked Sendable {
         private let _state: Synced<[String: (module: any TestModule & TestSuiteProvider, end: Date?)]>
-        let config: SessionConfig
         let observer: (any TestModuleManagerObserver)?
-        
-        init(config: SessionConfig, observer: (any TestModuleManagerObserver)?) {
+
+        init(observer: (any TestModuleManagerObserver)?) {
             self._state = .init([:])
-            self.config = config
             self.observer = observer
         }
         
@@ -172,7 +158,7 @@ extension DDModule {
                 return (module, true)
             }
             if started {
-                observer?.didStart(module: module, with: config)
+                observer?.didStart(module: module)
             }
             return module
         }
@@ -193,9 +179,9 @@ extension DDModule {
                 return modules
             }
             for module in modules.values {
-                observer?.willFinish(module: module.module, with: config)
+                observer?.willFinish(module: module.module)
                 module.module.end(time: module.end)
-                observer?.didFinish(module: module.module, with: config)
+                observer?.didFinish(module: module.module)
             }
         }
     }

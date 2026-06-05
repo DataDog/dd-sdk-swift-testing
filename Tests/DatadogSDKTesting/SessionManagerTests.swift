@@ -36,9 +36,9 @@ final class SessionManagerTests: XCTestCase {
 
     func testSessionConfigIsAvailableAfterBootstrap() async throws {
         let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider(), observer: nil)
-        let config1 = try await manager.config
-        let config2 = try await manager.config
-        XCTAssertEqual(config1.service, config2.service)
+        let config1 = try await manager.session.configuration
+        let config2 = try await manager.session.configuration
+        XCTAssertEqual(config1.env.service, config2.env.service)
         await manager.stop()
     }
 
@@ -114,23 +114,23 @@ private final class MockObserver: TestSessionManagerObserver, TestModuleManagerO
     var lastStartedSession: (any TestSession)? { _state.value.lastStartedSession }
     var lastFinishedSession: (any TestSession)? { _state.value.lastFinishedSession }
 
-    func didStart(session: any TestSession, with config: SessionConfig) async {
+    func didStart(session: any TestSession) async {
         _state.update {
             $0.didStartCount += 1
             $0.lastStartedSession = session
         }
     }
 
-    func willFinish(session: any TestSession, with config: SessionConfig) async {}
+    func willFinish(session: any TestSession) async {}
 
-    func didFinish(session: any TestSession, with config: SessionConfig) async {
+    func didFinish(session: any TestSession) async {
         _state.update {
             $0.didFinishCount += 1
             $0.lastFinishedSession = session
         }
     }
 
-    func didStart(module: any TestModule, with config: SessionConfig) {}
-    func willFinish(module: any TestModule, with config: SessionConfig) {}
-    func didFinish(module: any TestModule, with config: SessionConfig) {}
+    func didStart(module: any TestModule) {}
+    func willFinish(module: any TestModule) {}
+    func didFinish(module: any TestModule) {}
 }

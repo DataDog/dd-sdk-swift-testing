@@ -287,12 +287,11 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
         guard DatadogSwiftTestingTrait.sharedSuiteProvider == nil else { return }
         let session = Mocks.SessionManager(provider: Mocks.Session.Provider(),
                                            config: .init(activeFeatures: [],
-                                                         platform: DDTestMonitor.env.platform,
+                                                         env: DDTestMonitor.env,
+                                                         config: DDTestMonitor.config,
                                                          clock: DateClock(),
                                                          crash: nil,
                                                          command: nil,
-                                                         service: "test-service",
-                                                         metrics: [:],
                                                          log: Mocks.CatchLogger()),
                                            observer: SessionAndModuleObserver())
         DatadogSwiftTestingTrait.sharedSuiteProvider = SwiftTestingSuiteProvider(session: session,

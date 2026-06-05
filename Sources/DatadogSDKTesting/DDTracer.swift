@@ -241,6 +241,7 @@ internal class DDTracer {
                          flushInterval: flushInterval,
                          heartbeatInterval: heartbeatInterval,
                          distributionCap: distributionCap,
+                         clock: DDTestMonitor.clock,
                          configuration: Self.telemetryConfiguration())
     }
 

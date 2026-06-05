@@ -30,7 +30,8 @@ final class TelemetryTests: XCTestCase {
     /// `app-started` call.
     private func makeTelemetry(_ exporter: CaptureExporter, distributionCap: Int = 2048) -> Telemetry {
         Telemetry(api: NoopTelemetryApi(), exporter: exporter,
-                  flushInterval: 3600, heartbeatInterval: 3600, distributionCap: distributionCap)
+                  flushInterval: 3600, heartbeatInterval: 3600,
+                  distributionCap: distributionCap, clock: DateClock())
     }
 
     // MARK: - Counters

@@ -48,15 +48,17 @@ final class Telemetry: @unchecked Sendable {
     ///   - heartbeatInterval: `app-heartbeat` period, in seconds.
     ///   - distributionCap: total buffered distribution samples that force an
     ///     early drain (so a burst is persisted rather than waiting for the timer).
+    ///   - clock: time source for metric-point timestamps (the NTP-synced SDK clock).
     ///   - configuration: SDK config snapshot reported in the `app-started` payload.
     init(api: TelemetryApi,
          exporter: any TelemetryPayloadExporter,
          flushInterval: TimeInterval = 10,
          heartbeatInterval: TimeInterval = 60,
          distributionCap: Int = 65536,
+         clock: any Clock,
          configuration: [TelemetryConfigItem] = [])
     {
-        let store = MetricStore(exporter: exporter, distributionCap: distributionCap)
+        let store = MetricStore(exporter: exporter, distributionCap: distributionCap, clock: clock)
         self.store = store
         self.exporter = exporter
         self.metrics = Metrics(Factory(store: store))
@@ -69,16 +71,17 @@ final class Telemetry: @unchecked Sendable {
                                           error: nil, installSignature: nil)
         }
 
+        let queue = DispatchQueue(label: "com.datadoghq.civisibility.telemetry",
+                                  target: .global(qos: .utility))
         // Drain accumulated metrics to the exporter on every interval.
-        let flush = DispatchSource.makeTimerSource(
-            queue: DispatchQueue(label: "com.datadoghq.civisibility.telemetry"))
+        let flush = DispatchSource.makeTimerSource(queue: queue)
         flush.schedule(deadline: .now() + flushInterval, repeating: flushInterval)
         flush.setEventHandler { [weak self] in self?.store.flush() }
         self.flushTimer = flush
         flush.activate()
 
         // Enqueue a heartbeat into the batch on every interval.
-        let heartbeat = DispatchSource.makeTimerSource(queue: .global(qos: .utility))
+        let heartbeat = DispatchSource.makeTimerSource(queue: queue)
         heartbeat.schedule(deadline: .now() + heartbeatInterval, repeating: heartbeatInterval)
         heartbeat.setEventHandler { [weak self] in
             self?.exporter.export(item: TelemetryAppHeartbeat())
@@ -145,11 +148,13 @@ extension Telemetry {
 
         private let exporter: any TelemetryPayloadExporter
         private let distributionCap: Int
+        private let clock: any Clock
         private let state = Synced(State())
 
-        init(exporter: any TelemetryPayloadExporter, distributionCap: Int) {
+        init(exporter: any TelemetryPayloadExporter, distributionCap: Int, clock: any Clock) {
             self.exporter = exporter
             self.distributionCap = distributionCap
+            self.clock = clock
         }
 
         func addCount(name: String, value: Int, tags: Set<String>) {
@@ -180,7 +185,7 @@ extension Telemetry {
             }
 
             if !counts.isEmpty {
-                let now = Date().timeIntervalSince1970
+                let now = clock.now.timeIntervalSince1970
                 let series = counts.map { key, value in
                     TelemetryMetric.Series(
                         metric: key.name,

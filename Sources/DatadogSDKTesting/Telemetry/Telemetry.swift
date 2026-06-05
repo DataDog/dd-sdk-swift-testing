@@ -112,11 +112,12 @@ final class Telemetry: @unchecked Sendable {
         exporter.shutdown()
     }
 
-    /// Render a typed tag set to the sorted `"key:value"` wire form. Sorting
-    /// keeps a given label set mapping to a single series regardless of insert
-    /// order.
-    static func renderTags(_ tags: Tags) -> [String] {
-        tags.map { "\($0.key):\($0.value.spanAttribute)" }.sorted()
+    /// Render a typed tag set to the `"key:value"` wire form as a `Set`, so a
+    /// given label set maps to a single series regardless of order (`Set`
+    /// equality/hashing is order-independent). The wire array is sorted once at
+    /// emit time.
+    static func renderTags(_ tags: Tags) -> Set<String> {
+        Set(tags.map { "\($0.key):\($0.value.spanAttribute)" })
     }
 }
 
@@ -133,7 +134,7 @@ extension Telemetry {
     final class MetricStore: @unchecked Sendable {
         private struct Key: Hashable {
             let name: String
-            let tags: [String]
+            let tags: Set<String>
         }
 
         private let exporter: any TelemetryPayloadExporter
@@ -149,13 +150,13 @@ extension Telemetry {
             self.distributionCap = distributionCap
         }
 
-        func addCount(name: String, value: Int, tags: [String]) {
+        func addCount(name: String, value: Int, tags: Set<String>) {
             lock.whileLocked {
                 counts[Key(name: name, tags: tags), default: 0] += value
             }
         }
 
-        func record(name: String, value: Double, tags: [String]) {
+        func record(name: String, value: Double, tags: Set<String>) {
             let full = lock.whileLocked { () -> Bool in
                 distributions[Key(name: name, tags: tags), default: []].append(value)
                 bufferedSamples += 1
@@ -187,7 +188,7 @@ extension Telemetry {
                         metric: key.name,
                         points: [.init(timestamp: now, value: Double(value))],
                         type: .count,
-                        tags: key.tags.isEmpty ? nil : key.tags
+                        tags: key.tags.isEmpty ? nil : key.tags.sorted()
                     )
                 }
                 exporter.export(item: TelemetryMetric(namespace: .civisibility, series: series))
@@ -198,7 +199,7 @@ extension Telemetry {
                     TelemetryDistribution.Series(
                         metric: key.name,
                         points: points,
-                        tags: key.tags.isEmpty ? nil : key.tags
+                        tags: key.tags.isEmpty ? nil : key.tags.sorted()
                     )
                 }
                 exporter.export(item: TelemetryDistribution(namespace: .civisibility, series: series))

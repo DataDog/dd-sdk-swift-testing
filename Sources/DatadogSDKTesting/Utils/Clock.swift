@@ -11,17 +11,26 @@ internal import Kronos
 #endif
 internal import OpenTelemetrySdk
 
-protocol Clock: OpenTelemetrySdk.Clock, Sendable, DateProvider {
-    func sync() async throws
+protocol UnsafeClock: OpenTelemetrySdk.Clock, Sendable, DateProvider {
+    func faillableSync() async throws
 }
 
-extension Clock {
+extension UnsafeClock {
     @inlinable
     func currentDate() -> Date { self.now }
 }
 
+protocol Clock: UnsafeClock {
+    func sync() async
+}
+
+extension Clock {
+    @inlinable
+    func faillableSync() async throws { await sync() }
+}
+
 #if !os(watchOS)
-final class NTPClock: Clock {
+final class NTPClock: UnsafeClock {
     /// List of Datadog NTP pools.
     static let datadogNTPServers = [
         "0.datadog.pool.ntp.org",
@@ -46,7 +55,7 @@ final class NTPClock: Clock {
     
     private let _state: Synced<State> = Synced(.nonsynced)
     
-    func sync() async throws {
+    func faillableSync() async throws {
         let task = _state.update { state -> Task<Void, any Error>? in
             switch state {
             case .synced(_): return nil
@@ -86,7 +95,6 @@ final class NTPClock: Clock {
 
 final class DateClock: Clock {
     func sync() async {}
-
     var now: Date { Date() }
 }
 
@@ -95,20 +103,22 @@ final class DateClock: Clock {
 /// `now` never crashes regardless of sync state, and `sync()` never throws
 /// — failures are absorbed internally. This removes the need to replace the
 /// clock reference after a failed NTP sync.
-final class SyncingClock: Clock, @unchecked Sendable {
-    private let inner:  Synced<any Clock>
+final class FallbackClock: Clock, @unchecked Sendable {
+    private let clock: Synced<any UnsafeClock>
+    private let fallback: @Sendable () -> any Clock
 
-    init(_ inner: any Clock) {
-        self.inner = .init(inner)
+    init(_ unsafe: any UnsafeClock, _ fallback: @escaping @Sendable () -> any Clock) {
+        self.clock = .init(unsafe)
+        self.fallback = fallback
     }
 
     func sync() async {
         do {
-            try await inner.value.sync()
+            try await clock.value.faillableSync()
         } catch {
-            inner.update { $0 = DateClock() }
+            clock.update { $0 = self.fallback() }
         }
     }
-
-    var now: Date { inner.value.now }
+    
+    var now: Date { clock.value.now }
 }

@@ -26,11 +26,11 @@ internal import OpenTelemetrySdk
 
 internal class DDTestMonitor {
     static var instance: DDTestMonitor?
-    static var clock: SyncingClock = {
+    static var clock: any Clock = {
         #if os(watchOS)
-            return SyncingClock(DateClock())
+            return DateClock()
         #else
-            return SyncingClock(DDTestMonitor.config.disableNTPClock ? DateClock() : NTPClock())
+            return config.disableNTPClock ? DateClock() as Clock : FallbackClock(NTPClock()) { DateClock() }
         #endif
     }()
 

@@ -168,17 +168,17 @@ enum Mocks {
                 state.modules[name] = module
                 return (module, true)
             }
-            if let config = _sessionConfig, started {
-                _moduleObserver?.didStart(module: module, with: config)
+            if _sessionConfig != nil, started {
+                _moduleObserver?.didStart(module: module)
             }
             return module
         }
 
         func end(module: any TestModule) {
-            if let config = _sessionConfig {
-                _moduleObserver?.willFinish(module: module, with: config)
+            if _sessionConfig != nil {
+                _moduleObserver?.willFinish(module: module)
                 module.end()
-                _moduleObserver?.didFinish(module: module, with: config)
+                _moduleObserver?.didFinish(module: module)
             } else {
                 module.end()
             }
@@ -691,7 +691,7 @@ enum Mocks {
                     let startTime = config.clock.now
                     let session = try await provider.startSession(named: "Mock.session", config: config,
                                                                   startTime: startTime, observer: observer)
-                    await observer?.didStart(session: session, with: config)
+                    await observer?.didStart(session: session)
                     return (session, config) as SessionWithConfig
                 }
                 return try await _session!.value
@@ -702,9 +702,9 @@ enum Mocks {
             guard !_stopped else { return }
             _stopped = true
             guard let sc = try? await _session?.value else { return }
-            await _observer?.willFinish(session: sc.session, with: sc.config)
+            await _observer?.willFinish(session: sc.session)
             sc.session.end()
-            await _observer?.didFinish(session: sc.session, with: sc.config)
+            await _observer?.didFinish(session: sc.session)
             // Keep _session set so concurrent readers calling sessionAndConfig
             // after stop() see the same (now-ended) session instead of bootstrapping
             // a fresh empty one — that would race with parallel verification blocks

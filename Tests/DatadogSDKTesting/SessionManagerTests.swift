@@ -114,23 +114,23 @@ private final class MockObserver: TestSessionManagerObserver, TestModuleManagerO
     var lastStartedSession: (any TestSession)? { _state.value.lastStartedSession }
     var lastFinishedSession: (any TestSession)? { _state.value.lastFinishedSession }
 
-    func didStart(session: any TestSession, with config: SessionConfig) async {
+    func didStart(session: any TestSession) async {
         _state.update {
             $0.didStartCount += 1
             $0.lastStartedSession = session
         }
     }
 
-    func willFinish(session: any TestSession, with config: SessionConfig) async {}
+    func willFinish(session: any TestSession) async {}
 
-    func didFinish(session: any TestSession, with config: SessionConfig) async {
+    func didFinish(session: any TestSession) async {
         _state.update {
             $0.didFinishCount += 1
             $0.lastFinishedSession = session
         }
     }
 
-    func didStart(module: any TestModule, with config: SessionConfig) {}
-    func willFinish(module: any TestModule, with config: SessionConfig) {}
-    func didFinish(module: any TestModule, with config: SessionConfig) {}
+    func didStart(module: any TestModule) {}
+    func willFinish(module: any TestModule) {}
+    func didFinish(module: any TestModule) {}
 }

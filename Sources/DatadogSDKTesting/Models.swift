@@ -46,9 +46,9 @@ protocol TestSession: TestContainer {
 }
 
 protocol TestSessionManagerObserver: Sendable {
-    func didStart(session: any TestSession, with config: SessionConfig) async
-    func willFinish(session: any TestSession, with config: SessionConfig) async
-    func didFinish(session: any TestSession, with config: SessionConfig) async
+    func didStart(session: any TestSession) async
+    func willFinish(session: any TestSession) async
+    func didFinish(session: any TestSession) async
 }
 
 protocol TestSessionProvider: Sendable {
@@ -88,9 +88,9 @@ protocol TestModuleProvider: Sendable {
 }
 
 protocol TestModuleManagerObserver: Sendable {
-    func didStart(module: any TestModule, with config: SessionConfig)
-    func willFinish(module: any TestModule, with config: SessionConfig)
-    func didFinish(module: any TestModule, with config: SessionConfig)
+    func didStart(module: any TestModule)
+    func willFinish(module: any TestModule)
+    func didFinish(module: any TestModule)
 }
 
 protocol TestModuleManager: Sendable {

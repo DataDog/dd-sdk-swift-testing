@@ -148,13 +148,13 @@ extension Mocks {
                                   testTags: Dictionary(uniqueKeysWithValues: tags),
                                   config: config,
                                   observer: observer)
-            await observer.didStart(session: session, with: config)
+            await observer.didStart(session: session)
             for (module, suites) in tests {
                 _run(module: module, suites: suites, session: session)
             }
-            await observer.willFinish(session: session, with: config)
+            await observer.willFinish(session: session)
             session.end()
-            await observer.didFinish(session: session, with: config)
+            await observer.didFinish(session: session)
             return session
         }
         
@@ -163,12 +163,12 @@ extension Mocks {
             for (name, info) in suites {
                 _run(suite: name, info: info, module: module)
             }
-            if let config = session._sessionConfig {
-                session._moduleObserver?.willFinish(module: module, with: config)
+            if session._sessionConfig != nil {
+                session._moduleObserver?.willFinish(module: module)
             }
             session.end(module: module)
-            if let config = session._sessionConfig {
-                session._moduleObserver?.didFinish(module: module, with: config)
+            if session._sessionConfig != nil {
+                session._moduleObserver?.didFinish(module: module)
             }
         }
         

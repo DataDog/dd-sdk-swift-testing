@@ -37,10 +37,10 @@ final actor SessionManager: TestSessionManager {
         guard let session = try? await _session?.value else {
             return
         }
-        await observer?.willFinish(session: session.session, with: session.config)
+        await observer?.willFinish(session: session.session)
         _session = nil
         session.session.end()
-        await observer?.didFinish(session: session.session, with: session.config)
+        await observer?.didFinish(session: session.session)
         DDTestMonitor.removeTestMonitor()
         session.config.telemetry?.shutdown()
         DDTestMonitor.tracer.flush()
@@ -83,7 +83,7 @@ final actor SessionManager: TestSessionManager {
         
         let session = try await provider.startSession(named: "Swift.session", config: config,
                                                       startTime: startTime, observer: observer)
-        await observer?.didStart(session: session, with: config)
+        await observer?.didStart(session: session)
         return (session, config)
     }
 }
@@ -101,8 +101,7 @@ extension DDSession {
                           observer: (any TestModuleManagerObserver)?) async throws -> any TestModuleManager & TestSession
         {
             DDSession(name: name, config: config,
-                      modules: DDModule.StatefulManager(config: config,
-                                                        observer: observer),
+                      modules: DDModule.StatefulManager(observer: observer),
                       startTime: startTime)
         }
     }
@@ -116,27 +115,25 @@ protocol TestModuleManagerSession: Sendable {
 
 extension DDModule {
     struct StatelessManager: TestModuleManagerSession, Sendable {
-        let config: SessionConfig
         let observer: (any TestModuleManagerObserver)?
-        
-        init(config: SessionConfig, observer: (any TestModuleManagerObserver)?) {
-            self.config = config
+
+        init(observer: (any TestModuleManagerObserver)?) {
             self.observer = observer
         }
-        
+
         func module(named name: String,
                     at start: Date?,
                     provider: any TestModuleProvider) -> any TestModule & TestSuiteProvider
         {
             let module = provider.startModule(named: name, at: start)
-            observer?.didStart(module: module, with: config)
+            observer?.didStart(module: module)
             return module
         }
-        
+
         func end(module: any TestModule, at end: Date?) {
-            observer?.willFinish(module: module, with: config)
+            observer?.willFinish(module: module)
             module.end(time: end)
-            observer?.didFinish(module: module, with: config)
+            observer?.didFinish(module: module)
         }
         
         func stop() {}
@@ -144,12 +141,10 @@ extension DDModule {
     
     struct StatefulManager: TestModuleManagerSession, @unchecked Sendable {
         private let _state: Synced<[String: (module: any TestModule & TestSuiteProvider, end: Date?)]>
-        let config: SessionConfig
         let observer: (any TestModuleManagerObserver)?
-        
-        init(config: SessionConfig, observer: (any TestModuleManagerObserver)?) {
+
+        init(observer: (any TestModuleManagerObserver)?) {
             self._state = .init([:])
-            self.config = config
             self.observer = observer
         }
         
@@ -166,7 +161,7 @@ extension DDModule {
                 return (module, true)
             }
             if started {
-                observer?.didStart(module: module, with: config)
+                observer?.didStart(module: module)
             }
             return module
         }
@@ -187,9 +182,9 @@ extension DDModule {
                 return modules
             }
             for module in modules.values {
-                observer?.willFinish(module: module.module, with: config)
+                observer?.willFinish(module: module.module)
                 module.module.end(time: module.end)
-                observer?.didFinish(module: module.module, with: config)
+                observer?.didFinish(module: module.module)
             }
         }
     }

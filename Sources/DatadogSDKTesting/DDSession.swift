@@ -169,8 +169,7 @@ public extension DDSession {
                                    telemetry: DDTestMonitor.tracer.telemetry)
         waitForAsync { await DDTestMonitor.clock.sync() }
         let session = DDSession(name: name, config: config,
-                                modules: DDModule.StatelessManager(config: config,
-                                                                   observer: SessionAndModuleObserver()),
+                                modules: DDModule.StatelessManager(observer: SessionAndModuleObserver()),
                                 startTime: startTime)
         if let telemetry = DDTestMonitor.tracer.telemetry {
             telemetry.metrics.session.started.add(provider: config.env.ci?.provider, autoInjected: false)

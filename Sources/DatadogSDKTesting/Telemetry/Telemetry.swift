@@ -137,13 +137,15 @@ extension Telemetry {
             let tags: Set<String>
         }
 
+        private struct State {
+            var counts: [Key: Int] = [:]
+            var distributions: [Key: [Double]] = [:]
+            var bufferedSamples = 0
+        }
+
         private let exporter: any TelemetryPayloadExporter
         private let distributionCap: Int
-        private let lock = UnfairLock()
-
-        private var counts: [Key: Int] = [:]
-        private var distributions: [Key: [Double]] = [:]
-        private var bufferedSamples = 0
+        private let state = Synced(State())
 
         init(exporter: any TelemetryPayloadExporter, distributionCap: Int) {
             self.exporter = exporter
@@ -151,16 +153,16 @@ extension Telemetry {
         }
 
         func addCount(name: String, value: Int, tags: Set<String>) {
-            lock.whileLocked {
-                counts[Key(name: name, tags: tags), default: 0] += value
+            state.update {
+                $0.counts[Key(name: name, tags: tags), default: 0] += value
             }
         }
 
         func record(name: String, value: Double, tags: Set<String>) {
-            let full = lock.whileLocked { () -> Bool in
-                distributions[Key(name: name, tags: tags), default: []].append(value)
-                bufferedSamples += 1
-                return bufferedSamples >= distributionCap
+            let full = state.update { s -> Bool in
+                s.distributions[Key(name: name, tags: tags), default: []].append(value)
+                s.bufferedSamples += 1
+                return s.bufferedSamples >= distributionCap
             }
             // Buffer full: drain now so the burst is persisted instead of dropped
             // or held until the timer fires. The exporter uploads it later.
@@ -171,14 +173,10 @@ extension Telemetry {
         /// payloads outside the lock. Concurrent flushes (timer vs. force-flush)
         /// each drain a disjoint slice, so no sample is sent twice or lost.
         func flush() {
-            let (counts, distributions) = lock.whileLocked {
-                () -> ([Key: Int], [Key: [Double]]) in
-                defer {
-                    self.counts = [:]
-                    self.distributions = [:]
-                    self.bufferedSamples = 0
-                }
-                return (self.counts, self.distributions)
+            let (counts, distributions) = state.update {
+                s -> ([Key: Int], [Key: [Double]]) in
+                defer { s = State() }
+                return (s.counts, s.distributions)
             }
 
             if !counts.isEmpty {

@@ -11,6 +11,7 @@ internal enum EnvironmentKey: String, CaseIterable {
     case apiKey = "DD_API_KEY"
     case environment = "DD_ENV"
     case service = "DD_SERVICE"
+    case applicationVersion = "DD_VERSION"
     case sourcesDir = "SRCROOT"
     case tags = "DD_TAGS"
     case sessionName = "DD_TEST_SESSION_NAME"

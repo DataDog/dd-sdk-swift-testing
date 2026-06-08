@@ -46,6 +46,9 @@ internal class DDTracer {
 
     static var activeSpan: Span? { OpenTelemetry.instance.contextProvider.activeSpan ?? DDTest.current?.span }
 
+    /// Set to `true` to enable backend debug processing for all telemetry envelopes.
+    static let debugTelemetry = true
+
     var propagationContext: SpanContext? {
         return DDTracer.activeSpan?.context ?? launchSpanContext
     }
@@ -131,9 +134,17 @@ internal class DDTracer {
                                                    traceState: TraceState())
         }
 
-        let bundle = Bundle.main
-        let identifier = bundle.bundleIdentifier ?? "com.datadoghq.DatadogSDKTesting"
-        let version = (bundle.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "unknown"
+        // `Bundle.main` is only the product under test when an app hosts the
+        // tests; for host-less test bundles it is the bare `xctest` runner. Let
+        // the resolver pick the right bundle (app / product framework / xctest)
+        // and honor a `DD_VERSION` override.
+        let (appName, appVersion) = Bundle.productUnderTest(
+            schemeName: DDTestMonitor.envReader["XCODE_SCHEME_NAME"],
+            versionOverride: conf.applicationVersion
+        )
+        
+        let sdkName = Bundle.sdk.name
+        let sdkVersion = Bundle.sdk.version ?? "<unknown>"
 
         let payloadCompression: Bool
         // When reporting tests to local server
@@ -164,25 +175,30 @@ internal class DDTracer {
         let api = TestOptimizationApiService(
             serviceName: env.service,
             environment: env.environment,
-            applicationName: identifier,
-            version: version,
+            applicationName: appName,
+            applicationVersion: appVersion,
+            libraryVersion: sdkVersion,
+            device: .current,
             hostname: hostnameToReport,
+            kernelInfo: .current,
+            languageVersion: RuntimeLanguageVersion.current,
             apiKey: conf.apiKey ?? "",
             endpoint: conf.endpoint.exporterEndpoint,
             clientId: String(SpanId.random().rawValue),
             payloadCompression: payloadCompression,
             logger: Log.instance,
             dateProvider: DDTestMonitor.clock,
-            debugNetworkRequests: conf.extraDebugNetwork
+            debugNetworkRequests: conf.extraDebugNetwork,
+            debugTelemetry: DDTracer.debugTelemetry
         )
         var resource = Resource()
-        resource.applicationName = identifier
-        resource.applicationVersion = version
+        resource.applicationName = appName
+        resource.applicationVersion = appVersion
         resource.environment = env.environment
         resource.service = env.service
         resource.sdkLanguage = "swift"
-        resource.sdkName = identifier
-        resource.sdkVersion = DDTestMonitor.tracerVersion
+        resource.sdkName = sdkName
+        resource.sdkVersion = sdkVersion
 
         // Build the telemetry manager before the exporter so its observers can
         // be wired into the exporter's upload/serialization pipeline.
@@ -205,9 +221,10 @@ internal class DDTracer {
             eventsExporter = nil
         }
 
-        self.init(id: identifier, version: version, exporter: eventsExporter,
-                  api: api,
-                  enabled: !conf.disableTracesExporting, launchContext: launchSpanContext,
+        self.init(id: appName, version: appVersion,
+                  exporter: eventsExporter, api: api,
+                  enabled: !conf.disableTracesExporting,
+                  launchContext: launchSpanContext,
                   resource: resource,
                   logRecordExporter: logRecordExporter,
                   telemetry: telemetry)

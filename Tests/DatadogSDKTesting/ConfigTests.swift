@@ -21,6 +21,7 @@ class ConfigTests: XCTestCase {
         XCTAssertEqual(config.service, "testService")
     }
     
+    
     func testWhenDatadogSettingsAreSetInInfoPlist_TheyAreStoredCorrectly() {
         var testInfoDictionary = [String: String]()
         testInfoDictionary["DD_API_KEY"] = "token5a101f16"

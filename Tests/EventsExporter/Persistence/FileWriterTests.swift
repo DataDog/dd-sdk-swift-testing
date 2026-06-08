@@ -46,6 +46,40 @@ class FileWriterTests: XCTestCase {
         )
     }
 
+    func testItReportsSerializationAndPayloadCountsToObserver() throws {
+        let observer = RecordingPayloadObserver()
+        let expectation = self.expectation(description: "write completed")
+        let writer = FileWriter(
+            entity: "testfilewriter-observer",
+            dataFormat: DataFormat(prefix: Data("[".utf8),
+                                   suffix: Data("]".utf8),
+                                   separator: Data(",".utf8)),
+            orchestrator: FilesOrchestrator(
+                directory: temporaryDirectory,
+                performance: StoragePerformanceMock.appendToOneFile,
+                dateProvider: SystemDateProvider()
+            ),
+            encoder: JSONEncoder.apiEncoder,
+            observer: observer
+        )
+
+        writer.write(value: ["key1": "value1"])
+        writer.write(value: ["key2": "value2"])
+        writer.write(value: ["key3": "value3"])
+
+        waitForWritesCompletion(on: writer.queue, thenFulfill: expectation)
+        waitForExpectations(timeout: 1, handler: nil)
+
+        // Nothing finalized while the file is open.
+        XCTAssertEqual(observer.finalized.count, 0)
+
+        // Closing the file finalizes it with the full event count and the summed
+        // serialization time of those events.
+        writer.closeCurrentFile()
+        XCTAssertEqual(observer.finalized.map(\.eventCount), [3])
+        XCTAssertEqual(observer.finalized.first?.serializationMs ?? -1 >= 0, true)
+    }
+
     func testGivenErrorVerbosity_whenIndividualDataExceedsMaxWriteSize_itDropsDataAndPrintsError() throws {
         let expectation1 = self.expectation(description: "write completed")
         let expectation2 = self.expectation(description: "second write completed")
@@ -159,5 +193,23 @@ class FileWriterTests: XCTestCase {
     private var isGithub: Bool {
         ProcessInfo.processInfo.environment["GITHUB_ACTION"] ?? "" != "" ||
         ProcessInfo.processInfo.environment["GITHUB_ACTIONS"] ?? "" != ""
+    }
+}
+
+/// Records `PayloadObserver` callbacks for assertions. Callbacks arrive on the
+/// writer's serial queue; a lock keeps reads from the test thread safe.
+private final class RecordingPayloadObserver: PayloadObserver, @unchecked Sendable {
+    private let lock = NSLock()
+    private var _finalized: [(eventCount: Int, serializationMs: Double)] = []
+    private(set) var enqueuedCount: Int = 0
+
+    var finalized: [(eventCount: Int, serializationMs: Double)] { lock.withLock { _finalized } }
+
+    func eventEnqueued() {
+        lock.withLock { enqueuedCount += 1 }
+    }
+
+    func payloadFinalized(eventCount: Int, serializationMs: Double) {
+        lock.withLock { _finalized.append((eventCount, serializationMs)) }
     }
 }

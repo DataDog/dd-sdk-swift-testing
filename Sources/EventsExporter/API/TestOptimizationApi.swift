@@ -82,7 +82,9 @@ public struct TestOptimizationApiService: TestOptimizationApi {
     public private(set) var logs: LogsApi
     public private(set) var telemetry: TelemetryApi
 
-    internal init(config: APIServiceConfig, httpClient: HTTPClient, log: Logger) {
+    internal init(config: APIServiceConfig, httpClient: any HTTPClientType, log: Logger,
+                  dateProvider: DateProvider = SystemDateProvider())
+    {
         settings = SettingsApiService(config: config, httpClient: httpClient, log: log)
         knownTests = KnownTestsApiService(config: config, httpClient: httpClient, log: log)
         git = GitUploadApiService(config: config, httpClient: httpClient, log: log)
@@ -90,7 +92,8 @@ public struct TestOptimizationApiService: TestOptimizationApi {
         testManagement = TestManagementApiService(config: config, httpClient: httpClient, log: log)
         spans = SpansApiService(config: config, httpClient: httpClient, log: log)
         logs = LogsApiService(config: config, httpClient: httpClient, log: log)
-        telemetry = TelemetryApiService(config: config, httpClient: httpClient, log: log)
+        telemetry = TelemetryApiService(config: config, httpClient: httpClient,
+                                        dateProvider: dateProvider, log: log)
     }
 
     /// Build the full set of test-optimization API services that share one
@@ -101,7 +104,7 @@ public struct TestOptimizationApiService: TestOptimizationApi {
                 hostname: String?, apiKey: String,
                 endpoint: Endpoint, clientId: String,
                 payloadCompression: Bool,
-                logger: Logger,
+                logger: Logger, dateProvider: DateProvider = SystemDateProvider(),
                 debugNetworkRequests: Bool = false)
     {
         let config = APIServiceConfig(serviceName: serviceName, environment: environment,
@@ -111,7 +114,8 @@ public struct TestOptimizationApiService: TestOptimizationApi {
                                       payloadCompression: payloadCompression)
         self.init(config: config,
                   httpClient: HTTPClient(debug: debugNetworkRequests),
-                  log: logger)
+                  log: logger,
+                  dateProvider: dateProvider)
     }
 
     public var endpointURLs: Set<URL> {

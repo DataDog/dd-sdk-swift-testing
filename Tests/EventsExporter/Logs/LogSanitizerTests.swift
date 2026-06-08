@@ -103,6 +103,26 @@ class LogSanitizerTests: XCTestCase {
         XCTAssertEqual(sanitized.attributes.userAttributes.count, LogSanitizer.Constraints.maxNumberOfAttributes)
     }
 
+    func testWhenStringAttributeValueExceedsMaxLength_itIsTruncated() {
+        let longValue = String(repeating: "x", count: LogSanitizer.Constraints.maxAttributeValueLength + 100)
+        let shortValue = String(repeating: "y", count: 10)
+        let log = DDLog.mockWith(
+            attributes: .mockWith(
+                userAttributes: [
+                    "long": longValue,
+                    "short": shortValue,
+                    "number": 42,
+                ]
+            )
+        )
+
+        let sanitized = LogSanitizer().sanitize(log: log)
+
+        XCTAssertEqual((sanitized.attributes.userAttributes["long"] as? String)?.count, LogSanitizer.Constraints.maxAttributeValueLength)
+        XCTAssertEqual(sanitized.attributes.userAttributes["short"] as? String, shortValue)
+        XCTAssertEqual(sanitized.attributes.userAttributes["number"] as? Int, 42)
+    }
+
     func testInternalAttributesAreNotSanitized() {
         let log = DDLog.mockWith(
             attributes: .mockWith(

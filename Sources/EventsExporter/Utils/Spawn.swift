@@ -8,11 +8,21 @@ import Foundation
 import CDatadogSDKTesting
 
 public enum Spawn {
-    enum RunError: Error, CustomDebugStringConvertible {
+    public enum RunError: Error, CustomDebugStringConvertible {
         case code(Int32, String, String)
         case signal(Int32, String, String)
-        
-        var debugDescription: String {
+
+        /// The exit code to report in telemetry. For a normal exit this is the
+        /// process exit status; for a signal termination it follows the shell
+        /// convention of 128 + signal number.
+        public var exitCode: Int {
+            switch self {
+            case .code(let c, _, _): return Int(c)
+            case .signal(let s, _, _): return 128 + Int(s)
+            }
+        }
+
+        public var debugDescription: String {
             let prefix: String
             let output: String
             let error: String

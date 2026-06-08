@@ -17,6 +17,7 @@ final class CodeCoverage: TestHooksFeature {
     static var id: FeatureId = "Code Coverage"
 
     let swiftTestingEnabled: Bool
+    let telemetry: Telemetry?
 
     var isEnabled: Bool { _state.use { $0.collector != nil } }
 
@@ -32,8 +33,9 @@ final class CodeCoverage: TestHooksFeature {
     }
     private let _state: Synced<State>
 
-    init(collector: TestCoverageCollector, swiftTestingEnabled: Bool) {
+    init(collector: TestCoverageCollector, swiftTestingEnabled: Bool, telemetry: Telemetry? = nil) {
         self.swiftTestingEnabled = swiftTestingEnabled
+        self.telemetry = telemetry
         self._state = .init(.init(collector: collector, active: nil))
     }
 
@@ -64,8 +66,8 @@ final class CodeCoverage: TestHooksFeature {
         let context = CoverageContext.test(testSpanId: test.id,
                                            suiteId: test.suite.id,
                                            sessionId: test.session.id)
-        _state.update { state in
-            guard let collector = state.collector else { return }
+        let started: Bool = _state.update { state in
+            guard let collector = state.collector else { return false }
             if let prior = state.active {
                 Log.print("""
                     Code coverage error: a coverage gathering session is already \
@@ -78,9 +80,13 @@ final class CodeCoverage: TestHooksFeature {
                 prior.end()
                 state.active = nil
                 state.collector = nil
-                return
+                return false
             }
             state.active = collector.startCoverage(context: context)
+            return state.active != nil
+        }
+        if started {
+            telemetry?.metrics.codeCoverage.started.add()
         }
     }
 
@@ -110,6 +116,20 @@ struct CodeCoverageFactory: FeatureFactory {
     let debug: Bool
     let exporter: ExporterProtocol
     let swiftTestingEnabled: Bool
+    let telemetry: Telemetry?
+
+    init(workspacePath: String?, priority: CodeCoveragePriority, tempFolder: Directory,
+         debug: Bool, exporter: ExporterProtocol, swiftTestingEnabled: Bool,
+         telemetry: Telemetry? = nil)
+    {
+        self.workspacePath = workspacePath
+        self.priority = priority
+        self.tempFolder = tempFolder
+        self.debug = debug
+        self.exporter = exporter
+        self.swiftTestingEnabled = swiftTestingEnabled
+        self.telemetry = telemetry
+    }
 
     static func isEnabled(config: Config, env: Environment, remote: TracerSettings) -> Bool {
         config.codeCoverageEnabled && remote.itr.codeCoverage
@@ -120,8 +140,10 @@ struct CodeCoverageFactory: FeatureFactory {
                                                 exporter: exporter,
                                                 workspacePath: workspacePath,
                                                 priority: priority,
-                                                debug: debug)
+                                                debug: debug,
+                                                telemetry: telemetry)
         log.debug("Code Coverage Enabled")
-        return CodeCoverage(collector: provider, swiftTestingEnabled: swiftTestingEnabled)
+        return CodeCoverage(collector: provider, swiftTestingEnabled: swiftTestingEnabled,
+                            telemetry: telemetry)
     }
 }

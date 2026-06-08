@@ -336,7 +336,8 @@ final class LibraryConfigurationServiceThrowTests: XCTestCase {
                     "test_management": [
                         "enabled": false,
                         "attempt_to_fix_retries": 0
-                    ] as [String: Any]
+                    ] as [String: Any],
+                    "impacted_tests_enabled": false
                 ] as [String: Any]
             ] as [String: Any]
         ]

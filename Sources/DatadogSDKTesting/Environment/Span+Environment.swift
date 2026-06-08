@@ -48,6 +48,13 @@ extension URL: SpanAttributeConvertible {
     }
 }
 
+/// Any string-backed enum is convertible to its tag value via its `rawValue`,
+/// so the typed tag enums below plug straight into `SpanAttributeConvertible`
+/// alongside `Bool` / `Int` / `String`.
+extension SpanAttributeConvertible where Self: RawRepresentable, RawValue == String {
+    var spanAttribute: String { rawValue }
+}
+
 extension SpanMetadata {
     init(libraryVersion: String, env: Environment, capabilities: SDKCapabilities) {
         self.init(libraryVersion: libraryVersion,

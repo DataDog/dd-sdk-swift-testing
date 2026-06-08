@@ -495,7 +495,7 @@ struct SwiftTestingSuiteContext: Sendable {
     private let _suite: any TestSuite & TestRunProvider
     
     var suite: any TestSuite { _suite }
-    let configuration: SessionConfig
+    var configuration: SessionConfig { _suite.configuration }
     let info: any SwiftTestingTestInfoType
     let observer: any SwiftTestingObserverType
     let moduleManager: any TestModuleManager
@@ -503,31 +503,31 @@ struct SwiftTestingSuiteContext: Sendable {
     let version: String
     
     init(suite: any TestSuite & TestRunProvider,
-         configuration: SessionConfig, version: String,
+         version: String,
          info: any SwiftTestingTestInfoType,
          testsCount: Int,
          observer: any SwiftTestingObserverType,
          moduleManager: any TestModuleManager)
     {
-        self.init(suite: suite, configuration: configuration, version: version,
+        self.init(suite: suite, version: version,
                   testsCount: testsCount, state: .init(tests: []),
                   info: info, observer: observer, moduleManager: moduleManager)
     }
-   
+
     init(suite: any TestSuite & TestRunProvider,
-         configuration: SessionConfig, version: String,
+         version: String,
          tests: Set<String>,
          info: any SwiftTestingTestInfoType,
          observer: any SwiftTestingObserverType,
          moduleManager: any TestModuleManager)
     {
-        self.init(suite: suite, configuration: configuration, version: version,
+        self.init(suite: suite, version: version,
                   testsCount: tests.count, state: .init(tests: tests),
                   info: info, observer: observer, moduleManager: moduleManager)
     }
-    
+
     private init(suite: any TestSuite & TestRunProvider,
-                 configuration: SessionConfig, version: String,
+                 version: String,
                  testsCount: Int, state: State,
                  info: any SwiftTestingTestInfoType,
                  observer: any SwiftTestingObserverType,
@@ -538,7 +538,6 @@ struct SwiftTestingSuiteContext: Sendable {
         self._suite = suite
         self.info = info
         self.observer = observer
-        self.configuration = configuration
         self.moduleManager = moduleManager
         self.version = version
     }
@@ -632,18 +631,16 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
         final class ModuleContext {
             let module: any TestModule & TestSuiteProvider
             let manager: any TestModuleManager
-            let config: SessionConfig
             var active: [String: Task<SwiftTestingSuiteContext, any Error>]
             var left: Set<String>
-            
+
             init(module: any TestModule & TestSuiteProvider,
                  manager: any TestModuleManager,
-                 config: SessionConfig, left: Set<String>)
+                 left: Set<String>)
             {
                 self.module = module
                 self.active = [:]
                 self.left = left
-                self.config = config
                 self.manager = manager
             }
         }
@@ -674,28 +671,27 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
             case .ended: throw SwiftTestingRegistryError.moduleAlreadyEnded(name: name)
             case .notStarted: break
             }
-            let (session, config) = try await self.session.sessionAndConfig
+            let session = try await self.session.session
             let suites = await self.registry.suites(for: name)
             if case .active(let context) = _modules[name] {
                 // other thread created it
                 return context
             }
             let module = session.module(named: name)
-            let context = ModuleContext(module: module, manager: session, config: config, left: suites)
+            let context = ModuleContext(module: module, manager: session, left: suites)
             _modules[name] = .active(context)
             return context
         }
         
         func suite(named suite: String, in module: String,
                    factory: @Sendable @escaping (any TestModule & TestSuiteProvider,
-                                                 any TestModuleManager,
-                                                 SessionConfig) async throws ->  SwiftTestingSuiteContext
+                                                 any TestModuleManager) async throws ->  SwiftTestingSuiteContext
         ) async throws -> (suite: SwiftTestingSuiteContext, isNew: Bool) {
             let module = try await self.module(name: module)
             if let suite = module.active[suite] {
                 return try await (suite.value, false)
             }
-            let task = Task { try await factory(module.module, module.manager, module.config) }
+            let task = Task { try await factory(module.module, module.manager) }
             module.active[suite] = task
             module.left.remove(suite)
             return try await (task.value, true)
@@ -727,10 +723,10 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
     func with(suite info: some SwiftTestingTestInfoType,
               performing function: @Sendable (borrowing SwiftTestingSuiteContext) async throws -> Void) async throws
     {
-        let suite = try await self._state.suite(named: info.suite, in: info.module) { (mod, manager, config) in
+        let suite = try await self._state.suite(named: info.suite, in: info.module) { (mod, manager) in
             let count = await self.registry.count(for: info)
             let suite = mod.startSuite(named: info.suite, at: nil, framework: .init(name: Self.framework, version: version))
-            return .init(suite: suite, configuration: config, version: version, info: info,
+            return .init(suite: suite, version: version, info: info,
                          testsCount: count, observer: self.observer, moduleManager: manager)
         }
         if suite.isNew {
@@ -742,10 +738,10 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
     func with(virtual test: some SwiftTestingTestInfoType,
               performing function: @Sendable (borrowing SwiftTestingSuiteContext) async throws -> Void) async throws
     {
-        let suite = try await self._state.suite(named: test.suite, in: test.module) { (mod, manager, config) in
+        let suite = try await self._state.suite(named: test.suite, in: test.module) { (mod, manager) in
             let tests = await self.registry.tests(for: test)
             let suite = mod.startSuite(named: test.suite, at: nil, framework: .init(name: Self.framework, version: version))
-            return SwiftTestingSuiteContext(suite: suite, configuration: config, version: version,
+            return SwiftTestingSuiteContext(suite: suite, version: version,
                                             tests: tests, info: test, observer: self.observer,
                                             moduleManager: manager)
         }

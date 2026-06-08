@@ -13,16 +13,19 @@ internal final class SpansExporter: SpanExporter {
     let spansStorage: FeatureStoreAndUpload
     private let encoder: JSONEncoder
 
-    init(config: ExporterConfiguration, storage: Directory, api: SpansApi) throws {
+    init(config: ExporterConfiguration, storage: Directory, api: SpansApi,
+         observers: ExporterObservers.Feature = .init()) throws {
         self.configuration = config
 
+        let uploadObserver = observers.upload
         let filesOrchestrator = FilesOrchestrator(
             directory: try storage.createSubdirectory(path: "v1"),
             performance: configuration.performancePreset,
-            dateProvider: SystemDateProvider()
+            dateProvider: SystemDateProvider(),
+            onDrop: uploadObserver.map { obs in { obs.uploadDropped(payloadBytes: $0) } }
         )
 
-        var metadata = config.metadata
+        var metadata = SpanSanitizer().sanitize(metadata: config.metadata)
         self.runtimeId = metadata[string: "runtime-id"] ?? UUID().uuidString.lowercased()
         metadata[string: "runtime-id"] = self.runtimeId
 
@@ -34,24 +37,27 @@ internal final class SpansExporter: SpanExporter {
         let writer = FileWriter(entity: "spans",
                                 dataFormat: dataFormat,
                                 orchestrator: filesOrchestrator,
-                                encoder: encoder)
+                                encoder: encoder,
+                                observer: observers.payload)
         let reader = FileReader(dataFormat: dataFormat, orchestrator: filesOrchestrator)
-        let upload: ClosureDataUploader.UploadCallback = { (data: Data) async throws(HTTPClient.RequestError) -> Void in
-            try await api.uploadSpans(batch: data)
+        let requestObserver = observers.request
+        let upload: ClosureDataUploader.UploadCallback = { (data: Data) async throws(APICallError) -> Void in
+            try await api.uploadSpans(batch: data, observer: requestObserver)
         }
         let uploader = ClosureDataUploader(upload: upload)
         self.spansStorage = FeatureStoreAndUpload(featureName: "spans",
                                                   reader: reader,
                                                   writer: writer,
                                                   performance: configuration.performancePreset,
-                                                  uploader: uploader)
+                                                  uploader: uploader,
+                                                  observer: observers.upload)
     }
 
     /// Rebuild the file header (which embeds the per-feature `SpanMetadata`)
     /// and rotate the writable file so the new header takes effect on the
     /// next batch. The runtime-id stays pinned across updates.
     func setMetadata(_ meta: SpanMetadata) {
-        var meta = meta
+        var meta = SpanSanitizer().sanitize(metadata: meta)
         meta[string: "runtime-id"] = self.runtimeId
         // `try!` is safe: `Header` is a fixed-shape struct that always encodes.
         let dataFormat = try! DataFormat(header: Header(metadata: meta.metadata),

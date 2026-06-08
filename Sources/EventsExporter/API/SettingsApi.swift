@@ -11,7 +11,24 @@ public protocol SettingsApi: APIService {
                         repositoryURL: String, branch: String, sha: String,
                         testLevel: ITRTestLevel,
                         configurations: [String: String],
+                        customConfigurations: [String: String],
+                        observer: RequestObserver?) async throws(APICallError) -> TracerSettings
+}
+
+public extension SettingsApi {
+    /// Convenience without a telemetry observer.
+    @inlinable
+    func tracerSettings(service: String, env: String,
+                        repositoryURL: String, branch: String, sha: String,
+                        testLevel: ITRTestLevel,
+                        configurations: [String: String],
                         customConfigurations: [String: String]) async throws(APICallError) -> TracerSettings
+    {
+        try await tracerSettings(service: service, env: env, repositoryURL: repositoryURL,
+                                 branch: branch, sha: sha, testLevel: testLevel,
+                                 configurations: configurations,
+                                 customConfigurations: customConfigurations, observer: nil)
+    }
 }
 
 public struct TracerSettings {
@@ -20,6 +37,7 @@ public struct TracerSettings {
     public var flakyTestRetriesEnabled: Bool
     public var knownTestsEnabled: Bool
     public var testManagement: TestManagement
+    public var impactedTestsDetectionEnabled: Bool
 
     public var efdIsEnabled: Bool {
         knownTestsEnabled && efd.enabled
@@ -122,13 +140,15 @@ public struct TracerSettings {
 
     public init(itr: ITR, efd: EFD,
                 flakyTestRetriesEnabled: Bool, knownTestsEnabled: Bool,
-                testManagement: TestManagement)
+                testManagement: TestManagement,
+                impactedTestsDetectionEnabled: Bool = false)
     {
         self.itr = itr
         self.efd = efd
         self.flakyTestRetriesEnabled = flakyTestRetriesEnabled
         self.knownTestsEnabled = knownTestsEnabled
         self.testManagement = testManagement
+        self.impactedTestsDetectionEnabled = impactedTestsDetectionEnabled
     }
 
     init(response: SettingsApiService.SettingsResponse) {
@@ -136,7 +156,8 @@ public struct TracerSettings {
                   efd: EFD(response: response.earlyFlakeDetection),
                   flakyTestRetriesEnabled: response.flakyTestRetriesEnabled,
                   knownTestsEnabled: response.knownTestsEnabled,
-                  testManagement: TestManagement(response: response.testManagement))
+                  testManagement: TestManagement(response: response.testManagement),
+                  impactedTestsDetectionEnabled: response.impactedTestsEnabled)
     }
 }
 
@@ -147,10 +168,10 @@ struct SettingsApiService: SettingsApi, APIServiceConstructible {
     var headers: [HTTPHeader]
     var encoder: JSONEncoder
     var decoder: JSONDecoder
-    let httpClient: HTTPClient
+    let httpClient: any HTTPClientType
     let log: Logger
 
-    init(config: APIServiceConfig, httpClient: HTTPClient, log: Logger) {
+    init(config: APIServiceConfig, httpClient: any HTTPClientType, log: Logger) {
         self.endpoint = config.endpoint
         self.httpClient = httpClient
         self.log = log
@@ -163,7 +184,8 @@ struct SettingsApiService: SettingsApi, APIServiceConstructible {
                         repositoryURL: String, branch: String, sha: String,
                         testLevel: ITRTestLevel,
                         configurations: [String: String],
-                        customConfigurations: [String: String]) async throws(APICallError) -> TracerSettings
+                        customConfigurations: [String: String],
+                        observer: RequestObserver?) async throws(APICallError) -> TracerSettings
     {
         var configurations: [String: JSONGeneric] = configurations.mapValues { .string($0) }
         configurations["custom"] = JSONGeneric(customConfigurations)
@@ -180,7 +202,8 @@ struct SettingsApiService: SettingsApi, APIServiceConstructible {
                                                  url: endpoint.settingsURL,
                                                  data: .init(attributes: request),
                                                  headers: headers + [.contentTypeHeader(contentType: .applicationJSON)],
-                                                 coders: (encoder, decoder))
+                                                 coders: (encoder, decoder),
+                                                 observer: observer)
         log.debug("Tracer settings response: \(response.data.attributes)")
         return TracerSettings(response: response.data.attributes)
     }
@@ -250,6 +273,7 @@ extension SettingsApiService {
         let flakyTestRetriesEnabled: Bool
         let earlyFlakeDetection: EFD
         let testManagement: TestManagement
+        let impactedTestsEnabled: Bool
 
         static var apiType: String = "ci_app_tracers_test_service_settings"
 
@@ -261,7 +285,8 @@ extension SettingsApiService {
                 + #", "require_git": \#(requireGit)"#
                 + #", "flaky_test_retries_enabled": \#(flakyTestRetriesEnabled)"#
                 + #", "early_flake_detection": \#(earlyFlakeDetection)"#
-                + #", "test_management": \#(testManagement)}"#
+                + #", "test_management": \#(testManagement)"#
+                + #", "impacted_tests_enabled": \#(impactedTestsEnabled)}"#
         }
     }
 }

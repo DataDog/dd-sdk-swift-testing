@@ -49,14 +49,16 @@ public protocol KnownTestsApi: APIService {
         service: String, env: String, repositoryURL: String,
         configurations: [String: String],
         customConfigurations: [String: String],
-        page: KnownTestsPageInfo
+        page: KnownTestsPageInfo,
+        observer: RequestObserver?
     ) async throws(APICallError) -> KnownTestsResult
 
     /// Fetch all pages of known tests and merge them.
     func tests(
         service: String, env: String, repositoryURL: String,
         configurations: [String: String],
-        customConfigurations: [String: String]
+        customConfigurations: [String: String],
+        observer: RequestObserver?
     ) async throws(APICallError) -> KnownTestsResult
 }
 
@@ -64,7 +66,8 @@ extension KnownTestsApi {
     public func tests(
         service: String, env: String, repositoryURL: String,
         configurations: [String: String],
-        customConfigurations: [String: String]
+        customConfigurations: [String: String],
+        observer: RequestObserver?
     ) async throws(APICallError) -> KnownTestsResult {
         var tests: KnownTestsMap = [:]
         var page: KnownTestsPageInfo = .init()
@@ -73,7 +76,7 @@ extension KnownTestsApi {
             let result = try await self.tests(
                 service: service, env: env, repositoryURL: repositoryURL,
                 configurations: configurations, customConfigurations: customConfigurations,
-                page: page
+                page: page, observer: observer
             )
             tests = tests.merging(result.tests) { (current, new) in
                 current.merging(new) { (current, new) in
@@ -90,6 +93,31 @@ extension KnownTestsApi {
                                                 size: size,
                                                 hasNext: page.hasNext))
     }
+
+    /// Convenience without a telemetry observer.
+    @inlinable
+    public func tests(
+        service: String, env: String, repositoryURL: String,
+        configurations: [String: String],
+        customConfigurations: [String: String],
+        page: KnownTestsPageInfo
+    ) async throws(APICallError) -> KnownTestsResult {
+        try await tests(service: service, env: env, repositoryURL: repositoryURL,
+                        configurations: configurations, customConfigurations: customConfigurations,
+                        page: page, observer: nil)
+    }
+
+    /// Convenience without a telemetry observer.
+    @inlinable
+    public func tests(
+        service: String, env: String, repositoryURL: String,
+        configurations: [String: String],
+        customConfigurations: [String: String]
+    ) async throws(APICallError) -> KnownTestsResult {
+        try await tests(service: service, env: env, repositoryURL: repositoryURL,
+                        configurations: configurations, customConfigurations: customConfigurations,
+                        observer: nil)
+    }
 }
 
 struct KnownTestsApiService: KnownTestsApi, APIServiceConstructible {
@@ -99,10 +127,10 @@ struct KnownTestsApiService: KnownTestsApi, APIServiceConstructible {
     var headers: [HTTPHeader]
     var encoder: JSONEncoder
     var decoder: JSONDecoder
-    let httpClient: HTTPClient
+    let httpClient: any HTTPClientType
     let log: Logger
 
-    init(config: APIServiceConfig, httpClient: HTTPClient, log: Logger) {
+    init(config: APIServiceConfig, httpClient: any HTTPClientType, log: Logger) {
         self.endpoint = config.endpoint
         self.httpClient = httpClient
         self.log = log
@@ -115,7 +143,8 @@ struct KnownTestsApiService: KnownTestsApi, APIServiceConstructible {
                repositoryURL: String,
                configurations: [String: String],
                customConfigurations: [String: String],
-               page: KnownTestsPageInfo) async throws(APICallError) -> KnownTestsResult
+               page: KnownTestsPageInfo,
+               observer: RequestObserver?) async throws(APICallError) -> KnownTestsResult
     {
         var configurations: [String: JSONGeneric] = configurations.mapValues { .string($0) }
         configurations["custom"] = JSONGeneric(customConfigurations)
@@ -129,7 +158,8 @@ struct KnownTestsApiService: KnownTestsApi, APIServiceConstructible {
                                                  url: endpoint.knownTestsURL,
                                                  data: .init(attributes: request),
                                                  headers: headers + [.contentTypeHeader(contentType: .applicationJSON)],
-                                                 coders: (encoder, decoder))
+                                                 coders: (encoder, decoder),
+                                                 observer: observer)
         log.debug("Known tests response: \(response.data.attributes)")
         let attrs = response.data.attributes
         return KnownTestsResult(

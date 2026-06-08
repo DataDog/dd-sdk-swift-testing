@@ -7,10 +7,23 @@
 import Foundation
 
 internal protocol HTTPClientType: AnyObject, Sendable {
-    /// Send the request and return the response (no body).
-    func send(request: URLRequest) async throws(HTTPClient.RequestError) -> HTTPURLResponse
+    /// Send the request and return the response (no body). `observer`, when
+    /// provided, is notified once with the request's transport facts.
+    func send(request: URLRequest, observer: RequestObserver?) async throws(HTTPClient.RequestError) -> HTTPURLResponse
     /// Send the request and return the response body.
-    func sendWithResponse(request: URLRequest) async throws(HTTPClient.RequestError) -> Data
+    func sendWithResponse(request: URLRequest, observer: RequestObserver?) async throws(HTTPClient.RequestError) -> Data
+}
+
+extension HTTPClientType {
+    /// Send the request and return the response (no body).
+    func send(request: URLRequest) async throws(HTTPClient.RequestError) -> HTTPURLResponse {
+        try await send(request: request, observer: nil)
+    }
+
+    /// Send the request and return the response body.
+    func sendWithResponse(request: URLRequest) async throws(HTTPClient.RequestError) -> Data {
+        try await sendWithResponse(request: request, observer: nil)
+    }
 }
 
 /// Client for sending requests over HTTP.
@@ -80,23 +93,39 @@ public final class HTTPClient: HTTPClientType {
     }
 
     /// Send the request and return the response (no body).
-    func send(request: URLRequest) async throws(RequestError) -> HTTPURLResponse {
-        try await perform(request) { httpClientResult(for: $0) }
+    func send(request: URLRequest, observer: RequestObserver?) async throws(RequestError) -> HTTPURLResponse {
+        try await perform(request, observer: observer) { httpClientResult(for: $0) }
     }
 
     /// Send the request and return the response body.
-    func sendWithResponse(request: URLRequest) async throws(RequestError) -> Data {
-        try await perform(request) { httpClientResultWithData(for: $0) }
+    func sendWithResponse(request: URLRequest, observer: RequestObserver?) async throws(RequestError) -> Data {
+        try await perform(request, observer: observer) { httpClientResultWithData(for: $0) }
     }
 
     private func perform<T>(
         _ request: URLRequest,
+        observer: RequestObserver?,
         _ resultMapping: @escaping (_ taskResult: (Data?, URLResponse?, Error?)) -> Result<T, RequestError>
     ) async throws(RequestError) -> T {
+        // Capture the serialized payload size before `deflate` so it reflects
+        // the logical request size rather than the compressed wire size.
+        let requestBytes = request.httpBody?.count ?? 0
         let request = deflate(request)
+        let start = observer != nil ? DispatchTime.now() : nil
         let result: Result<T, RequestError> = await withCheckedContinuation { continuation in
             let task = session.dataTask(with: request) { data, response, error in
                 self.log(request: request, response: (data, response, error))
+                if let observer, let start {
+                    let durationMs = Double(DispatchTime.now().uptimeNanoseconds - start.uptimeNanoseconds) / 1_000_000
+                    let statusCode = (response as? HTTPURLResponse)?.statusCode
+                    let success = error == nil && (statusCode.map { (200 ..< 400).contains($0) } ?? false)
+                    observer.requestFinished(durationMs: durationMs,
+                                             requestBytes: requestBytes,
+                                             responseBytes: data?.count ?? 0,
+                                             statusCode: statusCode,
+                                             transportError: statusCode == nil ? error : nil,
+                                             failed: !success)
+                }
                 continuation.resume(returning: resultMapping((data, response, error)))
             }
             task.resume()

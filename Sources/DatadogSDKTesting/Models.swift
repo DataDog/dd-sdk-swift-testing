@@ -41,13 +41,14 @@ extension TestContainer {
 
 protocol TestSession: TestContainer {
     var testFrameworks: Set<String> { get }
+    var configuration: SessionConfig { get }
     func nextTestIndex() -> UInt
 }
 
 protocol TestSessionManagerObserver: Sendable {
-    func didStart(session: any TestSession, with config: SessionConfig) async
-    func willFinish(session: any TestSession, with config: SessionConfig) async
-    func didFinish(session: any TestSession, with config: SessionConfig) async
+    func didStart(session: any TestSession) async
+    func willFinish(session: any TestSession) async
+    func didFinish(session: any TestSession) async
 }
 
 protocol TestSessionProvider: Sendable {
@@ -57,19 +58,8 @@ protocol TestSessionProvider: Sendable {
 
 protocol TestSessionManager: Sendable {
     var session: any TestSession & TestModuleManager { get async throws }
-    var config: SessionConfig { get async throws }
-    var sessionAndConfig: (session: any TestSession & TestModuleManager, config: SessionConfig) { get async throws }
-    
-    func stop() async
-}
 
-extension TestSessionManager {
-    var session: any TestSession & TestModuleManager {
-        get async throws { try await sessionAndConfig.session }
-    }
-    var config: SessionConfig {
-        get async throws { try await sessionAndConfig.config }
-    }
+    func stop() async
 }
 
 protocol TestModule: TestContainer {
@@ -78,14 +68,18 @@ protocol TestModule: TestContainer {
     var localization: String { get }
 }
 
+extension TestModule {
+    var configuration: SessionConfig { session.configuration }
+}
+
 protocol TestModuleProvider: Sendable {
     func startModule(named: String, at: Date?) -> any TestModule & TestSuiteProvider
 }
 
 protocol TestModuleManagerObserver: Sendable {
-    func didStart(module: any TestModule, with config: SessionConfig)
-    func willFinish(module: any TestModule, with config: SessionConfig)
-    func didFinish(module: any TestModule, with config: SessionConfig)
+    func didStart(module: any TestModule)
+    func willFinish(module: any TestModule)
+    func didFinish(module: any TestModule)
 }
 
 protocol TestModuleManager: Sendable {
@@ -111,7 +105,8 @@ protocol TestRunProvider: Sendable {
 
 extension TestSuite {
     var session: any TestSession { module.session }
-    
+    var configuration: SessionConfig { module.configuration }
+
     func set(status: TestStatus) {
         switch status {
         case .fail: set(failed: nil)
@@ -233,7 +228,7 @@ struct TestError: Error, CustomDebugStringConvertible {
             self.crashLog = nil
             return
         }
-        if stack.count < 5000 {
+        if stack.count < AttributesSanitizer.Constraints.maxAttributeValueLength {
             self.message = message
             self.stack = stack
             self.crashLog = nil
@@ -241,7 +236,7 @@ struct TestError: Error, CustomDebugStringConvertible {
             self.message = message.map { $0 + ". " } ?? ""
                 + "Check error.crash_log for the full crash log."
             self.stack = DDSymbolicator.calculateCrashedThread(stack: stack)
-            self.crashLog = stack.split(by: 5000)
+            self.crashLog = stack.split(by: AttributesSanitizer.Constraints.maxAttributeValueLength)
         }
     }
     
@@ -325,13 +320,34 @@ struct TestError: Error, CustomDebugStringConvertible {
 
 struct SessionConfig: Sendable {
     let activeFeatures: TestHooksFeatures
-    let platform: Environment.Platform
+    nonisolated(unsafe) let env: Environment
+    nonisolated(unsafe) let config: Config
     let clock: Clock
     let crash: CrashInformation?
     let command: String?
-    let service: String
-    let metrics: [String: Double]
     let log: Logger
+    /// Common telemetry manager shared with all features so they can record
+    /// SDK self-metrics. `nil` when instrumentation telemetry is disabled.
+    let telemetry: Telemetry?
+
+    init(activeFeatures: TestHooksFeatures,
+         env: Environment,
+         config: Config,
+         clock: Clock,
+         crash: CrashInformation?,
+         command: String?,
+         log: Logger,
+         telemetry: Telemetry? = nil)
+    {
+        self.activeFeatures = activeFeatures
+        self.env = env
+        self.config = config
+        self.clock = clock
+        self.crash = crash
+        self.command = command
+        self.log = log
+        self.telemetry = telemetry
+    }
 }
 
 struct TestRunParameters: Encodable {

@@ -85,7 +85,7 @@ public protocol APIService {
 }
 
 internal protocol APIServiceConstructible: APIService {
-    init(config: APIServiceConfig, httpClient: HTTPClient, log: Logger)
+    init(config: APIServiceConfig, httpClient: any HTTPClientType, log: Logger)
 }
 
 protocol APIVoidValue {
@@ -426,12 +426,13 @@ extension JSONDecoder {
     }
 }
 
-extension HTTPClient {
+extension HTTPClientType {
     func call<Request, Response>(
         _ call: APICall<Request, Response>.Type,
         url: URL, meta: Request.Meta, data: Request,
         headers: [HTTPHeader]? = nil,
-        coders: (JSONEncoder, JSONDecoder) = (.apiEncoder, .apiDecoder)
+        coders: (JSONEncoder, JSONDecoder) = (.apiEncoder, .apiDecoder),
+        observer: RequestObserver? = nil
     ) async throws(APICallError) -> APIEnvelope<Response>
     where Request: APIRequestData, Response: APIResponseData
     {
@@ -444,12 +445,7 @@ extension HTTPClient {
         }
         request.httpBody = requestData
 
-        let body: Data
-        do {
-            body = try await sendWithResponse(request: request)
-        } catch let err {
-            throw APICallError(from: err)
-        }
+        let body: Data = try await sendWithResponse(api: request, observer: observer)
         return try call.response(from: body, requestId: requestId, coder: coders.1)
     }
 
@@ -457,10 +453,35 @@ extension HTTPClient {
         _ call: APICall<Request, Response>.Type,
         url: URL, data: Request,
         headers: [HTTPHeader]? = nil,
-        coders: (JSONEncoder, JSONDecoder) = (.apiEncoder, .apiDecoder)
+        coders: (JSONEncoder, JSONDecoder) = (.apiEncoder, .apiDecoder),
+        observer: RequestObserver? = nil
     ) async throws(APICallError) -> APIEnvelope<Response>
     where Request: APIRequestData, Response: APIResponseData, Request.Meta: APIVoidValue
     {
-        try await self.call(call, url: url, meta: .void, data: data, headers: headers, coders: coders)
+        try await self.call(call, url: url, meta: .void, data: data, headers: headers, coders: coders, observer: observer)
+    }
+
+    func send(api request: URLRequest, observer: RequestObserver? = nil) async throws(APICallError) -> HTTPURLResponse {
+        do {
+            return try await send(request: request, observer: observer)
+        } catch {
+            throw APICallError(from: error)
+        }
+    }
+
+    func sendWithResponse(api request: URLRequest, observer: RequestObserver? = nil) async throws(APICallError) -> Data {
+        do {
+            return try await sendWithResponse(request: request, observer: observer)
+        } catch {
+            throw APICallError(from: error)
+        }
+    }
+
+    func send(api request: MultipartFormURLRequest, observer: RequestObserver? = nil) async throws(APICallError) -> HTTPURLResponse {
+        try await send(api: request.asURLRequest, observer: observer)
+    }
+
+    func sendWithResponse(api request: MultipartFormURLRequest, observer: RequestObserver? = nil) async throws(APICallError) -> Data {
+        try await sendWithResponse(api: request.asURLRequest, observer: observer)
     }
 }

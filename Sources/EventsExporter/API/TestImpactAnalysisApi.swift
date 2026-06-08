@@ -46,25 +46,47 @@ public protocol TestImpactAnalysisApi: APIService {
     func skippableTests(repositoryURL: String, sha: String,
                         environment: String, service: String,
                         testLevel: ITRTestLevel, configurations: [String: String],
-                        customConfigurations: [String: String]) async throws(APICallError) -> SkipTests
+                        customConfigurations: [String: String],
+                        observer: RequestObserver?) async throws(APICallError) -> SkipTests
 
-    func uploadCoverage(batch url: URL) async throws(APICallError)
-    func uploadCoverage(batch data: Data) async throws(HTTPClient.RequestError)
+    func uploadCoverage(batch url: URL, observer: RequestObserver?) async throws(APICallError)
+    func uploadCoverage(batch data: Data, observer: RequestObserver?) async throws(APICallError)
 }
 
 extension TestImpactAnalysisApi {
-    public func uploadCoverage(batch url: URL) async throws(APICallError) {
+    public func uploadCoverage(batch url: URL, observer: RequestObserver?) async throws(APICallError) {
         let data: Data
         do {
             data = try Data(contentsOf: url, options: [.mappedIfSafe])
         } catch {
             throw .fileSystem(error)
         }
-        do {
-            try await uploadCoverage(batch: data)
-        } catch {
-            throw APICallError(from: error)
-        }
+        try await uploadCoverage(batch: data, observer: observer)
+    }
+
+    /// Convenience without a telemetry observer.
+    @inlinable
+    public func skippableTests(repositoryURL: String, sha: String,
+                               environment: String, service: String,
+                               testLevel: ITRTestLevel, configurations: [String: String],
+                               customConfigurations: [String: String]) async throws(APICallError) -> SkipTests
+    {
+        try await skippableTests(repositoryURL: repositoryURL, sha: sha,
+                                 environment: environment, service: service,
+                                 testLevel: testLevel, configurations: configurations,
+                                 customConfigurations: customConfigurations, observer: nil)
+    }
+
+    /// Convenience without a telemetry observer.
+    @inlinable
+    public func uploadCoverage(batch url: URL) async throws(APICallError) {
+        try await uploadCoverage(batch: url, observer: nil)
+    }
+
+    /// Convenience without a telemetry observer.
+    @inlinable
+    public func uploadCoverage(batch data: Data) async throws(APICallError) {
+        try await uploadCoverage(batch: data, observer: nil)
     }
 }
 
@@ -76,10 +98,10 @@ struct TestImpactAnalysisApiService: TestImpactAnalysisApi, APIServiceConstructi
     var encoder: JSONEncoder
     var decoder: JSONDecoder
     let compression: Bool
-    let httpClient: HTTPClient
+    let httpClient: any HTTPClientType
     let log: Logger
 
-    init(config: APIServiceConfig, httpClient: HTTPClient, log: Logger) {
+    init(config: APIServiceConfig, httpClient: any HTTPClientType, log: Logger) {
         self.endpoint = config.endpoint
         self.httpClient = httpClient
         self.log = log
@@ -92,7 +114,8 @@ struct TestImpactAnalysisApiService: TestImpactAnalysisApi, APIServiceConstructi
     func skippableTests(repositoryURL: String, sha: String,
                         environment: String, service: String,
                         testLevel: ITRTestLevel, configurations: [String: String],
-                        customConfigurations: [String: String]) async throws(APICallError) -> SkipTests
+                        customConfigurations: [String: String],
+                        observer: RequestObserver?) async throws(APICallError) -> SkipTests
     {
         var configurations: [String: JSONGeneric] = configurations.mapValues { .string($0) }
         configurations["custom"] = JSONGeneric(customConfigurations)
@@ -107,7 +130,8 @@ struct TestImpactAnalysisApiService: TestImpactAnalysisApi, APIServiceConstructi
                                                  url: endpoint.skippableTestsURL,
                                                  data: .init(attributes: request),
                                                  headers: headers + [.contentTypeHeader(contentType: .applicationJSON)],
-                                                 coders: (encoder, decoder))
+                                                 coders: (encoder, decoder),
+                                                 observer: observer)
         log.debug("Skippable tests response: \(response.data)")
         let correlationId = response.meta.correlationId
         let tests = response.data.attributes.map { test in
@@ -137,7 +161,7 @@ struct TestImpactAnalysisApiService: TestImpactAnalysisApi, APIServiceConstructi
         return SkipTests(correlationId: correlationId, tests: tests)
     }
 
-    func uploadCoverage(batch data: Data) async throws(HTTPClient.RequestError) {
+    func uploadCoverage(batch data: Data, observer: RequestObserver?) async throws(APICallError) {
         var request = MultipartFormURLRequest(url: endpoint.coverageURL)
         request.headers = headers
         if compression {
@@ -151,8 +175,8 @@ struct TestImpactAnalysisApiService: TestImpactAnalysisApi, APIServiceConstructi
                        contentType: .applicationJSON)
         let log = self.log
         log.debug("Uploading coverage batch...")
-        let response = try await httpClient.send(request: request)
-        log.debug("Coverage batch upload response: \(response.statusCode)")
+        let _ = try await httpClient.send(api: request, observer: observer)
+        log.debug("Coverage batch accepted...")
     }
 
     var endpointURLs: Set<URL> { [endpoint.skippableTestsURL, endpoint.coverageURL] }

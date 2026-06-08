@@ -13,17 +13,26 @@ internal final class FileWriter {
     private let orchestrator: FilesOrchestratorType
     /// JSON encoder used to encode data.
     private let encoder: JSONEncoder
+    /// Optional telemetry observer notified about serialization / payload size.
+    private let observer: PayloadObserver?
+    /// Events written to / time spent serializing the currently-open file. Only
+    /// touched on `queue`. Reported as `payloadFinalized` when the file rolls
+    /// over or is explicitly closed.
+    private var pendingEventCount: Int = 0
+    private var pendingSerializationMs: Double = 0
     /// Queue used to synchronize files access (read / write).
     internal let queue: DispatchQueue
 
     init(entity: String,
          dataFormat: DataFormatType,
          orchestrator: FilesOrchestratorType,
-         encoder: JSONEncoder)
+         encoder: JSONEncoder,
+         observer: PayloadObserver? = nil)
     {
         self.dataFormat = dataFormat
         self.orchestrator = orchestrator
         self.encoder = encoder
+        self.observer = observer
         self.queue = DispatchQueue(label: "datadogtest.filewriter.\(entity)",
                                    target: .global(qos: .userInteractive))
     }
@@ -32,6 +41,7 @@ internal final class FileWriter {
     /// next write starts a new file with the new header.
     func update(dataFormat: DataFormatType) {
         queue.sync(flags: .barrier) {
+            finalizeCurrentPayload()
             orchestrator.closeWritableFile()
             self.dataFormat = dataFormat
         }
@@ -41,7 +51,19 @@ internal final class FileWriter {
     /// Required before `FileReader.getAllReadableFiles()` so the in-progress
     /// file isn't returned mid-write.
     func closeCurrentFile() {
-        queue.sync(flags: .barrier) { orchestrator.closeWritableFile() }
+        queue.sync(flags: .barrier) {
+            finalizeCurrentPayload()
+            orchestrator.closeWritableFile()
+        }
+    }
+
+    /// Reports the event count and summed serialization time of the file that is
+    /// being closed, if any. Must be called on `queue`.
+    private func finalizeCurrentPayload() {
+        guard pendingEventCount > 0 else { return }
+        observer?.payloadFinalized(eventCount: pendingEventCount, serializationMs: pendingSerializationMs)
+        pendingEventCount = 0
+        pendingSerializationMs = 0
     }
 
     // MARK: - Writing data
@@ -55,21 +77,35 @@ internal final class FileWriter {
                 Log.print("🔥 Failed to write file: \(error)")
             }
         }
+        observer?.eventEnqueued()
     }
 
     /// Encodes and writes `value` synchronously, surfacing errors to the caller.
     func writeSync<T: Encodable>(value: T) throws {
+        observer?.eventEnqueued()
         try queue.sync { try write(value: value, sync: true) }
     }
 
     private func write<T: Encodable>(value: T, sync: Bool) throws {
+        let encodeStart = observer.map { _ in DispatchTime.now() }
         let data = try encoder.encode(value)
+        let eventMs = encodeStart.map {
+            Double(DispatchTime.now().uptimeNanoseconds - $0.uptimeNanoseconds) / 1_000_000
+        }
         // `withWritableFile` claims the file for the duration of `body`, so
         // the upload worker's reader cannot list-and-delete the file mid-
         // write. Once the closure returns, the file becomes visible to the
         // reader.
         try orchestrator.withWritableFile(writeSize: UInt64(data.count)) { writable, isNew in
-            let payload = isNew ? (dataFormat.prefix + data) : (dataFormat.separator + data)
+            // A new file means the previous one is finalized; report its totals
+            // and start accumulating for the new payload. This event's
+            // serialization time belongs to the new payload.
+            if isNew {
+                finalizeCurrentPayload()
+            }
+            pendingEventCount += 1
+            if let eventMs { pendingSerializationMs += eventMs }
+            let payload = try isNew ? (dataFormat.prefix + data) : (dataFormat.separator + data)
             try writable.append(data: payload, synchronized: sync)
         }
     }

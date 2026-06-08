@@ -82,12 +82,11 @@ extension Mocks {
             let session = Mocks.Session.Provider(tags: Dictionary(uniqueKeysWithValues: tags))
             let manager = SessionManager(provider: session,
                                          config: .init(activeFeatures: features,
-                                                       platform: DDTestMonitor.env.platform,
+                                                       env: DDTestMonitor.env,
+                                                       config: DDTestMonitor.config,
                                                        clock: DateClock(),
                                                        crash: nil,
                                                        command: "test command",
-                                                       service: "test-runner",
-                                                       metrics: [:],
                                                        log: Mocks.CatchLogger(isDebug: false)),
                                          observer: SessionAndModuleObserver())
             let suiteProvider = SwiftTestingSuiteProvider(session: manager,

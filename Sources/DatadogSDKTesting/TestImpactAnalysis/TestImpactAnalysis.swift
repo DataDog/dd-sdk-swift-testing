@@ -20,8 +20,9 @@ final class TestImpactAnalysis: TestHooksFeature {
     var isSkippingEnabled: Bool { correlationId != nil }
 
     private let _skippedCount: Synced<UInt>
+    let telemetry: Telemetry?
 
-    init(tests: SkipTests?, swiftTestingEnabled: Bool) {
+    init(tests: SkipTests?, swiftTestingEnabled: Bool, telemetry: Telemetry? = nil) {
         if let tests = tests { // we have skipping enabled
             var modules = [String: [String: Suite]]()
             for test in tests.tests {
@@ -43,6 +44,7 @@ final class TestImpactAnalysis: TestHooksFeature {
         }
         self.swiftTestingEnabled = swiftTestingEnabled
         self._skippedCount = .init(0)
+        self.telemetry = telemetry
     }
 
     func status(named test: String, suite: String, module: String, skippable: Bool) -> SkipStatus {
@@ -112,6 +114,9 @@ final class TestImpactAnalysis: TestHooksFeature {
         }
         if info.skip.status.markedUnskippable {
             test.set(tag: DDItrTags.itrUnskippable, value: "true")
+            if info.executions.total == 0 {
+                telemetry?.metrics.itr.unskippable.add(eventType: .test)
+            }
         }
     }
     
@@ -123,12 +128,16 @@ final class TestImpactAnalysis: TestHooksFeature {
         case .pass, .fail:
             if info.skip.status.isForcedRun {
                 test.set(tag: DDItrTags.itrForcedRun, value: "true")
+                if !info.retry.status.isRetry {
+                    telemetry?.metrics.itr.forcedRun.add(eventType: .test)
+                }
             }
         case .skip:
             if info.skip.by?.feature == id && info.skip.status.isSkipped {
                 test.set(tag: DDTestTags.testSkippedByITR, value: "true")
                 test.set(tag: DDTestTags.testFinalStatus, value: TestStatus.skip)
                 _skippedCount.update { $0 += 1 }
+                telemetry?.metrics.itr.skipped.add(eventType: .test)
             }
         }
     }
@@ -183,6 +192,7 @@ struct TestImpactAnalysisFactory: FeatureFactory {
     let api: TestImpactAnalysisApi
     let skippingEnabled: Bool
     let swiftTestingEnabled: Bool
+    let telemetry: Telemetry?
 
     init(configurations: [String: String],
          custom: [String: String],
@@ -190,7 +200,7 @@ struct TestImpactAnalysisFactory: FeatureFactory {
          service: String, environment: String,
          commit: String, repository: String,
          cache: Directory, skippingEnabled: Bool,
-         swiftTestingEnabled: Bool)
+         swiftTestingEnabled: Bool, telemetry: Telemetry? = nil)
     {
         self.configurations = configurations
         self.customConfigurations = custom
@@ -202,6 +212,7 @@ struct TestImpactAnalysisFactory: FeatureFactory {
         self.commitSha = commit
         self.skippingEnabled = skippingEnabled
         self.swiftTestingEnabled = swiftTestingEnabled
+        self.telemetry = telemetry
     }
 
     static func isEnabled(config: Config, env: Environment, remote: TracerSettings) -> Bool {
@@ -245,7 +256,7 @@ struct TestImpactAnalysisFactory: FeatureFactory {
 
     private func create(log: Logger, tests: SkipTests?) -> TestImpactAnalysis {
         log.debug("Test Impact Analysis Enabled")
-        return TestImpactAnalysis(tests: tests, swiftTestingEnabled: swiftTestingEnabled)
+        return TestImpactAnalysis(tests: tests, swiftTestingEnabled: swiftTestingEnabled, telemetry: telemetry)
     }
 
     private func loadTestsFromDisk(log: Logger) -> SkipTests? {
@@ -266,12 +277,19 @@ struct TestImpactAnalysisFactory: FeatureFactory {
 
     private func fetchTests() async throws -> SkipTests {
         do {
-            return try await api.skippableTests(repositoryURL: repository.spanAttribute,
-                                                sha: commitSha,
-                                                environment: environment, service: service,
-                                                testLevel: .test,
-                                                configurations: configurations,
-                                                customConfigurations: customConfigurations)
+            let tests = try await api.skippableTests(repositoryURL: repository.spanAttribute,
+                                                     sha: commitSha,
+                                                     environment: environment, service: service,
+                                                     testLevel: .test,
+                                                     configurations: configurations,
+                                                     customConfigurations: customConfigurations,
+                                                     observer: telemetry?.skippableTestsRequestObserver)
+            if let telemetry {
+                let uniqueSuites = Set(tests.tests.map { $0.suite })
+                telemetry.metrics.itrSkippableTests.responseTests.add(tests.tests.count)
+                telemetry.metrics.itrSkippableTests.responseSuites.add(uniqueSuites.count)
+            }
+            return tests
         } catch {
             throw LibraryConfigurationCommunicationError(
                 requestName: "SkipTestsRequest",

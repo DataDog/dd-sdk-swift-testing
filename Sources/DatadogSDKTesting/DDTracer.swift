@@ -21,11 +21,19 @@ internal class DDTracer {
     let tracerSdk: TracerSdk
     let tracerProviderSdk: TracerProviderSdk
     let maxObjectSize: UInt64
+    /// OTel `Resource` describing this SDK (service / version / env / sdk.* tags).
+    /// Reused by the telemetry meter provider so self-metrics carry the same
+    /// identity as spans and logs.
+    let resource: Resource
     var eventsExporter: ExporterProtocol?
     /// Backend APIs owned by the SDK (not by the exporter). Held here so
     /// feature factories don't need to reach through `eventsExporter` to talk
     /// to the backend.
     var api: TestOptimizationApi
+    /// Common telemetry manager. Created alongside the tracer so the API /
+    /// exporter layers and every feature can record SDK self-metrics. `nil`
+    /// when instrumentation telemetry is disabled or storage is unavailable.
+    let telemetry: Telemetry?
 
     /// Logger used to emit `print()`/stderr captures and test-error context as
     /// first-class OTel `LogRecord`s through the registered LoggerProvider.
@@ -49,11 +57,14 @@ internal class DDTracer {
     init(id: String, version: String, exporter: ExporterProtocol?,
          api: TestOptimizationApi, enabled: Bool, launchContext: SpanContext?,
          resource: Resource = Resource(),
-         logRecordExporter: LogRecordExporter? = nil)
+         logRecordExporter: LogRecordExporter? = nil,
+         telemetry: Telemetry? = nil)
     {
         self.launchSpanContext = launchContext
+        self.telemetry = telemetry
         self.eventsExporter = exporter
         self.api = api
+        self.resource = resource
         self.maxObjectSize = exporter?.maxObjectSize ?? 262144
 
         let spanExporterToUse: SpanExporter
@@ -82,14 +93,6 @@ internal class DDTracer {
         }
 
         // sync clock
-        waitForAsync {
-            do {
-                try await DDTestMonitor.clock.sync()
-            } catch {
-                DDTestMonitor.clock = DateClock()
-            }
-        }
-
         tracerProviderSdk = TracerProviderBuilder().with(sampler: Samplers.alwaysOn)
             .with(spanLimits: SpanLimits().settingAttributeCountLimit(attributeCountLimit))
             .with(clock: DDTestMonitor.clock)
@@ -149,10 +152,13 @@ internal class DDTracer {
                                     env: DDTestMonitor.env,
                                     capabilities: .libraryCapabilities)
 
+        // Sync the clock before creating the API service so its date provider
+        // is ready. SyncingClock absorbs NTP failures internally — no replacement needed.
+        waitForAsync { await DDTestMonitor.clock.sync() }
+
         let exporterConfiguration = ExporterConfiguration(
             environment: env.environment,
             metadata: metadata,
-            performancePreset: .instantDataDelivery,
             logger: Log.instance
         )
         let api = TestOptimizationApiService(
@@ -166,19 +172,9 @@ internal class DDTracer {
             clientId: String(SpanId.random().rawValue),
             payloadCompression: payloadCompression,
             logger: Log.instance,
+            dateProvider: DDTestMonitor.clock,
             debugNetworkRequests: conf.extraDebugNetwork
         )
-        // Exporter files live under the cache manager's session directory so
-        // they stay scoped to this test run and get cleaned up alongside the
-        // rest of the per-session state.
-        let eventsExporter: Exporter?
-        if let storage = try? DDTestMonitor.cacheManager?.session(feature: "exporter") {
-            eventsExporter = try? Exporter(config: exporterConfiguration, api: api, storage: storage)
-        } else {
-            Log.print("Exporter init skipped: cache manager unavailable")
-            eventsExporter = nil
-        }
-
         var resource = Resource()
         resource.applicationName = identifier
         resource.applicationVersion = version
@@ -188,11 +184,133 @@ internal class DDTracer {
         resource.sdkName = identifier
         resource.sdkVersion = DDTestMonitor.tracerVersion
 
+        // Build the telemetry manager before the exporter so its observers can
+        // be wired into the exporter's upload/serialization pipeline.
+        let telemetry: Telemetry? = conf.instrumentationTelemetryEnabled
+            ? DDTracer.makeTelemetry(api: api, configuration: exporterConfiguration,
+                                     flushInterval: conf.telemetryFlushInterval,
+                                     heartbeatInterval: conf.telemetryHeartbeatInterval,
+                                     distributionCap: conf.telemetryDistributionBufferSize)
+            : nil
+
+        // Exporter files live under the cache manager's session directory so
+        // they stay scoped to this test run and get cleaned up alongside the
+        // rest of the per-session state.
+        let eventsExporter: Exporter?
+        if let storage = try? DDTestMonitor.cacheManager?.session(feature: "exporter") {
+            eventsExporter = try? Exporter(config: exporterConfiguration, api: api, storage: storage,
+                                           observers: DDTracer.exporterObservers(telemetry: telemetry))
+        } else {
+            Log.print("Exporter init skipped: cache manager unavailable")
+            eventsExporter = nil
+        }
+
         self.init(id: identifier, version: version, exporter: eventsExporter,
                   api: api,
                   enabled: !conf.disableTracesExporting, launchContext: launchSpanContext,
                   resource: resource,
-                  logRecordExporter: logRecordExporter)
+                  logRecordExporter: logRecordExporter,
+                  telemetry: telemetry)
+    }
+
+    /// Build the common telemetry manager wired to the SDK's telemetry intake,
+    /// reusing the exporter's configuration. Returns `nil` when the backing
+    /// storage or exporter can't be created, in which case telemetry is simply
+    /// not gathered.
+    private static func makeTelemetry(api: TestOptimizationApi, configuration: ExporterConfiguration,
+                                      flushInterval: TimeInterval, heartbeatInterval: TimeInterval,
+                                      distributionCap: Int) -> Telemetry?
+    {
+        guard let cacheManager = DDTestMonitor.cacheManager,
+              let storage = try? cacheManager.session(feature: "telemetry")
+        else {
+            Log.print("Telemetry init skipped: cache manager unavailable")
+            return nil
+        }
+
+        guard let telemetryExporter = try? TelemetryExporter(config: configuration,
+                                                             storage: storage,
+                                                             api: api.telemetry)
+        else {
+            Log.print("Telemetry init skipped: telemetry exporter unavailable")
+            return nil
+        }
+
+        return Telemetry(api: api.telemetry,
+                         exporter: telemetryExporter,
+                         flushInterval: flushInterval,
+                         heartbeatInterval: heartbeatInterval,
+                         distributionCap: distributionCap,
+                         clock: DDTestMonitor.clock,
+                         configuration: Self.telemetryConfiguration())
+    }
+
+    /// Snapshot the current SDK configuration as `TelemetryConfigItem` values for
+    /// the `app-started` payload. Origin is `.envVar` when the user set the key
+    /// explicitly, `.default` otherwise.
+    private static func telemetryConfiguration() -> [TelemetryConfigItem] {
+        let conf = DDTestMonitor.config
+        let env  = DDTestMonitor.envReader
+
+        func item(_ key: EnvironmentKey, _ value: JSONGeneric) -> TelemetryConfigItem {
+            TelemetryConfigItem(name: key.rawValue, value: value,
+                                origin: env.has(key) ? .envVar : .default)
+        }
+
+        return [
+            item(.enableCiVisibilityGitUpload,     .bool(conf.gitUploadEnabled)),
+            item(.enableCiVisibilityGitUnshallow,  .bool(conf.gitUnshallowEnabled)),
+            item(.enableCiVisibilityCodeCoverage,  .bool(conf.codeCoverageEnabled)),
+            item(.enableCiVisibilityITR,            .bool(conf.tiaEnabled)),
+            item(.enableCiVisibilityEFD,            .bool(conf.efdEnabled)),
+            item(.enableCiVisibilityFlakyRetries,  .bool(conf.testRetriesEnabled)),
+            item(.testManagementEnabled,            .bool(conf.testManagementEnabled)),
+            item(.instrumentationTelemetryEnabled, .bool(conf.instrumentationTelemetryEnabled)),
+        ]
+    }
+
+    /// Build the exporter's telemetry observers, mapping each upload feature to
+    /// its `endpoint_payload.*` metrics tagged by endpoint (spans → `test_cycle`,
+    /// coverage → `code_coverage`). Empty when telemetry is disabled.
+    private static func exporterObservers(telemetry: Telemetry?) -> ExporterObservers {
+        guard let telemetry else { return .init() }
+        return ExporterObservers(
+            spans: endpointPayloadObservers(telemetry: telemetry, endpoint: .testCycle),
+            coverage: endpointPayloadObservers(telemetry: telemetry, endpoint: .codeCoverage)
+        )
+    }
+
+    private static func endpointPayloadObservers(telemetry: Telemetry,
+                                                 endpoint: Telemetry.Endpoint) -> ExporterObservers.Feature
+    {
+        let onEnqueued: (@Sendable () -> Void)?
+        if endpoint == .testCycle {
+            onEnqueued = { telemetry.metrics.events.enqueuedForSerialization.add(1) }
+        } else {
+            onEnqueued = nil
+        }
+        return ExporterObservers.Feature(
+            // Transport facts (size sent, duration, status) come from the upload
+            // request itself.
+            request: Telemetry.RequestMetricsObserver(
+                onRequest: { telemetry.metrics.endpointPayload.requests.add(endpoint: endpoint) },
+                onDurationMs: { telemetry.metrics.endpointPayload.requestsMs.record($0, endpoint: endpoint) },
+                onRequestBytes: { telemetry.metrics.endpointPayload.bytes.record(Double($0), endpoint: endpoint) },
+                onError: { telemetry.metrics.endpointPayload.requestsErrors.add(errorType: $0, endpoint: endpoint) }
+            ),
+            // The worker owns the batch lifecycle; only `dropped` is unique to it.
+            upload: Telemetry.UploadMetricsObserver(
+                onDropped: { _ in telemetry.metrics.endpointPayload.dropped.add(endpoint: endpoint) }
+            ),
+            // Serialization happens at the storage layer.
+            payload: Telemetry.PayloadMetricsObserver(
+                onEnqueued: onEnqueued,
+                onFinalized: { count, serializationMs in
+                    telemetry.metrics.endpointPayload.eventsCount.record(Double(count), endpoint: endpoint)
+                    telemetry.metrics.endpointPayload.eventsSerializationMs.record(serializationMs, endpoint: endpoint)
+                }
+            )
+        )
     }
     
     private func createSpanBuilder(name: String, attributes: [String: AttributeValue], startTime: Date? = nil) -> SpanBuilder {

@@ -27,7 +27,6 @@ public final class DDModule: NSObject {
     var id: SpanId { span.context.spanId }
     let span: SpanSdk
     var session: TestSession { _session }
-    var configuration: SessionConfig { _session.configuration }
     var startTime: Date { span.startTime }
 
     private let _session: DDSession
@@ -62,7 +61,7 @@ public final class DDModule: NSObject {
         attributes.testSessionId = session.id
         attributes.testModuleId = id
         
-        for (key, value) in session.configuration.metrics {
+        for (key, value) in session.configuration.env.baseMetrics {
             attributes[key] = .double(value)
         }
 
@@ -137,7 +136,8 @@ public extension DDModule {
     ///   - name: name of the suite
     ///   - startTime: Optional, the time where the suite started
     @objc func suiteStart(name: String, startTime: Date? = nil) -> DDSuite {
-        startSuite(named: name, at: startTime, framework: .init(name: "SwiftManual", version: "0.0.0")) as! DDSuite
+        configuration.telemetry?.metrics.events.manualApiEvents.add(eventType: .suite)
+        return startSuite(named: name, at: startTime, framework: .init(name: "SwiftManual", version: "0.0.0")) as! DDSuite
     }
 
     @objc func suiteStart(name: String) -> DDSuite {

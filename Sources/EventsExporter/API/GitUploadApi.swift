@@ -7,33 +7,34 @@
 import Foundation
 
 public protocol GitUploadApi: APIService {
-    func searchCommits(repositoryURL: String, commits: [String]) async throws(APICallError) -> [String]
+    func searchCommits(repositoryURL: String, commits: [String],
+                       observer: RequestObserver?) async throws(APICallError) -> [String]
 
-    func uploadPackFile(file: URL, commit: String, repositoryURL: String) async throws(APICallError)
+    func uploadPackFile(file: URL, commit: String, repositoryURL: String,
+                        observer: RequestObserver?) async throws(APICallError)
 
     func uploadPackFile(name: String, data: Data, commit: String,
-                        repositoryURL: String) async throws(HTTPClient.RequestError)
+                        repositoryURL: String, observer: RequestObserver?) async throws(APICallError)
 
-    func uploadPackFiles(directory: URL, commit: String, repositoryURL: String) async throws(APICallError)
+    func uploadPackFiles(directory: URL, commit: String, repositoryURL: String,
+                         observer: RequestObserver?) async throws(APICallError)
 }
 
 extension GitUploadApi {
-    public func uploadPackFile(file: URL, commit: String, repositoryURL: String) async throws(APICallError) {
+    public func uploadPackFile(file: URL, commit: String, repositoryURL: String,
+                               observer: RequestObserver?) async throws(APICallError) {
         let data: Data
         do {
             data = try Data(contentsOf: file, options: [.mappedIfSafe])
         } catch {
             throw APICallError.fileSystem(error)
         }
-        do {
-            try await uploadPackFile(name: file.lastPathComponent, data: data,
-                                     commit: commit, repositoryURL: repositoryURL)
-        } catch {
-            throw APICallError(from: error)
-        }
+        try await uploadPackFile(name: file.lastPathComponent, data: data,
+                                 commit: commit, repositoryURL: repositoryURL, observer: observer)
     }
 
-    public func uploadPackFiles(directory: URL, commit: String, repositoryURL: String) async throws(APICallError) {
+    public func uploadPackFiles(directory: URL, commit: String, repositoryURL: String,
+                                observer: RequestObserver?) async throws(APICallError) {
         let files: [URL]
         do {
             files = try FileManager.default
@@ -48,7 +49,7 @@ extension GitUploadApi {
                 for file in files {
                     group.addTask {
                         try await self.uploadPackFile(file: file, commit: commit,
-                                                      repositoryURL: repositoryURL)
+                                                      repositoryURL: repositoryURL, observer: observer)
                     }
                 }
                 while try await group.next() != nil {}
@@ -58,6 +59,30 @@ extension GitUploadApi {
         } catch {
             throw .unknownError(error)
         }
+    }
+
+    // MARK: - Convenience without a telemetry observer
+
+    @inlinable
+    public func searchCommits(repositoryURL: String, commits: [String]) async throws(APICallError) -> [String] {
+        try await searchCommits(repositoryURL: repositoryURL, commits: commits, observer: nil)
+    }
+
+    @inlinable
+    public func uploadPackFile(file: URL, commit: String, repositoryURL: String) async throws(APICallError) {
+        try await uploadPackFile(file: file, commit: commit, repositoryURL: repositoryURL, observer: nil)
+    }
+
+    @inlinable
+    public func uploadPackFile(name: String, data: Data, commit: String,
+                               repositoryURL: String) async throws(APICallError) {
+        try await uploadPackFile(name: name, data: data, commit: commit,
+                                 repositoryURL: repositoryURL, observer: nil)
+    }
+
+    @inlinable
+    public func uploadPackFiles(directory: URL, commit: String, repositoryURL: String) async throws(APICallError) {
+        try await uploadPackFiles(directory: directory, commit: commit, repositoryURL: repositoryURL, observer: nil)
     }
 }
 
@@ -69,10 +94,10 @@ struct GitUploadApiService: GitUploadApi, APIServiceConstructible {
     var encoder: JSONEncoder
     var decoder: JSONDecoder
     let compression: Bool
-    let httpClient: HTTPClient
+    let httpClient: any HTTPClientType
     let log: Logger
 
-    init(config: APIServiceConfig, httpClient: HTTPClient, log: Logger) {
+    init(config: APIServiceConfig, httpClient: any HTTPClientType, log: Logger) {
         self.endpoint = config.endpoint
         self.httpClient = httpClient
         self.log = log
@@ -82,7 +107,8 @@ struct GitUploadApiService: GitUploadApi, APIServiceConstructible {
         self.decoder = config.decoder
     }
 
-    func searchCommits(repositoryURL: String, commits: [String]) async throws(APICallError) -> [String] {
+    func searchCommits(repositoryURL: String, commits: [String],
+                       observer: RequestObserver?) async throws(APICallError) -> [String] {
         let meta = CommitRequestMeta(repositoryUrl: repositoryURL)
         let request = commits.map { APIData<CommitRequestMeta, Commit>(id: $0) }
         let log = self.log
@@ -91,13 +117,14 @@ struct GitUploadApiService: GitUploadApi, APIServiceConstructible {
                                                  url: endpoint.searchCommitsURL,
                                                  meta: meta, data: request,
                                                  headers: headers + [.contentTypeHeader(contentType: .applicationJSON)],
-                                                 coders: (encoder, decoder))
+                                                 coders: (encoder, decoder),
+                                                 observer: observer)
         log.debug("Search commits response: \(response.data)")
         return response.data.map { $0.id! }
     }
 
     func uploadPackFile(name: String, data: Data, commit: String,
-                        repositoryURL: String) async throws(HTTPClient.RequestError)
+                        repositoryURL: String, observer: RequestObserver?) async throws(APICallError)
     {
         let log = self.log
         let meta = CommitRequestMeta(repositoryUrl: repositoryURL)
@@ -117,7 +144,7 @@ struct GitUploadApiService: GitUploadApi, APIServiceConstructible {
                        fileName: name,
                        contentType: .applicationOctetStream)
         log.debug("Uploading packfile \(name) for commit \(commit)")
-        let _ = try await httpClient.send(request: request)
+        let _ = try await httpClient.send(api: request, observer: observer)
         log.debug("Packfile upload succeeded for \(name)")
     }
 

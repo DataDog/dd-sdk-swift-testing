@@ -7,23 +7,31 @@
 import Foundation
 
 public protocol SpansApi: APIService {
-    func uploadSpans(batch url: URL) async throws(APICallError)
-    func uploadSpans(batch data: Data) async throws(HTTPClient.RequestError)
+    func uploadSpans(batch url: URL, observer: RequestObserver?) async throws(APICallError)
+    func uploadSpans(batch data: Data, observer: RequestObserver?) async throws(APICallError)
 }
 
 extension SpansApi {
-    public func uploadSpans(batch url: URL) async throws(APICallError) {
+    public func uploadSpans(batch url: URL, observer: RequestObserver?) async throws(APICallError) {
         let data: Data
         do {
             data = try Data(contentsOf: url, options: [.mappedIfSafe])
         } catch {
             throw .fileSystem(error)
         }
-        do {
-            try await uploadSpans(batch: data)
-        } catch {
-            throw APICallError(from: error)
-        }
+        try await uploadSpans(batch: data, observer: observer)
+    }
+
+    /// Convenience without a telemetry observer.
+    @inlinable
+    public func uploadSpans(batch url: URL) async throws(APICallError) {
+        try await uploadSpans(batch: url, observer: nil)
+    }
+
+    /// Convenience without a telemetry observer.
+    @inlinable
+    public func uploadSpans(batch data: Data) async throws(APICallError) {
+        try await uploadSpans(batch: data, observer: nil)
     }
 }
 
@@ -33,10 +41,10 @@ struct SpansApiService: SpansApi, APIServiceConstructible {
     var encoder: JSONEncoder
     var decoder: JSONDecoder
     let compression: Bool
-    let httpClient: HTTPClient
+    let httpClient: any HTTPClientType
     let log: Logger
 
-    init(config: APIServiceConfig, httpClient: HTTPClient, log: Logger) {
+    init(config: APIServiceConfig, httpClient: any HTTPClientType, log: Logger) {
         self.endpoint = config.endpoint
         self.httpClient = httpClient
         self.log = log
@@ -46,7 +54,7 @@ struct SpansApiService: SpansApi, APIServiceConstructible {
         self.decoder = config.decoder
     }
 
-    func uploadSpans(batch data: Data) async throws(HTTPClient.RequestError) {
+    func uploadSpans(batch data: Data, observer: RequestObserver?) async throws(APICallError) {
         var request = URLRequest(url: endpoint.spansURL)
         request.httpMethod = "POST"
         request.httpHeaders = headers
@@ -57,7 +65,7 @@ struct SpansApiService: SpansApi, APIServiceConstructible {
         request.httpBody = data
         let log = self.log
         log.debug("Uploading spans...")
-        let _ = try await httpClient.send(request: request)
+        let _ = try await httpClient.send(api: request, observer: observer)
         log.debug("Spans upload succeeded")
     }
 

@@ -7,23 +7,31 @@
 import Foundation
 
 public protocol LogsApi: APIService {
-    func uploadLogs(batch url: URL) async throws(APICallError)
-    func uploadLogs(batch data: Data) async throws(HTTPClient.RequestError)
+    func uploadLogs(batch url: URL, observer: RequestObserver?) async throws(APICallError)
+    func uploadLogs(batch data: Data, observer: RequestObserver?) async throws(APICallError)
 }
 
 extension LogsApi {
-    public func uploadLogs(batch url: URL) async throws(APICallError) {
+    public func uploadLogs(batch url: URL, observer: RequestObserver?) async throws(APICallError) {
         let data: Data
         do {
             data = try Data(contentsOf: url, options: [.mappedIfSafe])
         } catch {
             throw .fileSystem(error)
         }
-        do {
-            try await uploadLogs(batch: data)
-        } catch {
-            throw APICallError(from: error)
-        }
+        try await uploadLogs(batch: data, observer: observer)
+    }
+
+    /// Convenience without a telemetry observer.
+    @inlinable
+    public func uploadLogs(batch url: URL) async throws(APICallError) {
+        try await uploadLogs(batch: url, observer: nil)
+    }
+
+    /// Convenience without a telemetry observer.
+    @inlinable
+    public func uploadLogs(batch data: Data) async throws(APICallError) {
+        try await uploadLogs(batch: data, observer: nil)
     }
 }
 
@@ -32,11 +40,11 @@ struct LogsApiService: LogsApi, APIServiceConstructible {
     var headers: [HTTPHeader]
     var encoder: JSONEncoder
     var decoder: JSONDecoder
-    let httpClient: HTTPClient
+    let httpClient: any HTTPClientType
     let compression: Bool
     let log: Logger
 
-    init(config: APIServiceConfig, httpClient: HTTPClient, log: Logger) {
+    init(config: APIServiceConfig, httpClient: any HTTPClientType, log: Logger) {
         self.endpoint = config.endpoint
         self.httpClient = httpClient
         self.log = log
@@ -46,7 +54,7 @@ struct LogsApiService: LogsApi, APIServiceConstructible {
         self.decoder = config.decoder
     }
 
-    func uploadLogs(batch data: Data) async throws(HTTPClient.RequestError) {
+    func uploadLogs(batch data: Data, observer: RequestObserver?) async throws(APICallError) {
         var url = endpoint.logsURL
         url.appendQueryItems([
             .ddsource(source: LogQueryValues.ddsource),
@@ -62,7 +70,7 @@ struct LogsApiService: LogsApi, APIServiceConstructible {
         request.httpBody = data
         let log = self.log
         log.debug("Uploading logs...")
-        let _ = try await httpClient.send(request: request)
+        let _ = try await httpClient.send(api: request, observer: observer)
         log.debug("Logs upload succeeded")
     }
 

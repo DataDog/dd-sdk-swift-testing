@@ -34,7 +34,7 @@ internal final class MockHTTPClient: HTTPClientType, @unchecked Sendable {
 
     // MARK: HTTPClientType
 
-    func send(request: URLRequest) async throws(HTTPClient.RequestError) -> HTTPURLResponse {
+    func send(request: URLRequest, observer: RequestObserver?) async throws(HTTPClient.RequestError) -> HTTPURLResponse {
         try await Task<Result<HTTPURLResponse, HTTPClient.RequestError>, Never>.detached {
             self.record(request)
             switch self.delivery {
@@ -44,7 +44,7 @@ internal final class MockHTTPClient: HTTPClientType, @unchecked Sendable {
         }.value.get()
     }
 
-    func sendWithResponse(request: URLRequest) async throws(HTTPClient.RequestError) -> Data {
+    func sendWithResponse(request: URLRequest, observer: RequestObserver?) async throws(HTTPClient.RequestError) -> Data {
         try await Task<Result<Data, HTTPClient.RequestError>, Never>.detached {
             self.record(request)
             switch self.delivery {

@@ -42,7 +42,7 @@ internal final class LogsExporter: LogRecordExporter {
                                 orchestrator: filesOrchestrator,
                                 encoder: encoder)
         let reader = FileReader(dataFormat: dataFormat, orchestrator: filesOrchestrator)
-        let upload: ClosureDataUploader.UploadCallback = { (data: Data) async throws(HTTPClient.RequestError) -> Void in
+        let upload: ClosureDataUploader.UploadCallback = { (data: Data) async throws(APICallError) -> Void in
             try await api.uploadLogs(batch: data)
         }
         let uploader = ClosureDataUploader(upload: upload)

@@ -53,6 +53,26 @@ struct StoragePerformanceMock: StoragePerformancePreset {
         maxObjectSize: .max,
         synchronousWrite: true
     )
+
+    /// All writes accumulate in the same file until it is explicitly closed via
+    /// `flush()`. Use this to test that the uploader correctly assembles a
+    /// `message-batch` from several entries that share one on-disk batch.
+    ///
+    /// `minFileAgeForRead` is effectively infinite so the periodic upload worker
+    /// never picks up the still-open file mid-write (which would race with the
+    /// writes and split the batch across uploads). `flush()` drains regardless of
+    /// file age, so it remains the only path that uploads here — exactly the
+    /// behaviour under test.
+    static let appendToOneFile = StoragePerformanceMock(
+        maxFileSize: .max,
+        maxDirectorySize: .max,
+        maxFileAgeForWrite: .greatestFiniteMagnitude,
+        minFileAgeForRead: .greatestFiniteMagnitude,
+        maxFileAgeForRead: readAllFiles.maxFileAgeForRead,
+        maxObjectsInFile: .max,
+        maxObjectSize: .max,
+        synchronousWrite: true
+    )
 }
 
 struct UploadPerformanceMock: UploadPerformancePreset {
@@ -76,9 +96,10 @@ struct UploadPerformanceMock: UploadPerformancePreset {
 extension PerformancePreset {
     static let readAllFiles = Self(any: StoragePerformanceMock.readAllFiles,
                                    upload: UploadPerformanceMock.veryQuick)
-    
     static let writeEachObjectToNewFileAndReadAllFiles = Self(any: StoragePerformanceMock.writeEachObjectToNewFileAndReadAllFiles,
                                                               upload: UploadPerformanceMock.veryQuick)
+    static let appendToOneFile = Self(any: StoragePerformanceMock.appendToOneFile,
+                                      upload: UploadPerformanceMock.veryQuick)
 }
 
 extension DataFormat {
@@ -176,7 +197,7 @@ internal struct MockClosureDataUploader: DataUploaderType {
             }
             return DataUploadStatus(httpResponse: response)
         } catch {
-            return DataUploadStatus(networkError: error)
+            return DataUploadStatus(api: .init(from: error))
         }
     }
 }
@@ -244,6 +265,15 @@ extension APIServiceConfig {
                          device: .current, hostname: hostname, apiKey: apiKey,
                          endpoint: endpoint, clientId: clientId,
                          payloadCompression: payloadCompression)
+    }
+}
+
+extension TelemetryApiService {
+    static func mock(endpoint: Endpoint = .us1, logger: Logger = Log()) -> TelemetryApiService {
+        TelemetryApiService(config: APIServiceConfig.mock(endpoint: endpoint),
+                            httpClient: HTTPClient(debug: false),
+                            dateProvider: SystemDateProvider(),
+                            log: logger)
     }
 }
 

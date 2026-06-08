@@ -62,7 +62,19 @@ final class Config {
     /// Test Management
     var testManagementEnabled: Bool = true
     var testManagementAttemptToFixRetries: UInt? = nil
-    
+
+    /// Instrumentation telemetry (SDK self-metrics)
+    var instrumentationTelemetryEnabled: Bool = true
+    /// Telemetry metric collection/export interval, in seconds. Clamped to 1...3600.
+    var telemetryHeartbeatInterval: TimeInterval = 60
+    /// How often accumulated telemetry metrics are drained to the exporter, in
+    /// seconds. Kept short so a crash loses at most one interval. Clamped to 1...3600.
+    var telemetryFlushInterval: TimeInterval = 10
+    /// Buffered telemetry distribution samples that force an early drain (a
+    /// safety backstop for bursts; the timer does the normal draining). Generous
+    /// since each sample is just an 8-byte `Double` — 65536 ≈ 512 KB. Clamped to >= 1.
+    var telemetryDistributionBufferSize: Int = 65536
+
     /// Avoids configuring the traces exporter
     var disableTracesExporting: Bool = false
 
@@ -149,6 +161,18 @@ final class Config {
         /// Test Managemennt
         testManagementEnabled = env[.testManagementEnabled] ?? testManagementEnabled
         testManagementAttemptToFixRetries = env[.testManagementAttemptToFixRetries]
+
+        /// Instrumentation telemetry
+        instrumentationTelemetryEnabled = env[.instrumentationTelemetryEnabled] ?? instrumentationTelemetryEnabled
+        if let interval = env[.telemetryHeartbeatInterval, Int.self] {
+            telemetryHeartbeatInterval = TimeInterval(min(3600, max(1, interval)))
+        }
+        if let interval = env[.telemetryFlushInterval, Int.self] {
+            telemetryFlushInterval = TimeInterval(min(3600, max(1, interval)))
+        }
+        if let size = env[.telemetryDistributionBufferSize, Int.self] {
+            telemetryDistributionBufferSize = max(1, size)
+        }
         
         /// UI testing properties
         tracerTraceId = env[.tracerTraceId]
@@ -240,6 +264,10 @@ extension Config: CustomDebugStringConvertible {
         Excluded Branches: \(excludedBranches)
         Test Management Enabled: \(testManagementEnabled)
         Test Management Attempt To Fix Retries: \(testManagementAttemptToFixRetries.map(String.init) ?? "nil")
+        Instrumentation Telemetry Enabled: \(instrumentationTelemetryEnabled)
+        Telemetry Heartbeat Interval: \(telemetryHeartbeatInterval)
+        Telemetry Flush Interval: \(telemetryFlushInterval)
+        Telemetry Distribution Buffer Size: \(telemetryDistributionBufferSize)
         Test Retries Enabled: \(testRetriesEnabled)
         Test Retries Count: \(testRetriesTestRetryCount)
         Test Retries Total Count: \(testRetriesTotalRetryCount)

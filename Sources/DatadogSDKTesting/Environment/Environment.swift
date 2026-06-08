@@ -10,11 +10,11 @@ internal import EventsExporter
 internal final class Environment {
     let sourceRoot: String?
     let workspacePath: String?
-    
+
     let platform: Platform
     let ci: CI?
     let git: Git
-    
+
     let sessionName: String
     let testCommand: String
     let service: String
@@ -83,10 +83,21 @@ internal final class Environment {
         gitInfo = nil
         #endif
         
-        if let info = gitInfo,
-           git.commit?.sha == nil || (git.commit?.sha != nil && git.commit?.sha == info.commit)
-        {
-            git = git.extended(from: info)
+        if let info = gitInfo {
+            if git.commit?.sha == nil || git.commit?.sha == info.commit {
+                git = git.extended(from: info)
+            } else {
+                git = git.appending(discrepancy: .init(expectedProvider: .ciProvider,
+                                                        discrepantProvider: .localGit,
+                                                        type: .commit))
+            }
+            if let ciRepo = git.repositoryURL, let localRepo = info.repository.flatMap({ URL(string: $0) }),
+               ciRepo.absoluteString != localRepo.absoluteString
+            {
+                git = git.appending(discrepancy: .init(expectedProvider: .ciProvider,
+                                                        discrepantProvider: .localGit,
+                                                        type: .repository))
+            }
             workspace = workspace ?? CI.expand(path: info.workspacePath, home: env.get(env: "HOME"))
         }
         workspacePath = workspace ?? sourceRoot
@@ -105,7 +116,22 @@ internal final class Environment {
         }
         #endif
 
-        self.git = git.updated(with: Environment.gitOverrides(env: env))
+        let overrides = Environment.gitOverrides(env: env)
+        let assembledProvider: Telemetry.ShaProvider = ciInfo?.git.commit?.sha != nil ? .ciProvider : .localGit
+        if let userSha = overrides.commit?.sha, let assembled = git.commit?.sha, userSha != assembled {
+            git = git.appending(discrepancy: .init(expectedProvider: assembledProvider,
+                                                    discrepantProvider: .userSupplied,
+                                                    type: .commit))
+        }
+        let assembledRepoProvider: Telemetry.ShaProvider = ciInfo?.git.repositoryURL != nil ? .ciProvider : .localGit
+        if let userRepo = overrides.repositoryURL, let assembled = git.repositoryURL,
+           userRepo.absoluteString != assembled.absoluteString
+        {
+            git = git.appending(discrepancy: .init(expectedProvider: assembledRepoProvider,
+                                                    discrepantProvider: .userSupplied,
+                                                    type: .repository))
+        }
+        self.git = git.updated(with: overrides)
         
         testCommand = "test \(Bundle.testBundle?.name ?? Bundle.main.name)"
         
@@ -580,14 +606,28 @@ internal extension Environment {
         // git.pull_request.*
         let pullRequestBaseBranch: BaseBranchInfo?
 
+        /// SHA / repository-URL mismatches found while assembling git info from
+        /// multiple providers (CI env, local .git folder, user DD_GIT_* overrides).
+        let discrepancies: [ShaDiscrepancy]
+
         var repositoryName: String? {
             repositoryURL?.deletingPathExtension().lastPathComponent
+        }
+
+        /// Whether all providers agreed (no discrepancies found).
+        var shaMatched: Bool { discrepancies.isEmpty }
+
+        struct ShaDiscrepancy {
+            let expectedProvider: Telemetry.ShaProvider
+            let discrepantProvider: Telemetry.ShaProvider
+            let type: Telemetry.ShaDiscrepancyType
         }
 
         init(directory: String? = nil,
              repositoryURL: URL? = nil, branch: String? = nil, tag: String? = nil,
              commit: CommitInfo? = nil, commitHead: CommitInfo? = nil,
-             pullRequestBaseBranch: BaseBranchInfo? = nil)
+             pullRequestBaseBranch: BaseBranchInfo? = nil,
+             discrepancies: [ShaDiscrepancy] = [])
         {
             self.directory = directory
             self.repositoryURL = repositoryURL
@@ -596,6 +636,7 @@ internal extension Environment {
             self.commit = commit
             self.commitHead = commitHead
             self.pullRequestBaseBranch = pullRequestBaseBranch
+            self.discrepancies = discrepancies
         }
 
         func with(directory: String?) -> Git {
@@ -606,7 +647,21 @@ internal extension Environment {
                 tag: tag,
                 commit: commit,
                 commitHead: commitHead,
-                pullRequestBaseBranch: pullRequestBaseBranch
+                pullRequestBaseBranch: pullRequestBaseBranch,
+                discrepancies: discrepancies
+            )
+        }
+
+        func appending(discrepancy: ShaDiscrepancy) -> Git {
+            Git(
+                directory: directory,
+                repositoryURL: repositoryURL,
+                branch: branch,
+                tag: tag,
+                commit: commit,
+                commitHead: commitHead,
+                pullRequestBaseBranch: pullRequestBaseBranch,
+                discrepancies: discrepancies + [discrepancy]
             )
         }
 
@@ -625,7 +680,8 @@ internal extension Environment {
                 tag: tag ?? (isTag ? branch : nil),
                 commit: commit?.extended(from: infoCommit) ?? infoCommit,
                 commitHead: commitHead,
-                pullRequestBaseBranch: pullRequestBaseBranch
+                pullRequestBaseBranch: pullRequestBaseBranch,
+                discrepancies: discrepancies
             )
         }
 
@@ -637,7 +693,8 @@ internal extension Environment {
                 tag: info.tag ?? tag,
                 commit: commit?.updated(with: info.commit) ?? info.commit,
                 commitHead: commitHead?.updated(with: info.commitHead) ?? info.commitHead,
-                pullRequestBaseBranch: pullRequestBaseBranch?.updated(with: info.pullRequestBaseBranch) ?? info.pullRequestBaseBranch
+                pullRequestBaseBranch: pullRequestBaseBranch?.updated(with: info.pullRequestBaseBranch) ?? info.pullRequestBaseBranch,
+                discrepancies: discrepancies
             )
         }
         
@@ -695,3 +752,4 @@ extension Environment: CustomDebugStringConvertible {
         """
     }
 }
+

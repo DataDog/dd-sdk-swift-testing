@@ -15,7 +15,7 @@ internal protocol DataUploaderType {
 /// the typed API services in `EventsExporter/API/`). The closure throws
 /// `HTTPClient.RequestError`; the result is mapped to a `DataUploadStatus`.
 internal struct ClosureDataUploader: DataUploaderType {
-    typealias UploadCallback = @Sendable (Data) async throws(HTTPClient.RequestError) -> Void
+    typealias UploadCallback = @Sendable (Data) async throws(APICallError) -> Void
 
     private let _upload: UploadCallback
 
@@ -26,12 +26,12 @@ internal struct ClosureDataUploader: DataUploaderType {
     func upload(data: Data) -> DataUploadStatus {
         let upload = self._upload
         do {
-            try waitForAsync { () async throws(HTTPClient.RequestError) -> Void in
+            try waitForAsync { () async throws(APICallError) -> Void in
                 try await upload(data)
             }
             return .success
-        } catch let error {
-            return DataUploadStatus(networkError: error)
+        } catch {
+            return DataUploadStatus(api: error)
         }
     }
 }

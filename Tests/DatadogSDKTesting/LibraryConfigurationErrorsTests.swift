@@ -79,8 +79,12 @@ final class LibraryConfigurationServiceThrowTests: XCTestCase {
         TestOptimizationApiService(serviceName: "service",
                                    environment: "environment",
                                    applicationName: "app",
-                                   version: "1.0",
+                                   applicationVersion: "1.0",
+                                   libraryVersion: "1.0.0",
+                                   device: .current,
                                    hostname: nil,
+                                   kernelInfo: .current,
+                                   languageVersion: "6.0",
                                    apiKey: "apikey",
                                    endpoint: .other(testsBaseURL: baseURL, logsBaseURL: baseURL),
                                    clientId: "client",
@@ -344,3 +348,4 @@ final class LibraryConfigurationServiceThrowTests: XCTestCase {
         return (try? JSONSerialization.data(withJSONObject: payload)) ?? Data()
     }
 }
+

@@ -35,6 +35,7 @@ public extension CoverageExporterType {
 internal final class CoverageExporter: CoverageExporterType {
     let configuration: ExporterConfiguration
     let coverageStorage: FeatureStoreAndUpload
+    private let payloadObserver: PayloadObserver?
 
     init(config: ExporterConfiguration, storage: Directory, api: TestImpactAnalysisApi,
          observers: ExporterObservers.Feature = .init()) throws {
@@ -62,6 +63,7 @@ internal final class CoverageExporter: CoverageExporterType {
             try await api.uploadCoverage(batch: data, observer: requestObserver)
         }
         let uploader = ClosureDataUploader(upload: upload)
+        self.payloadObserver = observers.payload
         self.coverageStorage = FeatureStoreAndUpload(featureName: "coverage",
                                                      reader: reader,
                                                      writer: writer,
@@ -93,6 +95,7 @@ internal final class CoverageExporter: CoverageExporterType {
     }
 
     private func writeCoverage(_ data: TestCodeCoverage) {
+        payloadObserver?.eventEnqueued()
         if configuration.performancePreset.synchronousWrite {
             try? coverageStorage.writeSync(value: data)
         } else {

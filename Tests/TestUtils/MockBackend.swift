@@ -90,6 +90,15 @@ public final class MockBackend {
 
         /// All individual coverage entries across all payloads.
         public var allCoverages: [TestCoverage] { coverage.flatMap(\.coverages) }
+
+        /// All `generate-metrics` (count/gauge/rate) series across every captured
+        /// telemetry batch.
+        public var telemetryMetricSeries: [TelemetrySeries] { MockBackend.parseTelemetry(telemetry).metrics }
+        /// All `distributions` series across every captured telemetry batch.
+        public var telemetryDistributionSeries: [TelemetrySeries] { MockBackend.parseTelemetry(telemetry).distributions }
+        /// Telemetry request types observed (e.g. `app-started`, `generate-metrics`,
+        /// `distributions`, `app-closing`).
+        public var telemetryEventTypes: Set<String> { MockBackend.parseTelemetry(telemetry).events }
     }
     
     // Thread safety.
@@ -280,7 +289,8 @@ public final class MockBackend {
                     "test_management": [
                         "enabled": s.testManagement.enabled,
                         "attempt_to_fix_retries": s.testManagement.attemptToFixRetries
-                    ] as [String: Any]
+                    ] as [String: Any],
+                    "impacted_tests_enabled": s.impactedTestsEnabled
                 ] as [String: Any]
             ] as [String: Any]
         ]
@@ -769,6 +779,85 @@ extension MockBackend {
     }
 }
 
+// MARK: - Telemetry parsing
+
+extension MockBackend {
+    /// A decoded telemetry metric/distribution series.
+    public struct TelemetrySeries: Sendable, Equatable {
+        public let metric: String
+        /// `count` / `gauge` / `rate` for `generate-metrics`; `nil` for distributions.
+        public let type: String?
+        public let tags: [String]
+        /// Sample values: the value of each `[timestamp, value]` point for
+        /// `generate-metrics`, or the raw samples for `distributions`.
+        public let points: [Double]
+    }
+
+    /// Result of decoding the raw telemetry batches captured by the backend.
+    public struct ParsedTelemetry: Sendable {
+        public let metrics: [TelemetrySeries]
+        public let distributions: [TelemetrySeries]
+        /// Every telemetry request type seen (`app-started`, `generate-metrics`,
+        /// `distributions`, `app-heartbeat`, `app-closing`, …).
+        public let events: Set<String>
+    }
+
+    /// Decode the raw `/api/v2/apmtelemetry` bodies into typed series and event
+    /// types. Handles both the direct single-payload form (e.g. `app-started`)
+    /// and the `message-batch` envelope used for metrics/heartbeats/closing.
+    public static func parseTelemetry(_ batches: [Data]) -> ParsedTelemetry {
+        var metrics: [TelemetrySeries] = []
+        var distributions: [TelemetrySeries] = []
+        var events: Set<String> = []
+
+        func number(_ any: Any?) -> Double? { (any as? NSNumber)?.doubleValue }
+
+        func series(from dict: [String: Any], distribution: Bool) -> TelemetrySeries? {
+            guard let metric = dict["metric"] as? String else { return nil }
+            let tags = dict["tags"] as? [String] ?? []
+            let type = dict["type"] as? String
+            var points: [Double] = []
+            if distribution {
+                points = (dict["points"] as? [Any])?.compactMap(number) ?? []
+            } else if let pairs = dict["points"] as? [[Any]] {
+                // generate-metrics points are [timestamp, value] pairs.
+                points = pairs.compactMap { $0.count >= 2 ? number($0[1]) : nil }
+            }
+            return TelemetrySeries(metric: metric, type: type, tags: tags, points: points)
+        }
+
+        func handle(requestType: String, payload: Any?) {
+            events.insert(requestType)
+            switch requestType {
+            case "message-batch":
+                for msg in (payload as? [[String: Any]]) ?? [] {
+                    handle(requestType: msg["request_type"] as? String ?? "",
+                           payload: msg["payload"])
+                }
+            case "generate-metrics":
+                for s in (payload as? [String: Any])?["series"] as? [[String: Any]] ?? [] {
+                    if let series = series(from: s, distribution: false) { metrics.append(series) }
+                }
+            case "distributions":
+                for s in (payload as? [String: Any])?["series"] as? [[String: Any]] ?? [] {
+                    if let series = series(from: s, distribution: true) { distributions.append(series) }
+                }
+            default:
+                break
+            }
+        }
+
+        for data in batches {
+            guard let top = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let requestType = top["request_type"] as? String
+            else { continue }
+            handle(requestType: requestType, payload: top["payload"])
+        }
+
+        return ParsedTelemetry(metrics: metrics, distributions: distributions, events: events)
+    }
+}
+
 // MARK: - Mock Configuration Types
 extension MockBackend {
     /// Configure the settings response returned to the SDK.
@@ -781,16 +870,19 @@ extension MockBackend {
         public var flakyTestRetriesEnabled: Bool
         public var earlyFlakeDetection: EFDConfig
         public var testManagement: TestManagementConfig
+        public var impactedTestsEnabled: Bool
 
         public init(
             itrEnabled: Bool = false, codeCoverage: Bool = false, testsSkipping: Bool = false,
             knownTestsEnabled: Bool = false, requireGit: Bool = false, flakyTestRetriesEnabled: Bool = false,
-            earlyFlakeDetection: EFDConfig = .init(), testManagement: TestManagementConfig = .init()
+            earlyFlakeDetection: EFDConfig = .init(), testManagement: TestManagementConfig = .init(),
+            impactedTestsEnabled: Bool = false
         ) {
             self.itrEnabled = itrEnabled; self.codeCoverage = codeCoverage
             self.testsSkipping = testsSkipping; self.knownTestsEnabled = knownTestsEnabled
             self.requireGit = requireGit; self.flakyTestRetriesEnabled = flakyTestRetriesEnabled
             self.earlyFlakeDetection = earlyFlakeDetection; self.testManagement = testManagement
+            self.impactedTestsEnabled = impactedTestsEnabled
         }
     }
 

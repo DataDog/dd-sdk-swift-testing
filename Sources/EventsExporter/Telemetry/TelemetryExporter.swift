@@ -6,7 +6,17 @@
 
 import Foundation
 
-public final class TelemetryExporter {
+/// Sink for fully-formed telemetry payloads. `TelemetryExporter` persists each
+/// payload to disk for asynchronous upload; tests substitute an in-memory
+/// capture to assert on what the producer emitted.
+public protocol TelemetryPayloadExporter: AnyObject {
+    func export(item: any TelemetryPayload)
+    func export(items: [any TelemetryPayload])
+    @discardableResult func flush() -> Bool
+    func shutdown()
+}
+
+public final class TelemetryExporter: TelemetryPayloadExporter {
     let telemetryStorage: FeatureStoreAndUpload
     private let synchronousWrite: Bool
 

@@ -26,6 +26,23 @@ struct UnitTestsXCTestSmoke: IntergationTestSuite {
         }
     }
 
+    /// The SDK's own instrumentation telemetry round-trips to the backend: the
+    /// app-lifecycle events plus self-metrics produced over a basic test run.
+    @Test func telemetryReported() async throws {
+        try await run(test: "XCBasicPass/testBasicPass") { backend, success in
+            #expect(success == true)
+            // App-lifecycle: app-started is sent directly; app-closing rides the
+            // final batch flushed on shutdown.
+            #expect(backend.telemetryEventTypes.contains("app-started"))
+            #expect(backend.telemetryEventTypes.contains("app-closing"))
+            // Self-metrics reached the backend via generate-metrics — `test_session`
+            // is emitted once per session.
+            let metricNames = Set(backend.telemetryMetricSeries.map(\.metric))
+            #expect(!metricNames.isEmpty)
+            #expect(metricNames.contains("test_session"))
+        }
+    }
+
     @Test func basicSkip() async throws {
         try await run(test: "XCBasicSkip/testBasicSkip") { backend, success in
             let spans = backend.allTestSpans

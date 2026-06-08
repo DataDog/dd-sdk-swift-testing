@@ -48,23 +48,6 @@ public extension Resource {
         get { attributes[SemanticConventions.Deployment.environmentName.rawValue]?.description }
         set { attributes[SemanticConventions.Deployment.environmentName.rawValue] = newValue.map { .string($0) } }
     }
-
-    /// Datadog telemetry namespace for `generate-metrics` series (gauge / count /
-    /// summary) produced by a meter provider. Used by the metric exporter as the
-    /// per-series namespace override.
-    var telemetryMetricNamespace: TelemetryMetric.Namespace? {
-        get { (attributes["dd.telemetry.metric.namespace"]?.description).flatMap(TelemetryMetric.Namespace.init(rawValue:)) }
-        set { attributes["dd.telemetry.metric.namespace"] = newValue.map { .string($0.rawValue) } }
-    }
-
-    /// Datadog telemetry namespace for `distributions` series (histograms) produced
-    /// by a meter provider. Used by the metric exporter as the per-series namespace
-    /// override. Kept separate from `telemetryMetricNamespace` because the two
-    /// payload types accept different namespace value sets.
-    var telemetryDistributionNamespace: TelemetryDistribution.Namespace? {
-        get { (attributes["dd.telemetry.distribution.namespace"]?.description).flatMap(TelemetryDistribution.Namespace.init(rawValue:)) }
-        set { attributes["dd.telemetry.distribution.namespace"] = newValue.map { .string($0.rawValue) } }
-    }
 }
 
 // MARK: - Test-attribute accessors on SpanData / AttributeValue dictionaries

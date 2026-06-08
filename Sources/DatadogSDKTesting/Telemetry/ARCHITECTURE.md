@@ -20,13 +20,13 @@ Milestone history:
    (events, git cmd,        │  (typed tree, 59 metrics)
     itr, coverage…)         │
                             ▼
-                       MeterProviderSdk ──▶ PeriodicMetricReader ──▶ TelemetryMetricExporter
-                       (OpenTelemetry)        (heartbeat)              (OTel MetricData ──▶ DD)
-                                                                          │
-                                                                          ▼
-                                                                     TelemetryExporter
-                                                                     (batch + upload via
-                                                                      api.telemetry)
+                       MetricStore ──────────▶ TelemetryExporter
+                       (counts + raw           (persist to disk, then
+                        distribution            batch + upload via
+                        samples; drained        api.telemetry)
+                        on a short timer
+                        and when a buffer
+                        fills)
 
  exporter/network internals report neutral facts back UP via observer protocols:
    HTTPClient / DataUploadWorker / FileWriter ── RequestObserver / UploadObserver / PayloadObserver
@@ -50,9 +50,9 @@ Two rules drive the whole design:
 
 ## 2. The metric tree (SDTEST-3775)
 
-`Telemetry` (`Telemetry.swift`) owns an OpenTelemetry `MeterProviderSdk` wired to
-`TelemetryMetricExporter` through a `PeriodicMetricReader`. It exposes every CI
-Visibility metric through a typed, discoverable tree:
+`Telemetry` (`Telemetry.swift`) owns a small in-memory `MetricStore` drained to
+the durable `TelemetryExporter`. It exposes every CI Visibility metric through a
+typed, discoverable tree:
 
 ```swift
 telemetry.metrics.git.command.add(command: .getRepository)
@@ -66,23 +66,39 @@ Files:
   `session`, `codeCoverage`, `endpointPayload`, `git`, `gitRequests`, `itr`,
   `itrSkippableTests`, `knownTests`, `testManagementTests`, `impactedTests`) →
   per-metric structs. Also the low-level `Counter` / `Distribution` handles and
-  the `Factory` that builds instruments from the meter.
+  the `Factory` that names them against the shared `MetricStore`.
 - `TelemetryTags.swift` — typed tag-value enums (`EventType`, `Endpoint`,
   `ErrorType`, `GitCommand`, `RetryReason`, `ShaProvider`, …), conforming to
   `SpanAttributeConvertible` (so `Bool`/`Int`/enum → wire string uniformly).
-- `Telemetry.swift` — the manager, the meter provider, `flush()` / `shutdown()`.
+- `Telemetry.swift` — the manager, the `MetricStore`, `flush()` / `shutdown()`.
 
 Metric set = union of the CSV spec and `dd-trace-go` (37 counters + 22
 distributions), all under the `civisibility` telemetry namespace.
 
+### Why a custom store instead of OpenTelemetry metrics
+The DD telemetry intake wants distributions as **raw sample arrays** (`points:
+[Double]`) and lets the backend compute the summary — exactly what `dd-trace-go`
+sends. An OTel `Histogram` buckets samples, so an OTel-backed path had to
+*reconstruct* approximate samples from bucket midpoints on export — lossy (it
+distorts percentiles) and complex (separate explicit/exponential code paths).
+`MetricStore` keeps counts as a running per-interval delta and distributions as
+the raw samples, so export is a verbatim copy. Counters/gauges are trivial
+enough to keep by hand, so the whole OTel metrics SDK (meter provider, views,
+readers, the `TelemetryMetricExporter` bridge) was dropped.
+
 ### Gotchas
-- **A catch-all `View` must be registered** on the meter provider or the SDK
-  records nothing (`findViews` only consults explicitly-registered views, not the
-  per-instrument defaults). See `Telemetry.init`.
-- `civisibility` had to be added to `TelemetryMetric.Namespace` /
-  `TelemetryDistribution.Namespace` in `EventsExporter`.
-- `TelemetryMetricExporter.getAggregationTemporality` returns **delta** for
-  counters/histograms and **cumulative** for up-down counters.
+- **Delta semantics by clear-on-flush.** Each drain takes and resets the buffers,
+  so the backend never double-counts and we never re-emit reported samples.
+- **Frequent flush limits crash loss.** `TelemetryExporter.export(item:)` persists
+  to disk immediately; upload happens later on the exporter's own schedule. So a
+  short `flushInterval` (default 10s) only shrinks the window of in-memory metrics
+  a crash could lose — it does not add network traffic.
+- **Buffer-full force-flush.** When buffered distribution samples reach
+  `distributionCap`, `record` drains immediately so a burst is persisted rather
+  than dropped (cf. `dd-trace-go`, which drops on a full ring buffer).
+- `civisibility` is a member of `TelemetryMetric.Namespace` /
+  `TelemetryDistribution.Namespace` in `EventsExporter`; the store stamps it on
+  every payload.
 
 ---
 
@@ -92,9 +108,12 @@ distributions), all under the `civisibility` telemetry namespace.
   API client and **before** the `Exporter` — so the exporter can be handed the
   telemetry observers, and so the feature factories can reach it. See
   `DDTracer.makeTelemetry(...)`.
-- Gated by `DD_INSTRUMENTATION_TELEMETRY_ENABLED` (default `true`). Heartbeat /
-  export interval is `DD_TELEMETRY_HEARTBEAT_INTERVAL` (seconds, clamped 1…3600,
-  default 60).
+- Gated by `DD_INSTRUMENTATION_TELEMETRY_ENABLED` (default `true`). Heartbeat
+  interval is `DD_TELEMETRY_HEARTBEAT_INTERVAL` (seconds, clamped 1…3600,
+  default 60). Metric drain cadence is `DD_TELEMETRY_FLUSH_INTERVAL` (seconds,
+  clamped 1…3600, default 10) and the distribution force-flush threshold is
+  `DD_TELEMETRY_DISTRIBUTION_BUFFER_SIZE` (samples, clamped ≥ 1, default 65536 —
+  a backstop for bursts; ~512 KB of `Double`s).
 - Exposed as `DDTracer.telemetry`; `SessionConfig.telemetry` is sourced from it
   (so `DDSession`/`Module`/`Suite`/`Test` and observers all share one instance).
 - The exporter + telemetry share a single `ExporterConfiguration` on the
@@ -110,10 +129,10 @@ distributions), all under the `civisibility` telemetry namespace.
 - **`app-heartbeat`** — a `DispatchSourceTimer` (utility QoS) fires every
   `exportInterval` seconds and calls `telemetryExporter.export(item:
   TelemetryAppHeartbeat())`, batching the heartbeat with the next upload.
-- **`app-closing`** — `Telemetry.shutdown()` calls
-  `telemetryExporter.export(item: TelemetryAppClosing())` before
-  `meterProvider.shutdown()`, so the closing event rides in the same last batch
-  as the final metric collection.
+- **`app-closing`** — `Telemetry.shutdown()` cancels the timers, does a final
+  `MetricStore` drain, enqueues `exporter.export(item: TelemetryAppClosing())`,
+  then `exporter.shutdown()` — so the closing event rides the same last batch as
+  the final metrics.
 
 ---
 
@@ -235,8 +254,9 @@ methods are the protocol requirements; no-observer convenience methods are
 
 EventsExporter:
 - `Telemetry/MetricObservers.swift` — observer protocols + `ExporterObservers`.
-- `Telemetry/TelemetryExporter.swift` / `TelemetryMetricExporter.swift` — DD
-  telemetry intake pipeline (built in SDTEST-3772/3773).
+- `Telemetry/TelemetryExporter.swift` — DD telemetry intake pipeline (built in
+  SDTEST-3772/3773) and the `TelemetryPayloadExporter` sink protocol the
+  `MetricStore` drains into.
 - `API/HTTPClient.swift` — `RequestObserver` measurement; `HTTPClientType` protocol.
 - `API/*.swift` — `observer:` param on every method + `@inlinable` conveniences.
 - `Upload/DataUploadWorker.swift`, `Utils/Feature.swift` — `UploadObserver`.
@@ -244,9 +264,9 @@ EventsExporter:
 - `{Spans,Coverage}Exporter.swift`, `Exporter.swift` — observer plumbing.
 
 DatadogSDKTesting:
-- `Telemetry/Telemetry.swift` — manager, meter provider, and app-lifecycle protocol
-  (`sendAppStarted` on init, heartbeat timer, `app-closing` in `shutdown`). Holds
-  `TelemetryApi` and `TelemetryExporter` references directly.
+- `Telemetry/Telemetry.swift` — manager, `MetricStore` + flush timer, and the
+  app-lifecycle protocol (`sendAppStarted` on init, heartbeat timer, `app-closing`
+  in `shutdown`). Holds `TelemetryApi` and a `TelemetryPayloadExporter` directly.
 - `Telemetry/TelemetryMetrics.swift` — typed metric tree; `SettingsResponse` has a
   `add(config: TracerSettings)` convenience overload.
 - `Telemetry/TelemetryTags.swift` — tag enums.

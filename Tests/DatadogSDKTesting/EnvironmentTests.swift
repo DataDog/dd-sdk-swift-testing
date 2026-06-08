@@ -32,26 +32,25 @@ class EnvironmentTests: XCTestCase {
 
         let metadata = SpanMetadata(libraryVersion: "1.0", env: createEnv(testEnvironment), capabilities: .allCapabilities)
         
-        for type in SpanMetadata.SpanType.allTest {
-            XCTAssertEqual(metadata[string: type, DDCITags.ciProvider], "jenkins")
-            XCTAssertEqual(metadata[string: type, DDCITags.ciPipelineId], "pipeline1")
-            XCTAssertEqual(metadata[string: type, DDCITags.ciPipelineNumber], "45")
-            XCTAssertEqual(metadata[string: type, DDCITags.ciPipelineURL], "http://jenkins.com/build")
-            XCTAssertEqual(metadata[string: type, DDCITags.ciPipelineName], "job1")
-            XCTAssertEqual(metadata[string: type, DDCITags.ciWorkspacePath], "/build")
-            XCTAssertEqual(metadata[string: type, DDGitTags.gitRepository], "/test/repo")
-            XCTAssertEqual(metadata[string: type, DDGitTags.gitCommitSha], "37e376448b0ac9b7f54404")
-            XCTAssertEqual(metadata[string: type, DDGitTags.gitBranch], "develop")
-            
-            XCTAssertEqual(metadata[string: type, DDOSTags.osArchitecture], PlatformUtils.getPlatformArchitecture())
-            XCTAssertEqual(metadata[string: type, DDOSTags.osPlatform], PlatformUtils.getRunningPlatform())
-            XCTAssertEqual(metadata[string: type, DDOSTags.osVersion], PlatformUtils.getDeviceVersion())
-            XCTAssertEqual(metadata[string: type, DDDeviceTags.deviceModel], PlatformUtils.getDeviceModel())
-            XCTAssertEqual(metadata[string: type, DDDeviceTags.deviceName], PlatformUtils.getDeviceName())
-            XCTAssertEqual(metadata[string: type, DDRuntimeTags.runtimeName], "Xcode")
-            XCTAssertEqual(metadata[string: type, DDRuntimeTags.runtimeVersion], PlatformUtils.getXcodeVersion())
-            XCTAssertEqual(metadata[string: type, DDUISettingsTags.uiSettingsLocalization], PlatformUtils.getLocalization())
-        }
+        
+        XCTAssertEqual(metadata[string: .allTest, DDCITags.ciProvider], "jenkins")
+        XCTAssertEqual(metadata[string: .allTest, DDCITags.ciPipelineId], "pipeline1")
+        XCTAssertEqual(metadata[string: .allTest, DDCITags.ciPipelineNumber], "45")
+        XCTAssertEqual(metadata[string: .allTest, DDCITags.ciPipelineURL], "http://jenkins.com/build")
+        XCTAssertEqual(metadata[string: .allTest, DDCITags.ciPipelineName], "job1")
+        XCTAssertEqual(metadata[string: .allTest, DDCITags.ciWorkspacePath], "/build")
+        XCTAssertEqual(metadata[string: .allTest, DDGitTags.gitRepository], "/test/repo")
+        XCTAssertEqual(metadata[string: .allTest, DDGitTags.gitCommitSha], "37e376448b0ac9b7f54404")
+        XCTAssertEqual(metadata[string: .allTest, DDGitTags.gitBranch], "develop")
+        
+        XCTAssertEqual(metadata[string: .allTest, DDOSTags.osArchitecture], PlatformUtils.getPlatformArchitecture())
+        XCTAssertEqual(metadata[string: .allTest, DDOSTags.osPlatform], PlatformUtils.getRunningPlatform())
+        XCTAssertEqual(metadata[string: .allTest, DDOSTags.osVersion], PlatformUtils.getDeviceVersion())
+        XCTAssertEqual(metadata[string: .allTest, DDDeviceTags.deviceModel], PlatformUtils.getDeviceModel())
+        XCTAssertEqual(metadata[string: .allTest, DDDeviceTags.deviceName], PlatformUtils.getDeviceName())
+        XCTAssertEqual(metadata[string: .allTest, DDRuntimeTags.runtimeName], "Xcode")
+        XCTAssertEqual(metadata[string: .allTest, DDRuntimeTags.runtimeVersion], PlatformUtils.getXcodeVersion())
+        XCTAssertEqual(metadata[string: .allTest, DDUISettingsTags.uiSettingsLocalization], PlatformUtils.getLocalization())
         
         XCTAssertEqual(metadata[string: .test, DDLibraryCapabilitiesTags.testImpactAnalysis], "1")
         XCTAssertEqual(metadata[string: .test, DDLibraryCapabilitiesTags.earlyFlakeDetection], "1")
@@ -69,10 +68,8 @@ class EnvironmentTests: XCTestCase {
 
         let metadata = SpanMetadata(libraryVersion: "1.0", env: createEnv(testEnvironment), capabilities: .libraryCapabilities)
         
-        for type in SpanMetadata.SpanType.allTest {
-            XCTAssertNotNil(metadata[type, DDCITags.ciWorkspacePath])
-            XCTAssertNil(metadata[type, DDCITags.ciProvider])
-        }
+        XCTAssertNotNil(metadata[.allTest, DDCITags.ciWorkspacePath])
+        XCTAssertNil(metadata[.allTest, DDCITags.ciProvider])
     }
     
     func testSessionName() {
@@ -86,12 +83,9 @@ class EnvironmentTests: XCTestCase {
                                      capabilities: .libraryCapabilities)
         let metadata3 = SpanMetadata(libraryVersion: "1.0", env: emptyEnv, capabilities: .libraryCapabilities)
         
-        for type in SpanMetadata.SpanType.allTest {
-            XCTAssertEqual(metadata1[string: type, DDTestSessionTags.testSessionName], "MyCoolSession")
-            XCTAssertEqual(metadata2[string: type, DDTestSessionTags.testSessionName], "job1-\(emptyEnv.testCommand)")
-            XCTAssertEqual(metadata3[string: type, DDTestSessionTags.testSessionName], emptyEnv.testCommand)
-        }
-        
+        XCTAssertEqual(metadata1[string: .allTest, DDTestSessionTags.testSessionName], "MyCoolSession")
+        XCTAssertEqual(metadata2[string: .allTest, DDTestSessionTags.testSessionName], "job1-\(emptyEnv.testCommand)")
+        XCTAssertEqual(metadata3[string: .allTest, DDTestSessionTags.testSessionName], emptyEnv.testCommand)
     }
     
     func testService() {
@@ -101,10 +95,8 @@ class EnvironmentTests: XCTestCase {
                                      capabilities: .libraryCapabilities)
         let metadata2 = SpanMetadata(libraryVersion: "1.0", env: emptyEnv, capabilities: .libraryCapabilities)
         
-        for type in SpanMetadata.SpanType.allTest {
-            XCTAssertEqual(metadata1[string: type, DDTags.isUserProvidedService], "true")
-            XCTAssertEqual(metadata2[string: type, DDTags.isUserProvidedService], "false")
-        }
+        XCTAssertEqual(metadata1[string: .allTest, DDTags.isUserProvidedService], "true")
+        XCTAssertEqual(metadata2[string: .allTest, DDTags.isUserProvidedService], "false")
     }
 
     func testAddCustomTagsWithDDTags() {
@@ -120,7 +112,7 @@ class EnvironmentTests: XCTestCase {
         XCTAssertEqual(metadata[string: .test, "keyFoo"], "BAR")
         XCTAssertEqual(metadata[string: .test, "keyFooFoo"], "$FOOFOO")
         XCTAssertEqual(metadata[string: .test, "keyMix"], "BAR-v1")
-        XCTAssertNotNil(metadata[string: .test, DDCITags.ciWorkspacePath])
+        XCTAssertNotNil(metadata[string: .allTest, DDCITags.ciWorkspacePath])
     }
 
     func testRepositoryName() {
@@ -204,9 +196,9 @@ class EnvironmentTests: XCTestCase {
         
         // Verify span attributes include pull request data
         let metadata = SpanMetadata(libraryVersion: "1.0", env: env, capabilities: .libraryCapabilities)
-        XCTAssertEqual(metadata[string: .test, DDGitTags.gitCommitHeadSha], "df289512a51123083a8e6931dd6f57bb3883d4c4")
-        XCTAssertEqual(metadata[string: .test, DDGitTags.gitPullRequestBaseBranch], "main")
-        XCTAssertEqual(metadata[string: .test, DDGitTags.gitPullRequestBaseBranchSha], "52e0974c74d41160a03d59ddc73bb9f5adab054b")
+        XCTAssertEqual(metadata[string: .allTest, DDGitTags.gitCommitHeadSha], "df289512a51123083a8e6931dd6f57bb3883d4c4")
+        XCTAssertEqual(metadata[string: .allTest, DDGitTags.gitPullRequestBaseBranch], "main")
+        XCTAssertEqual(metadata[string: .allTest, DDGitTags.gitPullRequestBaseBranchSha], "52e0974c74d41160a03d59ddc73bb9f5adab054b")
     }
     
     func testGitHubCIMissingEventPathFile() {
@@ -278,9 +270,9 @@ class EnvironmentTests: XCTestCase {
         
         // Verify span attributes reflect overrides
         let metadata = SpanMetadata(libraryVersion: "1.0", env: env, capabilities: .libraryCapabilities)
-        XCTAssertEqual(metadata[string: .test, DDGitTags.gitCommitHeadSha], "override-head-sha")
-        XCTAssertEqual(metadata[string: .test, DDGitTags.gitPullRequestBaseBranch], "override-base-branch")
-        XCTAssertEqual(metadata[string: .test, DDGitTags.gitPullRequestBaseBranchSha], "override-base-sha")
+        XCTAssertEqual(metadata[string: .allTest, DDGitTags.gitCommitHeadSha], "override-head-sha")
+        XCTAssertEqual(metadata[string: .allTest, DDGitTags.gitPullRequestBaseBranch], "override-base-branch")
+        XCTAssertEqual(metadata[string: .allTest, DDGitTags.gitPullRequestBaseBranchSha], "override-base-sha")
     }
     
     func testGithubCIJobIdVariable() {
@@ -394,7 +386,7 @@ class EnvironmentTests: XCTestCase {
             let metadata = SpanMetadata(libraryVersion: "1.0", env: createEnv(spec[0]), capabilities: .libraryCapabilities)
 
             spec[1].forEach {
-                let data = metadata[string: .test, $0.key]
+                let data = metadata[string: .allTest, $0.key]
                 if jsonAttributes.firstIndex(of: $0.key) != nil {
                     XCTAssertTrue(compareJsons(data, $0.value),
                                   "\(ci) > \($0.key): \(data ?? "nil") != \($0.value)")

@@ -317,13 +317,46 @@ public enum APICallError: Error {
     }
 }
 
+extension APICallError: CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .transport(let error):
+            return "transport error: \(error.localizedDescription)"
+        case .httpError(code: let code, headers: _, body: let body):
+            if let body, let text = String(data: body, encoding: .utf8), !text.isEmpty {
+                return "HTTP \(code): \(text)"
+            }
+            return "HTTP \(code)"
+        case .encoding(_, let error):
+            return "encoding error: \(error.localizedDescription)"
+        case .decoding(_, let error):
+            return "decoding error: \(error.localizedDescription)"
+        case .idMismatch(let expected, let got):
+            return "id mismatch: expected \(expected ?? "nil"), got \(got ?? "nil")"
+        case .typeMismatch(let expected, let got):
+            return "type mismatch: expected \(expected), got \(got)"
+        case .fileSystem(let error):
+            return "file system error: \(error.localizedDescription)"
+        case .unknownError(let error):
+            return "unknown error: \(error.localizedDescription)"
+        }
+    }
+}
+
 internal struct APIServiceConfig {
     let serviceName: String
     let environment: String
     let applicationName: String
-    let version: String
+    /// Version of the application under test (from its bundle).
+    let applicationVersion: String
+    /// Version of the DatadogSDKTesting library itself.
+    let libraryVersion: String
     let device: Device
     let hostname: String?
+    let kernelInfo: KernelInfo
+    let languageVersion: String
+    let runtimeName: String
+    let runtimeVersion: String
 
     /// API key for authentication
     let apiKey: String
@@ -344,10 +377,11 @@ internal struct APIServiceConfig {
         [
             .userAgentHeader(
                 appName: applicationName,
-                appVersion: version,
+                appVersion: applicationVersion,
                 device: device
             ),
             .apiKeyHeader(apiKey: apiKey),
+            .clientLibraryVersionHeader(version: libraryVersion),
             .traceIDHeader(traceID: clientId),
             .parentSpanIDHeader(parentSpanID: clientId),
             .samplingPriorityHeader()
@@ -355,16 +389,25 @@ internal struct APIServiceConfig {
     }
 
     init(serviceName: String, environment: String,
-         applicationName: String, version: String,
-         device: Device, hostname: String?, apiKey: String,
-         endpoint: Endpoint, clientId: String, payloadCompression: Bool)
+         applicationName: String,
+         applicationVersion: String, libraryVersion: String,
+         device: Device, hostname: String?,
+         kernelInfo: KernelInfo, languageVersion: String,
+         runtimeName: String, runtimeVersion: String,
+         apiKey: String, endpoint: Endpoint,
+         clientId: String, payloadCompression: Bool)
     {
         self.serviceName = serviceName
         self.environment = environment
         self.applicationName = applicationName
-        self.version = version
+        self.applicationVersion = applicationVersion
+        self.libraryVersion = libraryVersion
         self.device = device
         self.hostname = hostname
+        self.kernelInfo = kernelInfo
+        self.languageVersion = languageVersion
+        self.runtimeName = runtimeName
+        self.runtimeVersion = runtimeVersion
         self.apiKey = apiKey
         self.endpoint = endpoint
         self.clientId = clientId

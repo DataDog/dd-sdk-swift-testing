@@ -5,16 +5,27 @@
  */
 
 import Foundation
-#if canImport(Darwin)
-import Darwin
-#elseif canImport(Glibc)
-import Glibc
-#endif
 
 // MARK: - Public domain types
 
 public protocol TelemetryPayload: Encodable {
     var requestType: TelemetryRequestType { get }
+}
+
+/// Kernel/OS information for the host this process runs on.
+/// Populated from `uname(3)` by DatadogSDKTesting; carried as plain data here.
+public struct KernelInfo {
+    public let sysname: String
+    public let release: String
+    public let version: String
+    public let machine: String
+
+    public init(sysname: String, release: String, version: String, machine: String) {
+        self.sysname = sysname
+        self.release = release
+        self.version = version
+        self.machine = machine
+    }
 }
 
 /// The set of telemetry request_types this service implements.
@@ -509,8 +520,8 @@ internal struct TelemetryApiService: TelemetryApi {
     var decoder: JSONDecoder
     let compression: Bool
     let httpClient: any HTTPClientType
-    let log: Logger
     let dateProvider: DateProvider
+    let debugBackend: Bool
 
     /// Stable identifier for this tracer session. Reused as the telemetry
     /// `runtime_id` so backend can correlate telemetry with traces.
@@ -522,11 +533,12 @@ internal struct TelemetryApiService: TelemetryApi {
     /// telemetry requests within a runtime.
     private let seq: Synced<UInt64>
 
-    init(config: APIServiceConfig, httpClient: any HTTPClientType, dateProvider: DateProvider, log: Logger) {
+    init(config: APIServiceConfig, httpClient: any HTTPClientType, dateProvider: DateProvider,
+         log: Logger, debugBackend: Bool = false) {
         self.endpoint = config.endpoint
         self.httpClient = httpClient
-        self.log = log
         self.dateProvider = dateProvider
+        self.debugBackend = debugBackend
         // The telemetry intake does NOT accept the trace-style headers — strip
         // them. Keep the auth / user-agent / hostname additions.
         self.headers = config.defaultHeaders.filter { header in
@@ -621,7 +633,8 @@ internal struct TelemetryApiService: TelemetryApi {
             seqId: nextSeqId(),
             application: application,
             host: host,
-            payload: payload
+            payload: payload,
+            debug: debugBackend
         )
     }
 
@@ -651,17 +664,12 @@ internal struct TelemetryApiService: TelemetryApi {
                          forHTTPHeader: .ddTelemetryRequestType)
         request.setValue(.constant(TelemetryHeaders.libraryLanguage),
                          forHTTPHeader: .ddClientLibraryLanguage)
-        request.setValue(.constant(application.tracerVersion),
-                         forHTTPHeader: .ddClientLibraryVersion)
         if compression {
             request.setHTTPHeader(.contentEncodingHeader(contentEncoding: .deflate))
         }
         request.httpBody = body
 
-        let log = self.log
-        log.debug("Telemetry \(requestType.rawValue) sending \(body.count) bytes...")
         let _ = try await httpClient.send(api: request)
-        log.debug("Telemetry \(requestType.rawValue) accepted")
     }
 }
 
@@ -676,6 +684,8 @@ internal struct TelemetryEnvelope<Payload: Encodable>: Encodable {
     let application: TelemetryApplication
     let host: TelemetryHost
     let payload: Payload
+    /// When `true` the backend enables verbose debug processing for this payload.
+    let debug: Bool
 
     enum CodingKeys: String, CodingKey {
         case apiVersion = "api_version"
@@ -686,6 +696,7 @@ internal struct TelemetryEnvelope<Payload: Encodable>: Encodable {
         case application
         case host
         case payload
+        case debug
     }
 
     func encode(to encoder: any Encoder) throws {
@@ -699,6 +710,9 @@ internal struct TelemetryEnvelope<Payload: Encodable>: Encodable {
         try c.encode(host, forKey: .host)
         if payload as? any APIVoidValue == nil {
             try c.encode(payload, forKey: .payload)
+        }
+        if debug {
+            try c.encode(true, forKey: .debug)
         }
     }
 }
@@ -720,12 +734,12 @@ internal struct TelemetryApplication: Encodable {
     init(config: APIServiceConfig) {
         self.serviceName = config.serviceName
         self.env = config.environment
-        self.serviceVersion = config.version
-        self.tracerVersion = config.version
+        self.serviceVersion = config.applicationVersion
+        self.tracerVersion = config.libraryVersion
         self.languageName = TelemetryHeaders.libraryLanguage
-        self.languageVersion = SwiftRuntime.languageVersion
-        self.runtimeName = "swift"
-        self.runtimeVersion = SwiftRuntime.languageVersion
+        self.languageVersion = config.languageVersion
+        self.runtimeName = config.runtimeName
+        self.runtimeVersion = config.runtimeVersion
     }
 
     enum CodingKeys: String, CodingKey {
@@ -750,14 +764,13 @@ internal struct TelemetryHost: Encodable {
     let kernelVersion: String
 
     init(config: APIServiceConfig) {
-        let kernel = SwiftRuntime.kernelInfo
         self.hostname = config.hostname ?? ProcessInfo.processInfo.hostName
         self.os = config.device.osName
         self.osVersion = config.device.osVersion
-        self.architecture = kernel.machine
-        self.kernelName = kernel.sysname
-        self.kernelRelease = kernel.release
-        self.kernelVersion = kernel.version
+        self.architecture = config.kernelInfo.machine
+        self.kernelName = config.kernelInfo.sysname
+        self.kernelRelease = config.kernelInfo.release
+        self.kernelVersion = config.kernelInfo.version
     }
 
     enum CodingKeys: String, CodingKey {
@@ -785,54 +798,6 @@ extension HTTPHeader.Field {
     static let ddTelemetryApiVersion: Self = "DD-Telemetry-API-Version"
     static let ddTelemetryRequestType: Self = "DD-Telemetry-Request-Type"
     static let ddClientLibraryLanguage: Self = "DD-Client-Library-Language"
-    static let ddClientLibraryVersion: Self = "DD-Client-Library-Version"
-}
-
-private enum SwiftRuntime {
-    struct KernelInfo {
-        let sysname: String
-        let release: String
-        let version: String
-        let machine: String
-    }
-
-    /// Cached result of `uname(3)` for the host this process runs on.
-    /// Populated lazily; safe to read concurrently because the closure body
-    /// runs at most once and the resulting struct is value-typed.
-    static let kernelInfo: KernelInfo = {
-        var info = utsname()
-        guard uname(&info) == 0 else {
-            return KernelInfo(sysname: "", release: "", version: "", machine: "")
-        }
-        return KernelInfo(sysname: cString(&info.sysname),
-                          release: cString(&info.release),
-                          version: cString(&info.version),
-                          machine: cString(&info.machine))
-    }()
-
-    static let languageVersion: String = {
-        #if swift(>=6.2)
-        return "6.2"
-        #elseif swift(>=6.1)
-        return "6.1"
-        #elseif swift(>=6.0)
-        return "6.0"
-        #elseif swift(>=5.10)
-        return "5.10"
-        #elseif swift(>=5.9)
-        return "5.9"
-        #else
-        return ""
-        #endif
-    }()
-
-    /// Read a C `char[N]` tuple (which is how `utsname` fields surface to
-    /// Swift) as a null-terminated `String`.
-    private static func cString<T>(_ pointer: UnsafePointer<T>) -> String {
-        pointer.withMemoryRebound(to: CChar.self, capacity: MemoryLayout<T>.size) {
-            String(cString: $0)
-        }
-    }
 }
 
 // MARK: - Endpoint URL

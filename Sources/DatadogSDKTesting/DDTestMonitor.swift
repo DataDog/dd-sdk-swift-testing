@@ -34,7 +34,36 @@ internal class DDTestMonitor {
         #endif
     }()
 
-    static var tracer = DDTracer()
+    /// Backing storage for `tracer`. A plain `static var` got thread-safe lazy
+    /// initialization for free, but we need to be able to reset it (see
+    /// `shutdownTracer()`), so guard it behind a lock to keep access race-free.
+    /// `DDTracer.init` does not touch `DDTestMonitor.tracer`, so constructing it
+    /// inside the lock can't re-enter and deadlock.
+    private static let _tracer = Synced<DDTracer?>(nil)
+    /// The shared tracer. Created lazily on first access and re-created after
+    /// `shutdownTracer()`. Recreating re-registers a live OpenTelemetry provider,
+    /// so a subsequent session works even though the previous one shut the SDK
+    /// down (e.g. across tests, or multiple sessions in one process).
+    static var tracer: DDTracer {
+        get {
+            _tracer.update { current in
+                if let current { return current }
+                let tracer = DDTracer()
+                current = tracer
+                return tracer
+            }
+        }
+        set { _tracer.update { $0 = newValue } }
+    }
+
+    /// Flush and shut down the current tracer (tracer provider, log processor,
+    /// telemetry) and clear it so the next `tracer` access builds a fresh one.
+    static func shutdownTracer() {
+        _tracer.update { current in
+            current?.shutdown()
+            current = nil
+        }
+    }
     static var env = Environment(config: config, env: envReader, log: Log.instance)
     static var config: Config = Config(env: envReader)
     
@@ -209,7 +238,6 @@ internal class DDTestMonitor {
         knownTests?.stop()
         testManagement?.stop()
         DDTestMonitor.tracer.flush()
-        let _ = DDTestMonitor.tracer.eventsExporter?.flush()
         gitUploadQueue.waitUntilAllOperationsAreFinished()
     }
     

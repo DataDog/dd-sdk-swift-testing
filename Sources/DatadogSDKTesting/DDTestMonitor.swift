@@ -34,43 +34,6 @@ internal class DDTestMonitor {
         #endif
     }()
 
-    /// Backing storage for `tracer`. A plain `static var` got thread-safe lazy
-    /// initialization for free, but we need to be able to reset it (see
-    /// `shutdownTracer()`), so guard it behind a lock to keep access race-free.
-    /// `DDTracer.init` does not touch `DDTestMonitor.tracer`, so constructing it
-    /// inside the lock can't re-enter and deadlock.
-    private static let _tracer = Synced<DDTracer?>(nil)
-    /// The shared tracer. Created lazily on first access and re-created after
-    /// `shutdownTracer()`. Recreating re-registers a live OpenTelemetry provider,
-    /// so a subsequent session works even though the previous one shut the SDK
-    /// down (e.g. across tests, or multiple sessions in one process).
-    static var tracer: DDTracer {
-        get {
-            _tracer.update { current in
-                if let current { return current }
-                let tracer = DDTracer()
-                current = tracer
-                return tracer
-            }
-        }
-        set { _tracer.update { $0 = newValue } }
-    }
-
-    /// Flush and shut down the current tracer (tracer provider, log processor,
-    /// telemetry) and clear it so the next `tracer` access builds a fresh one.
-    ///
-    /// We clear the slot under the lock but run `shutdown()` *outside* it.
-    /// `shutdown()` flushes/logs/uploads, and stdout/stderr capture routes those
-    /// back through `DDTestMonitor.tracer.logString` — holding the lock during
-    /// shutdown would re-enter the non-reentrant lock and deadlock.
-    static func shutdownTracer() {
-        let old: DDTracer? = _tracer.update { current in
-            let old = current
-            current = nil
-            return old
-        }
-        old?.shutdown()
-    }
     static var env = Environment(config: config, env: envReader, log: Log.instance)
     static var config: Config = Config(env: envReader)
     
@@ -100,9 +63,13 @@ internal class DDTestMonitor {
         }
     }()
     
+    /// The tracer is owned by the monitor: created in `init` and torn down with
+    /// the monitor (`stop()` flushes/shuts it down, then it is released when the
+    /// instance is cleared). Callers reach it via `DDTestMonitor.instance?.tracer`,
+    /// so when no monitor is installed there is simply no tracer — nothing gets
+    /// created on access. `var` only so tests can inject an instrumented tracer.
+    var tracer: DDTracer
     var networkInstrumentation: DDNetworkInstrumentation?
-    var injectHeaders: Bool = false
-    var recordPayload: Bool = false
     var maxPayloadSize: UInt
     var launchNotificationObserver: NSObjectProtocol?
     var didBecomeActiveNotificationObserver: NSObjectProtocol?
@@ -183,7 +150,8 @@ internal class DDTestMonitor {
         Log.debug("Session ID:\n\(DDTestMonitor.sessionId)")
         maxPayloadSize = DDTestMonitor.config.maxPayloadSize
         messageChannelUUID = DDTestMonitor.config.messageChannelUUID ?? UUID().uuidString
-        
+        tracer = DDTracer()
+
         if DDTestMonitor.config.isBinaryUnderUITesting {
             launchNotificationObserver = NotificationCenter.default.addObserver(
                 forName: launchNotificationName,
@@ -192,7 +160,7 @@ internal class DDTestMonitor {
                 /// As crash reporter is initialized in testBundleWillStart() method, we initialize it here
                 /// because dont have test observer
                 self.setupCrashHandler()
-                let launchedSpan = DDTestMonitor.tracer.createSpanFromLaunchContext()
+                let launchedSpan = self.tracer.createSpanFromLaunchContext()
                 let simpleSpan = SimpleSpanData(spanData: launchedSpan.toSpanData(),
                                                 sessionStartTime: Date(),
                                                 moduleStartTime: Date())
@@ -244,7 +212,7 @@ internal class DDTestMonitor {
         coverage?.stop()
         knownTests?.stop()
         testManagement?.stop()
-        DDTestMonitor.tracer.flush()
+        tracer.shutdown()
         gitUploadQueue.waitUntilAllOperationsAreFinished()
     }
     
@@ -272,10 +240,10 @@ internal class DDTestMonitor {
             if DDTestMonitor.config.gitUploadEnabled {
                 Log.debug("Git Upload Enabled")
                 DDTestMonitor.instance?.gitUploader = GitUploader(
-                    log: Log.instance, api: DDTestMonitor.tracer.api.git, gitDirectory: gitDirectory,
+                    log: Log.instance, api: self.tracer.api.git, gitDirectory: gitDirectory,
                     commitFolder: try? DDTestMonitor.cacheManager?.commit(feature: "git"),
                     unshallowEnabled: DDTestMonitor.config.gitUnshallowEnabled,
-                    telemetry: DDTestMonitor.tracer.telemetry
+                    telemetry: self.tracer.telemetry
                 )
             } else {
                 Log.debug("Git Upload Disabled")
@@ -312,7 +280,7 @@ internal class DDTestMonitor {
         }
         
         func getTracerConfig(_ log: String) -> TracerSettings? {
-            let settingsApi = DDTestMonitor.tracer.api.settings
+            let settingsApi = tracer.api.settings
             let env = DDTestMonitor.env.environment
             let baseConfigurations = DDTestMonitor.env.baseConfigurations
             let customConfigurations = DDTestMonitor.config.customConfigurations
@@ -328,11 +296,11 @@ internal class DDTestMonitor {
                             testLevel: .test,
                             configurations: baseConfigurations,
                             customConfigurations: customConfigurations,
-                            observer: DDTestMonitor.tracer.telemetry?.gitSettingsRequestObserver
+                            observer: self.tracer.telemetry?.gitSettingsRequestObserver
                         )
                     }
                 }
-                DDTestMonitor.tracer.telemetry?.metrics.gitRequests.settingsResponse.add(config: config)
+                tracer.telemetry?.metrics.gitRequests.settingsResponse.add(config: config)
                 return config
             } catch {
                 let err = LibraryConfigurationCommunicationError(
@@ -435,8 +403,8 @@ internal class DDTestMonitor {
                                             environment: DDTestMonitor.env.environment,
                                             configurations: DDTestMonitor.env.baseConfigurations,
                                             custom: DDTestMonitor.config.customConfigurations,
-                                            api: DDTestMonitor.tracer.api.knownTests, cache: cache,
-                                            telemetry: DDTestMonitor.tracer.telemetry)
+                                            api: self.tracer.api.knownTests, cache: cache,
+                                            telemetry: self.tracer.telemetry)
             self.knownTests = runFactory(factory, errorKind: .knownTests)
         }
         knownTestsSetup.addDependency(updateTracerConfig)
@@ -493,9 +461,9 @@ internal class DDTestMonitor {
                                                 branch: branch,
                                                 module: module,
                                                 attemptToFixRetries: attemptToFixRetryCount,
-                                                api: DDTestMonitor.tracer.api.testManagement,
+                                                api: self.tracer.api.testManagement,
                                                 cache: cache,
-                                                telemetry: DDTestMonitor.tracer.telemetry)
+                                                telemetry: self.tracer.telemetry)
             self.testManagement = runFactory(factory, errorKind: .testManagementTests)
         }
         testManagementSetup.addDependency(updateTracerConfig)
@@ -519,7 +487,7 @@ internal class DDTestMonitor {
             }
             let factory = TestImpactAnalysisFactory(configurations: DDTestMonitor.env.baseConfigurations,
                                                     custom: DDTestMonitor.config.customConfigurations,
-                                                    api: DDTestMonitor.tracer.api.tia,
+                                                    api: self.tracer.api.tia,
                                                     service: service,
                                                     environment: DDTestMonitor.env.environment,
                                                     commit: commit,
@@ -527,7 +495,7 @@ internal class DDTestMonitor {
                                                     cache: cache,
                                                     skippingEnabled: remote.itr.testsSkipping,
                                                     swiftTestingEnabled: DDTestMonitor.env.tiaSwiftTestingEnabled,
-                                                    telemetry: DDTestMonitor.tracer.telemetry)
+                                                    telemetry: self.tracer.telemetry)
             self.tia = runFactory(factory, errorKind: .skippableTests)
         }
         tiaSetup.addDependency(updateTracerConfig)
@@ -548,7 +516,7 @@ internal class DDTestMonitor {
                 Log.print("Code Coverage: disabled")
                 return
             }
-            guard let eventsExporter = DDTestMonitor.tracer.eventsExporter else {
+            guard let eventsExporter = tracer.eventsExporter else {
                 Log.print("Code Coverage: init failed. Exporter is nil")
                 return
             }
@@ -562,7 +530,7 @@ internal class DDTestMonitor {
                                               debug: DDTestMonitor.config.extraDebugCodeCoverage,
                                               exporter: eventsExporter,
                                               swiftTestingEnabled: DDTestMonitor.env.tiaSwiftTestingEnabled,
-                                              telemetry: DDTestMonitor.tracer.telemetry)
+                                              telemetry: self.tracer.telemetry)
             self.coverage = runFactory(factory)
         }
         coverageSetup.addDependency(updateTracerConfig)
@@ -574,19 +542,9 @@ internal class DDTestMonitor {
             return
         }
 
-        Log.measure(name: "DDTracer") {
-            _ = DDTestMonitor.tracer
-        }
-
         if !DDTestMonitor.config.disableNetworkInstrumentation {
             Log.measure(name: "startNetworkAutoInstrumentation") {
                 startNetworkAutoInstrumentation()
-                if !DDTestMonitor.config.disableHeadersInjection {
-                    injectHeaders = true
-                }
-                if DDTestMonitor.config.enableRecordPayload {
-                    recordPayload = true
-                }
             }
         }
         if DDTestMonitor.config.enableStdoutInstrumentation {
@@ -648,29 +606,29 @@ internal class DDTestMonitor {
     }
     
     func setupCrashHandler() {
-        DDTestMonitor.instance?.instrumentationWorkQueue.waitUntilAllOperationsAreFinished()
+        instrumentationWorkQueue.waitUntilAllOperationsAreFinished()
         // check if handler needed
         guard !DDTestMonitor.config.disableCrashHandler else {
             return
         }
         Log.measure(name: "Crash handler install") {
-            DDCrashes.install(
+            let info = DDCrashes.install(
                 folder: try! DDTestMonitor.cacheManager!.session(feature: "crash"),
-                disableMach: DDTestMonitor.config.disableMachCrashHandler
+                disableMach: DDTestMonitor.config.disableMachCrashHandler,
+                tracer: tracer
             )
+            if let info { crashInfo = info }
         }
     }
 
     func startNetworkAutoInstrumentation() {
-        networkInstrumentation = DDNetworkInstrumentation()
-    }
-
-    func startHeaderInjection() {
-        injectHeaders = true
-    }
-
-    func stopHeaderInjection() {
-        injectHeaders = false
+        let config = DDTestMonitor.config
+        networkInstrumentation = DDNetworkInstrumentation(
+            tracer: tracer,
+            injectHeaders: !config.disableHeadersInjection,
+            recordPayload: config.enableRecordPayload,
+            disableNetworkCallStack: config.disableNetworkCallStack,
+            enableNetworkCallStackSymbolicated: config.enableNetworkCallStackSymbolicated)
     }
 
     func startStdoutCapture() {
@@ -740,7 +698,7 @@ internal class DDTestMonitor {
     
     var activeFeatures: any TestHooksFeatures {
         testOptimizationSetupQueue.waitUntilAllOperationsAreFinished()
-        let telemetryEvents = DDTestMonitor.tracer.telemetry.map { TelemetryEventsFeature(telemetry: $0) }
+        let telemetryEvents = tracer.telemetry.map { TelemetryEventsFeature(telemetry: $0) }
         let features: [(any TestHooksFeature)?] = [
             testManagement, tia, coverage, efd, atr, knownTests,
             AdditionalTags(codeCoverage: coverage == nil,

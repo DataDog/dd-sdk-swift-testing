@@ -10,19 +10,19 @@ public class DDInstrumentationControl: NSObject {
     override private init() {}
 
     @objc public static func startInjectingHeaders() {
-        DDTestMonitor.instance?.injectHeaders = true
+        DDTestMonitor.instance?.networkInstrumentation?.injectHeaders = true
     }
 
     @objc public static func stopInjectingHeaders() {
-        DDTestMonitor.instance?.injectHeaders = false
+        DDTestMonitor.instance?.networkInstrumentation?.injectHeaders = false
     }
 
     @objc public static func startPayloadCapture() {
-        DDTestMonitor.instance?.recordPayload = true
+        DDTestMonitor.instance?.networkInstrumentation?.recordPayload = true
     }
 
     @objc public static func stopPayloadCapture() {
-        DDTestMonitor.instance?.recordPayload = false
+        DDTestMonitor.instance?.networkInstrumentation?.recordPayload = false
     }
 
     @objc public static func startStdoutCapture() {
@@ -42,6 +42,6 @@ public class DDInstrumentationControl: NSObject {
     }
 
     public static var openTelemetryTracer: AnyObject? {
-        return DDTestMonitor.tracer.tracerSdk
+        return DDTestMonitor.instance?.tracer.tracerSdk
     }
 }

@@ -38,8 +38,10 @@ final actor SessionManager: TestSessionManager {
         _session = nil
         session.end()
         await observer?.didFinish(session: session)
+        // `removeTestMonitor()` runs the monitor's `stop()` (which flushes and
+        // shuts the tracer down) and then releases the instance, at which point
+        // `DDTracer.deinit` restores the default OpenTelemetry providers.
         DDTestMonitor.removeTestMonitor()
-        DDTestMonitor.shutdownTracer()
     }
 
     private func bootstrapSession() async throws -> any TestModuleManager & TestSession {
@@ -74,7 +76,8 @@ final actor SessionManager: TestSessionManager {
             crash: monitor.crashInfo,
             command: DDTestMonitor.env.testCommand,
             log: log,
-            telemetry: DDTestMonitor.tracer.telemetry
+            tracer: monitor.tracer,
+            telemetry: monitor.tracer.telemetry
         )
         
         let session = try await provider.startSession(named: "Swift.session", config: config,

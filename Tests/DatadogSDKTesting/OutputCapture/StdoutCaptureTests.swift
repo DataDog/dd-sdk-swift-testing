@@ -9,25 +9,23 @@
 import XCTest
 
 class StdoutCaptureTests: XCTestCase {
-    private var originalTracer: DDTracer!
-
     override func setUp() {
         DDTestMonitor._env_recreate(env: ["DD_API_KEY": "fakeToken", "DD_DISABLE_TEST_INSTRUMENTING": "1"])
-        originalTracer = DDTestMonitor.tracer
+        DDTestMonitor.instance = DDTestMonitor()
     }
 
     override func tearDown() {
-        DDTestMonitor.tracer = originalTracer
+        DDTestMonitor.removeTestMonitor()
         DDTestMonitor._env_recreate()
     }
 
-    /// Install a DDTracer wired to an in-memory `LogRecordExporter` as
-    /// the global `DDTestMonitor.tracer` (which `StdoutCapture` /
-    /// `StderrCapture` route through) so the test can introspect what the SDK
-    /// emitted.
+    /// Install a DDTracer wired to an in-memory `LogRecordExporter` as the
+    /// monitor's tracer (which `StdoutCapture` / `StderrCapture` route through
+    /// via `DDTestMonitor.instance?.tracer`) so the test can introspect what the
+    /// SDK emitted.
     private func installCapturingTracer(_ exporter: InMemoryLogRecordExporter) -> DDTracer {
         let tracer = DDTracer(logRecordExporter: exporter)
-        DDTestMonitor.tracer = tracer
+        DDTestMonitor.instance?.tracer = tracer
         return tracer
     }
 

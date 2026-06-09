@@ -74,7 +74,7 @@ enum StderrCapture {
 
     static func stderrMessage(string: String) {
         guard DDTracer.activeSpan != nil ||
-            DDTestMonitor.tracer.isBinaryUnderUITesting
+            (DDTestMonitor.instance?.tracer.isBinaryUnderUITesting ?? false)
         else {
             return
         }
@@ -105,7 +105,7 @@ enum StderrCapture {
         }
 
         if let message = message {
-            DDTestMonitor.tracer.logString(string: message, date: date)
+            DDTestMonitor.instance?.tracer.logString(string: message, date: date)
         }
     }
 
@@ -125,7 +125,7 @@ enum StderrCapture {
         }
 
         if let message = message {
-            DDTestMonitor.tracer.logString(string: message, timeIntervalSinceSpanStart: timeFromStart)
+            DDTestMonitor.instance?.tracer.logString(string: message, timeIntervalSinceSpanStart: timeFromStart)
         }
     }
 }

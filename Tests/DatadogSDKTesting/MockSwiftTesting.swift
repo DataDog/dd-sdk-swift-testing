@@ -87,7 +87,8 @@ extension Mocks {
                                                        clock: DateClock(),
                                                        crash: nil,
                                                        command: "test command",
-                                                       log: Mocks.CatchLogger(isDebug: false)),
+                                                       log: Mocks.CatchLogger(isDebug: false),
+                                                       tracer: DDTracer()),
                                          observer: SessionAndModuleObserver())
             let suiteProvider = SwiftTestingSuiteProvider(session: manager,
                                                           observer: SwiftTestingObserver())

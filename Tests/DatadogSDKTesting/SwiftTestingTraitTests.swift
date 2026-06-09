@@ -292,7 +292,8 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
                                                          clock: DateClock(),
                                                          crash: nil,
                                                          command: nil,
-                                                         log: Mocks.CatchLogger()),
+                                                         log: Mocks.CatchLogger(),
+                                                         tracer: DDTracer()),
                                            observer: SessionAndModuleObserver())
         DatadogSwiftTestingTrait.sharedSuiteProvider = SwiftTestingSuiteProvider(session: session,
                                                                                  observer: MockSwiftTestingObserver())

@@ -65,10 +65,10 @@ public final class DDModule: NSObject {
             attributes[key] = .double(value)
         }
 
-        let span = DDTestMonitor.tracer.createLifecycleSpan(name: "Swift.module",
-                                                            spanId: id,
-                                                            startTime: actualStartTime,
-                                                            attributes: attributes)
+        let span = session.configuration.tracer.createLifecycleSpan(name: "Swift.module",
+                                                                    spanId: id,
+                                                                    startTime: actualStartTime,
+                                                                    attributes: attributes)
         if isCrashed {
             span.applyStatus(.fail, errorDescription: "module failed")
         }

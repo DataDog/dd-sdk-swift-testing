@@ -10,29 +10,24 @@ internal import EventsExporter
 enum RuntimeInfo {
     case xcode(xcodeVersion: String, swiftVersion: String)
     case spm(swiftVersion: String)
-
-    static var current: RuntimeInfo {
+    
+    init(version xcode: String?, isXcode: Bool) {
         let env = ProcessInfo.processInfo.environment
-        let isXcode = env["XCODE_SCHEME_NAME"] != nil
-
-        // DTXcode is present in the XCTest bundle on both Xcode and SPM (swift test)
-        // on macOS, so try it first to avoid spawning swiftc at all.
-        let dtxcode = PlatformUtils.getXcodeVersion()
         var swiftVer: String?
-        if !dtxcode.isEmpty {
-            swiftVer = xcodeVersionToSwift(dtxcode)
+        if let xcode, !xcode.isEmpty {
+            swiftVer = Self.xcodeVersionToSwift(xcode)
         }
         if swiftVer == nil {
-            swiftVer = spawnSwiftcVersion() ?? "<unknown>"
+            swiftVer = Self.spawnSwiftcVersion() ?? "<unknown>"
         }
         if isXcode {
-            return .xcode(xcodeVersion: parseXcodeVersion(dtxcode),
+            self = .xcode(xcodeVersion: Self.parseXcodeVersion(xcode ?? ""),
                           swiftVersion: swiftVer!)
         } else {
-            return .spm(swiftVersion: swiftVer!)
+            self = .spm(swiftVersion: swiftVer!)
         }
     }
-
+    
     var runtimeName: String {
         switch self {
         case .xcode: return "Xcode"

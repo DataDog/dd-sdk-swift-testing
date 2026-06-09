@@ -208,15 +208,35 @@ extension Device {
     }
 
     static func mockWith(
+        name: String = .mockAny(),
         model: String = .mockAny(),
         osName: String = .mockAny(),
-        osVersion: String = .mockAny()
+        osVersion: String = .mockAny(),
+        osArchitecture: String = .mockAny(),
     ) -> Device {
         return Device(
+            name: name,
             model: model,
             osName: osName,
-            osVersion: osVersion
+            osVersion: osVersion,
+            osArchitecture: osArchitecture
         )
+    }
+}
+
+extension KernelInfo {
+    static func mockAny() -> KernelInfo {
+        return .mockWith()
+    }
+
+    static func mockWith(
+        sysname: String = .mockAny(),
+        release: String = .mockAny(),
+        version: String = .mockAny(),
+        machine: String = .mockAny()
+    ) -> KernelInfo {
+        return KernelInfo(sysname: sysname, release: release,
+                          version: version, machine: machine)
     }
 }
 
@@ -253,18 +273,28 @@ extension APIServiceConfig {
     static func mock(serviceName: String = "service",
                      environment: String = "environment",
                      applicationName: String = "app",
-                     version: String = "1.0",
+                     applicationVersion: String = "1.0",
+                     libraryVersion: String = "1.0",
+                     device: Device = .mockAny(),
                      hostname: String? = nil,
+                     kernelInfo: KernelInfo = .mockAny(),
+                     languageVersion: String = "6.0",
+                     runtimeName: String = "Xcode",
+                     runtimeVersion: String = "26.0",
                      apiKey: String = "apikey",
                      endpoint: Endpoint = .us1,
                      clientId: String = "client",
                      payloadCompression: Bool = false) -> APIServiceConfig
     {
         APIServiceConfig(serviceName: serviceName, environment: environment,
-                         applicationName: applicationName, version: version,
-                         device: .current, hostname: hostname, apiKey: apiKey,
-                         endpoint: endpoint, clientId: clientId,
-                         payloadCompression: payloadCompression)
+                         applicationName: applicationName,
+                         applicationVersion: applicationVersion,
+                         libraryVersion: libraryVersion,
+                         device: device, hostname: hostname,
+                         kernelInfo: kernelInfo, languageVersion: languageVersion,
+                         runtimeName: runtimeName, runtimeVersion: runtimeVersion,
+                         apiKey: apiKey, endpoint: endpoint,
+                         clientId: clientId, payloadCompression: payloadCompression)
     }
 }
 
@@ -283,8 +313,14 @@ extension TestOptimizationApiService {
     static func mock(serviceName: String = "service",
                      environment: String = "environment",
                      applicationName: String = "app",
-                     version: String = "1.0",
+                     applicationVersion: String = "1.0",
+                     libraryVersion: String = "1.0",
+                     device: Device = .mockAny(),
                      hostname: String? = nil,
+                     kernelInfo: KernelInfo = .mockAny(),
+                     languageVersion: String = "6.0",
+                     runtimeName: String = "Xcode",
+                     runtimeVersion: String = "26.0",
                      apiKey: String = "apikey",
                      endpoint: Endpoint = .us1,
                      clientId: String = "client",
@@ -292,10 +328,14 @@ extension TestOptimizationApiService {
                      logger: Logger = Log()) -> TestOptimizationApiService
     {
         TestOptimizationApiService(serviceName: serviceName, environment: environment,
-                                   applicationName: applicationName, version: version,
-                                   hostname: hostname, apiKey: apiKey,
-                                   endpoint: endpoint, clientId: clientId,
-                                   payloadCompression: payloadCompression,
+                                   applicationName: applicationName,
+                                   applicationVersion: applicationVersion,
+                                   libraryVersion: libraryVersion,
+                                   device: device, hostname: hostname,
+                                   kernelInfo: kernelInfo, languageVersion: languageVersion,
+                                   runtimeName: runtimeName, runtimeVersion: runtimeVersion,
+                                   apiKey: apiKey, endpoint: endpoint,
+                                   clientId: clientId, payloadCompression: payloadCompression,
                                    logger: logger)
     }
 }

@@ -185,19 +185,19 @@ internal class DDTracer {
             metadata: metadata,
             logger: Log.instance
         )
-        let runtimeInfo = RuntimeInfo.current
+        
         let api = TestOptimizationApiService(
             serviceName: env.service,
             environment: env.environment,
             applicationName: appName,
             applicationVersion: appVersion,
             libraryVersion: sdkVersion,
-            device: .current,
+            device: env.platform.device,
             hostname: hostnameToReport,
-            kernelInfo: .current,
-            languageVersion: runtimeInfo.swiftVersion,
-            runtimeName: runtimeInfo.runtimeName,
-            runtimeVersion: runtimeInfo.runtimeVersion,
+            kernelInfo: env.platform.kernelInfo,
+            languageVersion: env.platform.languageVersion,
+            runtimeName: env.platform.runtimeName,
+            runtimeVersion: env.platform.runtimeVersion,
             apiKey: conf.apiKey ?? "",
             endpoint: conf.endpoint.exporterEndpoint,
             clientId: String(SpanId.random().rawValue),

@@ -58,11 +58,18 @@ internal class DDTestMonitor {
 
     /// Flush and shut down the current tracer (tracer provider, log processor,
     /// telemetry) and clear it so the next `tracer` access builds a fresh one.
+    ///
+    /// We clear the slot under the lock but run `shutdown()` *outside* it.
+    /// `shutdown()` flushes/logs/uploads, and stdout/stderr capture routes those
+    /// back through `DDTestMonitor.tracer.logString` — holding the lock during
+    /// shutdown would re-enter the non-reentrant lock and deadlock.
     static func shutdownTracer() {
-        _tracer.update { current in
-            current?.shutdown()
+        let old: DDTracer? = _tracer.update { current in
+            let old = current
             current = nil
+            return old
         }
+        old?.shutdown()
     }
     static var env = Environment(config: config, env: envReader, log: Log.instance)
     static var config: Config = Config(env: envReader)

@@ -51,13 +51,21 @@ internal final class Environment {
         }
 
         /// Device Information
-        let (runtimeName, runtimeVersion) = PlatformUtils.getRuntimeInfo()
-        platform = Platform(deviceName: PlatformUtils.getDeviceName(),
-                            deviceModel: PlatformUtils.getDeviceModel(),
-                            osName: PlatformUtils.getRunningPlatform(),
-                            osArchitecture: PlatformUtils.getPlatformArchitecture(),
-                            osVersion: PlatformUtils.getDeviceVersion(),
-                            runtimeName: runtimeName, runtimeVersion: runtimeVersion,
+        let runtimeInfo = PlatformUtils.getRuntimeInfo()
+        let deviceInfo = PlatformUtils.getDeviceInfo()
+        let kernelInfo = PlatformUtils.getKernelInfo()
+        platform = Platform(deviceName: deviceInfo.name,
+                            deviceModel: deviceInfo.model,
+                            osName: deviceInfo.osName,
+                            osArchitecture: deviceInfo.osArchitecture,
+                            osVersion: deviceInfo.osVersion,
+                            sysname: kernelInfo.sysname,
+                            machine: kernelInfo.machine,
+                            kernelRelease: kernelInfo.release,
+                            kernelVersion: kernelInfo.version,
+                            runtimeName: runtimeInfo.runtimeName,
+                            runtimeVersion: runtimeInfo.runtimeVersion,
+                            languageVersion: runtimeInfo.swiftVersion,
                             localization: PlatformUtils.getLocalization(),
                             vCPUCount: PlatformUtils.getCpuCount())
         
@@ -351,9 +359,16 @@ internal extension Environment {
         let osArchitecture: String
         let osVersion: String
         
+        /// Kernel Information
+        let sysname: String
+        let machine: String
+        let kernelRelease: String
+        let kernelVersion: String
+        
         /// Runtime Information
         let runtimeName: String
         let runtimeVersion: String
+        let languageVersion: String
         
         let localization: String
         
@@ -367,8 +382,13 @@ internal extension Environment {
               OS Name: \(osName)
               OS Architecture: \(osArchitecture)
               OS Version: \(osVersion)
+              System Name: \(sysname)
+              Machine: \(machine)
+              Kernel Release: \(kernelRelease)
+              Kernel Version: \(kernelVersion)
               Runtime Name: \(runtimeName)
               Runtime Version: \(runtimeVersion)
+              Language Version: \(languageVersion)
               vCPU Count: \(vCPUCount)
               Localization: \(localization)
             """

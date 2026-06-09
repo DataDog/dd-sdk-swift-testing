@@ -40,6 +40,7 @@ internal class DDTracer {
     /// `includeTraceContext` stays on (default) so the active test span's
     /// context is auto-attached as `dd.trace_id` / `dd.span_id`.
     private let loggerSdk: LoggerSdk
+    private let logProcessor: LogRecordProcessor
 
     private var launchSpanContext: SpanContext?
     private let attributeCountLimit: UInt = 1024
@@ -102,11 +103,13 @@ internal class DDTracer {
             .with(resource: resource)
             .add(spanProcessor: spanProcessor)
             .build()
+        
+        logProcessor = SimpleLogRecordProcessor(logRecordExporter: logRecordExporterToUse)
 
         let loggerProviderSdk = LoggerProviderBuilder()
             .with(clock: DDTestMonitor.clock)
             .with(resource: resource)
-            .with(processors: [SimpleLogRecordProcessor(logRecordExporter: logRecordExporterToUse)])
+            .with(processors: [logProcessor])
             .build()
 
         OpenTelemetry.registerTracerProvider(tracerProvider: tracerProviderSdk)
@@ -117,6 +120,16 @@ internal class DDTracer {
             .loggerBuilder(instrumentationScopeName: id)
             .setInstrumentationVersion(version)
             .build() as! LoggerSdk
+    }
+
+    deinit {
+        // Deregister our SDK from the global OpenTelemetry singleton, restoring
+        // the default (no-op) providers. Otherwise the shut-down SDK provider
+        // stays registered and span creation returns `PropagatedSpan`, which
+        // crashes the `as! SpanSdk` casts. A new `DDTracer` re-registers a live
+        // SDK provider.
+        OpenTelemetry.registerTracerProvider(tracerProvider: DefaultTracerProvider.instance)
+        OpenTelemetry.registerLoggerProvider(loggerProvider: DefaultLoggerProvider.instance)
     }
 
     convenience init(logRecordExporter: LogRecordExporter? = nil) {
@@ -172,6 +185,7 @@ internal class DDTracer {
             metadata: metadata,
             logger: Log.instance
         )
+        let runtimeInfo = RuntimeInfo.current
         let api = TestOptimizationApiService(
             serviceName: env.service,
             environment: env.environment,
@@ -181,7 +195,9 @@ internal class DDTracer {
             device: .current,
             hostname: hostnameToReport,
             kernelInfo: .current,
-            languageVersion: RuntimeLanguageVersion.current,
+            languageVersion: runtimeInfo.swiftVersion,
+            runtimeName: runtimeInfo.runtimeName,
+            runtimeVersion: runtimeInfo.runtimeVersion,
             apiKey: conf.apiKey ?? "",
             endpoint: conf.endpoint.exporterEndpoint,
             clientId: String(SpanId.random().rawValue),
@@ -574,7 +590,17 @@ internal class DDTracer {
         }
         
         self.tracerProviderSdk.forceFlush()
+        _ = self.logProcessor.forceFlush()
+        self.telemetry?.flush()
         Log.debug("Tracer flush finished")
+    }
+    
+    func shutdown() {
+        self.flush()
+        self.tracerProviderSdk.shutdown()
+        _ = self.logProcessor.shutdown()
+        self.telemetry?.shutdown()
+        Log.debug("Tracer shutdown")
     }
 
     func addPropagationsHeadersToEnvironment() {

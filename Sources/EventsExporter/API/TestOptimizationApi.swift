@@ -83,7 +83,8 @@ public struct TestOptimizationApiService: TestOptimizationApi {
     public private(set) var telemetry: TelemetryApi
 
     internal init(config: APIServiceConfig, httpClient: any HTTPClientType, log: Logger,
-                  dateProvider: DateProvider = SystemDateProvider())
+                  dateProvider: DateProvider = SystemDateProvider(),
+                  debugTelemetry: Bool = false)
     {
         settings = SettingsApiService(config: config, httpClient: httpClient, log: log)
         knownTests = KnownTestsApiService(config: config, httpClient: httpClient, log: log)
@@ -93,29 +94,39 @@ public struct TestOptimizationApiService: TestOptimizationApi {
         spans = SpansApiService(config: config, httpClient: httpClient, log: log)
         logs = LogsApiService(config: config, httpClient: httpClient, log: log)
         telemetry = TelemetryApiService(config: config, httpClient: httpClient,
-                                        dateProvider: dateProvider, log: log)
+                                        dateProvider: dateProvider, log: log,
+                                        debugBackend: debugTelemetry)
     }
 
     /// Build the full set of test-optimization API services that share one
     /// `HTTPClient` and one set of identity headers. Callers (the SDK) own the
     /// resulting value and pass it to `EventsExporter`.
     public init(serviceName: String, environment: String,
-                applicationName: String, version: String,
-                hostname: String?, apiKey: String,
-                endpoint: Endpoint, clientId: String,
+                applicationName: String,
+                applicationVersion: String, libraryVersion: String,
+                device: Device, hostname: String?,
+                kernelInfo: KernelInfo, languageVersion: String,
+                runtimeName: String, runtimeVersion: String,
+                apiKey: String, endpoint: Endpoint, clientId: String,
                 payloadCompression: Bool,
                 logger: Logger, dateProvider: DateProvider = SystemDateProvider(),
-                debugNetworkRequests: Bool = false)
+                debugNetworkRequests: Bool = false,
+                debugTelemetry: Bool = false)
     {
         let config = APIServiceConfig(serviceName: serviceName, environment: environment,
-                                      applicationName: applicationName, version: version,
-                                      device: .current, hostname: hostname, apiKey: apiKey,
-                                      endpoint: endpoint, clientId: clientId,
+                                      applicationName: applicationName,
+                                      applicationVersion: applicationVersion,
+                                      libraryVersion: libraryVersion,
+                                      device: device, hostname: hostname,
+                                      kernelInfo: kernelInfo, languageVersion: languageVersion,
+                                      runtimeName: runtimeName, runtimeVersion: runtimeVersion,
+                                      apiKey: apiKey, endpoint: endpoint, clientId: clientId,
                                       payloadCompression: payloadCompression)
         self.init(config: config,
                   httpClient: HTTPClient(debug: debugNetworkRequests),
                   log: logger,
-                  dateProvider: dateProvider)
+                  dateProvider: dateProvider,
+                  debugTelemetry: debugTelemetry)
     }
 
     public var endpointURLs: Set<URL> {

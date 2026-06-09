@@ -85,6 +85,8 @@ final class LibraryConfigurationServiceThrowTests: XCTestCase {
                                    hostname: nil,
                                    kernelInfo: .current,
                                    languageVersion: "6.0",
+                                   runtimeName: "SPM",
+                                   runtimeVersion: "6.0",
                                    apiKey: "apikey",
                                    endpoint: .other(testsBaseURL: baseURL, logsBaseURL: baseURL),
                                    clientId: "client",

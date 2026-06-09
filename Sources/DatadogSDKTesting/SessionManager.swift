@@ -39,8 +39,7 @@ final actor SessionManager: TestSessionManager {
         session.end()
         await observer?.didFinish(session: session)
         DDTestMonitor.removeTestMonitor()
-        session.configuration.telemetry?.shutdown()
-        DDTestMonitor.tracer.flush()
+        DDTestMonitor.shutdownTracer()
     }
 
     private func bootstrapSession() async throws -> any TestModuleManager & TestSession {

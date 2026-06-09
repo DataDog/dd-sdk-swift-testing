@@ -326,6 +326,10 @@ struct SessionConfig: Sendable {
     let crash: CrashInformation?
     let command: String?
     let log: Logger
+    /// Tracer that owns the session/module/suite/test spans. Captured from the
+    /// monitor when the session is bootstrapped, so span creation never reaches
+    /// for a global and never creates a tracer on its own.
+    nonisolated(unsafe) let tracer: DDTracer
     /// Common telemetry manager shared with all features so they can record
     /// SDK self-metrics. `nil` when instrumentation telemetry is disabled.
     let telemetry: Telemetry?
@@ -337,6 +341,7 @@ struct SessionConfig: Sendable {
          crash: CrashInformation?,
          command: String?,
          log: Logger,
+         tracer: DDTracer,
          telemetry: Telemetry? = nil)
     {
         self.activeFeatures = activeFeatures
@@ -346,6 +351,7 @@ struct SessionConfig: Sendable {
         self.crash = crash
         self.command = command
         self.log = log
+        self.tracer = tracer
         self.telemetry = telemetry
     }
 }

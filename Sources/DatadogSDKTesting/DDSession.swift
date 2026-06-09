@@ -69,10 +69,10 @@ public final class DDSession: NSObject {
 
         // Span name gets the framework-aware value at internalEnd; until then
         // we use a placeholder.
-        let span = DDTestMonitor.tracer.createLifecycleSpan(name: "Swift.session",
-                                                            spanId: id,
-                                                            startTime: actualStartTime,
-                                                            attributes: attributes)
+        let span = config.tracer.createLifecycleSpan(name: "Swift.session",
+                                                     spanId: id,
+                                                     startTime: actualStartTime,
+                                                     attributes: attributes)
         if isCrashed {
             span.applyStatus(.fail, errorDescription: "session failed")
         }
@@ -105,7 +105,7 @@ public final class DDSession: NSObject {
         span.end(time: endTime)
 
         configuration.log.debug("Exported session_end event sessionId: \(self.id)")
-        DDTestMonitor.tracer.flush()
+        configuration.tracer.flush()
     }
 
     func addFramework(_ name: String) {
@@ -159,6 +159,10 @@ public extension DDSession {
         if DDTestMonitor.instance == nil  {
             let _ = DDTestMonitor.installTestMonitor()
         }
+        // Use the monitor's tracer. The fallback only matters if the monitor
+        // failed to install (degraded path) — we don't want a manual API call to
+        // crash, but normally the tracer comes from the installed monitor.
+        let tracer = DDTestMonitor.instance?.tracer ?? DDTracer()
         let config = SessionConfig(activeFeatures: DDTestMonitor.instance?.activeFeatures ?? [],
                                    env: DDTestMonitor.env,
                                    config: DDTestMonitor.config,
@@ -166,12 +170,13 @@ public extension DDSession {
                                    crash: DDTestMonitor.instance?.crashInfo,
                                    command: command,
                                    log: Log.instance,
-                                   telemetry: DDTestMonitor.tracer.telemetry)
+                                   tracer: tracer,
+                                   telemetry: tracer.telemetry)
         waitForAsync { await DDTestMonitor.clock.sync() }
         let session = DDSession(name: name, config: config,
                                 modules: DDModule.StatelessManager(observer: SessionAndModuleObserver()),
                                 startTime: startTime)
-        if let telemetry = DDTestMonitor.tracer.telemetry {
+        if let telemetry = tracer.telemetry {
             telemetry.metrics.session.started.add(provider: config.env.ci?.provider, autoInjected: false)
             telemetry.metrics.events.manualApiEvents.add(eventType: .session)
             session.emitGitShaCheck(to: telemetry)

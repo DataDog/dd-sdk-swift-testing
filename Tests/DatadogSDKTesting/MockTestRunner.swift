@@ -143,7 +143,8 @@ extension Mocks {
                                        clock: DateClock(),
                                        crash: nil,
                                        command: "test command",
-                                       log: Mocks.CatchLogger(isDebug: false))
+                                       log: Mocks.CatchLogger(isDebug: false),
+                                       tracer: DDTracer())
             let session = Session(name: "MockTestSession",
                                   testTags: Dictionary(uniqueKeysWithValues: tags),
                                   config: config,

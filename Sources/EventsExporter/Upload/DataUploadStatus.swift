@@ -50,17 +50,24 @@ internal struct DataUploadStatus {
 
     /// Server-supplied retry-after (in seconds) when available.
     let waitTime: TimeInterval?
+
+    /// Human-readable reason for a failed upload, if available.
+    let failureDescription: String?
 }
 
 extension DataUploadStatus {
     // MARK: - Initialization
+
+    init(needsRetry: Bool, waitTime: TimeInterval?) {
+        self.init(needsRetry: needsRetry, waitTime: waitTime, failureDescription: nil)
+    }
 
     init(httpResponse: HTTPURLResponse) {
         let statusCode = HTTPResponseStatusCode(rawValue: httpResponse.statusCode) ?? .unexpected
         self.init(needsRetry: statusCode.needsRetry, waitTime: nil)
     }
 
-    init(httpCode: Int, headers: [HTTPHeader.Field: String]) {
+    init(httpCode: Int, headers: [HTTPHeader.Field: String], failureDescription: String? = nil) {
         let statusCode = HTTPResponseStatusCode(rawValue: httpCode) ?? .unexpected
         switch statusCode {
         case .tooManyRequests:
@@ -70,19 +77,20 @@ extension DataUploadStatus {
             } else if let rateLimit = headers[.rateLimitResetHeaderField], let retry = TimeInterval(rateLimit) {
                 waitTime = retry
             }
-            self.init(needsRetry: true, waitTime: waitTime)
+            self.init(needsRetry: true, waitTime: waitTime, failureDescription: failureDescription)
         default:
-            self.init(needsRetry: statusCode.needsRetry, waitTime: nil)
+            self.init(needsRetry: statusCode.needsRetry, waitTime: nil, failureDescription: failureDescription)
         }
     }
-    
+
     init(api error: APICallError) {
         switch error {
         case .httpError(code: let code, headers: let headers, body: _):
-            self.init(httpCode: code, headers: headers)
+            self.init(httpCode: code, headers: headers, failureDescription: error.description)
         case .transport, .fileSystem, .idMismatch, .decoding:
-            self.init(needsRetry: true, waitTime: nil)
-        default: self.init(needsRetry: false, waitTime: nil)
+            self.init(needsRetry: true, waitTime: nil, failureDescription: error.description)
+        default:
+            self.init(needsRetry: false, waitTime: nil, failureDescription: error.description)
         }
     }
 

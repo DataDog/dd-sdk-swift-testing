@@ -37,6 +37,8 @@ internal final class DataUploadWorker: DataUploadWorkerType {
     private var uploadWork: DispatchWorkItem?
     /// Optional telemetry observer notified about upload attempts / drops.
     private let observer: UploadObserver?
+    /// Logger for upload status and errors.
+    private let log: Logger
 
     init(
         fileReader: FileReader,
@@ -44,12 +46,14 @@ internal final class DataUploadWorker: DataUploadWorkerType {
         delay: Delay,
         featureName: String,
         priority: DispatchQoS,
+        log: Logger,
         observer: UploadObserver? = nil
     ) {
         self.fileReader = fileReader
         self.dataUploader = dataUploader
         self.delay = delay
         self.observer = observer
+        self.log = log
         self.queue = DispatchQueue(label: "datadogtest.datauploadworker.\(featureName)",
                                    target: .global(qos: priority.qosClass))
         self.featureName = featureName
@@ -140,6 +144,16 @@ internal final class DataUploadWorker: DataUploadWorkerType {
         } else {
             delay.decrease()
             result = .success
+        }
+        switch result {
+        case .success:
+            log.debug("[\(featureName)] batch uploaded (\(data.count) bytes)")
+        case .retry:
+            let reason = uploadStatus.failureDescription.map { ": \($0)" } ?? ""
+            log.print("[\(featureName)] upload failed, will retry\(reason)")
+        case .failed:
+            let reason = uploadStatus.failureDescription.map { ": \($0)" } ?? ""
+            log.print("[\(featureName)] upload failed, dropping batch\(reason)")
         }
         if let observer, let start {
             let durationMs = Double(DispatchTime.now().uptimeNanoseconds - start.uptimeNanoseconds) / 1_000_000

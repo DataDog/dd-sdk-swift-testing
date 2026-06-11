@@ -52,6 +52,7 @@ internal final class SpansExporter: SpanExporter {
                                                   writer: writer,
                                                   performance: configuration.performancePreset,
                                                   uploader: uploader,
+                                                  log: configuration.logger,
                                                   observer: observers.upload)
     }
 

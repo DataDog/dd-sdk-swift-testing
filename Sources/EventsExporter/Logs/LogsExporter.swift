@@ -50,7 +50,8 @@ internal final class LogsExporter: LogRecordExporter {
                                                  reader: reader,
                                                  writer: writer,
                                                  performance: config.performancePreset,
-                                                 uploader: uploader)
+                                                 uploader: uploader,
+                                                 log: config.logger)
     }
 
     private func writeLog(_ log: DDLog) {

@@ -46,7 +46,8 @@ public final class TelemetryExporter: TelemetryPayloadExporter {
                                                       reader: reader,
                                                       writer: writer,
                                                       performance: config.performancePreset,
-                                                      uploader: uploader)
+                                                      uploader: uploader,
+                                                      log: config.logger)
     }
 
     public func export(items: [any TelemetryPayload]) {

@@ -1,7 +1,7 @@
 # Telemetry architecture
 
-SDK self-telemetry (CI Visibility "instrumentation telemetry" metrics). This
-document explains how the pieces fit together.
+SDK self-telemetry (CI Visibility "instrumentation telemetry" metrics and logs).
+This document explains how the pieces fit together.
 
 Milestone history:
 - **SDTEST-3775** — the metric instances + the common `Telemetry` manager.
@@ -24,9 +24,17 @@ Milestone history:
                        (counts + raw           (persist to disk, then
                         distribution            batch + upload via
                         samples; drained        api.telemetry)
-                        on a short timer
-                        and when a buffer
-                        fills)
+                        on a short timer        ▲
+                        and when a buffer       │
+                        fills)                  │
+                            ▲                   │
+ SDK self-logs ─ record ─▶ Telemetry.logs.<level>(message:)
+   (errors, warnings)       │  (.error / .warn / .debug)
+                            ▼                   │
+                       LogStore ────────────────┘
+                       (dedup by message/level/tags
+                        → one entry with a `count`;
+                        drained on the same timer)
 
  exporter/network internals report neutral facts back UP via observer protocols:
    HTTPClient / DataUploadWorker / FileWriter ── RequestObserver / UploadObserver / PayloadObserver
@@ -85,6 +93,34 @@ distorts percentiles) and complex (separate explicit/exponential code paths).
 the raw samples, so export is a verbatim copy. Counters/gauges are trivial
 enough to keep by hand, so the whole OTel metrics SDK (meter provider, views,
 readers, the `TelemetryMetricExporter` bridge) was dropped.
+
+Telemetry **logs** followed the same move: the `logs` request type maps cleanly
+to a tiny `TelemetryLog` value, so the OTel log path (`LoggerProvider`,
+`LogRecordProcessor`, `ReadableLogRecord`, and the `TelemetryLogExporter` bridge)
+was dropped in favour of a hand-written `LogStore` — see §2.5.
+
+### 2.5 The log handler
+`Telemetry` also owns a `LogStore`, exposed as a small handler mirroring the
+metric tree:
+
+```swift
+telemetry.logs.error("settings request failed", tags: ["endpoint": "settings"], stackTrace: trace)
+telemetry.logs.warn("git unshallow skipped")
+telemetry.logs.debug("…")
+```
+
+The three methods map to `TelemetryLog.Level` (`ERROR` / `WARN` / `DEBUG`).
+`LogStore` (in `Telemetry.swift`) deduplicates: identical logs — same message,
+level, tags, and stack trace — collapse into one entry whose `count` is the
+occurrence total for the interval, so a noisy repeated error costs one slot, not
+many. Tags reuse the **exact** metric rendering (`TelemetryMetricTags.renderTags`
+→ a `Set` of `"k:v"`), joined into the log spec's comma-separated `"k:v,k:v"`
+string only at flush. The buffer drains on the same flush timer as metrics (and
+force-flushes at `logCap` distinct entries, default 1024), is cleared on each
+drain (delta semantics, like `MetricStore`), and exports as the `logs` request
+type. The handler is a standalone API — the internal debug `Logger`
+(`Log.debug` / `Log.print`) is **not** auto-forwarded; callers emit telemetry
+logs explicitly.
 
 ### Gotchas
 - **Delta semantics by clear-on-flush.** Each drain takes and resets the buffers,
@@ -256,7 +292,8 @@ EventsExporter:
 - `Telemetry/MetricObservers.swift` — observer protocols + `ExporterObservers`.
 - `Telemetry/TelemetryExporter.swift` — DD telemetry intake pipeline (built in
   SDTEST-3772/3773) and the `TelemetryPayloadExporter` sink protocol the
-  `MetricStore` drains into.
+  `MetricStore` and `LogStore` drain into. (The OTel `TelemetryLogExporter`
+  bridge was removed when the log handler replaced the OTel log path.)
 - `API/HTTPClient.swift` — `RequestObserver` measurement; `HTTPClientType` protocol.
 - `API/*.swift` — `observer:` param on every method + `@inlinable` conveniences.
 - `Upload/DataUploadWorker.swift`, `Utils/Feature.swift` — `UploadObserver`.
@@ -264,9 +301,11 @@ EventsExporter:
 - `{Spans,Coverage}Exporter.swift`, `Exporter.swift` — observer plumbing.
 
 DatadogSDKTesting:
-- `Telemetry/Telemetry.swift` — manager, `MetricStore` + flush timer, and the
-  app-lifecycle protocol (`sendAppStarted` on init, heartbeat timer, `app-closing`
-  in `shutdown`). Holds `TelemetryApi` and a `TelemetryPayloadExporter` directly.
+- `Telemetry/Telemetry.swift` — manager, `metricStore` (`MetricStore`) +
+  `logStore` (`LogStore`) drained on a shared flush timer, the `logs` handler, and
+  the app-lifecycle protocol (`sendAppStarted` on init, heartbeat timer,
+  `app-closing` in `shutdown`). Holds `TelemetryApi` and a
+  `TelemetryPayloadExporter` directly.
 - `Telemetry/TelemetryMetrics.swift` — typed metric tree; `SettingsResponse` has a
   `add(config: TracerSettings)` convenience overload.
 - `Telemetry/TelemetryTags.swift` — tag enums.

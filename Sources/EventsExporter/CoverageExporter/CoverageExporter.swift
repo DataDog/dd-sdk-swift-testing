@@ -69,6 +69,7 @@ internal final class CoverageExporter: CoverageExporterType {
                                                      writer: writer,
                                                      performance: configuration.performancePreset,
                                                      uploader: uploader,
+                                                     log: configuration.logger,
                                                      observer: observers.upload)
     }
 

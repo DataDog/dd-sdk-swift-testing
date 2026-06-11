@@ -381,7 +381,6 @@ internal struct APIServiceConfig {
                 device: device
             ),
             .apiKeyHeader(apiKey: apiKey),
-            .clientLibraryVersionHeader(version: libraryVersion),
             .traceIDHeader(traceID: clientId),
             .parentSpanIDHeader(parentSpanID: clientId),
             .samplingPriorityHeader()

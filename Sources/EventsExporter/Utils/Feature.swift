@@ -19,6 +19,7 @@ internal struct FeatureStoreAndUpload: DataUploadWorkerType {
         writer: FileWriter,
         performance: UploadPerformancePreset,
         uploader: DataUploaderType,
+        log: Logger,
         observer: UploadObserver? = nil
     ) {
         self.init(
@@ -28,6 +29,7 @@ internal struct FeatureStoreAndUpload: DataUploadWorkerType {
                 delay: DataUploadDelay(performance: performance),
                 featureName: featureName,
                 priority: performance.uploadQueuePriority,
+                log: log,
                 observer: observer
             ),
             writer: writer

@@ -21,6 +21,11 @@ internal import EventsExporter
 /// the window of metrics lost to a crash small; the only data at risk is what
 /// has accumulated since the last flush.
 ///
+/// SDK self-logs follow the same pattern: `telemetry.logs.error(...)` /
+/// `.warn(...)` / `.debug(...)` accumulate in a `LogStore` (deduplicated by
+/// message/level/tags with an occurrence `count`) and drain on the same timer
+/// as the `logs` request type.
+///
 /// Also drives the app-lifecycle telemetry protocol:
 /// - Sends `app-started` directly (no batching) right after init.
 /// - Enqueues `app-heartbeat` via the exporter on a repeating timer.
@@ -33,8 +38,11 @@ internal import EventsExporter
 final class Telemetry: @unchecked Sendable {
     /// Typed tree of all CI Visibility telemetry metric instruments.
     let metrics: Metrics
+    /// Self-log handler — `telemetry.logs.error(...)` / `.warn(...)` / `.debug(...)`.
+    let logs: Logs
 
-    private let store: MetricStore
+    private let metricStore: MetricStore
+    private let logStore: LogStore
     private let exporter: any TelemetryPayloadExporter
     private var flushTimer: (any DispatchSourceTimer)?
     private var heartbeatTimer: (any DispatchSourceTimer)?
@@ -48,6 +56,8 @@ final class Telemetry: @unchecked Sendable {
     ///   - heartbeatInterval: `app-heartbeat` period, in seconds.
     ///   - distributionCap: total buffered distribution samples that force an
     ///     early drain (so a burst is persisted rather than waiting for the timer).
+    ///   - logCap: number of distinct buffered log entries that force an early
+    ///     drain (identical logs dedup into one entry, so this counts unique logs).
     ///   - clock: time source for metric-point timestamps (the NTP-synced SDK clock).
     ///   - configuration: SDK config snapshot reported in the `app-started` payload.
     init(api: TelemetryApi,
@@ -55,13 +65,17 @@ final class Telemetry: @unchecked Sendable {
          flushInterval: TimeInterval = 10,
          heartbeatInterval: TimeInterval = 60,
          distributionCap: Int = 65536,
+         logCap: Int = 1024,
          clock: any Clock,
          configuration: [TelemetryConfigItem] = [])
     {
-        let store = MetricStore(exporter: exporter, distributionCap: distributionCap, clock: clock)
-        self.store = store
+        let metricStore = MetricStore(exporter: exporter, distributionCap: distributionCap, clock: clock)
+        let logStore = LogStore(exporter: exporter, logCap: logCap, clock: clock)
+        self.metricStore = metricStore
+        self.logStore = logStore
         self.exporter = exporter
-        self.metrics = Metrics(Factory(store: store))
+        self.metrics = Metrics(Factory(store: metricStore))
+        self.logs = Logs(logStore)
 
         // Send app-started immediately via a direct HTTP call (no batching).
         // The clock is already synced (SyncingClock.sync ran before api creation).
@@ -73,10 +87,13 @@ final class Telemetry: @unchecked Sendable {
 
         let queue = DispatchQueue(label: "com.datadoghq.civisibility.telemetry",
                                   target: .global(qos: .utility))
-        // Drain accumulated metrics to the exporter on every interval.
+        // Drain accumulated metrics and logs to the exporter on every interval.
         let flush = DispatchSource.makeTimerSource(queue: queue)
         flush.schedule(deadline: .now() + flushInterval, repeating: flushInterval)
-        flush.setEventHandler { [weak self] in self?.store.flush() }
+        flush.setEventHandler { [weak self] in
+            self?.metricStore.flush()
+            self?.logStore.flush()
+        }
         self.flushTimer = flush
         flush.activate()
 
@@ -95,11 +112,12 @@ final class Telemetry: @unchecked Sendable {
         heartbeatTimer?.cancel()
     }
 
-    /// Drain the accumulated metrics to the exporter and push the exporter's
-    /// storage towards upload immediately.
+    /// Drain the accumulated metrics and logs to the exporter and push the
+    /// exporter's storage towards upload immediately.
     @discardableResult
     func flush() -> Bool {
-        store.flush()
+        metricStore.flush()
+        logStore.flush()
         return exporter.flush()
     }
 
@@ -110,7 +128,8 @@ final class Telemetry: @unchecked Sendable {
         flushTimer = nil
         heartbeatTimer?.cancel()
         heartbeatTimer = nil
-        store.flush()
+        metricStore.flush()
+        logStore.flush()
         exporter.export(item: TelemetryAppClosing())
         // Synchronously upload the final batch (metrics + app-closing) before
         // tearing the worker down — otherwise it sits on disk unsent at exit.
@@ -118,13 +137,6 @@ final class Telemetry: @unchecked Sendable {
         exporter.shutdown()
     }
 
-    /// Render a typed tag set to the `"key:value"` wire form as a `Set`, so a
-    /// given label set maps to a single series regardless of order (`Set`
-    /// equality/hashing is order-independent). The wire array is sorted once at
-    /// emit time.
-    static func renderTags(_ tags: Tags) -> Set<String> {
-        Set(tags.map { "\($0.key):\($0.value.spanAttribute)" })
-    }
 }
 
 // MARK: - Metric accumulation
@@ -210,6 +222,109 @@ extension Telemetry {
                 }
                 exporter.export(item: TelemetryDistribution(namespace: .civisibility, series: series))
             }
+        }
+    }
+}
+
+// MARK: - Log accumulation
+
+extension Telemetry {
+    /// In-memory accumulator for SDK self-logs, drained to the telemetry exporter
+    /// on `flush()` as the `logs` request type.
+    ///
+    /// Identical logs (same message, level, tags, and stack trace) collapse into a
+    /// single entry whose `count` is the number of occurrences in the interval, so
+    /// a noisy repeated error costs one slot instead of many. The buffer is cleared
+    /// on each drain — like `MetricStore`, a frequent flush never re-emits.
+    final class LogStore: @unchecked Sendable {
+        private struct Key: Hashable {
+            let message: String
+            let level: TelemetryLog.Level
+            let tags: Set<String>
+            let stackTrace: String?
+        }
+
+        private struct Entry {
+            var count: Int
+            /// Timestamp of the first occurrence in the current interval.
+            let tracerTime: Int64
+        }
+
+        private let exporter: any TelemetryPayloadExporter
+        private let logCap: Int
+        private let clock: any Clock
+        private let state = Synced([Key: Entry]())
+
+        init(exporter: any TelemetryPayloadExporter, logCap: Int, clock: any Clock) {
+            self.exporter = exporter
+            self.logCap = logCap
+            self.clock = clock
+        }
+
+        func record(message: String, level: TelemetryLog.Level, tags: Set<String>, stackTrace: String?) {
+            let now = Int64(clock.now.timeIntervalSince1970)
+            let full = state.update { s -> Bool in
+                let key = Key(message: message, level: level, tags: tags, stackTrace: stackTrace)
+                if var entry = s[key] {
+                    entry.count += 1
+                    s[key] = entry
+                } else {
+                    s[key] = Entry(count: 1, tracerTime: now)
+                }
+                return s.count >= logCap
+            }
+            // Distinct-log buffer full: drain now so the burst is persisted instead
+            // of held until the timer fires. The exporter uploads it later.
+            if full { flush() }
+        }
+
+        /// Atomically take and reset the buffer, then build and export the payload
+        /// outside the lock. Concurrent flushes each drain a disjoint slice, so no
+        /// log is sent twice or lost.
+        func flush() {
+            let entries = state.update { s -> [Key: Entry] in
+                defer { s = [:] }
+                return s
+            }
+            guard !entries.isEmpty else { return }
+
+            let logs = entries.map { key, entry in
+                TelemetryLog(message: key.message, level: key.level,
+                             count: entry.count,
+                             tags: key.tags.isEmpty ? nil : key.tags.sorted().joined(separator: ","),
+                             stackTrace: key.stackTrace, tracerTime: entry.tracerTime)
+            }
+            exporter.export(item: TelemetryLog.Logs(logs))
+        }
+    }
+}
+
+// MARK: - Log handler
+
+extension Telemetry {
+    /// Typed entry point for SDK self-logs. Mirrors the metrics tree: a level per
+    /// method, each accumulating into the shared `LogStore`.
+    struct Logs {
+        private let store: LogStore
+
+        init(_ store: LogStore) { self.store = store }
+
+        /// Record an error-level telemetry log.
+        func error(_ message: String, tags: [String: any SpanAttributeConvertible]? = nil, stackTrace: String? = nil) {
+            store.record(message: message, level: .error,
+                         tags: tags?.renderTags() ?? [], stackTrace: stackTrace)
+        }
+
+        /// Record a warning-level telemetry log.
+        func warn(_ message: String, tags: [String: any SpanAttributeConvertible]? = nil) {
+            store.record(message: message, level: .warn,
+                         tags: tags?.renderTags() ?? [], stackTrace: nil)
+        }
+
+        /// Record a debug-level telemetry log.
+        func debug(_ message: String, tags: [String: any SpanAttributeConvertible]? = nil) {
+            store.record(message: message, level: .debug,
+                         tags: tags?.renderTags() ?? [], stackTrace: nil)
         }
     }
 }

@@ -664,6 +664,8 @@ internal struct TelemetryApiService: TelemetryApi {
                          forHTTPHeader: .ddTelemetryRequestType)
         request.setValue(.constant(TelemetryHeaders.libraryLanguage),
                          forHTTPHeader: .ddClientLibraryLanguage)
+        request.setValue(.constant(application.tracerVersion),
+                         forHTTPHeader: .ddClientLibraryVersion)
         if compression {
             request.setHTTPHeader(.contentEncodingHeader(contentEncoding: .deflate))
         }
@@ -798,6 +800,7 @@ extension HTTPHeader.Field {
     static let ddTelemetryApiVersion: Self = "DD-Telemetry-API-Version"
     static let ddTelemetryRequestType: Self = "DD-Telemetry-Request-Type"
     static let ddClientLibraryLanguage: Self = "DD-Client-Library-Language"
+    static let ddClientLibraryVersion: Self = "DD-Client-Library-Version"
 }
 
 // MARK: - Endpoint URL

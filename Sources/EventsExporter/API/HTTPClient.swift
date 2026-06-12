@@ -108,13 +108,16 @@ public final class HTTPClient: HTTPClientType {
         _ resultMapping: @escaping (_ taskResult: (Data?, URLResponse?, Error?)) -> Result<T, RequestError>
     ) async throws(RequestError) -> T {
         // Capture the serialized payload size before `deflate` so it reflects
-        // the logical request size rather than the compressed wire size.
-        let requestBytes = request.httpBody?.count ?? 0
+        // the logical request size rather than the compressed wire size. Keep the
+        // uncompressed body too, so debug logs show the readable request payload
+        // rather than the deflated bytes sent on the wire.
+        let requestBody = request.httpBody
+        let requestBytes = requestBody?.count ?? 0
         let request = deflate(request)
         let start = observer != nil ? DispatchTime.now() : nil
         let result: Result<T, RequestError> = await withCheckedContinuation { continuation in
             let task = session.dataTask(with: request) { data, response, error in
-                self.log(request: request, response: (data, response, error))
+                self.log(request: request, requestBody: requestBody, response: (data, response, error))
                 if let observer, let start {
                     let durationMs = Double(DispatchTime.now().uptimeNanoseconds - start.uptimeNanoseconds) / 1_000_000
                     let statusCode = (response as? HTTPURLResponse)?.statusCode
@@ -147,21 +150,32 @@ public final class HTTPClient: HTTPClientType {
         return request
     }
 
-    private func log(request: URLRequest, response: (Data?, URLResponse?, Error?)) {
+    private func log(request: URLRequest, requestBody: Data?, response: (Data?, URLResponse?, Error?)) {
         guard debug else { return }
         let (data, urlres, error) = response
-        guard let httpres = urlres as? HTTPURLResponse else {
-            let res = urlres?.description ?? "nil"
-            let err = error?.localizedDescription ?? "nil"
-            let data = data?.description ?? "nil"
-            Log.debug("[NET] => \(request)\n\tERR: \(err)\n\tRES: \(res)\n\tDATA: \(data))")
-            return
+        if let httpres = urlres as? HTTPURLResponse {
+            Self.log(url: request.url!, reqBody: requestBody, res: String(httpres.statusCode),
+                     resError: error?.localizedDescription, resData: data)
+        } else {
+            Self.log(url: request.url!, reqBody: requestBody, res: urlres?.debugDescription,
+                     resError: error?.localizedDescription, resData: data)
         }
+    }
+
+    /// Render a payload for debug logging: UTF-8 text when decodable (JSON in
+    /// nearly all cases), a `<binary N bytes>` marker otherwise, `nil` when absent.
+    private static func printable(_ data: Data?) -> String {
+        guard let data else { return "nil" }
+        return String(data: data, encoding: .utf8) ?? "<binary \(data.count) bytes>"
+    }
+    
+    private static func log(url: URL, reqBody: Data?, res: String?, resError: String?, resData: Data?) {
         Log.debug("""
-                  [NET] => \(request.url!)
-                  RES CODE: \(httpres.statusCode)
-                  ERROR: \(error?.localizedDescription ?? "")
-                  DATA: \(data.flatMap{String(data: $0, encoding: .utf8)} ?? "")
+                  [NET REQ] => \(url)
+                  REQ BODY: \(printable(reqBody))
+                  RESPONSE: \(res ?? "nil")
+                  RES ERROR: \(resError ?? "nil")
+                  RES DATA: \(printable(resData))
                   """)
     }
 }

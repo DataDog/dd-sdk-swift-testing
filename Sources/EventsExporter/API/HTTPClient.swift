@@ -108,16 +108,19 @@ public final class HTTPClient: HTTPClientType {
         _ resultMapping: @escaping (_ taskResult: (Data?, URLResponse?, Error?)) -> Result<T, RequestError>
     ) async throws(RequestError) -> T {
         // Capture the serialized payload size before `deflate` so it reflects
-        // the logical request size rather than the compressed wire size. Keep the
-        // uncompressed body too, so debug logs show the readable request payload
-        // rather than the deflated bytes sent on the wire.
-        let requestBody = request.httpBody
-        let requestBytes = requestBody?.count ?? 0
+        // the logical request size rather than the compressed wire size.
+        let requestBytes = request.httpBody?.count ?? 0
+        // Capture only the parts the debug log needs (url, headers, uncompressed
+        // body) up front, so the completion handler doesn't retain the whole
+        // `URLRequest` — and so the body is shown readable, not deflated.
+        let logFields: LogFields? = debug
+            ? LogFields(url: request.url!, headers: request.allHTTPHeaderFields, body: request.httpBody)
+            : nil
         let request = deflate(request)
         let start = observer != nil ? DispatchTime.now() : nil
         let result: Result<T, RequestError> = await withCheckedContinuation { continuation in
             let task = session.dataTask(with: request) { data, response, error in
-                self.log(request: request, requestBody: requestBody, response: (data, response, error))
+                self.log(request: logFields, response: (data, response, error))
                 if let observer, let start {
                     let durationMs = Double(DispatchTime.now().uptimeNanoseconds - start.uptimeNanoseconds) / 1_000_000
                     let statusCode = (response as? HTTPURLResponse)?.statusCode
@@ -150,16 +153,29 @@ public final class HTTPClient: HTTPClientType {
         return request
     }
 
-    private func log(request: URLRequest, requestBody: Data?, response: (Data?, URLResponse?, Error?)) {
-        guard debug else { return }
+    /// The pieces of a request the debug log needs, captured before `deflate` so
+    /// they reflect the logical (uncompressed) request and we don't retain the
+    /// whole `URLRequest` for the request's duration.
+    private struct LogFields {
+        let url: URL
+        let headers: [String: String]?
+        let body: Data?
+    }
+
+    private func log(request: LogFields?, response: (Data?, URLResponse?, Error?)) {
+        guard let request else { return }
         let (data, urlres, error) = response
-        if let httpres = urlres as? HTTPURLResponse {
-            Self.log(url: request.url!, reqBody: requestBody, res: String(httpres.statusCode),
-                     resError: error?.localizedDescription, resData: data)
-        } else {
-            Self.log(url: request.url!, reqBody: requestBody, res: urlres?.debugDescription,
-                     resError: error?.localizedDescription, resData: data)
-        }
+        let httpres = urlres as? HTTPURLResponse
+        Log.debug("""
+                  [NETWORK REQUEST DEBUG INFO]
+                  REQUEST: \(request.url.absoluteString)
+                  REQ HEADERS: \(Self.printable(headers: request.headers))
+                  REQ BODY: \(Self.printable(request.body))
+                  RESPONSE: \(httpres.map { String($0.statusCode) } ?? urlres?.debugDescription ?? "nil")
+                  RES HEADERS: \(Self.printable(headers: httpres?.allHeaderFields))
+                  RES ERROR: \(error?.localizedDescription ?? "nil")
+                  RES DATA: \(Self.printable(data))
+                  """)
     }
 
     /// Render a payload for debug logging: UTF-8 text when decodable (JSON in
@@ -168,15 +184,11 @@ public final class HTTPClient: HTTPClientType {
         guard let data else { return "nil" }
         return String(data: data, encoding: .utf8) ?? "<binary \(data.count) bytes>"
     }
-    
-    private static func log(url: URL, reqBody: Data?, res: String?, resError: String?, resData: Data?) {
-        Log.debug("""
-                  [NET REQ] => \(url)
-                  REQ BODY: \(printable(reqBody))
-                  RESPONSE: \(res ?? "nil")
-                  RES ERROR: \(resError ?? "nil")
-                  RES DATA: \(printable(resData))
-                  """)
+
+    /// Render a header set as sorted `key: value` lines, `nil` when absent/empty.
+    private static func printable<K, V>(headers: [K: V]?) -> String {
+        guard let headers, !headers.isEmpty else { return "nil" }
+        return "\n\t" + headers.map { "\($0.key): \($0.value)" }.sorted().joined(separator: "\n\t")
     }
 }
 

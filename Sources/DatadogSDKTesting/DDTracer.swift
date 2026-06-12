@@ -48,7 +48,7 @@ internal class DDTracer {
     static var activeSpan: Span? { OpenTelemetry.instance.contextProvider.activeSpan ?? DDTest.current?.span }
 
     /// Set to `true` to enable backend debug processing for all telemetry envelopes.
-    static let debugTelemetry = true
+    static let debugTelemetry = false
 
     var propagationContext: SpanContext? {
         return DDTracer.activeSpan?.context ?? launchSpanContext

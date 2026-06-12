@@ -14,7 +14,7 @@ define xctest
 	$(if $(filter $2,watchOSsim),$(eval SDK=watchsimulator)$(eval DEST='platform=watchOS Simulator,name=$4'),)
 	$(if $(filter $2,visionOSsim),$(eval SDK=xrsimulator)$(eval DEST='platform=visionOS Simulator,name=$4'),)
 	$(if $3,\
-		set -o pipefail; xcodebuild -scheme $1 -sdk $(SDK) -destination $(DEST) test | tee $1-$2-$3.log | xcbeautify,\
+		set -o pipefail; xcodebuild -scheme $1 -sdk $(SDK) -destination $(DEST) test 2>&1 | tee $1-$2-$3.log | xcbeautify --report junit --report-path build/reports --junit-report-filename $1-$2.xml,\
 		xcodebuild -scheme $1 -sdk $(SDK) -destination $(DEST) test)
 endef
 
@@ -22,7 +22,7 @@ endef
 define xcarchive
 	$(if $5,\
 		set -o pipefail; xcodebuild archive -scheme $1 -sdk $2 -destination $3 -archivePath \
-			build/$1/$4.xcarchive SKIP_INSTALL=NO | tee $1-$4-$5.log | xcbeautify,\
+			build/$1/$4.xcarchive SKIP_INSTALL=NO 2>&1 | tee $1-$4-$5.log | xcbeautify,\
 		xcodebuild archive -scheme $1 -sdk $2 -destination $3 -archivePath build/$1/$4.xcarchive SKIP_INSTALL=NO)
 endef
 
@@ -37,7 +37,7 @@ define xctestint
 	$(if $(filter $2,visionOSsim),$(eval SDK=xrsimulator)$(eval DEST='platform=visionOS Simulator,name=$4'),)
 	$(if $3,mkdir -p logs-$3,)
 	$(if $3,\
-		set -o pipefail; INTEGRATION_TESTS_SDK=$(SDK) INTEGRATION_TESTS_PLATFORM=$(DEST) INTEGRATION_TESTS_LOG_PATH=$(ROOT_DIR)/logs-$3 xcodebuild -scheme $1 test | tee logs-$3/$1-$2-$3.log | xcbeautify,\
+		set -o pipefail; INTEGRATION_TESTS_SDK=$(SDK) INTEGRATION_TESTS_PLATFORM=$(DEST) INTEGRATION_TESTS_LOG_PATH=$(ROOT_DIR)/logs-$3 xcodebuild -scheme $1 test 2>&1 | tee logs-$3/$1-$2-$3.log | xcbeautify,\
 		INTEGRATION_TESTS_SDK=$(SDK) INTEGRATION_TESTS_PLATFORM=$(DEST) xcodebuild -scheme $1 test)
 endef
 

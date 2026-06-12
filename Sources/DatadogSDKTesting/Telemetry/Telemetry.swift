@@ -200,7 +200,7 @@ extension Telemetry {
             }
 
             if !counts.isEmpty {
-                let now = clock.now.timeIntervalSince1970
+                let now = Int64(clock.now.timeIntervalSince1970.rounded())
                 let series = counts.map { key, value in
                     TelemetryMetric.Series(
                         metric: key.name,

@@ -53,17 +53,22 @@ public struct TelemetryMetric: TelemetryPayload, Codable {
 
     /// A single `[timestamp, value]` sample. Encoded as a JSON pair, per spec.
     public struct Point: Codable {
-        public var timestamp: TimeInterval
+        public var timestamp: Int64
         public var value: Double
 
-        public init(timestamp: TimeInterval, value: Double) {
+        public init(time: TimeInterval, value: Double) {
+            self.timestamp = Int64(time.rounded())
+            self.value = value
+        }
+        
+        public init(timestamp: Int64, value: Double) {
             self.timestamp = timestamp
             self.value = value
         }
 
         public init(from decoder: any Decoder) throws {
             var container = try decoder.unkeyedContainer()
-            self.timestamp = try container.decode(TimeInterval.self)
+            self.timestamp = try container.decode(Int64.self)
             self.value = try container.decode(Double.self)
         }
 

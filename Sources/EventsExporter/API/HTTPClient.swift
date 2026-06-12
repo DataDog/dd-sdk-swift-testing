@@ -185,10 +185,22 @@ public final class HTTPClient: HTTPClientType {
         return String(data: data, encoding: .utf8) ?? "<binary \(data.count) bytes>"
     }
 
-    /// Render a header set as sorted `key: value` lines, `nil` when absent/empty.
+    /// Header names whose values are credentials and must never be logged.
+    /// `HTTPHeader.Field` lowercases its `rawValue`, so compare lowercased.
+    private static let redactedHeaders: Set<String> = [
+        HTTPHeader.Field.apiKeyHeaderField.rawValue,
+        HTTPHeader.Field.applicationKeyHeaderField.rawValue,
+    ]
+
+    /// Render a header set as sorted `key: value` lines, with credential values
+    /// (API / application key) replaced by `****`. `nil` when absent/empty.
     private static func printable<K, V>(headers: [K: V]?) -> String {
         guard let headers, !headers.isEmpty else { return "nil" }
-        return "\n\t" + headers.map { "\($0.key): \($0.value)" }.sorted().joined(separator: "\n\t")
+        return "\n\t" + headers.map { key, value in
+            let name = "\(key)"
+            let shown = redactedHeaders.contains(name.lowercased()) ? "****" : "\(value)"
+            return "\(name): \(shown)"
+        }.sorted().joined(separator: "\n\t")
     }
 }
 

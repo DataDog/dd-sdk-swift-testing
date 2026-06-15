@@ -68,8 +68,9 @@ final actor SessionManager: TestSessionManager {
         // The common telemetry manager is created with the tracer (so it's
         // available to the API/exporter layers) and shared with every feature
         // through the session config. `nil` when telemetry is disabled.
+        let activeFeatures = log.measure(name: "activeFeatures") { monitor.activeFeatures }
         let config = SessionConfig(
-            activeFeatures: monitor.activeFeatures,
+            activeFeatures: activeFeatures,
             env: DDTestMonitor.env,
             config: DDTestMonitor.config,
             clock: DDTestMonitor.clock,

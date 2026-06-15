@@ -124,9 +124,11 @@ internal class DDTestMonitor {
         Log.measure(name: "startInstrumenting") {
             DDTestMonitor.instance?.startInstrumenting()
         }
-        
-        DDTestMonitor.instance?.loadSourceCodeInfo()
-        
+
+        Log.measure(name: "loadSourceCodeInfo") {
+            DDTestMonitor.instance?.loadSourceCodeInfo()
+        }
+
         Log.measure(name: "startGitUpload") {
             DDTestMonitor.instance?.startGitUpload()
         }
@@ -570,10 +572,10 @@ internal class DDTestMonitor {
         guard !DDTestMonitor.config.disableSourceLocation else {
             return
         }
-        
+
         let testBundle = DDTestMonitor.config.isBinaryUnderUITesting ?
             Bundle.main : Bundle.testBundle
-        
+
         if let bundleName = testBundle?.name {
             instrumentationWorkQueue.addOperation {
                 Log.debug("Create test bundle DSYM file for test source location")
@@ -590,7 +592,7 @@ internal class DDTestMonitor {
                 }
             }
         }
-            
+
         if let workspacePath = DDTestMonitor.env.workspacePath {
             instrumentationWorkQueue.addOperation {
                 self.codeOwners = Log.measure(name: "createCodeOwners") {

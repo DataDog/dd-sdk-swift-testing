@@ -118,7 +118,9 @@ internal class DDTestMonitor {
             Log.print("SRCROOT is not properly set")
         }
         Log.print("Library loaded and active. Instrumenting tests.")
-        DDTestMonitor.instance = DDTestMonitor()
+        Log.measure(name: "DDTestMonitor init") {
+            DDTestMonitor.instance = DDTestMonitor()
+        }
         Log.measure(name: "startInstrumenting") {
             DDTestMonitor.instance?.startInstrumenting()
         }

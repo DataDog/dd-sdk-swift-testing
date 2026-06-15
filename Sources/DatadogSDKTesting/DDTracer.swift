@@ -168,45 +168,51 @@ internal class DDTracer {
         default: payloadCompression = true
         }
         
-        let hostnameToReport = DDTestMonitor.developerMachineHostName.flatMap { name in
-            conf.reportHostname && !name.isEmpty ? name : nil
+        let hostnameToReport = Log.measure(name: "resolveHostname") {
+            DDTestMonitor.developerMachineHostName.flatMap { name in
+                conf.reportHostname && !name.isEmpty ? name : nil
+            }
         }
-        
+
         let metadata = SpanMetadata(libraryVersion: DDTestMonitor.tracerVersion,
                                     env: DDTestMonitor.env,
                                     capabilities: .libraryCapabilities)
 
         // Sync the clock before creating the API service so its date provider
         // is ready. SyncingClock absorbs NTP failures internally — no replacement needed.
-        waitForAsync { await DDTestMonitor.clock.sync() }
+        Log.measure(name: "NTP clock sync") {
+            waitForAsync { await DDTestMonitor.clock.sync() }
+        }
 
         let exporterConfiguration = ExporterConfiguration(
             environment: env.environment,
             metadata: metadata,
             logger: Log.instance
         )
-        
-        let api = TestOptimizationApiService(
-            serviceName: env.service,
-            environment: env.environment,
-            applicationName: appName,
-            applicationVersion: appVersion,
-            libraryVersion: sdkVersion,
-            device: env.platform.device,
-            hostname: hostnameToReport,
-            kernelInfo: env.platform.kernelInfo,
-            languageVersion: env.platform.languageVersion,
-            runtimeName: env.platform.runtimeName,
-            runtimeVersion: env.platform.runtimeVersion,
-            apiKey: conf.apiKey ?? "",
-            endpoint: conf.endpoint.exporterEndpoint,
-            clientId: String(SpanId.random().rawValue),
-            payloadCompression: payloadCompression,
-            logger: Log.instance,
-            dateProvider: DDTestMonitor.clock,
-            debugNetworkRequests: conf.extraDebugNetwork,
-            debugTelemetry: DDTracer.debugTelemetry
-        )
+
+        let api = Log.measure(name: "TestOptimizationApiService init") {
+            TestOptimizationApiService(
+                serviceName: env.service,
+                environment: env.environment,
+                applicationName: appName,
+                applicationVersion: appVersion,
+                libraryVersion: sdkVersion,
+                device: env.platform.device,
+                hostname: hostnameToReport,
+                kernelInfo: env.platform.kernelInfo,
+                languageVersion: env.platform.languageVersion,
+                runtimeName: env.platform.runtimeName,
+                runtimeVersion: env.platform.runtimeVersion,
+                apiKey: conf.apiKey ?? "",
+                endpoint: conf.endpoint.exporterEndpoint,
+                clientId: String(SpanId.random().rawValue),
+                payloadCompression: payloadCompression,
+                logger: Log.instance,
+                dateProvider: DDTestMonitor.clock,
+                debugNetworkRequests: conf.extraDebugNetwork,
+                debugTelemetry: DDTracer.debugTelemetry
+            )
+        }
         var resource = Resource()
         resource.applicationName = appName
         resource.applicationVersion = appVersion
@@ -230,8 +236,10 @@ internal class DDTracer {
         // rest of the per-session state.
         let eventsExporter: Exporter?
         if let storage = try? DDTestMonitor.cacheManager?.session(feature: "exporter") {
-            eventsExporter = try? Exporter(config: exporterConfiguration, api: api, storage: storage,
-                                           observers: DDTracer.exporterObservers(telemetry: telemetry))
+            eventsExporter = Log.measure(name: "Exporter init") {
+                try? Exporter(config: exporterConfiguration, api: api, storage: storage,
+                              observers: DDTracer.exporterObservers(telemetry: telemetry))
+            }
         } else {
             Log.print("Exporter init skipped: cache manager unavailable")
             eventsExporter = nil

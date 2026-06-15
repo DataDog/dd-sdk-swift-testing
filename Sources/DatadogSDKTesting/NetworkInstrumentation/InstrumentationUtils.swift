@@ -11,51 +11,33 @@ import Foundation
 
 enum InstrumentationUtils {
     static func objc_getClassList() -> [AnyClass] {
-        let expectedClassCount = ObjectiveC.objc_getClassList(nil, 0)
-        let allClasses = UnsafeMutablePointer<AnyClass>.allocate(capacity: Int(expectedClassCount))
+        let capacity = Int(ObjectiveC.objc_getClassList(nil, 0))
+        let allClasses = UnsafeMutablePointer<AnyClass>.allocate(capacity: capacity)
+        defer { allClasses.deallocate() }
         let autoreleasingAllClasses = AutoreleasingUnsafeMutablePointer<AnyClass>(allClasses)
-        let actualClassCount: Int32 = ObjectiveC.objc_getClassList(autoreleasingAllClasses, expectedClassCount)
-        
+        // `objc_getClassList` writes at most `capacity` entries but returns the
+        // *total* number of registered classes, which can exceed `capacity` when
+        // another thread registers classes between the two calls (frameworks load
+        // concurrently during app/test launch). Iterating past `capacity` would
+        // read uninitialized memory and hand back garbage pointers, which then
+        // crash intermittently as "Attempt to use unknown class" / bad access the
+        // moment they are dereferenced. Clamp to what we actually allocated.
+        let written = Int(ObjectiveC.objc_getClassList(autoreleasingAllClasses, Int32(capacity)))
+        let count = min(written, capacity)
+
         var classes = [AnyClass]()
-        for i in 0 ..< actualClassCount {
-            classes.append(allClasses[Int(i)])
+        classes.reserveCapacity(count)
+        for i in 0 ..< count {
+            classes.append(allClasses[i])
         }
-        allClasses.deallocate()
         return classes
     }
-    
-    /// Returns the registered Objective-C classes that are safe to introspect
-    /// with `class_copyMethodList` / method swizzling.
-    ///
-    /// `objc_getClassList` can return classes whose superclass chain references a
-    /// class that is registered as a stub but never realized — for example
-    /// weak-linked classes from frameworks that aren't loaded, or the
-    /// relative-method-list "stub" classes that newer runtimes emit. Realizing
-    /// such a class, which `class_copyMethodList` does implicitly, makes the
-    /// runtime log "Attempt to use unknown class %p." and abort. We avoid that by
-    /// keeping only the classes whose entire superclass chain is itself present in
-    /// the class list. Reading the superclass pointer with `class_getSuperclass`
-    /// does not realize the class, so the check itself is safe.
-    static func objc_getSafeClassList() -> [AnyClass] {
-        let allClasses = objc_getClassList()
-        let known = Set(allClasses.map { ObjectIdentifier($0) })
 
-        return allClasses.filter { cls in
-            var current: AnyClass? = cls
-            while let c = current {
-                guard known.contains(ObjectIdentifier(c)) else { return false }
-                current = class_getSuperclass(c)
-            }
-            return true
-        }
-    }
-    
     /// Returns whether `cls` (or any of its superclasses) conforms to `proto`,
     /// using only ObjC runtime metadata. Unlike a Swift `is`/`as?` existential
-    /// cast, this never sends a message to the class, so it is safe to run across
-    /// every class from `objc_getClassList()` — including pathological internal
-    /// classes (`__NSGenericDeallocHandler`, `__NSAtom`, `__NSMessageBuilder`, …)
-    /// that abort with an `NSForwarding` error when messaged.
+    /// cast, this never sends a message to the class. It lets the delegate scan
+    /// skip the expensive `class_copyMethodList` for the thousands of classes
+    /// that don't adopt `URLSessionDelegate`.
     static func classConforms(_ cls: AnyClass, to proto: Protocol) -> Bool {
         var current: AnyClass? = cls
         while let c = current {

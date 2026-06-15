@@ -50,7 +50,10 @@ final actor SessionManager: TestSessionManager {
         let startTime = DDTestMonitor.clock.now
         
         if DDTestMonitor.instance == nil {
+            let _outerStart = CFAbsoluteTimeGetCurrent()
             try log.measure(name: "Install Test Monitor") {
+                let _innerElapsed = CFAbsoluteTimeGetCurrent() - _outerStart
+                log.print("Install Test Monitor closure lag: \(String(format: "%.5f", _innerElapsed))s (on main: \(Thread.isMainThread))")
                 guard DDTestMonitor.installTestMonitor() else {
                     throw BoostrapError.monitorInitFailed
                 }

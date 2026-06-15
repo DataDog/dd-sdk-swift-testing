@@ -110,13 +110,17 @@ internal class DDTestMonitor {
     private var isStopped: Bool = false
 
     static func installTestMonitor() -> Bool {
+        let _t0 = CFAbsoluteTimeGetCurrent()
         guard DDTestMonitor.config.apiKey != nil else {
             Log.print("A Datadog API key is required. DD_API_KEY environment value is missing.")
             return false
         }
+        Log.print("config.apiKey check: \(String(format: "%.5f", CFAbsoluteTimeGetCurrent() - _t0))s")
+        let _t1 = CFAbsoluteTimeGetCurrent()
         if DDTestMonitor.env.sourceRoot == nil {
             Log.print("SRCROOT is not properly set")
         }
+        Log.print("env.sourceRoot check: \(String(format: "%.5f", CFAbsoluteTimeGetCurrent() - _t1))s")
         Log.print("Library loaded and active. Instrumenting tests.")
         Log.measure(name: "DDTestMonitor init") {
             DDTestMonitor.instance = DDTestMonitor()

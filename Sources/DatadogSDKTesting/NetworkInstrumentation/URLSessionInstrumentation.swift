@@ -97,7 +97,7 @@ class URLSessionInstrumentation {
     ]
     let classes =
       configuration.delegateClassesToInstrument
-        ?? InstrumentationUtils.objc_getClassList()
+        ?? InstrumentationUtils.objc_getSafeClassList()
     let selectorsCount = selectors.count
     // Resolve the protocol once via the ObjC runtime. We check conformance with
     // `class_conformsToProtocol` (below) rather than a Swift `theClass is

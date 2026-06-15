@@ -8,15 +8,6 @@
  */
 
 import Foundation
-#if canImport(os.log)
-  import os.log
-#endif
-
-#if os(iOS) || os(tvOS) || os(visionOS)
-import UIKit
-#elseif os(watchOS)
-import WatchKit
-#endif
 
 enum InstrumentationUtils {
     static func objc_getClassList() -> [AnyClass] {
@@ -33,22 +24,30 @@ enum InstrumentationUtils {
         return classes
     }
     
-    static func objc_getSafeClassList(ignoredPrefixes: [String]? = nil) -> [AnyClass] {
+    /// Returns the registered Objective-C classes that are safe to introspect
+    /// with `class_copyMethodList` / method swizzling.
+    ///
+    /// `objc_getClassList` can return classes whose superclass chain references a
+    /// class that is registered as a stub but never realized — for example
+    /// weak-linked classes from frameworks that aren't loaded, or the
+    /// relative-method-list "stub" classes that newer runtimes emit. Realizing
+    /// such a class, which `class_copyMethodList` does implicitly, makes the
+    /// runtime log "Attempt to use unknown class %p." and abort. We avoid that by
+    /// keeping only the classes whose entire superclass chain is itself present in
+    /// the class list. Reading the superclass pointer with `class_getSuperclass`
+    /// does not realize the class, so the check itself is safe.
+    static func objc_getSafeClassList() -> [AnyClass] {
         let allClasses = objc_getClassList()
-        var safeClasses: [AnyClass] = []
-        
-        for cls in allClasses {
-            let className = NSStringFromClass(cls)
-            if let ignoredPrefixes = ignoredPrefixes {
-                if ignoredPrefixes.contains(where: { className.hasPrefix($0) }) {
-                    continue
-                }
+        let known = Set(allClasses.map { ObjectIdentifier($0) })
+
+        return allClasses.filter { cls in
+            var current: AnyClass? = cls
+            while let c = current {
+                guard known.contains(ObjectIdentifier(c)) else { return false }
+                current = class_getSuperclass(c)
             }
-            safeClasses.append(cls)
+            return true
         }
-        
-        os_log(.info, "failed to initialize network connection status: %ld", safeClasses.count)
-        return safeClasses
     }
     
     /// Returns whether `cls` (or any of its superclasses) conforms to `proto`,

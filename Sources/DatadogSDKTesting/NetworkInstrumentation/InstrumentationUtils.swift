@@ -11,26 +11,28 @@ import Foundation
 
 enum InstrumentationUtils {
     static func objc_getClassList() -> [AnyClass] {
-        let capacity = Int(ObjectiveC.objc_getClassList(nil, 0))
-        let allClasses = UnsafeMutablePointer<AnyClass>.allocate(capacity: capacity)
-        defer { allClasses.deallocate() }
-        let autoreleasingAllClasses = AutoreleasingUnsafeMutablePointer<AnyClass>(allClasses)
-        // `objc_getClassList` writes at most `capacity` entries but returns the
-        // *total* number of registered classes, which can exceed `capacity` when
-        // another thread registers classes between the two calls (frameworks load
-        // concurrently during app/test launch). Iterating past `capacity` would
-        // read uninitialized memory and hand back garbage pointers, which then
-        // crash intermittently as "Attempt to use unknown class" / bad access the
-        // moment they are dereferenced. Clamp to what we actually allocated.
-        let written = Int(ObjectiveC.objc_getClassList(autoreleasingAllClasses, Int32(capacity)))
-        let count = min(written, capacity)
-
-        var classes = [AnyClass]()
-        classes.reserveCapacity(count)
-        for i in 0 ..< count {
-            classes.append(allClasses[i])
+        // `objc_getClassList(buf, n)` fills at most `n` slots but returns the
+        // *total* number of registered classes. Other threads register classes
+        // concurrently while frameworks load during app/test launch, so that total
+        // can exceed the buffer we sized from an earlier call. Reading past the
+        // buffer yields uninitialized garbage pointers, which crash intermittently
+        // as "Attempt to use unknown class" / bad access the moment they are
+        // dereferenced. Re-query and grow until the returned count fits the buffer:
+        // that way we never read past it and still capture every class. The small
+        // headroom lets it settle in one retry under typical concurrent loading.
+        var capacity: Int32 = ObjectiveC.objc_getClassList(nil, 0) + 32
+        while true {
+            let buffer = UnsafeMutableBufferPointer<AnyClass>.allocate(capacity: Int(capacity))
+            defer { buffer.deallocate() }
+            let autoreleasing = AutoreleasingUnsafeMutablePointer<AnyClass>(buffer.baseAddress)
+            let written = ObjectiveC.objc_getClassList(autoreleasing, capacity)
+            if written <= capacity {
+                // We got all the classes. Convert to array and return
+                return Array(buffer.prefix(upTo: Int(written)))
+            }
+            // More classes appeared than fit; grow to the new total and retry.
+            capacity = written + 32
         }
-        return classes
     }
 
     /// Returns whether `cls` (or any of its superclasses) conforms to `proto`,

@@ -99,10 +99,11 @@ class URLSessionInstrumentation {
       configuration.delegateClassesToInstrument
         ?? InstrumentationUtils.objc_getClassList()
     let selectorsCount = selectors.count
-    // Resolve the protocol once via the ObjC runtime. We check conformance with
-    // `class_conformsToProtocol` (below) rather than a Swift `theClass is
-    // URLSessionDelegate.Type` cast: the cast messages the class, which aborts
-    // on pathological internal classes returned by `objc_getClassList()`.
+    // Only inspect classes that actually adopt URLSessionDelegate, so we skip the
+    // expensive `class_copyMethodList` for the thousands of unrelated runtime
+    // classes. Conformance is checked with `class_conformsToProtocol` rather than
+    // a Swift `theClass is URLSessionDelegate.Type` cast, since the cast messages
+    // the class.
     let urlSessionDelegateProtocol = objc_getProtocol("NSURLSessionDelegate")
     DispatchQueue.concurrentPerform(iterations: classes.count) { iteration in
       let theClass: AnyClass = classes[iteration]

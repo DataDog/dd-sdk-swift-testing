@@ -149,7 +149,7 @@ internal class DDTestMonitor {
     init() {
         Log.debug("Config:\n\(DDTestMonitor.config)")
         Log.debug("Environment:\n\(DDTestMonitor.env)")
-        Log.debug("Session ID:\n\(DDTestMonitor.sessionId)")
+        Log.debug("Session ID: \(DDTestMonitor.sessionId)")
         maxPayloadSize = DDTestMonitor.config.maxPayloadSize
         messageChannelUUID = DDTestMonitor.config.messageChannelUUID ?? UUID().uuidString
         tracer = DDTracer()

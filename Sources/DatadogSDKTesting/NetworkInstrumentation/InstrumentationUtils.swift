@@ -8,55 +8,38 @@
  */
 
 import Foundation
-#if canImport(os.log)
-  import os.log
-#endif
-
-#if os(iOS) || os(tvOS) || os(visionOS)
-import UIKit
-#elseif os(watchOS)
-import WatchKit
-#endif
 
 enum InstrumentationUtils {
     static func objc_getClassList() -> [AnyClass] {
-        let expectedClassCount = ObjectiveC.objc_getClassList(nil, 0)
-        let allClasses = UnsafeMutablePointer<AnyClass>.allocate(capacity: Int(expectedClassCount))
-        let autoreleasingAllClasses = AutoreleasingUnsafeMutablePointer<AnyClass>(allClasses)
-        let actualClassCount: Int32 = ObjectiveC.objc_getClassList(autoreleasingAllClasses, expectedClassCount)
-        
-        var classes = [AnyClass]()
-        for i in 0 ..< actualClassCount {
-            classes.append(allClasses[Int(i)])
-        }
-        allClasses.deallocate()
-        return classes
-    }
-    
-    static func objc_getSafeClassList(ignoredPrefixes: [String]? = nil) -> [AnyClass] {
-        let allClasses = objc_getClassList()
-        var safeClasses: [AnyClass] = []
-        
-        for cls in allClasses {
-            let className = NSStringFromClass(cls)
-            if let ignoredPrefixes = ignoredPrefixes {
-                if ignoredPrefixes.contains(where: { className.hasPrefix($0) }) {
-                    continue
-                }
+        // `objc_getClassList(buf, n)` fills at most `n` slots but returns the
+        // *total* number of registered classes. Other threads register classes
+        // concurrently while frameworks load during app/test launch, so that total
+        // can exceed the buffer we sized from an earlier call. Reading past the
+        // buffer yields uninitialized garbage pointers, which crash intermittently
+        // as "Attempt to use unknown class" / bad access the moment they are
+        // dereferenced. Re-query and grow until the returned count fits the buffer:
+        // that way we never read past it and still capture every class. The small
+        // headroom lets it settle in one retry under typical concurrent loading.
+        var capacity: Int32 = ObjectiveC.objc_getClassList(nil, 0) + 32
+        while true {
+            let buffer = UnsafeMutableBufferPointer<AnyClass>.allocate(capacity: Int(capacity))
+            defer { buffer.deallocate() }
+            let autoreleasing = AutoreleasingUnsafeMutablePointer<AnyClass>(buffer.baseAddress)
+            let written = ObjectiveC.objc_getClassList(autoreleasing, capacity)
+            if written <= capacity {
+                // We got all the classes. Convert to array and return
+                return Array(buffer.prefix(upTo: Int(written)))
             }
-            safeClasses.append(cls)
+            // More classes appeared than fit; grow to the new total and retry.
+            capacity = written + 32
         }
-        
-        os_log(.info, "failed to initialize network connection status: %ld", safeClasses.count)
-        return safeClasses
     }
-    
+
     /// Returns whether `cls` (or any of its superclasses) conforms to `proto`,
     /// using only ObjC runtime metadata. Unlike a Swift `is`/`as?` existential
-    /// cast, this never sends a message to the class, so it is safe to run across
-    /// every class from `objc_getClassList()` — including pathological internal
-    /// classes (`__NSGenericDeallocHandler`, `__NSAtom`, `__NSMessageBuilder`, …)
-    /// that abort with an `NSForwarding` error when messaged.
+    /// cast, this never sends a message to the class. It lets the delegate scan
+    /// skip the expensive `class_copyMethodList` for the thousands of classes
+    /// that don't adopt `URLSessionDelegate`.
     static func classConforms(_ cls: AnyClass, to proto: Protocol) -> Bool {
         var current: AnyClass? = cls
         while let c = current {

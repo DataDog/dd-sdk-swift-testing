@@ -61,7 +61,7 @@ public final class DDTest: NSObject {
                                                       message: message,
                                                       stack: callstack))
         }
-        DDTestMonitor.tracer.logError(string: "\(type): \(message)")
+        suite.configuration.tracer.logError(string: "\(type): \(message)")
     }
 
     /// Ends the test
@@ -132,9 +132,9 @@ extension DDTest {
     {
         let testStartTime = start ?? suite.configuration.clock.now
         suite.recordTestStarted()
-        return try await DDTestMonitor.tracer.withActiveSpan(name: "\(suite.testFramework.name).test",
-                                                             attributes: attributes(test: name, in: suite),
-                                                             startTime: testStartTime) { span in
+        return try await suite.configuration.tracer.withActiveSpan(name: "\(suite.testFramework.name).test",
+                                                                   attributes: attributes(test: name, in: suite),
+                                                                   startTime: testStartTime) { span in
             let test = Self(name: name, suite: suite, span: span)
             let result = try await test.withActive {
                 try await action(test)
@@ -149,9 +149,9 @@ extension DDTest {
     {
         let testStartTime = start ?? suite.configuration.clock.now
         suite.recordTestStarted()
-        return try DDTestMonitor.tracer.withActiveSpan(name: "\(suite.testFramework.name).test",
-                                                       attributes: attributes(test: name, in: suite),
-                                                       startTime: testStartTime) { span in
+        return try suite.configuration.tracer.withActiveSpan(name: "\(suite.testFramework.name).test",
+                                                             attributes: attributes(test: name, in: suite),
+                                                             startTime: testStartTime) { span in
             let test = Self(name: name, suite: suite, span: span)
             let result = try test.withActive {
                 try action(test)

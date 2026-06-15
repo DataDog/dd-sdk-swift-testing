@@ -268,6 +268,124 @@ extension Bundle {
     }
     
     static var sdk: Bundle { Bundle(for: DDTestMonitor.self) }
+
+    /// Value-type view of a bundle, so the product-under-test selection policy
+    /// can be unit-tested without live `Bundle` objects.
+    struct UnderTestInfo: Equatable {
+        /// Standardized path of the bundle's parent directory.
+        let directory: String
+        /// Standardized path of the bundle itself.
+        let path: String
+        let identifier: String?
+        let name: String
+        let version: String?
+
+        init(directory: String, path: String, identifier: String?, name: String, version: String?) {
+            self.directory = directory
+            self.path = path
+            self.identifier = identifier
+            self.name = name
+            self.version = version
+        }
+
+        init(bundle: Bundle) {
+            let url = bundle.bundleURL.standardizedFileURL
+            self.init(directory: url.deletingLastPathComponent().path,
+                      path: url.path,
+                      identifier: bundle.bundleIdentifier,
+                      name: bundle.name,
+                      version: bundle.version)
+        }
+    }
+
+    /// Resolves the `(name, version)` describing the product being tested.
+    ///
+    /// The process `main` bundle is only the product when tests are hosted by a
+    /// real app (unit tests injected into the app, or UI tests running in it);
+    /// otherwise it is the bare `xctest` runner and carries no useful version.
+    ///
+    /// The product *name* is always taken from the resolved bundle; only the
+    /// version honors `versionOverride` (the `DD_VERSION` escape hatch), since
+    /// that is the value users most often need to correct.
+    ///
+    /// Version resolution order — validated against macOS, simulator and device builds:
+    ///  0. `versionOverride` (e.g. `DD_VERSION`), when set, wins outright. It is
+    ///     the only reliable answer for statically-linked products (see step 3).
+    ///  1. `main` is an `.app` → the app *is* the product.
+    ///  2. Host-less `.xctest`: a dynamically-linked product framework is copied
+    ///     next to the `.xctest` bundle (sibling — including on device, where the
+    ///     whole test root is uploaded) or, in some layouts, embedded inside it.
+    ///     Match the one named after the scheme and report its version.
+    ///  3. Fall back to the `.xctest` bundle itself. Statically-linked products
+    ///     (static frameworks, SPM source targets) are merged into the test binary
+    ///     and expose no separate framework here; the xctest version is the best
+    ///     available (and is frequently unset, e.g. for SPM).
+    static func productUnderTest(
+        main: UnderTestInfo,
+        test: UnderTestInfo?,
+        frameworks: [UnderTestInfo],
+        schemeName: String?,
+        versionOverride: String? = nil
+    ) -> (name: String, version: String) {
+        let pick: UnderTestInfo
+        if main.path.hasSuffix(".app") {
+            pick = main
+        } else if let test = test, let schemeName = schemeName,
+                  let framework = frameworks.first(where: {
+                      $0.name == schemeName &&
+                      ($0.directory == test.directory || $0.path.hasPrefix(test.path + "/"))
+                  })
+        {
+            pick = framework
+        } else {
+            pick = test ?? main
+        }
+        // Version priority: explicit override → the resolved bundle's own version
+        // → the `.xctest` bundle version (when the product version can't be
+        // determined, e.g. a matched-but-versionless or statically-linked product)
+        // → unknown.
+        let name = pick.identifier ?? pick.name
+        let version = versionOverride ?? pick.version ?? test?.version ?? "<unknown>"
+        return (name, version)
+    }
+
+    /// Wires the live process bundles into `productUnderTest(main:test:frameworks:schemeName:versionOverride:)`.
+    static func productUnderTest(schemeName: String?, versionOverride: String? = nil) -> (name: String, version: String) {
+        let test = Bundle.testBundle
+        // When the version is supplied explicitly there is nothing to discover —
+        // skip enumerating loaded frameworks and probing the disk entirely.
+        var frameworks: [UnderTestInfo] = []
+        if versionOverride == nil, let schemeName = schemeName {
+            // Loaded (dynamically-linked) frameworks matching the scheme. Only
+            // these need their Info.plist read, so we avoid touching every loaded
+            // system framework.
+            frameworks += Bundle.allFrameworks
+                .filter { $0.name == schemeName }
+                .map(UnderTestInfo.init)
+            // On-disk `<scheme>.framework` sitting next to the `.xctest` bundle.
+            // A statically-linked framework is merged into the test binary and is
+            // never loaded into memory, but its bundle still ships in the products
+            // folder (reachable at runtime on simulator/macOS) and carries the
+            // version in its Info.plist. Listed after the loaded ones so a dynamic
+            // framework is always preferred.
+            if let test = test {
+                let onDiskURL = test.bundleURL.deletingLastPathComponent()
+                    .appendingPathComponent("\(schemeName).framework")
+                if FileManager.default.fileExists(atPath: onDiskURL.path),
+                   let onDisk = Bundle(url: onDiskURL)
+                {
+                    frameworks.append(UnderTestInfo(bundle: onDisk))
+                }
+            }
+        }
+        return productUnderTest(
+            main: UnderTestInfo(bundle: .main),
+            test: test.map(UnderTestInfo.init),
+            frameworks: frameworks,
+            schemeName: schemeName,
+            versionOverride: versionOverride
+        )
+    }
 }
 
 extension Sequence where Iterator.Element: Hashable {

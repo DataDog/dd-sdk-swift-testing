@@ -20,10 +20,9 @@ class DDNetworkInstrumentationTests: XCTestCase {
         DDTestMonitor._env_recreate(env: ["DD_API_KEY": "fakeToken", "DD_DISABLE_TEST_INSTRUMENTING": "1"])
         DDTestMonitor.instance = DDTestMonitor()
         DDTestMonitor.instance?.instrumentationWorkQueue.waitUntilAllOperationsAreFinished()
-        let tracer = DDTestMonitor.tracer
+        let tracer = DDTestMonitor.instance!.tracer
         tracer.tracerProviderSdk.addSpanProcessor(testSpanProcessor)
-        DDTestMonitor.instance?.networkInstrumentation = DDNetworkInstrumentation()
-        DDTestMonitor.instance?.injectHeaders = true // This is the default
+        DDTestMonitor.instance?.networkInstrumentation = DDNetworkInstrumentation(tracer: tracer, injectHeaders: true)
         try server?.start()
     }
 
@@ -37,7 +36,7 @@ class DDNetworkInstrumentationTests: XCTestCase {
     }
     
     func withContainerSpan<T>(_ body: (any Span) throws -> T) rethrows -> T {
-        try DDTestMonitor.tracer.withActiveSpan(name: "containerSpan", attributes: [:]) { span in
+        try DDTestMonitor.instance!.tracer.withActiveSpan(name: "containerSpan", attributes: [:]) { span in
             try body(span)
         }
     }

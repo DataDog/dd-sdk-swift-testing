@@ -51,6 +51,21 @@ enum InstrumentationUtils {
         return safeClasses
     }
     
+    /// Returns whether `cls` (or any of its superclasses) conforms to `proto`,
+    /// using only ObjC runtime metadata. Unlike a Swift `is`/`as?` existential
+    /// cast, this never sends a message to the class, so it is safe to run across
+    /// every class from `objc_getClassList()` — including pathological internal
+    /// classes (`__NSGenericDeallocHandler`, `__NSAtom`, `__NSMessageBuilder`, …)
+    /// that abort with an `NSForwarding` error when messaged.
+    static func classConforms(_ cls: AnyClass, to proto: Protocol) -> Bool {
+        var current: AnyClass? = cls
+        while let c = current {
+            if class_conformsToProtocol(c, proto) { return true }
+            current = class_getSuperclass(c)
+        }
+        return false
+    }
+
     static func instanceRespondsAndImplements(cls: AnyClass, selector: Selector) -> Bool {
         var implements = false
         if cls.instancesRespond(to: selector) {

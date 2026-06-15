@@ -4,72 +4,23 @@
  * Copyright 2020-Present Datadog, Inc.
  */
 
-#if canImport(WatchKit)
-import WatchKit
-#elseif canImport(UIKit)
-import UIKit
-#else
 import Foundation
-import SystemConfiguration
-#endif
 
-/// Describes current mobile device.
-internal class Device {
-    // MARK: - Info
+/// Describes the device on which the process is running.
+/// Values are supplied by the caller (e.g. DatadogSDKTesting); this type
+/// carries no platform-query logic.
+public struct Device {
+    public var name: String
+    public var model: String
+    public var osName: String
+    public var osVersion: String
+    public var osArchitecture: String
 
-    var model: String
-    var osName: String
-    var osVersion: String
-
-    init(
-        model: String,
-        osName: String,
-        osVersion: String)
-    {
+    public init(name: String, model: String, osName: String, osVersion: String, osArchitecture: String) {
+        self.name = name
         self.model = model
         self.osName = osName
         self.osVersion = osVersion
-    }
-
-    #if canImport(WatchKit)
-    convenience init(wkDevice: WKInterfaceDevice, processInfo: ProcessInfo) {
-        self.init(
-            model: wkDevice.model,
-            osName: wkDevice.systemName,
-            osVersion: wkDevice.systemVersion)
-    }
-    #elseif canImport(UIKit)
-    convenience init(uiDevice: UIDevice, processInfo: ProcessInfo) {
-        self.init(
-            model: uiDevice.model,
-            osName: uiDevice.systemName,
-            osVersion: uiDevice.systemVersion)
-    }
-    #else
-    convenience init(processInfo: ProcessInfo) {
-        self.init(
-            model: "Mac",
-            osName: processInfo.hostName,
-            osVersion: processInfo.operatingSystemVersionString)
-    }
-    #endif
-
-    /// Returns current mobile device  if `UIDevice` is available on this platform.
-    /// On other platforms returns `nil`.
-    static var current: Device {
-        #if canImport(WatchKit)
-        return Device(wkDevice: WKInterfaceDevice.current(), processInfo: ProcessInfo.processInfo)
-        #elseif os(macOS)
-        return Device(processInfo: ProcessInfo.processInfo)
-        #elseif os(iOS) && !targetEnvironment(simulator)
-        // Real device
-        return Device(uiDevice: UIDevice.current, processInfo: ProcessInfo.processInfo)
-        #else
-        // iOS Simulator, tvOS, visionOS - battery monitoring doesn't work on Simulator, so return "always OK" value
-        return Device(
-            model: UIDevice.current.model,
-            osName: UIDevice.current.systemName,
-            osVersion: UIDevice.current.systemVersion)
-        #endif
+        self.osArchitecture = osArchitecture
     }
 }

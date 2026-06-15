@@ -110,11 +110,17 @@ public final class HTTPClient: HTTPClientType {
         // Capture the serialized payload size before `deflate` so it reflects
         // the logical request size rather than the compressed wire size.
         let requestBytes = request.httpBody?.count ?? 0
+        // Capture only the parts the debug log needs (url, headers, uncompressed
+        // body) up front, so the completion handler doesn't retain the whole
+        // `URLRequest` — and so the body is shown readable, not deflated.
+        let logFields: LogFields? = debug
+            ? LogFields(url: request.url!, headers: request.allHTTPHeaderFields, body: request.httpBody)
+            : nil
         let request = deflate(request)
         let start = observer != nil ? DispatchTime.now() : nil
         let result: Result<T, RequestError> = await withCheckedContinuation { continuation in
             let task = session.dataTask(with: request) { data, response, error in
-                self.log(request: request, response: (data, response, error))
+                self.log(request: logFields, response: (data, response, error))
                 if let observer, let start {
                     let durationMs = Double(DispatchTime.now().uptimeNanoseconds - start.uptimeNanoseconds) / 1_000_000
                     let statusCode = (response as? HTTPURLResponse)?.statusCode
@@ -147,22 +153,54 @@ public final class HTTPClient: HTTPClientType {
         return request
     }
 
-    private func log(request: URLRequest, response: (Data?, URLResponse?, Error?)) {
-        guard debug else { return }
+    /// The pieces of a request the debug log needs, captured before `deflate` so
+    /// they reflect the logical (uncompressed) request and we don't retain the
+    /// whole `URLRequest` for the request's duration.
+    private struct LogFields {
+        let url: URL
+        let headers: [String: String]?
+        let body: Data?
+    }
+
+    private func log(request: LogFields?, response: (Data?, URLResponse?, Error?)) {
+        guard let request else { return }
         let (data, urlres, error) = response
-        guard let httpres = urlres as? HTTPURLResponse else {
-            let res = urlres?.description ?? "nil"
-            let err = error?.localizedDescription ?? "nil"
-            let data = data?.description ?? "nil"
-            Log.debug("[NET] => \(request)\n\tERR: \(err)\n\tRES: \(res)\n\tDATA: \(data))")
-            return
-        }
+        let httpres = urlres as? HTTPURLResponse
         Log.debug("""
-                  [NET] => \(request.url!)
-                  RES CODE: \(httpres.statusCode)
-                  ERROR: \(error?.localizedDescription ?? "")
-                  DATA: \(data.flatMap{String(data: $0, encoding: .utf8)} ?? "")
+                  [NETWORK REQUEST DEBUG INFO]
+                  REQUEST: \(request.url.absoluteString)
+                  REQ HEADERS: \(Self.printable(headers: request.headers))
+                  REQ BODY: \(Self.printable(request.body))
+                  RESPONSE: \(httpres.map { String($0.statusCode) } ?? urlres?.debugDescription ?? "nil")
+                  RES HEADERS: \(Self.printable(headers: httpres?.allHeaderFields))
+                  RES ERROR: \(error?.localizedDescription ?? "nil")
+                  RES DATA: \(Self.printable(data))
                   """)
+    }
+
+    /// Render a payload for debug logging: UTF-8 text when decodable (JSON in
+    /// nearly all cases), a `<binary N bytes>` marker otherwise, `nil` when absent.
+    private static func printable(_ data: Data?) -> String {
+        guard let data else { return "nil" }
+        return String(data: data, encoding: .utf8) ?? "<binary \(data.count) bytes>"
+    }
+
+    /// Header names whose values are credentials and must never be logged.
+    /// `HTTPHeader.Field` lowercases its `rawValue`, so compare lowercased.
+    private static let redactedHeaders: Set<String> = [
+        HTTPHeader.Field.apiKeyHeaderField.rawValue,
+        HTTPHeader.Field.applicationKeyHeaderField.rawValue,
+    ]
+
+    /// Render a header set as sorted `key: value` lines, with credential values
+    /// (API / application key) replaced by `****`. `nil` when absent/empty.
+    private static func printable<K, V>(headers: [K: V]?) -> String {
+        guard let headers, !headers.isEmpty else { return "nil" }
+        return "\n\t" + headers.map { key, value in
+            let name = "\(key)"
+            let shown = redactedHeaders.contains(name.lowercased()) ? "****" : "\(value)"
+            return "\(name): \(shown)"
+        }.sorted().joined(separator: "\n\t")
     }
 }
 

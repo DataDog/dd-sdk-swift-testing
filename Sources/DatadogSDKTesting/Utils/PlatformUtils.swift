@@ -15,6 +15,7 @@ import Foundation
     import SystemConfiguration
 #endif
 internal import CodeCoverage
+internal import EventsExporter
 
 struct PlatformUtils {
     static func getRunningPlatform() -> String {
@@ -89,7 +90,7 @@ struct PlatformUtils {
         #endif
     }
 
-    static func getDeviceVersion() -> String {
+    static func getPlatformVersion() -> String {
         return ProcessInfo.processInfo.operatingSystemVersionString
     }
 
@@ -111,13 +112,11 @@ struct PlatformUtils {
             .flatMap { $0.infoDictionary?["CFBundleVersion"] as? String }
     }
 
-    static func getRuntimeInfo() -> (String, String) {
-        if NSClassFromString("XCTest") != nil {
-            return ("Xcode", getXcodeVersion())
-        } else {
-            return (ProcessInfo.processInfo.processName,
-                    (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "")
-        }
+    static func getRuntimeInfo() -> RuntimeInfo {
+        let isXcode = ProcessInfo.processInfo.environment["XCODE_SCHEME_NAME"] != nil
+        var xcodeVersion: String? = getXcodeVersion()
+        if xcodeVersion?.isEmpty ?? true { xcodeVersion = nil }
+        return RuntimeInfo(version: xcodeVersion, isXcode: isXcode)
     }
     
     static func getCpuCount() -> Int {
@@ -174,6 +173,32 @@ struct PlatformUtils {
         #else
             return NSLocale.current.languageCode ?? "none"
         #endif
+    }
+    
+    static func getDeviceInfo() -> Device {
+        Device(name: getDeviceName(),
+               model: getDeviceModel(),
+               osName: getRunningPlatform(),
+               osVersion: getPlatformVersion(),
+               osArchitecture: getPlatformArchitecture())
+    }
+    
+    static func getKernelInfo() -> KernelInfo {
+        var info = utsname()
+        guard uname(&info) == 0 else {
+            return KernelInfo(sysname: "", release: "", version: "", machine: "")
+        }
+        func str<T>(_ ptr: UnsafePointer<T>) -> String {
+            ptr.withMemoryRebound(to: CChar.self, capacity: MemoryLayout<T>.size) {
+                String(cString: $0)
+            }
+        }
+        return KernelInfo(
+            sysname: str(&info.sysname),
+            release: str(&info.release),
+            version: str(&info.version),
+            machine: str(&info.machine)
+        )
     }
     
     static var xcodeVersion: XcodeVersion {

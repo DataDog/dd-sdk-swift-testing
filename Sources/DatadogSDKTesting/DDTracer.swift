@@ -40,11 +40,15 @@ internal class DDTracer {
     /// `includeTraceContext` stays on (default) so the active test span's
     /// context is auto-attached as `dd.trace_id` / `dd.span_id`.
     private let loggerSdk: LoggerSdk
+    private let logProcessor: LogRecordProcessor
 
     private var launchSpanContext: SpanContext?
     private let attributeCountLimit: UInt = 1024
 
     static var activeSpan: Span? { OpenTelemetry.instance.contextProvider.activeSpan ?? DDTest.current?.span }
+
+    /// Set to `true` to enable backend debug processing for all telemetry envelopes.
+    static let debugTelemetry = false
 
     var propagationContext: SpanContext? {
         return DDTracer.activeSpan?.context ?? launchSpanContext
@@ -99,11 +103,13 @@ internal class DDTracer {
             .with(resource: resource)
             .add(spanProcessor: spanProcessor)
             .build()
+        
+        logProcessor = SimpleLogRecordProcessor(logRecordExporter: logRecordExporterToUse)
 
         let loggerProviderSdk = LoggerProviderBuilder()
             .with(clock: DDTestMonitor.clock)
             .with(resource: resource)
-            .with(processors: [SimpleLogRecordProcessor(logRecordExporter: logRecordExporterToUse)])
+            .with(processors: [logProcessor])
             .build()
 
         OpenTelemetry.registerTracerProvider(tracerProvider: tracerProviderSdk)
@@ -114,6 +120,16 @@ internal class DDTracer {
             .loggerBuilder(instrumentationScopeName: id)
             .setInstrumentationVersion(version)
             .build() as! LoggerSdk
+    }
+
+    deinit {
+        // Deregister our SDK from the global OpenTelemetry singleton, restoring
+        // the default (no-op) providers. Otherwise the shut-down SDK provider
+        // stays registered and span creation returns `PropagatedSpan`, which
+        // crashes the `as! SpanSdk` casts. A new `DDTracer` re-registers a live
+        // SDK provider.
+        OpenTelemetry.registerTracerProvider(tracerProvider: DefaultTracerProvider.instance)
+        OpenTelemetry.registerLoggerProvider(loggerProvider: DefaultLoggerProvider.instance)
     }
 
     convenience init(logRecordExporter: LogRecordExporter? = nil) {
@@ -131,9 +147,17 @@ internal class DDTracer {
                                                    traceState: TraceState())
         }
 
-        let bundle = Bundle.main
-        let identifier = bundle.bundleIdentifier ?? "com.datadoghq.DatadogSDKTesting"
-        let version = (bundle.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "unknown"
+        // `Bundle.main` is only the product under test when an app hosts the
+        // tests; for host-less test bundles it is the bare `xctest` runner. Let
+        // the resolver pick the right bundle (app / product framework / xctest)
+        // and honor a `DD_VERSION` override.
+        let (appName, appVersion) = Bundle.productUnderTest(
+            schemeName: DDTestMonitor.envReader["XCODE_SCHEME_NAME"],
+            versionOverride: conf.applicationVersion
+        )
+        
+        let sdkName = Bundle.sdk.name
+        let sdkVersion = Bundle.sdk.version ?? "<unknown>"
 
         let payloadCompression: Bool
         // When reporting tests to local server
@@ -161,28 +185,36 @@ internal class DDTracer {
             metadata: metadata,
             logger: Log.instance
         )
+        
         let api = TestOptimizationApiService(
             serviceName: env.service,
             environment: env.environment,
-            applicationName: identifier,
-            version: version,
+            applicationName: appName,
+            applicationVersion: appVersion,
+            libraryVersion: sdkVersion,
+            device: env.platform.device,
             hostname: hostnameToReport,
+            kernelInfo: env.platform.kernelInfo,
+            languageVersion: env.platform.languageVersion,
+            runtimeName: env.platform.runtimeName,
+            runtimeVersion: env.platform.runtimeVersion,
             apiKey: conf.apiKey ?? "",
             endpoint: conf.endpoint.exporterEndpoint,
             clientId: String(SpanId.random().rawValue),
             payloadCompression: payloadCompression,
             logger: Log.instance,
             dateProvider: DDTestMonitor.clock,
-            debugNetworkRequests: conf.extraDebugNetwork
+            debugNetworkRequests: conf.extraDebugNetwork,
+            debugTelemetry: DDTracer.debugTelemetry
         )
         var resource = Resource()
-        resource.applicationName = identifier
-        resource.applicationVersion = version
+        resource.applicationName = appName
+        resource.applicationVersion = appVersion
         resource.environment = env.environment
         resource.service = env.service
         resource.sdkLanguage = "swift"
-        resource.sdkName = identifier
-        resource.sdkVersion = DDTestMonitor.tracerVersion
+        resource.sdkName = sdkName
+        resource.sdkVersion = sdkVersion
 
         // Build the telemetry manager before the exporter so its observers can
         // be wired into the exporter's upload/serialization pipeline.
@@ -205,9 +237,10 @@ internal class DDTracer {
             eventsExporter = nil
         }
 
-        self.init(id: identifier, version: version, exporter: eventsExporter,
-                  api: api,
-                  enabled: !conf.disableTracesExporting, launchContext: launchSpanContext,
+        self.init(id: appName, version: appVersion,
+                  exporter: eventsExporter, api: api,
+                  enabled: !conf.disableTracesExporting,
+                  launchContext: launchSpanContext,
                   resource: resource,
                   logRecordExporter: logRecordExporter,
                   telemetry: telemetry)
@@ -557,7 +590,17 @@ internal class DDTracer {
         }
         
         self.tracerProviderSdk.forceFlush()
+        _ = self.logProcessor.forceFlush()
+        self.telemetry?.flush()
         Log.debug("Tracer flush finished")
+    }
+    
+    func shutdown() {
+        self.flush()
+        self.tracerProviderSdk.shutdown()
+        _ = self.logProcessor.shutdown()
+        self.telemetry?.shutdown()
+        Log.debug("Tracer shutdown")
     }
 
     func addPropagationsHeadersToEnvironment() {

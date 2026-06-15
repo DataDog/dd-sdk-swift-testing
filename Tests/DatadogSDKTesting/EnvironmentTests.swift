@@ -45,11 +45,12 @@ class EnvironmentTests: XCTestCase {
         
         XCTAssertEqual(metadata[string: .allTest, DDOSTags.osArchitecture], PlatformUtils.getPlatformArchitecture())
         XCTAssertEqual(metadata[string: .allTest, DDOSTags.osPlatform], PlatformUtils.getRunningPlatform())
-        XCTAssertEqual(metadata[string: .allTest, DDOSTags.osVersion], PlatformUtils.getDeviceVersion())
+        XCTAssertEqual(metadata[string: .allTest, DDOSTags.osVersion], PlatformUtils.getPlatformVersion())
         XCTAssertEqual(metadata[string: .allTest, DDDeviceTags.deviceModel], PlatformUtils.getDeviceModel())
         XCTAssertEqual(metadata[string: .allTest, DDDeviceTags.deviceName], PlatformUtils.getDeviceName())
-        XCTAssertEqual(metadata[string: .allTest, DDRuntimeTags.runtimeName], "Xcode")
-        XCTAssertEqual(metadata[string: .allTest, DDRuntimeTags.runtimeVersion], PlatformUtils.getXcodeVersion())
+        let runtimeInfo = PlatformUtils.getRuntimeInfo()
+        XCTAssertEqual(metadata[string: .allTest, DDRuntimeTags.runtimeName], runtimeInfo.runtimeName)
+        XCTAssertEqual(metadata[string: .allTest, DDRuntimeTags.runtimeVersion], runtimeInfo.runtimeVersion)
         XCTAssertEqual(metadata[string: .allTest, DDUISettingsTags.uiSettingsLocalization], PlatformUtils.getLocalization())
         
         XCTAssertEqual(metadata[string: .test, DDLibraryCapabilitiesTags.testImpactAnalysis], "1")

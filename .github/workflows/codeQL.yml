@@ -48,5 +48,4 @@ jobs:
         env:
           DD_API_KEY: '${{ secrets.DD_API_KEY }}'
         run: |
-          npm install -g @datadog/datadog-ci
-          datadog-ci sarif upload "${{ github.workspace }}/results/swift.sarif" --service dd-sdk-swift-testing --env ci
+          npx --yes @datadog/datadog-ci sarif upload "${{ github.workspace }}/results/swift.sarif" --service dd-sdk-swift-testing --env ci

@@ -77,12 +77,10 @@ internal final class FileWriter {
                 Log.print("🔥 Failed to write file: \(error)")
             }
         }
-        observer?.eventEnqueued()
     }
 
     /// Encodes and writes `value` synchronously, surfacing errors to the caller.
     func writeSync<T: Encodable>(value: T) throws {
-        observer?.eventEnqueued()
         try queue.sync { try write(value: value, sync: true) }
     }
 

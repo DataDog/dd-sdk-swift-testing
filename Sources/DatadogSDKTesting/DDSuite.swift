@@ -71,10 +71,10 @@ public final class DDSuite: NSObject {
             attributes[key] = .double(value)
         }
 
-        let span = DDTestMonitor.tracer.createLifecycleSpan(name: "\(framework.name).suite",
-                                                            spanId: id,
-                                                            startTime: actualStartTime,
-                                                            attributes: attributes)
+        let span = module.configuration.tracer.createLifecycleSpan(name: "\(framework.name).suite",
+                                                                   spanId: id,
+                                                                   startTime: actualStartTime,
+                                                                   attributes: attributes)
         if isCrashed {
             span.applyStatus(.fail, errorDescription: "suite failed")
         }

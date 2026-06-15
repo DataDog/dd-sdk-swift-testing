@@ -29,7 +29,7 @@ enum StdoutCapture {
            newlineChar.contains(lastCharacter)
         {
             if !self.stdoutBuffer.trimmingCharacters(in: newlineChar).isEmpty {
-                DDTestMonitor.tracer.logString(string: self.stdoutBuffer)
+                DDTestMonitor.instance?.tracer.logString(string: self.stdoutBuffer)
             }
             self.stdoutBuffer = ""
         }

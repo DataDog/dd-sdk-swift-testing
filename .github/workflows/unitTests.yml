@@ -39,3 +39,21 @@ jobs:
       with:
         name: ${{ matrix.xcode }}-${{ matrix.platform }}-unit-logs
         path: "*-unit.log"
+    # The SDK can't instrument its own test run, so report unit-test results to
+    # Datadog by uploading the JUnit reports xcbeautify produced. Runs on failure
+    # too — failing tests are exactly what we want reported.
+    - name: Upload test results to Datadog
+      if: '!cancelled()'
+      env:
+        DD_API_KEY: '${{ secrets.DD_API_KEY }}'
+      run: |
+        if [ -z "$DD_API_KEY" ]; then
+          echo "DD_API_KEY not set (likely a fork PR); skipping test results upload."
+          exit 0
+        fi
+        npx --yes @datadog/datadog-ci junit upload \
+          --service dd-sdk-swift-testing \
+          --env ci \
+          --tags "test.xcode:${{ matrix.xcode }}" \
+          --tags "test.platform:${{ matrix.platform }}" \
+          build/reports

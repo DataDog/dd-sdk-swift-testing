@@ -279,6 +279,96 @@ class DDTracerTests: XCTestCase {
         XCTAssertNil(environmentValues[DDHeaders.parentSpanIDField.rawValue])
     }
     
+    // MARK: - Product-under-test version resolution
+
+    private func info(_ path: String, id: String? = nil, name: String, version: String?) -> Bundle.UnderTestInfo {
+        let url = URL(fileURLWithPath: path).standardizedFileURL
+        return Bundle.UnderTestInfo(directory: url.deletingLastPathComponent().path,
+                                    path: url.path, identifier: id, name: name, version: version)
+    }
+
+    /// App-hosted (or UI) tests: `Bundle.main` is the real `.app`, so it is the product.
+    func testProductUnderTest_appHostBundleIsTheProduct() {
+        let main = info("/Build/Debug/MyApp.app", id: "com.acme.MyApp", name: "MyApp", version: "3.2.1")
+        let test = info("/Build/Debug/MyAppTests.xctest", name: "MyAppTests", version: nil)
+        let (name, version) = Bundle.productUnderTest(main: main, test: test, frameworks: [], schemeName: "MyApp")
+        XCTAssertEqual(name, "com.acme.MyApp")
+        XCTAssertEqual(version, "3.2.1")
+    }
+
+    /// Host-less `.xctest`: a dynamic framework named after the scheme sits next
+    /// to the test bundle. It wins over other co-located frameworks.
+    func testProductUnderTest_siblingFrameworkMatchedByScheme() {
+        let main = info("/Xcode/Agents/xctest", name: "xctest", version: nil)
+        let test = info("/Build/Debug/MyLibTests.xctest", name: "MyLibTests", version: nil)
+        let sdk = info("/Build/Debug/DatadogSDKTesting.framework", id: "com.dd.sdk", name: "DatadogSDKTesting", version: "9.9.9")
+        let lib = info("/Build/Debug/MyLib.framework", id: "com.acme.MyLib", name: "MyLib", version: "1.4.0")
+        let (name, version) = Bundle.productUnderTest(main: main, test: test, frameworks: [sdk, lib], schemeName: "MyLib")
+        XCTAssertEqual(name, "com.acme.MyLib")
+        XCTAssertEqual(version, "1.4.0")
+    }
+
+    /// A framework matched by name but in an unrelated directory must be ignored.
+    func testProductUnderTest_frameworkInOtherDirectoryIgnored() {
+        let main = info("/Xcode/Agents/xctest", name: "xctest", version: nil)
+        let test = info("/Build/Debug/MyLibTests.xctest", name: "MyLibTests", version: "5.0")
+        let strayLib = info("/somewhere/else/MyLib.framework", name: "MyLib", version: "1.4.0")
+        let (_, version) = Bundle.productUnderTest(main: main, test: test, frameworks: [strayLib], schemeName: "MyLib")
+        XCTAssertEqual(version, "5.0", "Should fall back to the xctest version, not the unrelated framework")
+    }
+
+    /// A framework embedded inside the `.xctest` bundle is also accepted.
+    func testProductUnderTest_frameworkEmbeddedInsideXctest() {
+        let main = info("/Xcode/Agents/xctest", name: "xctest", version: nil)
+        let test = info("/Build/Debug/MyLibTests.xctest", name: "MyLibTests", version: nil)
+        let lib = info("/Build/Debug/MyLibTests.xctest/Frameworks/MyLib.framework", name: "MyLib", version: "2.0.0")
+        let (_, version) = Bundle.productUnderTest(main: main, test: test, frameworks: [lib], schemeName: "MyLib")
+        XCTAssertEqual(version, "2.0.0")
+    }
+
+    /// No product framework (e.g. `IntegrationTests-UnitTests`, or static/SPM merged
+    /// products): report the `.xctest` bundle version.
+    func testProductUnderTest_fallsBackToXctestVersion() {
+        let main = info("/Xcode/Agents/xctest", name: "xctest", version: nil)
+        let test = info("/Build/Debug/MyLibTests.xctest", id: "com.acme.MyLibTests", name: "MyLibTests", version: "7.7.7")
+        let (name, version) = Bundle.productUnderTest(main: main, test: test, frameworks: [], schemeName: "MyLib")
+        XCTAssertEqual(name, "com.acme.MyLibTests")
+        XCTAssertEqual(version, "7.7.7")
+    }
+
+    /// A matched framework without a version still falls through to the xctest version.
+    func testProductUnderTest_versionlessFrameworkFallsBackToXctest() {
+        let main = info("/Xcode/Agents/xctest", name: "xctest", version: nil)
+        let test = info("/Build/Debug/MyLibTests.xctest", name: "MyLibTests", version: "7.7.7")
+        let lib = info("/Build/Debug/MyLib.framework", name: "MyLib", version: nil)
+        let (_, version) = Bundle.productUnderTest(main: main, test: test, frameworks: [lib], schemeName: "MyLib")
+        XCTAssertEqual(version, "7.7.7")
+    }
+
+    /// Nothing resolvable (no scheme, versionless xctest): unknown.
+    func testProductUnderTest_unknownWhenNothingResolvable() {
+        let main = info("/Xcode/Agents/xctest", name: "xctest", version: nil)
+        let test = info("/Build/Debug/MyLibTests.xctest", name: "MyLibTests", version: nil)
+        let (_, version) = Bundle.productUnderTest(main: main, test: test, frameworks: [], schemeName: nil)
+        XCTAssertEqual(version, "<unknown>")
+    }
+
+    /// The `DD_VERSION` override wins over every derived source.
+    func testProductUnderTest_versionOverrideWins() {
+        let main = info("/Build/Debug/MyApp.app", id: "com.acme.MyApp", name: "MyApp", version: "3.2.1")
+        let test = info("/Build/Debug/MyAppTests.xctest", name: "MyAppTests", version: "9.9")
+        let (name, version) = Bundle.productUnderTest(main: main, test: test, frameworks: [],
+                                                      schemeName: "MyApp", versionOverride: "42.0.0")
+        XCTAssertEqual(name, "com.acme.MyApp", "Override affects only the version, not the name")
+        XCTAssertEqual(version, "42.0.0")
+    }
+
+    /// `DD_VERSION` flows from configuration into the resolved tracer version.
+    func testProductUnderTest_ddVersionFromConfig() {
+        let config = Config(env: ProcessEnvironmentReader(environment: ["DD_VERSION": "12.3.4"]))
+        XCTAssertEqual(config.applicationVersion, "12.3.4")
+    }
+
     private func setEnv(env: [String: String]) {
         var env = env
         env["DD_API_KEY"] = "fakeToken"

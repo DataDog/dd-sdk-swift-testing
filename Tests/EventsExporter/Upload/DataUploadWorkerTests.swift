@@ -52,7 +52,8 @@ class DataUploadWorkerTests: XCTestCase {
             dataUploader: dataUploader,
             delay: DataUploadDelay(performance: UploadPerformanceMock.veryQuick),
             featureName: .mockAny(),
-            priority: .userInteractive
+            priority: .userInteractive,
+            log: Log()
         )
 
         // Then
@@ -82,7 +83,8 @@ class DataUploadWorkerTests: XCTestCase {
             dataUploader: mockDataUploader,
             delay: DataUploadDelay(performance: UploadPerformanceMock.veryQuick),
             featureName: .mockAny(),
-            priority: .userInteractive
+            priority: .userInteractive,
+            log: Log()
         )
 
         wait(for: [startUploadExpectation], timeout: 5.0)
@@ -111,7 +113,8 @@ class DataUploadWorkerTests: XCTestCase {
             dataUploader: mockDataUploader,
             delay: DataUploadDelay(performance: UploadPerformanceMock.veryQuick),
             featureName: .mockAny(),
-            priority: .userInteractive
+            priority: .userInteractive,
+            log: Log()
         )
 
         wait(for: [startUploadExpectation], timeout: 0.5)
@@ -139,6 +142,7 @@ class DataUploadWorkerTests: XCTestCase {
             delay: DataUploadDelay(performance: UploadPerformanceMock.veryQuick),
             featureName: .mockAny(),
             priority: .userInteractive,
+            log: Log(),
             observer: observer
         )
         wait(for: [attemptExpectation], timeout: 5.0)
@@ -174,7 +178,8 @@ class DataUploadWorkerTests: XCTestCase {
             dataUploader: dataUploader,
             delay: mockDelay,
             featureName: .mockAny(),
-            priority: .userInteractive
+            priority: .userInteractive,
+            log: Log()
         )
 
         // Then
@@ -203,7 +208,8 @@ class DataUploadWorkerTests: XCTestCase {
             dataUploader: dataUploader,
             delay: mockDelay,
             featureName: .mockAny(),
-            priority: .userInteractive
+            priority: .userInteractive,
+            log: Log()
         )
 
         // Then
@@ -232,7 +238,8 @@ class DataUploadWorkerTests: XCTestCase {
             dataUploader: dataUploader,
             delay: mockDelay,
             featureName: .mockAny(),
-            priority: .userInteractive
+            priority: .userInteractive,
+            log: Log()
         )
 
         // Then
@@ -252,7 +259,8 @@ class DataUploadWorkerTests: XCTestCase {
             dataUploader: dataUploader,
             delay: MockDelay(),
             featureName: .mockAny(),
-            priority: .userInteractive
+            priority: .userInteractive,
+            log: Log()
         )
 
         // When
@@ -272,7 +280,8 @@ class DataUploadWorkerTests: XCTestCase {
             dataUploader: dataUploader,
             delay: DataUploadDelay(performance: UploadPerformanceMock.veryQuick),
             featureName: .mockAny(),
-            priority: .userInteractive
+            priority: .userInteractive,
+            log: Log()
         )
 
         // Given

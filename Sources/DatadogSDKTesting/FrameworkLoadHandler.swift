@@ -45,7 +45,7 @@ enum FrameworkLoadHandler {
                 
                 DatadogSwiftTestingTrait.sharedSuiteProvider = SwiftTestingSuiteProvider(session: manager,
                                                                                          observer: SwiftTestingObserver())
-                Task.detached { try? await DDTestMonitor.clock.sync() }
+                Task.detached { await DDTestMonitor.clock.sync() }
             } else if config.isBinaryUnderUITesting {
                 print("note: [DatadogSDKTesting] Application launched from UITest while being instrumented")
                 DDTestMonitor.instance = DDTestMonitor()

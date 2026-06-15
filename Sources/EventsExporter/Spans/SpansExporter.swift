@@ -12,6 +12,7 @@ internal final class SpansExporter: SpanExporter {
     let runtimeId: String
     let spansStorage: FeatureStoreAndUpload
     private let encoder: JSONEncoder
+    private let payloadObserver: PayloadObserver?
 
     init(config: ExporterConfiguration, storage: Directory, api: SpansApi,
          observers: ExporterObservers.Feature = .init()) throws {
@@ -45,11 +46,13 @@ internal final class SpansExporter: SpanExporter {
             try await api.uploadSpans(batch: data, observer: requestObserver)
         }
         let uploader = ClosureDataUploader(upload: upload)
+        self.payloadObserver = observers.payload
         self.spansStorage = FeatureStoreAndUpload(featureName: "spans",
                                                   reader: reader,
                                                   writer: writer,
                                                   performance: configuration.performancePreset,
                                                   uploader: uploader,
+                                                  log: configuration.logger,
                                                   observer: observers.upload)
     }
 
@@ -76,6 +79,7 @@ internal final class SpansExporter: SpanExporter {
     }
 
     private func write<T: Encodable>(_ value: T) {
+        payloadObserver?.eventEnqueued()
         if configuration.performancePreset.synchronousWrite {
             try? spansStorage.writeSync(value: value)
         } else {

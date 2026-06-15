@@ -79,8 +79,17 @@ final class LibraryConfigurationServiceThrowTests: XCTestCase {
         TestOptimizationApiService(serviceName: "service",
                                    environment: "environment",
                                    applicationName: "app",
-                                   version: "1.0",
+                                   applicationVersion: "1.0",
+                                   libraryVersion: "1.0.0",
+                                   device: .init(name: "DName", model: "DModel",
+                                                 osName: "macOS", osVersion: "26.0",
+                                                 osArchitecture: "arm64"),
                                    hostname: nil,
+                                   kernelInfo: .init(sysname: "Darwin", release: "1.0.0",
+                                                     version: "26.0", machine: "machine"),
+                                   languageVersion: "6.0",
+                                   runtimeName: "SPM",
+                                   runtimeVersion: "6.0",
                                    apiKey: "apikey",
                                    endpoint: .other(testsBaseURL: baseURL, logsBaseURL: baseURL),
                                    clientId: "client",
@@ -344,3 +353,4 @@ final class LibraryConfigurationServiceThrowTests: XCTestCase {
         return (try? JSONSerialization.data(withJSONObject: payload)) ?? Data()
     }
 }
+

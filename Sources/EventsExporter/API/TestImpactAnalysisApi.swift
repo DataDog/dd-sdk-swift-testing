@@ -173,10 +173,7 @@ struct TestImpactAnalysisApiService: TestImpactAnalysisApi, APIServiceConstructi
         request.append(data: Data(#"{"dummy": true}"#.utf8),
                        withName: "event",
                        contentType: .applicationJSON)
-        let log = self.log
-        log.debug("Uploading coverage batch...")
         let _ = try await httpClient.send(api: request, observer: observer)
-        log.debug("Coverage batch accepted...")
     }
 
     var endpointURLs: Set<URL> { [endpoint.skippableTestsURL, endpoint.coverageURL] }

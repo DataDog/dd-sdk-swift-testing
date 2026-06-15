@@ -97,10 +97,15 @@ internal enum DDCrashes {
     fileprivate static var sanitizerURL: URL?
     fileprivate static var spanURL: URL?
 
-    static func install(folder: Directory, disableMach: Bool) {
-        guard !installed else { return }
+    /// Installs the crash handler and loads any crash report from a previous
+    /// launch. Returns the reconstructed `CrashInformation` (if the prior run
+    /// crashed inside a test) so the caller — the monitor — can store it, instead
+    /// of `DDCrashes` reaching back into `DDTestMonitor.instance`.
+    @discardableResult
+    static func install(folder: Directory, disableMach: Bool, tracer: DDTracer) -> CrashInformation? {
+        guard !installed else { return nil }
         installed = true
-        installKSCrashHandler(folder: folder, disableMach: disableMach)
+        return installKSCrashHandler(folder: folder, disableMach: disableMach, tracer: tracer)
     }
 
     static func setCurrent(spanData: SimpleSpanData?) {
@@ -108,7 +113,8 @@ internal enum DDCrashes {
         KSCrash.shared.userInfo = [userInfoSpanKey: bytes.base64EncodedString()]
     }
 
-    private static func installKSCrashHandler(folder: Directory, disableMach: Bool) {
+    @discardableResult
+    private static func installKSCrashHandler(folder: Directory, disableMach: Bool, tracer: DDTracer) -> CrashInformation? {
         let baseURL = folder.url
         sanitizerURL = baseURL.appendingPathComponent("Sanitizer.log", isDirectory: false)
         spanURL = baseURL.appendingPathComponent("Span.json", isDirectory: false)
@@ -131,14 +137,15 @@ internal enum DDCrashes {
             try KSCrash.shared.install(with: config)
         } catch {
             Log.debug("KSCrash install failed: \(error)")
-            return
+            return nil
         }
 
-        handleKSCrashReport()
+        return handleKSCrashReport(tracer: tracer)
     }
 
-    /// Loads any pending crash report from a previous launch, builds the CrashInformation, and purges the report.
-    private static func handleKSCrashReport() {
+    /// Loads any pending crash report from a previous launch, builds the
+    /// CrashInformation, purges the report, and returns the info (if any).
+    private static func handleKSCrashReport(tracer: DDTracer) -> CrashInformation? {
         defer {
             sanitizerURL.flatMap { try? FileManager.default.removeItem(at: $0) }
             spanURL.flatMap { try? FileManager.default.removeItem(at: $0) }
@@ -155,7 +162,7 @@ internal enum DDCrashes {
         guard let store = KSCrash.shared.reportStore,
               let firstID = store.reportIDs.first
         else {
-            return
+            return nil
         }
         let reportID = firstID.int64Value
         defer {
@@ -165,7 +172,7 @@ internal enum DDCrashes {
 
         guard let report = store.report(for: reportID)?.value,
               var crashLog = CrashLog(report: report)
-        else { return }
+        else { return nil }
 
         DDSymbolicator.symbolicate(&crashLog)
 
@@ -180,9 +187,9 @@ internal enum DDCrashes {
            let data = try? Data(contentsOf: url),
            let spanData = SimpleSpanSerializer.deserializeSpan(data: data)
         {
-            DDTestMonitor.tracer.createSpanFromCrash(spanData: spanData,
-                                                     crashDate: crashTimestamp,
-                                                     error: error)
+            tracer.createSpanFromCrash(spanData: spanData,
+                                       crashDate: crashTimestamp,
+                                       error: error)
             crashedInfo = makeTestCrashInfo(spanData: spanData, error: error)
         } else if let userDict = report["user"] as? [String: Any],
                   let base64 = userDict[userInfoSpanKey] as? String,
@@ -194,9 +201,9 @@ internal enum DDCrashes {
         }
 
         if let info = crashedInfo {
-            DDTestMonitor.instance?.crashInfo = info
             Log.debug("Loaded Crash Info: \(info)")
         }
+        return crashedInfo
     }
 
     // MARK: - Crash info reconstruction

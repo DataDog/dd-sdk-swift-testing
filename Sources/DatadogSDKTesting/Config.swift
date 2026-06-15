@@ -15,6 +15,9 @@ final class Config {
     /// Datatog Configuration values
     var apiKey: String? = nil
     var service: String? = nil
+    /// Explicit version override for the product under test (`DD_VERSION`). Used
+    /// when the version can't be derived from the tested app/framework bundle.
+    var applicationVersion: String? = nil
     var tags: [String: String] = [:]
     var customConfigurations: [String: String] = [:]
     var environment: String? = nil
@@ -104,6 +107,7 @@ final class Config {
         
         apiKey = env[.apiKey] ?? env.get(info: "DatadogApiKey")
         environment = env[.environment]
+        applicationVersion = env[.applicationVersion]
         
         let tracerUnderTesting = env.has(env: .testOutputFile)
         isTracerUnderTesting = tracerUnderTesting
@@ -235,6 +239,7 @@ extension Config: CustomDebugStringConvertible {
         Is Test Observer Needed: \(isTestObserverNeeded)
         Api Key: \(apiKey.map {_ in "*****" } ?? "nil")
         Service \(service ?? "nil")
+        Application Version: \(applicationVersion ?? "nil")
         Environment: \(environment ?? "nil")
         Endpoint: \(endpoint.exporterEndpoint)
         Tags: \(tags.map { "\n  \($0.key): \($0.value)" }.joined())

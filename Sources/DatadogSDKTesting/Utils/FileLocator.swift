@@ -43,7 +43,11 @@ enum FileLocator {
         try file.open()
         defer { file.close() }
         
-        let funcNamePattern = #"(?:-\[[\w \:\$#]+\])|(?:\S+)"#
+        // A function name is either an ObjC method (`-[Class selector:]`, may contain
+        // spaces) or a Swift symbol. A Swift Testing function name can be backtick-quoted
+        // and contain spaces (e.g. ``failing parameterized test``(_:)), so a plain `\S+`
+        // truncates it at the first space — match backtick-quoted segments as a unit.
+        let funcNamePattern = #"(?:-\[[\w \:\$#]+\])|(?:(?:`[^`]*`|[^\s`])+)"#
         let funcRegex = try NSRegularExpression(pattern: #"^\s+[0-9a-fA-FxX]+\s+\([0-9a-fA-FxX\ ]+\)\s+(\#(funcNamePattern))\s+\[FUNC,\s+((?:EXT)|(?:OBJC))[\w\s,]+\] $"#)
         let anyFuncRegex = try NSRegularExpression(pattern: #"^\s+[0-9a-fA-FxX]+\s+\([0-9a-fA-FxX\ ]+\)\s+(\#(funcNamePattern))\s+\[FUNC,"#)
         let lineRegex = try NSRegularExpression(pattern: #"^\s+[0-9a-fA-FxX]+\s+\([0-9a-fA-FxX\ ]+\)\s+(.*?)\:(\d+)$"#)
@@ -143,7 +147,11 @@ enum FileLocator {
     private static func swiftTestName(function name: String) -> (test: String, module: String?) {
         var function: String
         let module: String?
-        if let dotPos = name.lastIndex(of: ".") {
+        // The module/type prefix carries no backticks, but a backtick-quoted function
+        // name may contain dots (e.g. ``test 3.0``). Split on the last dot that precedes
+        // the first backtick, so such a dot isn't mistaken for the module separator.
+        let searchEnd = name.firstIndex(of: "`") ?? name.endIndex
+        if let dotPos = name[..<searchEnd].lastIndex(of: ".") {
             function = String(name[name.index(after: dotPos)...])
             module = String(name[..<dotPos])
         } else {

@@ -308,6 +308,40 @@ internal class FileLocatorEdgeCaseTests: XCTestCase {
         XCTAssertEqual(40, swiftColons.startLine)
     }
 
+    func testSwiftBacktickQuotedNameWithSpaces() throws {
+        // Swift Testing allows backtick-quoted function names containing spaces,
+        // e.g. `func \`failing parameterized test\`(_ p1: SomeEnum)`. The name plus its
+        // parameter list must be captured verbatim, not truncated at the first space.
+        // (FUNC lines must end with a trailing space; `\(" ")` keeps it lint-proof.)
+        let body = """
+                    0x0100 (0x0020) TestModule.`failing parameterized test`(_:) [FUNC, EXT, LENGTH, NameNList, MangledNameNList, Merged, NList, DebugMap, FunctionStarts]\(" ")
+                        0x0100 (0x0010) /path/to/Tests.swift:50
+                        0x0110 (0x0010) /path/to/Tests.swift:53
+        """
+        let url = try makeFixture(body)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let map = try FileLocator.extractFunctions(url)
+        let info = try XCTUnwrap(map["TestModule.`failing parameterized test`(_:)"])
+        XCTAssertEqual(info.file, "/path/to/Tests.swift")
+        XCTAssertEqual(50, info.startLine)
+        XCTAssertEqual(53, info.endLine)
+    }
+
+    func testSwiftBacktickQuotedNameWithDotInside() throws {
+        // A dot inside a backtick-quoted name must not be mistaken for the module separator.
+        let body = """
+                    0x0100 (0x0020) TestModule.`test 3.0 behavior`() [FUNC, EXT, LENGTH, NameNList, MangledNameNList, Merged, NList, DebugMap, FunctionStarts]\(" ")
+                        0x0100 (0x0010) /path/to/Tests.swift:12
+        """
+        let url = try makeFixture(body)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let map = try FileLocator.extractFunctions(url)
+        // trailing () stripped; module split before the backtick, not on the inner dot
+        let info = try XCTUnwrap(map["TestModule.`test 3.0 behavior`"])
+        XCTAssertEqual(info.file, "/path/to/Tests.swift")
+        XCTAssertEqual(12, info.startLine)
+    }
+
     func testFunctionAtEndOfFileWithoutStubs() throws {
         // If the file ends without a __TEXT __stubs marker the last parsed function must still
         // be included in the result.

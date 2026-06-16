@@ -108,6 +108,9 @@ internal class DDTestMonitor {
     private var isGitUploadSucceded: Bool = false
     private var serverTestingPort: CFMessagePort? = nil
     private var isStopped: Bool = false
+    /// Retains a reference to the background mergeHeadInfo operation so
+    /// updateTracerConfig can wait for it without draining the full gitUploadQueue.
+    private var mergeHeadOperation: Operation? = nil
 
     static func installTestMonitor() -> Bool {
         guard DDTestMonitor.config.apiKey != nil else {
@@ -150,6 +153,7 @@ internal class DDTestMonitor {
         maxPayloadSize = DDTestMonitor.config.maxPayloadSize
         messageChannelUUID = DDTestMonitor.config.messageChannelUUID ?? UUID().uuidString
         tracer = DDTracer()
+        gitUploadQueue.maxConcurrentOperationCount = 1
 
         if DDTestMonitor.config.isBinaryUnderUITesting {
             launchNotificationObserver = NotificationCenter.default.addObserver(
@@ -224,43 +228,54 @@ internal class DDTestMonitor {
     }
 
     func startGitUpload() {
-        /// Check Git is up to date and no local changes
-        let gitDirectory = DDTestMonitor.env.git.directory ?? ""
-        guard DDTestMonitor.env.isCI || GitUploader.statusUpToDate(gitDirectory: gitDirectory, log: Log.instance) else {
-            Log.print("Git status is not up to date")
-            return
-        }
-
         guard let commit = DDTestMonitor.env.git.commit?.sha, commit != "" else {
             Log.print("Commit SHA is empty. Git upload failed")
             self.isGitUploadSucceded = false
             return
         }
 
-        DDTestMonitor.instance?.gitUploadQueue.addOperation {
-            if DDTestMonitor.config.gitUploadEnabled {
-                Log.debug("Git Upload Enabled")
-                DDTestMonitor.instance?.gitUploader = GitUploader(
-                    log: Log.instance, api: self.tracer.api.git, gitDirectory: gitDirectory,
-                    commitFolder: try? DDTestMonitor.cacheManager?.commit(feature: "git"),
-                    unshallowEnabled: DDTestMonitor.config.gitUnshallowEnabled,
-                    telemetry: self.tracer.telemetry
-                )
-            } else {
-                Log.debug("Git Upload Disabled")
-                self.isGitUploadSucceded = false
+        let gitDirectory = DDTestMonitor.env.git.directory ?? ""
+        let isCI = DDTestMonitor.env.isCI
+
+        let uploadOp = BlockOperation { [self] in
+            /// Check Git is up to date and no local changes (moved to queue so it
+            /// runs after mergeHeadInfo and doesn't block test startup).
+            let upToDate = isCI || Log.measure(name: "gitStatusUpToDate") {
+                GitUploader.statusUpToDate(gitDirectory: gitDirectory, log: Log.instance)
+            }
+            guard upToDate else {
+                Log.print("Git status is not up to date")
                 return
             }
 
-            let repositoryURL = DDTestMonitor.env.git.repositoryURL
-            guard let uploader = DDTestMonitor.instance?.gitUploader else {
-                self.isGitUploadSucceded = false
+            guard DDTestMonitor.config.gitUploadEnabled else {
+                Log.debug("Git Upload Disabled")
+                isGitUploadSucceded = false
                 return
             }
-            self.isGitUploadSucceded = waitForAsync { () async -> Bool in
+            Log.debug("Git Upload Enabled")
+            gitUploader = GitUploader(
+                log: Log.instance, api: tracer.api.git, gitDirectory: gitDirectory,
+                commitFolder: try? DDTestMonitor.cacheManager?.commit(feature: "git"),
+                unshallowEnabled: DDTestMonitor.config.gitUnshallowEnabled,
+                telemetry: tracer.telemetry
+            )
+
+            let repositoryURL = DDTestMonitor.env.git.repositoryURL
+            guard let uploader = gitUploader else {
+                isGitUploadSucceded = false
+                return
+            }
+            isGitUploadSucceded = waitForAsync { () async -> Bool in
                 await uploader.sendGitInfo(repositoryURL: repositoryURL, commit: commit)
             }
         }
+
+        // Upload must run after mergeHeadInfo so env.git is fully populated.
+        if let mergeOp = mergeHeadOperation {
+            uploadOp.addDependency(mergeOp)
+        }
+        gitUploadQueue.addOperation(uploadOp)
     }
 
     func startTestOptimization() {
@@ -364,6 +379,12 @@ internal class DDTestMonitor {
                                    testManagement: config.testManagement)
                 }
                 tracerBackendConfig = config
+            } else {
+                // Even without a full git upload, wait for mergeHeadInfo so that
+                // commit message/author metadata is available when features are set up.
+                Log.measure(name: "mergeHeadInfo wait") {
+                    mergeHeadOperation?.waitUntilFinished()
+                }
             }
         }
         testOptimizationSetupQueue.addOperation(updateTracerConfig)
@@ -609,13 +630,17 @@ internal class DDTestMonitor {
 #endif
     }
 
-    /// Schedules `mergeHeadInfo` (a `git fetch`) on `instrumentationWorkQueue`.
-    /// Not gated by `disableSourceLocation` — commit author/message metadata
-    /// is unrelated to source-location features.
+    /// Schedules `mergeHeadInfo` (a `git fetch`) on `gitUploadQueue` as the first
+    /// operation, saving a reference so `updateTracerConfig` can wait for just this
+    /// op (not the full upload) when ITR does not require a git upload.
+    /// Not gated by `disableSourceLocation` — commit author/message metadata is
+    /// unrelated to source-location features.
     func loadGitCommitInfo() {
-        instrumentationWorkQueue.addOperation {
+        let op = BlockOperation {
             DDTestMonitor.env.fetchMergeHeadInfo(log: Log.instance)
         }
+        mergeHeadOperation = op
+        gitUploadQueue.addOperation(op)
     }
     
     func setupCrashHandler() {

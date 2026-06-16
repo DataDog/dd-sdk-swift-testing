@@ -121,11 +121,11 @@ internal class DDTestMonitor {
         Log.measure(name: "DDTestMonitor init") {
             DDTestMonitor.instance = DDTestMonitor()
         }
+        DDTestMonitor.instance?.loadGitCommitInfo()
         Log.measure(name: "startInstrumenting") {
             DDTestMonitor.instance?.startInstrumenting()
         }
         DDTestMonitor.instance?.loadSourceCodeInfo()
-        DDTestMonitor.instance?.loadGitCommitInfo()
         Log.measure(name: "startGitUpload") {
             DDTestMonitor.instance?.startGitUpload()
         }

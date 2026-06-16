@@ -63,8 +63,24 @@ struct XcodeTestRunner: Sendable {
                                                                   environment: config.environment,
                                                                   server: self.backend.baseURL)
                 print("note: [IntegrationTestRunner]: test \(testBundle)/\(test) finished, status: \(status).")
+                let requests = self.backend.requests
                 defer { self.backend.reset() }
-                try await function(self.backend.requests, status == 0, config)
+                // Propagate device/OS tags from the inner test process to the outer runner span.
+                // The runner always executes on macOS; for simulator platforms the inner tests
+                // carry the real simulator device info that would otherwise be absent.
+                if let span = requests.allSpans.first(where: { $0.meta[DDOSTags.osPlatform] != nil }),
+                   let osPlatform = span.meta[DDOSTags.osPlatform],
+                   osPlatform != "macOS",
+                   let currentTest = DDTest.current
+                {
+                    for key in [DDOSTags.osPlatform, DDOSTags.osArchitecture, DDOSTags.osVersion,
+                                DDDeviceTags.deviceName, DDDeviceTags.deviceModel] {
+                        if let value = span.meta[key] {
+                            currentTest.set(tag: key, value: value)
+                        }
+                    }
+                }
+                try await function(requests, status == 0, config)
             }
             activeTests[module] = Task { let _ = await task.result }
             try await task.value

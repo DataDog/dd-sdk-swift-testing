@@ -115,7 +115,7 @@ internal struct GithubCIEnvironmentReader: CIEnvironmentReader {
 
         let regex = jobIdRegex
         for globDir in _diagnosticDirs {
-            if let id = FileManager.default.searchGlob(globDir, body: { dir -> String? in
+            if let id = FileManager.default.searchGlob(globDir, matcher: { dir -> String? in
                 guard let contents = try? FileManager.default.contentsOfDirectory(
                     at: dir, includingPropertiesForKeys: nil,
                     options: [.skipsHiddenFiles, .skipsSubdirectoryDescendants]

@@ -7,38 +7,38 @@
 import Foundation
 
 extension FileManager {
-    /// Walk directories matching `url` (which may contain `**` glob segments), calling `body` for
-    /// each matched directory. Returns the first non-`nil` value produced by `body`, or `nil` if
+    /// Walk directories matching `url` (which may contain `**` glob segments), calling `matcher` for
+    /// each matched directory. Returns the first non-`nil` value produced by `matcher`, or `nil` if
     /// no directory matched. `**` expansion is capped at `maxWildcardDepth` levels to avoid
     /// scanning huge directory trees.
     ///
-    /// - `body` returns `nil`  → keep searching
-    /// - `body` returns a value → stop immediately and return that value
+    /// - `matcher` returns `nil`  → keep searching
+    /// - `matcher` returns a value → stop immediately and return that value
     ///
-    /// When `**` has a suffix pattern (e.g. `**/_diag`), `body` is called only on directories
-    /// that satisfy the full subpath. When `**` is the last segment, `body` is called on every
+    /// When `**` has a suffix pattern (e.g. `**/_diag`), `matcher` is called only on directories
+    /// that satisfy the full subpath. When `**` is the last segment, `matcher` is called on every
     /// directory in the subtree.
     @discardableResult
-    func searchGlob<T>(_ url: URL, maxWildcardDepth: Int = 3, body: (URL) -> T?) -> T? {
+    func searchGlob<T>(_ url: URL, maxWildcardDepth: Int = 3, matcher: (URL) -> T?) -> T? {
         let path = url.path
         guard path.contains("**") else {
             var isDir: ObjCBool = false
             guard fileExists(atPath: path, isDirectory: &isDir), isDir.boolValue else { return nil }
-            return body(url)
+            return matcher(url)
         }
         let segments = path.split(separator: "/", omittingEmptySubsequences: true).map(String.init)
-        let staticCount = segments.prefix(while: { $0 != "**" }).count
-        let staticPath = "/" + segments.prefix(staticCount).joined(separator: "/")
+        let staticPathSegments = segments.prefix(while: { $0 != "**" })
+        let staticPath = (path.hasPrefix("/") ? "/" : "") + staticPathSegments.joined(separator: "/")
         let root = URL(fileURLWithPath: staticPath, isDirectory: true)
-        let remaining = Array(segments.dropFirst(staticCount))
-        return searchGlobSegments(prefix: root, segments: remaining, wildcardDepth: 0, maxWildcardDepth: maxWildcardDepth, body: body)
+        let remaining = Array(segments.dropFirst(staticPathSegments.count))
+        return searchGlobSegments(prefix: root, segments: remaining, wildcardDepth: 0, maxWildcardDepth: maxWildcardDepth, matcher: matcher)
     }
 
-    private func searchGlobSegments<T>(prefix: URL, segments: [String], wildcardDepth: Int, maxWildcardDepth: Int, body: (URL) -> T?) -> T? {
+    private func searchGlobSegments<T>(prefix: URL, segments: [String], wildcardDepth: Int, maxWildcardDepth: Int, matcher: (URL) -> T?) -> T? {
         guard let head = segments.first else {
             var isDir: ObjCBool = false
             guard fileExists(atPath: prefix.path, isDirectory: &isDir), isDir.boolValue else { return nil }
-            return body(prefix)
+            return matcher(prefix)
         }
         let tail = Array(segments.dropFirst())
         if head == "**" {
@@ -46,11 +46,11 @@ extension FileManager {
             guard fileExists(atPath: prefix.path, isDirectory: &isDir), isDir.boolValue else { return nil }
             if tail.isEmpty {
                 // `**` is the last segment: the current directory itself is a match.
-                if let result = body(prefix) { return result }
+                if let result = matcher(prefix) { return result }
             } else {
                 // `**` has a suffix pattern: only directories satisfying the tail are matches.
                 // The current prefix is an anchor, not a result.
-                if let result = searchGlobSegments(prefix: prefix, segments: tail, wildcardDepth: wildcardDepth, maxWildcardDepth: maxWildcardDepth, body: body) { return result }
+                if let result = searchGlobSegments(prefix: prefix, segments: tail, wildcardDepth: wildcardDepth, maxWildcardDepth: maxWildcardDepth, matcher: matcher) { return result }
             }
             // One-or-more match: descend into subdirs, keeping `**` for further recursion.
             guard wildcardDepth < maxWildcardDepth else { return nil }
@@ -59,11 +59,11 @@ extension FileManager {
                                                        options: [.skipsSubdirectoryDescendants]) {
                 for child in children {
                     guard (try? child.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true else { continue }
-                    if let result = searchGlobSegments(prefix: child, segments: segments, wildcardDepth: wildcardDepth + 1, maxWildcardDepth: maxWildcardDepth, body: body) { return result }
+                    if let result = searchGlobSegments(prefix: child, segments: segments, wildcardDepth: wildcardDepth + 1, maxWildcardDepth: maxWildcardDepth, matcher: matcher) { return result }
                 }
             }
             return nil
         }
-        return searchGlobSegments(prefix: prefix.appendingPathComponent(head, isDirectory: true), segments: tail, wildcardDepth: wildcardDepth, maxWildcardDepth: maxWildcardDepth, body: body)
+        return searchGlobSegments(prefix: prefix.appendingPathComponent(head, isDirectory: true), segments: tail, wildcardDepth: wildcardDepth, maxWildcardDepth: maxWildcardDepth, matcher: matcher)
     }
 }

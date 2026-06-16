@@ -114,26 +114,23 @@ internal struct GithubCIEnvironmentReader: CIEnvironmentReader {
         }
 
         let regex = jobIdRegex
-        var result: String? = nil
         for globDir in _diagnosticDirs {
-            FileManager.default.searchGlob(globDir) { dir in
+            if let id = FileManager.default.searchGlob(globDir, body: { dir -> String? in
                 guard let contents = try? FileManager.default.contentsOfDirectory(
                     at: dir, includingPropertiesForKeys: nil,
                     options: [.skipsHiddenFiles, .skipsSubdirectoryDescendants]
-                ) else { return false }
+                ) else { return nil }
                 for file in contents where file.pathExtension == "log" && file.lastPathComponent.hasPrefix("Worker_") {
                     guard let data = try? String(contentsOf: file) else { continue }
                     if let match = regex.firstMatch(in: data, range: NSRange(location: 0, length: data.utf16.count)) {
-                        result = String(data[Range(match.range(at: 1), in: data)!])
-                        return true
+                        return String(data[Range(match.range(at: 1), in: data)!])
                     }
                 }
-                return false
-            }
-            if result != nil { break }
+                return nil
+            }) { return id }
         }
 
-        return result
+        return nil
     }
 
     private var jobIdRegex: NSRegularExpression {

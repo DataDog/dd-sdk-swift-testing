@@ -113,7 +113,7 @@ internal struct GithubCIEnvironmentReader: CIEnvironmentReader {
             return id
         }
         
-        let files: [URL] = _diagnosticDirs.flatMap(expandGlob).compactMap { dir -> ([URL]?) in
+        let files: [URL] = _diagnosticDirs.flatMap { expandGlob($0) }.compactMap { dir -> ([URL]?) in
             guard let contents = try? FileManager.default.contentsOfDirectory(at: dir,
                                                                               includingPropertiesForKeys: nil,
                                                                               options: [.skipsHiddenFiles, .skipsSubdirectoryDescendants])
@@ -141,16 +141,17 @@ internal struct GithubCIEnvironmentReader: CIEnvironmentReader {
     }
 
     /// Expand a file URL containing `**` segments into concrete existing directory URLs.
-    /// `**` matches zero or more path segments. URLs without `**` are returned as-is.
-    private func expandGlob(_ url: URL) -> [URL] {
+    /// `**` matches zero or more path segments (capped at `maxWildcardDepth` levels to
+    /// avoid scanning huge directory trees on CI runners). URLs without `**` are returned as-is.
+    private func expandGlob(_ url: URL, maxWildcardDepth: Int = 3) -> [URL] {
         let path = url.path
         guard path.contains("**") else { return [url] }
         let segments = path.split(separator: "/", omittingEmptySubsequences: true).map(String.init)
         let root = URL(fileURLWithPath: path.hasPrefix("/") ? "/" : "", isDirectory: true)
-        return expandGlobSegments(prefix: root, segments: segments)
+        return expandGlobSegments(prefix: root, segments: segments, wildcardDepth: 0, maxWildcardDepth: maxWildcardDepth)
     }
 
-    private func expandGlobSegments(prefix: URL, segments: [String]) -> [URL] {
+    private func expandGlobSegments(prefix: URL, segments: [String], wildcardDepth: Int, maxWildcardDepth: Int) -> [URL] {
         guard let head = segments.first else {
             var isDir: ObjCBool = false
             guard FileManager.default.fileExists(atPath: prefix.path, isDirectory: &isDir), isDir.boolValue else {
@@ -161,18 +162,20 @@ internal struct GithubCIEnvironmentReader: CIEnvironmentReader {
         let tail = Array(segments.dropFirst())
         if head == "**" {
             // Zero-segment match: drop ** and continue at current prefix.
-            var results = expandGlobSegments(prefix: prefix, segments: tail)
-            // One-or-more match: descend into each subdir keeping ** for further recursion.
+            var results = expandGlobSegments(prefix: prefix, segments: tail, wildcardDepth: wildcardDepth, maxWildcardDepth: maxWildcardDepth)
+            // One-or-more match: descend into each subdir keeping ** for further recursion,
+            // but stop if we've already expanded this wildcard maxWildcardDepth times.
+            guard wildcardDepth < maxWildcardDepth else { return results }
             if let children = try? FileManager.default.contentsOfDirectory(at: prefix,
                                                                            includingPropertiesForKeys: [.isDirectoryKey],
                                                                            options: [.skipsHiddenFiles, .skipsSubdirectoryDescendants]) {
                 for child in children {
                     guard (try? child.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true else { continue }
-                    results.append(contentsOf: expandGlobSegments(prefix: child, segments: segments))
+                    results.append(contentsOf: expandGlobSegments(prefix: child, segments: segments, wildcardDepth: wildcardDepth + 1, maxWildcardDepth: maxWildcardDepth))
                 }
             }
             return results
         }
-        return expandGlobSegments(prefix: prefix.appendingPathComponent(head, isDirectory: true), segments: tail)
+        return expandGlobSegments(prefix: prefix.appendingPathComponent(head, isDirectory: true), segments: tail, wildcardDepth: wildcardDepth, maxWildcardDepth: maxWildcardDepth)
     }
 }

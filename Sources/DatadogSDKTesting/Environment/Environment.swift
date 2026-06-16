@@ -73,8 +73,15 @@ internal final class Environment {
                             vCPUCount: PlatformUtils.getCpuCount())
 
         let ciInfo = Log.measure(name: "env-ciReaders") {
-            ciReaders.reduce(nil) { (ci, reader) in
-                ci ?? (reader.isActive(env: env) ? reader.read(env: env) : nil)
+            ciReaders.reduce(nil) { (ci, reader) -> (ci: CI, git: Git)? in
+                guard ci == nil else { return ci }
+                let active = Log.measure(name: "env-ci[\(type(of: reader))]") {
+                    reader.isActive(env: env)
+                }
+                guard active else { return nil }
+                return Log.measure(name: "env-ci[\(type(of: reader))].read") {
+                    reader.read(env: env)
+                }
             }
         }
         ci = ciInfo?.ci

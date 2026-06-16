@@ -68,25 +68,14 @@ struct XcodeTestRunner: Sendable {
                 // Propagate device/OS tags from the inner test process to the outer runner span.
                 // The runner always executes on macOS; for simulator platforms the inner tests
                 // carry the real simulator device info that would otherwise be absent.
-                //
-                // Device/OS tags live in the envelope-level metadata under "test_levels" — they
-                // are NOT merged into individual span.meta by SpanEvent.extend (which only merges
-                // metadata[span.type] and metadata["*"]), so we read the envelope metadata directly.
-                // Individual span tags take priority over envelope metadata (span tags override).
-                let deviceTagKeys = [DDOSTags.osPlatform, DDOSTags.osArchitecture, DDOSTags.osVersion,
-                                     DDDeviceTags.deviceName, DDDeviceTags.deviceModel]
-                if let envelope = requests.spanEnvelopes.first,
-                   let envTags = envelope.metadata["test_levels"],
-                   let osPlatform = envTags[DDOSTags.osPlatform],
+                if let span = requests.allSpans.first(where: { $0.meta[DDOSTags.osPlatform] != nil }),
+                   let osPlatform = span.meta[DDOSTags.osPlatform],
                    osPlatform != "macOS",
                    let currentTest = DDTest.current
                 {
-                    for key in deviceTagKeys {
-                        // Prefer a value set directly on an individual span (via allSpans extended
-                        // merge), fall back to the envelope-level metadata value.
-                        let value = requests.allSpans.lazy.compactMap({ $0.meta[key] }).first
-                                    ?? envTags[key]
-                        if let value {
+                    for key in [DDOSTags.osPlatform, DDOSTags.osArchitecture, DDOSTags.osVersion,
+                                DDDeviceTags.deviceName, DDDeviceTags.deviceModel] {
+                        if let value = span.meta[key] {
                             currentTest.set(tag: key, value: value)
                         }
                     }

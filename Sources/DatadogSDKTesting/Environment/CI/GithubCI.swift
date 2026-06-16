@@ -112,70 +112,31 @@ internal struct GithubCIEnvironmentReader: CIEnvironmentReader {
         if let id: String = env["JOB_CHECK_RUN_ID"] {
             return id
         }
-        
-        let files: [URL] = _diagnosticDirs.flatMap { expandGlob($0) }.compactMap { dir -> ([URL]?) in
-            guard let contents = try? FileManager.default.contentsOfDirectory(at: dir,
-                                                                              includingPropertiesForKeys: nil,
-                                                                              options: [.skipsHiddenFiles, .skipsSubdirectoryDescendants])
-            else {
-                return nil
-            }
-            return contents.filter { $0.pathExtension == "log" && $0.lastPathComponent.hasPrefix("Worker_") }
-        }.flatMap { $0 }
-        
+
         let regex = jobIdRegex
-        for file in files {
-            guard let data = try? String(contentsOf: file) else {
-                continue
+        var result: String? = nil
+        for globDir in _diagnosticDirs {
+            FileManager.default.searchGlob(globDir) { dir in
+                guard let contents = try? FileManager.default.contentsOfDirectory(
+                    at: dir, includingPropertiesForKeys: nil,
+                    options: [.skipsHiddenFiles, .skipsSubdirectoryDescendants]
+                ) else { return false }
+                for file in contents where file.pathExtension == "log" && file.lastPathComponent.hasPrefix("Worker_") {
+                    guard let data = try? String(contentsOf: file) else { continue }
+                    if let match = regex.firstMatch(in: data, range: NSRange(location: 0, length: data.utf16.count)) {
+                        result = String(data[Range(match.range(at: 1), in: data)!])
+                        return true
+                    }
+                }
+                return false
             }
-            if let match = regex.firstMatch(in: data, range: NSRange(location: 0, length: data.utf16.count)) {
-                return String(data[Range(match.range(at: 1), in: data)!])
-            }
+            if result != nil { break }
         }
-        
-        return nil
+
+        return result
     }
-    
+
     private var jobIdRegex: NSRegularExpression {
         try! NSRegularExpression(pattern: #""k":\s*"check_run_id"[^}]*"v":\s*(\d+)(?:\.\d+)?"#)
-    }
-
-    /// Expand a file URL containing `**` segments into concrete existing directory URLs.
-    /// `**` matches zero or more path segments (capped at `maxWildcardDepth` levels to
-    /// avoid scanning huge directory trees on CI runners). URLs without `**` are returned as-is.
-    private func expandGlob(_ url: URL, maxWildcardDepth: Int = 3) -> [URL] {
-        let path = url.path
-        guard path.contains("**") else { return [url] }
-        let segments = path.split(separator: "/", omittingEmptySubsequences: true).map(String.init)
-        let root = URL(fileURLWithPath: path.hasPrefix("/") ? "/" : "", isDirectory: true)
-        return expandGlobSegments(prefix: root, segments: segments, wildcardDepth: 0, maxWildcardDepth: maxWildcardDepth)
-    }
-
-    private func expandGlobSegments(prefix: URL, segments: [String], wildcardDepth: Int, maxWildcardDepth: Int) -> [URL] {
-        guard let head = segments.first else {
-            var isDir: ObjCBool = false
-            guard FileManager.default.fileExists(atPath: prefix.path, isDirectory: &isDir), isDir.boolValue else {
-                return []
-            }
-            return [prefix]
-        }
-        let tail = Array(segments.dropFirst())
-        if head == "**" {
-            // Zero-segment match: drop ** and continue at current prefix.
-            var results = expandGlobSegments(prefix: prefix, segments: tail, wildcardDepth: wildcardDepth, maxWildcardDepth: maxWildcardDepth)
-            // One-or-more match: descend into each subdir keeping ** for further recursion,
-            // but stop if we've already expanded this wildcard maxWildcardDepth times.
-            guard wildcardDepth < maxWildcardDepth else { return results }
-            if let children = try? FileManager.default.contentsOfDirectory(at: prefix,
-                                                                           includingPropertiesForKeys: [.isDirectoryKey],
-                                                                           options: [.skipsHiddenFiles, .skipsSubdirectoryDescendants]) {
-                for child in children {
-                    guard (try? child.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true else { continue }
-                    results.append(contentsOf: expandGlobSegments(prefix: child, segments: segments, wildcardDepth: wildcardDepth + 1, maxWildcardDepth: maxWildcardDepth))
-                }
-            }
-            return results
-        }
-        return expandGlobSegments(prefix: prefix.appendingPathComponent(head, isDirectory: true), segments: tail, wildcardDepth: wildcardDepth, maxWildcardDepth: maxWildcardDepth)
     }
 }

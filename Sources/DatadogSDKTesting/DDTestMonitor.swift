@@ -125,6 +125,7 @@ internal class DDTestMonitor {
             DDTestMonitor.instance?.startInstrumenting()
         }
         DDTestMonitor.instance?.loadSourceCodeInfo()
+        DDTestMonitor.instance?.loadGitCommitInfo()
         Log.measure(name: "startGitUpload") {
             DDTestMonitor.instance?.startGitUpload()
         }
@@ -211,7 +212,9 @@ internal class DDTestMonitor {
         knownTests?.stop()
         testManagement?.stop()
         tracer.shutdown()
-        gitUploadQueue.waitUntilAllOperationsAreFinished()
+        Log.measure(name: "gitUploadQueue drain") {
+            gitUploadQueue.waitUntilAllOperationsAreFinished()
+        }
     }
     
     deinit {
@@ -346,7 +349,9 @@ internal class DDTestMonitor {
             Log.debug("Tracer Config: \(config)")
             if config.itr.requireGit {
                 Log.debug("ITR requires Git upload")
-                gitUploadQueue.waitUntilAllOperationsAreFinished()
+                Log.measure(name: "gitUploadQueue drain (ITR)") {
+                    gitUploadQueue.waitUntilAllOperationsAreFinished()
+                }
                 if isGitUploadSucceded {
                     config = getTracerConfig("Get Tracer Config after git upload") ?? config
                     Log.debug("Tracer config: \(config)")
@@ -601,27 +606,22 @@ internal class DDTestMonitor {
             }
         }
 
-        // `git fetch` inside mergeHeadInfo can take 15+ seconds on simulators
-        // (shallow clone, network timeout). Run it on the background queue so it
-        // doesn't block test startup; setupCrashHandler() waits for this queue
-        // before the session span is created, so the commit metadata is available
-        // in time.
-        let env = DDTestMonitor.env
-        if let gitDirectory = env.git.directory, let head = env.git.commitHead?.sha {
-            instrumentationWorkQueue.addOperation {
-                if let info = Environment.mergeHeadInfo(headSha: head,
-                                                        gitDirectory: gitDirectory,
-                                                        log: Log.instance)
-                {
-                    env.git = env.git.updated(with: info)
-                }
-            }
-        }
 #endif
+    }
+
+    /// Schedules `mergeHeadInfo` (a `git fetch`) on `instrumentationWorkQueue`.
+    /// Not gated by `disableSourceLocation` — commit author/message metadata
+    /// is unrelated to source-location features.
+    func loadGitCommitInfo() {
+        instrumentationWorkQueue.addOperation {
+            DDTestMonitor.env.fetchMergeHeadInfo(log: Log.instance)
+        }
     }
     
     func setupCrashHandler() {
-        instrumentationWorkQueue.waitUntilAllOperationsAreFinished()
+        Log.measure(name: "instrumentationWorkQueue drain") {
+            instrumentationWorkQueue.waitUntilAllOperationsAreFinished()
+        }
         // check if handler needed
         guard !DDTestMonitor.config.disableCrashHandler else {
             return
@@ -712,7 +712,9 @@ internal class DDTestMonitor {
     }
     
     var activeFeatures: any TestHooksFeatures {
-        testOptimizationSetupQueue.waitUntilAllOperationsAreFinished()
+        Log.measure(name: "testOptimizationSetupQueue drain") {
+            testOptimizationSetupQueue.waitUntilAllOperationsAreFinished()
+        }
         let telemetryEvents = tracer.telemetry.map { TelemetryEventsFeature(telemetry: $0) }
         let features: [(any TestHooksFeature)?] = [
             testManagement, tia, coverage, efd, atr, knownTests,

@@ -323,6 +323,21 @@ internal final class Environment {
     }
 
     
+    /// Fetches commit message and author/committer details via `git fetch`.
+    /// Must be called on a background thread — the fetch can take many seconds
+    /// on simulators with shallow clones or restricted network access.
+    func fetchMergeHeadInfo(log: Logger) {
+#if targetEnvironment(simulator) || os(macOS)
+        guard let gitDirectory = git.directory, let head = git.commitHead?.sha else { return }
+        let info = Log.measure(name: "mergeHeadInfo") {
+            Self.mergeHeadInfo(headSha: head, gitDirectory: gitDirectory, log: log)
+        }
+        if let info {
+            git = git.updated(with: info)
+        }
+#endif
+    }
+
     static var ciReaders: [CIEnvironmentReader] {
         return [
             TravisCIEnvironmentReader(), CircleCIEnvironmentReader(), JenkinsCIEnvironmentReader(),

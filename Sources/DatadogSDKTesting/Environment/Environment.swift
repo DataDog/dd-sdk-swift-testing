@@ -13,7 +13,7 @@ internal final class Environment {
 
     let platform: Platform
     let ci: CI?
-    let git: Git
+    var git: Git
 
     let sessionName: String
     let testCommand: String
@@ -114,15 +114,6 @@ internal final class Environment {
         if git.directory == nil {
             git = git.with(directory: workspacePath)
         }
-
-        #if targetEnvironment(simulator) || os(macOS)
-        if let gitDirectory = git.directory,
-           let head = git.commitHead?.sha,
-           let info = Self.mergeHeadInfo(headSha: head, gitDirectory: gitDirectory, log: log)
-        {
-            git = git.updated(with: info)
-        }
-        #endif
 
         let overrides = Environment.gitOverrides(env: env)
         let assembledProvider: Telemetry.ShaProvider = ciInfo?.git.commit?.sha != nil ? .ciProvider : .localGit

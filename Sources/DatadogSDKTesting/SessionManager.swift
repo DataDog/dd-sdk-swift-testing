@@ -50,10 +50,7 @@ final actor SessionManager: TestSessionManager {
         let startTime = DDTestMonitor.clock.now
         
         if DDTestMonitor.instance == nil {
-            let _outerStart = CFAbsoluteTimeGetCurrent()
             try log.measure(name: "Install Test Monitor") {
-                let _innerElapsed = CFAbsoluteTimeGetCurrent() - _outerStart
-                log.print("Install Test Monitor closure lag: \(String(format: "%.5f", _innerElapsed))s (on main: \(Thread.isMainThread))")
                 guard DDTestMonitor.installTestMonitor() else {
                     throw BoostrapError.monitorInitFailed
                 }
@@ -71,9 +68,8 @@ final actor SessionManager: TestSessionManager {
         // The common telemetry manager is created with the tracer (so it's
         // available to the API/exporter layers) and shared with every feature
         // through the session config. `nil` when telemetry is disabled.
-        let activeFeatures = log.measure(name: "activeFeatures") { monitor.activeFeatures }
         let config = SessionConfig(
-            activeFeatures: activeFeatures,
+            activeFeatures: monitor.activeFeatures,
             env: DDTestMonitor.env,
             config: DDTestMonitor.config,
             clock: DDTestMonitor.clock,

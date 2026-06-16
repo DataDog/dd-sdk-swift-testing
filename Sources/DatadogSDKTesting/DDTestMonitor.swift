@@ -110,17 +110,13 @@ internal class DDTestMonitor {
     private var isStopped: Bool = false
 
     static func installTestMonitor() -> Bool {
-        let _t0 = CFAbsoluteTimeGetCurrent()
         guard DDTestMonitor.config.apiKey != nil else {
             Log.print("A Datadog API key is required. DD_API_KEY environment value is missing.")
             return false
         }
-        Log.print("config.apiKey check: \(String(format: "%.5f", CFAbsoluteTimeGetCurrent() - _t0))s")
-        let _t1 = CFAbsoluteTimeGetCurrent()
         if DDTestMonitor.env.sourceRoot == nil {
             Log.print("SRCROOT is not properly set")
         }
-        Log.print("env.sourceRoot check: \(String(format: "%.5f", CFAbsoluteTimeGetCurrent() - _t1))s")
         Log.print("Library loaded and active. Instrumenting tests.")
         Log.measure(name: "DDTestMonitor init") {
             DDTestMonitor.instance = DDTestMonitor()
@@ -128,19 +124,13 @@ internal class DDTestMonitor {
         Log.measure(name: "startInstrumenting") {
             DDTestMonitor.instance?.startInstrumenting()
         }
-
-        Log.measure(name: "loadSourceCodeInfo") {
-            DDTestMonitor.instance?.loadSourceCodeInfo()
-        }
-
+        DDTestMonitor.instance?.loadSourceCodeInfo()
         Log.measure(name: "startGitUpload") {
             DDTestMonitor.instance?.startGitUpload()
         }
-
         Log.measure(name: "startTestOptimization") {
             DDTestMonitor.instance?.startTestOptimization()
         }
-        
         return true
     }
     
@@ -607,6 +597,23 @@ internal class DDTestMonitor {
                         Log.print("Codeowners parsing failed \(error)")
                         return nil
                     }
+                }
+            }
+        }
+
+        // `git fetch` inside mergeHeadInfo can take 15+ seconds on simulators
+        // (shallow clone, network timeout). Run it on the background queue so it
+        // doesn't block test startup; setupCrashHandler() waits for this queue
+        // before the session span is created, so the commit metadata is available
+        // in time.
+        let env = DDTestMonitor.env
+        if let gitDirectory = env.git.directory, let head = env.git.commitHead?.sha {
+            instrumentationWorkQueue.addOperation {
+                if let info = Environment.mergeHeadInfo(headSha: head,
+                                                        gitDirectory: gitDirectory,
+                                                        log: Log.instance)
+                {
+                    env.git = env.git.updated(with: info)
                 }
             }
         }

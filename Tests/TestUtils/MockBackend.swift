@@ -588,8 +588,8 @@ extension MockBackend {
         
         func extend(metadata: borrowing [String: [String: String]]) -> Self {
             switch self {
-            case .span(let span): return .span(span.extend(metadata: metadata))
-            case .test(let span): return .test(span.extend(metadata: metadata))
+            case .span(let span): return .span(span.extend(metadata: metadata, includeTestLevels: false))
+            case .test(let span): return .test(span.extend(metadata: metadata, includeTestLevels: true))
             case .suiteEnd(let event): return .suiteEnd(event.extend(type: CodingKeys.suiteEnd.rawValue,
                                                                      metadata: metadata))
             case .moduleEnd(let event): return .moduleEnd(event.extend(type: CodingKeys.moduleEnd.rawValue,
@@ -629,14 +629,15 @@ extension MockBackend {
             case itrCorrelationId = "itr_correlation_id"
         }
         
-        func extend(metadata: borrowing [String: [String: String]]) -> Self {
-            var meta = self.meta
-            if let typed = metadata[type] {
-                meta.merge(typed) { a, b in a }
-            }
-            if let common = metadata["*"] {
-                meta.merge(common) { a, b in a }
-            }
+        func extend(metadata: borrowing [String: [String: String]], includeTestLevels: Bool) -> Self {
+            // Priority (highest to lowest): span.meta > metadata[type] > metadata["test_levels"] > metadata["*"]
+            // "test_levels" only applies to test* spans, not generic "span" events.
+            // Build from lowest priority up; { a, _ in a } keeps the already-accumulated value.
+            var meta = [String: String]()
+            if let common = metadata["*"] { meta.merge(common) { a, _ in a } }
+            if includeTestLevels, let levels = metadata["test_levels"] { meta.merge(levels) { a, _ in a } }
+            if let typed = metadata[type] { meta.merge(typed) { a, _ in a } }
+            meta.merge(self.meta) { a, _ in a }
             return .init(traceId: traceId, spanId: spanId, parentId: parentId,
                          testSessionId: testSessionId, testModuleId: testModuleId,
                          testSuiteId: testSuiteId, name: name, service: service,
@@ -666,13 +667,12 @@ extension MockBackend {
         }
         
         func extend(type: String, metadata: borrowing [String: [String: String]]) -> Self {
-            var meta = self.meta
-            if let typed = metadata[type] {
-                meta.merge(typed) { a, b in a }
-            }
-            if let common = metadata["*"] {
-                meta.merge(common) { a, b in a }
-            }
+            // Priority (highest to lowest): span.meta > metadata[type] > metadata["test_levels"] > metadata["*"]
+            var meta = [String: String]()
+            if let common = metadata["*"] { meta.merge(common) { a, _ in a } }
+            if let levels = metadata["test_levels"] { meta.merge(levels) { a, _ in a } }
+            if let typed = metadata[type] { meta.merge(typed) { a, _ in a } }
+            meta.merge(self.meta) { a, _ in a }
             return .init(testSessionId: testSessionId, testModuleId: testModuleId,
                          testSuiteId: testSuiteId, name: name, service: service,
                          resource: resource, start: start, duration: duration,

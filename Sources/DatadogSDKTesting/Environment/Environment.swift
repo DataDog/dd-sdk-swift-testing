@@ -40,20 +40,22 @@ internal final class Environment {
 
         // Determine whether Swift Testing TIA is enabled for this target.
         // Explicit env var takes precedence; otherwise auto-detect from the test runner config.
-        let targetName: String? = Bundle.testBundle?.name ?? Bundle.main.name
+        let targetName: String? = Log.measure(name: "env-testBundle") { Bundle.testBundle?.name ?? Bundle.main.name }
         if let explicit = config.tiaSwiftTestingEnabled {
             tiaSwiftTestingEnabled = config.tiaEnabled && explicit
         } else {
             tiaSwiftTestingEnabled = config.tiaEnabled &&
-                ParallelTestRunnerDetector.isParallelizationDisabled(
-                    env: env, sourceRoot: sourceRoot, targetName: targetName
-                )
+                Log.measure(name: "env-parallelizationDisabled") {
+                    ParallelTestRunnerDetector.isParallelizationDisabled(
+                        env: env, sourceRoot: sourceRoot, targetName: targetName
+                    )
+                }
         }
 
         /// Device Information
-        let runtimeInfo = PlatformUtils.getRuntimeInfo()
-        let deviceInfo = PlatformUtils.getDeviceInfo()
-        let kernelInfo = PlatformUtils.getKernelInfo()
+        let runtimeInfo = Log.measure(name: "env-runtimeInfo") { PlatformUtils.getRuntimeInfo() }
+        let deviceInfo = Log.measure(name: "env-deviceInfo") { PlatformUtils.getDeviceInfo() }
+        let kernelInfo = Log.measure(name: "env-kernelInfo") { PlatformUtils.getKernelInfo() }
         platform = Platform(deviceName: deviceInfo.name,
                             deviceModel: deviceInfo.model,
                             osName: deviceInfo.osName,
@@ -68,29 +70,30 @@ internal final class Environment {
                             languageVersion: runtimeInfo.swiftVersion,
                             localization: PlatformUtils.getLocalization(),
                             vCPUCount: PlatformUtils.getCpuCount())
-        
-        
-        let ciInfo = ciReaders.reduce(nil) { (ci, reader) in
-            ci ?? (reader.isActive(env: env) ? reader.read(env: env) : nil)
+
+        let ciInfo = Log.measure(name: "env-ciReaders") {
+            ciReaders.reduce(nil) { (ci, reader) in
+                ci ?? (reader.isActive(env: env) ? reader.read(env: env) : nil)
+            }
         }
         ci = ciInfo?.ci
-        
+
         var workspace = ciInfo?.ci.workspacePath
         var git: Git = ciInfo?.git ?? Git()
-        
+
         // Read git folder information
         let gitInfo: GitInfo?
 
         #if targetEnvironment(simulator) || os(macOS)
         if let sourceRoot = sourceRoot ?? workspace {
-            gitInfo = Self.gitInfoAt(startingPath: sourceRoot)
+            gitInfo = Log.measure(name: "env-gitInfoAt") { Self.gitInfoAt(startingPath: sourceRoot) }
         } else {
             gitInfo = nil
         }
         #else
         gitInfo = nil
         #endif
-        
+
         if let info = gitInfo {
             if git.commit?.sha == nil || git.commit?.sha == info.commit {
                 git = git.extended(from: info)
@@ -131,9 +134,9 @@ internal final class Environment {
                                                     type: .repository))
         }
         self.git = git.updated(with: overrides)
-        
+
         testCommand = "test \(Bundle.testBundle?.name ?? Bundle.main.name)"
-        
+
         if let sName = config.sessionName {
             sessionName = sName
         } else if let job = ci?.jobName {
@@ -141,7 +144,7 @@ internal final class Environment {
         } else {
             sessionName = testCommand
         }
-        
+
         if let service = config.service {
             self.service = service
             self.isUserProvidedService = true
@@ -149,7 +152,7 @@ internal final class Environment {
             self.service = git.repositoryName ?? "unknown-swift-repo"
             self.isUserProvidedService = false
         }
-        
+
         validate(log: log)
     }
     

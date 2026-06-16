@@ -36,7 +36,8 @@ internal final class Environment {
         self.env = env
         self.config = config
 
-        sourceRoot = env[.sourcesDir]
+        let sourceRootValue: String? = env[.sourcesDir]
+        sourceRoot = sourceRootValue
 
         // Determine whether Swift Testing TIA is enabled for this target.
         // Explicit env var takes precedence; otherwise auto-detect from the test runner config.
@@ -47,7 +48,7 @@ internal final class Environment {
             tiaSwiftTestingEnabled = config.tiaEnabled &&
                 Log.measure(name: "env-parallelizationDisabled") {
                     ParallelTestRunnerDetector.isParallelizationDisabled(
-                        env: env, sourceRoot: sourceRoot, targetName: targetName
+                        env: env, sourceRoot: sourceRootValue, targetName: targetName
                     )
                 }
         }
@@ -85,8 +86,8 @@ internal final class Environment {
         let gitInfo: GitInfo?
 
         #if targetEnvironment(simulator) || os(macOS)
-        if let sourceRoot = sourceRoot ?? workspace {
-            gitInfo = Log.measure(name: "env-gitInfoAt") { Self.gitInfoAt(startingPath: sourceRoot) }
+        if let sr = sourceRootValue ?? workspace {
+            gitInfo = Log.measure(name: "env-gitInfoAt") { Self.gitInfoAt(startingPath: sr) }
         } else {
             gitInfo = nil
         }

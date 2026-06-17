@@ -567,8 +567,10 @@ internal class DDTestMonitor {
         }
 
         if !DDTestMonitor.config.disableNetworkInstrumentation {
-            Log.measure(name: "startNetworkAutoInstrumentation") {
-                startNetworkAutoInstrumentation()
+            instrumentationWorkQueue.addOperation { [self] in
+                Log.measure(name: "startNetworkAutoInstrumentation") {
+                    startNetworkAutoInstrumentation()
+                }
             }
         }
         if DDTestMonitor.config.enableStdoutInstrumentation {

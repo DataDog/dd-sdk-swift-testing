@@ -21,6 +21,8 @@ internal final class FileWriter {
     private var isClosed = false
     /// Optional telemetry observer notified about serialization / payload size.
     private let observer: PayloadObserver?
+    /// Logger for write failures and events dropped after the writer was stopped.
+    private let log: Logger
     /// Events written to / time spent serializing the currently-open file. Only
     /// touched on `queue`. Reported as `payloadFinalized` when the file rolls
     /// over or is explicitly closed.
@@ -33,12 +35,14 @@ internal final class FileWriter {
          dataFormat: DataFormatType,
          orchestrator: FilesOrchestratorType,
          encoder: JSONEncoder,
+         log: Logger,
          observer: PayloadObserver? = nil)
     {
         self.entity = entity
         self.dataFormat = dataFormat
         self.orchestrator = orchestrator
         self.encoder = encoder
+        self.log = log
         self.observer = observer
         self.queue = DispatchQueue(label: "datadogtest.filewriter.\(entity)",
                                    target: .global(qos: .userInteractive))
@@ -99,7 +103,7 @@ internal final class FileWriter {
             do {
                 try self.write(value: value, sync: false)
             } catch {
-                Log.print("🔥 Failed to write file: \(error)")
+                self.log.print("🔥 Failed to write file: \(error)")
             }
         }
     }
@@ -121,7 +125,7 @@ internal final class FileWriter {
     private func logDropped<T: Encodable>(_ value: T) {
         let payload = (try? encoder.encode(value))
             .flatMap { String(data: $0, encoding: .utf8) } ?? "\(value)"
-        Log.print("🔥 Dropped event written to '\(entity)' after the writer was stopped: \(payload)")
+        log.print("🔥 Dropped event written to '\(entity)' after the writer was stopped: \(payload)")
     }
 
     private func write<T: Encodable>(value: T, sync: Bool) throws {

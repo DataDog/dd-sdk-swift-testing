@@ -37,7 +37,8 @@ public final class TelemetryExporter: TelemetryPayloadExporter {
         let writer = FileWriter(entity: "telemetry",
                                 dataFormat: dataFormat,
                                 orchestrator: filesOrchestrator,
-                                encoder: encoder)
+                                encoder: encoder,
+                                log: config.logger)
         let reader = FileReader(dataFormat: dataFormat, orchestrator: filesOrchestrator)
         let uploader = ClosureDataUploader() { (data) async throws(APICallError) -> Void in
             try await api.send(batch: data)

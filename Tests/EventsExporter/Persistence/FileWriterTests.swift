@@ -30,7 +30,8 @@ class FileWriterTests: XCTestCase {
                 performance: PerformancePreset.default,
                 dateProvider: SystemDateProvider()
             ),
-            encoder: JSONEncoder.apiEncoder
+            encoder: JSONEncoder.apiEncoder,
+            log: Log()
         )
 
         writer.write(value: ["key1": "value1"])
@@ -60,6 +61,7 @@ class FileWriterTests: XCTestCase {
                 dateProvider: SystemDateProvider()
             ),
             encoder: JSONEncoder.apiEncoder,
+            log: Log(),
             observer: observer
         )
 
@@ -101,7 +103,8 @@ class FileWriterTests: XCTestCase {
                 ),
                 dateProvider: SystemDateProvider()
             ),
-            encoder: JSONEncoder.apiEncoder
+            encoder: JSONEncoder.apiEncoder,
+            log: Log()
         )
 
         writer.write(value: ["key1": "value1"]) // will be written
@@ -144,7 +147,8 @@ class FileWriterTests: XCTestCase {
                 ),
                 dateProvider: SystemDateProvider()
             ),
-            encoder: JSONEncoder.apiEncoder
+            encoder: JSONEncoder.apiEncoder,
+            log: Log()
         )
 
         let ioInterruptionQueue = DispatchQueue(
@@ -186,6 +190,107 @@ class FileWriterTests: XCTestCase {
         XCTAssertLessThanOrEqual(writtenData.count, 300)
     }
 
+    func testWhenWriterIsStopped_itDropsAndLogsSubsequentWrites() throws {
+        let logger = RecordingLogger()
+        let writer = FileWriter(
+            entity: "testfilewriter-stop",
+            dataFormat: DataFormat(prefix: Data("[".utf8),
+                                   suffix: Data("]".utf8),
+                                   separator: Data(",".utf8)),
+            orchestrator: FilesOrchestrator(
+                directory: temporaryDirectory,
+                performance: StoragePerformanceMock.appendToOneFile,
+                dateProvider: SystemDateProvider()
+            ),
+            encoder: JSONEncoder.apiEncoder,
+            log: logger
+        )
+
+        writer.write(value: ["key1": "value1"])
+        // `stop()` barrier-drains the in-flight write, then seals the writer.
+        writer.stop()
+
+        XCTAssertEqual(try temporaryDirectory.files().count, 1)
+        let contentBeforeDrop = try temporaryDirectory.files()[0].read()
+
+        // A write after stop is rejected: no new file, existing content untouched.
+        writer.write(value: ["dropped": "afterstop"])
+        let expectation = self.expectation(description: "post-stop write drained")
+        waitForWritesCompletion(on: writer.queue, thenFulfill: expectation)
+        wait(for: [expectation], timeout: 1)
+
+        XCTAssertEqual(try temporaryDirectory.files().count, 1)
+        XCTAssertEqual(try temporaryDirectory.files()[0].read(), contentBeforeDrop)
+
+        // The drop is logged with the entity and the encoded payload, so the
+        // discarded data can be inspected when debugging.
+        let dropLog = logger.messages.first { $0.contains("after the writer was stopped") }
+        XCTAssertNotNil(dropLog, "expected a dropped-event log line")
+        XCTAssertEqual(dropLog?.contains("testfilewriter-stop"), true)
+        XCTAssertEqual(dropLog?.contains(#"{"dropped":"afterstop"}"#), true)
+    }
+
+    func testStopDrainsInFlightWritesBeforeSealing() throws {
+        let writer = FileWriter(
+            entity: "testfilewriter-drain",
+            dataFormat: DataFormat(prefix: Data("[".utf8),
+                                   suffix: Data("]".utf8),
+                                   separator: Data(",".utf8)),
+            orchestrator: FilesOrchestrator(
+                directory: temporaryDirectory,
+                performance: StoragePerformanceMock.appendToOneFile,
+                dateProvider: SystemDateProvider()
+            ),
+            encoder: JSONEncoder.apiEncoder,
+            log: Log()
+        )
+
+        writer.write(value: ["key1": "value1"])
+        writer.write(value: ["key2": "value2"])
+        writer.write(value: ["key3": "value3"])
+        // No explicit wait: `stop()` must drain all in-flight async writes via
+        // the serial-queue barrier before it returns.
+        writer.stop()
+
+        XCTAssertEqual(try temporaryDirectory.files().count, 1)
+        XCTAssertEqual(
+            try temporaryDirectory.files()[0].read(),
+            #"[{"key1":"value1"},{"key2":"value2"},{"key3":"value3"}"# .utf8Data
+        )
+    }
+
+    func testAfterStop_allWrittenFilesAreReadableForFinalFlush() throws {
+        let orchestrator = FilesOrchestrator(
+            directory: temporaryDirectory,
+            performance: StoragePerformanceMock.appendToOneFile,
+            dateProvider: SystemDateProvider()
+        )
+        let writer = FileWriter(
+            entity: "testfilewriter-complete",
+            dataFormat: DataFormat(prefix: Data("[".utf8),
+                                   suffix: Data("]".utf8),
+                                   separator: Data(",".utf8)),
+            orchestrator: orchestrator,
+            encoder: JSONEncoder.apiEncoder,
+            log: Log()
+        )
+
+        writer.write(value: ["key1": "value1"])
+        writer.write(value: ["key2": "value2"])
+        writer.stop()
+
+        // After sealing, no file is hidden in `activeWrites`, so the final flush
+        // (`getAllReadableFiles`) enumerates the complete set written so far —
+        // nothing is skipped and stranded on disk.
+        let readable = try orchestrator.getAllReadableFiles()
+        XCTAssertEqual(readable.count, 1)
+        XCTAssertEqual(try temporaryDirectory.files().count, 1)
+        XCTAssertEqual(
+            try readable[0].read(),
+            #"[{"key1":"value1"},{"key2":"value2"}"# .utf8Data
+        )
+    }
+
     private func waitForWritesCompletion(on queue: DispatchQueue, thenFulfill expectation: XCTestExpectation) {
         queue.async { expectation.fulfill() }
     }
@@ -211,5 +316,27 @@ private final class RecordingPayloadObserver: PayloadObserver, @unchecked Sendab
 
     func payloadFinalized(eventCount: Int, serializationMs: Double) {
         lock.withLock { _finalized.append((eventCount, serializationMs)) }
+    }
+}
+
+/// Captures `Logger.print` messages so tests can assert on what was logged,
+/// without touching global logging state. Messages may arrive on the writer's
+/// serial queue, so a lock keeps reads from the test thread safe.
+private final class RecordingLogger: Logger, @unchecked Sendable {
+    private let lock = NSLock()
+    private var _messages: [String] = []
+
+    var messages: [String] { lock.withLock { _messages } }
+    var isDebug: Bool { false }
+
+    func print(_ message: String) { lock.withLock { _messages.append(message) } }
+    func debug(_ wrapped: @autoclosure () -> String) {}
+
+    func measure<T, E: Error>(name: String, _ operation: () throws(E) -> T) throws(E) -> T {
+        try operation()
+    }
+
+    func measure<T, E: Error>(name: String, _ operation: @Sendable () async throws(E) -> T) async throws(E) -> T {
+        try await operation()
     }
 }

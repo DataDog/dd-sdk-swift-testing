@@ -18,7 +18,8 @@ class DataUploadWorkerTests: XCTestCase {
         entity: "datauploadworker",
         dataFormat: DataFormat.mockWith(prefix: "[", suffix: "]", separator: ","),
         orchestrator: orchestrator,
-        encoder: JSONEncoder.apiEncoder
+        encoder: JSONEncoder.apiEncoder,
+        log: Log()
     )
     lazy var reader = FileReader(
         dataFormat: DataFormat.mockWith(prefix: "[", suffix: "]", separator: ","),

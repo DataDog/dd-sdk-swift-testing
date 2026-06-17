@@ -13,7 +13,7 @@ internal final class Environment {
 
     let platform: Platform
     let ci: CI?
-    let git: Git
+    var git: Git
 
     let sessionName: String
     let testCommand: String
@@ -36,24 +36,27 @@ internal final class Environment {
         self.env = env
         self.config = config
 
-        sourceRoot = env[.sourcesDir]
+        let sourceRootValue: String? = env[.sourcesDir]
+        sourceRoot = sourceRootValue
 
         // Determine whether Swift Testing TIA is enabled for this target.
         // Explicit env var takes precedence; otherwise auto-detect from the test runner config.
-        let targetName: String? = Bundle.testBundle?.name ?? Bundle.main.name
+        let targetName: String? = Log.measure(name: "env-testBundle") { Bundle.testBundle?.name ?? Bundle.main.name }
         if let explicit = config.tiaSwiftTestingEnabled {
             tiaSwiftTestingEnabled = config.tiaEnabled && explicit
         } else {
             tiaSwiftTestingEnabled = config.tiaEnabled &&
-                ParallelTestRunnerDetector.isParallelizationDisabled(
-                    env: env, sourceRoot: sourceRoot, targetName: targetName
-                )
+                Log.measure(name: "env-parallelizationDisabled") {
+                    ParallelTestRunnerDetector.isParallelizationDisabled(
+                        env: env, sourceRoot: sourceRootValue, targetName: targetName
+                    )
+                }
         }
 
         /// Device Information
-        let runtimeInfo = PlatformUtils.getRuntimeInfo()
-        let deviceInfo = PlatformUtils.getDeviceInfo()
-        let kernelInfo = PlatformUtils.getKernelInfo()
+        let runtimeInfo = Log.measure(name: "env-runtimeInfo") { PlatformUtils.getRuntimeInfo() }
+        let deviceInfo = Log.measure(name: "env-deviceInfo") { PlatformUtils.getDeviceInfo() }
+        let kernelInfo = Log.measure(name: "env-kernelInfo") { PlatformUtils.getKernelInfo() }
         platform = Platform(deviceName: deviceInfo.name,
                             deviceModel: deviceInfo.model,
                             osName: deviceInfo.osName,
@@ -68,29 +71,37 @@ internal final class Environment {
                             languageVersion: runtimeInfo.swiftVersion,
                             localization: PlatformUtils.getLocalization(),
                             vCPUCount: PlatformUtils.getCpuCount())
-        
-        
-        let ciInfo = ciReaders.reduce(nil) { (ci, reader) in
-            ci ?? (reader.isActive(env: env) ? reader.read(env: env) : nil)
+
+        let ciInfo = Log.measure(name: "env-ciReaders") {
+            ciReaders.reduce(nil) { (ci, reader) -> (ci: CI, git: Git)? in
+                guard ci == nil else { return ci }
+                let active = Log.measure(name: "env-ci[\(type(of: reader))]") {
+                    reader.isActive(env: env)
+                }
+                guard active else { return nil }
+                return Log.measure(name: "env-ci[\(type(of: reader))].read") {
+                    reader.read(env: env)
+                }
+            }
         }
         ci = ciInfo?.ci
-        
+
         var workspace = ciInfo?.ci.workspacePath
         var git: Git = ciInfo?.git ?? Git()
-        
+
         // Read git folder information
         let gitInfo: GitInfo?
 
         #if targetEnvironment(simulator) || os(macOS)
-        if let sourceRoot = sourceRoot ?? workspace {
-            gitInfo = Self.gitInfoAt(startingPath: sourceRoot)
+        if let sr = sourceRootValue ?? workspace {
+            gitInfo = Log.measure(name: "env-gitInfoAt") { Self.gitInfoAt(startingPath: sr) }
         } else {
             gitInfo = nil
         }
         #else
         gitInfo = nil
         #endif
-        
+
         if let info = gitInfo {
             if git.commit?.sha == nil || git.commit?.sha == info.commit {
                 git = git.extended(from: info)
@@ -115,15 +126,6 @@ internal final class Environment {
             git = git.with(directory: workspacePath)
         }
 
-        #if targetEnvironment(simulator) || os(macOS)
-        if let gitDirectory = git.directory,
-           let head = git.commitHead?.sha,
-           let info = Self.mergeHeadInfo(headSha: head, gitDirectory: gitDirectory, log: log)
-        {
-            git = git.updated(with: info)
-        }
-        #endif
-
         let overrides = Environment.gitOverrides(env: env)
         let assembledProvider: Telemetry.ShaProvider = ciInfo?.git.commit?.sha != nil ? .ciProvider : .localGit
         if let userSha = overrides.commit?.sha, let assembled = git.commit?.sha, userSha != assembled {
@@ -140,9 +142,9 @@ internal final class Environment {
                                                     type: .repository))
         }
         self.git = git.updated(with: overrides)
-        
+
         testCommand = "test \(Bundle.testBundle?.name ?? Bundle.main.name)"
-        
+
         if let sName = config.sessionName {
             sessionName = sName
         } else if let job = ci?.jobName {
@@ -150,7 +152,7 @@ internal final class Environment {
         } else {
             sessionName = testCommand
         }
-        
+
         if let service = config.service {
             self.service = service
             self.isUserProvidedService = true
@@ -158,7 +160,7 @@ internal final class Environment {
             self.service = git.repositoryName ?? "unknown-swift-repo"
             self.isUserProvidedService = false
         }
-        
+
         validate(log: log)
     }
     
@@ -332,6 +334,21 @@ internal final class Environment {
     }
 
     
+    /// Fetches commit message and author/committer details via `git fetch`.
+    /// Must be called on a background thread — the fetch can take many seconds
+    /// on simulators with shallow clones or restricted network access.
+    func fetchMergeHeadInfo(log: Logger) {
+#if targetEnvironment(simulator) || os(macOS)
+        guard let gitDirectory = git.directory, let head = git.commitHead?.sha else { return }
+        let info = Log.measure(name: "mergeHeadInfo") {
+            Self.mergeHeadInfo(headSha: head, gitDirectory: gitDirectory, log: log)
+        }
+        if let info {
+            git = git.updated(with: info)
+        }
+#endif
+    }
+
     static var ciReaders: [CIEnvironmentReader] {
         return [
             TravisCIEnvironmentReader(), CircleCIEnvironmentReader(), JenkinsCIEnvironmentReader(),

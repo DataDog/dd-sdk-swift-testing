@@ -5,6 +5,7 @@
  */
 
 @testable import DatadogSDKTesting
+import EventsExporter
 import OpenTelemetryApi
 import OpenTelemetrySdk
 import XCTest
@@ -257,6 +258,66 @@ internal class DDXCTestObserverTests: XCTestCase {
 
         XCTAssertTrue(spanData.attributes[DDTags.errorMessage]?.description.contains(exactWord: "error1") ?? false)
         XCTAssertTrue(spanData.attributes[DDTags.errorMessage]?.description.contains(exactWord: "error2") ?? false)
+    }
+
+    /// Regression test for premature process exit (SDTEST-3844): the process
+    /// terminates while a test is running and XCTest never delivers
+    /// `testCaseDidFinish` / `testRetryGroupDidFinish` / `testSuiteDidFinish`.
+    /// The unload hook reaches `stop()`, which must force-close the open test
+    /// and its suite as failed so they are still exported.
+    ///
+    /// Intentionally *synchronous*: `stop()` unregisters the observer, which
+    /// XCTest only permits on the main thread, and sync test methods run there.
+    /// An `async` test (even `@MainActor`) deadlocks here — this XCTest version
+    /// blocks the main thread until the async test finishes, so the first
+    /// `await` can never resume on the main thread it needs.
+    func testWhenProcessExitsMidTest_activeTestAndSuiteAreSealedAsFailed() {
+        let group = DDXCTestRetryGroup(for: self, observer: testObserver)
+        testObserver.testBundleWillStart(Bundle.main)
+        testObserver.testSuiteWillStart(theSuite)
+        testObserver.testRetryGroupWillStart(group)
+
+        // The suite span lives for the lifetime of the suite; capture it so we
+        // can inspect it after the forced shutdown ends it.
+        let suiteSpan = (group.context.suite as! DDSuite).span
+
+        let testSpan = group.context.suite.withActiveTest(named: self.testId.test) { test -> SpanSdk in
+            let originalRun = self.testRun
+            let mockRun = MockXCTestCaseRetryRun(ddTest: test, group: group, xcTest: self)
+            self.setValue(mockRun, forKey: "testRun")
+
+            testObserver.testCaseWillStart(self)
+
+            // State is now `.test`. Simulate the premature exit: the unload hook
+            // calls stop() while XCTest delivers none of the finish callbacks.
+            testObserver.stop()
+
+            self.setValue(originalRun, forKey: "testRun")
+            return (test as! DDTest).span
+        }
+
+        // The observer detached itself as part of the forced shutdown.
+        guard case .stopped = testObserver.state else {
+            XCTFail("Observer was not stopped: \(testObserver.state)")
+            return
+        }
+
+        // Tear down the session (ends + flushes the session/module) synchronously.
+        let session = self.session!
+        waitForAsync { await session.stop() }
+        testObserver = nil
+
+        // Both the in-flight test and its suite were ended (exported) ...
+        XCTAssertNotNil(testSpan.endTime)
+        XCTAssertNotNil(suiteSpan.endTime)
+        // ... sealed as failed ...
+        XCTAssertEqual(testSpan.toSpanData().attributes[DDTestTags.testStatus]?.description, DDTagValues.statusFail)
+        XCTAssertEqual(suiteSpan.toSpanData().attributes[DDTestTags.testStatus]?.description, DDTagValues.statusFail)
+        // ... and carry an error explaining the premature exit.
+        XCTAssertNotNil(testSpan.toSpanData().attributes[DDTags.errorType])
+        XCTAssertNotNil(testSpan.toSpanData().attributes[DDTags.errorMessage])
+        XCTAssertNotNil(suiteSpan.toSpanData().attributes[DDTags.errorType])
+        XCTAssertNotNil(suiteSpan.toSpanData().attributes[DDTags.errorMessage])
     }
 
     private func destroyObserver() async {

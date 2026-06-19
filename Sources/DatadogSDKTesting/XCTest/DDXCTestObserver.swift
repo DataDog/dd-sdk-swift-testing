@@ -32,10 +32,94 @@ final class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate
     func stop() {
         switch state {
         case .stopping, .start:
-            XCTestObservationCenter.shared.removeTestObserver(self)
-            state = .stopped
-        default: break
+            // Normal shutdown: `testBundleDidFinish` already ran (`.stopping`)
+            // or no tests ever started (`.start`).
+            removeObserver()
+        case .stopped, .startError:
+            // Already detached, or the session never initialised — nothing to do.
+            break
+        case .test(let run, let context):
+            // The process is ending mid-test without XCTest firing the
+            // completion hooks. Seal the open test and its suite as failed,
+            // then end the module exactly as `testBundleDidFinish` would (the
+            // session is closed by the unload path on its own).
+            reportPrematureExit("Force-closing active test '\(run.ddTest.name)', its suite and module.")
+            seal(test: run)
+            seal(suite: context.suite)
+            seal(module: context.suiteContext.module, context: context.suiteContext.moduleContext)
+            removeObserver()
+        case .group(let context):
+            reportPrematureExit("Force-closing active suite '\(context.suite.name)' and module.")
+            seal(suite: context.suite)
+            seal(module: context.suiteContext.module, context: context.suiteContext.moduleContext)
+            removeObserver()
+        case .suite(let suite, let context):
+            reportPrematureExit("Force-closing active suite '\(suite.name)' and module.")
+            seal(suite: suite)
+            seal(module: context.module, context: context.moduleContext)
+            removeObserver()
+        case .container(_, let module, let context), .module(let module, let context):
+            // No suite/test span is open between suites; just end the module.
+            reportPrematureExit("Force-closing active module '\(module.name)'.")
+            seal(module: module, context: context)
+            removeObserver()
         }
+    }
+
+    private func removeObserver() {
+        XCTestObservationCenter.shared.removeTestObserver(self)
+        state = .stopped
+    }
+
+    /// Logs that the test process is terminating without XCTest delivering the
+    /// suite/group/bundle completion hooks. This is always a fault regardless of
+    /// the trigger (a test calling `exit(...)`, a failure in an async setup,
+    /// etc.), so the message is intentionally generic and points at the
+    /// premature exit rather than at any specific cause.
+    private func reportPrematureExit(_ detail: String) {
+        log.print("Test process is ending without XCTest firing the suite/bundle " +
+                  "completion hooks — a premature exit (for example a call to exit() " +
+                  "in a test, or a failure in an async setUp/tearDown). This should " +
+                  "not happen in a normal run. \(detail)")
+    }
+
+    /// The error attached to every test/suite/module force-closed on premature
+    /// exit, so the backend records *why* they were failed rather than just a
+    /// bare failed status.
+    private func prematureExitError() -> TestError {
+        TestError(type: "PrematureTestProcessExit",
+                  message: "The test process ended before XCTest reported completion " +
+                           "(a premature exit, for example a call to exit() in a test, " +
+                           "or a failure in an async setUp/tearDown). Force-failed on shutdown.")
+    }
+
+    /// Force-ends an in-flight test as failed, with an error explaining the
+    /// premature exit. Used only on premature exit; the normal path ends the
+    /// test span when the `withActiveTest` scope returns.
+    private func seal(test run: any DDXCTestCaseRetryRunType) {
+        guard let test = run.ddTest as? DDTest else { return }
+        test.add(error: prematureExitError())
+        test.end(status: .fail, endTime: test.suite.configuration.clock.now)
+    }
+
+    /// Force-ends an in-flight suite as failed, with an error explaining the
+    /// premature exit. Mirrors the suite-end in `testSuiteDidFinish` but skips
+    /// the feature hooks: the process is already terminating, so the most we can
+    /// do is seal the span. `set(failed:)` also propagates the failure to the
+    /// module.
+    private func seal(suite: any TestSuite & TestRunProvider) {
+        suite.set(failed: prematureExitError())
+        suite.end()
+    }
+
+    /// Fails the module with the premature-exit error and ends it the same way
+    /// `testBundleDidFinish` does (records the module end on the session
+    /// manager). The module/session spans are closed by the unload path; this
+    /// makes the bundle-end bookkeeping run — and reports the failure up to the
+    /// session — even though XCTest never delivered `testBundleDidFinish`.
+    private func seal(module: any TestModule & TestSuiteProvider, context: ModuleContext) {
+        module.set(failed: prematureExitError())
+        context.session.end(module: module)
     }
 
     func testBundleWillStart(_ testBundle: Bundle) {
@@ -176,8 +260,8 @@ final class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate
         group.context = GroupContext(tags: testTags, skip: skip, suite: suite, suiteContext: context)
         
         context.features.testGroupWillStart(for: testId.test, in: suite)
-        
-        state = .group
+
+        state = .group(context: group.context)
         log.debug("testRetryGroupWillStart: \(group.name)")
     }
     
@@ -193,7 +277,7 @@ final class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate
     }
 
     func testCaseWillStart(_ testCase: XCTestCase) {
-        guard case .group = state else {
+        guard case .group(let context) = state else {
             log.print("testCaseWillStart: Bad observer state: \(state), expected: .group")
             return
         }
@@ -209,8 +293,8 @@ final class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate
                                     executions: (total: testRun.group.groupRun?.executionCount ?? 0,
                                                  failed: testRun.group.groupRun?.failedExecutionCount ?? 0))
         testRun.context.features.testWillStart(test: test, info: info)
-        
-        state = .test
+
+        state = .test(run: testRun, context: context)
         log.debug("testCaseWillStart: \(testCase.name)")
     }
 
@@ -297,7 +381,7 @@ final class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate
     }
     
     func testCaseRetryDidFinish(_ testCase: XCTestCase) {
-        guard case .test = state else {
+        guard case .test(_, let context) = state else {
             log.print("testCaseRetryDidFinish: Bad observer state: \(state), expected: .test")
             return
         }
@@ -317,7 +401,7 @@ final class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate
                                                failed: groupRun.failedExecutionCount))
         testRun.context.features.testDidFinish(test: testRun.ddTest, info: info)
         // Switch state back
-        state = .group
+        state = .group(context: context)
         log.debug("testCaseRetryDidFinish: \(testCase.name)")
     }
     
@@ -399,8 +483,8 @@ extension DDXCTestObserver {
         case module(module: any TestModule & TestSuiteProvider, context: ModuleContext)
         case container(suite: ContainerSuite, inside: any TestModule & TestSuiteProvider, context: ModuleContext)
         case suite(suite: any TestSuite & TestRunProvider, context: SuiteContext)
-        case group
-        case test
+        case group(context: GroupContext)
+        case test(run: any DDXCTestCaseRetryRunType, context: GroupContext)
     }
     
     indirect enum ContainerSuite {

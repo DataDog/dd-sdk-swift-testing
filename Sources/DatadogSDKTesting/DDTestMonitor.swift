@@ -153,6 +153,13 @@ internal class DDTestMonitor {
         maxPayloadSize = DDTestMonitor.config.maxPayloadSize
         messageChannelUUID = DDTestMonitor.config.messageChannelUUID ?? UUID().uuidString
         tracer = DDTracer()
+        
+        // Change queue priorities. We want loading to work quick
+        gitUploadQueue.qualityOfService = .userInteractive
+        instrumentationWorkQueue.qualityOfService = .userInteractive
+        testOptimizationSetupQueue.qualityOfService = .userInteractive
+        
+        // Make git queue serial. We can't run multiple git commands at the same time
         gitUploadQueue.maxConcurrentOperationCount = 1
 
         if DDTestMonitor.config.isBinaryUnderUITesting {
@@ -567,8 +574,10 @@ internal class DDTestMonitor {
         }
 
         if !DDTestMonitor.config.disableNetworkInstrumentation {
-            Log.measure(name: "startNetworkAutoInstrumentation") {
-                startNetworkAutoInstrumentation()
+            instrumentationWorkQueue.addOperation { [self] in
+                Log.measure(name: "startNetworkAutoInstrumentation") {
+                    startNetworkAutoInstrumentation()
+                }
             }
         }
         if DDTestMonitor.config.enableStdoutInstrumentation {

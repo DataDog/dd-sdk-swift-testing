@@ -61,7 +61,17 @@ internal struct FeatureStoreAndUpload: DataUploadWorkerType {
         return try uploader.flush()
     }
 
+    /// Shutdown sequence:
+    /// 1. Stop scheduling background uploads, so the periodic worker can't run a
+    ///    read+upload cycle concurrently with the seal / final flush — the final
+    ///    `flush()` is then the only thing touching files during teardown.
+    /// 2. Seal the writer: drains in-flight writes and blocks new ones, so by the
+    ///    time the flush enumerates the directory no file is mid-write (none can
+    ///    be hidden in `activeWrites`) — nothing written so far is skipped.
+    /// 3. Synchronously upload everything left on disk.
     func stop() {
         uploader.stop()
+        writer.stop()
+        _ = try? uploader.flush()
     }
 }

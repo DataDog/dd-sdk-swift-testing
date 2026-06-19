@@ -56,6 +56,7 @@ internal final class CoverageExporter: CoverageExporterType {
                                 dataFormat: dataFormat,
                                 orchestrator: filesOrchestrator,
                                 encoder: encoder,
+                                log: configuration.logger,
                                 observer: observers.payload)
         let reader = FileReader(dataFormat: dataFormat, orchestrator: filesOrchestrator)
         let requestObserver = observers.request

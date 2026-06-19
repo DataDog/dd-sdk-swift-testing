@@ -83,7 +83,10 @@ public final class Exporter: ExporterProtocol {
     }
 
     public func shutdown(explicitTimeout: TimeInterval?) {
-        _ = self.flush(explicitTimeout: explicitTimeout)
+        // No pre-flush here: each exporter's `shutdown()` seals its writer and
+        // then performs the final, complete upload (`FeatureStoreAndUpload.stop()`).
+        // A flush before sealing could skip a file still being written, which
+        // `stop()` would then never get a chance to upload.
         logsExporter.shutdown()
         spansExporter.shutdown()
         coverageExporter.shutdown()

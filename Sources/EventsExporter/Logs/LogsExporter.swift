@@ -40,7 +40,8 @@ internal final class LogsExporter: LogRecordExporter {
         let writer = FileWriter(entity: "logs",
                                 dataFormat: dataFormat,
                                 orchestrator: filesOrchestrator,
-                                encoder: encoder)
+                                encoder: encoder,
+                                log: config.logger)
         let reader = FileReader(dataFormat: dataFormat, orchestrator: filesOrchestrator)
         let upload: ClosureDataUploader.UploadCallback = { (data: Data) async throws(APICallError) -> Void in
             try await api.uploadLogs(batch: data)

@@ -7,14 +7,22 @@
 import Foundation
 
 internal final class FileWriter {
+    /// Name of the feature this writer stores data for. Used in log messages.
+    private let entity: String
     /// Data writing format.
     private var dataFormat: DataFormatType
     /// Orchestrator producing reference to writable file.
     private let orchestrator: FilesOrchestratorType
     /// JSON encoder used to encode data.
     private let encoder: JSONEncoder
+    /// Set on `queue` by `stop()`. Once `true`, the writer is sealed for good:
+    /// further writes are rejected (and logged), so the final shutdown upload
+    /// sees a complete, quiescent set of files with no file mid-write.
+    private var isClosed = false
     /// Optional telemetry observer notified about serialization / payload size.
     private let observer: PayloadObserver?
+    /// Logger for write failures and events dropped after the writer was stopped.
+    private let log: Logger
     /// Events written to / time spent serializing the currently-open file. Only
     /// touched on `queue`. Reported as `payloadFinalized` when the file rolls
     /// over or is explicitly closed.
@@ -27,11 +35,14 @@ internal final class FileWriter {
          dataFormat: DataFormatType,
          orchestrator: FilesOrchestratorType,
          encoder: JSONEncoder,
+         log: Logger,
          observer: PayloadObserver? = nil)
     {
+        self.entity = entity
         self.dataFormat = dataFormat
         self.orchestrator = orchestrator
         self.encoder = encoder
+        self.log = log
         self.observer = observer
         self.queue = DispatchQueue(label: "datadogtest.filewriter.\(entity)",
                                    target: .global(qos: .userInteractive))
@@ -57,6 +68,19 @@ internal final class FileWriter {
         }
     }
 
+    /// Permanently seals the writer at shutdown. Drains any in-flight writes
+    /// (serial queue + barrier), finalizes and closes the current file, then
+    /// blocks all subsequent writes. After this returns no file can be in
+    /// `activeWrites`, so the final upload enumerates a complete set of files
+    /// and nothing written so far is skipped.
+    func stop() {
+        queue.sync(flags: .barrier) {
+            finalizeCurrentPayload()
+            orchestrator.closeWritableFile()
+            isClosed = true
+        }
+    }
+
     /// Reports the event count and summed serialization time of the file that is
     /// being closed, if any. Must be called on `queue`.
     private func finalizeCurrentPayload() {
@@ -71,17 +95,37 @@ internal final class FileWriter {
     /// Encodes and writes `value` asynchronously. Errors are logged and swallowed.
     func write<T: Encodable>(value: T) {
         queue.async { [weak self] in
+            guard let self else { return }
+            guard !self.isClosed else {
+                self.logDropped(value)
+                return
+            }
             do {
-                try self?.write(value: value, sync: false)
+                try self.write(value: value, sync: false)
             } catch {
-                Log.print("🔥 Failed to write file: \(error)")
+                self.log.print("🔥 Failed to write file: \(error)")
             }
         }
     }
 
     /// Encodes and writes `value` synchronously, surfacing errors to the caller.
     func writeSync<T: Encodable>(value: T) throws {
-        try queue.sync { try write(value: value, sync: true) }
+        try queue.sync {
+            guard !isClosed else {
+                logDropped(value)
+                return
+            }
+            try write(value: value, sync: true)
+        }
+    }
+
+    /// Logs an event that was discarded because it arrived after `stop()`.
+    /// Includes the encoded payload so the dropped data can be inspected when
+    /// debugging. Must be called on `queue` (uses `encoder`).
+    private func logDropped<T: Encodable>(_ value: T) {
+        let payload = (try? encoder.encode(value))
+            .flatMap { String(data: $0, encoding: .utf8) } ?? "\(value)"
+        log.print("🔥 Dropped event written to '\(entity)' after the writer was stopped: \(payload)")
     }
 
     private func write<T: Encodable>(value: T, sync: Bool) throws {

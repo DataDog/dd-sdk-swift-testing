@@ -578,33 +578,43 @@ internal class DDTracer {
         builder.emit()
     }
 
-    func flush() {
-        if let rumPort = DDTestMonitor.instance?.rumPort {
-            let timeout: CFTimeInterval = 10.0
-            let status = CFMessagePortSendRequest(
-                rumPort,
-                DDCFMessageID.forceFlush, // Message ID for asking RUM to flush all data
-                nil,
-                timeout,
-                timeout,
-                "kCFRunLoopDefaultMode" as CFString,
-                nil
-            )
-            if status == kCFMessagePortSuccess {
-                Log.debug("DDCFMessageID.forceFlush finished")
-            } else {
-                Log.debug("CFMessagePortCreateRemote request to DatadogRUMTestingPort failed")
-            }
+    /// Asks the RUM process (instrumented app under UI test) to flush its data.
+    /// Cross-process, so it isn't covered by the local provider shutdown and is
+    /// requested on both flush and shutdown.
+    private func flushRUM() {
+        guard let rumPort = DDTestMonitor.instance?.rumPort else { return }
+        let timeout: CFTimeInterval = 10.0
+        let status = CFMessagePortSendRequest(
+            rumPort,
+            DDCFMessageID.forceFlush, // Message ID for asking RUM to flush all data
+            nil,
+            timeout,
+            timeout,
+            "kCFRunLoopDefaultMode" as CFString,
+            nil
+        )
+        if status == kCFMessagePortSuccess {
+            Log.debug("DDCFMessageID.forceFlush finished")
+        } else {
+            Log.debug("CFMessagePortCreateRemote request to DatadogRUMTestingPort failed")
         }
-        
+    }
+
+    func flush() {
+        flushRUM()
         self.tracerProviderSdk.forceFlush()
         _ = self.logProcessor.forceFlush()
         self.telemetry?.flush()
         Log.debug("Tracer flush finished")
     }
-    
+
     func shutdown() {
-        self.flush()
+        // No `flush()` here: shutting the providers down below flushes spans and
+        // logs properly — and the spans pipeline does it race-free via the
+        // sealed `FileWriter.stop()`. A pre-shutdown flush would be redundant
+        // and could skip a span still being written. We only forward the
+        // cross-process RUM flush, which provider shutdown doesn't cover.
+        flushRUM()
         self.tracerProviderSdk.shutdown()
         _ = self.logProcessor.shutdown()
         self.telemetry?.shutdown()

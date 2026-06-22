@@ -415,7 +415,7 @@ internal struct APIServiceConfig {
 }
 
 extension JSONEncoder {
-    internal static let apiEncoder: JSONEncoder = {
+    public static let apiEncoder: JSONEncoder = {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .custom { date, encoder in
             var container = encoder.singleValueContainer()
@@ -441,7 +441,7 @@ extension JSONEncoder {
 }
 
 extension JSONDecoder {
-    internal static let apiDecoder: JSONDecoder = {
+    public static let apiDecoder: JSONDecoder = {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .custom { decoder in
             let container = try decoder.singleValueContainer()

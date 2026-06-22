@@ -425,7 +425,7 @@ extension JSONEncoder {
         encoder.dataEncodingStrategy = .base64
         encoder.keyEncodingStrategy = .convertToSnakeCase
         encoder.nonConformingFloatEncodingStrategy = .throw
-        encoder.outputFormatting = [.withoutEscapingSlashes]
+        encoder.outputFormatting = [.withoutEscapingSlashes, .sortedKeys]
         return encoder
     }()
 
@@ -454,6 +454,7 @@ extension JSONDecoder {
         }
         decoder.keyDecodingStrategy = .convertFromSnakeCase
         decoder.dataDecodingStrategy = .base64
+        decoder.nonConformingFloatDecodingStrategy = .throw
         return decoder
     }()
 

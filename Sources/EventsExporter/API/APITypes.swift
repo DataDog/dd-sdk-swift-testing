@@ -415,7 +415,7 @@ internal struct APIServiceConfig {
 }
 
 extension JSONEncoder {
-    internal static let apiEncoder: JSONEncoder = {
+    public static let apiEncoder: JSONEncoder = {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .custom { date, encoder in
             var container = encoder.singleValueContainer()
@@ -425,7 +425,7 @@ extension JSONEncoder {
         encoder.dataEncodingStrategy = .base64
         encoder.keyEncodingStrategy = .convertToSnakeCase
         encoder.nonConformingFloatEncodingStrategy = .throw
-        encoder.outputFormatting = [.withoutEscapingSlashes]
+        encoder.outputFormatting = [.withoutEscapingSlashes, .sortedKeys]
         return encoder
     }()
 
@@ -441,7 +441,7 @@ extension JSONEncoder {
 }
 
 extension JSONDecoder {
-    internal static let apiDecoder: JSONDecoder = {
+    public static let apiDecoder: JSONDecoder = {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .custom { decoder in
             let container = try decoder.singleValueContainer()
@@ -454,6 +454,7 @@ extension JSONDecoder {
         }
         decoder.keyDecodingStrategy = .convertFromSnakeCase
         decoder.dataDecodingStrategy = .base64
+        decoder.nonConformingFloatDecodingStrategy = .throw
         return decoder
     }()
 

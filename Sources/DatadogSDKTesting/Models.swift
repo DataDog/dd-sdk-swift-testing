@@ -482,7 +482,7 @@ extension TestRun {
     }
     
     func set(parameters: TestRunParameters) {
-        guard let value = try? String(data: JSONEncoder().encode(parameters), encoding: .utf8) else { return }
+        guard let value = try? String(data: JSONEncoder.apiEncoder.encode(parameters), encoding: .utf8) else { return }
         self.set(tag: DDTestTags.testParameters, value: value)
     }
     

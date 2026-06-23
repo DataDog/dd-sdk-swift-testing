@@ -401,49 +401,21 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
             #expect(cancels[fullName] == expect.cancelled)
         }
         
-        let decoder = JSONDecoder()
-
         // Verify parameter tags on every run of the parameterized test.
+        // apiEncoder uses .sortedKeys so the JSON is always deterministic.
         if test.isSuite, let paramGroup = statuses["testParameterized(p1:p2:)"] {
-            for run in paramGroup.runs {
-                #expect(run.tags[DDTestTags.testParameters] != nil)
-            }
-            let params = try paramGroup.runs.map {
-                try $0.tags[DDTestTags.testParameters].map { try decoder.decode(TestParameters.self, from: $0.utf8Data) }
-            }.sorted { g1, g2 in
-                g1?.arguments.first?.value ?? "" < g2?.arguments.first?.value ?? ""
-            }
+            let params = paramGroup.runs.compactMap { $0.tags[DDTestTags.testParameters] }.sorted()
             // Arguments are zip([1,2,3], ["1","2","3"]); the String value appears
             // with its surrounding quotes in the description, so it is JSON-escaped.
-            let expectedParams: [TestParameters] = [
-                [(name: "p1", value: "1", type: "Swift.Int"), (name: "p2 second", value:"\"1\"", type:"Swift.String")],
-                [(name: "p1", value: "2", type: "Swift.Int"), (name: "p2 second", value:"\"2\"", type:"Swift.String")],
-                [(name: "p1", value: "3", type: "Swift.Int"), (name: "p2 second", value:"\"3\"", type:"Swift.String")]
+            // Keys are sorted alphabetically: name, type, value.
+            let expectedParams = [
+                #"{"arguments":[{"name":"p1","type":"Swift.Int","value":"1"},{"name":"p2 second","type":"Swift.String","value":"\"1\""}]}"#,
+                #"{"arguments":[{"name":"p1","type":"Swift.Int","value":"2"},{"name":"p2 second","type":"Swift.String","value":"\"2\""}]}"#,
+                #"{"arguments":[{"name":"p1","type":"Swift.Int","value":"3"},{"name":"p2 second","type":"Swift.String","value":"\"3\""}]}"#,
             ]
-            for (run, expected) in zip(params, expectedParams) {
-                #expect(run == expected)
-            }
+            #expect(params.count == paramGroup.runs.count)
+            #expect(params == expectedParams)
         }
-    }
-}
-
-private struct TestParameters: Equatable, Codable, ExpressibleByArrayLiteral {
-    typealias ArrayLiteralElement = (name: String, value: String, type: String)
-    
-    struct Argument: Equatable, Codable {
-        let name: String
-        let value: String
-        let type: String
-        
-        init(_ t: (name: String, value: String, type: String)) {
-            name = t.name; value = t.value; type = t.type
-        }
-    }
-    
-    let arguments: [Argument]
-    
-    init(arrayLiteral elements: (name: String, value: String, type: String)...) {
-        arguments = elements.map(Argument.init)
     }
 }
 

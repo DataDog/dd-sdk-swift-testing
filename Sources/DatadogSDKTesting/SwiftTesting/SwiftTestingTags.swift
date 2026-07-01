@@ -9,10 +9,10 @@ import Foundation
 #if canImport(Testing)
 import Testing
 
-extension Tag {
+public extension Tag {
     enum dd {
-        @Tag static var retriable: Tag
-        @Tag static var nonretriable: Tag
+        @Tag public static var retriable: Tag
+        @Tag public static var nonretriable: Tag
     }
 }
 

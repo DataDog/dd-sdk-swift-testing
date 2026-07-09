@@ -91,6 +91,13 @@ internal final class DataUploadWorker: DataUploadWorkerType {
         queue.sync { fileReader.update(dataFormat: dataFormat) }
     }
 
+    /// Maximum number of retries per batch during a synchronous `flush()`.
+    /// Unlike the background worker (which retries indefinitely across ticks),
+    /// `flush()` runs on the shutdown path and must be bounded: a persistently
+    /// retriable server (503/500/408/429) or a downed network — both map to
+    /// `needsRetry` — would otherwise loop forever, hanging process teardown.
+    private static let maxFlushRetries = 3
+
     /// Drains all pending batches synchronously. Holds the upload queue for
     /// the duration so the periodic worker can't interleave reads with the flush.
     func flush() throws -> Bool {
@@ -103,6 +110,7 @@ internal final class DataUploadWorker: DataUploadWorkerType {
                     break
                 }
                 var status: UploadResult
+                var retries = 0
                 repeat {
                     status = upload(data: batch.data)
                     switch status {
@@ -112,6 +120,15 @@ internal final class DataUploadWorker: DataUploadWorkerType {
                     case .failed:
                         result = false
                     case .retry:
+                        retries += 1
+                        guard retries <= Self.maxFlushRetries else {
+                            // Give up rather than hang teardown; leave the batch
+                            // on disk for a later run to pick up.
+                            log.print("[\(featureName)] flush giving up after \(Self.maxFlushRetries) retries")
+                            result = false
+                            status = .failed
+                            break
+                        }
                         Thread.sleep(forTimeInterval: delay.current)
                     }
                 } while status.isRetry

@@ -181,12 +181,13 @@ struct XcodeTestRunner: Sendable {
         process.arguments = [
             "xcodebuild",
             "-scheme", module,
-            // Build the inner (consumer) test targets in Release so they link
-            // the framework exactly as shipped — with the bundled-dependency
-            // symbols stripped (`UNEXPORTED_SYMBOLS_FILE`, Release-only). The
-            // outer Runner stays in Debug for its `@testable` access; only these
-            // nested builds exercise the stripped artifact.
-            "-configuration", "Release",
+            // Build the inner (consumer) test targets with the `Integration`
+            // configuration: same as Debug (fast, unoptimized, debuggable) but
+            // with the framework's bundled-dependency symbols stripped
+            // (`UNEXPORTED_SYMBOLS_FILE`) — so they link the framework as
+            // shipped. The outer Runner stays in Debug for its `@testable`
+            // access; only these nested builds exercise the stripped artifact.
+            "-configuration", "Integration",
             "-sdk", sdk,
             "-destination", platform,
             "-derivedDataPath", derivedDataPath,

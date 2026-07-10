@@ -324,6 +324,13 @@ class DataUploadWorkerTests: XCTestCase {
             log: Log()
         )
 
+        // Mirror the production shutdown order (`Feature.stop()`): stop the
+        // periodic worker first so its background tick can't run a read+upload
+        // cycle alongside the flush, leaving `flush()` as the only thing that
+        // uploads the batch. Without this, the scheduled tick fires right after
+        // flush releases the queue and adds a stray 5th upload.
+        worker.stop()
+
         // When: this must return (not hang) and report failure.
         let flushed = try worker.flush()
 
@@ -331,8 +338,6 @@ class DataUploadWorkerTests: XCTestCase {
         XCTAssertFalse(flushed, "A persistently-retriable upload should end in failure, not success")
         XCTAssertEqual(uploadCount.value, 4, "1 initial attempt + 3 retries, then give up")
         XCTAssertEqual(try temporaryDirectory.files().count, 1, "Undelivered batch is left on disk for a later run")
-
-        worker.stop()
     }
 }
 

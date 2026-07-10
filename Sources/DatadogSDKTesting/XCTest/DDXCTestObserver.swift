@@ -67,7 +67,25 @@ final class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate
     }
 
     private func removeObserver() {
-        XCTestObservationCenter.shared.removeTestObserver(self)
+        // `removeTestObserver` (like `addTestObserver`) is main-thread-only.
+        // This runs from the framework unload destructor (`__AutoUnloadHook`),
+        // whose thread depends on who calls `exit()`: the classic `xctest`
+        // runner exits on the main thread, but the swift-testing runner exits
+        // from a Swift Concurrency continuation on a background thread. Removing
+        // off the main thread raises `NSInternalInconsistencyException`.
+        //
+        // When we're off the main thread, hop *asynchronously*: a synchronous
+        // hop can deadlock during process teardown if the main thread is already
+        // finalizing. If the block never runs because the process exits first,
+        // that's harmless — the observer only needs detaching while the runner
+        // is still alive.
+        if Thread.isMainThread {
+            XCTestObservationCenter.shared.removeTestObserver(self)
+        } else {
+            DispatchQueue.main.async { [self] in
+                XCTestObservationCenter.shared.removeTestObserver(self)
+            }
+        }
         state = .stopped
     }
 

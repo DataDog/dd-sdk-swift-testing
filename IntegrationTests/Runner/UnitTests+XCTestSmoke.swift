@@ -202,12 +202,14 @@ struct UnitTestsXCTestSmoke: IntergationTestSuite {
         }
     }
 
-    /// Full-stack integration test: spins up the real SDK in a subprocess that
-    /// runs `XCStdoutOTelAndCoverage.testStdoutOTelAndCoverage`, then asserts
-    /// that all three telemetry pipelines reached the backend with the right
-    /// shape: one test span, the stdout-captured `print()` as a log entry, the
-    /// OTel `LogRecord` as a log entry (status `warn`), and at least one
-    /// coverage payload.
+    /// Full-stack integration test against the *stripped* framework: spins up
+    /// the real SDK in a subprocess that runs
+    /// `XCStdoutOTelAndCoverage.testStdoutOTelAndCoverage`, then asserts the
+    /// pipelines a stripped consumer still gets reached the backend: one test
+    /// span, the stdout-captured `print()` as a log entry, and at least one
+    /// coverage payload. The test also drives a second, consumer-owned
+    /// OpenTelemetry copy purely to prove it coexists without the
+    /// metadata-coalescing crash — those spans are not expected at the backend.
     @Test func stdoutOTelAndCoverage() async throws {
         var config = XcodeTestRunner.Config()
         // Code Coverage is a standalone feature: enable it without TIA/ITR.
@@ -234,21 +236,14 @@ struct UnitTestsXCTestSmoke: IntergationTestSuite {
             let testModuleId = try #require(testSpan.testModuleId)
             let testSuiteId = try #require(testSpan.testSuiteId)
 
-            // 2) Logs — both entries must correlate to the test span via
-            //    dd.trace_id / dd.span_id and carry the right wire status.
+            // 2) Logs — the stdout `print()` must be captured and correlate to
+            //    the test span via dd.trace_id / dd.span_id.
             let stdoutLog = try #require(backend.allLogs.first { $0.message?.contains("hello from XCTest stdout") == true },
                                          "stdout `print()` should be captured and shipped as a log entry")
-            let otelLog = try #require(backend.allLogs.first { $0.message?.contains("hello from XCTest OTel") == true },
-                                       "an OTel LogRecord should be shipped as a log entry")
-            #expect(otelLog.status == "warn", "Severity.warn must map to DDLog.Status.warn on the wire")
             #expect(stdoutLog.fields["dd.trace_id"]?.stringValue == String(testSpan.traceId),
                     "stdout log must correlate to the test span via dd.trace_id")
             #expect(stdoutLog.fields["dd.span_id"]?.stringValue == String(testSpan.spanId),
                     "stdout log must correlate to the test span via dd.span_id")
-            #expect(otelLog.fields["dd.trace_id"]?.stringValue == String(testSpan.traceId),
-                    "OTel log must correlate to the test span via dd.trace_id")
-            #expect(otelLog.fields["dd.span_id"]?.stringValue == String(testSpan.spanId),
-                    "OTel log must correlate to the test span via dd.span_id")
 
             // 3) Coverage — the payload must carry the test's session / module /
             //    suite / test span IDs.

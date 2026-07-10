@@ -2775,7 +2775,6 @@
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				UNEXPORTED_SYMBOLS_FILE = "$(SRCROOT)/DatadogSDKTesting-unexported-symbols.txt";
 			};
 			name = Debug;
 		};

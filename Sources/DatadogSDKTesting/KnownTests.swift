@@ -125,13 +125,13 @@ struct KnownTestsFactory: FeatureFactory {
     }
 
     private func fetchTests() async throws -> KnownTestsMap {
-        let tests: KnownTestsMap
+        let result: KnownTestsResult
         do {
-            tests = try await api.tests(service: service, env: environment,
-                                        repositoryURL: repository,
-                                        configurations: configurations,
-                                        customConfigurations: customConfigurations,
-                                        observer: telemetry?.knownTestsRequestObserver).tests
+            result = try await api.tests(service: service, env: environment,
+                                         repositoryURL: repository,
+                                         configurations: configurations,
+                                         customConfigurations: customConfigurations,
+                                         observer: telemetry?.knownTestsRequestObserver)
         } catch {
             throw LibraryConfigurationCommunicationError(
                 requestName: "Known Tests Request",
@@ -140,12 +140,15 @@ struct KnownTestsFactory: FeatureFactory {
             )
         }
         if let telemetry {
-            let totalTests = tests.values.flatMap { $0.values }.reduce(0) { $0 + $1.count }
+            let totalTests = result.tests.values.flatMap { $0.values }.reduce(0) { $0 + $1.count }
             telemetry.metrics.knownTests.responseTests.record(Double(totalTests))
+            telemetry.metrics.knownTests.pagesFetched.record(Double(result.pagesFetched))
+            telemetry.metrics.knownTests.totalFetchMs.record(result.totalFetchMs)
+            telemetry.metrics.knownTests.totalRequestMs.record(result.totalRequestMs)
         }
         // if we have empty array we should disable Known Tests functionality
-        guard tests.count > 0 else { throw FeatureEmptyResponseError(featureName: "Known Tests") }
-        return tests
+        guard result.tests.count > 0 else { throw FeatureEmptyResponseError(featureName: "Known Tests") }
+        return result.tests
     }
 
     private func saveTests(tests: KnownTestsMap) {

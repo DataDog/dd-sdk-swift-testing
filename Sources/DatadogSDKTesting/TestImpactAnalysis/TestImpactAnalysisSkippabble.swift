@@ -52,10 +52,10 @@ extension TIASkippableTag: XCTestTag {
 #if canImport(Testing)
 import Testing
 
-extension Tag.dd {
+public extension Tag.dd {
     enum tia {
-        @Tag static var skippable: Tag
-        @Tag static var unskippable: Tag
+        @Tag public static var skippable: Tag
+        @Tag public static var unskippable: Tag
     }
 }
 

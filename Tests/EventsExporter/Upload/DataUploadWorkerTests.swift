@@ -304,6 +304,50 @@ class DataUploadWorkerTests: XCTestCase {
 
         worker.stop()
     }
+
+    func testFlushGivesUpAfterMaxRetriesInsteadOfHanging() throws {
+        // A server that always asks to retry (e.g. persistent 503) used to make
+        // `flush()` loop forever, hanging the synchronous shutdown flush.
+        let uploadCount = LockedInt()
+        var mockDataUploader = DataUploaderMock(uploadStatus: .mockWith(needsRetry: true))
+        mockDataUploader.onUpload = { uploadCount.increment() }
+
+        writer.write(value: ["k1": "v1"])
+        writer.queue.sync {}
+
+        let worker = DataUploadWorker(
+            fileReader: reader,
+            dataUploader: mockDataUploader,
+            delay: MockDelay(),
+            featureName: .mockAny(),
+            priority: .userInteractive,
+            log: Log()
+        )
+
+        // Mirror the production shutdown order (`Feature.stop()`): stop the
+        // periodic worker first so its background tick can't run a read+upload
+        // cycle alongside the flush, leaving `flush()` as the only thing that
+        // uploads the batch. Without this, the scheduled tick fires right after
+        // flush releases the queue and adds a stray 5th upload.
+        worker.stop()
+
+        // When: this must return (not hang) and report failure.
+        let flushed = try worker.flush()
+
+        // Then
+        XCTAssertFalse(flushed, "A persistently-retriable upload should end in failure, not success")
+        XCTAssertEqual(uploadCount.value, 4, "1 initial attempt + 3 retries, then give up")
+        XCTAssertEqual(try temporaryDirectory.files().count, 1, "Undelivered batch is left on disk for a later run")
+    }
+}
+
+/// Thread-safe integer counter for asserting on callbacks made from the worker queue.
+private final class LockedInt: @unchecked Sendable {
+    private let lock = NSLock()
+    private var _value = 0
+
+    var value: Int { lock.withLock { _value } }
+    func increment() { lock.withLock { _value += 1 } }
 }
 
 struct MockDelay: Delay {

@@ -12,17 +12,10 @@ public typealias KnownTestsMap = [String: [String: [String]]]
 public struct KnownTestsResult {
     public let tests: KnownTestsMap
     public let pageInfo: KnownTestsPageInfo
-    public let pagesFetched: Int
-    public let totalFetchMs: Double
-    public let totalRequestMs: Double
 
-    public init(tests: KnownTestsMap, pageInfo: KnownTestsPageInfo,
-                pagesFetched: Int = 1, totalFetchMs: Double = 0, totalRequestMs: Double = 0) {
+    public init(tests: KnownTestsMap, pageInfo: KnownTestsPageInfo) {
         self.tests = tests
         self.pageInfo = pageInfo
-        self.pagesFetched = pagesFetched
-        self.totalFetchMs = totalFetchMs
-        self.totalRequestMs = totalRequestMs
     }
 
     public var isAllTests: Bool { !pageInfo.hasNext }
@@ -65,7 +58,7 @@ public protocol KnownTestsApi: APIService {
         service: String, env: String, repositoryURL: String,
         configurations: [String: String],
         customConfigurations: [String: String],
-        observer: RequestObserver?
+        observer: PagedRequestObserver?
     ) async throws(APICallError) -> KnownTestsResult
 }
 
@@ -74,25 +67,19 @@ extension KnownTestsApi {
         service: String, env: String, repositoryURL: String,
         configurations: [String: String],
         customConfigurations: [String: String],
-        observer: RequestObserver?
+        observer: PagedRequestObserver?
     ) async throws(APICallError) -> KnownTestsResult {
         let startTime = Date().timeIntervalSince1970 * 1000
         var tests: KnownTestsMap = [:]
         var page: KnownTestsPageInfo = .init()
         var size: Int = 0
-        var pageCount: Int = 0
-        var totalRequestMs: Double = 0
 
         repeat {
-            pageCount += 1
-            let pageStartTime = Date().timeIntervalSince1970 * 1000
             let result = try await self.tests(
                 service: service, env: env, repositoryURL: repositoryURL,
                 configurations: configurations, customConfigurations: customConfigurations,
                 page: page, observer: observer
             )
-            let pageEndTime = Date().timeIntervalSince1970 * 1000
-            totalRequestMs += (pageEndTime - pageStartTime)
 
             tests = tests.merging(result.tests) { (current, new) in
                 current.merging(new) { (current, new) in
@@ -103,17 +90,14 @@ extension KnownTestsApi {
             size += result.pageInfo.size
         } while page.hasNext
 
-        let endTime = Date().timeIntervalSince1970 * 1000
-        let totalFetchMs = endTime - startTime
+        let totalFetchMs = Date().timeIntervalSince1970 * 1000 - startTime
+        observer?.finished(totalFetchMs: totalFetchMs)
 
         return KnownTestsResult(tests: tests,
                                 pageInfo: .init(cursor: page.cursor,
                                                 pageSize: page.pageSize,
                                                 size: size,
-                                                hasNext: page.hasNext),
-                                pagesFetched: pageCount,
-                                totalFetchMs: totalFetchMs,
-                                totalRequestMs: totalRequestMs)
+                                                hasNext: page.hasNext))
     }
 
     /// Convenience without a telemetry observer.

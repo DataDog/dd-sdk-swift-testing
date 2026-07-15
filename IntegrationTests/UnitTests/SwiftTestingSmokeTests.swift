@@ -7,7 +7,6 @@
 import Testing
 import Foundation
 import DatadogSDKTesting
-import OpenTelemetryApi
 
 @Suite(.datadogTesting) struct STBasicPass {
     @Test func basicPass() {
@@ -92,21 +91,12 @@ import OpenTelemetryApi
     }
 }
 
-/// Swift Testing counterpart to `XCStdoutOTelAndCoverage` — exercises the
-/// three pipelines (stdout, OTel logger, code coverage) inside a real
-/// Swift-Testing `@Test`.
+/// Swift Testing counterpart to `XCStdoutOTelAndCoverage` — exercises stdout
+/// capture and code coverage inside a real Swift-Testing `@Test`, as a
+/// public-API consumer of the stripped framework.
 @Suite(.datadogTesting) struct STStdoutOTelAndCoverage {
     @Test func stdoutOTelAndCoverage() {
         print("hello from Swift Testing stdout")
-
-        let logger = OpenTelemetry.instance.loggerProvider
-            .loggerBuilder(instrumentationScopeName: "swift-testing-integration")
-            .build()
-        logger.logRecordBuilder()
-            .setBody(.string("hello from Swift Testing OTel"))
-            .setSeverity(.warn)
-            .emit()
-
         #expect(Bool(true))
     }
 }

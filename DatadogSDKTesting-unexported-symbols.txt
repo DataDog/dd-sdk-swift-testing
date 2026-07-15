@@ -1,0 +1,59 @@
+# Symbols to hide (make local / private_extern) in DatadogSDKTesting.framework.
+#
+# WHY: every dependency we statically link into the framework exports its
+# symbols by default. When a project-under-test links its OWN copy of the same
+# dependency (e.g. opentelemetry-swift), dyld coalesces the duplicate weak
+# type-metadata symbols to a single definition process-wide. If the two copies
+# differ in version/layout, one image ends up reading objects through the
+# other's metadata -> `swift_getObjectType` walks a bad pointer -> SEGV_ACCERR.
+# Marking these symbols non-exported stops dyld from coalescing them: each image
+# binds to its own copy. Only the public DatadogSDKTesting API stays exported.
+#
+# Passed to ld64 via `-unexported_symbols_list` (see UNEXPORTED_SYMBOLS_FILE /
+# OTHER_LDFLAGS on the framework target). Patterns use fnmatch globs and are
+# matched against the full mangled symbol name (leading underscore included).
+#
+# CAVEAT: this only prevents dyld symbol coalescing. It does NOT change the
+# mangled names, so name-keyed Swift runtime lookups (dynamic casts, Codable,
+# NSClassFromString) can still cross images in rare cases. For a hard guarantee
+# use module renaming instead. See the OpenTelemetry-isolation discussion.
+#
+# NOTE: Swift mangles the module name as a length-prefixed component
+# (e.g. `16OpenTelemetryApi`, 16 == strlen). It appears not only at the start of
+# symbols the module DEFINES but also mid-string in every symbol that REFERENCES
+# one of its types, so the globs are intentionally unanchored (`*...*`).
+# Keying on the length prefix keeps us from clobbering our own identifiers such
+# as `OpenTelemetryContextProvider` (mangled `28OpenTelemetry...`).
+
+# --- opentelemetry-swift-core ---
+*16OpenTelemetryApi*
+*16OpenTelemetrySdk*
+
+# --- swift-code-coverage ---
+*12CodeCoverage*
+*21CodeCoverageCollector*
+*18CodeCoverageParser*
+
+# --- Kronos ---
+*6Kronos*
+
+# --- SigmaSwiftStatistics ---
+*20SigmaSwiftStatistics*
+
+# --- EventsExporter (internal SDK module, not part of the public product) ---
+*14EventsExporter*
+
+# --- KSCrash (C/ObjC + Swift) ---
+# Modules: KSCrashRecording / RecordingCore / RecordingCoreSwift / ReportingCore
+# / Core / Filters / Sinks / Installations / DemangleFilter / etc.
+# NOTE: hiding C/ObjC symbols stops the linker-level duplicate, but the ObjC
+# runtime still registers classes by name and KSCrash installs process-wide
+# signal/exception handlers; if a project-under-test also links KSCrash that
+# handler-install conflict is a separate concern this list does NOT solve.
+# All KSCrash C functions are namespaced under `ks` (`_ksobjc_`, `_kscm_`,
+# `_ksjson_`, `_kscrash_`, ...); inline log wrappers are under `_i_ks`.
+*KSCrash*
+_ks*
+_i_ks*
+_OBJC_CLASS_$_KS*
+_OBJC_METACLASS_$_KS*

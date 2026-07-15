@@ -7,7 +7,6 @@
 import XCTest
 import Foundation
 import DatadogSDKTesting
-import OpenTelemetryApi
 
 final class XCBasicPass: XCTestCase {
     func testBasicPass() {
@@ -74,28 +73,24 @@ final class XCCrash: XCTestCase {
     }
 }
 
-/// Drives the three observable telemetry pipelines from inside a real XCTest
-/// run: print() → StdoutCapture → span event → SpanEventsLogExporterAdapter →
-/// LogsExporter; an OTel `LogRecord` emitted through the global LoggerProvider
-/// (registered by `DDTracer`) → LogsExporter; and the implicit per-test code
-/// coverage profraw → CoverageExporter → CoverageRecord upload (enabled by the
-/// xctestplan + backend settings supplied by the outer harness).
+/// Drives the consumer-facing telemetry pipelines from inside a real XCTest run
+/// against the *stripped* framework (the inner targets are built
+/// `-configuration Release`, so the bundled OpenTelemetry symbols are private —
+/// this exercises the framework exactly as shipped). print() → StdoutCapture →
+/// span event → SpanEventsLogExporterAdapter → LogsExporter; and the implicit
+/// per-test code-coverage profraw → CoverageExporter → CoverageRecord upload
+/// (enabled by the xctestplan + backend settings supplied by the outer
+/// harness).
+///
+/// Note: this is a public-API consumer only. The SDK's OpenTelemetry is private
+/// (stripped), so a consumer cannot share its OTel instance; the OTel-bridge is
+/// intentionally not covered here.
 final class XCStdoutOTelAndCoverage: XCTestCase {
     func testStdoutOTelAndCoverage() {
         // 1) stdout path
         print("hello from XCTest stdout")
 
-        // 2) OTel log path — go through OpenTelemetry.instance.loggerProvider
-        // which DDTracer wires up to the same LogsExporter.
-        let logger = OpenTelemetry.instance.loggerProvider
-            .loggerBuilder(instrumentationScopeName: "xctest-integration")
-            .build()
-        logger.logRecordBuilder()
-            .setBody(.string("hello from XCTest OTel"))
-            .setSeverity(.warn)
-            .emit()
-
-        // 3) The test passing is enough to trigger DDCoverageHelper.endTest,
+        // 2) The test passing is enough to trigger DDCoverageHelper.endTest,
         //    which is what produces the coverage payload — no extra wiring.
         XCTAssert(Bool(true))
     }

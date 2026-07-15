@@ -108,22 +108,6 @@ You can add custom tags inside your test methods. The static property `DDTest.cu
 DDTest.current!.setTag(key: "key1", value: "value1")
 ```
 
-## Using OpenTelemetry (only for Swift)
-
-The Datadog Swift testing framework uses [OpenTelemetry](https://github.com/open-telemetry/opentelemetry-swift) as the tracing technology under the hood. You can access the OpenTelemetry tracer using `DDInstrumentationControl.openTelemetryTracer` and can use any OpenTelemetry api. For example, for adding a tag/attribute:
-
-```swift
-import DatadogSDKTesting
-import OpenTelemetryApi
-
-let tracer = DDInstrumentationControl.openTelemetryTracer as? Tracer
-let span = tracer?.spanBuilder(spanName: "ChildSpan").startSpan()
-span?.setAttribute(key: "OTTag2", value: "OTValue2")
-span?.end()
-```
-
-The test target needs to link explicitly with `opentelemetry-swift`.
-
 ## Using Info.plist for configuration
 
 Alternatively to setting environment variables, all configuration values can be provided by adding them to the `Info.plist` file of the Test bundle (not the App bundle). If the same setting is set both in an environment variable and in the `Info.plist` file, the environment variable takes precedence.

@@ -104,32 +104,73 @@ public final class HTTPClient: HTTPClientType {
     
     @discardableResult
     func send(request: URLRequest, observer: RequestObserver?) async throws(RequestError) -> Response {
-        try await withUnsafeContinuation { continuation in
-            let _ = self._send(request: request, observer: observer) {
+        let (result, facts): (Result<Response, RequestError>, ObserverFacts?) = await withUnsafeContinuation { continuation in
+            let _ = self._send(request: request, collectFacts: observer != nil) {
                 continuation.resume(returning: $0)
             }
-        }.get()
+        }
+        // `RequestObserver` is async: invoke it here, in our own async context,
+        // after the (non-async) completion handler has returned.
+        if let observer, let facts {
+            await observer.requestFinished(durationMs: facts.durationMs,
+                                           requestBytes: facts.requestBytes,
+                                           responseBytes: facts.responseBytes,
+                                           statusCode: facts.statusCode,
+                                           transportError: facts.transportError,
+                                           failed: facts.failed)
+        }
+        return try result.get()
     }
-    
+
     @discardableResult
     func send(request: URLRequest, observer: RequestObserver?) throws(RequestError) -> Response {
         let sema = DispatchSemaphore(value: 0)
-        nonisolated(unsafe) var response: Result<Response, RequestError> = .failure(.inconsistentSession)
-        let task = _send(request: request, observer: observer) { result in
-            response = result
+        nonisolated(unsafe) var outcome: (Result<Response, RequestError>, ObserverFacts?) = (.failure(.inconsistentSession), nil)
+        let task = _send(request: request, collectFacts: observer != nil) { result in
+            outcome = result
             sema.signal()
         }
         guard sema.wait(timeout: .now() + request.timeoutInterval) == .success else {
             task.cancel()
             throw .transport(URLError(.timedOut))
         }
-        return try response.get()
+        // This synchronous path runs on the teardown/flush path, where we must not
+        // block on — or depend on — the cooperative executor. `RequestObserver` is
+        // async, so report it fire-and-forget: it records during normal operation
+        // and is simply skipped if the executor is no longer scheduled at process
+        // exit. Telemetry never delays teardown.
+        if let observer, let facts = outcome.1 {
+            Task {
+                await observer.requestFinished(durationMs: facts.durationMs,
+                                               requestBytes: facts.requestBytes,
+                                               responseBytes: facts.responseBytes,
+                                               statusCode: facts.statusCode,
+                                               transportError: facts.transportError,
+                                               failed: facts.failed)
+            }
+        }
+        return try outcome.0.get()
     }
-    
-    
+
+    /// The facts a `RequestObserver` needs, captured inside the (non-async)
+    /// `URLSessionDataTask` completion handler so the (async) observer can be
+    /// invoked afterwards, outside that closure.
+    ///
+    /// `@unchecked Sendable`: an immutable snapshot whose only non-`Sendable`
+    /// member (`transportError`) is read-only, so it is safe to hand to the
+    /// observer across a concurrency boundary.
+    private struct ObserverFacts: @unchecked Sendable {
+        let durationMs: Double
+        let requestBytes: Int
+        let responseBytes: Int
+        let statusCode: Int?
+        let transportError: (any Error)?
+        let failed: Bool
+    }
+
     private func _send(request: URLRequest,
-                       observer: (any RequestObserver)?,
-                       result: @escaping @Sendable (Result<Response, RequestError>) -> Void) -> URLSessionTask
+                       collectFacts: Bool,
+                       result: @escaping @Sendable ((Result<Response, RequestError>, ObserverFacts?)) -> Void) -> URLSessionTask
     {
         // Capture the serialized payload size before `deflate` so it reflects
         // the logical request size rather than the compressed wire size.
@@ -144,22 +185,23 @@ public final class HTTPClient: HTTPClientType {
             Log.debug("Sending request to \(url).....")
         }
         let request = _deflate(request)
-        let start = observer != nil ? DispatchTime.now() : nil
+        let start = collectFacts ? DispatchTime.now() : nil
         let task = session.dataTask(with: request) { data, response, error in
             // Log request and response
             self._log(request: logFields, response: (data, response, error))
-            if let observer, let start {
+            var facts: ObserverFacts? = nil
+            if let start {
                 let durationMs = Double(DispatchTime.now().uptimeNanoseconds - start.uptimeNanoseconds) / 1_000_000
                 let statusCode = (response as? HTTPURLResponse)?.statusCode
                 let success = error == nil && (statusCode.map { (200 ..< 400).contains($0) } ?? false)
-                observer.requestFinished(durationMs: durationMs,
-                                         requestBytes: requestBytes,
-                                         responseBytes: data?.count ?? 0,
-                                         statusCode: statusCode,
-                                         transportError: statusCode == nil ? error : nil,
-                                         failed: !success)
+                facts = ObserverFacts(durationMs: durationMs,
+                                      requestBytes: requestBytes,
+                                      responseBytes: data?.count ?? 0,
+                                      statusCode: statusCode,
+                                      transportError: statusCode == nil ? error : nil,
+                                      failed: !success)
             }
-            result(.init(data: data, response: response, error: error))
+            result((.init(data: data, response: response, error: error), facts))
         }
         task.resume()
         return task

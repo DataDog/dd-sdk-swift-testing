@@ -134,7 +134,7 @@ final class TelemetryTests: XCTestCase {
         XCTAssertEqual(Telemetry.errorType(statusCode: 200), .network)
     }
 
-    func testRequestMetricsObserverForwardsFactsAndDerivesErrorType() {
+    func testRequestMetricsObserverForwardsFactsAndDerivesErrorType() async {
         final class Box: @unchecked Sendable {
             var requests = 0
             var durationMs: Double?
@@ -152,8 +152,8 @@ final class TelemetryTests: XCTestCase {
         )
 
         // A failed request forwards all facts and derives the error type.
-        observer.requestFinished(durationMs: 12, requestBytes: 100, responseBytes: 200,
-                                 statusCode: 503, transportError: nil, failed: true)
+        await observer.requestFinished(durationMs: 12, requestBytes: 100, responseBytes: 200,
+                                       statusCode: 503, transportError: nil, failed: true)
         XCTAssertEqual(box.requests, 1)
         XCTAssertEqual(box.durationMs, 12)
         XCTAssertEqual(box.requestBytes, 100)
@@ -162,8 +162,8 @@ final class TelemetryTests: XCTestCase {
 
         // A successful request does not report an error.
         box.error = nil
-        observer.requestFinished(durationMs: 1, requestBytes: 1, responseBytes: 1,
-                                 statusCode: 202, transportError: nil, failed: false)
+        await observer.requestFinished(durationMs: 1, requestBytes: 1, responseBytes: 1,
+                                       statusCode: 202, transportError: nil, failed: false)
         XCTAssertEqual(box.requests, 2)
         XCTAssertNil(box.error)
     }

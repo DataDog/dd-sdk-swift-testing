@@ -21,25 +21,43 @@ public struct KnownTestsResult {
     public var isAllTests: Bool { !pageInfo.hasNext }
 }
 
-/// Pagination metadata from the Known Tests API (cursor for next page, page size, size, has_next).
-public struct KnownTestsPageInfo {
+/// Pagination metadata for the Known Tests API call (cursor for next page, page size).
+public struct KnownTestsPageCursor: Encodable, CustomDebugStringConvertible {
+    public let pageState: String?
+    public let pageSize: Int?
+
+    public init(pageSize: Int? = nil, pageState: String? = nil) {
+        self.pageState = pageState
+        self.pageSize = pageSize
+    }
+    
+    public var debugDescription: String {
+        let size = pageSize.map { "\($0)" } ?? "auto"
+        let state = pageState.map { #""\#($0)""# } ?? "null"
+        return #"{"page_size": \#(size), "page_state": \#(state)}"#
+    }
+}
+
+/// Pagination metadata from the Known Tests API (cursor for next page, size, has_next).
+public struct KnownTestsPageInfo: Decodable, CustomDebugStringConvertible {
     public let cursor: String?
-    public let pageSize: Int
     public let size: Int
     public let hasNext: Bool
 
-    public init(cursor: String?, pageSize: Int, size: Int, hasNext: Bool) {
+    public init(cursor: String?, size: Int, hasNext: Bool) {
         self.cursor = cursor
-        self.pageSize = pageSize
+        
         self.size = size
         self.hasNext = hasNext
     }
-
-    public init(pageSize: Int = 2000) {
-        self.pageSize = pageSize
-        self.size = 0
-        self.hasNext = false
-        self.cursor = nil
+    
+    public func next(pageSize: Int? = nil) -> KnownTestsPageCursor? {
+        hasNext ? .init(pageSize: pageSize, pageState: cursor) : nil
+    }
+    
+    public var debugDescription: String {
+        let cursorStr = cursor.map { #""\#($0)""# } ?? "null"
+        return #"{"cursor": \#(cursorStr), "size": \#(size), "has_next": \#(hasNext)}"#
     }
 }
 
@@ -49,7 +67,7 @@ public protocol KnownTestsApi: APIService {
         service: String, env: String, repositoryURL: String,
         configurations: [String: String],
         customConfigurations: [String: String],
-        page: KnownTestsPageInfo,
+        page: KnownTestsPageCursor,
         observer: RequestObserver?
     ) async throws(APICallError) -> KnownTestsResult
 
@@ -58,8 +76,8 @@ public protocol KnownTestsApi: APIService {
         service: String, env: String, repositoryURL: String,
         configurations: [String: String],
         customConfigurations: [String: String],
-        observer: RequestObserver?
-    ) async throws(APICallError) -> KnownTestsResult
+        observer: PagedRequestObserver?
+    ) async throws(APICallError) -> KnownTestsMap
 }
 
 extension KnownTestsApi {
@@ -67,31 +85,31 @@ extension KnownTestsApi {
         service: String, env: String, repositoryURL: String,
         configurations: [String: String],
         customConfigurations: [String: String],
-        observer: RequestObserver?
-    ) async throws(APICallError) -> KnownTestsResult {
+        observer: PagedRequestObserver?
+    ) async throws(APICallError) -> KnownTestsMap {
+        let startTime = Date().timeIntervalSince1970 * 1000
         var tests: KnownTestsMap = [:]
-        var page: KnownTestsPageInfo = .init()
-        var size: Int = 0
+        var page: KnownTestsPageCursor? = .init()
+
         repeat {
             let result = try await self.tests(
                 service: service, env: env, repositoryURL: repositoryURL,
                 configurations: configurations, customConfigurations: customConfigurations,
-                page: page, observer: observer
+                page: page!, observer: observer
             )
+
             tests = tests.merging(result.tests) { (current, new) in
                 current.merging(new) { (current, new) in
                     Array(Set(current).union(new))
                 }
             }
-            page = result.pageInfo
-            size += result.pageInfo.size
-        } while page.hasNext
+            page = result.pageInfo.next()
+        } while page != nil
 
-        return KnownTestsResult(tests: tests,
-                                pageInfo: .init(cursor: page.cursor,
-                                                pageSize: page.pageSize,
-                                                size: size,
-                                                hasNext: page.hasNext))
+        let totalFetchMs = Date().timeIntervalSince1970 * 1000 - startTime
+        observer?.finished(totalFetchMs: totalFetchMs)
+
+        return tests
     }
 
     /// Convenience without a telemetry observer.
@@ -100,7 +118,7 @@ extension KnownTestsApi {
         service: String, env: String, repositoryURL: String,
         configurations: [String: String],
         customConfigurations: [String: String],
-        page: KnownTestsPageInfo
+        page: KnownTestsPageCursor
     ) async throws(APICallError) -> KnownTestsResult {
         try await tests(service: service, env: env, repositoryURL: repositoryURL,
                         configurations: configurations, customConfigurations: customConfigurations,
@@ -113,7 +131,7 @@ extension KnownTestsApi {
         service: String, env: String, repositoryURL: String,
         configurations: [String: String],
         customConfigurations: [String: String]
-    ) async throws(APICallError) -> KnownTestsResult {
+    ) async throws(APICallError) -> KnownTestsMap {
         try await tests(service: service, env: env, repositoryURL: repositoryURL,
                         configurations: configurations, customConfigurations: customConfigurations,
                         observer: nil)
@@ -143,7 +161,7 @@ struct KnownTestsApiService: KnownTestsApi, APIServiceConstructible {
                repositoryURL: String,
                configurations: [String: String],
                customConfigurations: [String: String],
-               page: KnownTestsPageInfo,
+               page: KnownTestsPageCursor,
                observer: RequestObserver?) async throws(APICallError) -> KnownTestsResult
     {
         var configurations: [String: JSONGeneric] = configurations.mapValues { .string($0) }
@@ -151,7 +169,7 @@ struct KnownTestsApiService: KnownTestsApi, APIServiceConstructible {
 
         let request = TestsRequest(repositoryUrl: repositoryURL, env: env,
                                    service: service, configurations: configurations,
-                                   pageInfo: .init(pageSize: page.pageSize, pageState: page.cursor))
+                                   pageInfo: page)
         let log = self.log
         log.debug("Known tests request: \(request)")
         let response = try await httpClient.call(KnownTestsCall.self,
@@ -162,46 +180,19 @@ struct KnownTestsApiService: KnownTestsApi, APIServiceConstructible {
                                                  observer: observer)
         log.debug("Known tests response: \(response.data.attributes)")
         let attrs = response.data.attributes
-        return KnownTestsResult(
-            tests: attrs.tests,
-            pageInfo: .init(cursor: attrs.pageInfo.cursor,
-                            pageSize: page.pageSize,
-                            size: attrs.pageInfo.size,
-                            hasNext: attrs.pageInfo.hasNext)
-        )
+        return KnownTestsResult(tests: attrs.tests, pageInfo: attrs.pageInfo)
     }
 
     var endpointURLs: Set<URL> { [endpoint.knownTestsURL] }
 }
 
 extension KnownTestsApiService {
-    struct PageInfoRequest: Encodable, CustomDebugStringConvertible {
-        let pageSize: Int
-        let pageState: String?
-
-        var debugDescription: String {
-            let state = pageState.map { #""\#($0)""# } ?? "null"
-            return #"{"page_size": \#(pageSize), "page_state": \#(state)}"#
-        }
-    }
-
-    struct PageInfoResponse: Decodable, CustomDebugStringConvertible {
-        let cursor: String?
-        let size: Int
-        let hasNext: Bool
-
-        var debugDescription: String {
-            let cursorStr = cursor.map { #""\#($0)""# } ?? "null"
-            return #"{"cursor": \#(cursorStr), "size": \#(size), "has_next": \#(hasNext)}"#
-        }
-    }
-
     struct TestsRequest: Encodable, APIAttributesUUID, CustomDebugStringConvertible {
         let repositoryUrl: String
         let env: String
         let service: String
         let configurations: [String: JSONGeneric]
-        let pageInfo: PageInfoRequest
+        let pageInfo: KnownTestsPageCursor
 
         static var apiType: String = "ci_app_libraries_tests_request"
 
@@ -219,7 +210,7 @@ extension KnownTestsApiService {
                           APIResponseAttributesBrokenId, CustomDebugStringConvertible
     {
         let tests: KnownTestsMap
-        let pageInfo: PageInfoResponse
+        let pageInfo: KnownTestsPageInfo
 
         static var apiType: String = "ci_app_libraries_tests"
 

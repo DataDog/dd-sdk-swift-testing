@@ -31,6 +31,44 @@ public protocol RequestObserver: Sendable {
                          statusCode: Int?, transportError: (any Error)?, failed: Bool)
 }
 
+/// Observes a sequence of paginated requests (e.g. Known Tests). Conforms to
+/// `RequestObserver` so the same instance can be handed to each per-page HTTP
+/// call: it forwards every call unchanged to the wrapped observer while
+/// summing the `durationMs` of every call (successful or not — retries still
+/// cost wall-clock time) and counting only the succeeded pages, so the caller
+/// never times a page itself. Call `finished(totalFetchMs:)` once, after the
+/// last page, to report the pagination-level aggregate.
+public final class PagedRequestObserver: RequestObserver, Sendable {
+    private let wrapped: RequestObserver?
+    private let onPagesFetched: (@Sendable (_ count: Int, _ totalFetchMs: Double, _ totalRequestMs: Double) -> Void)?
+    private let accumulated = Synced<(pageCount: Int, totalRequestMs: Double)>((0, 0))
+
+    public init(wrapping observer: RequestObserver? = nil,
+               onPagesFetched: (@Sendable (_ count: Int, _ totalFetchMs: Double, _ totalRequestMs: Double) -> Void)? = nil) {
+        self.wrapped = observer
+        self.onPagesFetched = onPagesFetched
+    }
+
+    public func requestFinished(durationMs: Double, requestBytes: Int, responseBytes: Int,
+                                statusCode: Int?, transportError: (any Error)?, failed: Bool) {
+        accumulated.update { state in
+            state.totalRequestMs += durationMs
+            if !failed { state.pageCount += 1 }
+        }
+        wrapped?.requestFinished(durationMs: durationMs, requestBytes: requestBytes,
+                                 responseBytes: responseBytes, statusCode: statusCode,
+                                 transportError: transportError, failed: failed)
+    }
+
+    /// Reports the pagination-level aggregate; call once after the last page.
+    /// `totalFetchMs` is the wall-clock time from the first page request to
+    /// the last, supplied by the caller since only it spans the whole loop.
+    public func finished(totalFetchMs: Double) {
+        let (pageCount, totalRequestMs) = accumulated.value
+        onPagesFetched?(pageCount, totalFetchMs, totalRequestMs)
+    }
+}
+
 /// Observes the background upload pipeline that drains stored batches to the
 /// intake (one observer per feature store, e.g. spans vs coverage).
 ///

@@ -131,13 +131,20 @@ extension Telemetry {
         )
     }
 
-    var knownTestsRequestObserver: RequestMetricsObserver {
+    var knownTestsRequestObserver: PagedRequestObserver {
         let m = metrics.knownTests
-        return RequestMetricsObserver(
-            onRequest: { m.request.add() },
-            onDurationMs: { m.requestMs.record($0) },
-            onResponseBytes: { m.responseBytes.record(Double($0)) },
-            onError: { m.requestErrors.add(errorType: $0) }
+        return PagedRequestObserver(
+            wrapping: RequestMetricsObserver(
+                onRequest: { m.request.add() },
+                onDurationMs: { m.requestMs.record($0) },
+                onResponseBytes: { m.responseBytes.record(Double($0)) },
+                onError: { m.requestErrors.add(errorType: $0) }
+            ),
+            onPagesFetched: { count, totalFetchMs, totalRequestMs in
+                m.pagesFetched.record(Double(count))
+                m.totalFetchMs.record(totalFetchMs)
+                m.totalRequestMs.record(totalRequestMs)
+            }
         )
     }
 

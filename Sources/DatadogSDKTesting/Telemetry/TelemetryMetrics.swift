@@ -556,6 +556,9 @@ extension Telemetry.Metrics {
         let requestMs: Telemetry.Distribution<Telemetry.EmptyMetricTags>
         let responseBytes: Telemetry.Distribution<Telemetry.EmptyMetricTags>
         let responseTests: Telemetry.Distribution<Telemetry.EmptyMetricTags>
+        let pagesFetched: Telemetry.Distribution<Telemetry.EmptyMetricTags>
+        let totalFetchMs: Telemetry.Distribution<Telemetry.EmptyMetricTags>
+        let totalRequestMs: Telemetry.Distribution<Telemetry.EmptyMetricTags>
 
         init(_ f: Telemetry.Factory) {
             request = f.counter("known_tests.request")
@@ -563,6 +566,9 @@ extension Telemetry.Metrics {
             requestMs = f.distribution("known_tests.request_ms")
             responseBytes = f.distribution("known_tests.response_bytes")
             responseTests = f.distribution("known_tests.response_tests")
+            pagesFetched = f.distribution("known_tests.pages_fetched")
+            totalFetchMs = f.distribution("known_tests.total_fetch_ms")
+            totalRequestMs = f.distribution("known_tests.total_request_ms")
         }
     }
 

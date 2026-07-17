@@ -131,7 +131,7 @@ struct KnownTestsFactory: FeatureFactory {
                                         repositoryURL: repository,
                                         configurations: configurations,
                                         customConfigurations: customConfigurations,
-                                        observer: telemetry?.knownTestsRequestObserver).tests
+                                        observer: telemetry?.knownTestsRequestObserver)
         } catch {
             throw LibraryConfigurationCommunicationError(
                 requestName: "Known Tests Request",

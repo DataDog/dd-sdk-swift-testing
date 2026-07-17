@@ -221,7 +221,7 @@ final class LibraryConfigurationServiceThrowTests: XCTestCase {
 
         let error = expectError {
             _ = try invokeConfigurationApi(requestName: "Known Tests Request",
-                                           payload: "") { () async throws(APICallError) -> KnownTestsResult in
+                                           payload: "") { () async throws(APICallError) -> KnownTestsMap in
                 try await api.tests(service: "service", env: "env", repositoryURL: "repo",
                                     configurations: [:], customConfigurations: [:])
             }

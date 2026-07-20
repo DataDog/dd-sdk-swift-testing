@@ -23,26 +23,7 @@ internal final class SpanEventsLogExporterAdapter: SpanExporter {
     }
 
     func export(spans: [SpanData], explicitTimeout: TimeInterval?) -> SpanExporterResultCode {
-        var records: [ReadableLogRecord] = []
-        for span in spans {
-            for event in span.events {
-                records.append(ReadableLogRecord(
-                    resource: span.resource,
-                    instrumentationScopeInfo: span.instrumentationScope,
-                    timestamp: event.timestamp,
-                    spanContext: SpanContext.create(
-                        traceId: span.traceId,
-                        spanId: span.spanId,
-                        traceFlags: span.traceFlags,
-                        traceState: span.traceState
-                    ),
-                    severity: Self.severity(from: event.attributes["status"]?.description),
-                    body: nil,
-                    attributes: event.attributes,
-                    eventName: event.name
-                ))
-            }
-        }
+        let records = Self.logRecords(from: spans)
         guard !records.isEmpty else { return .success }
         return logRecordExporter.export(logRecords: records,
                                         explicitTimeout: explicitTimeout) == .success ? .success : .failure
@@ -56,6 +37,43 @@ internal final class SpanEventsLogExporterAdapter: SpanExporter {
 
     func shutdown(explicitTimeout: TimeInterval?) {
         // Same — the log exporter is shut down directly via the EventsExporter.
+    }
+
+    func export(spans: [SpanData], explicitTimeout: TimeInterval?) async -> SpanExporterResultCode {
+        let records = Self.logRecords(from: spans)
+        guard !records.isEmpty else { return .success }
+        return await logRecordExporter.export(logRecords: records,
+                                              explicitTimeout: explicitTimeout) == .success ? .success : .failure
+    }
+
+    func flush(explicitTimeout: TimeInterval?) async -> SpanExporterResultCode {
+        .success
+    }
+
+    func shutdown(explicitTimeout: TimeInterval?) async {}
+
+    private static func logRecords(from spans: [SpanData]) -> [ReadableLogRecord] {
+        var records: [ReadableLogRecord] = []
+        for span in spans {
+            for event in span.events {
+                records.append(ReadableLogRecord(
+                    resource: span.resource,
+                    instrumentationScopeInfo: span.instrumentationScope,
+                    timestamp: event.timestamp,
+                    spanContext: SpanContext.create(
+                        traceId: span.traceId,
+                        spanId: span.spanId,
+                        traceFlags: span.traceFlags,
+                        traceState: span.traceState
+                    ),
+                    severity: severity(from: event.attributes["status"]?.description),
+                    body: nil,
+                    attributes: event.attributes,
+                    eventName: event.name
+                ))
+            }
+        }
+        return records
     }
 
     /// Map a `status` attribute (set by `DDTracer.logString` / `.logErrorString`)

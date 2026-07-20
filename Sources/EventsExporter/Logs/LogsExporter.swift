@@ -83,4 +83,20 @@ internal final class LogsExporter: LogRecordExporter {
     func shutdown(explicitTimeout: TimeInterval?) {
         logsStorage.stop()
     }
+
+    func export(logRecords: [ReadableLogRecord], explicitTimeout: TimeInterval?) async -> ExportResult {
+        for record in logRecords {
+            guard let context = record.spanContext else { continue }
+            writeLog(DDLog(log: record, span: context))
+        }
+        return .success
+    }
+
+    func forceFlush(explicitTimeout: TimeInterval?) async -> ExportResult {
+        (try? logsStorage.flush()) == true ? .success : .failure
+    }
+
+    func shutdown(explicitTimeout: TimeInterval?) async {
+        logsStorage.stop()
+    }
 }

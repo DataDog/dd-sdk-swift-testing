@@ -107,6 +107,21 @@ internal final class SpansExporter: SpanExporter {
     func shutdown(explicitTimeout: TimeInterval?) {
         spansStorage.stop()
     }
+
+    func export(spans: [SpanData], explicitTimeout: TimeInterval?) async -> SpanExporterResultCode {
+        for span in spans {
+            exportSpan(span: span)
+        }
+        return .success
+    }
+
+    func flush(explicitTimeout: TimeInterval?) async -> SpanExporterResultCode {
+        (try? spansStorage.flush()) == true ? .success : .failure
+    }
+
+    func shutdown(explicitTimeout: TimeInterval?) async {
+        spansStorage.stop()
+    }
 }
 
 extension SpansExporter {

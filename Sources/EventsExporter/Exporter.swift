@@ -108,4 +108,31 @@ public final class Exporter: ExporterProtocol {
     public func forceFlush(explicitTimeout: TimeInterval?) -> ExportResult {
         logsExporter.forceFlush(explicitTimeout: explicitTimeout)
     }
+
+    public func export(spans: [SpanData], explicitTimeout: TimeInterval?) async -> SpanExporterResultCode {
+        let sampled = spans.filter { $0.traceFlags.sampled }
+        guard !sampled.isEmpty else { return .success }
+        return await spanExporterComposite.export(spans: sampled, explicitTimeout: explicitTimeout)
+    }
+
+    public func flush(explicitTimeout: TimeInterval?) async -> SpanExporterResultCode {
+        let logsOK = (try? logsExporter.logsStorage.flush()) ?? false
+        let spansOK = (try? spansExporter.spansStorage.flush()) ?? false
+        let covOK = (try? coverageExporter.coverageStorage.flush()) ?? false
+        return (logsOK && spansOK && covOK) ? .success : .failure
+    }
+
+    public func shutdown(explicitTimeout: TimeInterval?) async {
+        await logsExporter.shutdown(explicitTimeout: explicitTimeout)
+        await spansExporter.shutdown(explicitTimeout: explicitTimeout)
+        coverageExporter.shutdown()
+    }
+
+    public func export(logRecords: [ReadableLogRecord], explicitTimeout: TimeInterval?) async -> ExportResult {
+        await logsExporter.export(logRecords: logRecords, explicitTimeout: explicitTimeout)
+    }
+
+    public func forceFlush(explicitTimeout: TimeInterval?) async -> ExportResult {
+        await logsExporter.forceFlush(explicitTimeout: explicitTimeout)
+    }
 }

@@ -19,4 +19,14 @@ final class NoopSpanExporter: SpanExporter {
     }
 
     func shutdown(explicitTimeout: TimeInterval? = nil) {}
+
+    func export(spans: [SpanData], explicitTimeout: TimeInterval? = nil) async -> SpanExporterResultCode {
+        .success
+    }
+
+    func flush(explicitTimeout: TimeInterval? = nil) async -> SpanExporterResultCode {
+        .success
+    }
+
+    func shutdown(explicitTimeout: TimeInterval? = nil) async {}
 }

@@ -601,10 +601,10 @@ internal class DDTracer {
     }
 
     func flush() {
-        flushRUM()
-        self.tracerProviderSdk.forceFlush()
-        _ = self.logProcessor.forceFlush()
-        self.telemetry?.flush()
+        Log.measure(name: "flushRUM") { flushRUM() }
+        Log.measure(name: "tracerProviderSdk forceFlush") { self.tracerProviderSdk.forceFlush() }
+        _ = Log.measure(name: "logProcessor forceFlush") { self.logProcessor.forceFlush() }
+        _ = Log.measure(name: "telemetry flush") { self.telemetry?.flush() }
         Log.debug("Tracer flush finished")
     }
 
@@ -614,10 +614,10 @@ internal class DDTracer {
         // sealed `FileWriter.stop()`. A pre-shutdown flush would be redundant
         // and could skip a span still being written. We only forward the
         // cross-process RUM flush, which provider shutdown doesn't cover.
-        flushRUM()
-        self.tracerProviderSdk.shutdown()
-        _ = self.logProcessor.shutdown()
-        self.telemetry?.shutdown()
+        Log.measure(name: "flushRUM") { flushRUM() }
+        Log.measure(name: "tracerProviderSdk shutdown") { self.tracerProviderSdk.shutdown() }
+        _ = Log.measure(name: "logProcessor shutdown") { self.logProcessor.shutdown() }
+        Log.measure(name: "telemetry shutdown") { self.telemetry?.shutdown() }
         Log.debug("Tracer shutdown")
     }
 

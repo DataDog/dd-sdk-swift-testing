@@ -216,13 +216,13 @@ internal class DDTestMonitor {
     func stop() {
         guard !isStopped else { return }
         isStopped = true
-        efd?.stop()
-        atr?.stop()
-        tia?.stop()
-        coverage?.stop()
-        knownTests?.stop()
-        testManagement?.stop()
-        tracer.shutdown()
+        Log.measure(name: "efd stop") { efd?.stop() }
+        Log.measure(name: "atr stop") { atr?.stop() }
+        Log.measure(name: "tia stop") { tia?.stop() }
+        Log.measure(name: "coverage stop") { coverage?.stop() }
+        Log.measure(name: "knownTests stop") { knownTests?.stop() }
+        Log.measure(name: "testManagement stop") { testManagement?.stop() }
+        Log.measure(name: "tracer shutdown") { tracer.shutdown() }
         Log.measure(name: "gitUploadQueue drain") {
             gitUploadQueue.waitUntilAllOperationsAreFinished()
         }

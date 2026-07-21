@@ -37,6 +37,7 @@ final class Log: Logger, @unchecked Sendable {
     
     func measure<T, E: Error>(name: String, _ operation: () throws(E) -> T) throws(E) -> T {
         if isDebug {
+            print(prefix: "[Debug][DatadogSDKTesting] ", message: "Waiting for \(name)...")
             let startTime = CFAbsoluteTimeGetCurrent()
             defer {
                 print(name: name, time: CFAbsoluteTimeGetCurrent() - startTime)
@@ -46,9 +47,10 @@ final class Log: Logger, @unchecked Sendable {
             return try operation()
         }
     }
-    
+
     func measure<T, E: Error>(name: String, _ operation: @Sendable () async throws(E) -> T) async throws(E) -> T {
         if isDebug {
+            print(prefix: "[Debug][DatadogSDKTesting] ", message: "Waiting for \(name)...")
             let startTime = CFAbsoluteTimeGetCurrent()
             defer {
                 print(name: name, time: CFAbsoluteTimeGetCurrent() - startTime)

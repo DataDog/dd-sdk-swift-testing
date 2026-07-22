@@ -181,15 +181,18 @@ private struct NoopTelemetryApi: TelemetryApi {
     var endpointURLs: Set<URL> { [] }
 
     func sendAppStarted(products: TelemetryProducts?, configuration: [TelemetryConfigItem]?,
-                        error: TelemetryError?,
-                        installSignature: TelemetryInstallSignature?) async throws(APICallError) {}
-    func sendAppHeartbeat() async throws(APICallError) {}
-    func sendAppClosing() async throws(APICallError) {}
-    func sendMetrics(_ series: [TelemetryMetric.Series],
-                     namespace: TelemetryMetric.Namespace?) async throws(APICallError) {}
-    func sendDistributions(_ series: [TelemetryDistribution.Series],
-                           namespace: TelemetryDistribution.Namespace?) async throws(APICallError) {}
-    func sendLogs(_ logs: [TelemetryLog]) async throws(APICallError) {}
-    func send(batch items: [any TelemetryPayload]) async throws(APICallError) {}
-    func send(batch data: Data) async throws(APICallError) {}
+                        error: TelemetryError?, installSignature: TelemetryInstallSignature?,
+                        timeout: TimeInterval?) async throws(APICallError) {}
+    func sendAppHeartbeat(timeout: TimeInterval?) async throws(APICallError) {}
+    func sendAppClosing(timeout: TimeInterval?) async throws(APICallError) {}
+    func sendAppClosing(timeout: TimeInterval?) throws(APICallError) {}
+    func send(metrics series: [TelemetryMetric.Series],
+              namespace: TelemetryMetric.Namespace?, timeout: TimeInterval?) async throws(APICallError) {}
+    func send(distributions series: [TelemetryDistribution.Series],
+              namespace: TelemetryDistribution.Namespace?, timeout: TimeInterval?) async throws(APICallError) {}
+    func send(logs: [TelemetryLog], timeout: TimeInterval?) async throws(APICallError) {}
+    func send(batch items: [any TelemetryPayload], timeout: TimeInterval?) async throws(APICallError) {}
+    func send(batch items: [any TelemetryPayload], timeout: TimeInterval?) throws(APICallError) {}
+    func send(batch data: Data, timeout: TimeInterval?) async throws(APICallError) {}
+    func send(batch data: Data, timeout: TimeInterval?) throws(APICallError) {}
 }

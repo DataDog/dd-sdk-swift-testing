@@ -49,19 +49,20 @@ public protocol TestImpactAnalysisApi: APIService {
                         customConfigurations: [String: String],
                         observer: RequestObserver?) async throws(APICallError) -> SkipTests
 
-    func uploadCoverage(batch url: URL, observer: RequestObserver?) async throws(APICallError)
-    func uploadCoverage(batch data: Data, observer: RequestObserver?) async throws(APICallError)
+    func uploadCoverage(batch url: URL, observer: RequestObserver?, timeout: TimeInterval?) async throws(APICallError)
+    func uploadCoverage(batch data: Data, observer: RequestObserver?, timeout: TimeInterval?) async throws(APICallError)
+    func uploadCoverage(batch data: Data, observer: RequestObserver?, timeout: TimeInterval?) throws(APICallError)
 }
 
 extension TestImpactAnalysisApi {
-    public func uploadCoverage(batch url: URL, observer: RequestObserver?) async throws(APICallError) {
+    public func uploadCoverage(batch url: URL, observer: RequestObserver? = nil, timeout: TimeInterval? = nil) async throws(APICallError) {
         let data: Data
         do {
             data = try Data(contentsOf: url, options: [.mappedIfSafe])
         } catch {
             throw .fileSystem(error)
         }
-        try await uploadCoverage(batch: data, observer: observer)
+        try await uploadCoverage(batch: data, observer: observer, timeout: timeout)
     }
 
     /// Convenience without a telemetry observer.
@@ -77,16 +78,40 @@ extension TestImpactAnalysisApi {
                                  customConfigurations: customConfigurations, observer: nil)
     }
 
-    /// Convenience without a telemetry observer.
-    @inlinable
-    public func uploadCoverage(batch url: URL) async throws(APICallError) {
-        try await uploadCoverage(batch: url, observer: nil)
-    }
-
-    /// Convenience without a telemetry observer.
+    /// Convenience without telemetry observer and timeout.
     @inlinable
     public func uploadCoverage(batch data: Data) async throws(APICallError) {
-        try await uploadCoverage(batch: data, observer: nil)
+        try await uploadCoverage(batch: data, observer: nil, timeout: nil)
+    }
+    
+    /// Convenience without timeout.
+    @inlinable
+    public func uploadCoverage(batch data: Data, observer: RequestObserver?) async throws(APICallError) {
+        try await uploadCoverage(batch: data, observer: observer, timeout: nil)
+    }
+    
+    /// Convenience without telemetry observer.
+    @inlinable
+    public func uploadCoverage(batch data: Data, timeout: TimeInterval?) async throws(APICallError) {
+        try await uploadCoverage(batch: data, observer: nil, timeout: timeout)
+    }
+    
+    /// Convenience without telemetry observer and timeaout.
+    @inlinable
+    public func uploadCoverage(batch data: Data) throws(APICallError) {
+        try uploadCoverage(batch: data, observer: nil, timeout: nil)
+    }
+    
+    /// Convenience without timeout.
+    @inlinable
+    public func uploadCoverage(batch data: Data, observer: RequestObserver?) throws(APICallError) {
+        try uploadCoverage(batch: data, observer: observer, timeout: nil)
+    }
+    
+    /// Convenience without telemetry observer.
+    @inlinable
+    public func uploadCoverage(batch data: Data, timeout: TimeInterval?) throws(APICallError) {
+        try uploadCoverage(batch: data, observer: nil, timeout: timeout)
     }
 }
 
@@ -161,9 +186,22 @@ struct TestImpactAnalysisApiService: TestImpactAnalysisApi, APIServiceConstructi
         return SkipTests(correlationId: correlationId, tests: tests)
     }
 
-    func uploadCoverage(batch data: Data, observer: RequestObserver?) async throws(APICallError) {
+    
+
+    func uploadCoverage(batch data: Data, observer: RequestObserver?, timeout: TimeInterval?) async throws(APICallError) {
+        try await httpClient.send(api: _coverageRequest(batch: data, timeout: timeout), observer: observer)
+    }
+
+    func uploadCoverage(batch data: Data, observer: RequestObserver?, timeout: TimeInterval?) throws(APICallError) {
+        try httpClient.send(api: _coverageRequest(batch: data, timeout: timeout), observer: observer)
+    }
+    
+    var endpointURLs: Set<URL> { [endpoint.skippableTestsURL, endpoint.coverageURL] }
+    
+    private func _coverageRequest(batch data: Data, timeout: TimeInterval?) -> MultipartFormURLRequest {
         var request = MultipartFormURLRequest(url: endpoint.coverageURL)
         request.headers = headers
+        request.timeoutInterval = timeout
         if compression {
             request.addHTTPHeader(.contentEncodingHeader(contentEncoding: .deflate))
         }
@@ -173,10 +211,9 @@ struct TestImpactAnalysisApiService: TestImpactAnalysisApi, APIServiceConstructi
         request.append(data: Data(#"{"dummy": true}"#.utf8),
                        withName: "event",
                        contentType: .applicationJSON)
-        let _ = try await httpClient.send(api: request, observer: observer)
+        return request
     }
 
-    var endpointURLs: Set<URL> { [endpoint.skippableTestsURL, endpoint.coverageURL] }
 }
 
 extension TestImpactAnalysisApiService {

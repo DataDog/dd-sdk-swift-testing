@@ -46,7 +46,9 @@ internal final class CoverageExporter: CoverageExporterType {
             directory: try storage.createSubdirectory(path: "v1"),
             performance: PerformancePreset.instantDataDelivery,
             dateProvider: SystemDateProvider(),
-            onDrop: uploadObserver.map { obs in { obs.uploadDropped(payloadBytes: $0) } }
+            onDrop: uploadObserver.map { obs in
+                { @Sendable bytes in obs.uploadDropped(payloadBytes: bytes) }
+            }
         )
 
         let encoder = api.encoder
@@ -60,10 +62,13 @@ internal final class CoverageExporter: CoverageExporterType {
                                 observer: observers.payload)
         let reader = FileReader(dataFormat: dataFormat, orchestrator: filesOrchestrator)
         let requestObserver = observers.request
-        let upload: ClosureDataUploader.UploadCallback = { (data: Data) async throws(APICallError) -> Void in
-            try await api.uploadCoverage(batch: data, observer: requestObserver)
+        let uploadSync: ClosureDataUploader.UploadCallbackSync = { (data, timeout) throws(APICallError) -> Void in
+            try api.uploadCoverage(batch: data, observer: requestObserver, timeout: timeout)
         }
-        let uploader = ClosureDataUploader(upload: upload)
+        let uploadAsync: ClosureDataUploader.UploadCallbackAsync = { (data, timeout) async throws(APICallError) -> Void in
+            try await api.uploadCoverage(batch: data, observer: requestObserver, timeout: timeout)
+        }
+        let uploader = ClosureDataUploader(sync: uploadSync, async: uploadAsync)
         self.payloadObserver = observers.payload
         self.coverageStorage = FeatureStoreAndUpload(featureName: "coverage",
                                                      reader: reader,
@@ -89,7 +94,7 @@ internal final class CoverageExporter: CoverageExporterType {
 
     @discardableResult
     func forceFlush(explicitTimeout: TimeInterval?) -> ExportResult {
-        (try? coverageStorage.flush()) == true ? .success : .failure
+        (try? coverageStorage.flush(timeout: explicitTimeout)) == true ? .success : .failure
     }
 
     func shutdown(explicitTimeout: TimeInterval?) {

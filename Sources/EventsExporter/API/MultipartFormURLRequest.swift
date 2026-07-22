@@ -9,6 +9,7 @@ import Foundation
 struct MultipartFormURLRequest {
     let url: URL
     var headers: [HTTPHeader] = []
+    var timeoutInterval: TimeInterval? = nil
 
     private let boundary: String = UUID().uuidString
     private var body: Data = Data()
@@ -59,16 +60,9 @@ struct MultipartFormURLRequest {
         request.httpHeaders = headers
         request.setValue(.constant("multipart/form-data; boundary=\(boundary)"), forHTTPHeader: .contentTypeHeaderField)
         request.httpBody = body + Data("--\(boundary)--".utf8)
+        if let timeoutInterval {
+            request.timeoutInterval = timeoutInterval
+        }
         return request
-    }
-}
-
-extension HTTPClient {
-    func send(request: MultipartFormURLRequest) async throws(RequestError) -> HTTPURLResponse {
-        try await send(request: request.asURLRequest)
-    }
-
-    func sendWithResponse(request: MultipartFormURLRequest) async throws(RequestError) -> Data {
-        try await sendWithResponse(request: request.asURLRequest)
     }
 }

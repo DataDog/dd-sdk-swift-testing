@@ -40,9 +40,13 @@ public final class TelemetryExporter: TelemetryPayloadExporter {
                                 encoder: encoder,
                                 log: config.logger)
         let reader = FileReader(dataFormat: dataFormat, orchestrator: filesOrchestrator)
-        let uploader = ClosureDataUploader() { (data) async throws(APICallError) -> Void in
-            try await api.send(batch: data)
+        let uploadSync: ClosureDataUploader.UploadCallbackSync = { (data, timeout) throws(APICallError) -> Void in
+            try api.send(batch: data, timeout: timeout)
         }
+        let uploadAsync: ClosureDataUploader.UploadCallbackAsync = { (data, timeout) async throws(APICallError) -> Void in
+            try await api.send(batch: data, timeout: timeout)
+        }
+        let uploader = ClosureDataUploader(sync: uploadSync, async: uploadAsync)
         self.telemetryStorage = FeatureStoreAndUpload(featureName: "telemetry",
                                                       reader: reader,
                                                       writer: writer,
@@ -63,7 +67,9 @@ public final class TelemetryExporter: TelemetryPayloadExporter {
 
     @discardableResult
     public func flush() -> Bool {
-        (try? telemetryStorage.flush()) ?? false
+        // Telemetry isn't driven by an OpenTelemetry `forceFlush` budget; use
+        // the default per-attempt cap with no total deadline.
+        (try? telemetryStorage.flush(timeout: nil)) ?? false
     }
 
     public func shutdown() {

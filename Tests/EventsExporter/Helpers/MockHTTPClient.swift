@@ -12,9 +12,9 @@ import XCTest
 /// `DataUploadWorkerTests`. Records every request and returns the configured
 /// delivery immediately, with no dependency on `URLSession` or `URLProtocol`.
 ///
-/// This lets the sync-via-`RunLoopWaiter` upload path that `DataUploader` uses
-/// run cleanly on watchOS, where `URLSession` is documented to bypass custom
-/// `URLProtocol`s for synchronous dispatch.
+/// This lets the synchronous upload path that `DataUploader` uses run cleanly on
+/// watchOS, where `URLSession` is documented to bypass custom `URLProtocol`s for
+/// synchronous dispatch.
 internal final class MockHTTPClient: HTTPClientType, @unchecked Sendable {
     enum Delivery {
         case success(response: HTTPURLResponse, data: Data = .mockAny())
@@ -34,24 +34,20 @@ internal final class MockHTTPClient: HTTPClientType, @unchecked Sendable {
 
     // MARK: HTTPClientType
 
-    func send(request: URLRequest, observer: RequestObserver?) async throws(HTTPClient.RequestError) -> HTTPURLResponse {
-        try await Task<Result<HTTPURLResponse, HTTPClient.RequestError>, Never>.detached {
-            self.record(request)
-            switch self.delivery {
-            case .success(let response, _): return .success(response)
-            case .failure(let error): return .failure(error)
-            }
-        }.value.get()
+    private func deliver(_ request: URLRequest) throws(HTTPClient.RequestError) -> HTTPClient.Response {
+        record(request)
+        switch delivery {
+        case .success(let response, let data): return (response: response, data: data)
+        case .failure(let error): throw error
+        }
     }
 
-    func sendWithResponse(request: URLRequest, observer: RequestObserver?) async throws(HTTPClient.RequestError) -> Data {
-        try await Task<Result<Data, HTTPClient.RequestError>, Never>.detached {
-            self.record(request)
-            switch self.delivery {
-            case .success(_, let data): return .success(data)
-            case .failure(let error): return .failure(error)
-            }
-        }.value.get()
+    func send(request: URLRequest, observer: RequestObserver?) async throws(HTTPClient.RequestError) -> HTTPClient.Response {
+        try deliver(request)
+    }
+
+    func send(request: URLRequest, observer: RequestObserver?) throws(HTTPClient.RequestError) -> HTTPClient.Response {
+        try deliver(request)
     }
 
     // MARK: Test API

@@ -459,33 +459,48 @@ public protocol TelemetryApi: APIService {
     func sendAppStarted(products: TelemetryProducts?,
                         configuration: [TelemetryConfigItem]?,
                         error: TelemetryError?,
-                        installSignature: TelemetryInstallSignature?) async throws(APICallError)
+                        installSignature: TelemetryInstallSignature?,
+                        timeout: TimeInterval?) async throws(APICallError)
 
     /// Send an `app-heartbeat` event. Per spec callers should schedule this
     /// once per minute after `sendAppStarted` for as long as the app is alive,
     /// even if other telemetry events were sent in the same window.
-    func sendAppHeartbeat() async throws(APICallError)
+    func sendAppHeartbeat(timeout: TimeInterval?) async throws(APICallError)
 
     /// Send the `app-closing` event when the app is about to terminate.
     /// Should use a short timeout so it doesn't delay shutdown.
-    func sendAppClosing() async throws(APICallError)
+    func sendAppClosing(timeout: TimeInterval?) async throws(APICallError)
+    
+    /// Send the `app-closing` event when the app is about to terminate.
+    /// Should use a short timeout so it doesn't delay shutdown.
+    /// Sync version
+    func sendAppClosing(timeout: TimeInterval?) throws(APICallError)
 
     /// Send a batch of metric series via the `generate-metrics` request type.
-    func sendMetrics(_ series: [TelemetryMetric.Series],
-                     namespace: TelemetryMetric.Namespace?) async throws(APICallError)
+    func send(metrics series: [TelemetryMetric.Series],
+              namespace: TelemetryMetric.Namespace?,
+              timeout: TimeInterval?) async throws(APICallError)
 
     /// Send a batch of distribution series via the `distributions` request type.
-    func sendDistributions(_ series: [TelemetryDistribution.Series],
-                           namespace: TelemetryDistribution.Namespace?) async throws(APICallError)
+    func send(distributions series: [TelemetryDistribution.Series],
+              namespace: TelemetryDistribution.Namespace?,
+              timeout: TimeInterval?) async throws(APICallError)
 
     /// Send a batch of log messages via the `logs` request type.
-    func sendLogs(_ logs: [TelemetryLog]) async throws(APICallError)
+    func send(logs: [TelemetryLog], timeout: TimeInterval?) async throws(APICallError)
 
     /// Send a mixed batch of telemetry items via the `message-batch` request
     /// type. Items keep their original request_type tag inside the batch and
     /// share the outer envelope's `application`/`host`/`runtime_id`/`seq_id`.
     /// An empty `items` array is a no-op and does not hit the network.
-    func send(batch items: [any TelemetryPayload]) async throws(APICallError)
+    func send(batch items: [any TelemetryPayload], timeout: TimeInterval?) async throws(APICallError)
+    
+    /// Send a mixed batch of telemetry items via the `message-batch` request
+    /// type. Items keep their original request_type tag inside the batch and
+    /// share the outer envelope's `application`/`host`/`runtime_id`/`seq_id`.
+    /// An empty `items` array is a no-op and does not hit the network.
+    /// Sync version
+    func send(batch items: [any TelemetryPayload], timeout: TimeInterval?) throws(APICallError)
 
     /// Send a batch of pre-encoded `TelemetryBatchEntry` values stored in a
     /// file. The file must contain one or more JSON-encoded batch entries
@@ -493,7 +508,7 @@ public protocol TelemetryApi: APIService {
     /// written by `TelemetryExporter`. The service wraps them with a fresh
     /// `message-batch` envelope (current timestamp, next `seq_id`, full
     /// `application` / `host` identity) before POSTing.
-    func send(batch url: URL) async throws(APICallError)
+    func send(batch url: URL, timeout: TimeInterval?) async throws(APICallError)
 
     /// Send a batch of pre-encoded `TelemetryBatchEntry` values. `data` must
     /// contain one or more JSON-encoded batch entries separated by commas with
@@ -501,18 +516,88 @@ public protocol TelemetryApi: APIService {
     /// `TelemetryExporter`. The service wraps them with a fresh
     /// `message-batch` envelope (current timestamp, next `seq_id`, full
     /// `application` / `host` identity) before POSTing.
-    func send(batch data: Data) async throws(APICallError)
+    func send(batch data: Data, timeout: TimeInterval?) async throws(APICallError)
+
+    /// Synchronous variant of `send(batch:)` for the teardown flush path
+    /// (see the synchronous `HTTPClient.send`). `timeout` bounds the single attempt.
+    func send(batch data: Data, timeout: TimeInterval?) throws(APICallError)
 }
 
 extension TelemetryApi {
-    public func send(batch url: URL) async throws(APICallError) {
+    public func send(batch url: URL, timeout: TimeInterval? = nil) async throws(APICallError) {
         let data: Data
         do {
             data = try Data(contentsOf: url, options: [.mappedIfSafe])
         } catch {
             throw .fileSystem(error)
         }
-        try await send(batch: data)
+        try await send(batch: data, timeout: timeout)
+    }
+    
+    // No timeout helpers
+    @inlinable
+    public func sendAppStarted(products: TelemetryProducts?,
+                               configuration: [TelemetryConfigItem]?,
+                               error: TelemetryError?,
+                               installSignature: TelemetryInstallSignature?) async throws(APICallError)
+    {
+        try await sendAppStarted(products: products, configuration: configuration,
+                                 error: error, installSignature: installSignature,
+                                 timeout: nil)
+    }
+
+    @inlinable
+    public func sendAppHeartbeat() async throws(APICallError) {
+        try await sendAppHeartbeat(timeout: nil)
+    }
+
+    @inlinable
+    public func sendAppClosing() async throws(APICallError) {
+        try await sendAppClosing(timeout: nil)
+    }
+    
+    @inlinable
+    public func sendAppClosing() throws(APICallError) {
+        try sendAppClosing(timeout: nil)
+    }
+
+    @inlinable
+    public func send(metrics series: [TelemetryMetric.Series],
+                     namespace: TelemetryMetric.Namespace?) async throws(APICallError)
+    {
+        try await send(metrics: series, namespace: namespace, timeout: nil)
+    }
+
+    @inlinable
+    public func send(distributions series: [TelemetryDistribution.Series],
+                     namespace: TelemetryDistribution.Namespace?) async throws(APICallError)
+    {
+        try await send(distributions: series, namespace: namespace, timeout: nil)
+    }
+
+    @inlinable
+    public func send(logs: [TelemetryLog]) async throws(APICallError) {
+        try await send(logs: logs, timeout: nil)
+    }
+
+    @inlinable
+    public func send(batch items: [any TelemetryPayload]) async throws(APICallError) {
+        try await send(batch: items, timeout: nil)
+    }
+    
+    @inlinable
+    public func send(batch items: [any TelemetryPayload]) throws(APICallError) {
+        try send(batch: items, timeout: nil)
+    }
+
+    @inlinable
+    public func send(batch data: Data) async throws(APICallError) {
+        try await send(batch: data, timeout: nil)
+    }
+
+    @inlinable
+    public func send(batch data: Data) throws(APICallError) {
+        try send(batch: data, timeout: nil)
     }
 }
 
@@ -566,59 +651,63 @@ internal struct TelemetryApiService: TelemetryApi {
     func sendAppStarted(products: TelemetryProducts?,
                         configuration: [TelemetryConfigItem]?,
                         error: TelemetryError?,
-                        installSignature: TelemetryInstallSignature?) async throws(APICallError)
+                        installSignature: TelemetryInstallSignature?,
+                        timeout: TimeInterval?) async throws(APICallError)
     {
         let payload = TelemetryAppStarted(products: products, configuration: configuration,
                                           error: error, installSignature: installSignature)
-        try await send(payload: payload)
+        try await _send(payload: payload, timeout: timeout)
     }
 
-    func sendAppHeartbeat() async throws(APICallError) {
-        try await send(payload: TelemetryAppHeartbeat())
+    func sendAppHeartbeat(timeout: TimeInterval?) async throws(APICallError) {
+        try await _send(payload: TelemetryAppHeartbeat(), timeout: timeout)
     }
 
-    func sendAppClosing() async throws(APICallError) {
-        try await send(payload: TelemetryAppClosing())
+    func sendAppClosing(timeout: TimeInterval?) async throws(APICallError) {
+        try await _send(payload: TelemetryAppClosing(), timeout: timeout)
+    }
+    
+    func sendAppClosing(timeout: TimeInterval?) throws(APICallError) {
+        try _send(payload: TelemetryAppClosing(), timeout: timeout)
     }
 
-    func sendMetrics(_ series: [TelemetryMetric.Series],
-                     namespace: TelemetryMetric.Namespace?) async throws(APICallError)
+    func send(metrics series: [TelemetryMetric.Series],
+              namespace: TelemetryMetric.Namespace?,
+              timeout: TimeInterval?) async throws(APICallError)
     {
         let payload = TelemetryMetric(namespace: namespace, series: series)
-        try await send(payload: payload)
+        try await _send(payload: payload, timeout: timeout)
     }
 
-    func sendDistributions(_ series: [TelemetryDistribution.Series],
-                           namespace: TelemetryDistribution.Namespace?) async throws(APICallError)
+    func send(distributions series: [TelemetryDistribution.Series],
+              namespace: TelemetryDistribution.Namespace?,
+              timeout: TimeInterval?) async throws(APICallError)
     {
         let payload = TelemetryDistribution(namespace: namespace, series: series)
-        try await send(payload: payload)
+        try await _send(payload: payload, timeout: timeout)
     }
 
-    func sendLogs(_ logs: [TelemetryLog]) async throws(APICallError) {
+    func send(logs: [TelemetryLog], timeout: TimeInterval?) async throws(APICallError) {
         guard !logs.isEmpty else { return }
-        try await send(payload: TelemetryLog.Logs(logs))
+        try await _send(payload: TelemetryLog.Logs(logs), timeout: timeout)
     }
 
-    func send(batch items: [any TelemetryPayload]) async throws(APICallError) {
+    func send(batch items: [any TelemetryPayload], timeout: TimeInterval?) async throws(APICallError) {
         guard !items.isEmpty else { return }
-        try await send(payload: TelemetryMessageBatch(messages: items))
+        try await _send(payload: TelemetryMessageBatch(messages: items), timeout: timeout)
+    }
+    
+    func send(batch items: [any TelemetryPayload], timeout: TimeInterval?) throws(APICallError) {
+        guard !items.isEmpty else { return }
+        try _send(payload: TelemetryMessageBatch(messages: items), timeout: timeout)
     }
 
-    func send(batch data: Data) async throws(APICallError) {
-        // Wrap the raw comma-separated batch entries with a fresh envelope:
-        // prefix = {"api_version":…,"payload":[ and suffix = ]}
-        let header = makeEnvelope(payload: TelemetryVoidBatch())
-        let dataFormat: DataFormat
-        do {
-            dataFormat = try DataFormat(header: header, encoder: encoder)
-        } catch let error as EncodingError {
-            throw .encoding(value: header, error: error)
-        } catch {
-            throw .unknownError(error)
-        }
-        try await send(requestType: .messageBatch,
-                       body: dataFormat.prefix + data + dataFormat.suffix)
+    func send(batch data: Data, timeout: TimeInterval?) async throws(APICallError) {
+        try await httpClient.send(api: _request(batch: data, timeout: timeout))
+    }
+
+    func send(batch data: Data, timeout: TimeInterval?) throws(APICallError) {
+        try httpClient.send(api: _request(batch: data, timeout: timeout))
     }
 
     var endpointURLs: Set<URL> { [endpoint.telemetryURL] }
@@ -630,21 +719,8 @@ internal struct TelemetryApiService: TelemetryApi {
         }
     }
     
-    private func makeEnvelope<Payload: TelemetryPayload>(payload: Payload) -> TelemetryEnvelope<Payload> {
-        TelemetryEnvelope(
-            requestType: payload.requestType,
-            tracerTime: UInt64(dateProvider.currentDate().timeIntervalSince1970),
-            runtimeId: runtimeId,
-            seqId: nextSeqId(),
-            application: application,
-            host: host,
-            payload: payload,
-            debug: debugBackend
-        )
-    }
-
-    private func send<Payload: TelemetryPayload>(payload: Payload) async throws(APICallError) {
-        let envelope = makeEnvelope(payload: payload)
+    private func _data<Payload: TelemetryPayload>(for payload: Payload) throws(APICallError) -> Data {
+        let envelope = _envelope(for: payload)
         let data: Data
         do {
             data = try encoder.encode(envelope)
@@ -653,12 +729,41 @@ internal struct TelemetryApiService: TelemetryApi {
         } catch {
             throw .unknownError(error)
         }
-        try await send(requestType: payload.requestType, body: data)
+        return data
+    }
+    
+    private func _envelope<Payload: TelemetryPayload>(for payload: Payload) -> TelemetryEnvelope<Payload> {
+        .init(requestType: payload.requestType,
+              tracerTime: UInt64(dateProvider.currentDate().timeIntervalSince1970),
+              runtimeId: runtimeId,
+              seqId: nextSeqId(),
+              application: application,
+              host: host,
+              payload: payload,
+              debug: debugBackend)
     }
 
-    private func send(requestType: TelemetryRequestType,
-                      body: Data) async throws(APICallError)
+    private func _send<Payload: TelemetryPayload>(payload: Payload, timeout: TimeInterval?) async throws(APICallError) {
+        try await _send(requestType: payload.requestType, body: _data(for: payload), timeout: timeout)
+    }
+    
+    private func _send<Payload: TelemetryPayload>(payload: Payload, timeout: TimeInterval?) throws(APICallError) {
+        try _send(requestType: payload.requestType, body: _data(for: payload), timeout: timeout)
+    }
+
+    private func _send(requestType: TelemetryRequestType,
+                       body: Data, timeout: TimeInterval?) async throws(APICallError)
     {
+        try await httpClient.send(api: _request(requestType: requestType, body: body, timeout: timeout))
+    }
+    
+    private func _send(requestType: TelemetryRequestType,
+                       body: Data, timeout: TimeInterval?) throws(APICallError)
+    {
+        try httpClient.send(api: _request(requestType: requestType, body: body, timeout: timeout))
+    }
+
+    private func _request(requestType: TelemetryRequestType, body: Data, timeout: TimeInterval?) -> URLRequest {
         var request = URLRequest(url: endpoint.telemetryURL)
         request.httpMethod = "POST"
         request.httpHeaders = headers
@@ -675,8 +780,28 @@ internal struct TelemetryApiService: TelemetryApi {
             request.setHTTPHeader(.contentEncodingHeader(contentEncoding: .deflate))
         }
         request.httpBody = body
-
-        let _ = try await httpClient.send(api: request)
+        if let timeout {
+            request.timeoutInterval = timeout
+        }
+        return request
+    }
+    
+    /// Wrap the raw comma-separated batch entries with a fresh envelope
+    /// (prefix = `{"api_version":…,"payload":[` and suffix = `]}`) and build the
+    /// `message-batch` request.
+    private func _request(batch data: Data, timeout: TimeInterval?) throws(APICallError) -> URLRequest {
+        let header = _envelope(for: TelemetryVoidBatch())
+        let dataFormat: DataFormat
+        do {
+            dataFormat = try DataFormat(header: header, encoder: encoder)
+        } catch let error as EncodingError {
+            throw .encoding(value: header, error: error)
+        } catch {
+            throw .unknownError(error)
+        }
+        return _request(requestType: .messageBatch,
+                        body: dataFormat.prefix + data + dataFormat.suffix,
+                        timeout: timeout)
     }
 }
 

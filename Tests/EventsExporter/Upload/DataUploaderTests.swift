@@ -22,7 +22,7 @@ class DataUploaderTests: XCTestCase {
         let uploader = MockClosureDataUploader(httpClient: httpClient)
 
         // When
-        let uploadStatus = uploader.upload(data: .mockAny())
+        let uploadStatus = uploader.upload(data: .mockAny(), timeout: 5)
 
         // Then
         let expectedUploadStatus = DataUploadStatus(httpResponse: randomResponse)
@@ -39,7 +39,7 @@ class DataUploaderTests: XCTestCase {
         let uploader = MockClosureDataUploader(httpClient: httpClient)
 
         // When
-        let uploadStatus = uploader.upload(data: .mockAny())
+        let uploadStatus = uploader.upload(data: .mockAny(), timeout: 5)
 
         // Then
         let expectedUploadStatus = DataUploadStatus(api: .transport(randomError))

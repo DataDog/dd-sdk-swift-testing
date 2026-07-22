@@ -7,31 +7,56 @@
 import Foundation
 
 public protocol SpansApi: APIService {
-    func uploadSpans(batch url: URL, observer: RequestObserver?) async throws(APICallError)
-    func uploadSpans(batch data: Data, observer: RequestObserver?) async throws(APICallError)
+    func uploadSpans(batch url: URL, observer: RequestObserver?, timeout: TimeInterval?) async throws(APICallError)
+    func uploadSpans(batch data: Data, observer: RequestObserver?, timeout: TimeInterval?) async throws(APICallError)
+    func uploadSpans(batch data: Data, observer: RequestObserver?, timeout: TimeInterval?) throws(APICallError)
 }
 
 extension SpansApi {
-    public func uploadSpans(batch url: URL, observer: RequestObserver?) async throws(APICallError) {
+    public func uploadSpans(batch url: URL, observer: RequestObserver? = nil, timeout: TimeInterval? = nil) async throws(APICallError) {
         let data: Data
         do {
             data = try Data(contentsOf: url, options: [.mappedIfSafe])
         } catch {
             throw .fileSystem(error)
         }
-        try await uploadSpans(batch: data, observer: observer)
+        try await uploadSpans(batch: data, observer: observer, timeout: timeout)
     }
 
-    /// Convenience without a telemetry observer.
-    @inlinable
-    public func uploadSpans(batch url: URL) async throws(APICallError) {
-        try await uploadSpans(batch: url, observer: nil)
-    }
-
-    /// Convenience without a telemetry observer.
+    /// Convenience without telemetry observer and timeout.
     @inlinable
     public func uploadSpans(batch data: Data) async throws(APICallError) {
-        try await uploadSpans(batch: data, observer: nil)
+        try await uploadSpans(batch: data, observer: nil, timeout: nil)
+    }
+    
+    /// Convenience without timeout.
+    @inlinable
+    public func uploadSpans(batch data: Data, observer: RequestObserver?) async throws(APICallError) {
+        try await uploadSpans(batch: data, observer: observer, timeout: nil)
+    }
+    
+    /// Convenience without telemetry observer.
+    @inlinable
+    public func uploadSpans(batch data: Data, timeout: TimeInterval?) async throws(APICallError) {
+        try await uploadSpans(batch: data, observer: nil, timeout: timeout)
+    }
+    
+    /// Convenience without telemetry observer and timeaout.
+    @inlinable
+    public func uploadSpans(batch data: Data) throws(APICallError) {
+        try uploadSpans(batch: data, observer: nil, timeout: nil)
+    }
+    
+    /// Convenience without timeout.
+    @inlinable
+    public func uploadSpans(batch data: Data, observer: RequestObserver?) throws(APICallError) {
+        try uploadSpans(batch: data, observer: observer, timeout: nil)
+    }
+    
+    /// Convenience without telemetry observer.
+    @inlinable
+    public func uploadSpans(batch data: Data, timeout: TimeInterval?) throws(APICallError) {
+        try uploadSpans(batch: data, observer: nil, timeout: timeout)
     }
 }
 
@@ -52,7 +77,17 @@ struct SpansApiService: SpansApi, APIServiceConstructible {
         self.decoder = config.decoder
     }
 
-    func uploadSpans(batch data: Data, observer: RequestObserver?) async throws(APICallError) {
+    func uploadSpans(batch data: Data, observer: RequestObserver?, timeout: TimeInterval?) async throws(APICallError) {
+        try await httpClient.send(api: _spansRequest(batch: data, timeout: timeout), observer: observer)
+    }
+
+    func uploadSpans(batch data: Data, observer: RequestObserver?, timeout: TimeInterval?) throws(APICallError) {
+        try httpClient.send(api: _spansRequest(batch: data, timeout: timeout), observer: observer)
+    }
+
+    var endpointURLs: Set<URL> { [endpoint.spansURL] }
+    
+    private func _spansRequest(batch data: Data, timeout: TimeInterval?) -> URLRequest {
         var request = URLRequest(url: endpoint.spansURL)
         request.httpMethod = "POST"
         request.httpHeaders = headers
@@ -61,10 +96,11 @@ struct SpansApiService: SpansApi, APIServiceConstructible {
             request.setHTTPHeader(.contentEncodingHeader(contentEncoding: .deflate))
         }
         request.httpBody = data
-        let _ = try await httpClient.send(api: request, observer: observer)
+        if let timeout {
+            request.timeoutInterval = timeout
+        }
+        return request
     }
-
-    var endpointURLs: Set<URL> { [endpoint.spansURL] }
 }
 
 extension Endpoint {

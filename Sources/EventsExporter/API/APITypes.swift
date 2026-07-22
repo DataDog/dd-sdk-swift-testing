@@ -488,7 +488,7 @@ extension HTTPClientType {
         }
         request.httpBody = requestData
 
-        let body: Data = try await sendWithResponse(api: request, observer: observer)
+        let body: Data = try await send(api: request, observer: observer).data ?? Data()
         return try call.response(from: body, requestId: requestId, coder: coders.1)
     }
 
@@ -504,27 +504,31 @@ extension HTTPClientType {
         try await self.call(call, url: url, meta: .void, data: data, headers: headers, coders: coders, observer: observer)
     }
 
-    func send(api request: URLRequest, observer: RequestObserver? = nil) async throws(APICallError) -> HTTPURLResponse {
+    @discardableResult
+    func send(api request: URLRequest, observer: RequestObserver? = nil) async throws(APICallError) -> HTTPClient.Response {
         do {
             return try await send(request: request, observer: observer)
         } catch {
             throw APICallError(from: error)
         }
     }
-
-    func sendWithResponse(api request: URLRequest, observer: RequestObserver? = nil) async throws(APICallError) -> Data {
+    
+    @discardableResult
+    func send(api request: URLRequest, observer: RequestObserver? = nil) throws(APICallError) -> HTTPClient.Response {
         do {
-            return try await sendWithResponse(request: request, observer: observer)
+            return try send(request: request, observer: observer)
         } catch {
             throw APICallError(from: error)
         }
     }
 
-    func send(api request: MultipartFormURLRequest, observer: RequestObserver? = nil) async throws(APICallError) -> HTTPURLResponse {
+    @discardableResult
+    func send(api request: MultipartFormURLRequest, observer: RequestObserver? = nil) async throws(APICallError) -> HTTPClient.Response {
         try await send(api: request.asURLRequest, observer: observer)
     }
-
-    func sendWithResponse(api request: MultipartFormURLRequest, observer: RequestObserver? = nil) async throws(APICallError) -> Data {
-        try await sendWithResponse(api: request.asURLRequest, observer: observer)
+    
+    @discardableResult
+    func send(api request: MultipartFormURLRequest, observer: RequestObserver? = nil) throws(APICallError) -> HTTPClient.Response {
+        try send(api: request.asURLRequest, observer: observer)
     }
 }

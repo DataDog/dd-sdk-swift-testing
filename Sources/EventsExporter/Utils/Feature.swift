@@ -9,7 +9,7 @@ import Foundation
 /// Combines a feature's `FileWriter` with the background `DataUploadWorker` that
 /// drains its files. Forwards `update(dataFormat:)` to both so writer and uploader
 /// stay in lockstep when the header changes.
-internal struct FeatureStoreAndUpload: DataUploadWorkerType {
+internal struct FeatureStoreAndUpload: DataUploadWorkerType, Sendable {
     let uploader: DataUploadWorkerType
     let writer: FileWriter
 
@@ -27,6 +27,7 @@ internal struct FeatureStoreAndUpload: DataUploadWorkerType {
                 fileReader: reader,
                 dataUploader: uploader,
                 delay: DataUploadDelay(performance: performance),
+                uploadTimeout: performance.flushTimeout,
                 featureName: featureName,
                 priority: performance.uploadQueuePriority,
                 log: log,
@@ -55,10 +56,11 @@ internal struct FeatureStoreAndUpload: DataUploadWorkerType {
     }
 
     /// Drain the writer queue, close the in-progress file, then synchronously
-    /// upload everything left on disk.
-    func flush() throws -> Bool {
+    /// upload everything left on disk. `timeout` is a total wall-clock budget
+    /// for the upload phase (e.g. an OpenTelemetry `forceFlush` timeout).
+    func flush(timeout: TimeInterval?) throws -> Bool {
         writer.closeCurrentFile()
-        return try uploader.flush()
+        return try uploader.flush(timeout: timeout)
     }
 
     /// Shutdown sequence:
@@ -72,6 +74,8 @@ internal struct FeatureStoreAndUpload: DataUploadWorkerType {
     func stop() {
         uploader.stop()
         writer.stop()
-        _ = try? uploader.flush()
+        // Final drain on the shutdown path: no total budget, each attempt still
+        // bounded by the default per-attempt cap.
+        _ = try? uploader.flush(timeout: nil)
     }
 }

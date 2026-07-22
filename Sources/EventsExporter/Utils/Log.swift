@@ -6,7 +6,7 @@
 
 import Foundation
 
-public protocol Logger {
+public protocol Logger: Sendable {
     var isDebug: Bool { get }
     func print(_ message: String)
     func debug(_ wrapped: @autoclosure () -> String)

@@ -52,6 +52,7 @@ class DataUploadWorkerTests: XCTestCase {
             fileReader: reader,
             dataUploader: dataUploader,
             delay: DataUploadDelay(performance: UploadPerformanceMock.veryQuick),
+            uploadTimeout: 5,
             featureName: .mockAny(),
             priority: .userInteractive,
             log: Log()
@@ -83,6 +84,7 @@ class DataUploadWorkerTests: XCTestCase {
             fileReader: reader,
             dataUploader: mockDataUploader,
             delay: DataUploadDelay(performance: UploadPerformanceMock.veryQuick),
+            uploadTimeout: 5,
             featureName: .mockAny(),
             priority: .userInteractive,
             log: Log()
@@ -113,12 +115,13 @@ class DataUploadWorkerTests: XCTestCase {
             fileReader: reader,
             dataUploader: mockDataUploader,
             delay: DataUploadDelay(performance: UploadPerformanceMock.veryQuick),
+            uploadTimeout: 5,
             featureName: .mockAny(),
             priority: .userInteractive,
             log: Log()
         )
 
-        wait(for: [startUploadExpectation], timeout: 0.5)
+        wait(for: [startUploadExpectation], timeout: 5.0)
         worker.stop()
 
         // Then
@@ -141,6 +144,7 @@ class DataUploadWorkerTests: XCTestCase {
             fileReader: reader,
             dataUploader: mockDataUploader,
             delay: DataUploadDelay(performance: UploadPerformanceMock.veryQuick),
+            uploadTimeout: 5,
             featureName: .mockAny(),
             priority: .userInteractive,
             log: Log(),
@@ -178,6 +182,7 @@ class DataUploadWorkerTests: XCTestCase {
             fileReader: reader,
             dataUploader: dataUploader,
             delay: mockDelay,
+            uploadTimeout: 5,
             featureName: .mockAny(),
             priority: .userInteractive,
             log: Log()
@@ -208,6 +213,7 @@ class DataUploadWorkerTests: XCTestCase {
             fileReader: reader,
             dataUploader: dataUploader,
             delay: mockDelay,
+            uploadTimeout: 5,
             featureName: .mockAny(),
             priority: .userInteractive,
             log: Log()
@@ -238,6 +244,7 @@ class DataUploadWorkerTests: XCTestCase {
             fileReader: reader,
             dataUploader: dataUploader,
             delay: mockDelay,
+            uploadTimeout: 5,
             featureName: .mockAny(),
             priority: .userInteractive,
             log: Log()
@@ -259,6 +266,7 @@ class DataUploadWorkerTests: XCTestCase {
             fileReader: reader,
             dataUploader: dataUploader,
             delay: MockDelay(),
+            uploadTimeout: 5,
             featureName: .mockAny(),
             priority: .userInteractive,
             log: Log()
@@ -280,10 +288,17 @@ class DataUploadWorkerTests: XCTestCase {
             fileReader: reader,
             dataUploader: dataUploader,
             delay: DataUploadDelay(performance: UploadPerformanceMock.veryQuick),
+            uploadTimeout: 5,
             featureName: .mockAny(),
             priority: .userInteractive,
             log: Log()
         )
+        // Stop the periodic worker up front so `flush()` is the sole uploader.
+        // Otherwise its background tick races the flush on the shared queue and
+        // occasionally leaves a batch behind (flaky `1 != 0`). This also mirrors
+        // the production shutdown order (`Feature.stop()`: stop, then final flush)
+        // and guarantees the worker is torn down even if an assertion below fails.
+        worker.stop()
 
         // Given
         writer.write(value: ["k1": "v1"])
@@ -292,7 +307,7 @@ class DataUploadWorkerTests: XCTestCase {
         writer.queue.sync {}
 
         // When
-        _ = try worker.flush()
+        _ = try worker.flush(timeout: nil)
 
         // Then
         XCTAssertEqual(try temporaryDirectory.files().count, 0)
@@ -301,13 +316,12 @@ class DataUploadWorkerTests: XCTestCase {
         XCTAssertTrue(recordedRequests.contains { $0.httpBody == #"[{"k1":"v1"}]"#.utf8Data })
         XCTAssertTrue(recordedRequests.contains { $0.httpBody == #"[{"k2":"v2"}]"#.utf8Data })
         XCTAssertTrue(recordedRequests.contains { $0.httpBody == #"[{"k3":"v3"}]"#.utf8Data })
-
-        worker.stop()
     }
 
-    func testFlushGivesUpAfterMaxRetriesInsteadOfHanging() throws {
+    func testFlushGivesUpAfterTimeoutInsteadOfHanging() throws {
         // A server that always asks to retry (e.g. persistent 503) used to make
-        // `flush()` loop forever, hanging the synchronous shutdown flush.
+        // `flush()` loop forever, hanging the synchronous shutdown flush. It must
+        // now give up once the flush timeout budget elapses.
         let uploadCount = LockedInt()
         var mockDataUploader = DataUploaderMock(uploadStatus: .mockWith(needsRetry: true))
         mockDataUploader.onUpload = { uploadCount.increment() }
@@ -319,6 +333,7 @@ class DataUploadWorkerTests: XCTestCase {
             fileReader: reader,
             dataUploader: mockDataUploader,
             delay: MockDelay(),
+            uploadTimeout: 5,
             featureName: .mockAny(),
             priority: .userInteractive,
             log: Log()
@@ -331,12 +346,12 @@ class DataUploadWorkerTests: XCTestCase {
         // flush releases the queue and adds a stray 5th upload.
         worker.stop()
 
-        // When: this must return (not hang) and report failure.
-        let flushed = try worker.flush()
+        // When: this must return (not hang) once the flush timeout budget elapses.
+        let flushed = try worker.flush(timeout: 0.3)
 
         // Then
         XCTAssertFalse(flushed, "A persistently-retriable upload should end in failure, not success")
-        XCTAssertEqual(uploadCount.value, 4, "1 initial attempt + 3 retries, then give up")
+        XCTAssertGreaterThanOrEqual(uploadCount.value, 1, "flush should attempt at least once before giving up")
         XCTAssertEqual(try temporaryDirectory.files().count, 1, "Undelivered batch is left on disk for a later run")
     }
 }

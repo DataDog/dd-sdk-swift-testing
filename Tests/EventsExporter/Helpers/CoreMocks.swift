@@ -82,6 +82,7 @@ struct UploadPerformanceMock: UploadPerformancePreset {
     let maxUploadDelay: TimeInterval
     let uploadDelayChangeRate: Double
     let uploadQueuePriority: DispatchQoS
+    var flushTimeout: TimeInterval = 5
 
     static let veryQuick = UploadPerformanceMock(
         initialUploadDelay: 0.05,
@@ -186,15 +187,21 @@ internal struct MockClosureDataUploader: DataUploaderType {
         self.url = url
     }
 
-    func upload(data: Data) -> DataUploadStatus {
+    func upload(data: Data, timeout: TimeInterval?) -> DataUploadStatus {
+        _upload(data: data, timeout: timeout)
+    }
+
+    func upload(data: Data, timeout: TimeInterval?) async -> DataUploadStatus {
+        _upload(data: data, timeout: timeout)
+    }
+
+    private func _upload(data: Data, timeout: TimeInterval?) -> DataUploadStatus {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.httpBody = data
-        let httpClient = self.httpClient
+        if let timeout { request.timeoutInterval = timeout }
         do {
-            let response = try waitForAsync { [request] () async throws(HTTPClient.RequestError) -> HTTPURLResponse in
-                try await httpClient.send(request: request)
-            }
+            let (response, _) = try httpClient.send(request: request)
             return DataUploadStatus(httpResponse: response)
         } catch {
             return DataUploadStatus(api: .init(from: error))
@@ -245,7 +252,12 @@ struct DataUploaderMock: DataUploaderType {
 
     var onUpload: (() -> Void)? = nil
 
-    func upload(data: Data) -> DataUploadStatus {
+    func upload(data: Data, timeout: TimeInterval?) -> DataUploadStatus {
+        onUpload?()
+        return uploadStatus
+    }
+
+    func upload(data: Data, timeout: TimeInterval?) async -> DataUploadStatus {
         onUpload?()
         return uploadStatus
     }

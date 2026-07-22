@@ -10,7 +10,7 @@ internal struct ExporterError: Error, CustomStringConvertible {
     let description: String
 }
 
-public struct ExporterConfiguration {
+public struct ExporterConfiguration: Sendable {
     /// Performance preset for the file-backed reader/writer pipelines.
     var performancePreset: PerformancePreset
 

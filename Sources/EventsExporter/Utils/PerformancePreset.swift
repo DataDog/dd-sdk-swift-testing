@@ -6,7 +6,7 @@
 
 import Foundation
 
-internal protocol StoragePerformancePreset {
+internal protocol StoragePerformancePreset: Sendable {
     /// Maximum size of a single file (in bytes).
     /// Each feature (logging, tracing, ...) serializes its objects data to that file for later upload.
     /// If last written file is too big to append next data, new file is created.
@@ -35,7 +35,7 @@ internal protocol StoragePerformancePreset {
     var synchronousWrite: Bool { get }
 }
 
-internal protocol UploadPerformancePreset {
+internal protocol UploadPerformancePreset: Sendable {
     /// First upload delay (in seconds).
     /// It is used as a base value until no more files eligible for upload are found - then `defaultUploadDelay` is used as a new base.
     var initialUploadDelay: TimeInterval { get }
@@ -52,6 +52,8 @@ internal protocol UploadPerformancePreset {
     var uploadDelayChangeRate: Double { get }
     /// Priority for upload queue
     var uploadQueuePriority: DispatchQoS { get }
+    /// Flush process timeout
+    var flushTimeout: TimeInterval { get }
 }
 
 public struct PerformancePreset: Equatable, StoragePerformancePreset, UploadPerformancePreset {
@@ -88,10 +90,12 @@ public struct PerformancePreset: Equatable, StoragePerformancePreset, UploadPerf
         let maxUploadDelay: TimeInterval
         let uploadDelayChangeRate: Double
         let uploadQueuePriority: DispatchQoS
+        let flushTimeout: TimeInterval
         
         public init(initialUploadDelay: TimeInterval, defaultUploadDelay: TimeInterval,
                     minUploadDelay: TimeInterval, maxUploadDelay: TimeInterval,
-                    uploadDelayChangeRate: Double, uploadQueuePriority: DispatchQoS)
+                    uploadDelayChangeRate: Double, uploadQueuePriority: DispatchQoS,
+                    flushTimeout: TimeInterval)
         {
             self.initialUploadDelay = initialUploadDelay
             self.defaultUploadDelay = defaultUploadDelay
@@ -99,6 +103,7 @@ public struct PerformancePreset: Equatable, StoragePerformancePreset, UploadPerf
             self.maxUploadDelay = maxUploadDelay
             self.uploadDelayChangeRate = uploadDelayChangeRate
             self.uploadQueuePriority = uploadQueuePriority
+            self.flushTimeout = flushTimeout
         }
     }
     
@@ -133,6 +138,7 @@ public struct PerformancePreset: Equatable, StoragePerformancePreset, UploadPerf
     var maxUploadDelay: TimeInterval { upload.maxUploadDelay }
     var uploadDelayChangeRate: Double { upload.uploadDelayChangeRate }
     var uploadQueuePriority: DispatchQoS { upload.uploadQueuePriority }
+    var flushTimeout: TimeInterval { upload.flushTimeout }
 
     // MARK: - Predefined presets
 
@@ -160,7 +166,8 @@ public struct PerformancePreset: Equatable, StoragePerformancePreset, UploadPerf
             minUploadDelay: 1,
             maxUploadDelay: 20,
             uploadDelayChangeRate: 0.1,
-            uploadQueuePriority: .utility
+            uploadQueuePriority: .utility,
+            flushTimeout: 60
         )
     )
 
@@ -185,7 +192,8 @@ public struct PerformancePreset: Equatable, StoragePerformancePreset, UploadPerf
             minUploadDelay: 1,
             maxUploadDelay: 5,
             uploadDelayChangeRate: 0.5, // reduce significantly for more uploads in short-lived app extensions
-            uploadQueuePriority: .userInitiated
+            uploadQueuePriority: .userInitiated,
+            flushTimeout: 30
         )
     )
     
@@ -214,6 +222,7 @@ extension UploadPerformancePreset {
         minUploadDelay == other.minUploadDelay &&
         maxUploadDelay == other.maxUploadDelay &&
         uploadDelayChangeRate == other.uploadDelayChangeRate &&
-        uploadQueuePriority == other.uploadQueuePriority
+        uploadQueuePriority == other.uploadQueuePriority &&
+        flushTimeout == other.flushTimeout
     }
 }

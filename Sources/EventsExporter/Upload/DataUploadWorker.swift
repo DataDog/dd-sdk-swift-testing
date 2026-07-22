@@ -7,14 +7,19 @@
 import Foundation
 
 /// Abstracts the `DataUploadWorker` so we can swap it for a no-op in tests.
-internal protocol DataUploadWorkerType {
+internal protocol DataUploadWorkerType: Sendable {
     /// Replace the data format. Only the header (prefix) can be changed —
     /// already-flushed files keep their original format until they upload.
     func update(dataFormat: DataFormatType)
 
     /// Synchronously drain all stored data (with retry on transient failures).
     /// Returns `false` if a non-retriable failure was encountered.
-    func flush() throws -> Bool
+    ///
+    /// `timeout` is a total wall-clock budget for the whole drain (e.g. an
+    /// OpenTelemetry `forceFlush` timeout). When it elapses, remaining batches
+    /// are left on disk for a later run. `nil` means "no total budget" — each
+    /// attempt is still bounded by the default per-attempt cap.
+    func flush(timeout: TimeInterval?) throws -> Bool
 
     /// Cancel scheduled uploads and stop scheduling new ones. Does not
     /// interrupt an upload that has already started; will block the caller
@@ -22,7 +27,7 @@ internal protocol DataUploadWorkerType {
     func stop()
 }
 
-internal final class DataUploadWorker: DataUploadWorkerType {
+internal final class DataUploadWorker: DataUploadWorkerType, @unchecked Sendable {
     /// Queue to execute uploads.
     internal let queue: DispatchQueue
     /// File reader providing data to upload.
@@ -33,6 +38,8 @@ internal final class DataUploadWorker: DataUploadWorkerType {
     private let featureName: String
     /// Delay used to schedule consecutive uploads.
     private var delay: Delay
+    /// Request timeout for upload
+    private let uploadTimeout: TimeInterval
     /// Upload work scheduled by this worker.
     private var uploadWork: DispatchWorkItem?
     /// Optional telemetry observer notified about upload attempts / drops.
@@ -44,6 +51,7 @@ internal final class DataUploadWorker: DataUploadWorkerType {
         fileReader: FileReader,
         dataUploader: DataUploaderType,
         delay: Delay,
+        uploadTimeout: TimeInterval,
         featureName: String,
         priority: DispatchQoS,
         log: Logger,
@@ -52,6 +60,7 @@ internal final class DataUploadWorker: DataUploadWorkerType {
         self.fileReader = fileReader
         self.dataUploader = dataUploader
         self.delay = delay
+        self.uploadTimeout = uploadTimeout
         self.observer = observer
         self.log = log
         self.queue = DispatchQueue(label: "datadogtest.datauploadworker.\(featureName)",
@@ -69,7 +78,7 @@ internal final class DataUploadWorker: DataUploadWorkerType {
             }
 
             if let batch = batch {
-                if self.upload(data: batch.data) == .success {
+                if self.upload(data: batch.data, timeout: uploadTimeout) == .success {
                     try? self.fileReader.markBatchAsRead(batch)
                 }
             } else {
@@ -91,28 +100,35 @@ internal final class DataUploadWorker: DataUploadWorkerType {
         queue.sync { fileReader.update(dataFormat: dataFormat) }
     }
 
-    /// Maximum number of retries per batch during a synchronous `flush()`.
-    /// Unlike the background worker (which retries indefinitely across ticks),
-    /// `flush()` runs on the shutdown path and must be bounded: a persistently
-    /// retriable server (503/500/408/429) or a downed network — both map to
-    /// `needsRetry` — would otherwise loop forever, hanging process teardown.
-    private static let maxFlushRetries = 3
-
     /// Drains all pending batches synchronously. Holds the upload queue for
     /// the duration so the periodic worker can't interleave reads with the flush.
-    func flush() throws -> Bool {
+    ///
+    /// `timeout`, when set, is a total wall-clock budget for the whole drain:
+    /// once it elapses no further attempt is started and remaining batches are
+    /// left on disk for a later run. Each individual attempt is additionally
+    /// bounded by the smaller of the remaining budget and the default
+    /// per-attempt cap.
+    func flush(timeout: TimeInterval?) throws -> Bool {
+        let deadline = Date(timeIntervalSinceNow: timeout ?? uploadTimeout)
         var result = true
         try queue.sync {
             var iterator = try fileReader.getRemainingBatches()
-            while let batchRes = iterator.next() {
+            batchLoop: while let batchRes = iterator.next() {
                 guard case .success(let batch) = batchRes else {
                     result = false
                     break
                 }
                 var status: UploadResult
-                var retries = 0
                 repeat {
-                    status = upload(data: batch.data)
+                    let attemptTimeout = max(0, deadline.timeIntervalSinceNow)
+                    guard attemptTimeout > 0 else {
+                        // Total flush budget exhausted; leave remaining batches
+                        // on disk rather than blocking teardown further.
+                        log.print("[\(featureName)] flush timed out; leaving remaining batches on disk")
+                        result = false
+                        break batchLoop
+                    }
+                    status = upload(data: batch.data, timeout: attemptTimeout)
                     switch status {
                     case .success:
                         try self.fileReader.markBatchAsRead(batch)
@@ -120,16 +136,8 @@ internal final class DataUploadWorker: DataUploadWorkerType {
                     case .failed:
                         result = false
                     case .retry:
-                        retries += 1
-                        guard retries <= Self.maxFlushRetries else {
-                            // Give up rather than hang teardown; leave the batch
-                            // on disk for a later run to pick up.
-                            log.print("[\(featureName)] flush giving up after \(Self.maxFlushRetries) retries")
-                            result = false
-                            status = .failed
-                            break
-                        }
-                        Thread.sleep(forTimeInterval: delay.current)
+                        // Don't sleep past the deadline.
+                        Thread.sleep(forTimeInterval: min(delay.current, max(0, deadline.timeIntervalSinceNow)))
                     }
                 } while status.isRetry
                 guard result else { break }
@@ -147,9 +155,9 @@ internal final class DataUploadWorker: DataUploadWorkerType {
         }
     }
 
-    private func upload(data: Data) -> UploadResult {
+    private func upload(data: Data, timeout: TimeInterval?) -> UploadResult {
         let start = observer != nil ? DispatchTime.now() : nil
-        let uploadStatus = self.dataUploader.upload(data: data)
+        let uploadStatus = self.dataUploader.upload(data: data, timeout: timeout)
         let result: UploadResult
         if uploadStatus.needsRetry {
             if let waitTime = uploadStatus.waitTime {

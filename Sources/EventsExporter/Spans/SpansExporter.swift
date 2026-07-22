@@ -23,7 +23,7 @@ internal final class SpansExporter: SpanExporter {
             directory: try storage.createSubdirectory(path: "v1"),
             performance: configuration.performancePreset,
             dateProvider: SystemDateProvider(),
-            onDrop: uploadObserver.map { obs in { obs.uploadDropped(payloadBytes: $0) } }
+            onDrop: uploadObserver.map { obs in { @Sendable bytes in obs.uploadDropped(payloadBytes: bytes) } }
         )
 
         var metadata = SpanSanitizer().sanitize(metadata: config.metadata)
@@ -43,10 +43,13 @@ internal final class SpansExporter: SpanExporter {
                                 observer: observers.payload)
         let reader = FileReader(dataFormat: dataFormat, orchestrator: filesOrchestrator)
         let requestObserver = observers.request
-        let upload: ClosureDataUploader.UploadCallback = { (data: Data) async throws(APICallError) -> Void in
-            try await api.uploadSpans(batch: data, observer: requestObserver)
+        let uploadSync: ClosureDataUploader.UploadCallbackSync = { (data, timeout) throws(APICallError) -> Void in
+            try api.uploadSpans(batch: data, observer: requestObserver, timeout: timeout)
         }
-        let uploader = ClosureDataUploader(upload: upload)
+        let uploadAsync: ClosureDataUploader.UploadCallbackAsync = { (data, timeout) async throws(APICallError) -> Void in
+            try await api.uploadSpans(batch: data, observer: requestObserver, timeout: timeout)
+        }
+        let uploader = ClosureDataUploader(sync: uploadSync, async: uploadAsync)
         self.payloadObserver = observers.payload
         self.spansStorage = FeatureStoreAndUpload(featureName: "spans",
                                                   reader: reader,
@@ -98,7 +101,7 @@ internal final class SpansExporter: SpanExporter {
     }
 
     func flush(explicitTimeout: TimeInterval?) -> SpanExporterResultCode {
-        (try? spansStorage.flush()) == true ? .success : .failure
+        (try? spansStorage.flush(timeout: explicitTimeout)) == true ? .success : .failure
     }
 
     func shutdown(explicitTimeout: TimeInterval?) {

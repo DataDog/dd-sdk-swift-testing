@@ -43,10 +43,13 @@ internal final class LogsExporter: LogRecordExporter {
                                 encoder: encoder,
                                 log: config.logger)
         let reader = FileReader(dataFormat: dataFormat, orchestrator: filesOrchestrator)
-        let upload: ClosureDataUploader.UploadCallback = { (data: Data) async throws(APICallError) -> Void in
-            try await api.uploadLogs(batch: data)
+        let uploadSync: ClosureDataUploader.UploadCallbackSync = { (data, timeout) throws(APICallError) -> Void in
+            try api.uploadLogs(batch: data, observer: nil, timeout: timeout)
         }
-        let uploader = ClosureDataUploader(upload: upload)
+        let uploadAsync: ClosureDataUploader.UploadCallbackAsync = { (data, timeout) async throws(APICallError) -> Void in
+            try await api.uploadLogs(batch: data, observer: nil, timeout: timeout)
+        }
+        let uploader = ClosureDataUploader(sync: uploadSync, async: uploadAsync)
         self.logsStorage = FeatureStoreAndUpload(featureName: "logs",
                                                  reader: reader,
                                                  writer: writer,
@@ -74,7 +77,7 @@ internal final class LogsExporter: LogRecordExporter {
     }
 
     func forceFlush(explicitTimeout: TimeInterval?) -> ExportResult {
-        (try? logsStorage.flush()) == true ? .success : .failure
+        (try? logsStorage.flush(timeout: explicitTimeout)) == true ? .success : .failure
     }
 
     func shutdown(explicitTimeout: TimeInterval?) {

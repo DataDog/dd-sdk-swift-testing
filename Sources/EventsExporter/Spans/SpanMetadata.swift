@@ -6,7 +6,7 @@
 
 import Foundation
 
-public struct SpanMetadata {
+public struct SpanMetadata: Sendable {
     private var meta: [String: [String: Value]]
     
     public subscript(bool key: String) -> Bool? {
@@ -69,7 +69,7 @@ public struct SpanMetadata {
 }
 
 public extension SpanMetadata {
-    struct SpanType: RawRepresentable, Encodable, Hashable, ExpressibleByStringLiteral {
+    struct SpanType: RawRepresentable, Encodable, Hashable, ExpressibleByStringLiteral, Sendable {
         public typealias StringLiteralType = String
         public typealias RawValue = String
         
@@ -96,7 +96,7 @@ public extension SpanMetadata {
 }
 
 public extension SpanMetadata {
-    enum Value: Encodable, ExpressibleByNilLiteral, ExpressibleByStringLiteral, ExpressibleByIntegerLiteral, ExpressibleByFloatLiteral {
+    enum Value: Encodable, ExpressibleByNilLiteral, ExpressibleByStringLiteral, ExpressibleByIntegerLiteral, ExpressibleByFloatLiteral, Sendable {
         case int(Int)
         case double(Double)
         case string(String)

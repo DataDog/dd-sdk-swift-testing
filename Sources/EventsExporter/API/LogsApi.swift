@@ -7,31 +7,56 @@
 import Foundation
 
 public protocol LogsApi: APIService {
-    func uploadLogs(batch url: URL, observer: RequestObserver?) async throws(APICallError)
-    func uploadLogs(batch data: Data, observer: RequestObserver?) async throws(APICallError)
+    func uploadLogs(batch url: URL, observer: RequestObserver?, timeout: TimeInterval?) async throws(APICallError)
+    func uploadLogs(batch data: Data, observer: RequestObserver?, timeout: TimeInterval?) async throws(APICallError)
+    func uploadLogs(batch data: Data, observer: RequestObserver?, timeout: TimeInterval?) throws(APICallError)
 }
 
 extension LogsApi {
-    public func uploadLogs(batch url: URL, observer: RequestObserver?) async throws(APICallError) {
+    public func uploadLogs(batch url: URL, observer: RequestObserver? = nil, timeout: TimeInterval? = nil) async throws(APICallError) {
         let data: Data
         do {
             data = try Data(contentsOf: url, options: [.mappedIfSafe])
         } catch {
             throw .fileSystem(error)
         }
-        try await uploadLogs(batch: data, observer: observer)
+        try await uploadLogs(batch: data, observer: observer, timeout: timeout)
     }
 
-    /// Convenience without a telemetry observer.
-    @inlinable
-    public func uploadLogs(batch url: URL) async throws(APICallError) {
-        try await uploadLogs(batch: url, observer: nil)
-    }
-
-    /// Convenience without a telemetry observer.
+    /// Convenience without telemetry observer and timeout.
     @inlinable
     public func uploadLogs(batch data: Data) async throws(APICallError) {
-        try await uploadLogs(batch: data, observer: nil)
+        try await uploadLogs(batch: data, observer: nil, timeout: nil)
+    }
+    
+    /// Convenience without timeout.
+    @inlinable
+    public func uploadLogs(batch data: Data, observer: RequestObserver?) async throws(APICallError) {
+        try await uploadLogs(batch: data, observer: observer, timeout: nil)
+    }
+    
+    /// Convenience without telemetry observer.
+    @inlinable
+    public func uploadLogs(batch data: Data, timeout: TimeInterval?) async throws(APICallError) {
+        try await uploadLogs(batch: data, observer: nil, timeout: timeout)
+    }
+    
+    /// Convenience without telemetry observer and timeaout.
+    @inlinable
+    public func uploadLogs(batch data: Data) throws(APICallError) {
+        try uploadLogs(batch: data, observer: nil, timeout: nil)
+    }
+    
+    /// Convenience without timeout.
+    @inlinable
+    public func uploadLogs(batch data: Data, observer: RequestObserver?) throws(APICallError) {
+        try uploadLogs(batch: data, observer: observer, timeout: nil)
+    }
+    
+    /// Convenience without telemetry observer.
+    @inlinable
+    public func uploadLogs(batch data: Data, timeout: TimeInterval?) throws(APICallError) {
+        try uploadLogs(batch: data, observer: nil, timeout: timeout)
     }
 }
 
@@ -52,7 +77,17 @@ struct LogsApiService: LogsApi, APIServiceConstructible {
         self.decoder = config.decoder
     }
 
-    func uploadLogs(batch data: Data, observer: RequestObserver?) async throws(APICallError) {
+    func uploadLogs(batch data: Data, observer: RequestObserver?, timeout: TimeInterval?) async throws(APICallError) {
+        try await httpClient.send(api: _logsRequest(batch: data, timeout: timeout), observer: observer)
+    }
+
+    func uploadLogs(batch data: Data, observer: RequestObserver?, timeout: TimeInterval?) throws(APICallError) {
+        try httpClient.send(api: _logsRequest(batch: data, timeout: timeout), observer: observer)
+    }
+    
+    var endpointURLs: Set<URL> { [endpoint.logsURL] }
+    
+    private func _logsRequest(batch data: Data, timeout: TimeInterval?) -> URLRequest {
         var url = endpoint.logsURL
         url.appendQueryItems([
             .ddsource(source: LogQueryValues.ddsource),
@@ -66,10 +101,11 @@ struct LogsApiService: LogsApi, APIServiceConstructible {
             request.setHTTPHeader(.contentEncodingHeader(contentEncoding: .deflate))
         }
         request.httpBody = data
-        let _ = try await httpClient.send(api: request, observer: observer)
+        if let timeout {
+            request.timeoutInterval = timeout
+        }
+        return request
     }
-
-    var endpointURLs: Set<URL> { [endpoint.logsURL] }
 }
 
 

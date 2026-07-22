@@ -6,7 +6,7 @@
 
 import Foundation
 
-internal final class FileWriter {
+internal final class FileWriter: @unchecked Sendable {
     /// Name of the feature this writer stores data for. Used in log messages.
     private let entity: String
     /// Data writing format.

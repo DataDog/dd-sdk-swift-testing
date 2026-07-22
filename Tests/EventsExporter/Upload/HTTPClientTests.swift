@@ -14,7 +14,7 @@ class HTTPClientTests: XCTestCase {
         let client = HTTPClient(session: server.getInterceptedURLSession(), debug: false)
 
         let httpResponse = try await client.send(request: .mockAny())
-        XCTAssertEqual(httpResponse.statusCode, 200)
+        XCTAssertEqual(httpResponse.response.statusCode, 200)
 
         server.waitFor(requestsCompletion: 1)
     }

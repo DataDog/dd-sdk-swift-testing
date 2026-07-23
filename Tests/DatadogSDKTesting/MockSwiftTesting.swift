@@ -14,6 +14,7 @@ extension Mocks {
             throw STSkipError(reason: reason)
         }
         func fail(reason: String, location: SwiftTestingSourceLocation) {}
+        func record(error: any Error, location: SwiftTestingSourceLocation) {}
     }
     
     struct STSuite: SwiftTestingTestInfoType {

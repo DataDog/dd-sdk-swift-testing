@@ -131,9 +131,22 @@ public struct DatadogSwiftTestingScopeProvider: TestScoping {
                         if error.isSwiftTestingSkip {
                             return .cancelled(error: error, issues: errors.value?.issues)
                         } else {
-                            errors.update {
+                            let suppressed = errors.update {
                                 $0.catched(error: error,
                                            suppress: run.shouldSuppressError(info: runInfo))
+                            }
+                            // A thrown error that is NOT suppressed was rethrown
+                            // by `withKnownIssue` (it's not a known issue) and
+                            // recorded nothing, so the run would pass despite
+                            // throwing (issue #280). Record it now to fail the
+                            // run. Goes through `_actions` (not `Issue.record`
+                            // directly) so the unit-test harness — which drives
+                            // `provideScope` outside a live Swift Testing test —
+                            // can stub it; a direct `Issue.record` traps there.
+                            // Suppressed errors are held back and restored on the
+                            // retry path.
+                            if !suppressed {
+                                _actions.record(error: error, location: run.info.location)
                             }
                         }
                     }
@@ -168,6 +181,7 @@ public struct DatadogSwiftTestingScopeProvider: TestScoping {
 protocol DatadogSwiftTestingTestActions: Sendable {
     func cancel(reason: String, location: SwiftTestingSourceLocation) throws
     func fail(reason: String, location: SwiftTestingSourceLocation)
+    func record(error: any Error, location: SwiftTestingSourceLocation)
 }
 
 extension Testing.Trait where Self == DatadogSwiftTestingTrait {
@@ -237,6 +251,10 @@ extension DatadogSwiftTestingScopeProvider {
         
         func fail(reason: String, location: SwiftTestingSourceLocation) {
             Issue.record(Comment(rawValue: reason), sourceLocation: location.asSwift)
+        }
+
+        func record(error: any Error, location: SwiftTestingSourceLocation) {
+            Issue.record(error, sourceLocation: location.asSwift)
         }
     }
     

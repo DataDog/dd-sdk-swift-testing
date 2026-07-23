@@ -137,16 +137,21 @@ enum SwiftTestingTestStatus: Sendable {
             }
         }
         
-        mutating func catched(error: any Error) {
+        /// Records a thrown error, keeping the suppression state derived from
+        /// the issues collected so far. Returns whether the error is
+        /// suppressed, mirroring `add(issue:)`.
+        mutating func catched(error: any Error) -> Bool {
             guard case .issues(let issues) = self else {
                 // can't happen. We can't have double throw
-                return
+                return false
             }
             switch issues {
             case .suppressed(let issues):
                 self = .catched(error: error, suppressed: true, issues: issues)
+                return true
             case .unsuppressed(let issues):
                 self = .catched(error: error, suppressed: false, issues: issues)
+                return false
             }
         }
         
@@ -792,13 +797,16 @@ extension Optional where Wrapped == SwiftTestingTestStatus.Errors {
         }
     }
     
-    mutating func catched(error: any Error, suppress: @autoclosure () -> Bool) {
+    mutating func catched(error: any Error, suppress: @autoclosure () -> Bool) -> Bool {
         switch self {
         case .none:
-            self = .some(.catched(error: error, suppressed: suppress(), issues: []))
+            let res = suppress()
+            self = .some(.catched(error: error, suppressed: res, issues: []))
+            return res
         case .some(var errors):
-            errors.catched(error: error)
+            let res = errors.catched(error: error)
             self = .some(errors)
+            return res
         }
     }
 }

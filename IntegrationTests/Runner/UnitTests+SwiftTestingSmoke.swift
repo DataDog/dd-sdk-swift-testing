@@ -109,6 +109,59 @@ struct UnitTestsSwiftTestingSmoke: IntergationTestSuite {
         }
     }
 
+    // Regression coverage for issue #280: a test that fails by *throwing* must
+    // make the test process exit non-zero (`success == false`) and be reported
+    // as failed — not silently pass.
+    @Test func basicThrow() async throws {
+        try await run(test: "STBasicThrow/basicThrow()") { backend, success in
+            let spans = backend.allTestSpans
+            #expect(success == false)
+            #expect(spans.count == 1)
+            let span = try #require(spans.last)
+            let meta = span.meta
+            #expect(meta[DDTestTags.testStatus] == DDTagValues.statusFail)
+            #expect(span.resource == "STBasicThrow.basicThrow")
+            #expect(meta[DDTestTags.testName] == "basicThrow")
+            #expect(meta[DDTestTags.testSuite] == "STBasicThrow")
+            #expect(meta[DDTestTags.testType] == "test")
+            #expect(meta[DDTags.errorType] != nil)
+            #expect(meta[DDTags.errorMessage] != nil)
+        }
+    }
+
+    @Test func asynchronousThrow() async throws {
+        try await run(test: "STAsynchronousThrow/asynchronousThrow()") { backend, success in
+            let spans = backend.allTestSpans
+            #expect(success == false)
+            #expect(spans.count == 1)
+            let span = try #require(spans.last)
+            let meta = span.meta
+            #expect(meta[DDTestTags.testStatus] == DDTagValues.statusFail)
+            #expect(span.resource == "STAsynchronousThrow.asynchronousThrow")
+            #expect(meta[DDTestTags.testName] == "asynchronousThrow")
+            #expect(meta[DDTestTags.testSuite] == "STAsynchronousThrow")
+            #expect(meta[DDTestTags.testType] == "test")
+            #expect(meta[DDTags.errorType] != nil)
+        }
+    }
+
+    // Parameterized + throwing: the exact reported shape. Cases value=2 and
+    // value=3 throw; value=1 passes. The process must exit non-zero and the two
+    // throwing cases must be reported as failed.
+    @Test func parameterizedThrow() async throws {
+        try await run(test: "STParameterizedThrow/parameterizedThrow(value:)") { backend, success in
+            let spans = backend.allTestSpans
+            #expect(success == false)
+            #expect(spans.count == 3)
+            let statuses = spans.compactMap { $0.meta[DDTestTags.testStatus] }.sorted()
+            #expect(statuses == [DDTagValues.statusFail, DDTagValues.statusFail, DDTagValues.statusPass])
+            for span in spans {
+                #expect(span.resource == "STParameterizedThrow.parameterizedThrow(value:)")
+                #expect(span.meta[DDTestTags.testSuite] == "STParameterizedThrow")
+            }
+        }
+    }
+
     @Test func nestedSuitePass() async throws {
         try await run(test: "STNestedSuite/Inner/nestedPass()") { backend, success in
             let spans = backend.allTestSpans

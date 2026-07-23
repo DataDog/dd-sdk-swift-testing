@@ -46,6 +46,24 @@ final class XCAsynchronousError: XCTestCase {
     }
 }
 
+/// Parity with issue #280 (Swift Testing `STBasicThrow`/`STAsynchronousThrow`):
+/// an XCTest that fails by *throwing* an error — rather than via `XCTAssert` —
+/// must make the test process exit non-zero and be reported as failed.
+enum XCThrownError: Error { case boom(String) }
+
+final class XCBasicThrow: XCTestCase {
+    func testBasicThrow() throws {
+        throw XCThrownError.boom("basicThrow")
+    }
+}
+
+final class XCAsynchronousThrow: XCTestCase {
+    func testAsynchronousThrow() async throws {
+        try? await Task.sleep(nanoseconds: 1_000_000)
+        throw XCThrownError.boom("asynchronousThrow")
+    }
+}
+
 final class XCBenchmark: XCTestCase {
     func testBenchmark() {
         measure {

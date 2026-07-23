@@ -73,6 +73,44 @@ struct UnitTestsXCTestSmoke: IntergationTestSuite {
         }
     }
 
+    // Parity with the Swift Testing `basicThrow`/`asynchronousThrow` coverage
+    // for issue #280: an XCTest that fails by *throwing* (not via `XCTAssert`)
+    // must make the test process exit non-zero (`success == false`) and be
+    // reported as failed, carrying the thrown error's type/message.
+    @Test func basicThrow() async throws {
+        try await run(test: "XCBasicThrow/testBasicThrow") { backend, success in
+            let spans = backend.allTestSpans
+            #expect(success == false)
+            #expect(spans.count == 1)
+            let span = try #require(spans.last)
+            let meta = span.meta
+            #expect(meta[DDTestTags.testStatus] == DDTagValues.statusFail)
+            #expect(span.resource == "XCBasicThrow.testBasicThrow")
+            #expect(meta[DDTestTags.testName] == "testBasicThrow")
+            #expect(meta[DDTestTags.testSuite] == "XCBasicThrow")
+            #expect(meta[DDTestTags.testType] == "test")
+            #expect(meta[DDTags.errorType] != nil)
+            #expect(meta[DDTags.errorMessage] != nil)
+        }
+    }
+
+    @Test func asynchronousThrow() async throws {
+        try await run(test: "XCAsynchronousThrow/testAsynchronousThrow") { backend, success in
+            let spans = backend.allTestSpans
+            #expect(success == false)
+            #expect(spans.count == 1)
+            let span = try #require(spans.last)
+            let meta = span.meta
+            #expect(meta[DDTestTags.testStatus] == DDTagValues.statusFail)
+            #expect(span.resource == "XCAsynchronousThrow.testAsynchronousThrow")
+            #expect(meta[DDTestTags.testName] == "testAsynchronousThrow")
+            #expect(meta[DDTestTags.testSuite] == "XCAsynchronousThrow")
+            #expect(meta[DDTestTags.testType] == "test")
+            #expect(meta[DDTags.errorType] != nil)
+            #expect(meta[DDTags.errorMessage] != nil)
+        }
+    }
+
     @Test func asynchronousPass() async throws {
         try await run(test: "XCAsynchronousPass/testAsynchronousPass") { backend, success in
             let spans = backend.allTestSpans

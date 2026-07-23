@@ -131,9 +131,18 @@ public struct DatadogSwiftTestingScopeProvider: TestScoping {
                         if error.isSwiftTestingSkip {
                             return .cancelled(error: error, issues: errors.value?.issues)
                         } else {
-                            errors.update {
+                            let suppressed = errors.update {
                                 $0.catched(error: error,
                                            suppress: run.shouldSuppressError(info: runInfo))
+                            }
+                            // A thrown error that is NOT suppressed was rethrown
+                            // by `withKnownIssue` (it's not a known issue) and
+                            // recorded nothing, so the run would pass despite
+                            // throwing (issue #280). Record it now to fail the
+                            // run. Suppressed errors are held back and restored
+                            // on the retry path.
+                            if !suppressed {
+                                Issue.record(error, sourceLocation: run.info.location.asSwift)
                             }
                         }
                     }

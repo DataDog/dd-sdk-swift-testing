@@ -107,7 +107,7 @@ extension KnownTestsApi {
         } while page != nil
 
         let totalFetchMs = Date().timeIntervalSince1970 * 1000 - startTime
-        observer?.finished(totalFetchMs: totalFetchMs)
+        await observer?.finished(totalFetchMs: totalFetchMs)
 
         return tests
     }

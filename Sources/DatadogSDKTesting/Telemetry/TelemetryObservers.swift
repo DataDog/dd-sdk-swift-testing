@@ -35,23 +35,23 @@ extension Telemetry {
     /// Each closure is optional so a family only wires the metrics it has.
     struct RequestMetricsObserver: RequestObserver {
         /// The request happened (counted regardless of success).
-        var onRequest: (@Sendable () -> Void)? = nil
+        var onRequest: (@Sendable () async -> Void)? = nil
         /// Request round-trip duration, in milliseconds.
-        var onDurationMs: (@Sendable (Double) -> Void)? = nil
+        var onDurationMs: (@Sendable (Double) async -> Void)? = nil
         /// Size of the serialized request payload, in bytes.
-        var onRequestBytes: (@Sendable (Int) -> Void)? = nil
+        var onRequestBytes: (@Sendable (Int) async -> Void)? = nil
         /// Size of the received response body, in bytes.
-        var onResponseBytes: (@Sendable (Int) -> Void)? = nil
+        var onResponseBytes: (@Sendable (Int) async -> Void)? = nil
         /// The request failed; the derived `error_type` is supplied.
-        var onError: (@Sendable (ErrorType) -> Void)? = nil
+        var onError: (@Sendable (ErrorType) async -> Void)? = nil
 
         func requestFinished(durationMs: Double, requestBytes: Int, responseBytes: Int,
-                             statusCode: Int?, transportError: (any Error)?, failed: Bool) {
-            onRequest?()
-            onDurationMs?(durationMs)
-            onRequestBytes?(requestBytes)
-            onResponseBytes?(responseBytes)
-            if failed { onError?(Telemetry.errorType(statusCode: statusCode, transportError: transportError)) }
+                             statusCode: Int?, transportError: (any Error)?, failed: Bool) async {
+            await onRequest?()
+            await onDurationMs?(durationMs)
+            await onRequestBytes?(requestBytes)
+            await onResponseBytes?(responseBytes)
+            if failed { await onError?(Telemetry.errorType(statusCode: statusCode, transportError: transportError)) }
         }
     }
 

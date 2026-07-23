@@ -93,7 +93,7 @@ internal final class LogsExporter: LogRecordExporter {
     }
 
     func forceFlush(explicitTimeout: TimeInterval?) async -> ExportResult {
-        (try? logsStorage.flush()) == true ? .success : .failure
+        (try? logsStorage.flush(timeout: explicitTimeout)) == true ? .success : .failure
     }
 
     func shutdown(explicitTimeout: TimeInterval?) async {

@@ -116,9 +116,9 @@ public final class Exporter: ExporterProtocol {
     }
 
     public func flush(explicitTimeout: TimeInterval?) async -> SpanExporterResultCode {
-        let logsOK = (try? logsExporter.logsStorage.flush()) ?? false
-        let spansOK = (try? spansExporter.spansStorage.flush()) ?? false
-        let covOK = (try? coverageExporter.coverageStorage.flush()) ?? false
+        let logsOK = (try? logsExporter.logsStorage.flush(timeout: explicitTimeout)) ?? false
+        let spansOK = (try? spansExporter.spansStorage.flush(timeout: explicitTimeout)) ?? false
+        let covOK = (try? coverageExporter.coverageStorage.flush(timeout: explicitTimeout)) ?? false
         return (logsOK && spansOK && covOK) ? .success : .failure
     }
 

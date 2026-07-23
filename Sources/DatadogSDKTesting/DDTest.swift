@@ -77,7 +77,12 @@ public final class DDTest: NSObject {
     /// - Parameters:
     ///   - status: the status reported for this test
     @objc public func set(status: TestStatus) {
-        if status == .fail, let error = errorInfo.value {
+        // Applied regardless of `status`: a non-failing issue (e.g. an Xcode
+        // Runtime Issue, or a Swift Testing warning) can still be recorded as
+        // an error on a test that otherwise passes. `applyStatus` only clears
+        // `error.*` tags when the span was previously marked `.fail`, so a
+        // fresh pass/skip status keeps them.
+        if let error = errorInfo.value {
             set(errorTags: error)
         }
         span.applyStatus(status, errorDescription: "Test failed")

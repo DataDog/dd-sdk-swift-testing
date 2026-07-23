@@ -152,6 +152,30 @@ struct UnitTestsXCTestSmoke: IntergationTestSuite {
         }
     }
     
+    /// SDTEST-3913: an Xcode Runtime Issue (Thread Performance Checker
+    /// priority inversion) is a non-failing `XCTIssue` (`isFailure == false`).
+    /// It must not trigger DD's own retry/suppression handling — the test
+    /// still ends up with a single span, reported as passed, exactly as
+    /// XCTest itself sees it.
+    @Test func runtimeIssueDoesNotFailOrRetry() async throws {
+        try await run(test: "XCRuntimeIssue/testPriorityInversion") { backend, success in
+            let spans = backend.allTestSpans
+            #expect(success == true)
+            #expect(spans.count == 1)
+            let span = try #require(spans.last)
+            let meta = span.meta
+            #expect(meta[DDTestTags.testStatus] == DDTagValues.statusPass)
+            #expect(span.resource == "XCRuntimeIssue.testPriorityInversion")
+            #expect(meta[DDTestTags.testName] == "testPriorityInversion")
+            #expect(meta[DDTestTags.testSuite] == "XCRuntimeIssue")
+            #expect(meta[DDTestTags.testType] == "test")
+            // The issue is still recorded on the span, even though it didn't
+            // fail the test.
+            #expect(meta[DDTags.errorType] != nil)
+            #expect(meta[DDTags.errorMessage] != nil)
+        }
+    }
+
     @Test(
         .disabled(if: XcodeTestRunner.isWatchOSChildSDK,
                   "KSCrash disables signal/mach exception handlers on watchOS (KSCRASH_HAS_SIGNAL = 0, KSCRASH_HAS_MACH = 0), so SIGILL from Swift array bounds traps cannot be captured.")

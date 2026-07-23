@@ -61,27 +61,24 @@ final class XCNetworkIntegration: XCTestCase {
     }
 }
 
-/// SDTEST-3913: reproduces an Xcode "Runtime Issue" — the Thread Performance
-/// Checker's priority-inversion diagnostic — which XCTest records via
-/// `XCTIssue` with `isFailure == false`. XCTest itself doesn't fail the test
-/// for it, and the SDK must not either (no retry, no failed status).
+/// SDTEST-3913: an Xcode "Runtime Issue" (e.g. the Thread Performance Checker's
+/// priority-inversion diagnostic) is surfaced by XCTest as a *non-failing*
+/// `XCTIssue` — one whose severity is below `.error`, so `isFailure == false`.
+/// XCTest itself doesn't fail the test for it, and the SDK must not either (no
+/// retry, no failed status) while still recording it on the span.
+///
+/// We record a `.warning`-severity `XCTIssue` directly rather than provoking a
+/// real priority inversion: the Thread Performance Checker is a runtime
+/// diagnostic that is not injected into the `test-without-building` launch the
+/// integration runner uses, so a real inversion never fires in CI. A
+/// `.warning`-severity issue reproduces exactly what the SDK observes
+/// (`isFailure == false`) and makes the test deterministic on every platform.
 final class XCRuntimeIssue: XCTestCase {
-    func testPriorityInversion() {
-        let lock = NSLock()
-        let holderStarted = DispatchSemaphore(value: 0)
-
-        DispatchQueue.global(qos: .background).async {
-            lock.lock()
-            holderStarted.signal()
-            Thread.sleep(forTimeInterval: 1.0)
-            lock.unlock()
-        }
-
-        holderStarted.wait()
-        lock.lock() // main thread (.userInteractive) blocks on a .background holder
-        lock.unlock()
-
-        XCTAssertTrue(true)
+    func testNonFailingRuntimeIssue() {
+        let issue = XCTIssue(type: .system,
+                             compactDescription: "RuntimeIssue: simulated non-failing diagnostic",
+                             severity: .warning)
+        record(issue)
     }
 }
 

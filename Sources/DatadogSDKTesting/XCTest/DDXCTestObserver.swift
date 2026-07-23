@@ -434,7 +434,16 @@ final class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate
             log.print("testCaseRetry:willRecord: Unknown test run type: \(type(of: testCase.testRun)) for \(testCase)")
             return
         }
-        
+
+        // Non-failing issues (e.g. Xcode Runtime Issues such as QoS priority
+        // inversions) must never be suppressed/retried on: XCTest itself
+        // doesn't count them as a failure, so treating them as one here would
+        // make DD retry a test that XCTest considers passing.
+        guard issue.isFailure else {
+            log.debug("Ignoring non-failing issue \(issue) for test \(testCase)")
+            return
+        }
+
         // Test can fail more than once.
         // We suppress all errors or none.
         guard testRun.ddTotalFailureCount == 0 else {
@@ -468,7 +477,7 @@ final class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate
             return
         }
         log.debug("testCase:didRecord: \(testCase), issue: \(issue)")
-        
+
         testRun.ddTest.add(error: .init(type: issue.compactDescription.components(separatedBy: " ").first ?? "unknown",
                                         message: issue.description))
     }
@@ -483,7 +492,7 @@ final class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate
             return
         }
         log.debug("testCase:didRecord: \(testCase), expectedFailure: \(expectedFailure.issue.compactDescription)")
-        
+
         let reason = expectedFailure.failureReason ?? ""
         let type = expectedFailure.issue.compactDescription.components(separatedBy: " ").first ?? "unknown"
         

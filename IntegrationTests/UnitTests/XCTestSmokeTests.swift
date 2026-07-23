@@ -61,6 +61,30 @@ final class XCNetworkIntegration: XCTestCase {
     }
 }
 
+/// SDTEST-3913: reproduces an Xcode "Runtime Issue" — the Thread Performance
+/// Checker's priority-inversion diagnostic — which XCTest records via
+/// `XCTIssue` with `isFailure == false`. XCTest itself doesn't fail the test
+/// for it, and the SDK must not either (no retry, no failed status).
+final class XCRuntimeIssue: XCTestCase {
+    func testPriorityInversion() {
+        let lock = NSLock()
+        let holderStarted = DispatchSemaphore(value: 0)
+
+        DispatchQueue.global(qos: .background).async {
+            lock.lock()
+            holderStarted.signal()
+            Thread.sleep(forTimeInterval: 1.0)
+            lock.unlock()
+        }
+
+        holderStarted.wait()
+        lock.lock() // main thread (.userInteractive) blocks on a .background holder
+        lock.unlock()
+
+        XCTAssertTrue(true)
+    }
+}
+
 final class XCCrash: XCTestCase {
     func testCrash() {
         let array: [Int] = [1]

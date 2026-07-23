@@ -406,6 +406,16 @@ struct SwiftTestingRetryGroupContext: Sendable {
             case .issues(.suppressed(let issues)):
                 errors = .init(catched: nil, issues: issues)
                 status = status.asUnsuppressed
+            case .catched(error: let err, suppressed: false, issues: _):
+                // A thrown error that was NOT suppressed. `withKnownIssue`
+                // rethrew it (it is not a "known issue"), so our `provideScope`
+                // catch swallowed it and Swift Testing recorded nothing — the
+                // run would pass despite throwing (issue #280). Any in-body
+                // issues here were unsuppressed and are already recorded by
+                // Swift Testing, so re-record only the thrown error to actually
+                // fail the run. `errorsWereRecorded` already reports true for
+                // this status, so `endAction` stays consistent.
+                errors = .init(catched: err, issues: [])
             default: errors = nil
             }
         } else {

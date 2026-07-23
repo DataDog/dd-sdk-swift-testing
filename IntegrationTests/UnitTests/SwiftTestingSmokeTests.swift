@@ -79,6 +79,36 @@ import DatadogSDKTesting
     }
 }
 
+/// Regression coverage for https://github.com/DataDog/dd-sdk-swift-testing/issues/280
+/// A Swift Testing test that fails by *throwing* an error (not via `#expect`).
+/// Before the fix the SDK swallowed the throw and the process exited 0, so CI
+/// stayed green while the Datadog UI showed the test as failed.
+enum STThrownError: Error { case boom(String) }
+
+@Suite(.datadogTesting) struct STBasicThrow {
+    @Test func basicThrow() throws {
+        throw STThrownError.boom("basicThrow")
+    }
+}
+
+@Suite(.datadogTesting) struct STAsynchronousThrow {
+    @Test func asynchronousThrow() async throws {
+        try? await Task.sleep(nanoseconds: 1_000_000)
+        throw STThrownError.boom("asynchronousThrow")
+    }
+}
+
+/// The exact shape from the issue report: a *parameterized* test that throws
+/// for some arguments.
+@Suite(.datadogTesting) struct STParameterizedThrow {
+    @Test(arguments: [1, 2, 3])
+    func parameterizedThrow(value: Int) throws {
+        if value != 1 {
+            throw STThrownError.boom("parameterizedThrow-\(value)")
+        }
+    }
+}
+
 @Suite(.datadogTesting) struct STCrash {
     @Test func crash() {
         let array: [Int] = [1]

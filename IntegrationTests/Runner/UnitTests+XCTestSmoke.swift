@@ -152,21 +152,21 @@ struct UnitTestsXCTestSmoke: IntergationTestSuite {
         }
     }
     
-    /// SDTEST-3913: an Xcode Runtime Issue (Thread Performance Checker
-    /// priority inversion) is a non-failing `XCTIssue` (`isFailure == false`).
-    /// It must not trigger DD's own retry/suppression handling — the test
-    /// still ends up with a single span, reported as passed, exactly as
-    /// XCTest itself sees it.
+    /// SDTEST-3913: an Xcode Runtime Issue is a non-failing `XCTIssue`
+    /// (`isFailure == false`). It must not trigger DD's own retry/suppression
+    /// handling — the test still ends up with a single span, reported as
+    /// passed, exactly as XCTest itself sees it, while the issue is still
+    /// recorded on the span.
     @Test func runtimeIssueDoesNotFailOrRetry() async throws {
-        try await run(test: "XCRuntimeIssue/testPriorityInversion") { backend, success in
+        try await run(test: "XCRuntimeIssue/testNonFailingRuntimeIssue") { backend, success in
             let spans = backend.allTestSpans
             #expect(success == true)
             #expect(spans.count == 1)
             let span = try #require(spans.last)
             let meta = span.meta
             #expect(meta[DDTestTags.testStatus] == DDTagValues.statusPass)
-            #expect(span.resource == "XCRuntimeIssue.testPriorityInversion")
-            #expect(meta[DDTestTags.testName] == "testPriorityInversion")
+            #expect(span.resource == "XCRuntimeIssue.testNonFailingRuntimeIssue")
+            #expect(meta[DDTestTags.testName] == "testNonFailingRuntimeIssue")
             #expect(meta[DDTestTags.testSuite] == "XCRuntimeIssue")
             #expect(meta[DDTestTags.testType] == "test")
             // The issue is still recorded on the span, even though it didn't

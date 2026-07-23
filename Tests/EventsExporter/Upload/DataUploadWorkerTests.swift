@@ -288,7 +288,15 @@ class DataUploadWorkerTests: XCTestCase {
             fileReader: reader,
             dataUploader: dataUploader,
             delay: DataUploadDelay(performance: UploadPerformanceMock.veryQuick),
-            uploadTimeout: 5,
+            // `flush(timeout: nil)` uses this as a real wall-clock budget for the
+            // whole drain. The uploads here are instant (in-memory mock), so the
+            // only thing that consumes the budget is the machine itself: on a
+            // heavily loaded CI simulator the previous 5s expired mid-drain and
+            // `flush` gave up with batches still on disk (flaky `2 != 0`). This
+            // test asserts *all* data is flushed, so give it a budget CI load
+            // can't exhaust — the give-up-on-timeout path is covered separately
+            // by `testFlushGivesUpAfterTimeoutInsteadOfHanging`.
+            uploadTimeout: 60,
             featureName: .mockAny(),
             priority: .userInteractive,
             log: Log()

@@ -28,6 +28,7 @@ internal struct BuildkiteCIEnvironmentReader: CIEnvironmentReader {
                 provider: "buildkite",
                 pipelineId: env["BUILDKITE_BUILD_ID"],
                 pipelineName: env["BUILDKITE_PIPELINE_SLUG"],
+                pipelineDisplayName: env["BUILDKITE_PIPELINE_NAME"],
                 pipelineNumber: env["BUILDKITE_BUILD_NUMBER"],
                 pipelineURL: pipelineURL.flatMap { URL(string: $0) },
                 jobId: env["BUILDKITE_JOB_ID"],

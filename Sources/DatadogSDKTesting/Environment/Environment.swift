@@ -173,6 +173,7 @@ internal final class Environment {
         ciAttributes[DDCITags.ciPipelineNumber] = ci.pipelineNumber
         ciAttributes[DDCITags.ciPipelineURL] = ci.pipelineURL?.spanAttribute
         ciAttributes[DDCITags.ciPipelineName] = ci.pipelineName
+        ciAttributes[DDCITags.ciPipelineDisplayName] = ci.pipelineDisplayName
         ciAttributes[DDCITags.ciNodeName] = ci.nodeName
         ciAttributes[DDCITags.ciNodeLabels] = ci.nodeLabels?.description
         ciAttributes[DDCITags.ciStageName] = ci.stageName
@@ -422,6 +423,7 @@ internal extension Environment {
         // ci.pipeline.*
         let pipelineId: String?
         let pipelineName: String?
+        let pipelineDisplayName: String?
         let pipelineNumber: String?
         let pipelineURL: URL?
         
@@ -447,6 +449,7 @@ internal extension Environment {
         let environment: [String: SpanAttributeConvertible]
         
         init(provider: String, pipelineId: String? = nil, pipelineName: String? = nil,
+             pipelineDisplayName: String? = nil,
              pipelineNumber: String? = nil, pipelineURL: URL? = nil, stageName: String? = nil,
              jobId: String? = nil, jobName: String? = nil, jobURL: URL? = nil,
              workspacePath: String? = nil, nodeName: String? = nil, nodeLabels: [String]? = nil,
@@ -455,6 +458,7 @@ internal extension Environment {
             self.provider = provider
             self.pipelineId = pipelineId
             self.pipelineName = pipelineName
+            self.pipelineDisplayName = pipelineDisplayName
             self.pipelineNumber = pipelineNumber
             self.pipelineURL = pipelineURL
             self.stageName = stageName
@@ -484,6 +488,7 @@ internal extension Environment {
               Provider: \(provider),
               Pipeline ID: \(pipelineId ?? "")
               Pipeline Name: \(pipelineName ?? "")
+              Pipeline Display Name: \(pipelineDisplayName ?? "")
               Pipeline Number: \(pipelineNumber ?? "")
               Pipeline URL: \(pipelineURL?.spanAttribute ?? "")
               Stage Name: \(stageName ?? "")

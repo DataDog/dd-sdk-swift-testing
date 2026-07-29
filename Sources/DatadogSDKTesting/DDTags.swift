@@ -145,6 +145,7 @@ internal enum DDCITags {
     static let ciProvider = "ci.provider.name"
     static let ciPipelineId = "ci.pipeline.id"
     static let ciPipelineName = "ci.pipeline.name"
+    static let ciPipelineDisplayName = "ci.pipeline.display_name"
     static let ciPipelineNumber = "ci.pipeline.number"
     static let ciPipelineURL = "ci.pipeline.url"
     static let ciNodeName = "ci.node.name"

@@ -21,6 +21,38 @@ extension Array where Element: BinaryFloatingPoint {
     }
 }
 
+extension Sequence where Element == String {
+    /// A tag-friendly representation: the single value as a plain string when there is
+    /// exactly one element, or a JSON-encoded array string when there are several.
+    /// `nil` when there are no elements, so the tag is simply not sent.
+    /// Backends that ingest this tag expect either form.
+    var tagValue: String? {
+        // we can't use joined because we need count and the first item too (and sequence doesn't have those).
+        let (elems, count, first) = reduce(into: (str: "", count: 0, first: nil as String?)) { acc, item in
+            if acc.count == 0 { acc.first = item } else { acc.str.append(",") }
+            acc.str.append("\"")
+            acc.str.append(item)
+            acc.str.append("\"")
+            acc.count += 1
+        }
+        return count > 1 ? "[\(elems)]" : first
+    }
+
+    /// Always a JSON array string, even for a single element — for tags that must
+    /// stay array-shaped regardless of count (e.g. codeowners).
+    var jsonArrayValue: String {
+        "[" + map { #""\#($0)""# }.joined(separator: ",") + "]"
+    }
+}
+
+extension Dictionary where Key == String, Value == String {
+    /// A `{"key":"value",...}` JSON object string, built the same way as `tagValue`
+    /// (manual concatenation, no `JSONEncoder`) for tags that expect an embedded JSON object.
+    var jsonValue: String {
+        "{" + map { #""\#($0.key)":"\#($0.value)""# }.joined(separator: ",") + "}"
+    }
+}
+
 extension String {
     func split(by length: Int) -> [String] {
         var startIndex = self.startIndex

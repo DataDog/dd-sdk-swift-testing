@@ -181,7 +181,7 @@ internal final class Environment {
         ciAttributes[DDCITags.ciJobId] = ci.jobId
         ciAttributes[DDCITags.ciJobName] = ci.jobName
         ciAttributes[DDCITags.ciJobURL] = ci.jobURL?.spanAttribute
-        ciAttributes[DDCITags.ciEnvVars] = ##"{\##(ci.environment.map { #""\#($0.0)":"\#($0.1.spanAttribute)""# }.joined(separator: ","))}"##
+        ciAttributes[DDCITags.ciEnvVars] = ci.environment.mapValues { $0.spanAttribute }.jsonValue
         ciAttributes[DDCITags.prNumber] = ci.prNumber
         return ciAttributes
     }

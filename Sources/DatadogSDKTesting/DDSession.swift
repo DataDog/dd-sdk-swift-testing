@@ -95,8 +95,9 @@ public final class DDSession: NSObject {
                 : "Swift.session"
         }
 
-        span.setAttribute(key: DDTestTags.testFramework,
-                          value: .string(_state.value.testFrameworks.joined(separator: ",")))
+        if let tagValue = _state.value.testFrameworks.sorted().tagValue {
+            span.setAttribute(key: DDTestTags.testFramework, value: .string(tagValue))
+        }
         span.name = framework
         // get-status -> set-status round-trip: writes the canonical
         // `test.status` tag (even if it was only visible through

@@ -111,7 +111,7 @@ struct CodeOwners {
     }
 
     static func format(_ owners: [String]) -> String {
-        #"[""# + owners.joined(separator: #"",""#) + #""]"#
+        owners.jsonArrayValue
     }
 }
 

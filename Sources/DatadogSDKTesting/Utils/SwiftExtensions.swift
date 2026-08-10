@@ -28,7 +28,7 @@ extension Sequence where Element == String {
     /// `nil` when there are no elements, so the tag is simply not sent.
     /// Backends that ingest this tag expect either form.
     var tagValue: String? {
-        let items = Array(self)
+        let items = self as? Array<String> ?? Array(self)
         guard items.count > 1 else { return items.first }
         return items.jsonArrayValue
     }
@@ -36,7 +36,8 @@ extension Sequence where Element == String {
     /// Always a JSON array string, even for a single element — for tags that must
     /// stay array-shaped regardless of count (e.g. codeowners).
     var jsonArrayValue: String {
-        guard let data = try? JSONEncoder.apiEncoder.encode(Array(self)),
+        let items = self as? Array<String> ?? Array(self)
+        guard let data = try? JSONEncoder.apiEncoder.encode(items),
               let json = String(data: data, encoding: .utf8)
         else { return "[]" }
         return json
@@ -46,7 +47,7 @@ extension Sequence where Element == String {
 extension Dictionary where Key == String, Value == String {
     /// A `{"key":"value",...}` JSON object string for tags that expect an embedded JSON object.
     var jsonValue: String {
-        guard let data = try? JSONSerialization.data(withJSONObject: self, options: [.sortedKeys]),
+        guard let data = try? JSONEncoder.apiEncoder.encode(self),
               let json = String(data: data, encoding: .utf8)
         else { return "{}" }
         return json

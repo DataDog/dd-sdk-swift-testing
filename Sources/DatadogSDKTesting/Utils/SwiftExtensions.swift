@@ -6,6 +6,7 @@
 
 import Compression
 import Foundation
+internal import EventsExporter
 #if canImport(UIKit)
 import UIKit
 #endif
@@ -27,29 +28,28 @@ extension Sequence where Element == String {
     /// `nil` when there are no elements, so the tag is simply not sent.
     /// Backends that ingest this tag expect either form.
     var tagValue: String? {
-        // we can't use joined because we need count and the first item too (and sequence doesn't have those).
-        let (elems, count, first) = reduce(into: (str: "", count: 0, first: nil as String?)) { acc, item in
-            if acc.count == 0 { acc.first = item } else { acc.str.append(",") }
-            acc.str.append("\"")
-            acc.str.append(item)
-            acc.str.append("\"")
-            acc.count += 1
-        }
-        return count > 1 ? "[\(elems)]" : first
+        let items = Array(self)
+        guard items.count > 1 else { return items.first }
+        return items.jsonArrayValue
     }
 
     /// Always a JSON array string, even for a single element — for tags that must
     /// stay array-shaped regardless of count (e.g. codeowners).
     var jsonArrayValue: String {
-        "[" + map { #""\#($0)""# }.joined(separator: ",") + "]"
+        guard let data = try? JSONEncoder.apiEncoder.encode(Array(self)),
+              let json = String(data: data, encoding: .utf8)
+        else { return "[]" }
+        return json
     }
 }
 
 extension Dictionary where Key == String, Value == String {
-    /// A `{"key":"value",...}` JSON object string, built the same way as `tagValue`
-    /// (manual concatenation, no `JSONEncoder`) for tags that expect an embedded JSON object.
+    /// A `{"key":"value",...}` JSON object string for tags that expect an embedded JSON object.
     var jsonValue: String {
-        "{" + map { #""\#($0.key)":"\#($0.value)""# }.joined(separator: ",") + "}"
+        guard let data = try? JSONSerialization.data(withJSONObject: self, options: [.sortedKeys]),
+              let json = String(data: data, encoding: .utf8)
+        else { return "{}" }
+        return json
     }
 }
 

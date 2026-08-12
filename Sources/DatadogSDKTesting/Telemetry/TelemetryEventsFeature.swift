@@ -97,11 +97,15 @@ final class TelemetryEventsFeature: TestHooksFeature {
 // MARK: - Framework telemetry tag
 
 private extension Set<String> {
-    /// Metric tags carry a single value per dimension, so an unambiguous single framework
-    /// is reported by name; a mix of frameworks (or none yet known) falls back to the
-    /// generic "Swift" label rather than packing several names into one tag value.
+    /// Metric tags carry a single opaque value per dimension (never parsed as JSON), so a
+    /// mix of frameworks is safely reported as a stable "name1+name2" combination instead of
+    /// a generic label — that keeps sessions using several frameworks distinguishable in metrics.
     var telemetryTag: String {
-        count == 1 ? first! : "Swift"
+        switch count {
+        case 0: return "Swift"
+        case 1: return first!
+        default: return sorted().joined(separator: "+")
+        }
     }
 }
 

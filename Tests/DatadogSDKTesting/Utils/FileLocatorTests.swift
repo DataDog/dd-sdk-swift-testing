@@ -479,6 +479,52 @@ internal class FileLocatorEdgeCaseTests: XCTestCase {
         XCTAssertEqual(7, info.endLine)
     }
 
+    func testContinuationWithSyntheticSourcePathDoesNotEstablishLocation() throws {
+        // When the declaration chunk has no usable source line, a continuation chunk may
+        // establish the function's location — but only from real source. Compiler-generated
+        // and macro-expansion buffers must not be reported as the test's file, otherwise
+        // `test.source.file` points at a temporary buffer and codeowners resolution breaks.
+        let body = """
+                    0x0100 (0x0020) AsyncSuite.testFoo() [FUNC, EXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf]\(" ")
+                        0x0100 (0x0020) /<compiler-generated>:0
+                    0x0120 (0x0020) closure #2 in AsyncSuite.testFoo() [FUNC, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf]\(" ")
+                        0x0120 (0x0008) /var/folders/x/T/swift-generated-sources/@__swiftmacro_5Tests9testFooyyFMf_.swift:1
+                        0x0128 (0x0008) /<compiler-generated>:7
+                        0x0130 (0x0008) /path/to/AsyncSuite.swift:10
+                        0x0138 (0x0008) /path/to/AsyncSuite.swift:14
+        """
+        let url = try makeFixture(body)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let map = try FileLocator.extractFunctions(url)
+
+        let info = try XCTUnwrap(map["AsyncSuite.testFoo"])
+        XCTAssertEqual(info.file, "/path/to/AsyncSuite.swift",
+                       "Synthetic macro/compiler buffers must not become the test's source file")
+        XCTAssertEqual(10, info.startLine)
+        XCTAssertEqual(14, info.endLine)
+    }
+
+    func testSecondDeclarationOfSameNameReplacesRangeInsteadOfWidening() throws {
+        // Generic functions can be emitted as several distinct EXT declarations at different
+        // source lines. Each declaration must replace the recorded range rather than merge
+        // with the previous one, which would report a span covering both bodies.
+        let body = """
+                    0x0100 (0x0020) MyModule.withTest<A>(named:_:) [FUNC, EXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf]\(" ")
+                        0x0100 (0x0010) /path/to/My.swift:262
+                        0x0110 (0x0010) /path/to/My.swift:263
+                    0x0120 (0x0020) MyModule.withTest<A>(named:_:) [FUNC, EXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf]\(" ")
+                        0x0120 (0x0010) /path/to/My.swift:266
+                        0x0130 (0x0010) /path/to/My.swift:268
+        """
+        let url = try makeFixture(body)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let map = try FileLocator.extractFunctions(url)
+
+        let info = try XCTUnwrap(map["MyModule.withTest<A>(named:_:)"])
+        XCTAssertEqual(266, info.startLine, "Later declaration must replace the earlier range")
+        XCTAssertEqual(268, info.endLine)
+    }
+
     func testAsyncFunctionWithNoRecoverableSourceLinesOmittedWithoutCrash() throws {
         // If literally none of a function's chunks ever carry a real source line, it must
         // be silently omitted from the map rather than crashing or corrupting other entries.

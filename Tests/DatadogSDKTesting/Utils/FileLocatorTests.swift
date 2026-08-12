@@ -106,6 +106,45 @@ internal class FileLocatorFixtureTests: XCTestCase {
         let map = try FileLocator.extractFunctions(url)
         XCTAssertEqual(23, map.count)
     }
+
+    // MARK: symbols-async-thunk.log (SDTEST-3944 regression)
+
+    // Captured from a real `-O` build of an XCTestCase with sync/async/throwing test
+    // methods (`symbols -fullSourcePath -lazy` output). Under optimization, an async test
+    // method's own EXT-tagged DWARF entry can carry only `/<compiler-generated>:0` lines
+    // (no source info) — the real body lives in a `specialized` clone, which is untagged,
+    // named differently (`specialized Module.func()`), and lands far from the original
+    // entry with unrelated functions interleaved. Before the SDTEST-3944 fix this caused
+    // the async test methods to be dropped from the map entirely (`test.source.file` missing).
+
+    func testAsyncThunkFixtureRecoversAllAsyncTestMethods() throws {
+        let url = fixturesURL.appendingPathComponent("symbols-async-thunk.log")
+        let map = try FileLocator.extractFunctions(url)
+
+        let throwsInfo = try XCTUnwrap(map["AsyncRepro.testAsyncThrows"])
+        XCTAssertTrue(throwsInfo.file.hasSuffix("AsyncTests.swift"))
+        XCTAssertEqual(11, throwsInfo.startLine)
+        XCTAssertEqual(19, throwsInfo.endLine)
+
+        let plainInfo = try XCTUnwrap(map["AsyncRepro.testAsyncPlain"])
+        XCTAssertEqual(21, plainInfo.startLine)
+        XCTAssertEqual(28, plainInfo.endLine)
+
+        let manyAwaitsInfo = try XCTUnwrap(map["AsyncRepro.testAsyncManyAwaits"])
+        XCTAssertEqual(30, manyAwaitsInfo.startLine)
+        XCTAssertEqual(36, manyAwaitsInfo.endLine)
+
+        // The simple sync method in the same suite must still resolve as before.
+        let syncInfo = try XCTUnwrap(map["AsyncRepro.testSync"])
+        XCTAssertEqual(6, syncInfo.startLine)
+        XCTAssertEqual(8, syncInfo.endLine)
+
+        // A different suite's async method, whose first chunk already carries real lines,
+        // must also still resolve.
+        let otherInfo = try XCTUnwrap(map["AsyncRepro2.testOtherAsync"])
+        XCTAssertEqual(40, otherInfo.startLine)
+        XCTAssertEqual(43, otherInfo.endLine)
+    }
 }
 
 // MARK: - Edge case tests with synthetic fixtures
@@ -390,5 +429,68 @@ internal class FileLocatorEdgeCaseTests: XCTestCase {
         let info = try XCTUnwrap(map["MyModule.myFunc"])
         XCTAssertEqual(12, info.startLine)
         XCTAssertEqual(24, info.endLine)
+    }
+
+    // MARK: SDTEST-3944 regression — async thunk source-line recovery
+
+    func testAsyncFunctionSourceRecoveredFromNonAdjacentSpecializedClone() throws {
+        // The EXT-tagged entry and its immediate `@objc` thunk carry no real source line
+        // (compiler-generated bootstrap only). The real lines live in a `specialized` clone
+        // that is untagged and separated from the original by an unrelated function — it
+        // must still be matched back to the tracked function by name.
+        let body = """
+                    0x0100 (0x0020) AsyncSuite.testFoo() [FUNC, EXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf]\(" ")
+                        0x0100 (0x0020) /<compiler-generated>:0
+                    0x0120 (0x0020) @objc AsyncSuite.testFoo() [FUNC, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf]\(" ")
+                        0x0120 (0x0020) /<compiler-generated>:0
+                    0x0140 (0x0020) Other.unrelated() [FUNC, EXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf]\(" ")
+                        0x0140 (0x0010) /path/to/Other.swift:1
+                    0x0160 (0x0020) specialized AsyncSuite.testFoo() [FUNC, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf]\(" ")
+                        0x0160 (0x0010) /path/to/AsyncSuite.swift:10
+                        0x0170 (0x0010) /path/to/AsyncSuite.swift:12
+        """
+        let url = try makeFixture(body)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let map = try FileLocator.extractFunctions(url)
+
+        let info = try XCTUnwrap(map["AsyncSuite.testFoo"])
+        XCTAssertEqual(info.file, "/path/to/AsyncSuite.swift")
+        XCTAssertEqual(10, info.startLine)
+        XCTAssertEqual(12, info.endLine)
+        XCTAssertNotNil(map["Other.unrelated"])
+    }
+
+    func testObjcThunkContinuationMergedIntoTrackedFunction() throws {
+        // An immediately-adjacent `@objc` thunk that happens to carry real lines must be
+        // merged into the tracked function's range (previously never matched because the
+        // continuation regex could not span the space in "@objc Module.func()").
+        let body = """
+                    0x0100 (0x0020) AsyncSuite.testFoo() [FUNC, EXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf]\(" ")
+                        0x0100 (0x0010) /path/to/AsyncSuite.swift:5
+                    0x0120 (0x0020) @objc AsyncSuite.testFoo() [FUNC, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf]\(" ")
+                        0x0120 (0x0010) /path/to/AsyncSuite.swift:7
+        """
+        let url = try makeFixture(body)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let map = try FileLocator.extractFunctions(url)
+
+        let info = try XCTUnwrap(map["AsyncSuite.testFoo"])
+        XCTAssertEqual(5, info.startLine)
+        XCTAssertEqual(7, info.endLine)
+    }
+
+    func testAsyncFunctionWithNoRecoverableSourceLinesOmittedWithoutCrash() throws {
+        // If literally none of a function's chunks ever carry a real source line, it must
+        // be silently omitted from the map rather than crashing or corrupting other entries.
+        let body = """
+                    0x0100 (0x0020) AsyncSuite.testNoLines() [FUNC, EXT, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf]\(" ")
+                        0x0100 (0x0020) /<compiler-generated>:0
+                    0x0120 (0x0020) @objc AsyncSuite.testNoLines() [FUNC, LENGTH, NameNList, MangledNameNList, Merged, NList, Dwarf]\(" ")
+                        0x0120 (0x0020) /<compiler-generated>:0
+        """
+        let url = try makeFixture(body)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let map = try FileLocator.extractFunctions(url)
+        XCTAssertNil(map["AsyncSuite.testNoLines"])
     }
 }

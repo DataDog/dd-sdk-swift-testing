@@ -504,6 +504,60 @@ internal class FileLocatorEdgeCaseTests: XCTestCase {
         XCTAssertEqual(14, info.endLine)
     }
 
+    func testUnicodeFunctionNames() throws {
+        // Swift and ObjC identifiers may be non-ASCII, and Swift Testing names are arbitrary
+        // text inside backticks. Names must survive verbatim, and a continuation chunk of a
+        // non-ASCII function must still be matched back to it.
+        let body = """
+                    0x0100 (0x0020) MyTests.testПривет() [FUNC, EXT, LENGTH, NameNList, Merged, NList, Dwarf]\(" ")
+                        0x0100 (0x0010) /путь/к/Файл.swift:10
+                    0x0120 (0x0020) MyTests.测试方法() [FUNC, EXT, LENGTH, NameNList, Merged, NList, Dwarf]\(" ")
+                        0x0120 (0x0010) /path/to/CJK.swift:20
+                    0x0140 (0x0020) MyTests.`тест с пробелами`() [FUNC, EXT, LENGTH, NameNList, Merged, NList, Dwarf]\(" ")
+                        0x0140 (0x0010) /path/to/Back.swift:30
+                    0x0160 (0x0020) MyTests.test🎉Emoji() [FUNC, EXT, LENGTH, NameNList, Merged, NList, Dwarf]\(" ")
+                        0x0160 (0x0010) /path/to/Emoji.swift:40
+                    0x0180 (0x0020) -[ЮникодTests testМетод] [FUNC, OBJC, LENGTH, NameNList, Merged, NList, Dwarf]\(" ")
+                        0x0180 (0x0010) /path/to/ObjC.m:50
+                    0x01C0 (0x0020) specialized MyTests.testПривет() [FUNC, LENGTH, NameNList, Merged, NList, Dwarf]\(" ")
+                        0x01C0 (0x0010) /путь/к/Файл.swift:14
+        """
+        let url = try makeFixture(body)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let map = try FileLocator.extractFunctions(url)
+
+        let cyrillic = try XCTUnwrap(map["MyTests.testПривет"])
+        XCTAssertEqual(cyrillic.file, "/путь/к/Файл.swift")
+        XCTAssertEqual(10, cyrillic.startLine)
+        XCTAssertEqual(14, cyrillic.endLine, "Continuation of a non-ASCII name must be merged")
+
+        XCTAssertEqual(20, try XCTUnwrap(map["MyTests.测试方法"]).startLine)
+        XCTAssertEqual(30, try XCTUnwrap(map["MyTests.`тест с пробелами`"]).startLine)
+        XCTAssertEqual(40, try XCTUnwrap(map["MyTests.test🎉Emoji"]).startLine)
+        // ObjC class/selector with Cyrillic letters — the `\w` class is Unicode-aware
+        XCTAssertEqual(50, try XCTUnwrap(map["ЮникодTests.testМетод"]).startLine)
+    }
+
+    func testStartLineIsRunningMinimum() throws {
+        // Chunks are not emitted in source order, so a later chunk may carry a lower line
+        // than the one that opened the range.
+        let body = """
+                    0x0100 (0x0020) MyModule.myFunc() [FUNC, EXT, LENGTH, NameNList, Merged, NList, Dwarf]\(" ")
+                        0x0100 (0x0010) /path/to/My.swift:20
+                        0x0110 (0x0010) /path/to/My.swift:25
+                    0x0120 (0x0020) specialized MyModule.myFunc() [FUNC, LENGTH, NameNList, Merged, NList, Dwarf]\(" ")
+                        0x0120 (0x0010) /path/to/My.swift:18
+                        0x0130 (0x0010) /path/to/My.swift:27
+        """
+        let url = try makeFixture(body)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let map = try FileLocator.extractFunctions(url)
+
+        let info = try XCTUnwrap(map["MyModule.myFunc"])
+        XCTAssertEqual(18, info.startLine, "startLine must fall to the lowest line seen")
+        XCTAssertEqual(27, info.endLine)
+    }
+
     func testSecondDeclarationOfSameNameReplacesRangeInsteadOfWidening() throws {
         // Generic functions can be emitted as several distinct EXT declarations at different
         // source lines. Each declaration must replace the recorded range rather than merge

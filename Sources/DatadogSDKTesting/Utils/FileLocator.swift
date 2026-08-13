@@ -8,10 +8,13 @@ import Foundation
 
 struct FunctionInfo: Sendable {
     let file: String
-    let startLine: Int
+    private(set) var startLine: Int
     private(set) var endLine: Int
 
     mutating func updateWithLine(_ line: Int) {
+        if startLine > line {
+            startLine = line
+        }
         if endLine < line {
             endLine = line
         }
@@ -22,138 +25,129 @@ typealias FunctionName = String
 typealias FunctionMap = [FunctionName: FunctionInfo]
 
 enum FileLocator {
-    private enum DeclKind { case ext, objc }
-
     static func extractFunctions(_ symbolsOutput: URL) throws -> FunctionMap {
         var map = FunctionMap()
+
+        // Keys of functions we know are real declarations (an EXT/OBJC-tagged header was seen
+        // for them), so later chunks belonging to the same function that carry no EXT/OBJC tag
+        // of their own — async continuations, `@objc` thunks, generic `specialized` clones,
+        // closures, partial applies — can still be matched back by name and contribute their
+        // source lines, no matter where in the file they land.
         var trackedKeys: Set<String> = []
+        // The key currently receiving source-line records, if any.
         var activeKey: String? = nil
-        /// True while the active key's own declaration chunk is still supplying its first
-        /// source line — that line replaces any previously recorded range (last-wins).
+        // True until the declaration's own chunk has supplied its first source line. That line
+        // replaces any range recorded by an earlier same-named declaration rather than widening
+        // it: a generic function can be emitted as several distinct declarations, and merging
+        // them would report a span covering two different bodies.
         var activeIsFreshDeclaration = false
-        var pendingModuleless: String? = nil
+        // Set right after an EXT header whose name had no module prefix (e.g. a bare global
+        // function): the key can't be known until the first real source line reveals the file,
+        // from which the synthetic module name is derived.
+        var pendingModuleless: FunctionName? = nil
 
         let file = DDFileReader(fileURL: symbolsOutput)
         try file.open()
         defer { file.close() }
 
+        // A function name is either an ObjC method (`-[Class selector:]`, may contain
+        // spaces) or a Swift symbol. A Swift Testing function name can be backtick-quoted
+        // and contain spaces (e.g. ``failing parameterized test``(_:)), so a plain `\S+`
+        // truncates it at the first space — match backtick-quoted segments as a unit.
+        // These stay regexes on purpose: `\w`/`\s` carry ICU's Unicode semantics, and Swift
+        // (and ObjC) identifiers may be non-ASCII.
+        let funcNamePattern = #"(?:-\[[\w \:\$#]+\])|(?:(?:`[^`]*`|[^\s`])+)"#
+        let funcRegex = try NSRegularExpression(pattern: #"^\s+[0-9a-fA-FxX]+\s+\([0-9a-fA-FxX\ ]+\)\s+(\#(funcNamePattern))\s+\[FUNC,\s+((?:EXT)|(?:OBJC))[\w\s,]+\] $"#)
+        // Looser match used only to attribute a wrapper/continuation chunk (no EXT/OBJC tag)
+        // back to an already-tracked function. Unlike `funcNamePattern`, it captures the whole
+        // name verbatim — including any embedded spaces from a compiler-added prefix — so it
+        // can be stripped by `strippingWrapperPrefixes` below.
+        let anyFuncRegex = try NSRegularExpression(pattern: #"^\s+[0-9a-fA-FxX]+\s+\([0-9a-fA-FxX\ ]+\)\s+(.+?)\s+\[FUNC,"#)
+        let trimCharacters = CharacterSet(charactersIn: "-[]")
+
+        // Find function region
         while let line = try file.readLine() {
-            if line.contains(" __TEXT __text") { break }
+            if line.contains(" __TEXT __text") {
+                break
+            }
         }
 
         while var line = try file.readLine() {
-            let reachedStubs: Bool = line.withUTF8 { buf in
-                var end = buf.count
-                let hasNewline = end > 0 && buf[end - 1] == UInt8(ascii: "\n")
-                if hasNewline { end -= 1 }
-                guard end > 0 else { return false }
-
-                // Symbol header: "<indent>0xADDR (<pad>0xSIZE) <name> [FLAGS] "
-                if hasNewline, end >= 2,
-                   buf[end - 1] == UInt8(ascii: " "), buf[end - 2] == UInt8(ascii: "]")
-                {
-                    activeKey = nil
-                    activeIsFreshDeclaration = false
-                    pendingModuleless = nil
-                    guard let nameStart = Self.indexAfterPrefix(buf, end),
-                          let funcAt = Self.find(buf, from: nameStart, to: end, needle: "[FUNC,"),
-                          case let flagsStart = funcAt + 6,
-                          case let flagsEnd = end - 2, // index of the closing "]"
-                          flagsStart <= flagsEnd,
-                          buf[funcAt - 1] == UInt8(ascii: " ")
-                    else { return false }
-                    var nameEnd = funcAt
-                    while nameEnd > nameStart, buf[nameEnd - 1] == UInt8(ascii: " ") { nameEnd -= 1 }
-                    guard nameEnd > nameStart else { return false }
-
-                    if let kind = Self.declKind(buf, flagsStart, flagsEnd),
-                       Self.isDeclarationName(buf, nameStart, nameEnd)
-                    {
-                        switch kind {
-                        case .ext:
-                            // key == name with any trailing "()" removed; the module prefix is
-                            // present iff a "." occurs before the first backtick.
-                            let keyEnd = Self.droppingCallParens(buf, nameStart, nameEnd)
-                            if Self.hasModulePrefix(buf, nameStart, keyEnd) {
-                                let key = Self.string(buf, nameStart, keyEnd)
-                                trackedKeys.insert(key)
-                                activeKey = key
-                                activeIsFreshDeclaration = true
-                            } else {
-                                pendingModuleless = Self.string(buf, nameStart, keyEnd)
-                            }
-                        case .objc:
-                            // "-[Class selector]" -> "Class.selector"
-                            let innerStart = nameStart + 2, innerEnd = nameEnd - 1
-                            guard let sep = Self.firstIndex(buf, innerStart, innerEnd, UInt8(ascii: " ")),
-                                  sep > innerStart, sep + 1 < innerEnd,
-                                  Self.firstIndex(buf, sep + 1, innerEnd, UInt8(ascii: " ")) == nil,
-                                  Self.hasPrefix(buf, sep + 1, innerEnd, "test")
-                            else { return false }
-                            let key = Self.string(buf, innerStart, sep) + "."
-                                + Self.string(buf, sep + 1, innerEnd)
+            if line.hasSuffix("] \n") {
+                activeKey = nil
+                activeIsFreshDeclaration = false
+                pendingModuleless = nil
+                // Computed once and shared by both header regexes below.
+                let range = NSRange(line.startIndex..., in: line)
+                if let match = funcRegex.firstMatch(in: line, range: range) {
+                    let name = line[Range(match.range(at: 1), in: line)!]
+                    let type = line[Range(match.range(at: 2), in: line)!]
+                    switch type {
+                    case "EXT":
+                        let info = Self.swiftTestName(function: String(name))
+                        if let module = info.module {
+                            let key = "\(module).\(info.test)"
                             trackedKeys.insert(key)
                             activeKey = key
                             activeIsFreshDeclaration = true
+                        } else {
+                            pendingModuleless = info.test
                         }
-                    } else if !trackedKeys.isEmpty {
-                        // A compiler-generated layer over some function's body (`@objc `,
-                        // `specialized `, `closure #N in `, `partial apply for `, or none at
-                        // all). If it names a function we track, it continues that function.
-                        let bodyStart = Self.skippingWrapperPrefixes(buf, nameStart, nameEnd)
-                        let keyEnd = Self.droppingCallParens(buf, bodyStart, nameEnd)
-                        guard keyEnd > bodyStart else { return false }
-                        let candidate = Self.string(buf, bodyStart, keyEnd)
-                        if trackedKeys.contains(candidate) { activeKey = candidate }
-                    }
-                    return false
-                }
-
-                // Zero addresses carry no usable line information.
-                if hasNewline, end >= 2,
-                   buf[end - 2] == UInt8(ascii: ":"), buf[end - 1] == UInt8(ascii: "0")
-                { return false }
-
-                if activeKey != nil || pendingModuleless != nil,
-                   let source = Self.sourceLine(buf, end)
-                {
-                    let lineNumber = source.line
-                    if let function = pendingModuleless {
-                        let filePath = Self.string(buf, source.fileStart, source.fileEnd)
-                        let url = URL(fileURLWithPath: filePath, isDirectory: false)
-                        let key = "[\(url.deletingPathExtension().lastPathComponent)].\(function)"
+                    case "OBJC":
+                        let parts = name.trimmingCharacters(in: trimCharacters).components(separatedBy: " ")
+                        guard parts.count == 2, parts[1].hasPrefix("test") else { continue }
+                        let key = "\(parts[0]).\(parts[1])"
                         trackedKeys.insert(key)
-                        map[key] = FunctionInfo(file: filePath, startLine: lineNumber, endLine: lineNumber)
                         activeKey = key
-                        activeIsFreshDeclaration = false
-                        pendingModuleless = nil
-                    } else if let key = activeKey {
-                        if activeIsFreshDeclaration {
-                            // A fresh declaration replaces whatever an earlier same-named
-                            // declaration recorded, rather than widening its range.
-                            map[key] = FunctionInfo(file: Self.string(buf, source.fileStart, source.fileEnd),
-                                                    startLine: lineNumber, endLine: lineNumber)
-                            activeIsFreshDeclaration = false
-                        } else if var info = map[key] {
-                            if Self.matches(buf, source.fileStart, source.fileEnd, info.file) {
-                                info.updateWithLine(lineNumber)
-                                map[key] = info
-                            }
-                        } else if !Self.isSyntheticSource(buf, source.fileStart, source.fileEnd) {
-                            // Only a continuation chunk pointing at real source may establish
-                            // the function's file: compiler-generated and macro-expansion
-                            // buffers would otherwise be reported as the test's location.
-                            map[key] = FunctionInfo(file: Self.string(buf, source.fileStart, source.fileEnd),
-                                                    startLine: lineNumber, endLine: lineNumber)
-                        }
+                        activeIsFreshDeclaration = true
+                    default: continue
                     }
-                    return false
+                } else if !trackedKeys.isEmpty,
+                          let anyMatch = anyFuncRegex.firstMatch(in: line, range: range)
+                {
+                    // The key of a Swift function is its name minus any trailing "()", so the
+                    // candidate can be compared without splitting off the module prefix.
+                    let rawName = line[Range(anyMatch.range(at: 1), in: line)!]
+                    var candidate = Self.strippingWrapperPrefixes(rawName)
+                    if candidate.hasSuffix("()") { candidate = candidate.dropLast(2) }
+                    if !candidate.isEmpty, trackedKeys.contains(String(candidate)) {
+                        activeKey = String(candidate)
+                    }
                 }
-
-                if hasNewline, Self.hasSuffix(buf, end, "__TEXT __stubs") { return true }
-                return false
+            } else if line.hasSuffix(":0\n") { // ignoring zero addresses
+                continue
+            } else if activeKey != nil || pendingModuleless != nil,
+                      let source = Self.sourceLine(&line)
+            {
+                let filePath = source.file
+                let lineNumber = source.line
+                if let function = pendingModuleless {
+                    let url = URL(fileURLWithPath: filePath, isDirectory: false)
+                    let key = "[\(url.deletingPathExtension().lastPathComponent)].\(function)"
+                    trackedKeys.insert(key)
+                    map[key] = FunctionInfo(file: filePath, startLine: lineNumber, endLine: lineNumber)
+                    activeKey = key
+                    activeIsFreshDeclaration = false
+                    pendingModuleless = nil
+                } else if let key = activeKey {
+                    if activeIsFreshDeclaration {
+                        map[key] = FunctionInfo(file: filePath, startLine: lineNumber, endLine: lineNumber)
+                        activeIsFreshDeclaration = false
+                    } else if var info = map[key] {
+                        if info.file == filePath {
+                            info.updateWithLine(lineNumber)
+                            map[key] = info
+                        }
+                    } else if !Self.isSyntheticSource(filePath) {
+                        // Only a continuation chunk pointing at real source may establish the
+                        // function's location: compiler-generated and macro-expansion buffers
+                        // would otherwise be reported as the test's source file.
+                        map[key] = FunctionInfo(file: filePath, startLine: lineNumber, endLine: lineNumber)
+                    }
+                }
+            } else if line.hasSuffix("__TEXT __stubs\n") {
+                break
             }
-            if reachedStubs { break }
         }
 
         return map
@@ -168,213 +162,103 @@ enum FileLocator {
         return try extractFunctions(symbolsFile)
     }
 
-    // MARK: - Byte-level parsing helpers
-    //
-    // `symbols` emits a rigid ASCII layout, and this runs over every line of a dump that can
-    // reach tens of megabytes, so the scanning is done on UTF-8 bytes. Swift's `Character`
-    // view performs grapheme breaking, which dominates the runtime of the naive spelling.
-
-    /// Index just past the first `") "`, which always terminates the address/size prefix
-    /// (neither field can contain a parenthesis).
-    private static func indexAfterPrefix(_ b: UnsafeBufferPointer<UInt8>, _ end: Int) -> Int? {
-        var i = 0
-        while i + 1 < end {
-            if b[i] == UInt8(ascii: ")"), b[i + 1] == UInt8(ascii: " ") { return i + 2 }
-            i += 1
-        }
-        return nil
-    }
-
-    private static func find(_ b: UnsafeBufferPointer<UInt8>, from: Int, to: Int, needle: StaticString) -> Int? {
-        let n = needle.utf8CodeUnitCount
-        guard n > 0, to - from >= n else { return nil }
-        let first = needle.utf8Start[0]
-        var i = from
-        while i + n <= to {
-            if b[i] == first {
-                var k = 1
-                while k < n, b[i + k] == needle.utf8Start[k] { k += 1 }
-                if k == n { return i }
+    /// Splits a source-location line — `<indent>0xADDR (<pad>0xSIZE) <path>:<line>` — into its
+    /// path and line number.
+    ///
+    /// This one is scanned over UTF-8 bytes rather than matched with a regex: it is the only
+    /// form that occurs on *every* line of a dump that can reach tens of megabytes, and the
+    /// equivalent `NSRegularExpression` costs ~2.7µs per line (112ms over this repo's own
+    /// 41k-line fixture, roughly 90% of the total parse). Nothing here is Unicode-sensitive —
+    /// the delimiters and digits are ASCII, and UTF-8 never encodes an ASCII byte inside a
+    /// multi-byte character — so the path is carried through verbatim.
+    private static func sourceLine(_ line: inout String) -> (file: String, line: Int)? {
+        line.withUTF8 { buf -> (file: String, line: Int)? in
+            var end = buf.count
+            if end > 0, buf[end - 1] == UInt8(ascii: "\n") { end -= 1 }
+            // The address and size fields cannot contain a parenthesis, so the first ") "
+            // always terminates the prefix.
+            var start = 0
+            while start + 1 < end,
+                  !(buf[start] == UInt8(ascii: ")") && buf[start + 1] == UInt8(ascii: " "))
+            {
+                start += 1
             }
-            i += 1
-        }
-        return nil
-    }
-
-    private static func firstIndex(_ b: UnsafeBufferPointer<UInt8>, _ from: Int, _ to: Int, _ byte: UInt8) -> Int? {
-        var i = from
-        while i < to {
-            if b[i] == byte { return i }
-            i += 1
-        }
-        return nil
-    }
-
-    private static func hasPrefix(_ b: UnsafeBufferPointer<UInt8>, _ from: Int, _ to: Int, _ p: StaticString) -> Bool {
-        let n = p.utf8CodeUnitCount
-        guard to - from >= n else { return false }
-        var k = 0
-        while k < n {
-            if b[from + k] != p.utf8Start[k] { return false }
-            k += 1
-        }
-        return true
-    }
-
-    private static func hasSuffix(_ b: UnsafeBufferPointer<UInt8>, _ end: Int, _ s: StaticString) -> Bool {
-        let n = s.utf8CodeUnitCount
-        guard end >= n else { return false }
-        return hasPrefix(b, end - n, end, s)
-    }
-
-    private static func string(_ b: UnsafeBufferPointer<UInt8>, _ from: Int, _ to: Int) -> String {
-        String(decoding: UnsafeBufferPointer(rebasing: b[from..<to]), as: UTF8.self)
-    }
-
-    private static func matches(_ b: UnsafeBufferPointer<UInt8>, _ from: Int, _ to: Int, _ s: String) -> Bool {
-        var s = s
-        return s.withUTF8 { other in
-            guard other.count == to - from else { return false }
-            var k = 0
-            while k < other.count {
-                if b[from + k] != other[k] { return false }
-                k += 1
+            guard start + 1 < end else { return nil }
+            start += 2
+            while start < end, buf[start] == UInt8(ascii: " ") { start += 1 }
+            // The line number follows the last ":" and must be all ASCII digits.
+            var colon = end
+            var i = end - 1
+            while i >= start {
+                if buf[i] == UInt8(ascii: ":") { colon = i; break }
+                i -= 1
             }
-            return true
-        }
-    }
-
-    /// `EXT`/`OBJC` must be the first flag after `FUNC`, and the remaining flags must be a
-    /// non-empty run of word/space/comma bytes (so `OMIT-FP` disqualifies the entry).
-    private static func declKind(_ b: UnsafeBufferPointer<UInt8>, _ from: Int, _ to: Int) -> DeclKind? {
-        var i = from
-        while i < to, b[i] == UInt8(ascii: " ") { i += 1 }
-        guard i > from else { return nil } // whitespace is required after "FUNC,"
-        let kind: DeclKind
-        if hasPrefix(b, i, to, "EXT") {
-            kind = .ext
-            i += 3
-        } else if hasPrefix(b, i, to, "OBJC") {
-            kind = .objc
-            i += 4
-        } else {
-            return nil
-        }
-        guard i < to else { return nil }
-        while i < to {
-            let c = b[i]
-            let isWord = (c >= UInt8(ascii: "a") && c <= UInt8(ascii: "z"))
-                || (c >= UInt8(ascii: "A") && c <= UInt8(ascii: "Z"))
-                || (c >= UInt8(ascii: "0") && c <= UInt8(ascii: "9"))
-                || c == UInt8(ascii: "_")
-            guard isWord || c == UInt8(ascii: ",") || c == UInt8(ascii: " ") else { return nil }
-            i += 1
-        }
-        return kind
-    }
-
-    /// A declaration is named either as an ObjC method (`-[Class selector:]`) or as a Swift
-    /// symbol with no whitespace outside backtick-quoted segments. Anything else (`static
-    /// Foo.bar.getter`, `variable initialization expression of …`) is not a declaration.
-    private static func isDeclarationName(_ b: UnsafeBufferPointer<UInt8>, _ from: Int, _ to: Int) -> Bool {
-        if to - from > 3, b[from] == UInt8(ascii: "-"), b[from + 1] == UInt8(ascii: "["),
-           b[to - 1] == UInt8(ascii: "]")
-        {
-            var i = from + 2
-            while i < to - 1 {
-                let c = b[i]
-                let ok = (c >= UInt8(ascii: "a") && c <= UInt8(ascii: "z"))
-                    || (c >= UInt8(ascii: "A") && c <= UInt8(ascii: "Z"))
-                    || (c >= UInt8(ascii: "0") && c <= UInt8(ascii: "9"))
-                    || c == UInt8(ascii: "_") || c == UInt8(ascii: " ") || c == UInt8(ascii: ":")
-                    || c == UInt8(ascii: "$") || c == UInt8(ascii: "#")
-                guard ok else { return false }
-                i += 1
+            guard colon < end, colon + 1 < end else { return nil }
+            var value = 0
+            var d = colon + 1
+            while d < end {
+                let digit = buf[d]
+                guard digit >= UInt8(ascii: "0"), digit <= UInt8(ascii: "9") else { return nil }
+                value = value * 10 + Int(digit - UInt8(ascii: "0"))
+                d += 1
             }
-            return true
+            let path = String(decoding: UnsafeBufferPointer(rebasing: buf[start..<colon]), as: UTF8.self)
+            return (file: path, line: value)
         }
-        var insideBackticks = false
-        var i = from
-        while i < to {
-            let c = b[i]
-            if c == UInt8(ascii: "`") {
-                insideBackticks = !insideBackticks
-            } else if !insideBackticks, c == UInt8(ascii: " ") || c == UInt8(ascii: "\t") {
-                return false
-            }
-            i += 1
-        }
-        return !insideBackticks
-    }
-
-    /// A module/type prefix is present iff a "." occurs before the first backtick (a
-    /// backtick-quoted name may itself contain dots, e.g. ``test 3.0 behavior``).
-    private static func hasModulePrefix(_ b: UnsafeBufferPointer<UInt8>, _ from: Int, _ to: Int) -> Bool {
-        var i = from
-        while i < to, b[i] != UInt8(ascii: "`") {
-            if b[i] == UInt8(ascii: ".") { return true }
-            i += 1
-        }
-        return false
-    }
-
-    private static func droppingCallParens(_ b: UnsafeBufferPointer<UInt8>, _ from: Int, _ to: Int) -> Int {
-        if to - from >= 2, b[to - 2] == UInt8(ascii: "("), b[to - 1] == UInt8(ascii: ")") { return to - 2 }
-        return to
-    }
-
-    private static func skippingWrapperPrefixes(_ b: UnsafeBufferPointer<UInt8>, _ from: Int, _ to: Int) -> Int {
-        var i = from
-        while i < to {
-            if hasPrefix(b, i, to, "@objc ") { i += 6; continue }
-            if hasPrefix(b, i, to, "specialized ") { i += 12; continue }
-            if hasPrefix(b, i, to, "partial apply for ") { i += 18; continue }
-            if hasPrefix(b, i, to, "closure #") {
-                var j = i + 9
-                let digitsStart = j
-                while j < to, b[j] >= UInt8(ascii: "0"), b[j] <= UInt8(ascii: "9") { j += 1 }
-                if j > digitsStart, hasPrefix(b, j, to, " in ") { i = j + 4; continue }
-            }
-            break
-        }
-        return i
-    }
-
-    /// Splits a source-location line into its file-path byte range and line number.
-    private static func sourceLine(_ b: UnsafeBufferPointer<UInt8>, _ end: Int)
-        -> (fileStart: Int, fileEnd: Int, line: Int)?
-    {
-        guard var i = indexAfterPrefix(b, end) else { return nil }
-        while i < end, b[i] == UInt8(ascii: " ") { i += 1 }
-        // The line number follows the last ":" and must be all digits.
-        var colon = -1
-        var k = end - 1
-        while k >= i {
-            if b[k] == UInt8(ascii: ":") { colon = k; break }
-            k -= 1
-        }
-        guard colon > 0, colon + 1 < end else { return nil }
-        var value = 0
-        var d = colon + 1
-        while d < end {
-            let c = b[d]
-            guard c >= UInt8(ascii: "0"), c <= UInt8(ascii: "9") else { return nil }
-            value = value * 10 + Int(c - UInt8(ascii: "0"))
-            d += 1
-        }
-        return (fileStart: i, fileEnd: colon, line: value)
     }
 
     /// `/<compiler-generated>`, `<stdin>` and macro-expansion buffers under
-    /// `swift-generated-sources` are not real source locations.
-    private static func isSyntheticSource(_ b: UnsafeBufferPointer<UInt8>, _ from: Int, _ to: Int) -> Bool {
-        var basename = from
-        var i = from
-        while i < to {
-            if b[i] == UInt8(ascii: "/") { basename = i + 1 }
-            i += 1
+    /// `swift-generated-sources` are not source locations a user can navigate to.
+    private static func isSyntheticSource(_ path: String) -> Bool {
+        let basename = path.lastIndex(of: "/").map { path[path.index(after: $0)...] } ?? path[...]
+        return basename.hasPrefix("<") || path.contains("swift-generated-sources")
+    }
+
+    private static func swiftTestName(function name: String) -> (test: String, module: String?) {
+        var function: String
+        let module: String?
+        // The module/type prefix carries no backticks, but a backtick-quoted function
+        // name may contain dots (e.g. ``test 3.0``). Split on the last dot that precedes
+        // the first backtick, so such a dot isn't mistaken for the module separator.
+        let searchEnd = name.firstIndex(of: "`") ?? name.endIndex
+        if let dotPos = name[..<searchEnd].lastIndex(of: ".") {
+            function = String(name[name.index(after: dotPos)...])
+            module = String(name[..<dotPos])
+        } else {
+            function = String(name)
+            module = nil
         }
-        if basename < to, b[basename] == UInt8(ascii: "<") { return true }
-        return find(b, from: from, to: to, needle: "swift-generated-sources") != nil
+        if function.hasSuffix("()") {
+            function = String(function[..<function.index(function.endIndex, offsetBy: -2)])
+        }
+        return (test: function, module: module)
+    }
+
+    private static let wrapperPrefixes = ["partial apply for ", "@objc ", "specialized "]
+
+    /// Compiler-generated wrapper layers around a function's real body carry the original
+    /// name plus a leading label (`@objc `, `specialized `, `closure #1 in `, `partial apply
+    /// for `, or a combination of those). Stripping them lets a wrapper/continuation entry —
+    /// which never carries its own EXT/OBJC tag — be matched back to the tracked function it
+    /// belongs to, however far from it it landed in the binary.
+    private static func strippingWrapperPrefixes(_ name: Substring) -> Substring {
+        var result = name
+        outer: while !result.isEmpty {
+            for prefix in Self.wrapperPrefixes where result.hasPrefix(prefix) {
+                result = result.dropFirst(prefix.count)
+                continue outer
+            }
+            if result.hasPrefix("closure #") {
+                let afterHash = result.dropFirst(9)
+                let digits = afterHash.prefix(while: { $0.isNumber })
+                let afterDigits = afterHash.dropFirst(digits.count)
+                if !digits.isEmpty, afterDigits.hasPrefix(" in ") {
+                    result = afterDigits.dropFirst(4)
+                    continue outer
+                }
+            }
+            break
+        }
+        return result
     }
 }

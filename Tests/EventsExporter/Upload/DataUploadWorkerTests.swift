@@ -466,6 +466,54 @@ class DataUploadWorkerTests: XCTestCase {
         XCTAssertFalse(flushed, "flush must not report success while a batch is still in flight")
     }
 
+    func testLastChanceFlushUploadsEvenWhileABatchIsInFlight() throws {
+        // Shutdown counterpart of the test above. Anything still on disk when the
+        // process exits is usually gone for good, so when the loop is wedged the
+        // shutdown drain re-sends rather than giving up — even though the wedged
+        // upload may already have reached the server.
+        let uploadStarted = expectation(description: "periodic upload started")
+        uploadStarted.assertForOverFulfill = false
+        let releaseUpload = DispatchSemaphore(value: 0)
+        let uploads = LockedInt()
+        var mockDataUploader = DataUploaderMock(uploadStatus: .mockWith(needsRetry: false))
+        mockDataUploader.onUpload = { [uploads] in
+            if uploads.value == 0 {
+                uploads.increment()
+                uploadStarted.fulfill()
+                _ = releaseUpload.wait(timeout: .now() + 10)   // wedge the first upload
+            } else {
+                uploads.increment()
+            }
+        }
+
+        try writer.writeSync(value: ["k1": "v1"])
+
+        let worker = DataUploadWorker(
+            fileReader: reader,
+            dataUploader: mockDataUploader,
+            delay: MockDelay(),
+            uploadTimeout: 5,
+            featureName: .mockAny(),
+            priority: .userInteractive,
+            log: Log()
+        )
+        defer {
+            // Release the wedged upload before stopping, or `stop()` sits waiting
+            // for it — and leaving the worker running would let it consume batches
+            // written by later tests.
+            releaseUpload.signal()
+            worker.stop()
+        }
+        wait(for: [uploadStarted], timeout: 5)
+
+        // When
+        let flushed = try worker.flush(timeout: 0.3, lastChance: true)
+
+        // Then: the batch went out a second time rather than being abandoned
+        XCTAssertTrue(flushed, "the last-chance drain must send what is left on disk")
+        XCTAssertEqual(uploads.value, 2, "the wedged batch is re-sent instead of dropped")
+    }
+
     func testStopWaitsForTheInFlightUploadToSettle() throws {
         // `stop()` is followed by a final flush on the shutdown path, so it has to
         // leave the storage settled: no upload still deciding whether its file
@@ -609,7 +657,7 @@ private final class SpyUploadWorker: DataUploadWorkerType {
 
     func update(dataFormat: DataFormatType) {}
 
-    func flush(timeout: TimeInterval?) throws -> Bool {
+    func flush(timeout: TimeInterval?, lastChance: Bool) throws -> Bool {
         flushCount.increment()
         return true
     }

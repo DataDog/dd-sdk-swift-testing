@@ -28,7 +28,11 @@ internal protocol DataUploadWorkerType: Sendable {
     ///
     /// This overload blocks the calling thread and never suspends, so it stays
     /// usable on the teardown path (see `ClosureDataUploader`).
-    func flush(timeout: TimeInterval?) throws -> Bool
+    ///
+    /// Pass `lastChance` for the shutdown drain: if the periodic loop is wedged
+    /// and never frees the upload slot, the drain runs anyway and re-sends what is
+    /// left, trading possible duplicates for not losing the data entirely.
+    func flush(timeout: TimeInterval?, lastChance: Bool) throws -> Bool
 
     /// Drain all stored data, suspending rather than blocking. Same budget and
     /// exclusivity semantics as the synchronous overload.
@@ -43,6 +47,13 @@ internal protocol DataUploadWorkerType: Sendable {
 
     /// Cancel scheduled uploads and await the in-flight upload cycle.
     func stop() async
+}
+
+extension DataUploadWorkerType {
+    /// Ordinary drain: gives up rather than risking a duplicate send.
+    func flush(timeout: TimeInterval?) throws -> Bool {
+        try flush(timeout: timeout, lastChance: false)
+    }
 }
 
 internal final class DataUploadWorker: DataUploadWorkerType, @unchecked Sendable {
@@ -143,17 +154,40 @@ internal final class DataUploadWorker: DataUploadWorkerType, @unchecked Sendable
     /// left on disk for a later run. Each individual attempt is additionally
     /// bounded by the smaller of the remaining budget and the default
     /// per-attempt cap.
-    func flush(timeout: TimeInterval?) throws -> Bool {
-        let deadline = Date(timeIntervalSinceNow: timeout ?? uploadTimeout)
+    ///
+    /// `lastChance` is for the shutdown drain, where leaving a batch behind
+    /// usually means losing it for good — a CI runner rarely gets a "later run"
+    /// with the same cache. When the periodic loop is wedged and won't release the
+    /// upload slot, the drain proceeds anyway rather than returning empty-handed,
+    /// re-sending a batch whose fate we can't determine. That can duplicate events
+    /// the server already accepted; the pipeline is at-least-once regardless (a
+    /// retry after a response timeout does the same), and duplicates beat silently
+    /// dropping a session.
+    func flush(timeout: TimeInterval?, lastChance: Bool) throws -> Bool {
+        let budget = timeout ?? uploadTimeout
+        let budgetDeadline = Date(timeIntervalSinceNow: budget)
         // Take the slot first: once held, no other upload is running, so the
         // enumeration below sees the complete, settled set of stored batches.
-        guard acquireUploadSlot(until: deadline) else { return false }
-        defer { uploadSlot.signal() }
+        let exclusive = acquireUploadSlot(until: budgetDeadline)
+        defer { if exclusive { uploadSlot.signal() } }
+        guard exclusive || lastChance else { return false }
+        // Waiting for a wedged loop just burned the whole budget, so the
+        // last-chance drain gets a fresh one — otherwise it would have no time
+        // left to send anything and the fallback would be pointless.
+        let deadline = exclusive ? budgetDeadline : Date(timeIntervalSinceNow: budget)
+        if !exclusive {
+            log.print("[\(featureName)] shutting down with an upload still in flight; "
+                      + "re-sending everything left on disk, which may duplicate events")
+        }
 
         var result = true
         var iterator = try remainingBatches()
         batchLoop: while let batchRes = iterator.next() {
             guard case .success(let batch) = batchRes else {
+                // Without the slot a wedged upload may delete a file mid-read;
+                // that batch is already handled, so move on instead of giving up
+                // on the ones after it.
+                if lastChance { continue }
                 result = false
                 break
             }
@@ -166,7 +200,8 @@ internal final class DataUploadWorker: DataUploadWorkerType, @unchecked Sendable
                 status = upload(data: batch.data, timeout: attemptTimeout)
                 switch status {
                 case .success:
-                    try markAsRead(batch)
+                    // Same race: the file may already be gone.
+                    if lastChance { try? markAsRead(batch) } else { try markAsRead(batch) }
                     result = true
                 case .failed:
                     result = false

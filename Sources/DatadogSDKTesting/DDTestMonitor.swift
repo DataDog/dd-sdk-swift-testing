@@ -140,6 +140,15 @@ internal class DDTestMonitor {
     
     static func removeTestMonitor() {
         DDTestMonitor.instance?.stop()
+        clearMonitor()
+    }
+
+    static func removeTestMonitor() async {
+        await DDTestMonitor.instance?.stop()
+        clearMonitor()
+    }
+
+    private static func clearMonitor() {
         DDTestMonitor.instance = nil
         Log.debug("Clearing monitor")
         try? DDSymbolicator.dsymFilesDir.delete()
@@ -214,7 +223,25 @@ internal class DDTestMonitor {
     }
     
     func stop() {
-        guard !isStopped else { return }
+        guard stopFeatures() else { return }
+        Log.measure(name: "tracer shutdown") { tracer.shutdown() }
+        Log.measure(name: "gitUploadQueue drain") {
+            gitUploadQueue.waitUntilAllOperationsAreFinished()
+        }
+    }
+
+    func stop() async {
+        guard stopFeatures() else { return }
+        await tracer.shutdown()
+        Log.measure(name: "gitUploadQueue drain") {
+            gitUploadQueue.waitUntilAllOperationsAreFinished()
+        }
+    }
+
+    /// Stops every feature. Returns `false` when the monitor was already stopped
+    /// and the caller should do nothing more.
+    private func stopFeatures() -> Bool {
+        guard !isStopped else { return false }
         isStopped = true
         Log.measure(name: "efd stop") { efd?.stop() }
         Log.measure(name: "atr stop") { atr?.stop() }
@@ -222,10 +249,7 @@ internal class DDTestMonitor {
         Log.measure(name: "coverage stop") { coverage?.stop() }
         Log.measure(name: "knownTests stop") { knownTests?.stop() }
         Log.measure(name: "testManagement stop") { testManagement?.stop() }
-        Log.measure(name: "tracer shutdown") { tracer.shutdown() }
-        Log.measure(name: "gitUploadQueue drain") {
-            gitUploadQueue.waitUntilAllOperationsAreFinished()
-        }
+        return true
     }
     
     deinit {

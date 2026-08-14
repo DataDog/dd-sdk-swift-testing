@@ -101,6 +101,19 @@ internal final class CoverageExporter: CoverageExporterType {
         coverageStorage.stop()
     }
 
+    @discardableResult
+    func forceFlush(explicitTimeout: TimeInterval?) async -> ExportResult {
+        (try? await coverageStorage.flush(timeout: explicitTimeout)) == true ? .success : .failure
+    }
+
+    func shutdown(explicitTimeout: TimeInterval?) async {
+        await coverageStorage.stop()
+    }
+
+    func persistToDisk() {
+        coverageStorage.persistToDisk()
+    }
+
     private func writeCoverage(_ data: TestCodeCoverage) {
         payloadObserver?.eventEnqueued()
         if configuration.performancePreset.synchronousWrite {

@@ -362,6 +362,106 @@ class DataUploadWorkerTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(uploadCount.value, 1, "flush should attempt at least once before giving up")
         XCTAssertEqual(try temporaryDirectory.files().count, 1, "Undelivered batch is left on disk for a later run")
     }
+
+    // MARK: - Async flush / stop
+
+    func testAsyncFlushUploadsAllData() async throws {
+        let httpClient = MockHTTPClient(delivery: .success(response: .mockResponseWith(statusCode: 200)))
+        let dataUploader = MockClosureDataUploader(httpClient: httpClient)
+        let worker = DataUploadWorker(
+            fileReader: reader,
+            dataUploader: dataUploader,
+            delay: DataUploadDelay(performance: UploadPerformanceMock.veryQuick),
+            uploadTimeout: 60,
+            featureName: .mockAny(),
+            priority: .userInteractive,
+            log: Log()
+        )
+        // Leave the async flush as the sole uploader, mirroring the shutdown order.
+        await worker.stop()
+
+        // Given
+        writer.write(value: ["k1": "v1"])
+        writer.write(value: ["k2": "v2"])
+        writer.queue.sync {}
+
+        // When
+        let flushed = try await worker.flush(timeout: nil)
+
+        // Then
+        XCTAssertTrue(flushed)
+        XCTAssertEqual(try temporaryDirectory.files().count, 0)
+        let requests = httpClient.waitAndReturnRequests(count: 2)
+        XCTAssertTrue(requests.contains { $0.httpBody == #"[{"k1":"v1"}]"#.utf8Data })
+        XCTAssertTrue(requests.contains { $0.httpBody == #"[{"k2":"v2"}]"#.utf8Data })
+    }
+
+    func testAsyncFlushGivesUpAfterTimeoutInsteadOfHanging() async throws {
+        let uploadCount = LockedInt()
+        var mockDataUploader = DataUploaderMock(uploadStatus: .mockWith(needsRetry: true))
+        mockDataUploader.onUpload = { uploadCount.increment() }
+
+        writer.write(value: ["k1": "v1"])
+        writer.queue.sync {}
+
+        let worker = DataUploadWorker(
+            fileReader: reader,
+            dataUploader: mockDataUploader,
+            delay: MockDelay(),
+            uploadTimeout: 5,
+            featureName: .mockAny(),
+            priority: .userInteractive,
+            log: Log()
+        )
+        await worker.stop()
+
+        // When: a persistently-retriable upload must not loop forever.
+        let flushed = try await worker.flush(timeout: 0.3)
+
+        // Then
+        XCTAssertFalse(flushed)
+        XCTAssertGreaterThanOrEqual(uploadCount.value, 1)
+        XCTAssertEqual(try temporaryDirectory.files().count, 1, "Undelivered batch is left on disk for a later run")
+    }
+
+    // MARK: - Disk-only persistence
+
+    func testPersistToDiskDrainsWriterWithoutUploading() throws {
+        let uploader = SpyUploadWorker()
+        let store = FeatureStoreAndUpload(uploader: uploader, writer: writer)
+
+        // Given: an event handed to the writer (queued, not necessarily written yet)
+        store.write(value: ["k1": "v1"])
+
+        // When
+        store.persistToDisk()
+
+        // Then: the write is drained onto disk, but nothing is uploaded — this is
+        // what the crash handler relies on.
+        XCTAssertEqual(try temporaryDirectory.files().count, 1)
+        XCTAssertEqual(uploader.flushCount.value, 0, "persistToDisk must never upload")
+    }
+
+    func testAsyncStopPerformsNoMoreUploads() async {
+        let httpClient = MockHTTPClient(delivery: .success(response: .mockResponseWith(statusCode: 200)))
+        let dataUploader = MockClosureDataUploader(httpClient: httpClient)
+        let worker = DataUploadWorker(
+            fileReader: reader,
+            dataUploader: dataUploader,
+            delay: MockDelay(),
+            uploadTimeout: 5,
+            featureName: .mockAny(),
+            priority: .userInteractive,
+            log: Log()
+        )
+
+        // When: unlike the sync variant, this awaits the periodic task's exit.
+        await worker.stop()
+
+        // Then
+        writer.write(value: ["k1": "v1"])
+        httpClient.waitAndAssertNoRequestsSent()
+    }
 }
 
 /// Thread-safe integer counter for asserting on callbacks made from the worker queue.
@@ -423,4 +523,25 @@ private final class RecordingUploadObserver: UploadObserver, @unchecked Sendable
     func uploadDropped(payloadBytes: Int) {
         lock.withLock { _dropped.append(payloadBytes) }
     }
+}
+
+/// Records whether the store asked for an upload, so disk-only paths can assert
+/// that they never do.
+private final class SpyUploadWorker: DataUploadWorkerType {
+    let flushCount = LockedInt()
+
+    func update(dataFormat: DataFormatType) {}
+
+    func flush(timeout: TimeInterval?) throws -> Bool {
+        flushCount.increment()
+        return true
+    }
+
+    func flush(timeout: TimeInterval?) async throws -> Bool {
+        flushCount.increment()
+        return true
+    }
+
+    func stop() {}
+    func stop() async {}
 }

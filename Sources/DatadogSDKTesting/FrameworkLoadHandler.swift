@@ -65,9 +65,11 @@ enum FrameworkLoadHandler {
         DatadogSwiftTestingTrait.sharedSuiteProvider = nil
         if let manager = sessionManager {
             sessionManager = nil
-            waitForAsync {
-                await manager.stop()
-            }
+            // Synchronous on purpose: this runs from the library-unload C
+            // destructor during `exit()`, where the Swift cooperative executor
+            // may never be scheduled again — bridging to `async` here can hang
+            // teardown instead of completing it.
+            manager.stop()
         }
     }
 }

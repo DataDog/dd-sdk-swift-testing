@@ -22,7 +22,10 @@ final class TelemetryTests: XCTestCase {
         func export(item: any TelemetryPayload) { lock.withLock { _items.append(item) } }
         func export(items: [any TelemetryPayload]) { lock.withLock { _items.append(contentsOf: items) } }
         func flush() -> Bool { true }
+        func flush() async -> Bool { true }
         func shutdown() {}
+        func shutdown() async {}
+        func persistToDisk() {}
     }
 
     /// A long interval keeps the periodic timers (flush + heartbeat) out of the

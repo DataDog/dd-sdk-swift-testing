@@ -59,8 +59,23 @@ internal struct FeatureStoreAndUpload: DataUploadWorkerType, Sendable {
     /// upload everything left on disk. `timeout` is a total wall-clock budget
     /// for the upload phase (e.g. an OpenTelemetry `forceFlush` timeout).
     func flush(timeout: TimeInterval?) throws -> Bool {
-        writer.closeCurrentFile()
+        persistToDisk()
         return try uploader.flush(timeout: timeout)
+    }
+
+    func flush(timeout: TimeInterval?) async throws -> Bool {
+        persistToDisk()
+        return try await uploader.flush(timeout: timeout)
+    }
+
+    /// Persist everything gathered so far to disk *without uploading it*:
+    /// drains the writer queue and closes the in-progress file, so every event
+    /// handed to the writer is on disk and visible to the reader for a later
+    /// upload. Performs no network I/O and never suspends, which is what makes
+    /// it usable from the crash handler — where the process is about to die and
+    /// the network is not an option.
+    func persistToDisk() {
+        writer.closeCurrentFile()
     }
 
     /// Shutdown sequence:
@@ -77,5 +92,11 @@ internal struct FeatureStoreAndUpload: DataUploadWorkerType, Sendable {
         // Final drain on the shutdown path: no total budget, each attempt still
         // bounded by the default per-attempt cap.
         _ = try? uploader.flush(timeout: nil)
+    }
+
+    func stop() async {
+        await uploader.stop()
+        writer.stop()
+        _ = try? await uploader.flush(timeout: nil)
     }
 }

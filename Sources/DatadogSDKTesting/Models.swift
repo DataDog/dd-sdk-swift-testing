@@ -46,20 +46,56 @@ protocol TestSession: TestContainer {
 }
 
 protocol TestSessionManagerObserver: Sendable {
+    /// Session start is only ever reached from the async bootstrap, so it has no
+    /// synchronous variant.
     func didStart(session: any TestSession) async
+
+    func willFinish(session: any TestSession)
+    func didFinish(session: any TestSession)
+
+    /// Async counterparts of the end hooks, so an observer that needs to suspend
+    /// can implement them. Both variants exist because session end also runs on
+    /// the synchronous teardown path, where `await` isn't available.
     func willFinish(session: any TestSession) async
     func didFinish(session: any TestSession) async
 }
 
+/// The async end hooks default to their synchronous counterparts, so observers
+/// only implement the async ones when they actually need to suspend.
+///
+/// Each body pins the call to a non-`async` function type: within an `async`
+/// context an unannotated `willFinish(session:)` would resolve back to this
+/// async overload and recurse.
+extension TestSessionManagerObserver {
+    func willFinish(session: any TestSession) async {
+        let sync: (any TestSession) -> Void = willFinish(session:)
+        sync(session)
+    }
+
+    func didFinish(session: any TestSession) async {
+        let sync: (any TestSession) -> Void = didFinish(session:)
+        sync(session)
+    }
+}
+
 protocol TestSessionProvider: Sendable {
+    /// - Parameter manager: the manager bootstrapping this session. Providers whose
+    ///   sessions are ended by the caller (the manual `DDSession.start` API) hand it
+    ///   to the session so it can drive its own shutdown.
     func startSession(named: String, config: SessionConfig, startTime: Date,
-                      observer: (any TestModuleManagerObserver)?) async throws -> any TestSession & TestModuleManager
+                      observer: (any TestModuleManagerObserver)?,
+                      manager: any TestSessionManager) async throws -> any TestSession & TestModuleManager
 }
 
 protocol TestSessionManager: Sendable {
     var session: any TestSession & TestModuleManager { get async throws }
 
     func stop() async
+
+    /// Synchronous teardown. Must never use `Task`/`await`: this is what runs
+    /// from the library-unload C destructor during `exit()`, where the Swift
+    /// cooperative executor is no longer guaranteed to be scheduled.
+    func stop()
 }
 
 protocol TestModule: TestContainer {

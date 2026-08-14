@@ -621,6 +621,34 @@ internal class DDTracer {
         Log.debug("Tracer shutdown")
     }
 
+    /// Async counterparts of `flush()` / `shutdown()`. `SpanProcessor` and
+    /// `TracerProviderSdk` have no async API, so these drive the exporter
+    /// directly instead of going through the provider. Spans are exported to the
+    /// exporter synchronously as they end (`SimpleSpanProcessor`), so nothing is
+    /// stranded in the processor by skipping it.
+    func flush() async {
+        Log.measure(name: "flushRUM") { flushRUM() }
+        _ = await eventsExporter?.flush(explicitTimeout: nil)
+        _ = await telemetry?.flush()
+        Log.debug("Tracer flush finished")
+    }
+
+    func shutdown() async {
+        Log.measure(name: "flushRUM") { flushRUM() }
+        await eventsExporter?.shutdown(explicitTimeout: nil)
+        await telemetry?.shutdown()
+        Log.debug("Tracer shutdown")
+    }
+
+    /// Persist everything gathered so far to disk without uploading it, and
+    /// without touching the network or the cooperative executor. Called from the
+    /// crash handler, where the process is about to die: any event already
+    /// handed to the SDK lands on disk and is uploaded by the next run.
+    func persistToDisk() {
+        eventsExporter?.persistToDisk()
+        telemetry?.persistToDisk()
+    }
+
     func addPropagationsHeadersToEnvironment() {
         let headers = tracePropagationHTTPHeaders()
         headers.forEach {

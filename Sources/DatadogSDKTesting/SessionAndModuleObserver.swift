@@ -11,11 +11,11 @@ struct SessionAndModuleObserver: TestSessionManagerObserver, TestModuleManagerOb
         session.configuration.activeFeatures.testSessionWillStart(session: session)
     }
 
-    func willFinish(session: any TestSession) async {
+    func willFinish(session: any TestSession) {
         session.configuration.activeFeatures.testSessionWillEnd(session: session)
     }
 
-    func didFinish(session: any TestSession) async {
+    func didFinish(session: any TestSession) {
         session.configuration.activeFeatures.testSessionDidEnd(session: session)
         #if canImport(Testing)
             DatadogSwiftTestingTrait.sharedSuiteProvider = nil

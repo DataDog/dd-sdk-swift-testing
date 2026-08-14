@@ -86,6 +86,10 @@ private let ddCrashIsWritingReportCallback: @convention(c) (
     }
     DDTestMonitor.instance?.tia?.stop()
     DDTestMonitor.instance?.coverage?.stop()
+    // Get everything gathered so far onto disk so the next run uploads it. Only
+    // local writes happen here — no network (unreachable/unsafe mid-crash) and no
+    // `Task`/`await` (the executor won't run us again).
+    DDTestMonitor.instance?.tracer.persistToDisk()
     Log.print("Crash detected! Exiting...")
 }
 

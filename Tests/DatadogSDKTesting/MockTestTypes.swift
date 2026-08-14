@@ -194,7 +194,8 @@ enum Mocks {
             }
             
             func startSession(named name: String, config: SessionConfig, startTime: Date,
-                              observer: (any TestModuleManagerObserver)?) async throws -> any TestModuleManager & TestSession {
+                              observer: (any TestModuleManagerObserver)?,
+                              manager: any TestSessionManager) async throws -> any TestModuleManager & TestSession {
                 self.session = Session(name: name, startTime: startTime, testTags: tags,
                                        config: config, observer: observer)
                 return self.session!
@@ -661,16 +662,22 @@ enum Mocks {
         }
     }
     
-    final actor SessionManager: TestSessionManager {
-        private var _session: Task<any TestModuleManager & TestSession, any Error>?
-        private var _stopped: Bool = false
+    final class SessionManager: TestSessionManager, @unchecked Sendable {
+        private struct State {
+            var task: Task<any TestModuleManager & TestSession, any Error>?
+            /// Recorded once the bootstrap finishes so the synchronous `stop()`
+            /// can reach the session without awaiting the task.
+            var started: (any TestModuleManager & TestSession)?
+            var stopped: Bool = false
+        }
+
+        private let _state = Synced(State())
         let provider: any TestSessionProvider
         let _config: SessionConfig
         let _observer: (any TestSessionManagerObserver & TestModuleManagerObserver)?
 
         init(provider: any TestSessionProvider, config: SessionConfig,
              observer: (any TestSessionManagerObserver & TestModuleManagerObserver)? = nil) {
-            self._session = nil
             self.provider = provider
             self._config = config
             self._observer = observer
@@ -678,34 +685,60 @@ enum Mocks {
 
         var session: any TestModuleManager & TestSession {
             get async throws {
-                if let session = _session {
-                    return try await session.value
-                }
                 let config = _config
                 let provider = self.provider
                 let observer = _observer
-                _session = Task.detached {
-                    let startTime = config.clock.now
-                    let session = try await provider.startSession(named: "Mock.session", config: config,
-                                                                  startTime: startTime, observer: observer)
-                    await observer?.didStart(session: session)
-                    return session
+                let state = _state
+                let manager = self
+                let task = _state.update { current -> Task<any TestModuleManager & TestSession, any Error> in
+                    if let task = current.task { return task }
+                    let task = Task.detached {
+                        let startTime = config.clock.now
+                        let session = try await provider.startSession(named: "Mock.session", config: config,
+                                                                      startTime: startTime, observer: observer,
+                                                                      manager: manager)
+                        state.update { $0.started = session }
+                        await observer?.didStart(session: session)
+                        return session
+                    }
+                    current.task = task
+                    return task
                 }
-                return try await _session!.value
+                return try await task.value
             }
         }
 
         func stop() async {
-            guard !_stopped else { return }
-            _stopped = true
-            guard let session = try? await _session?.value else { return }
+            // Keep the task set so concurrent readers calling `session` after
+            // stop() see the same (now-ended) session instead of bootstrapping a
+            // fresh empty one — that would race with parallel verification blocks
+            // inspecting session.modules.
+            guard let task = beginStop() else { return }
+            guard let session = try? await task.value else { return }
             await _observer?.willFinish(session: session)
             session.end()
             await _observer?.didFinish(session: session)
-            // Keep _session set so concurrent readers calling `session`
-            // after stop() see the same (now-ended) session instead of bootstrapping
-            // a fresh empty one — that would race with parallel verification blocks
-            // inspecting session.modules.
+        }
+
+        func stop() {
+            guard beginStop() != nil else { return }
+            // Mirrors the real manager: the synchronous path can't await the
+            // bootstrap, so it only ends a session that already finished starting —
+            // and it fires the same end hooks as the async path.
+            guard let session = _state.value.started else { return }
+            _observer?.willFinish(session: session)
+            session.end()
+            _observer?.didFinish(session: session)
+        }
+
+        /// Marks the manager stopped and returns the bootstrap task, or `nil` when
+        /// there is nothing to stop (never started, or already stopped).
+        private func beginStop() -> Task<any TestModuleManager & TestSession, any Error>? {
+            _state.update { state in
+                guard !state.stopped else { return nil }
+                state.stopped = true
+                return state.task
+            }
         }
     }
 }

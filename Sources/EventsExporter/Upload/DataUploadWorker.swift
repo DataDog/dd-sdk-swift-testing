@@ -13,24 +13,32 @@ internal protocol DataUploadWorkerType: Sendable {
     func update(dataFormat: DataFormatType)
 
     /// Synchronously drain all stored data (with retry on transient failures).
-    /// Returns `false` if a non-retriable failure was encountered.
+    /// Returns `true` only if every batch stored when the drain began was
+    /// accounted for — uploaded and deleted, or deliberately dropped.
     ///
-    /// `timeout` is a total wall-clock budget for the whole drain (e.g. an
-    /// OpenTelemetry `forceFlush` timeout). When it elapses, remaining batches
-    /// are left on disk for a later run. `nil` means "no total budget" — each
-    /// attempt is still bounded by the default per-attempt cap.
+    /// A drain runs exclusively: it first waits for any upload the periodic loop
+    /// has already started, so it can never report success while a batch's fate
+    /// is still undecided.
+    ///
+    /// `timeout` is a total wall-clock budget for the whole drain — including that
+    /// wait — (e.g. an OpenTelemetry `forceFlush` timeout). When it elapses,
+    /// remaining batches are left on disk for a later run and the result is
+    /// `false`. `nil` means "no total budget": each attempt is still bounded by
+    /// the default per-attempt cap.
     ///
     /// This overload blocks the calling thread and never suspends, so it stays
     /// usable on the teardown path (see `ClosureDataUploader`).
     func flush(timeout: TimeInterval?) throws -> Bool
 
-    /// Drain all stored data, suspending rather than blocking. Same budget
-    /// semantics as the synchronous overload.
+    /// Drain all stored data, suspending rather than blocking. Same budget and
+    /// exclusivity semantics as the synchronous overload.
     func flush(timeout: TimeInterval?) async throws -> Bool
 
-    /// Cancel scheduled uploads and stop scheduling new ones. Does not wait for
-    /// an upload that has already started — waiting would mean depending on the
-    /// cooperative executor, which isn't guaranteed to run at process exit.
+    /// Cancel scheduled uploads, then wait for an upload the loop has already
+    /// started so its batch is either uploaded-and-deleted or left on disk before
+    /// returning. The wait is bounded: at process exit the cooperative executor
+    /// may never resume the task, and blocking forever there is the very deadlock
+    /// this path exists to avoid.
     func stop()
 
     /// Cancel scheduled uploads and await the in-flight upload cycle.
@@ -44,10 +52,6 @@ internal final class DataUploadWorker: DataUploadWorkerType, @unchecked Sendable
     private struct State {
         var delay: Delay
         var isStopped: Bool = false
-        /// Names of files whose batch is currently being uploaded. Both the
-        /// periodic loop and a concurrent flush skip these, so the same batch is
-        /// never uploaded twice when they overlap.
-        var inFlight: Set<String> = []
         var periodicUploads: Task<Void, Never>? = nil
     }
 
@@ -55,6 +59,12 @@ internal final class DataUploadWorker: DataUploadWorkerType, @unchecked Sendable
     /// through `readerLock`.
     private let fileReader: FileReader
     private let readerLock = UnfairLock()
+    /// Serializes uploading, the way the worker's `DispatchQueue` used to: the
+    /// periodic loop holds it for one batch, a flush holds it for the whole drain.
+    /// Without it a flush could walk past a batch another upload had already read
+    /// but not yet deleted, and report success while that batch's outcome — and
+    /// the matching file deletion — were still pending.
+    private let uploadSlot = DispatchSemaphore(value: 1)
     /// Data uploader sending data to server.
     private let dataUploader: DataUploaderType
     /// Name of the feature this worker is performing uploads for.
@@ -110,11 +120,15 @@ internal final class DataUploadWorker: DataUploadWorkerType, @unchecked Sendable
     }
 
     private func uploadNextBatch() async {
-        guard let batch = claimNextBatch() else {
+        // Skip this tick if a flush holds the slot — it is draining everything
+        // anyway, and the loop must not read a batch out from under it.
+        guard uploadSlot.wait(timeout: .now()) == .success else { return }
+        defer { uploadSlot.signal() }
+
+        guard let batch = nextBatch() else {
             state.update { $0.delay.increase() }
             return
         }
-        defer { release(batch) }
         if await upload(data: batch.data, timeout: uploadTimeout) == .success {
             try? markAsRead(batch)
         }
@@ -131,6 +145,11 @@ internal final class DataUploadWorker: DataUploadWorkerType, @unchecked Sendable
     /// per-attempt cap.
     func flush(timeout: TimeInterval?) throws -> Bool {
         let deadline = Date(timeIntervalSinceNow: timeout ?? uploadTimeout)
+        // Take the slot first: once held, no other upload is running, so the
+        // enumeration below sees the complete, settled set of stored batches.
+        guard acquireUploadSlot(until: deadline) else { return false }
+        defer { uploadSlot.signal() }
+
         var result = true
         var iterator = try remainingBatches()
         batchLoop: while let batchRes = iterator.next() {
@@ -138,9 +157,6 @@ internal final class DataUploadWorker: DataUploadWorkerType, @unchecked Sendable
                 result = false
                 break
             }
-            // Skip a batch the periodic loop is already uploading.
-            guard claim(batch) else { continue }
-            defer { release(batch) }
             var status: UploadResult
             repeat {
                 guard let attemptTimeout = attemptTimeout(until: deadline) else {
@@ -165,6 +181,9 @@ internal final class DataUploadWorker: DataUploadWorkerType, @unchecked Sendable
 
     func flush(timeout: TimeInterval?) async throws -> Bool {
         let deadline = Date(timeIntervalSinceNow: timeout ?? uploadTimeout)
+        guard await acquireUploadSlot(until: deadline) else { return false }
+        defer { uploadSlot.signal() }
+
         var result = true
         var iterator = try remainingBatches()
         batchLoop: while let batchRes = iterator.next() {
@@ -172,8 +191,6 @@ internal final class DataUploadWorker: DataUploadWorkerType, @unchecked Sendable
                 result = false
                 break
             }
-            guard claim(batch) else { continue }
-            defer { release(batch) }
             var status: UploadResult
             repeat {
                 guard let attemptTimeout = attemptTimeout(until: deadline) else {
@@ -199,16 +216,30 @@ internal final class DataUploadWorker: DataUploadWorkerType, @unchecked Sendable
     // MARK: - Stop
 
     func stop() {
-        // Cancellation is enough: `isStopped` blocks any further claim, and
-        // `inFlight` keeps a still-finishing cycle from colliding with a flush.
-        // We deliberately don't await the task — that would make teardown depend
-        // on the cooperative executor being scheduled.
-        cancelPeriodicUploads()?.cancel()
+        guard let task = cancelPeriodicUploads() else { return }
+        task.cancel()
+        // Wait for a cycle the loop may already be running, so its batch is either
+        // uploaded and deleted, or left on disk, before we return — otherwise the
+        // final flush that follows could report success over an unsettled batch,
+        // and process exit could cut the upload short or duplicate it.
+        //
+        // We wait on the slot rather than the task: awaiting the task needs the
+        // cooperative executor, which isn't guaranteed to run during `exit()`.
+        // The wait is bounded for the same reason — if the executor is already
+        // gone, the cycle will never finish and blocking forever here is exactly
+        // the teardown deadlock this path exists to avoid.
+        if uploadSlot.wait(timeout: .now() + uploadTimeout) == .success {
+            uploadSlot.signal()
+        } else {
+            log.print("[\(featureName)] timed out waiting for an in-flight upload during shutdown")
+        }
     }
 
     func stop() async {
         guard let task = cancelPeriodicUploads() else { return }
         task.cancel()
+        // Awaiting the task is exact here: when it returns, its cycle has released
+        // the slot and finished its bookkeeping.
         await task.value
     }
 
@@ -226,27 +257,32 @@ internal final class DataUploadWorker: DataUploadWorkerType, @unchecked Sendable
         try readerLock.whileLocked { try fileReader.getRemainingBatches() }
     }
 
-    /// Reads the next batch and claims it for upload, or returns `nil` when
-    /// there is nothing to upload (or it's already claimed).
-    private func claimNextBatch() -> Batch? {
-        let batch = readerLock.whileLocked { try? fileReader.getNextBatch() }
-        guard let batch, claim(batch) else { return nil }
-        return batch
+    private func nextBatch() -> Batch? {
+        readerLock.whileLocked { try? fileReader.getNextBatch() }
     }
 
-    /// Claims a batch unless another upload already holds it. Deliberately does
-    /// not consider `isStopped`: `stop()` is followed by a final `flush()` on the
-    /// shutdown path, and that flush still has to drain everything.
-    private func claim(_ batch: Batch) -> Bool {
-        state.update { state in
-            guard !state.inFlight.contains(batch.file.name) else { return false }
-            state.inFlight.insert(batch.file.name)
-            return true
+    /// Blocks until the upload slot is free or the drain budget runs out.
+    /// Deliberately ignores `isStopped`: `stop()` is followed by a final `flush()`
+    /// on the shutdown path, and that flush still has to drain everything.
+    private func acquireUploadSlot(until deadline: Date) -> Bool {
+        let remaining = max(0, deadline.timeIntervalSinceNow)
+        guard uploadSlot.wait(timeout: .now() + remaining) == .success else {
+            log.print("[\(featureName)] flush timed out waiting for an in-flight upload; leaving batches on disk")
+            return false
         }
+        return true
     }
 
-    private func release(_ batch: Batch) {
-        state.update { $0.inFlight.remove(batch.file.name) }
+    /// Suspending counterpart: polls rather than blocking a cooperative thread.
+    private func acquireUploadSlot(until deadline: Date) async -> Bool {
+        while uploadSlot.wait(timeout: .now()) != .success {
+            guard deadline.timeIntervalSinceNow > 0 else {
+                log.print("[\(featureName)] flush timed out waiting for an in-flight upload; leaving batches on disk")
+                return false
+            }
+            try? await Task.sleep(nanoseconds: 10_000_000)
+        }
+        return true
     }
 
     private func markAsRead(_ batch: Batch) throws {

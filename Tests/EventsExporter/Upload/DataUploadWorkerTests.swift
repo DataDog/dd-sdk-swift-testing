@@ -424,6 +424,83 @@ class DataUploadWorkerTests: XCTestCase {
         XCTAssertEqual(try temporaryDirectory.files().count, 1, "Undelivered batch is left on disk for a later run")
     }
 
+    // MARK: - Flush vs. in-flight upload
+
+    func testFlushDoesNotReportSuccessWhileABatchIsInFlight() throws {
+        // A periodic upload that has already read a batch is holding its fate
+        // undecided: the file is still on disk, but may be deleted at any moment.
+        // A flush must wait for it rather than walk past it and claim success —
+        // otherwise shutdown returns while an upload is still running, and the
+        // process can exit mid-request or re-send a batch the server already took.
+        let uploadStarted = expectation(description: "periodic upload started")
+        uploadStarted.assertForOverFulfill = false
+        let releaseUpload = DispatchSemaphore(value: 0)
+        var mockDataUploader = DataUploaderMock(uploadStatus: .mockWith(needsRetry: false))
+        mockDataUploader.onUpload = {
+            uploadStarted.fulfill()
+            // Hold the batch in flight until the assertions below have run.
+            _ = releaseUpload.wait(timeout: .now() + 10)
+        }
+
+        try writer.writeSync(value: ["k1": "v1"])
+
+        let worker = DataUploadWorker(
+            fileReader: reader,
+            dataUploader: mockDataUploader,
+            delay: MockDelay(),
+            uploadTimeout: 5,
+            featureName: .mockAny(),
+            priority: .userInteractive,
+            log: Log()
+        )
+        defer {
+            releaseUpload.signal()
+            worker.stop()
+        }
+        wait(for: [uploadStarted], timeout: 5)
+
+        // When: flushing while that upload is stuck mid-request
+        let flushed = try worker.flush(timeout: 0.3)
+
+        // Then: it must report failure, not success over an unsettled batch
+        XCTAssertFalse(flushed, "flush must not report success while a batch is still in flight")
+    }
+
+    func testStopWaitsForTheInFlightUploadToSettle() throws {
+        // `stop()` is followed by a final flush on the shutdown path, so it has to
+        // leave the storage settled: no upload still deciding whether its file
+        // stays on disk.
+        let uploadStarted = expectation(description: "periodic upload started")
+        uploadStarted.assertForOverFulfill = false
+        let uploadFinished = LockedInt()
+        var mockDataUploader = DataUploaderMock(uploadStatus: .mockWith(needsRetry: false))
+        mockDataUploader.onUpload = {
+            uploadStarted.fulfill()
+            Thread.sleep(forTimeInterval: 0.3)
+            uploadFinished.increment()
+        }
+
+        try writer.writeSync(value: ["k1": "v1"])
+
+        let worker = DataUploadWorker(
+            fileReader: reader,
+            dataUploader: mockDataUploader,
+            delay: MockDelay(),
+            uploadTimeout: 5,
+            featureName: .mockAny(),
+            priority: .userInteractive,
+            log: Log()
+        )
+        wait(for: [uploadStarted], timeout: 5)
+
+        // When
+        worker.stop()
+
+        // Then: the in-flight cycle ran to completion before stop() returned
+        XCTAssertEqual(uploadFinished.value, 1, "stop() must wait for the in-flight upload to settle")
+        XCTAssertEqual(try temporaryDirectory.files().count, 0, "the uploaded batch was deleted before stop() returned")
+    }
+
     // MARK: - Disk-only persistence
 
     func testPersistToDiskDrainsWriterWithoutUploading() throws {

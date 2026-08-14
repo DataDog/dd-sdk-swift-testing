@@ -204,8 +204,11 @@ class DataUploadWorkerTests: XCTestCase {
             }
         }
 
-        // When
-        writer.write(value: ["k1": "v1"])
+        // When: write synchronously, so the batch is on disk before the worker's
+        // first tick. With an async write the worker can tick first, find nothing,
+        // and report `.increase` for the wrong reason — passing this test by
+        // accident and failing its `decrease` twin.
+        try? writer.writeSync(value: ["k1": "v1"])
 
         let httpClient = MockHTTPClient(delivery: .success(response: .mockResponseWith(statusCode: 500)))
         let dataUploader = MockClosureDataUploader(httpClient: httpClient)
@@ -235,8 +238,12 @@ class DataUploadWorkerTests: XCTestCase {
             }
         }
 
-        // When
-        writer.write(value: ["k1": "v1"])
+        // When: synchronously, so the batch is guaranteed to be on disk before the
+        // worker's first tick 100ms later. An async write races that tick — the
+        // worker finds no batch, reports `.increase`, and the test fails with
+        // "Wrong command is sent!". That race is what made this test flaky on the
+        // slower CI simulators.
+        try? writer.writeSync(value: ["k1": "v1"])
 
         let httpClient = MockHTTPClient(delivery: .success(response: .mockResponseWith(statusCode: 200)))
         let dataUploader = MockClosureDataUploader(httpClient: httpClient)

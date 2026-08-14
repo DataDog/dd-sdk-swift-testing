@@ -99,8 +99,4 @@ internal final class LogsExporter: LogRecordExporter {
     func shutdown(explicitTimeout: TimeInterval?) async {
         await logsStorage.stop()
     }
-
-    func persistToDisk() {
-        logsStorage.persistToDisk()
-    }
 }

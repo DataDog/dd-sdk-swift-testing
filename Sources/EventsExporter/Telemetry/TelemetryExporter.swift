@@ -16,8 +16,6 @@ public protocol TelemetryPayloadExporter: AnyObject {
     @discardableResult func flush() async -> Bool
     func shutdown()
     func shutdown() async
-    /// Persist buffered payloads to disk without uploading them.
-    func persistToDisk()
 }
 
 public final class TelemetryExporter: TelemetryPayloadExporter {
@@ -87,10 +85,6 @@ public final class TelemetryExporter: TelemetryPayloadExporter {
 
     public func shutdown() async {
         await telemetryStorage.stop()
-    }
-
-    public func persistToDisk() {
-        telemetryStorage.persistToDisk()
     }
 
     private func write<T: Encodable>(_ value: T) {

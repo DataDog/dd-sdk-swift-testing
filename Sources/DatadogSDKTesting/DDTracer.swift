@@ -640,15 +640,6 @@ internal class DDTracer {
         Log.debug("Tracer shutdown")
     }
 
-    /// Persist everything gathered so far to disk without uploading it, and
-    /// without touching the network or the cooperative executor. Called from the
-    /// crash handler, where the process is about to die: any event already
-    /// handed to the SDK lands on disk and is uploaded by the next run.
-    func persistToDisk() {
-        eventsExporter?.persistToDisk()
-        telemetry?.persistToDisk()
-    }
-
     func addPropagationsHeadersToEnvironment() {
         let headers = tracePropagationHTTPHeaders()
         headers.forEach {

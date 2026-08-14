@@ -25,7 +25,6 @@ final class TelemetryTests: XCTestCase {
         func flush() async -> Bool { true }
         func shutdown() {}
         func shutdown() async {}
-        func persistToDisk() {}
     }
 
     /// A long interval keeps the periodic timers (flush + heartbeat) out of the

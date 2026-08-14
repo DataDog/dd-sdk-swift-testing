@@ -14,10 +14,6 @@ public protocol ExporterProtocol: SpanExporter, LogRecordExporter, CoverageExpor
     /// rotate the writable file so the new header takes effect on the next
     /// batch.
     func setMetadata(_ metadata: SpanMetadata)
-
-    /// Persist everything gathered so far to disk without uploading it. Safe to
-    /// call from the crash handler: no network, no suspension.
-    func persistToDisk()
 }
 
 public final class Exporter: ExporterProtocol {
@@ -130,15 +126,6 @@ public final class Exporter: ExporterProtocol {
         await logsExporter.shutdown(explicitTimeout: explicitTimeout)
         await spansExporter.shutdown(explicitTimeout: explicitTimeout)
         await coverageExporter.shutdown(explicitTimeout: explicitTimeout)
-    }
-
-    /// Disk-only counterpart of `flush`: every feature drains its writer and
-    /// closes its in-progress file, so all gathered events are on disk and get
-    /// picked up by a later run. Performs no upload.
-    public func persistToDisk() {
-        logsExporter.persistToDisk()
-        spansExporter.persistToDisk()
-        coverageExporter.persistToDisk()
     }
 
     public func export(logRecords: [ReadableLogRecord], explicitTimeout: TimeInterval?) async -> ExportResult {

@@ -549,24 +549,6 @@ class DataUploadWorkerTests: XCTestCase {
         XCTAssertEqual(try temporaryDirectory.files().count, 0, "the uploaded batch was deleted before stop() returned")
     }
 
-    // MARK: - Disk-only persistence
-
-    func testPersistToDiskDrainsWriterWithoutUploading() throws {
-        let uploader = SpyUploadWorker()
-        let store = FeatureStoreAndUpload(uploader: uploader, writer: writer)
-
-        // Given: an event handed to the writer (queued, not necessarily written yet)
-        store.write(value: ["k1": "v1"])
-
-        // When
-        store.persistToDisk()
-
-        // Then: the write is drained onto disk, but nothing is uploaded — this is
-        // what the crash handler relies on.
-        XCTAssertEqual(try temporaryDirectory.files().count, 1)
-        XCTAssertEqual(uploader.flushCount.value, 0, "persistToDisk must never upload")
-    }
-
     func testAsyncStopPerformsNoMoreUploads() async {
         let httpClient = MockHTTPClient(delivery: .success(response: .mockResponseWith(statusCode: 200)))
         let dataUploader = MockClosureDataUploader(httpClient: httpClient)
@@ -648,25 +630,4 @@ private final class RecordingUploadObserver: UploadObserver, @unchecked Sendable
     func uploadDropped(payloadBytes: Int) {
         lock.withLock { _dropped.append(payloadBytes) }
     }
-}
-
-/// Records whether the store asked for an upload, so disk-only paths can assert
-/// that they never do.
-private final class SpyUploadWorker: DataUploadWorkerType {
-    let flushCount = LockedInt()
-
-    func update(dataFormat: DataFormatType) {}
-
-    func flush(timeout: TimeInterval?, lastChance: Bool) throws -> Bool {
-        flushCount.increment()
-        return true
-    }
-
-    func flush(timeout: TimeInterval?) async throws -> Bool {
-        flushCount.increment()
-        return true
-    }
-
-    func stop() {}
-    func stop() async {}
 }

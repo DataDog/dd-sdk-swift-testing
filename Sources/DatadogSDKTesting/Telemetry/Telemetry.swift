@@ -155,14 +155,6 @@ final class Telemetry: @unchecked Sendable {
         logStore.flush()
         exporter.export(item: TelemetryAppClosing())
     }
-
-    /// Drain the accumulated metrics and logs into the exporter's storage and
-    /// persist it to disk, without uploading anything. Used on the crash path.
-    func persistToDisk() {
-        metricStore.flush()
-        logStore.flush()
-        exporter.persistToDisk()
-    }
 }
 
 // MARK: - Metric accumulation

@@ -110,10 +110,6 @@ internal final class CoverageExporter: CoverageExporterType {
         await coverageStorage.stop()
     }
 
-    func persistToDisk() {
-        coverageStorage.persistToDisk()
-    }
-
     private func writeCoverage(_ data: TestCodeCoverage) {
         payloadObserver?.eventEnqueued()
         if configuration.performancePreset.synchronousWrite {

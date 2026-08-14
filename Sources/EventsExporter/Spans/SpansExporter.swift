@@ -122,10 +122,6 @@ internal final class SpansExporter: SpanExporter {
     func shutdown(explicitTimeout: TimeInterval?) async {
         await spansStorage.stop()
     }
-
-    func persistToDisk() {
-        spansStorage.persistToDisk()
-    }
 }
 
 extension SpansExporter {

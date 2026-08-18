@@ -31,11 +31,17 @@ public final class DDSession: NSObject {
 
     private let _state: Synced<MutableState>
     private let _moduleManager: any TestModuleManagerSession
+    /// Set only for sessions created through the manual `start(name:)` API, which
+    /// owns its shutdown. Framework-driven sessions are owned by the
+    /// `SessionManager` that created them, so it drives teardown instead.
+    private let _sessionManager: (any TestSessionManager)?
 
-    init(name: String, config: SessionConfig, modules: any TestModuleManagerSession, startTime: Date? = nil) {
+    init(name: String, config: SessionConfig, modules: any TestModuleManagerSession,
+         startTime: Date? = nil, sessionManager: (any TestSessionManager)? = nil) {
         self.name = name
         self.configuration = config
         self._moduleManager = modules
+        self._sessionManager = sessionManager
 
         let state = MutableState()
         let id: SpanId
@@ -106,7 +112,6 @@ public final class DDSession: NSObject {
         span.end(time: endTime)
 
         configuration.log.debug("Exported session_end event sessionId: \(self.id)")
-        configuration.tracer.flush()
     }
 
     func addFramework(_ name: String) {
@@ -146,58 +151,75 @@ extension DDSession: TestSession {
         }
     }
 
-    func end(time: Date?) { end(endTime: time) }
+    /// Ends the session's span only. The owning `SessionManager` calls this and
+    /// then drives the rest of the shutdown itself, so this must not re-enter the
+    /// manager the way the public `end` API does.
+    func end(time: Date?) { internalEnd(endTime: time) }
 }
 
 /// Public interface for DDSession
 public extension DDSession {
     /// Starts the test session
+    ///
+    /// Returns `nil` when the SDK can't run at all — most commonly a missing
+    /// `DD_API_KEY`, without which nothing can be reported. There is no partially
+    /// working session: check the result and skip your instrumentation if it's nil.
     /// - Parameters:
     ///   - name: name of the session
     ///   - command: Optional, test command that started this session
     ///   - startTime: Optional, the time where the session started
-    @objc static func start(name: String, command: String? = nil, startTime: Date? = nil) -> DDSession {
-        if DDTestMonitor.instance == nil  {
-            let _ = DDTestMonitor.installTestMonitor()
+    @objc static func start(name: String, command: String? = nil, startTime: Date? = nil) -> DDSession? {
+        // Bootstrap through a session manager, exactly like a framework-driven run
+        // — so the session gets the same start hooks and the same shutdown path.
+        // The manager is created first and handed to the session, which keeps it to
+        // drive its own `end`.
+        let manager = SessionManager(log: Log.instance,
+                                     provider: DDSession.ManualProvider(),
+                                     observer: SessionAndModuleObserver(),
+                                     bootstrap: .manual(name: name, command: command,
+                                                        startTime: startTime))
+        // Blocking here is fine: this is session *start*, not the teardown path.
+        guard let session = waitForAsync({ try? await manager.session }) as? DDSession else {
+            Log.print("Could not start the test session: the test monitor is unavailable")
+            return nil
         }
-        // Use the monitor's tracer. The fallback only matters if the monitor
-        // failed to install (degraded path) — we don't want a manual API call to
-        // crash, but normally the tracer comes from the installed monitor.
-        let tracer = DDTestMonitor.instance?.tracer ?? DDTracer()
-        let config = SessionConfig(activeFeatures: DDTestMonitor.instance?.activeFeatures ?? [],
-                                   env: DDTestMonitor.env,
-                                   config: DDTestMonitor.config,
-                                   clock: DDTestMonitor.clock,
-                                   crash: DDTestMonitor.instance?.crashInfo,
-                                   command: command,
-                                   log: Log.instance,
-                                   tracer: tracer,
-                                   telemetry: tracer.telemetry)
-        waitForAsync { await DDTestMonitor.clock.sync() }
-        let session = DDSession(name: name, config: config,
-                                modules: DDModule.StatelessManager(observer: SessionAndModuleObserver()),
-                                startTime: startTime)
-        if let telemetry = tracer.telemetry {
-            telemetry.metrics.session.started.add(provider: config.env.ci?.provider, autoInjected: false)
-            telemetry.metrics.events.manualApiEvents.add(eventType: .session)
-            session.emitGitShaCheck(to: telemetry)
-        }
+        // `session.started` / git-SHA telemetry is emitted by the session-start
+        // feature hook (via the observer's `didStart`); only the manual-API counter
+        // is specific to this entry point.
+        session.configuration.telemetry?.metrics.events.manualApiEvents.add(eventType: .session)
         return session
     }
 
-    @objc static func start(name: String) -> DDSession {
+    @objc static func start(name: String) -> DDSession? {
         return start(name: name, command: nil)
     }
 
     /// Ends the session
+    ///
+    /// Shutdown (flushing and uploading everything gathered) runs through the
+    /// session manager. This overload is fully synchronous and safe to call at
+    /// process exit; prefer the `async` overload when you can await it.
     /// - Parameters:
     ///   - endTime: Optional, the time where the session ended
     @objc(endWithTime:) func end(endTime: Date? = nil) {
         internalEnd(endTime: endTime)
+        _sessionManager?.stop()
     }
 
     @objc func end() {
         return end(endTime: nil)
+    }
+
+    /// Ends the session, awaiting the shutdown instead of blocking the caller.
+    /// - Parameters:
+    ///   - endTime: Optional, the time where the session ended
+    func end(endTime: Date? = nil) async {
+        internalEnd(endTime: endTime)
+        await _sessionManager?.stop()
+    }
+
+    func end() async {
+        await end(endTime: nil)
     }
 
     /// Adds a extra tag or attribute to the test session, any number of tags can be reported

@@ -84,8 +84,13 @@ private let ddCrashIsWritingReportCallback: @convention(c) (
         let data = SimpleSpanSerializer.serializeSpan(simpleSpan: test.toCrashData)
         try? data.write(to: url, options: .atomic)
     }
-    DDTestMonitor.instance?.tia?.stop()
-    DDTestMonitor.instance?.coverage?.stop()
+    // Nothing here may drain a queue, wait on an OperationQueue, take a lock or
+    // touch the network. KSCrash suspends the other threads before writing the
+    // report (`ksmc_suspendEnvironment`), so anything that waits on them waits
+    // forever — and the work it is waiting for can never run, which makes the
+    // attempt pointless as well as deadlock-prone. That rules out flushing the
+    // exporters' writer queues and draining the coverage processor here; both
+    // have to happen before the crash, or on the next run.
     Log.print("Crash detected! Exiting...")
 }
 

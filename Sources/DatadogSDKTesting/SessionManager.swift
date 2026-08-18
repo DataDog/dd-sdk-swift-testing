@@ -7,48 +7,151 @@
 import Foundation
 internal import EventsExporter
 
-final actor SessionManager: TestSessionManager {
-    private var _session: Task<any TestModuleManager & TestSession, any Error>?
+/// Owns the lifecycle of the one test session and, through it, the teardown of
+/// `DDTestMonitor`.
+///
+/// State is guarded by a lock rather than actor isolation on purpose: teardown
+/// has to be reachable synchronously from the library-unload C destructor during
+/// `exit()`, where the Swift cooperative executor is no longer guaranteed to run
+/// — so a `Task`/`await` hop there can deadlock instead of completing.
+final class SessionManager: TestSessionManager, @unchecked Sendable {
+    typealias Session = any TestModuleManager & TestSession
+
+    private enum State {
+        case idle
+        case starting(Task<Session, any Error>)
+        case running(Session)
+    }
+
+    private let state: Synced<State>
     let observer: (any TestSessionManagerObserver & TestModuleManagerObserver)?
     let provider: any TestSessionProvider
+    let bootstrap: Bootstrap
     let log: Logger
 
-    init(log: Logger, provider: any TestSessionProvider, observer: (any TestSessionManagerObserver & TestModuleManagerObserver)?) {
-        self._session = nil
+    init(log: Logger, provider: any TestSessionProvider,
+         observer: (any TestSessionManagerObserver & TestModuleManagerObserver)?,
+         bootstrap: Bootstrap = .automatic) {
+        self.state = Synced(.idle)
         self.log = log
         self.provider = provider
         self.observer = observer
+        self.bootstrap = bootstrap
     }
 
-    var session: any TestModuleManager & TestSession {
+    var session: Session {
         get async throws {
-            if let session = _session {
-                return try await session.value
+            switch pendingSession() {
+            case .ready(let session):
+                return session
+            case .starting(let task):
+                let session = try await task.value
+                state.update { state in
+                    if case .starting = state { state = .running(session) }
+                }
+                return session
             }
-            _session = Task.detached { try await self.bootstrapSession() }
-            return try await _session!.value
         }
     }
 
     func stop() async {
-        guard let session = try? await _session?.value else {
-            return
-        }
+        guard let session = await takeSession() else { return }
         await observer?.willFinish(session: session)
-        _session = nil
-        session.end()
+        session.end(time: nil)
         await observer?.didFinish(session: session)
+        await DDTestMonitor.removeTestMonitor()
+    }
+
+    /// Synchronous teardown for the process-exit path. Contains no `Task`/`await`
+    /// at any depth: the observer hooks run, the session's span is ended and the
+    /// monitor is shut down, all on the calling thread.
+    func stop() {
+        switch takeSessionSync() {
+        case .none:
+            return
+        case .session(let session):
+            observer?.willFinish(session: session)
+            session.end(time: nil)
+            observer?.didFinish(session: session)
+        case .stillStarting:
+            // The session never finished bootstrapping, so there's no span to
+            // end — but still shut the monitor down so whatever was already
+            // gathered gets flushed and uploaded.
+            log.debug("Session was still starting at teardown; shutting down without ending it")
+        }
         // `removeTestMonitor()` runs the monitor's `stop()` (which flushes and
         // shuts the tracer down) and then releases the instance, at which point
         // `DDTracer.deinit` restores the default OpenTelemetry providers.
         DDTestMonitor.removeTestMonitor()
     }
 
+    // MARK: - State transitions
+
+    private enum PendingSession {
+        case ready(Session)
+        case starting(Task<Session, any Error>)
+    }
+
+    /// Returns the live session, or the task bootstrapping it — starting the
+    /// bootstrap when this is the first access.
+    private func pendingSession() -> PendingSession {
+        state.update { state in
+            switch state {
+            case .running(let session):
+                return .ready(session)
+            case .starting(let task):
+                return .starting(task)
+            case .idle:
+                let task = Task.detached { try await self.bootstrapSession() }
+                state = .starting(task)
+                return .starting(task)
+            }
+        }
+    }
+
+    /// Detaches the session from the manager so it can be ended exactly once.
+    private func takeSession() async -> Session? {
+        let pending: PendingSession? = state.update { state in
+            defer { state = .idle }
+            switch state {
+            case .running(let session): return .ready(session)
+            case .starting(let task): return .starting(task)
+            case .idle: return nil
+            }
+        }
+        switch pending {
+        case .ready(let session): return session
+        case .starting(let task): return try? await task.value
+        case nil: return nil
+        }
+    }
+
+    private enum SyncTakeResult {
+        case session(Session)
+        case stillStarting
+        case none
+    }
+
+    private func takeSessionSync() -> SyncTakeResult {
+        state.update { state in
+            switch state {
+            case .running(let session):
+                state = .idle
+                return .session(session)
+            case .starting:
+                state = .idle
+                return .stillStarting
+            case .idle:
+                return .none
+            }
+        }
+    }
+
     private func bootstrapSession() async throws -> any TestModuleManager & TestSession {
         await DDTestMonitor.clock.sync()
-        
-        let startTime = DDTestMonitor.clock.now
-        
+
+        let startTime = bootstrap.startTime ?? DDTestMonitor.clock.now
+
         if DDTestMonitor.instance == nil {
             try log.measure(name: "Install Test Monitor") {
                 guard DDTestMonitor.installTestMonitor() else {
@@ -56,13 +159,15 @@ final actor SessionManager: TestSessionManager {
                 }
             }
         }
-        
+
         guard let monitor = DDTestMonitor.instance else {
             throw BoostrapError.monitorIsNil
         }
-        
-        log.measure(name: "Setup crash handler") {
-            monitor.setupCrashHandler()
+
+        if bootstrap.installsCrashHandler {
+            log.measure(name: "Setup crash handler") {
+                monitor.setupCrashHandler()
+            }
         }
 
         // The common telemetry manager is created with the tracer (so it's
@@ -74,14 +179,15 @@ final actor SessionManager: TestSessionManager {
             config: DDTestMonitor.config,
             clock: DDTestMonitor.clock,
             crash: monitor.crashInfo,
-            command: DDTestMonitor.env.testCommand,
+            command: bootstrap.command.value,
             log: log,
             tracer: monitor.tracer,
             telemetry: monitor.tracer.telemetry
         )
-        
-        let session = try await provider.startSession(named: "Swift.session", config: config,
-                                                      startTime: startTime, observer: observer)
+
+        let session = try await provider.startSession(named: bootstrap.sessionName, config: config,
+                                                      startTime: startTime, observer: observer,
+                                                      manager: self)
         await observer?.didStart(session: session)
         return session
     }
@@ -92,16 +198,67 @@ extension SessionManager {
         case monitorInitFailed
         case monitorIsNil
     }
+
+    /// What differs between the framework-driven bootstrap and the manual
+    /// `DDSession.start` API.
+    struct Bootstrap: Sendable {
+        enum Command: Sendable {
+            case environment
+            case explicit(String?)
+
+            var value: String? {
+                switch self {
+                case .environment: return DDTestMonitor.env.testCommand
+                case .explicit(let command): return command
+                }
+            }
+        }
+
+        let sessionName: String
+        let command: Command
+        /// `nil` uses the clock's time at bootstrap.
+        let startTime: Date?
+        let installsCrashHandler: Bool
+
+        /// Framework-driven runs (XCTest / swift-testing).
+        static let automatic = Bootstrap(sessionName: "Swift.session", command: .environment,
+                                         startTime: nil, installsCrashHandler: true)
+
+        /// The manual API. It has never installed the crash handler, so it still
+        /// doesn't — enabling it here would turn crash reporting on for embedders
+        /// that only use `DDSession.start`.
+        static func manual(name: String, command: String?, startTime: Date?) -> Bootstrap {
+            Bootstrap(sessionName: name, command: .explicit(command),
+                      startTime: startTime, installsCrashHandler: false)
+        }
+    }
 }
 
 extension DDSession {
+    /// Framework-driven sessions. The `SessionManager` that created them ends them
+    /// directly, so they don't hold a back-reference to it.
     struct Provider: TestSessionProvider {
         func startSession(named name: String, config: SessionConfig, startTime: Date,
-                          observer: (any TestModuleManagerObserver)?) async throws -> any TestModuleManager & TestSession
+                          observer: (any TestModuleManagerObserver)?,
+                          manager: any TestSessionManager) async throws -> any TestModuleManager & TestSession
         {
             DDSession(name: name, config: config,
                       modules: DDModule.StatefulManager(observer: observer),
                       startTime: startTime)
+        }
+    }
+
+    /// Sessions created through the public `DDSession.start` API. The caller ends
+    /// these, so the session keeps the manager that performs the shutdown.
+    struct ManualProvider: TestSessionProvider {
+        func startSession(named name: String, config: SessionConfig, startTime: Date,
+                          observer: (any TestModuleManagerObserver)?,
+                          manager: any TestSessionManager) async throws -> any TestModuleManager & TestSession
+        {
+            DDSession(name: name, config: config,
+                      modules: DDModule.StatelessManager(observer: observer),
+                      startTime: startTime,
+                      sessionManager: manager)
         }
     }
 }

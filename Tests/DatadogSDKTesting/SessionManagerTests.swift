@@ -95,6 +95,98 @@ final class SessionManagerTests: XCTestCase {
         XCTAssertFalse(session1.id == session2.id)
         await manager.stop()
     }
+
+    // MARK: - Synchronous stop (process-exit path)
+
+    func testSyncStopEndsBootstrappedSession() async throws {
+        let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider(), observer: nil)
+        let session = try await manager.session
+
+        stopSynchronously(manager)
+
+        XCTAssertNotEqual(session.duration, 0, "The session's span should have been ended")
+    }
+
+    func testSyncStopNotifiesObserversOfFinish() async throws {
+        let observer = MockObserver()
+        let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider(), observer: observer)
+        let session = try await manager.session
+
+        stopSynchronously(manager)
+
+        XCTAssertEqual(observer.didFinishCount, 1, "The end hooks must run on the sync path too")
+        XCTAssertEqual(observer.willFinishCount, 1)
+        XCTAssertEqual(observer.lastFinishedSession?.id, session.id)
+    }
+
+    func testSyncStopWithNoBootstrappedSessionDoesNothing() {
+        let observer = MockObserver()
+        let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider(), observer: observer)
+
+        manager.stop()
+
+        XCTAssertEqual(observer.didFinishCount, 0)
+    }
+
+    func testSyncStopClearsSessionSoNextAccessCreatesNewOne() async throws {
+        let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider(), observer: nil)
+        let session1 = try await manager.session
+
+        stopSynchronously(manager)
+
+        let session2 = try await manager.session
+        XCTAssertFalse(session1.id == session2.id)
+        stopSynchronously(manager)
+    }
+
+    func testSyncStopIsIdempotent() async throws {
+        let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider(), observer: nil)
+        let session = try await manager.session
+
+        stopSynchronously(manager)
+        let duration = session.duration
+        stopSynchronously(manager)
+
+        XCTAssertEqual(session.duration, duration, "A second stop must not re-end the session")
+    }
+
+    // MARK: - Bootstrap options
+
+    func testManualBootstrapUsesSuppliedNameCommandAndStartTime() async throws {
+        let provider = Mocks.Session.Provider()
+        let startTime = Date(timeIntervalSince1970: 1_000_000)
+        let manager = SessionManager(log: Mocks.CatchLogger(), provider: provider, observer: nil,
+                                     bootstrap: .manual(name: "Manual.session",
+                                                        command: "my command",
+                                                        startTime: startTime))
+
+        let session = try await manager.session
+
+        XCTAssertEqual(session.name, "Manual.session")
+        XCTAssertEqual(session.startTime, startTime)
+        XCTAssertEqual(session.configuration.command, "my command")
+        await manager.stop()
+    }
+
+    func testManualBootstrapNotifiesObserverOfStart() async throws {
+        let observer = MockObserver()
+        let manager = SessionManager(log: Mocks.CatchLogger(), provider: Mocks.Session.Provider(),
+                                     observer: observer,
+                                     bootstrap: .manual(name: "Manual.session", command: nil,
+                                                        startTime: nil))
+
+        let session = try await manager.session
+
+        XCTAssertEqual(observer.didStartCount, 1, "The manual path must fire didStart too")
+        XCTAssertEqual(observer.lastStartedSession?.id, session.id)
+        await manager.stop()
+    }
+
+    /// Calls the *synchronous* `stop()`. Needed inside `async` tests, where the
+    /// compiler would otherwise resolve `stop()` to the `async` overload.
+    private func stopSynchronously(_ manager: SessionManager) {
+        manager.stop()
+    }
 }
 
 // MARK: - Test helpers
@@ -104,12 +196,14 @@ private final class MockObserver: TestSessionManagerObserver, TestModuleManagerO
 
     struct State {
         var didStartCount: Int = 0
+        var willFinishCount: Int = 0
         var didFinishCount: Int = 0
         var lastStartedSession: (any TestSession)?
         var lastFinishedSession: (any TestSession)?
     }
 
     var didStartCount: Int { _state.value.didStartCount }
+    var willFinishCount: Int { _state.value.willFinishCount }
     var didFinishCount: Int { _state.value.didFinishCount }
     var lastStartedSession: (any TestSession)? { _state.value.lastStartedSession }
     var lastFinishedSession: (any TestSession)? { _state.value.lastFinishedSession }
@@ -121,9 +215,11 @@ private final class MockObserver: TestSessionManagerObserver, TestModuleManagerO
         }
     }
 
-    func willFinish(session: any TestSession) async {}
+    func willFinish(session: any TestSession) {
+        _state.update { $0.willFinishCount += 1 }
+    }
 
-    func didFinish(session: any TestSession) async {
+    func didFinish(session: any TestSession) {
         _state.update {
             $0.didFinishCount += 1
             $0.lastFinishedSession = session

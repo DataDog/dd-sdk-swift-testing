@@ -116,11 +116,11 @@ internal final class SpansExporter: SpanExporter {
     }
 
     func flush(explicitTimeout: TimeInterval?) async -> SpanExporterResultCode {
-        (try? spansStorage.flush(timeout: explicitTimeout)) == true ? .success : .failure
+        (try? await spansStorage.flush(timeout: explicitTimeout)) == true ? .success : .failure
     }
 
     func shutdown(explicitTimeout: TimeInterval?) async {
-        spansStorage.stop()
+        await spansStorage.stop()
     }
 }
 

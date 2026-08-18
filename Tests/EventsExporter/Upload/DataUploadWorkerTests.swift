@@ -204,8 +204,11 @@ class DataUploadWorkerTests: XCTestCase {
             }
         }
 
-        // When
-        writer.write(value: ["k1": "v1"])
+        // When: write synchronously, so the batch is on disk before the worker's
+        // first tick. With an async write the worker can tick first, find nothing,
+        // and report `.increase` for the wrong reason — passing this test by
+        // accident and failing its `decrease` twin.
+        try? writer.writeSync(value: ["k1": "v1"])
 
         let httpClient = MockHTTPClient(delivery: .success(response: .mockResponseWith(statusCode: 500)))
         let dataUploader = MockClosureDataUploader(httpClient: httpClient)
@@ -235,8 +238,12 @@ class DataUploadWorkerTests: XCTestCase {
             }
         }
 
-        // When
-        writer.write(value: ["k1": "v1"])
+        // When: synchronously, so the batch is guaranteed to be on disk before the
+        // worker's first tick 100ms later. An async write races that tick — the
+        // worker finds no batch, reports `.increase`, and the test fails with
+        // "Wrong command is sent!". That race is what made this test flaky on the
+        // slower CI simulators.
+        try? writer.writeSync(value: ["k1": "v1"])
 
         let httpClient = MockHTTPClient(delivery: .success(response: .mockResponseWith(statusCode: 200)))
         let dataUploader = MockClosureDataUploader(httpClient: httpClient)
@@ -361,6 +368,213 @@ class DataUploadWorkerTests: XCTestCase {
         XCTAssertFalse(flushed, "A persistently-retriable upload should end in failure, not success")
         XCTAssertGreaterThanOrEqual(uploadCount.value, 1, "flush should attempt at least once before giving up")
         XCTAssertEqual(try temporaryDirectory.files().count, 1, "Undelivered batch is left on disk for a later run")
+    }
+
+    // MARK: - Async flush / stop
+
+    func testAsyncFlushUploadsAllData() async throws {
+        let httpClient = MockHTTPClient(delivery: .success(response: .mockResponseWith(statusCode: 200)))
+        let dataUploader = MockClosureDataUploader(httpClient: httpClient)
+        let worker = DataUploadWorker(
+            fileReader: reader,
+            dataUploader: dataUploader,
+            delay: DataUploadDelay(performance: UploadPerformanceMock.veryQuick),
+            uploadTimeout: 60,
+            featureName: .mockAny(),
+            priority: .userInteractive,
+            log: Log()
+        )
+        // Leave the async flush as the sole uploader, mirroring the shutdown order.
+        await worker.stop()
+
+        // Given
+        writer.write(value: ["k1": "v1"])
+        writer.write(value: ["k2": "v2"])
+        writer.queue.sync {}
+
+        // When
+        let flushed = try await worker.flush(timeout: nil)
+
+        // Then
+        XCTAssertTrue(flushed)
+        XCTAssertEqual(try temporaryDirectory.files().count, 0)
+        let requests = httpClient.waitAndReturnRequests(count: 2)
+        XCTAssertTrue(requests.contains { $0.httpBody == #"[{"k1":"v1"}]"#.utf8Data })
+        XCTAssertTrue(requests.contains { $0.httpBody == #"[{"k2":"v2"}]"#.utf8Data })
+    }
+
+    func testAsyncFlushGivesUpAfterTimeoutInsteadOfHanging() async throws {
+        let uploadCount = LockedInt()
+        var mockDataUploader = DataUploaderMock(uploadStatus: .mockWith(needsRetry: true))
+        mockDataUploader.onUpload = { uploadCount.increment() }
+
+        writer.write(value: ["k1": "v1"])
+        writer.queue.sync {}
+
+        let worker = DataUploadWorker(
+            fileReader: reader,
+            dataUploader: mockDataUploader,
+            delay: MockDelay(),
+            uploadTimeout: 5,
+            featureName: .mockAny(),
+            priority: .userInteractive,
+            log: Log()
+        )
+        await worker.stop()
+
+        // When: a persistently-retriable upload must not loop forever.
+        let flushed = try await worker.flush(timeout: 0.3)
+
+        // Then
+        XCTAssertFalse(flushed)
+        XCTAssertGreaterThanOrEqual(uploadCount.value, 1)
+        XCTAssertEqual(try temporaryDirectory.files().count, 1, "Undelivered batch is left on disk for a later run")
+    }
+
+    // MARK: - Flush vs. in-flight upload
+
+    func testFlushDoesNotReportSuccessWhileABatchIsInFlight() throws {
+        // A periodic upload that has already read a batch is holding its fate
+        // undecided: the file is still on disk, but may be deleted at any moment.
+        // A flush must wait for it rather than walk past it and claim success —
+        // otherwise shutdown returns while an upload is still running, and the
+        // process can exit mid-request or re-send a batch the server already took.
+        let uploadStarted = expectation(description: "periodic upload started")
+        uploadStarted.assertForOverFulfill = false
+        let releaseUpload = DispatchSemaphore(value: 0)
+        var mockDataUploader = DataUploaderMock(uploadStatus: .mockWith(needsRetry: false))
+        mockDataUploader.onUpload = {
+            uploadStarted.fulfill()
+            // Hold the batch in flight until the assertions below have run.
+            _ = releaseUpload.wait(timeout: .now() + 10)
+        }
+
+        try writer.writeSync(value: ["k1": "v1"])
+
+        let worker = DataUploadWorker(
+            fileReader: reader,
+            dataUploader: mockDataUploader,
+            delay: MockDelay(),
+            uploadTimeout: 5,
+            featureName: .mockAny(),
+            priority: .userInteractive,
+            log: Log()
+        )
+        defer {
+            releaseUpload.signal()
+            worker.stop()
+        }
+        wait(for: [uploadStarted], timeout: 5)
+
+        // When: flushing while that upload is stuck mid-request
+        let flushed = try worker.flush(timeout: 0.3)
+
+        // Then: it must report failure, not success over an unsettled batch
+        XCTAssertFalse(flushed, "flush must not report success while a batch is still in flight")
+    }
+
+    func testLastChanceFlushUploadsEvenWhileABatchIsInFlight() throws {
+        // Shutdown counterpart of the test above. Anything still on disk when the
+        // process exits is usually gone for good, so when the loop is wedged the
+        // shutdown drain re-sends rather than giving up — even though the wedged
+        // upload may already have reached the server.
+        let uploadStarted = expectation(description: "periodic upload started")
+        uploadStarted.assertForOverFulfill = false
+        let releaseUpload = DispatchSemaphore(value: 0)
+        let uploads = LockedInt()
+        var mockDataUploader = DataUploaderMock(uploadStatus: .mockWith(needsRetry: false))
+        mockDataUploader.onUpload = { [uploads] in
+            if uploads.value == 0 {
+                uploads.increment()
+                uploadStarted.fulfill()
+                _ = releaseUpload.wait(timeout: .now() + 10)   // wedge the first upload
+            } else {
+                uploads.increment()
+            }
+        }
+
+        try writer.writeSync(value: ["k1": "v1"])
+
+        let worker = DataUploadWorker(
+            fileReader: reader,
+            dataUploader: mockDataUploader,
+            delay: MockDelay(),
+            uploadTimeout: 5,
+            featureName: .mockAny(),
+            priority: .userInteractive,
+            log: Log()
+        )
+        defer {
+            // Release the wedged upload before stopping, or `stop()` sits waiting
+            // for it — and leaving the worker running would let it consume batches
+            // written by later tests.
+            releaseUpload.signal()
+            worker.stop()
+        }
+        wait(for: [uploadStarted], timeout: 5)
+
+        // When
+        let flushed = try worker.flush(timeout: 0.3, lastChance: true)
+
+        // Then: the batch went out a second time rather than being abandoned
+        XCTAssertTrue(flushed, "the last-chance drain must send what is left on disk")
+        XCTAssertEqual(uploads.value, 2, "the wedged batch is re-sent instead of dropped")
+    }
+
+    func testStopWaitsForTheInFlightUploadToSettle() throws {
+        // `stop()` is followed by a final flush on the shutdown path, so it has to
+        // leave the storage settled: no upload still deciding whether its file
+        // stays on disk.
+        let uploadStarted = expectation(description: "periodic upload started")
+        uploadStarted.assertForOverFulfill = false
+        let uploadFinished = LockedInt()
+        var mockDataUploader = DataUploaderMock(uploadStatus: .mockWith(needsRetry: false))
+        mockDataUploader.onUpload = {
+            uploadStarted.fulfill()
+            Thread.sleep(forTimeInterval: 0.3)
+            uploadFinished.increment()
+        }
+
+        try writer.writeSync(value: ["k1": "v1"])
+
+        let worker = DataUploadWorker(
+            fileReader: reader,
+            dataUploader: mockDataUploader,
+            delay: MockDelay(),
+            uploadTimeout: 5,
+            featureName: .mockAny(),
+            priority: .userInteractive,
+            log: Log()
+        )
+        wait(for: [uploadStarted], timeout: 5)
+
+        // When
+        worker.stop()
+
+        // Then: the in-flight cycle ran to completion before stop() returned
+        XCTAssertEqual(uploadFinished.value, 1, "stop() must wait for the in-flight upload to settle")
+        XCTAssertEqual(try temporaryDirectory.files().count, 0, "the uploaded batch was deleted before stop() returned")
+    }
+
+    func testAsyncStopPerformsNoMoreUploads() async {
+        let httpClient = MockHTTPClient(delivery: .success(response: .mockResponseWith(statusCode: 200)))
+        let dataUploader = MockClosureDataUploader(httpClient: httpClient)
+        let worker = DataUploadWorker(
+            fileReader: reader,
+            dataUploader: dataUploader,
+            delay: MockDelay(),
+            uploadTimeout: 5,
+            featureName: .mockAny(),
+            priority: .userInteractive,
+            log: Log()
+        )
+
+        // When: unlike the sync variant, this awaits the periodic task's exit.
+        await worker.stop()
+
+        // Then
+        writer.write(value: ["k1": "v1"])
+        httpClient.waitAndAssertNoRequestsSent()
     }
 }
 

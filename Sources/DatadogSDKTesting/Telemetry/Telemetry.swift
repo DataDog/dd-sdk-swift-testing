@@ -121,9 +121,32 @@ final class Telemetry: @unchecked Sendable {
         return exporter.flush()
     }
 
+    @discardableResult
+    func flush() async -> Bool {
+        metricStore.flush()
+        logStore.flush()
+        return await exporter.flush()
+    }
+
     /// Stop the timers, enqueue `app-closing`, drain a final time, and tear down
     /// the exporter — so the closing event and the last metrics ride the same batch.
     func shutdown() {
+        prepareShutdown()
+        // Synchronously upload the final batch (metrics + app-closing) before
+        // tearing the worker down — otherwise it sits on disk unsent at exit.
+        _ = exporter.flush()
+        exporter.shutdown()
+    }
+
+    func shutdown() async {
+        prepareShutdown()
+        _ = await exporter.flush()
+        await exporter.shutdown()
+    }
+
+    /// Cancel the timers and enqueue the final metrics/logs plus `app-closing`,
+    /// leaving only the upload for the caller to perform.
+    private func prepareShutdown() {
         flushTimer?.cancel()
         flushTimer = nil
         heartbeatTimer?.cancel()
@@ -131,12 +154,7 @@ final class Telemetry: @unchecked Sendable {
         metricStore.flush()
         logStore.flush()
         exporter.export(item: TelemetryAppClosing())
-        // Synchronously upload the final batch (metrics + app-closing) before
-        // tearing the worker down — otherwise it sits on disk unsent at exit.
-        _ = exporter.flush()
-        exporter.shutdown()
     }
-
 }
 
 // MARK: - Metric accumulation

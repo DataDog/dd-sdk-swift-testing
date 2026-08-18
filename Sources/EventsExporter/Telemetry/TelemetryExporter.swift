@@ -13,7 +13,9 @@ public protocol TelemetryPayloadExporter: AnyObject {
     func export(item: any TelemetryPayload)
     func export(items: [any TelemetryPayload])
     @discardableResult func flush() -> Bool
+    @discardableResult func flush() async -> Bool
     func shutdown()
+    func shutdown() async
 }
 
 public final class TelemetryExporter: TelemetryPayloadExporter {
@@ -72,8 +74,17 @@ public final class TelemetryExporter: TelemetryPayloadExporter {
         (try? telemetryStorage.flush(timeout: nil)) ?? false
     }
 
+    @discardableResult
+    public func flush() async -> Bool {
+        (try? await telemetryStorage.flush(timeout: nil)) ?? false
+    }
+
     public func shutdown() {
         telemetryStorage.stop()
+    }
+
+    public func shutdown() async {
+        await telemetryStorage.stop()
     }
 
     private func write<T: Encodable>(_ value: T) {

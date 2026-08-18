@@ -58,9 +58,14 @@ internal struct FeatureStoreAndUpload: DataUploadWorkerType, Sendable {
     /// Drain the writer queue, close the in-progress file, then synchronously
     /// upload everything left on disk. `timeout` is a total wall-clock budget
     /// for the upload phase (e.g. an OpenTelemetry `forceFlush` timeout).
-    func flush(timeout: TimeInterval?) throws -> Bool {
+    func flush(timeout: TimeInterval?, lastChance: Bool) throws -> Bool {
         writer.closeCurrentFile()
-        return try uploader.flush(timeout: timeout)
+        return try uploader.flush(timeout: timeout, lastChance: lastChance)
+    }
+
+    func flush(timeout: TimeInterval?) async throws -> Bool {
+        writer.closeCurrentFile()
+        return try await uploader.flush(timeout: timeout)
     }
 
     /// Shutdown sequence:
@@ -75,7 +80,16 @@ internal struct FeatureStoreAndUpload: DataUploadWorkerType, Sendable {
         uploader.stop()
         writer.stop()
         // Final drain on the shutdown path: no total budget, each attempt still
-        // bounded by the default per-attempt cap.
-        _ = try? uploader.flush(timeout: nil)
+        // bounded by the default per-attempt cap. `lastChance` because anything
+        // left here is usually lost for good — a CI runner rarely gets a later run
+        // with the same cache — so if an upload is wedged we re-send rather than
+        // give up, accepting a possible duplicate.
+        _ = try? uploader.flush(timeout: nil, lastChance: true)
+    }
+
+    func stop() async {
+        await uploader.stop()
+        writer.stop()
+        _ = try? await uploader.flush(timeout: nil)
     }
 }

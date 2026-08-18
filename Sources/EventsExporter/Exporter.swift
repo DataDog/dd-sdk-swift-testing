@@ -116,16 +116,16 @@ public final class Exporter: ExporterProtocol {
     }
 
     public func flush(explicitTimeout: TimeInterval?) async -> SpanExporterResultCode {
-        let logsOK = (try? logsExporter.logsStorage.flush(timeout: explicitTimeout)) ?? false
-        let spansOK = (try? spansExporter.spansStorage.flush(timeout: explicitTimeout)) ?? false
-        let covOK = (try? coverageExporter.coverageStorage.flush(timeout: explicitTimeout)) ?? false
+        let logsOK = (try? await logsExporter.logsStorage.flush(timeout: explicitTimeout)) ?? false
+        let spansOK = (try? await spansExporter.spansStorage.flush(timeout: explicitTimeout)) ?? false
+        let covOK = (try? await coverageExporter.coverageStorage.flush(timeout: explicitTimeout)) ?? false
         return (logsOK && spansOK && covOK) ? .success : .failure
     }
 
     public func shutdown(explicitTimeout: TimeInterval?) async {
         await logsExporter.shutdown(explicitTimeout: explicitTimeout)
         await spansExporter.shutdown(explicitTimeout: explicitTimeout)
-        coverageExporter.shutdown()
+        await coverageExporter.shutdown(explicitTimeout: explicitTimeout)
     }
 
     public func export(logRecords: [ReadableLogRecord], explicitTimeout: TimeInterval?) async -> ExportResult {

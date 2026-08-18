@@ -93,8 +93,9 @@ public final class DDModule: NSObject {
                 : "Swift.module"
         }
 
-        span.setAttribute(key: DDTestTags.testFramework,
-                          value: .string(_state.value.testFrameworks.joined(separator: ",")))
+        if let tagValue = _state.value.testFrameworks.sorted().tagValue {
+            span.setAttribute(key: DDTestTags.testFramework, value: .string(tagValue))
+        }
         span.name = framework
         // get-status -> set-status round-trip (see DDSession).
         span.applyStatus(span.testStatus, errorDescription: "module failed")

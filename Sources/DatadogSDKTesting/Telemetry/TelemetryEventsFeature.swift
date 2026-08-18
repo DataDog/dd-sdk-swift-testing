@@ -21,27 +21,26 @@ final class TelemetryEventsFeature: TestHooksFeature {
     func testSessionWillStart(session: any TestSession) {
         telemetry.metrics.session.started.add(
             provider: session.configuration.env.ci?.provider, autoInjected: false)
-        let fw = session.testFrameworks.sorted().joined(separator: ",")
-        telemetry.metrics.events.created.add(testFramework: fw, eventType: .session)
+        telemetry.metrics.events.created.add(
+            testFramework: session.testFrameworks.telemetryTag, eventType: .session)
         session.emitGitShaCheck(to: telemetry)
     }
 
     func testSessionWillEnd(session: any TestSession) {
-        let fw = session.testFrameworks.sorted().joined(separator: ",")
-        let framework = fw.isEmpty ? "Swift" : fw
-        telemetry.metrics.events.finished.add(testFramework: framework, eventType: .session)
+        telemetry.metrics.events.finished.add(
+            testFramework: session.testFrameworks.telemetryTag, eventType: .session)
     }
 
     // MARK: - Module
 
     func testModuleWillStart(module: any TestModule) {
-        let framework = module.testFrameworks.sorted().joined(separator: ",")
-        telemetry.metrics.events.created.add(testFramework: framework, eventType: .module)
+        telemetry.metrics.events.created.add(
+            testFramework: module.testFrameworks.telemetryTag, eventType: .module)
     }
 
     func testModuleWillEnd(module: any TestModule) {
-        let framework = module.testFrameworks.sorted().joined(separator: ",")
-        telemetry.metrics.events.finished.add(testFramework: framework, eventType: .module)
+        telemetry.metrics.events.finished.add(
+            testFramework: module.testFrameworks.telemetryTag, eventType: .module)
     }
 
     // MARK: - Suite
@@ -92,6 +91,21 @@ final class TelemetryEventsFeature: TestHooksFeature {
     private func telemetryEFDAbortReason(from string: String?) -> Telemetry.EFDAbortReason? {
         guard string == DDTagValues.efdAbortSlow else { return nil }
         return .slow
+    }
+}
+
+// MARK: - Framework telemetry tag
+
+private extension Set<String> {
+    /// Metric tags carry a single opaque value per dimension (never parsed as JSON), so a
+    /// mix of frameworks is safely reported as a stable "name1+name2" combination instead of
+    /// a generic label — that keeps sessions using several frameworks distinguishable in metrics.
+    var telemetryTag: String {
+        switch count {
+        case 0: return "Swift"
+        case 1: return first!
+        default: return sorted().joined(separator: "+")
+        }
     }
 }
 

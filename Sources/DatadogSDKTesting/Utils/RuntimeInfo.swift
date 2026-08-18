@@ -12,7 +12,6 @@ enum RuntimeInfo {
     case spm(swiftVersion: String)
     
     init(version xcode: String?, isXcode: Bool) {
-        let env = ProcessInfo.processInfo.environment
         var swiftVer: String?
         if let xcode, !xcode.isEmpty {
             swiftVer = Self.xcodeVersionToSwift(xcode)

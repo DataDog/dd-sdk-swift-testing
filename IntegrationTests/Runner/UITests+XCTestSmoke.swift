@@ -10,7 +10,9 @@ import TestUtils
 
 @Suite("Integration Tests - XCTest Smoke UI Tests",
        .build("UITests", bundle: "Tests"),
-       .datadogTesting)
+       .datadogTesting,
+       .disabled(if: XcodeTestRunner.isVisionOSChildSDK,
+                 "XCUITest cannot drive an instrumented app on visionOS: the SDK adds ~49s to app launch, accessibility-server registration overruns it, and every element query then fails with kAXErrorServerNotFound. The inner test also skips itself on visionOS."))
 struct UITestsXCTestSmoke: IntergationTestSuite {
     @Test func environmentPassed() async throws {
         try await run(test: "UIEnvironmentPassed/testEnvironmentPassed") { backend, success in

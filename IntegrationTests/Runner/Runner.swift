@@ -260,6 +260,15 @@ struct XcodeTestRunner: Sendable {
         parameters(env: ProcessInfo.processInfo.environment).sdk.hasPrefix("watch")
     }
 
+    /// `true` when the child test bundle is being launched against a visionOS SDK
+    /// (`xros` device or `xrsimulator`). Used to skip UI tests: XCUITest cannot
+    /// drive an instrumented app there, because the SDK adds ~49s to app launch
+    /// and accessibility-server registration overruns, after which every element
+    /// query fails with `kAXErrorServerNotFound`.
+    static var isVisionOSChildSDK: Bool {
+        parameters(env: ProcessInfo.processInfo.environment).sdk.hasPrefix("xr")
+    }
+
     static let modules: Modules = .init()
 }
 

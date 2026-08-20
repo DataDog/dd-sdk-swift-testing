@@ -36,13 +36,15 @@ public extension DispatchSemaphore {
         return wait(timeout: .now() + remaining) == .success
     }
     
-    func wait(until deadline: Date = .distantFuture, sleep nanoseconds: UInt64 = 10_000_000) async -> Bool {
+    func wait(until deadline: Date = .distantFuture, sleep seconds: TimeInterval = 0.01) async -> Bool {
         while !tryAcquire() {
-            guard deadline.timeIntervalSinceNow > 0 else {
+            let deadlineInterval = deadline.timeIntervalSinceNow
+            guard deadlineInterval > 0 else {
                 return false
             }
+            let sleepNS = UInt64(min(seconds, deadlineInterval) * 1_000_000_000)
             do {
-                try await Task.sleep(nanoseconds: nanoseconds)
+                try await Task.sleep(nanoseconds: sleepNS)
             } catch {
                 return false
             }

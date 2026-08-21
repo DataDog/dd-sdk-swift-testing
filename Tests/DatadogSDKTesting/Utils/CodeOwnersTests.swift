@@ -8,15 +8,16 @@
 import XCTest
 
 class CodeOwnersTestsBase: XCTestCase {
-    /// expected: nil = expect nil result, [] = expect empty list (Swift may return nil if it doesn't store owner-less rules), [String] = expect that list
+    /// expected: nil = expect nil result (no rule matched at all), [] = expect an explicit empty list
+    /// (a rule matched but resolves to no owner, e.g. an ownerless override or a negated exclusion),
+    /// [String] = expect that list.
     func expectOwners(_ result: String?, equals expected: [String]?) {
         guard let expected = expected else {
             XCTAssertNil(result, "Expected nil")
             return
         }
         if expected.isEmpty {
-            // Ruby returns [] for match-with-no-owners; Swift may return nil
-            XCTAssertTrue(result == "[]" || result == nil, "Expected [] or nil, got \(result ?? "nil")")
+            XCTAssertEqual(result, "[]", "Expected []")
             return
         }
         let formatted = "[\"" + expected.joined(separator: "\",\"") + "\"]"
@@ -465,6 +466,31 @@ class CodeOwnersMatcherSpecTests: CodeOwnersTestsBase {
         expectOwners(codeOwners.ownersForPath("apps/github/codeowners"), equals: [])
 
         expectOwners(codeOwners.ownersForPath("other/file.txt"), equals: ["@owner"])
+    }
+
+    // MARK: - SDTEST-3943: ownerless override line explicitly clears ownership
+    // https://datadoghq.atlassian.net/browse/SDTEST-3943
+    func testMatcher_ownerlessOverride_clearsOwnershipButStillReportsMatch() throws {
+        let codeownersContent = """
+        # Broader rule
+        /src/ @team-alpha
+
+        # Override: these paths have no owner (intentional)
+        /src/shared/
+        /src/utils/
+        """
+        let codeOwners = try CodeOwners(parsing: codeownersContent)
+
+        // Broader rule still applies to paths not covered by the override.
+        expectOwners(codeOwners.ownersForPath("/src/main.swift"), equals: ["@team-alpha"])
+
+        // Overridden paths must resolve to an explicit empty list ("[]"), not nil,
+        // since a rule DID match — it just intentionally clears ownership.
+        expectOwners(codeOwners.ownersForPath("/src/shared/helper.swift"), equals: [])
+        expectOwners(codeOwners.ownersForPath("/src/utils/utils.swift"), equals: [])
+
+        // A path with no matching rule at all must still resolve to nil.
+        expectOwners(codeOwners.ownersForPath("/other/file.swift"), equals: nil)
     }
 
     // MARK: - Negated path support (! prefix, GitLab-style exclusions)

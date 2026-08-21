@@ -84,9 +84,13 @@ struct CodeOwners {
         let fullPathRange = NSRange(location: 0, length: fullPath.utf16.count)
         // Last matching rule wins (inside one section).
         // Owners from the all sections are combined.
-        // If it has empty owners, return nil.
+        // If no rule matched in any section, return nil (path has no codeowners info at all).
+        // If a rule matched but leaves no owner (ownerless override, or a negated exclusion),
+        // that is an explicit "no owner" result and must be distinguished from "no match":
+        // it still counts as matched, just contributing no owners.
         // Negated patterns (!) exclude paths from their section; once excluded, cannot be included again.
         var codeowners: [String] = []
+        var matched = false
         for sectionEntries in sections {
             var lastMatch: [String]?
             var isExcluded = false
@@ -99,11 +103,14 @@ struct CodeOwners {
                     }
                 }
             }
-            if !isExcluded, let lastMatch {
+            if isExcluded {
+                matched = true
+            } else if let lastMatch {
+                matched = true
                 codeowners.append(contentsOf: lastMatch)
             }
         }
-        return codeowners.isEmpty ? nil : codeowners
+        return matched ? codeowners : nil
     }
 
     func ownersForPath(_ path: String) -> String? {

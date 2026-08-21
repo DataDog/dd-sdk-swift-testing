@@ -26,6 +26,10 @@ public final class UnfairLock: Sendable {
     public func unlock() {
         os_unfair_lock_unlock(_lock)
     }
+    
+    public func tryLock() -> Bool {
+        os_unfair_lock_trylock(_lock)
+    }
 
     public func whileLocked<T>(_ action: () throws -> T) rethrows -> T {
         os_unfair_lock_lock(_lock)

@@ -1,0 +1,16 @@
+{
+  "DD_CIVISIBILITY_DYNAMIC_ATR_ENABLED": [
+    {
+      "implementation": "A",
+      "type": "boolean",
+      "default": "false"
+    }
+  ],
+  "DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS": [
+    {
+      "implementation": "A",
+      "type": "array",
+      "default": null
+    }
+  ]
+}

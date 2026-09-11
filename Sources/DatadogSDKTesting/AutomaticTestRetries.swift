@@ -7,7 +7,7 @@
 import Foundation
 internal import EventsExporter
 
-final class AutomaticTestRetries: TestHooksFeature {
+class AutomaticTestRetries: TestHooksFeature, @unchecked Sendable {
     static var id: FeatureId = "Automatic Test Retries"
     
     let failedTestRetriesCount: UInt
@@ -67,7 +67,7 @@ final class AutomaticTestRetries: TestHooksFeature {
         }
     }
     
-    private func incrementRetries() -> UInt? {
+    func incrementRetries() -> UInt? {
         _failedTestTotalRetries.update { cnt in
             cnt.checkedAdd(1, max: failedTestTotalRetriesMax).map {
                 cnt = $0

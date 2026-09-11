@@ -77,6 +77,15 @@ DD_DISABLE_CRASH_HANDLER # Disables crash handling and reporting. (Boolean) WARN
 ```
 > You must know that if you disable crash reporting, crashing tests wont be reported to the backend and wont appear as a failure. If you really, really need to do this for any of your tests, run it as a totally separated target, so you dont disable it for the rest of the tests
 
+### Dynamic Auto Test Retries
+
+By default, Auto Test Retries uses a flat per-test retry limit (`DD_CIVISIBILITY_FLAKY_RETRY_COUNT`). When dynamic ATR is enabled, the number of retries allowed for a test is determined by the duration of its initial attempt, using the same duration buckets as Early Flake Detection (5s / 10s / 30s / 5m), instead of the flat per-test retry limit. Requires Auto Test Retries to be enabled by the backend.
+
+```shell
+DD_CIVISIBILITY_DYNAMIC_ATR_ENABLED # Enables dynamic, duration-based Auto Test Retries budgets (Boolean, default: false)
+DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS # Comma-separated list of five positive integers in [1, 20] overriding the five duration-based retry budgets (for the 5s, 10s, 30s, 5m, and >5m buckets respectively). When unset or empty, the Early Flake Detection retry settings from the backend are used. Only takes effect when DD_CIVISIBILITY_DYNAMIC_ATR_ENABLED is enabled. (String)
+```
+
 ## Custom tags
 
 ### Environment variables

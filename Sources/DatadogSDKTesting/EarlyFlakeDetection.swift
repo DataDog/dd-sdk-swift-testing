@@ -124,7 +124,7 @@ final class EarlyFlakeDetection: TestHooksFeature {
         }
 
         // Check how much repeats do we have
-        let repeats = slowTestRetries.repeats(for: duration)
+        let repeats = slowTestRetries.retries(forDuration: duration)
         if info.executions.total < Int(repeats) - 1 {
             // We can retry test
             return retryStatus.retry(reason: DDTagValues.retryReasonEarlyFlakeDetection,

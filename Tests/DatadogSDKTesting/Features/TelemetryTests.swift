@@ -169,6 +169,38 @@ final class TelemetryTests: XCTestCase {
         XCTAssertEqual(box.requests, 2)
         XCTAssertNil(box.error)
     }
+
+    // MARK: - Dynamic ATR telemetry
+
+    func testRecordDynamicAtrRetriesWithCustomBuckets() throws {
+        let exporter = CaptureExporter()
+        let telemetry = makeTelemetry(exporter)
+
+        telemetry.metrics.dynamicATR.enabled.add(hasCustomBuckets: true)
+        telemetry.flush()
+
+        let series = try XCTUnwrap(exporter.metrics.flatMap(\.series)
+            .first { $0.metric == "dynamic_atr_retries.enabled" })
+        XCTAssertEqual(series.type, .count)
+        XCTAssertEqual(series.points.first?.value, 1)
+        XCTAssertEqual(series.tags, ["has_custom_buckets:true"])
+        XCTAssertEqual(exporter.metrics.first?.namespace, .civisibility)
+    }
+
+    func testRecordDynamicAtrRetriesWithoutCustomBuckets() throws {
+        let exporter = CaptureExporter()
+        let telemetry = makeTelemetry(exporter)
+
+        telemetry.metrics.dynamicATR.enabled.add(hasCustomBuckets: false)
+        telemetry.flush()
+
+        let series = try XCTUnwrap(exporter.metrics.flatMap(\.series)
+            .first { $0.metric == "dynamic_atr_retries.enabled" })
+        XCTAssertEqual(series.type, .count)
+        XCTAssertEqual(series.points.first?.value, 1)
+        // When hasCustomBuckets is false, the tag is nil → empty tags set
+        XCTAssertEqual(series.tags, [])
+    }
 }
 
 // MARK: - Test helpers

@@ -115,13 +115,22 @@ public struct TracerSettings {
                 self.times = times
             }
 
-            public func repeats(for time: TimeInterval) -> UInt {
-                let rounded = time.rounded()
+            public func retryBucketIndex(forDuration duration: TimeInterval) -> Int {
+                let rounded = duration.rounded()
                 guard let index = times.firstIndex(where: { $0.time > rounded }) else {
-                    return 0
+                    return times.count // > max time → last bucket (0 retries)
                 }
-                guard index > 0 else { return times[index].count }
-                return times[index-1].count
+                return index > 0 ? index - 1 : 0
+            }
+
+            public func retries(forDuration duration: TimeInterval) -> UInt {
+                let index = retryBucketIndex(forDuration: duration)
+                guard index < times.count else { return 0 }
+                return times[index].count
+            }
+
+            public func repeats(for time: TimeInterval) -> UInt {
+                retries(forDuration: time)
             }
 
             private static func time(_ val: String) -> TimeInterval? {

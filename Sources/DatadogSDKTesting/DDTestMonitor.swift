@@ -432,8 +432,19 @@ internal class DDTestMonitor {
                 Log.print("ATR: disabled")
                 return
             }
-            let factory = AutomaticTestRetriesFactory(config: DDTestMonitor.config)
-            self.atr = runFactory(factory)
+            if DynamicATRRetriesFactory.isEnabled(config: DDTestMonitor.config,
+                                                   env: DDTestMonitor.env,
+                                                   remote: remote)
+            {
+                let factory = DynamicATRRetriesFactory(config: DDTestMonitor.config,
+                                                       efdSettings: remote.efd)
+                self.atr = runFactory(factory)
+                self.tracer.telemetry?.metrics.dynamicATR.enabled
+                    .add(hasCustomBuckets: DDTestMonitor.config.dynamicATRBuckets != nil)
+            } else {
+                let factory = AutomaticTestRetriesFactory(config: DDTestMonitor.config)
+                self.atr = runFactory(factory)
+            }
         }
         automaticTestRetries.addDependency(updateTracerConfig)
         testOptimizationSetupQueue.addOperation(automaticTestRetries)

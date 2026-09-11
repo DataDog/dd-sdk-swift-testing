@@ -199,4 +199,11 @@ class ConfigTests: XCTestCase {
         let config = Config(env: reader(env: ["DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS": ""]))
         XCTAssertNil(config.dynamicATRBuckets)
     }
+
+    func testDynamicATRBucketsRejectEmptyFields() {
+        for value in [",1,1,1,1", "1,,1,1,1", "1,1,1,1,"] {
+            let config = Config(env: reader(env: ["DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS": value]))
+            XCTAssertNil(config.dynamicATRBuckets, "\(value) must be rejected")
+        }
+    }
 }

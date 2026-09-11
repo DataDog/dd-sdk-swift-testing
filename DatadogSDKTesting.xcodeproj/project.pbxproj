@@ -19,6 +19,10 @@
 		476CBA69A1DF07E74A0E7311 /* KnownTestsApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1531A96019132E3E9E96A3A7 /* KnownTestsApi.swift */; };
 		4B08F62941D9EB26E5DF3837 /* TestImpactAnalysisApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1495758A45B516A2C584B845 /* TestImpactAnalysisApi.swift */; };
 		4CCD47B30A3B513F26C8936E /* TelemetryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8BF04956AA1E2FADBB80244 /* TelemetryTests.swift */; };
+		D4A7A7100000000000000001 /* DynamicATRRetries.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4A7A7100000000000000011 /* DynamicATRRetries.swift */; };
+		D4A7A7100000000000000002 /* DynamicATRRetriesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4A7A7100000000000000012 /* DynamicATRRetriesTests.swift */; };
+		D4A7A7100000000000000003 /* DynamicATRRetriesSwiftTestingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4A7A7100000000000000013 /* DynamicATRRetriesSwiftTestingTests.swift */; };
+		D4A7A7100000000000000004 /* TimeTableDedupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4A7A7100000000000000014 /* TimeTableDedupTests.swift */; };
 		56B58A2FC91F21D1ABB0155E /* TelemetryApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01EB970146040DD4967C7411 /* TelemetryApi.swift */; };
 		6CB9C5C6886840A5505A58CF /* RuntimeInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C8B6265EAF40604D5159055 /* RuntimeInfo.swift */; };
 		7972B04FB1DFA64DC20032AE /* Telemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E11F924F40C94461C2B6B27 /* Telemetry.swift */; };
@@ -592,6 +596,10 @@
 		BC161A86B91745F4BDC88FF1 /* TelemetryExporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TelemetryExporter.swift; sourceTree = "<group>"; };
 		C1E3348865C204C942F4765C /* SettingsApi.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SettingsApi.swift; sourceTree = "<group>"; };
 		C8BF04956AA1E2FADBB80244 /* TelemetryTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TelemetryTests.swift; sourceTree = "<group>"; };
+		D4A7A7100000000000000011 /* DynamicATRRetries.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicATRRetries.swift; sourceTree = "<group>"; };
+		D4A7A7100000000000000012 /* DynamicATRRetriesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicATRRetriesTests.swift; sourceTree = "<group>"; };
+		D4A7A7100000000000000013 /* DynamicATRRetriesSwiftTestingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicATRRetriesSwiftTestingTests.swift; sourceTree = "<group>"; };
+		D4A7A7100000000000000014 /* TimeTableDedupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeTableDedupTests.swift; sourceTree = "<group>"; };
 		CC931D86ADB841B6969C7A7A /* EarlyFlakeDetectionSwiftTestingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EarlyFlakeDetectionSwiftTestingTests.swift; sourceTree = "<group>"; };
 		D969899DDA68AF3C690F7FF8 /* LogsApi.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LogsApi.swift; sourceTree = "<group>"; };
 		E0B522400A21CABC6BB4F1CA /* TestOptimizationApi.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TestOptimizationApi.swift; sourceTree = "<group>"; };
@@ -917,6 +925,9 @@
 				A7DEAD032F3DEAD00000001A /* ParallelTestRunnerDetectorTests.swift */,
 				A70B91122DF0AE11003F284F /* AutoTestRetriesTests.swift */,
 				31F8747157604DB48FE692EB /* AutoTestRetriesSwiftTestingTests.swift */,
+				D4A7A7100000000000000012 /* DynamicATRRetriesTests.swift */,
+				D4A7A7100000000000000013 /* DynamicATRRetriesSwiftTestingTests.swift */,
+				D4A7A7100000000000000014 /* TimeTableDedupTests.swift */,
 				A7B6602E2C2E08A900AEBA6C /* TestImpactAnalysisSkippableTests.swift */,
 				A718EC342CC7F32A00C5F0D9 /* EarlyFlakeDetectionTests.swift */,
 				CC931D86ADB841B6969C7A7A /* EarlyFlakeDetectionSwiftTestingTests.swift */,
@@ -1321,6 +1332,7 @@
 				A7B70E3B2C5CDE8B00E4AE09 /* Endpoint.swift */,
 				A718EC2C2CBD5DCE00C5F0D9 /* EarlyFlakeDetection.swift */,
 				A77C12362D8DCB87009C2BA1 /* AutomaticTestRetries.swift */,
+				D4A7A7100000000000000011 /* DynamicATRRetries.swift */,
 				A77C12322D8C9798009C2BA1 /* KnownTests.swift */,
 				A7675D6B2F6C58BB00A05B5F /* SessionManager.swift */,
 				A79FAD982F8548700080C3F6 /* SessionAndModuleObserver.swift */,
@@ -2033,6 +2045,7 @@
 				A7FC260C2BA1EC0500067E26 /* GitInfo.swift in Sources */,
 				A7FC26112BA1EC0500067E26 /* DDFileReader.swift in Sources */,
 				A77C12372D8DCB87009C2BA1 /* AutomaticTestRetries.swift in Sources */,
+				D4A7A7100000000000000001 /* DynamicATRRetries.swift in Sources */,
 				A77C123E2D9474E6009C2BA1 /* Models.swift in Sources */,
 				A71E647E2BAA0AA100F2ACA5 /* EnvironmentReader.swift in Sources */,
 				A71E647A2BAA0AA100F2ACA5 /* CircleCI.swift in Sources */,
@@ -2129,6 +2142,9 @@
 				A75DAB9C2DEE18DD00F1B8A7 /* MockTestRunner.swift in Sources */,
 				A718EC352CC7F32A00C5F0D9 /* EarlyFlakeDetectionTests.swift in Sources */,
 				300F42B595C3462AB9656B0C /* EarlyFlakeDetectionSwiftTestingTests.swift in Sources */,
+				D4A7A7100000000000000002 /* DynamicATRRetriesTests.swift in Sources */,
+				D4A7A7100000000000000003 /* DynamicATRRetriesSwiftTestingTests.swift in Sources */,
+				D4A7A7100000000000000004 /* TimeTableDedupTests.swift in Sources */,
 				A7FC265F2BA1F66E00067E26 /* DDSessionApiTests.m in Sources */,
 				A7FC26602BA1F67800067E26 /* SimpleSpanSerializerTests.swift in Sources */,
 				A7FC26672BA1F6FC00067E26 /* CodeOwnersTests.swift in Sources */,

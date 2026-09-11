@@ -63,10 +63,52 @@ final class DynamicATRRetriesLogicTests: XCTestCase {
 
         let tests = try await extractTests(runner.run())
         XCTAssertNotNil(tests["someTest"])
-        // >5m bucket → index 4 → 1 retry → 1 initial + 1 retry = 2 runs
+        // >300s bucket → index 4 → 1 retry → 1 initial + 1 retry = 2 runs
         XCTAssertEqual(tests["someTest"]?.runs.count, 2)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 2)
         XCTAssertEqual(tests["someTest"]?.isSucceeded, false)
+    }
+
+    func testDynamicAtrCustomBucketsUseFixedExactAndFractionalBoundaries() async throws {
+        let buckets: (UInt, UInt, UInt, UInt, UInt) = (1, 2, 3, 4, 5)
+        let cases: [(duration: TimeInterval, retries: Int)] = [
+            (5, 1), (5.1, 2),
+            (10, 2), (10.1, 3),
+            (30, 3), (30.1, 4),
+            (300, 4), (300.1, 5)
+        ]
+
+        for (duration, retries) in cases {
+            let (runner, _) = runner(tests: ["someTest": .fail("Should fail", duration: duration)],
+                                     customBuckets: buckets)
+            let tests = try await extractTests(runner.run())
+            XCTAssertEqual(tests["someTest"]?.runs.count, retries + 1,
+                           "duration \(duration) should use \(retries) retries")
+        }
+    }
+
+    func testDynamicAtrInitialDurationCacheUsesFullTestIdentity() {
+        let atr = DynamicATRRetries(failedTestRetriesCount: 5,
+                                    failedTestTotalRetriesMax: 1000,
+                                    slowTestRetries: .init(),
+                                    retriesBuckets: (1, 1, 1, 1, 4))
+        let fast = mockTest(module: "FirstModule", suite: "SharedSuite", name: "sharedTest")
+        let slow = mockTest(module: "SecondModule", suite: "SharedSuite", name: "sharedTest")
+        let firstAttempt = TestRunInfoStart(tags: Mocks.AttachedTags(),
+                                            skip: (nil, .init(canBeSkipped: false, markedUnskippable: false)),
+                                            retry: nil,
+                                            executions: (0, 0))
+
+        withExtendedLifetime((fast.session, slow.session)) {
+            _ = atr.testGroupRetry(test: fast.test, duration: 1, withStatus: .fail,
+                                    retryStatus: .init(), andInfo: firstAttempt)
+            _ = atr.testGroupRetry(test: slow.test, duration: 301, withStatus: .fail,
+                                    retryStatus: .init(), andInfo: firstAttempt)
+
+            var fastRetry = firstAttempt
+            fastRetry.executions = (1, 1)
+            XCTAssertFalse(atr.shouldSuppressError(test: fast.test, info: fastRetry))
+        }
     }
 
     // MARK: - Ignores flat DD_CIVISIBILITY_FLAKY_RETRY_COUNT
@@ -144,6 +186,16 @@ final class DynamicATRRetriesLogicTests: XCTestCase {
     }
 
     // MARK: - Helpers
+
+    private func mockTest(module: String, suite: String, name: String) -> (session: Mocks.Session, test: Mocks.Test) {
+        let session = Mocks.Session(name: "MockTestSession", testTags: [:])
+        let testModule = session.module(named: module) as! Mocks.Module
+        let testSuite = testModule.startSuite(named: suite, at: nil,
+                                              framework: .init(name: "MockRunner", version: "1.0.0")) as! Mocks.Suite
+        let group = testSuite.startGroup(named: name)
+        let test = group.withTest(named: name) { $0 }
+        return (session, test)
+    }
 
     func extractTests(_ session: Mocks.Session) throws -> [String: Mocks.Group] {
         guard let suite = session["ATRModule"]?["ATRSuite"] else {

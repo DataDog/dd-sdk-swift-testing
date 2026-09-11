@@ -219,8 +219,9 @@ final class Config {
     }
     
     private static func parseDynamicATRBuckets(_ raw: String?) -> (UInt, UInt, UInt, UInt, UInt)? {
-        guard let raw, !raw.isEmpty else { return nil }
-        let parts = raw.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+        guard let raw else { return nil }
+        let parts = raw.split(separator: ",", omittingEmptySubsequences: false)
+            .map { $0.trimmingCharacters(in: .whitespaces) }
         guard parts.count == 5 else {
             Log.print("Invalid DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS value \"\(raw)\"; expected five comma-separated integers in [1, 20]")
             return nil

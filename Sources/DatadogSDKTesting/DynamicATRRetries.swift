@@ -14,9 +14,22 @@ final class DynamicATRRetries: AutomaticTestRetries, @unchecked Sendable {
     let slowTestRetries: TracerSettings.EFD.TimeTable
     let retriesBuckets: (UInt, UInt, UInt, UInt, UInt)?
 
-    /// Caches the initial-attempt duration per test name so the classification
+    /// Stable identity for a test across XCTest and Swift Testing execution paths.
+    private struct TestIdentity: Hashable {
+        let module: String
+        let suite: String
+        let name: String
+
+        init(_ test: any TestRun) {
+            module = test.module.name
+            suite = test.suite.name
+            name = test.name
+        }
+    }
+
+    /// Caches the initial-attempt duration per test identity so the classification
     /// is computed once and reused across all retries of that test.
-    private let _initialDurationCache: Synced<[String: TimeInterval]> = .init([:])
+    private let _initialDurationCache: Synced<[TestIdentity: TimeInterval]> = .init([:])
 
     init(failedTestRetriesCount: UInt,
          failedTestTotalRetriesMax: UInt,
@@ -32,17 +45,29 @@ final class DynamicATRRetries: AutomaticTestRetries, @unchecked Sendable {
     /// Returns the duration-based max retries for a test, using the cached initial
     /// duration. Falls back to 1 (minimum retry budget) if the initial duration is
     /// not yet cached, ensuring error suppression on the initial run.
-    private func maxRetries(for testName: String) -> UInt {
-        guard let initialDuration = _initialDurationCache.value[testName] else {
+    private func maxRetries(for test: any TestRun) -> UInt {
+        guard let initialDuration = _initialDurationCache.value[TestIdentity(test)] else {
             return 1
         }
-        let bucketIndex = slowTestRetries.retryBucketIndex(forDuration: initialDuration)
         if let buckets = retriesBuckets {
             let allBuckets = [buckets.0, buckets.1, buckets.2, buckets.3, buckets.4]
-            let idx = min(bucketIndex, allBuckets.count - 1)
-            return max(1, allBuckets[idx])
+            return max(1, allBuckets[Self.customBucketIndex(for: initialDuration)])
         } else {
+            // Preserve EFD's backend-configured time-table semantics when no
+            // Dynamic ATR bucket override is configured.
             return max(1, slowTestRetries.retries(forDuration: initialDuration))
+        }
+    }
+
+    /// Dynamic ATR custom buckets are fixed product boundaries, independent of
+    /// the backend-configured EFD time table.
+    private static func customBucketIndex(for duration: TimeInterval) -> Int {
+        switch duration {
+        case ...5: return 0
+        case ...10: return 1
+        case ...30: return 2
+        case ...300: return 3
+        default: return 4
         }
     }
 
@@ -54,11 +79,16 @@ final class DynamicATRRetries: AutomaticTestRetries, @unchecked Sendable {
 
         // Cache the initial-attempt duration on the first run (executions.total == 0).
         if info.executions.total == 0 {
-            _initialDurationCache.update { $0[test.name] = duration }
+            let identity = TestIdentity(test)
+            _initialDurationCache.update {
+                if $0[identity] == nil {
+                    $0[identity] = duration
+                }
+            }
         }
 
         if case .fail = status {
-            let maxRetries = self.maxRetries(for: test.name)
+            let maxRetries = self.maxRetries(for: test)
             if UInt(info.executions.total) < maxRetries // we can retry more
                && incrementRetries() != nil // and increased global retry counter successfully
             {
@@ -73,7 +103,7 @@ final class DynamicATRRetries: AutomaticTestRetries, @unchecked Sendable {
 
     override func shouldSuppressError(test: any TestRun, info: TestRunInfoStart) -> Bool {
         guard info.tags.get(tag: .retriable) ?? true else { return false }
-        let maxRetries = self.maxRetries(for: test.name)
+        let maxRetries = self.maxRetries(for: test)
         return UInt(info.executions.total) < maxRetries // we can retry test more
             && failedTestTotalRetries < failedTestTotalRetriesMax // and global counter allow us to retry
     }

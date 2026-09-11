@@ -29,6 +29,15 @@ final class DynamicATRRetriesSwiftTestingTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.count, 11)
     }
 
+    func testDynamicAtrCustomBucketsUseFixedFractionalBoundary() async throws {
+        let (runner, _) = runner(tests: ["someTest": .fail("Should fail", duration: 5.1)],
+                                 customBuckets: (1, 2, 3, 4, 5))
+
+        let tests = try await extractTests(try await runner.run())
+        // 5.1s is in the >5s and <=10s bucket, so it gets two retries.
+        XCTAssertEqual(tests["someTest"]?.runs.count, 3)
+    }
+
     func testDynamicAtrStopsAfterFirstPass() async throws {
         let (runner, _) = runner(tests: ["someTest": .fail(first: 2, 1.0)],
                                 customBuckets: (5, 1, 1, 1, 1))

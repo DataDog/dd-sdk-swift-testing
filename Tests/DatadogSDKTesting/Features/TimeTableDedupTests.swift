@@ -21,20 +21,20 @@ final class TimeTableDedupTests: XCTestCase {
         XCTAssertEqual(table.repeats(for: 1), 10)
         XCTAssertEqual(table.repeats(for: 5), 10)
 
-        // Between 5s and 30s → 10 (previous bucket's count)
+        // After 5s and through 30s → 10; at 30s the next bucket begins.
         XCTAssertEqual(table.repeats(for: 6), 10)
         XCTAssertEqual(table.repeats(for: 29), 10)
-        XCTAssertEqual(table.repeats(for: 30), 10)
+        XCTAssertEqual(table.repeats(for: 30), 5)
 
-        // Between 30s and 60s → 5
+        // After 30s and through 60s → 5; at 60s the next bucket begins.
         XCTAssertEqual(table.repeats(for: 31), 5)
         XCTAssertEqual(table.repeats(for: 59), 5)
-        XCTAssertEqual(table.repeats(for: 60), 5)
+        XCTAssertEqual(table.repeats(for: 60), 2)
 
-        // Between 60s and 300s → 2
+        // After 60s and through 300s → 2; at 300s the final configured bucket begins.
         XCTAssertEqual(table.repeats(for: 61), 2)
         XCTAssertEqual(table.repeats(for: 299), 2)
-        XCTAssertEqual(table.repeats(for: 300), 2)
+        XCTAssertEqual(table.repeats(for: 300), 1)
 
         // Above 300s → 0
         XCTAssertEqual(table.repeats(for: 301), 0)
@@ -48,12 +48,12 @@ final class TimeTableDedupTests: XCTestCase {
         XCTAssertEqual(table.retryBucketIndex(forDuration: 0), 0)
         XCTAssertEqual(table.retryBucketIndex(forDuration: 5), 0)
         XCTAssertEqual(table.retryBucketIndex(forDuration: 6), 0)
-        XCTAssertEqual(table.retryBucketIndex(forDuration: 30), 0)
+        XCTAssertEqual(table.retryBucketIndex(forDuration: 30), 1)
         XCTAssertEqual(table.retryBucketIndex(forDuration: 31), 1)
-        XCTAssertEqual(table.retryBucketIndex(forDuration: 60), 1)
+        XCTAssertEqual(table.retryBucketIndex(forDuration: 60), 2)
         XCTAssertEqual(table.retryBucketIndex(forDuration: 61), 2)
-        XCTAssertEqual(table.retryBucketIndex(forDuration: 300), 2)
-        XCTAssertEqual(table.retryBucketIndex(forDuration: 301), 3)
+        XCTAssertEqual(table.retryBucketIndex(forDuration: 300), 3)
+        XCTAssertEqual(table.retryBucketIndex(forDuration: 301), 4)
         XCTAssertEqual(table.retryBucketIndex(forDuration: 700), 4) // times.count = 4
     }
 

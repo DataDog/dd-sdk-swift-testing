@@ -91,9 +91,9 @@ final class DynamicATRRetriesSwiftTestingTests: XCTestCase {
     func runner(tests: KeyValuePairs<String, Mocks.Runner.TestMethod>,
                 failedTestRetriesCount: UInt = 5,
                 failedTestTotalRetriesMax: UInt = 1000,
-                customBuckets: (UInt, UInt, UInt, UInt, UInt)? = nil) -> (Mocks.STRunner, DynamicATRRetries)
+                customBuckets: (UInt, UInt, UInt, UInt, UInt)? = nil) -> (Mocks.STRunner, AutomaticTestRetries)
     {
-        let atr = DynamicATRRetries(
+        let atr = AutomaticTestRetries(
             failedTestRetriesCount: failedTestRetriesCount,
             failedTestTotalRetriesMax: failedTestTotalRetriesMax,
             slowTestRetries: .init(attrs: ["5s": 10, "30s": 5, "1m": 2, "5m": 1]),

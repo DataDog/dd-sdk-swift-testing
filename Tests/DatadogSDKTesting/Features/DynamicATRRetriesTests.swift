@@ -88,7 +88,7 @@ final class DynamicATRRetriesLogicTests: XCTestCase {
     }
 
     func testDynamicAtrInitialDurationCacheUsesFullTestIdentity() {
-        let atr = DynamicATRRetries(failedTestRetriesCount: 5,
+        let atr = AutomaticTestRetries(failedTestRetriesCount: 5,
                                     failedTestTotalRetriesMax: 1000,
                                     slowTestRetries: .init(),
                                     retriesBuckets: (1, 1, 1, 1, 4))
@@ -207,9 +207,9 @@ final class DynamicATRRetriesLogicTests: XCTestCase {
     func runner(tests: KeyValuePairs<String, Mocks.Runner.TestMethod>,
                 failedTestRetriesCount: UInt = 5,
                 failedTestTotalRetriesMax: UInt = 1000,
-                customBuckets: (UInt, UInt, UInt, UInt, UInt)? = nil) -> (Mocks.Runner, DynamicATRRetries)
+                customBuckets: (UInt, UInt, UInt, UInt, UInt)? = nil) -> (Mocks.Runner, AutomaticTestRetries)
     {
-        let atr = DynamicATRRetries(
+        let atr = AutomaticTestRetries(
             failedTestRetriesCount: failedTestRetriesCount,
             failedTestTotalRetriesMax: failedTestTotalRetriesMax,
             slowTestRetries: .init(attrs: ["5s": 10, "30s": 5, "1m": 2, "5m": 1]),

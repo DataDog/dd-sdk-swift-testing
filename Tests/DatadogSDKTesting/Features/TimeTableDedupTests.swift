@@ -31,12 +31,13 @@ final class TimeTableDedupTests: XCTestCase {
         XCTAssertEqual(table.repeats(for: 59), 5)
         XCTAssertEqual(table.repeats(for: 60), 2)
 
-        // After 60s and through 300s → 2; at 300s the final configured bucket begins.
+        // After 60s and before 300s → 2. A duration at the final threshold
+        // belongs to the no-retry bucket.
         XCTAssertEqual(table.repeats(for: 61), 2)
         XCTAssertEqual(table.repeats(for: 299), 2)
-        XCTAssertEqual(table.repeats(for: 300), 1)
+        XCTAssertEqual(table.repeats(for: 300), 0)
 
-        // Above 300s → 0
+        // At and above 300s → 0
         XCTAssertEqual(table.repeats(for: 301), 0)
         XCTAssertEqual(table.repeats(for: 700), 0)
     }
@@ -52,7 +53,7 @@ final class TimeTableDedupTests: XCTestCase {
         XCTAssertEqual(table.retryBucketIndex(forDuration: 31), 1)
         XCTAssertEqual(table.retryBucketIndex(forDuration: 60), 2)
         XCTAssertEqual(table.retryBucketIndex(forDuration: 61), 2)
-        XCTAssertEqual(table.retryBucketIndex(forDuration: 300), 3)
+        XCTAssertEqual(table.retryBucketIndex(forDuration: 300), 4)
         XCTAssertEqual(table.retryBucketIndex(forDuration: 301), 4)
         XCTAssertEqual(table.retryBucketIndex(forDuration: 700), 4) // times.count = 4
     }

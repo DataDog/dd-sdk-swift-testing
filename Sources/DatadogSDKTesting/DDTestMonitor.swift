@@ -433,12 +433,9 @@ internal class DDTestMonitor {
                 return
             }
             let factory = AutomaticTestRetriesFactory(config: DDTestMonitor.config,
-                                                      efdSettings: remote.efd)
+                                                      efdSettings: remote.efd,
+                                                      telemetry: self.tracer.telemetry)
             self.atr = runFactory(factory)
-            if let budget = self.atr?.budget, budget.isDynamic {
-                self.tracer.telemetry?.metrics.dynamicATR.enabled
-                    .add(hasCustomBuckets: DDTestMonitor.config.dynamicATRBuckets != nil)
-            }
         }
         automaticTestRetries.addDependency(updateTracerConfig)
         testOptimizationSetupQueue.addOperation(automaticTestRetries)

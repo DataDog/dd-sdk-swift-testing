@@ -172,12 +172,14 @@ final class TelemetryTests: XCTestCase {
 
     // MARK: - Dynamic ATR telemetry
 
-    func testRecordDynamicAtrRetriesWithCustomBuckets() throws {
+    /// The metric is emitted by `AutomaticTestRetriesFactory` while it builds the
+    /// feature, so these drive the factory instead of the counter directly.
+    func testRecordDynamicAtrRetriesWithCustomBuckets() async throws {
         let exporter = CaptureExporter()
         let telemetry = makeTelemetry(exporter)
 
-        telemetry.metrics.dynamicATR.enabled.add(hasCustomBuckets: true)
-        telemetry.flush()
+        _ = try await dynamicAtrFactory(telemetry, buckets: "3,2,2,1,1").create(log: Log.instance)
+        await telemetry.flush()
 
         let series = try XCTUnwrap(exporter.metrics.flatMap(\.series)
             .first { $0.metric == "dynamic_atr_retries.enabled" })
@@ -187,18 +189,49 @@ final class TelemetryTests: XCTestCase {
         XCTAssertEqual(exporter.metrics.first?.namespace, .civisibility)
     }
 
-    func testRecordDynamicAtrRetriesWithoutCustomBuckets() throws {
+    func testRecordDynamicAtrRetriesWithoutCustomBuckets() async throws {
         let exporter = CaptureExporter()
         let telemetry = makeTelemetry(exporter)
 
-        telemetry.metrics.dynamicATR.enabled.add(hasCustomBuckets: false)
-        telemetry.flush()
+        _ = try await dynamicAtrFactory(telemetry).create(log: Log.instance)
+        await telemetry.flush()
 
         let series = try XCTUnwrap(exporter.metrics.flatMap(\.series)
             .first { $0.metric == "dynamic_atr_retries.enabled" })
         XCTAssertEqual(series.type, .count)
         XCTAssertEqual(series.points.first?.value, 1)
         XCTAssertEqual(series.tags, ["has_custom_buckets:false"])
+    }
+
+    func testDoesNotRecordDynamicAtrRetriesForFlatBudget() async throws {
+        let exporter = CaptureExporter()
+        let telemetry = makeTelemetry(exporter)
+
+        // Dynamic ATR disabled
+        _ = try await dynamicAtrFactory(telemetry, enabled: false).create(log: Log.instance)
+        // Dynamic ATR enabled, but the backend sent no timetable, so it falls back to flat
+        _ = try await AutomaticTestRetriesFactory(config: dynamicAtrConfig(enabled: true),
+                                                  telemetry: telemetry).create(log: Log.instance)
+        await telemetry.flush()
+
+        XCTAssertNil(exporter.metrics.flatMap(\.series)
+            .first { $0.metric == "dynamic_atr_retries.enabled" })
+    }
+
+    private func dynamicAtrFactory(_ telemetry: Telemetry, enabled: Bool = true,
+                                   buckets: String? = nil) -> AutomaticTestRetriesFactory
+    {
+        AutomaticTestRetriesFactory(config: dynamicAtrConfig(enabled: enabled, buckets: buckets),
+                                    efdSettings: .init(slowTestRetries: .init(attrs: ["5s": 10])),
+                                    telemetry: telemetry)
+    }
+
+    private func dynamicAtrConfig(enabled: Bool, buckets: String? = nil) -> Config {
+        var env = ["DD_CIVISIBILITY_DYNAMIC_ATR_ENABLED": enabled ? "true" : "false"]
+        if let buckets {
+            env["DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS"] = buckets
+        }
+        return Config(env: ProcessEnvironmentReader(environment: env, infoDictionary: [:]))
     }
 }
 

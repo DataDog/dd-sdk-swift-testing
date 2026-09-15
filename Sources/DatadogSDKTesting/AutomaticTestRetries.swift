@@ -151,10 +151,12 @@ struct AutomaticTestRetriesFactory: FeatureFactory {
 
     let config: Config
     let efdSettings: TracerSettings.EFD
+    let telemetry: Telemetry?
 
-    init(config: Config, efdSettings: TracerSettings.EFD = .init()) {
+    init(config: Config, efdSettings: TracerSettings.EFD = .init(), telemetry: Telemetry? = nil) {
         self.config = config
         self.efdSettings = efdSettings
+        self.telemetry = telemetry
     }
 
     static func isEnabled(config: Config, env: Environment, remote: TracerSettings) -> Bool {
@@ -162,8 +164,21 @@ struct AutomaticTestRetriesFactory: FeatureFactory {
     }
 
     func create(log: Logger) async throws -> AutomaticTestRetries {
-        AutomaticTestRetries(budget: budget(log: log),
-                             failedTestTotalRetriesMax: config.testRetriesTotalRetryCount)
+        let budget = budget(log: log)
+        report(budget: budget)
+        return AutomaticTestRetries(budget: budget,
+                                    failedTestTotalRetriesMax: config.testRetriesTotalRetryCount)
+    }
+
+    /// Reports the budget we ended up with, so a dynamic ATR which fell back to the
+    /// flat retry count isn't counted as enabled.
+    private func report(budget: AutomaticTestRetries.RetryBudget) {
+        guard let telemetry else { return }
+        switch budget {
+        case .flat: break
+        case .buckets: telemetry.metrics.dynamicATR.enabled.add(hasCustomBuckets: true)
+        case .timeTable: telemetry.metrics.dynamicATR.enabled.add(hasCustomBuckets: false)
+        }
     }
 
     private func budget(log: Logger) -> AutomaticTestRetries.RetryBudget {

@@ -169,7 +169,7 @@ struct AutomaticTestRetriesFactory: FeatureFactory {
     private func budget(log: Logger) -> AutomaticTestRetries.RetryBudget {
         let flat = AutomaticTestRetries.RetryBudget.flat(config.testRetriesTestRetryCount)
         guard config.dynamicATREnabled else {
-            log.debug("Automatic Test Retries Enabled")
+            log.debug("Dynamic Auto Test Retries Disabled. Static retry count: \(flat.maxRetries)")
             return flat
         }
         if let buckets = config.dynamicATRBuckets {
@@ -180,7 +180,7 @@ struct AutomaticTestRetriesFactory: FeatureFactory {
             log.print("Dynamic Auto Test Retries: the backend didn't provide a retry timetable. Falling back to the flat retry count")
             return flat
         }
-        log.debug("Dynamic Auto Test Retries Enabled with the backend retry timetable")
+        log.debug("Dynamic Auto Test Retries Enabled with the backend retry timetable: \(efdSettings.slowTestRetries)")
         return .timeTable(efdSettings.slowTestRetries)
     }
 }

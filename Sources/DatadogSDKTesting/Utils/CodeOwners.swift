@@ -49,31 +49,29 @@ struct CodeOwners {
         var sectionsOrder: Array<String> = []
         let lines = content.components(separatedBy: .newlines).map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
         var index = Self._skipCommentLines(lines: lines, lineIndex: 0)
-        var parsedEmptySection: Bool = false
         
+        // Parsing never fails on the content of a single line. A rejected file means
+        // `test.codeowners` is missing from every test in the run, so one malformed
+        // line is skipped and the rules around it are kept.
         while index < lines.count {
             let line = lines[index]
             if let offset = Self._isSectionHeader(line: line) {
-                let section = try Self._parseSection(lines: lines, lineIndex: index, offset: offset)
-                if sections[section.name] != nil {
-                    sections[section.name]!.append(contentsOf: section.entries)
-                } else {
-                    sections[section.name] = section.entries
-                    sectionsOrder.append(section.name)
+                guard let section = try? Self._parseSection(lines: lines, lineIndex: index, offset: offset) else {
+                    Log.print("CODEOWNERS: skipping unparsable section header at line \(index + 1): \(line)")
+                    index = Self._skipCommentLines(lines: lines, lineIndex: index + 1)
+                    continue
                 }
+                Self._add(entries: section.entries, to: section.name, in: &sections, order: &sectionsOrder)
                 index = section.index
             } else {
-                guard !parsedEmptySection else {
-                    throw .foundEmptySectionAfterRealSection(line, index)
-                }
-                let section = try Self._parseSection(named: "[]",
-                                                     defaultOwners: [],
-                                                     lines: lines,
-                                                     lineIndex: index)
-                sections["[]"] = section.entries
-                sectionsOrder.append("[]")
+                // Rules outside any section belong to the default one, wherever they
+                // appear: a skipped header can leave a second run of them mid-file.
+                let section = Self._parseSection(named: Self._defaultSectionName,
+                                                 defaultOwners: [],
+                                                 lines: lines,
+                                                 lineIndex: index)
+                Self._add(entries: section.entries, to: Self._defaultSectionName, in: &sections, order: &sectionsOrder)
                 index = section.index
-                parsedEmptySection = true
             }
         }
         self.init(sections: sectionsOrder.map { ($0, sections[$0]!) })
@@ -84,13 +82,11 @@ struct CodeOwners {
         let fullPathRange = NSRange(location: 0, length: fullPath.utf16.count)
         // Last matching rule wins (inside one section).
         // Owners from the all sections are combined.
-        // If no rule matched in any section, return nil (path has no codeowners info at all).
-        // If a rule matched but leaves no owner (ownerless override, or a negated exclusion),
-        // that is an explicit "no owner" result and must be distinguished from "no match":
-        // it still counts as matched, just contributing no owners.
+        // If the path resolves to no owner at all - no rule matched, or the rules that
+        // matched assign no owner (an ownerless override or a negated exclusion) - return
+        // nil so the caller omits the tag rather than reporting an empty owner list.
         // Negated patterns (!) exclude paths from their section; once excluded, cannot be included again.
         var codeowners: [String] = []
-        var matched = false
         for sectionEntries in sections {
             var lastMatch: [String]?
             var isExcluded = false
@@ -103,14 +99,11 @@ struct CodeOwners {
                     }
                 }
             }
-            if isExcluded {
-                matched = true
-            } else if let lastMatch {
-                matched = true
+            if !isExcluded, let lastMatch {
                 codeowners.append(contentsOf: lastMatch)
             }
         }
-        return matched ? codeowners : nil
+        return codeowners.isEmpty ? nil : codeowners
     }
 
     func ownersForPath(_ path: String) -> String? {
@@ -128,7 +121,6 @@ extension CodeOwners {
         case cantReadFile(URL)
         case cantFindClosingBracket(String, Int)
         case emptySectionName(String, Int)
-        case foundEmptySectionAfterRealSection(String, Int)
         case patternError(String, String, Int)
         case patternRegexError(String, any Error, Int)
     }
@@ -201,8 +193,22 @@ private extension CodeOwners {
         }
     }
     
+    static let _defaultSectionName = "[]"
+
+    static func _add(entries: [SectionEntry], to name: String,
+                     in sections: inout [String: Array<SectionEntry>],
+                     order: inout Array<String>)
+    {
+        if sections[name] != nil {
+            sections[name]!.append(contentsOf: entries)
+        } else {
+            sections[name] = entries
+            order.append(name)
+        }
+    }
+
     static func _parseSection(named name: String, defaultOwners: [String],
-                                      lines: [String], lineIndex: Int) throws(ParsingError) -> (entries: [SectionEntry], index: Int)
+                                      lines: [String], lineIndex: Int) -> (entries: [SectionEntry], index: Int)
     {
         var index = _skipCommentLines(lines: lines, lineIndex: lineIndex)
         var entries: [SectionEntry] = []
@@ -211,11 +217,17 @@ private extension CodeOwners {
             guard _isSectionHeader(line: line) == nil else { // end of the section
                 break
             }
-            var record = try _parseOwnersRecord(line: line, lineIndex: index)
-            if record.owners.isEmpty {
-                record.owners = defaultOwners
+            // A single unparsable pattern must not discard the whole CODEOWNERS
+            // file: dropping everything would strip `test.codeowners` from every
+            // test in the run, including the paths covered by valid rules.
+            if var record = try? _parseOwnersRecord(line: line, lineIndex: index) {
+                if record.owners.isEmpty {
+                    record.owners = defaultOwners
+                }
+                entries.append(record)
+            } else {
+                Log.print("CODEOWNERS: skipping unparsable rule at line \(index + 1): \(line)")
             }
-            entries.append(record)
             index = _skipCommentLines(lines: lines, lineIndex: index + 1)
         }
         return (entries, index)
@@ -224,17 +236,31 @@ private extension CodeOwners {
     static func _parseSection(lines: [String], lineIndex: Int, offset: Int) throws(ParsingError) -> (name: String, entries: [SectionEntry], index: Int) {
         let line = lines[lineIndex]
         let header = try _parseSectionHeader(from: line.suffix(from: line.index(line.startIndex, offsetBy: offset)), index: lineIndex)
-        let section = try _parseSection(named: header.name, defaultOwners: header.owners, lines: lines, lineIndex: lineIndex + 1)
+        let section = _parseSection(named: header.name, defaultOwners: header.owners, lines: lines, lineIndex: lineIndex + 1)
         return (name: header.name, entries: section.entries, index: section.index)
     }
     
     static func _isSectionHeader(line: String) -> Int? {
+        let offset: Int
         switch line[line.startIndex] {
-        case "[": return 1
+        case "[": offset = 1
         case "^" where line.count > 2 && line[line.index(after: line.startIndex)] == "[":
-            return 2
+            offset = 2
         default: return nil
         }
+        // A leading `[` also starts a character range in a path (`[Gg]enerated/`).
+        // A real header carries nothing but an optional approval count and owners
+        // after the closing bracket, so content attached directly to `]` means
+        // this is a path. Misreading one as a header would swallow the rule and
+        // regroup every rule below it into a section that does not exist.
+        let afterOpen = line.suffix(from: line.index(line.startIndex, offsetBy: offset))
+        guard let closeIndex = _firstUnescapedIndex(of: _headerEndSymbol, in: afterOpen) else {
+            return offset // let the header parser report the missing bracket
+        }
+        guard let next = afterOpen.suffix(from: afterOpen.index(after: closeIndex)).first else {
+            return offset
+        }
+        return next.isWhitespace || next == "[" ? offset : nil
     }
     
     static func _parseSectionHeader(from line: Substring, index: Int) throws(ParsingError) -> (name: String, owners: [String]) {
@@ -318,10 +344,13 @@ private extension CodeOwners {
                 pattern += ".*?"
                 if hasPathContent { hasFolderGlob = true }
                 window.advance(amount: 3)
-            case ("*", "*", .some(let char)):
-                throw .patternError(window.pattern,
-                                    "Unknown character \(char) after **. Expected / or last symbol",
-                                    lineIndex)
+            // `**` not followed by `/` is not a folder glob. Git treats "other
+            // consecutive asterisks" as regular asterisks, so `**.swift` and
+            // `/a/**b/c` are valid patterns and collapse to a single `*`.
+            case ("*", "*", .some):
+                hasPathContent = true
+                pattern += "[^/]*"
+                window.advance(amount: 2)
             case ("*", _, _):
                 hasPathContent = true
                 pattern += "[^/]*"

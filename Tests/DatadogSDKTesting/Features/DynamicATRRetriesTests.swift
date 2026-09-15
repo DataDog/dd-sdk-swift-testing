@@ -6,41 +6,56 @@
 
 import XCTest
 @testable import DatadogSDKTesting
+@testable import EventsExporter
 
 final class DynamicATRRetriesLogicTests: XCTestCase {
-    // MARK: - Duration-based retry budgets from EFD settings
+    // MARK: - Duration-based retry budgets from the backend retry timetable
 
-    func testDynamicAtrUsesEfdRetryBudgetsForFastTest() async throws {
+    func testDynamicAtrUsesTimeTableBudgetForFastTest() async throws {
         let (runner, _) = runner(tests: ["someTest": .fail("Should fail", duration: 1.0)])
 
         let tests = try await extractTests(runner.run())
         XCTAssertNotNil(tests["someTest"])
-        // EFD 5s bucket → 10 retries → 1 initial + 10 retries = 11 runs
+        // 5s bucket → 10 retries → 1 initial + 10 retries = 11 runs
         XCTAssertEqual(tests["someTest"]?.runs.count, 11)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 11)
         XCTAssertEqual(tests["someTest"]?.isSucceeded, false)
     }
 
-    func testDynamicAtrUsesEfdRetryBudgetsForMediumTest() async throws {
+    func testDynamicAtrUsesTimeTableBudgetForMediumTest() async throws {
         let (runner, _) = runner(tests: ["someTest": .fail("Should fail", duration: 31.0)])
 
         let tests = try await extractTests(runner.run())
         XCTAssertNotNil(tests["someTest"])
-        // EFD 30-60s bucket → 5 retries → 1 initial + 5 retries = 6 runs
-        XCTAssertEqual(tests["someTest"]?.runs.count, 6)
-        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 6)
+        // 31s is under the "1m" threshold → 2 retries → 1 initial + 2 retries = 3 runs
+        XCTAssertEqual(tests["someTest"]?.runs.count, 3)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 3)
         XCTAssertEqual(tests["someTest"]?.isSucceeded, false)
     }
 
-    func testDynamicAtrUsesEfdRetryBudgetsForVeryLongTest() async throws {
+    func testDynamicAtrDoesNotRetryTestLongerThanTheTimeTable() async throws {
         let (runner, _) = runner(tests: ["someTest": .fail("Should fail", duration: 700.0)])
 
         let tests = try await extractTests(runner.run())
         XCTAssertNotNil(tests["someTest"])
-        // EFD >5m bucket → 0 retries, but max(1, 0) = 1 → 1 initial + 1 retry = 2 runs
-        XCTAssertEqual(tests["someTest"]?.runs.count, 2)
-        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 2)
+        // Longer than the last bucket of the timetable → no retries
+        XCTAssertEqual(tests["someTest"]?.runs.count, 1)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 1)
+        // The error of the only run must not stay suppressed
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.xcStatus == .fail }.count, 1)
         XCTAssertEqual(tests["someTest"]?.isSucceeded, false)
+    }
+
+    func testDynamicAtrFallsBackToFlatCountWithoutTimeTable() async throws {
+        let (runner, _) = runner(tests: ["someTest": .fail("Should fail", duration: 1.0)],
+                                 slowTestRetries: .init(),
+                                 failedTestRetriesCount: 2)
+
+        let tests = try await extractTests(runner.run())
+        XCTAssertNotNil(tests["someTest"])
+        // An empty timetable gives no budget for any duration, so the flat count is used instead
+        XCTAssertEqual(tests["someTest"]?.runs.count, 3)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.xcStatus == .fail }.count, 1)
     }
 
     // MARK: - Duration-based retry budgets from custom env buckets
@@ -63,19 +78,20 @@ final class DynamicATRRetriesLogicTests: XCTestCase {
 
         let tests = try await extractTests(runner.run())
         XCTAssertNotNil(tests["someTest"])
-        // >300s bucket → index 4 → 1 retry → 1 initial + 1 retry = 2 runs
+        // >5m bucket → 1 retry → 1 initial + 1 retry = 2 runs
         XCTAssertEqual(tests["someTest"]?.runs.count, 2)
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.status == .fail }.count, 2)
         XCTAssertEqual(tests["someTest"]?.isSucceeded, false)
     }
 
-    func testDynamicAtrCustomBucketsUseFixedExactAndFractionalBoundaries() async throws {
-        let buckets: (UInt, UInt, UInt, UInt, UInt) = (1, 2, 3, 4, 5)
+    func testDynamicAtrCustomBucketsUseStrictUpperBounds() async throws {
+        let buckets: AutomaticTestRetries.RetryBuckets = (1, 2, 3, 4, 5)
+        // Thresholds are strict: a duration equal to one belongs to the next bucket
         let cases: [(duration: TimeInterval, retries: Int)] = [
-            (5, 1), (5.1, 2),
-            (10, 2), (10.1, 3),
-            (30, 3), (30.1, 4),
-            (300, 4), (300.1, 5)
+            (4.9, 1), (5, 2),
+            (9.9, 2), (10, 3),
+            (29.9, 3), (30, 4),
+            (299.9, 4), (300, 5)
         ]
 
         for (duration, retries) in cases {
@@ -85,43 +101,6 @@ final class DynamicATRRetriesLogicTests: XCTestCase {
             XCTAssertEqual(tests["someTest"]?.runs.count, retries + 1,
                            "duration \(duration) should use \(retries) retries")
         }
-    }
-
-    func testDynamicAtrInitialDurationCacheUsesFullTestIdentity() {
-        let atr = AutomaticTestRetries(failedTestRetriesCount: 5,
-                                    failedTestTotalRetriesMax: 1000,
-                                    slowTestRetries: .init(),
-                                    retriesBuckets: (1, 1, 1, 1, 4))
-        let fast = mockTest(module: "FirstModule", suite: "SharedSuite", name: "sharedTest")
-        let slow = mockTest(module: "SecondModule", suite: "SharedSuite", name: "sharedTest")
-        let firstAttempt = TestRunInfoStart(tags: Mocks.AttachedTags(),
-                                            skip: (nil, .init(canBeSkipped: false, markedUnskippable: false)),
-                                            retry: nil,
-                                            executions: (0, 0))
-
-        withExtendedLifetime((fast.session, slow.session)) {
-            _ = atr.testGroupRetry(test: fast.test, duration: 1, withStatus: .fail,
-                                    retryStatus: .init(), andInfo: firstAttempt)
-            _ = atr.testGroupRetry(test: slow.test, duration: 301, withStatus: .fail,
-                                    retryStatus: .init(), andInfo: firstAttempt)
-
-            var fastRetry = firstAttempt
-            fastRetry.executions = (1, 1)
-            XCTAssertFalse(atr.shouldSuppressError(test: fast.test, info: fastRetry))
-        }
-    }
-
-    // MARK: - Ignores flat DD_CIVISIBILITY_FLAKY_RETRY_COUNT
-
-    func testDynamicAtrIgnoresFlatRetryCount() async throws {
-        // flat limit of 1, but 5s bucket gives 10 → should use 10, not 1
-        let (runner, _) = runner(tests: ["someTest": .fail("Should fail", duration: 1.0)],
-                                 failedTestRetriesCount: 1)
-
-        let tests = try await extractTests(runner.run())
-        XCTAssertNotNil(tests["someTest"])
-        // 5s bucket → 10 retries (not flat 1) → 11 runs
-        XCTAssertEqual(tests["someTest"]?.runs.count, 11)
     }
 
     // MARK: - Stops after first pass
@@ -151,21 +130,34 @@ final class DynamicATRRetriesLogicTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.isSucceeded, true)
     }
 
+    // MARK: - Non retriable test
+
+    func testDynamicAtrDoesNotRetryNonRetriableTest() async throws {
+        let (runner, atr) = runner(tests: ["someTest": .fail("Should fail", tags: .init(retriable: false))],
+                                   customBuckets: (3, 1, 1, 1, 1))
+
+        let tests = try await extractTests(runner.run())
+        XCTAssertNotNil(tests["someTest"])
+        XCTAssertEqual(tests["someTest"]?.runs.count, 1)
+        XCTAssertEqual(tests["someTest"]?.runs.filter { $0.xcStatus == .fail }.count, 1)
+        XCTAssertEqual(atr.failedTestTotalRetries, 0)
+    }
+
     // MARK: - Session-level retry cap still applies
 
     func testDynamicAtrRespectsSessionLevelRetryCap() async throws {
-        let (runner, _) = runner(tests: ["someTest": .fail("Should fail", duration: 1.0),
-                                        "someTest2": .fail("Should fail", duration: 1.0)],
-                                 failedTestRetriesCount: 5,
-                                 failedTestTotalRetriesMax: 8)
+        let (runner, atr) = runner(tests: ["someTest": .fail("Should fail", duration: 1.0),
+                                           "someTest2": .fail("Should fail", duration: 1.0)],
+                                   failedTestTotalRetriesMax: 8)
 
         let tests = try await extractTests(runner.run())
         // someTest: 5s bucket → 10 retries, but capped at 8 total → 1 initial + 8 retries = 9 runs
         XCTAssertNotNil(tests["someTest"])
         XCTAssertEqual(tests["someTest"]?.runs.count, 9)
-        // someTest2: global cap reached after 8 retries → no retries → 1 run
+        // someTest2: global cap reached → no retries → 1 run
         XCTAssertNotNil(tests["someTest2"])
         XCTAssertEqual(tests["someTest2"]?.runs.count, 1)
+        XCTAssertEqual(atr.failedTestTotalRetries, 8)
     }
 
     // MARK: - Retry reason tags
@@ -185,16 +177,100 @@ final class DynamicATRRetriesLogicTests: XCTestCase {
         XCTAssertEqual(tests["someTest"]?.runs.filter { $0.tags[DDEfdTags.testRetryReason] == DDTagValues.retryReasonAutoTestRetry }.count, 2)
     }
 
+    // MARK: - Budget
+
+    func testRetryBudgetForDuration() {
+        let table = TracerSettings.EFD.TimeTable(attrs: ["5s": 10, "30s": 5, "1m": 2, "5m": 1])
+        let timeTable = AutomaticTestRetries.RetryBudget.timeTable(table)
+        for duration in [0.0, 1.0, 5.0, 30.0, 61.0, 300.0, 700.0] {
+            XCTAssertEqual(timeTable.retries(for: duration), table.repeats(for: duration),
+                           "timetable budget must follow the backend timetable at \(duration)")
+        }
+        XCTAssertEqual(timeTable.maxRetries, 10)
+
+        let buckets = AutomaticTestRetries.RetryBudget.buckets((5, 4, 3, 2, 1))
+        XCTAssertEqual(buckets.retries(for: 4.9), 5)
+        XCTAssertEqual(buckets.retries(for: 5), 4)
+        XCTAssertEqual(buckets.retries(for: 299.9), 2)
+        XCTAssertEqual(buckets.retries(for: 300), 1)
+        XCTAssertEqual(buckets.maxRetries, 5)
+
+        let flat = AutomaticTestRetries.RetryBudget.flat(3)
+        XCTAssertEqual(flat.retries(for: 1), 3)
+        XCTAssertEqual(flat.retries(for: 700), 3)
+        XCTAssertEqual(flat.maxRetries, 3)
+
+        XCTAssertFalse(flat.isDynamic)
+        XCTAssertTrue(buckets.isDynamic)
+        XCTAssertTrue(timeTable.isDynamic)
+    }
+
+    // MARK: - Enablement
+
+    func testDynamicAtrRequiresAutomaticTestRetries() {
+        let env = Environment(config: Config(), env: ProcessEnvironmentReader(environment: [:], infoDictionary: [:]),
+                              log: Log.instance)
+        func isEnabled(atr: Bool, dynamic: Bool, remote: Bool) -> Bool {
+            AutomaticTestRetriesFactory.isEnabled(config: config(dynamic: dynamic, atrEnabled: atr),
+                                                  env: env, remote: settings(flakyTestRetriesEnabled: remote))
+        }
+        // The dynamic budget doesn't enable the feature on its own: ATR has to be enabled
+        // both locally and by the backend
+        XCTAssertFalse(isEnabled(atr: false, dynamic: true, remote: true))
+        XCTAssertFalse(isEnabled(atr: true, dynamic: true, remote: false))
+        XCTAssertTrue(isEnabled(atr: true, dynamic: true, remote: true))
+        // ATR can be enabled while the dynamic budget is not
+        XCTAssertTrue(isEnabled(atr: true, dynamic: false, remote: true))
+    }
+
+    // MARK: - Factory
+
+    func testFactoryBudgetSelection() async throws {
+        let table = TracerSettings.EFD.TimeTable(attrs: ["5s": 10])
+        let log = Mocks.CatchLogger(isDebug: false)
+
+        let flat = try await AutomaticTestRetriesFactory(config: config(dynamic: false),
+                                                         efdSettings: .init(slowTestRetries: table))
+            .create(log: log)
+        XCTAssertFalse(flat.budget.isDynamic)
+        XCTAssertEqual(flat.budget.retries(for: 1), 5)
+
+        let dynamic = try await AutomaticTestRetriesFactory(config: config(dynamic: true),
+                                                            efdSettings: .init(slowTestRetries: table))
+            .create(log: log)
+        XCTAssertTrue(dynamic.budget.isDynamic)
+        XCTAssertEqual(dynamic.budget.retries(for: 1), 10)
+
+        // Dynamic ATR without a backend timetable falls back to the flat retry count
+        let noTable = try await AutomaticTestRetriesFactory(config: config(dynamic: true))
+            .create(log: log)
+        XCTAssertFalse(noTable.budget.isDynamic)
+        XCTAssertEqual(noTable.budget.retries(for: 1), 5)
+
+        // Custom buckets win over the backend timetable
+        let custom = try await AutomaticTestRetriesFactory(config: config(dynamic: true, buckets: "3,2,2,1,1"),
+                                                           efdSettings: .init(slowTestRetries: table))
+            .create(log: log)
+        XCTAssertTrue(custom.budget.isDynamic)
+        XCTAssertEqual(custom.budget.retries(for: 1), 3)
+        XCTAssertEqual(custom.budget.retries(for: 700), 1)
+    }
+
     // MARK: - Helpers
 
-    private func mockTest(module: String, suite: String, name: String) -> (session: Mocks.Session, test: Mocks.Test) {
-        let session = Mocks.Session(name: "MockTestSession", testTags: [:])
-        let testModule = session.module(named: module) as! Mocks.Module
-        let testSuite = testModule.startSuite(named: suite, at: nil,
-                                              framework: .init(name: "MockRunner", version: "1.0.0")) as! Mocks.Suite
-        let group = testSuite.startGroup(named: name)
-        let test = group.withTest(named: name) { $0 }
-        return (session, test)
+    private func config(dynamic: Bool, buckets: String? = nil, atrEnabled: Bool = true) -> Config {
+        var env: [String: String] = ["DD_CIVISIBILITY_DYNAMIC_ATR_ENABLED": dynamic ? "true" : "false",
+                                     "DD_CIVISIBILITY_FLAKY_RETRY_ENABLED": atrEnabled ? "true" : "false"]
+        if let buckets {
+            env["DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS"] = buckets
+        }
+        return Config(env: ProcessEnvironmentReader(environment: env, infoDictionary: [:]))
+    }
+
+    private func settings(flakyTestRetriesEnabled: Bool) -> TracerSettings {
+        TracerSettings(itr: .init(), efd: .init(),
+                       flakyTestRetriesEnabled: flakyTestRetriesEnabled,
+                       knownTestsEnabled: false, testManagement: .init())
     }
 
     func extractTests(_ session: Mocks.Session) throws -> [String: Mocks.Group] {
@@ -205,17 +281,27 @@ final class DynamicATRRetriesLogicTests: XCTestCase {
     }
 
     func runner(tests: KeyValuePairs<String, Mocks.Runner.TestMethod>,
+                slowTestRetries: TracerSettings.EFD.TimeTable = .init(attrs: ["5s": 10, "30s": 5, "1m": 2, "5m": 1]),
                 failedTestRetriesCount: UInt = 5,
                 failedTestTotalRetriesMax: UInt = 1000,
-                customBuckets: (UInt, UInt, UInt, UInt, UInt)? = nil) -> (Mocks.Runner, AutomaticTestRetries)
+                customBuckets: AutomaticTestRetries.RetryBuckets? = nil) -> (Mocks.Runner, AutomaticTestRetries)
     {
-        let atr = AutomaticTestRetries(
-            failedTestRetriesCount: failedTestRetriesCount,
-            failedTestTotalRetriesMax: failedTestTotalRetriesMax,
-            slowTestRetries: .init(attrs: ["5s": 10, "30s": 5, "1m": 2, "5m": 1]),
-            retriesBuckets: customBuckets
-        )
+        let atr = AutomaticTestRetries(budget: budget(slowTestRetries: slowTestRetries,
+                                                      failedTestRetriesCount: failedTestRetriesCount,
+                                                      customBuckets: customBuckets),
+                                       failedTestTotalRetriesMax: failedTestTotalRetriesMax)
         return (Mocks.Runner(features: [atr, AdditionalTags()],
-                              tests: ["ATRModule": ["ATRSuite": .init(tests: tests)]]), atr)
+                             tests: ["ATRModule": ["ATRSuite": .init(tests: tests)]]), atr)
+    }
+
+    private func budget(slowTestRetries: TracerSettings.EFD.TimeTable,
+                        failedTestRetriesCount: UInt,
+                        customBuckets: AutomaticTestRetries.RetryBuckets?) -> AutomaticTestRetries.RetryBudget
+    {
+        if let customBuckets {
+            return .buckets(customBuckets)
+        }
+        // The same fallback the factory does for an empty backend timetable
+        return slowTestRetries.times.isEmpty ? .flat(failedTestRetriesCount) : .timeTable(slowTestRetries)
     }
 }

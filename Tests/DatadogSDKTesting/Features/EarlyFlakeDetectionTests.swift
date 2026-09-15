@@ -167,8 +167,9 @@ final class EarlyFlakeDetectionLogicTests: XCTestCase {
     }
     
     func testEfdChangesRetryCountForLongTest() async throws {
+        // 31s falls into the "1m" bucket of the table below → 2 runs
         let (runner, efd) = efdRunner(known: [],
-                                      tests: ["newTest": .failOddRuns(61.0)])
+                                      tests: ["newTest": .failOddRuns(31.0)])
         let tests = try await extractTests(runner.run())
         XCTAssertNotNil(tests["newTest"])
         XCTAssertEqual(tests["newTest"]?.runs.count, 2)
@@ -187,6 +188,22 @@ final class EarlyFlakeDetectionLogicTests: XCTestCase {
         XCTAssertEqual(tests["newTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusPass)
     }
     
+    func testEfdUsesLastBucketOfTheTimeTable() async throws {
+        // 61s falls into the "5m" bucket of the table below → 1 run, no retries
+        let (runner, efd) = efdRunner(known: [],
+                                      tests: ["newTest": .failOddRuns(61.0)])
+        let tests = try await extractTests(runner.run())
+        XCTAssertNotNil(tests["newTest"])
+        XCTAssertEqual(tests["newTest"]?.runs.count, 1)
+        XCTAssertEqual(tests["newTest"]?.runs.filter { $0.status == .fail }.count, 1)
+        XCTAssertEqual(tests["newTest"]?.isSucceeded, false)
+        XCTAssertEqual(efd.testCounters.newTests, 1)
+        // The test isn't slower than the whole table, so EFD isn't aborted for it
+        XCTAssertNil(tests["newTest"]?.runs.first?.tags[DDEfdTags.testEfdAbortReason])
+        XCTAssertNil(tests["newTest"]?.runs.first?.tags[DDEfdTags.testIsRetry])
+        XCTAssertEqual(tests["newTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
+    }
+
     func testEfdChangesRetryCountForLongLongTest() async throws {
         let (runner, efd) = efdRunner(known: [],
                                       tests: ["newTest": .failOddRuns(700.0)])
@@ -221,6 +238,24 @@ final class EarlyFlakeDetectionLogicTests: XCTestCase {
         XCTAssertNil(tests["newTest"]?.runs.first?.tags[DDTestTags.testFailureSuppressionReason])
         XCTAssertEqual(tests["newTest"]?.runs.filter { $0.tags[DDTestTags.testIsNew] == "true" }.count, 1)
         XCTAssertEqual(tests["newTest"]?.runs.last?.tags[DDTestTags.testFinalStatus], DDTagValues.statusFail)
+    }
+
+    func testSlowTestRetriesTableBuckets() {
+        let table = TracerSettings.EFD.TimeTable(attrs: ["5s": 10, "10s": 5, "30s": 3, "5m": 2])
+        // Thresholds are strict upper bounds: a duration equal to a threshold
+        // belongs to the next bucket, and everything above the table gets 0
+        let expected: [(duration: TimeInterval, repeats: UInt)] = [
+            (0, 10), (1, 10), (4.9, 10),
+            (5, 5), (6, 5), (9.9, 5),
+            (10, 3), (29.9, 3),
+            (30, 2), (299.9, 2),
+            (300, 0), (700, 0)
+        ]
+        for (duration, repeats) in expected {
+            XCTAssertEqual(table.repeats(for: duration), repeats, "duration \(duration)")
+        }
+        // An empty table has no budget for any duration
+        XCTAssertEqual(TracerSettings.EFD.TimeTable().repeats(for: 1), 0)
     }
 
     func extractTests(_ session: Mocks.Session) throws -> [String: Mocks.Group] {

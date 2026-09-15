@@ -115,22 +115,17 @@ public struct TracerSettings {
                 self.times = times
             }
 
-            public func retryBucketIndex(forDuration duration: TimeInterval) -> Int {
-                let rounded = duration.rounded()
-                guard let index = times.firstIndex(where: { $0.time > rounded }) else {
-                    return times.count // > max time → last bucket (0 retries)
-                }
-                return index > 0 ? index - 1 : 0
-            }
-
-            public func retries(forDuration duration: TimeInterval) -> UInt {
-                let index = retryBucketIndex(forDuration: duration)
-                guard index < times.count else { return 0 }
-                return times[index].count
-            }
-
+            /// Value of the first bucket the given duration falls into.
+            ///
+            /// Bucket thresholds are strict upper bounds: a duration equal to a threshold
+            /// belongs to the next bucket, and a duration at or past the last threshold
+            /// gets `0`. For the usual table of `5s: 10, 10s: 5, 30s: 3, 5m: 2` that means
+            /// `10` under 5s, `5` under 10s, `3` under 30s, `2` under 5m and `0` above.
             public func repeats(for time: TimeInterval) -> UInt {
-                retries(forDuration: time)
+                guard let index = times.firstIndex(where: { $0.time > time }) else {
+                    return 0
+                }
+                return times[index].count
             }
 
             private static func time(_ val: String) -> TimeInterval? {

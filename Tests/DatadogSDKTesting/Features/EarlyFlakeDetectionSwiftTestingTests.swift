@@ -167,8 +167,9 @@ final class EarlyFlakeDetectionSwiftTestingTests: XCTestCase {
     }
 
     func testEfdChangesRetryCountForLongTest() async throws {
+        // 31s falls into the "1m" bucket of the table below → 2 runs
         let (runner, efd) = efdRunner(known: [],
-                                      tests: ["newTest": .failOddRuns(61.0)])
+                                      tests: ["newTest": .failOddRuns(31.0)])
         let tests = try extractTests(try await runner.run())
         XCTAssertNotNil(tests["newTest"])
         XCTAssertEqual(tests["newTest"]?.runs.count, 2)

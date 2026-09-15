@@ -5,100 +5,93 @@
  */
 
 import Foundation
-internal import EventsExporter
+@preconcurrency internal import EventsExporter
 
-class AutomaticTestRetries: TestHooksFeature, @unchecked Sendable {
+final class AutomaticTestRetries: TestHooksFeature {
     static var id: FeatureId = "Automatic Test Retries"
 
-    let failedTestRetriesCount: UInt
-    let failedTestTotalRetriesMax: UInt
+    /// Retry budgets for the Dynamic ATR duration buckets.
+    /// Values are the retry counts for the `< 5s`, `< 10s`, `< 30s`, `< 5m` and `>= 5m` buckets.
+    /// Thresholds are strict upper bounds, the same way the backend retry timetable works.
+    typealias RetryBuckets = (UInt, UInt, UInt, UInt, UInt)
 
-    private let retryTimings: RetryTimings
-    private let minimumRetryCount: UInt
-    private let usesInitialDuration: Bool
+    /// How many times one test can be retried.
+    enum RetryBudget {
+        /// The same retry count for every test.
+        case flat(UInt)
+        /// Dynamic ATR: retry count for the duration buckets configured by the user.
+        case buckets(RetryBuckets)
+        /// Dynamic ATR: retry count from the retry timetable provided by the backend.
+        /// The timetable is the same one Early Flake Detection uses, so buckets and
+        /// their boundaries are defined by the backend.
+        case timeTable(TracerSettings.EFD.TimeTable)
 
-    /// Stable identity for a test across XCTest and Swift Testing execution paths.
-    private struct TestIdentity: Hashable {
-        let module: String
-        let suite: String
-        let name: String
-
-        init(_ test: any TestRun) {
-            module = test.module.name
-            suite = test.suite.name
-            name = test.name
-        }
-    }
-
-    /// Retry budgets for regular ATR, backend EFD fallback, or custom Dynamic ATR buckets.
-    private enum RetryTimings {
-        case constant(UInt)
-        case efd(TracerSettings.EFD.TimeTable)
-        case dynamic((UInt, UInt, UInt, UInt, UInt))
-
+        /// Retries allowed for a test which run for `duration`.
         func retries(for duration: TimeInterval) -> UInt {
             switch self {
-            case let .constant count:
+            case .flat(let count):
                 return count
-            case let .efd table:
-                return table.retries(forDuration: duration)
-            case let .dynamic buckets:
+            case .buckets(let buckets):
                 switch duration {
-                case ...5: return buckets.0
-                case ...10: return buckets.1
-                case ...30: return buckets.2
-                case ...300: return buckets.3
+                case ..<5: return buckets.0
+                case ..<10: return buckets.1
+                case ..<30: return buckets.2
+                case ..<300: return buckets.3
                 default: return buckets.4
                 }
+            case .timeTable(let table):
+                return table.repeats(for: duration)
+            }
+        }
+
+        /// The biggest retry count this budget can return. We don't know the duration
+        /// of the run while it is still running, so error suppression uses this upper bound.
+        var maxRetries: UInt {
+            switch self {
+            case .flat(let count):
+                return count
+            case .buckets(let buckets):
+                return max(buckets.0, buckets.1, buckets.2, buckets.3, buckets.4)
+            case .timeTable(let table):
+                return table.times.map { $0.count }.max() ?? 0
+            }
+        }
+
+        var isDynamic: Bool {
+            switch self {
+            case .flat: return false
+            default: return true
             }
         }
     }
 
-    /// Dynamic ATR classifies the initial attempt once. Flat ATR does not need this cache.
-    private let initialDurationCache: Synced<[TestIdentity: TimeInterval]> = .init([:])
+    let budget: RetryBudget
+    let failedTestTotalRetriesMax: UInt
+
     private let _failedTestTotalRetries: Synced<UInt>
     var failedTestTotalRetries: UInt { _failedTestTotalRetries.value }
 
-    /// Creates regular ATR with one retry count for every test duration.
-    init(failedTestRetriesCount: UInt,
+    init(budget: RetryBudget,
          failedTestTotalRetriesMax: UInt)
     {
-        self.failedTestRetriesCount = failedTestRetriesCount
+        self.budget = budget
         self.failedTestTotalRetriesMax = failedTestTotalRetriesMax
-        self.retryTimings = .constant(failedTestRetriesCount)
-        self.minimumRetryCount = 0
-        self.usesInitialDuration = false
         self._failedTestTotalRetries = Synced(0)
     }
 
-    /// Creates Dynamic ATR. Custom buckets use fixed inclusive product boundaries;
-    /// otherwise the backend EFD timetable supplies duration-specific budgets.
-    init(failedTestRetriesCount: UInt,
-         failedTestTotalRetriesMax: UInt,
-         slowTestRetries: TracerSettings.EFD.TimeTable,
-         retriesBuckets: (UInt, UInt, UInt, UInt, UInt)? = nil)
+    /// Creates ATR with the same retry count for every test.
+    convenience init(failedTestRetriesCount: UInt,
+                     failedTestTotalRetriesMax: UInt)
     {
-        self.failedTestRetriesCount = failedTestRetriesCount
-        self.failedTestTotalRetriesMax = failedTestTotalRetriesMax
-        self.retryTimings = retriesBuckets.map(RetryTimings.dynamic) ?? .efd(slowTestRetries)
-        self.minimumRetryCount = 1
-        self.usesInitialDuration = true
-        self._failedTestTotalRetries = Synced(0)
-    }
-
-    private func maxRetries(for test: any TestRun) -> UInt {
-        guard usesInitialDuration else { return failedTestRetriesCount }
-        guard let initialDuration = initialDurationCache.value[TestIdentity(test)] else {
-            // Ensure the first failing attempt is suppressed while its duration is recorded.
-            return minimumRetryCount
-        }
-        return max(minimumRetryCount, retryTimings.retries(for: initialDuration))
+        self.init(budget: .flat(failedTestRetriesCount),
+                  failedTestTotalRetriesMax: failedTestTotalRetriesMax)
     }
 
     func testGroupConfiguration(for test: String, tags: any TestTags,
                                 in suite: any TestSuite,
                                 configuration: RetryGroupConfiguration.Iterator) -> RetryGroupConfiguration.Iterator
     {
+        // Retry but allow softer successStrategy
         configuration.retry(softer: .atLeastOneSucceeded)
     }
 
@@ -107,23 +100,16 @@ class AutomaticTestRetries: TestHooksFeature, @unchecked Sendable {
                         andInfo info: TestRunInfoStart) -> RetryStatus.Iterator
     {
         guard info.tags.get(tag: .retriable) ?? true else { return retryStatus.next() }
-
-        if usesInitialDuration && info.executions.total == 0 {
-            let identity = TestIdentity(test)
-            initialDurationCache.update {
-                if $0[identity] == nil {
-                    $0[identity] = duration
-                }
-            }
-        }
-
         if case .fail = status {
-            if UInt(info.executions.total) < maxRetries(for: test)
-               && incrementRetries() != nil
+            // Retry budget of the dynamic ATR depends on how long the run took
+            if info.executions.total < budget.retries(for: duration) // we can retry more
+               && incrementRetries() != nil // and increased global retry counter successfully
             {
+                // we can retry this test more
                 return retryStatus.retry(reason: DDTagValues.retryReasonAutoTestRetry,
                                          errors: .suppressed(reason: DDTagValues.failureSuppressionReasonATR))
             } else {
+                // we can't retry anymore, end it
                 return retryStatus.end()
             }
         }
@@ -132,19 +118,23 @@ class AutomaticTestRetries: TestHooksFeature, @unchecked Sendable {
 
     func shouldSuppressError(test: any TestRun, info: TestRunInfoStart) -> Bool {
         guard info.tags.get(tag: .retriable) ?? true else { return false }
-        return UInt(info.executions.total) < maxRetries(for: test)
-            && failedTestTotalRetries < failedTestTotalRetriesMax
+        // The run isn't finished yet, so its duration is unknown and we can't tell the exact
+        // budget of the dynamic ATR. We suppress the error while any retry is still possible.
+        // `testGroupRetry` restores it if the duration leaves us no retries.
+        return info.executions.total < budget.maxRetries // we can retry test more
+            && _failedTestTotalRetries.value < failedTestTotalRetriesMax // and global counter allow us to retry
     }
 
     func testWillFinish(test: any TestRun, duration: TimeInterval, withStatus status: TestStatus, andInfo info: TestRunInfoEnd) {
         guard info.retry.feature == id else { return }
-        if !info.retry.status.isRetry {
+        if !info.retry.status.isRetry { // last run. Save status
+            // We have to fix status for the suppressed errors if needed.
             test.set(tag: DDTestTags.testFinalStatus,
                      value: status.final(ignoreErrors: info.retry.status.ignoreErrors))
         }
     }
 
-    func incrementRetries() -> UInt? {
+    private func incrementRetries() -> UInt? {
         _failedTestTotalRetries.update { cnt in
             cnt.checkedAdd(1, max: failedTestTotalRetriesMax).map {
                 cnt = $0
@@ -172,18 +162,25 @@ struct AutomaticTestRetriesFactory: FeatureFactory {
     }
 
     func create(log: Logger) async throws -> AutomaticTestRetries {
-        if config.dynamicATREnabled {
-            log.debug("Dynamic Auto Test Retries Enabled")
-            return AutomaticTestRetries(
-                failedTestRetriesCount: config.testRetriesTestRetryCount,
-                failedTestTotalRetriesMax: config.testRetriesTotalRetryCount,
-                slowTestRetries: efdSettings.slowTestRetries,
-                retriesBuckets: config.dynamicATRBuckets
-            )
-        }
+        AutomaticTestRetries(budget: budget(log: log),
+                             failedTestTotalRetriesMax: config.testRetriesTotalRetryCount)
+    }
 
-        log.debug("Automatic Test Retries Enabled")
-        return AutomaticTestRetries(failedTestRetriesCount: config.testRetriesTestRetryCount,
-                                    failedTestTotalRetriesMax: config.testRetriesTotalRetryCount)
+    private func budget(log: Logger) -> AutomaticTestRetries.RetryBudget {
+        let flat = AutomaticTestRetries.RetryBudget.flat(config.testRetriesTestRetryCount)
+        guard config.dynamicATREnabled else {
+            log.debug("Automatic Test Retries Enabled")
+            return flat
+        }
+        if let buckets = config.dynamicATRBuckets {
+            log.debug("Dynamic Auto Test Retries Enabled with custom buckets: \(buckets)")
+            return .buckets(buckets)
+        }
+        guard !efdSettings.slowTestRetries.times.isEmpty else {
+            log.print("Dynamic Auto Test Retries: the backend didn't provide a retry timetable. Falling back to the flat retry count")
+            return flat
+        }
+        log.debug("Dynamic Auto Test Retries Enabled with the backend retry timetable")
+        return .timeTable(efdSettings.slowTestRetries)
     }
 }

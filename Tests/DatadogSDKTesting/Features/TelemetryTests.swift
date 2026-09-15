@@ -198,8 +198,7 @@ final class TelemetryTests: XCTestCase {
             .first { $0.metric == "dynamic_atr_retries.enabled" })
         XCTAssertEqual(series.type, .count)
         XCTAssertEqual(series.points.first?.value, 1)
-        // The tag is emitted only when valid custom buckets were accepted.
-        XCTAssertNil(series.tags)
+        XCTAssertEqual(series.tags, ["has_custom_buckets:false"])
     }
 }
 

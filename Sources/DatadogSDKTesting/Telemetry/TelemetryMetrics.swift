@@ -383,9 +383,7 @@ extension Telemetry {
 
     struct DynamicATRMetricTags: TelemetryMetricTags {
         var hasCustomBuckets: Bool
-        var tags: [String: any SpanAttributeConvertible] {
-            hasCustomBuckets ? ["has_custom_buckets": true] : [:]
-        }
+        var tags: [String: any SpanAttributeConvertible] { ["has_custom_buckets": hasCustomBuckets] }
     }
 }
 

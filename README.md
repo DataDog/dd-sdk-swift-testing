@@ -79,11 +79,13 @@ DD_DISABLE_CRASH_HANDLER # Disables crash handling and reporting. (Boolean) WARN
 
 ### Dynamic Auto Test Retries
 
-By default, Auto Test Retries uses a flat per-test retry limit (`DD_CIVISIBILITY_FLAKY_RETRY_COUNT`). When dynamic ATR is enabled, the number of retries allowed for a test is determined by the duration of its initial attempt, using the same duration buckets as Early Flake Detection (5s / 10s / 30s / 5m), instead of the flat per-test retry limit. Requires Auto Test Retries to be enabled by the backend.
+By default, Auto Test Retries uses a flat per-test retry limit (`DD_CIVISIBILITY_FLAKY_RETRY_COUNT`). When dynamic ATR is enabled, the number of retries allowed for a failed test run is determined by how long that run took, instead of by the flat per-test retry limit. The session-wide retry limit (`DD_CIVISIBILITY_TOTAL_FLAKY_RETRY_COUNT`) still applies. Dynamic ATR only changes how the per-test budget is calculated: it needs Auto Test Retries itself to be enabled, both by `DD_CIVISIBILITY_FLAKY_RETRY_ENABLED` and by the backend. If Auto Test Retries is disabled, dynamic ATR is disabled too.
+
+Retry budgets come from the same duration-based retry timetable the backend provides for Early Flake Detection, so its buckets and their boundaries are defined by the backend. Tests longer than the last bucket of the timetable are not retried. Setting `DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS` replaces that timetable with five fixed buckets. If the backend provides no timetable and no buckets are configured, the flat per-test retry limit is used.
 
 ```shell
 DD_CIVISIBILITY_DYNAMIC_ATR_ENABLED # Enables dynamic, duration-based Auto Test Retries budgets (Boolean, default: false)
-DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS # Comma-separated list of five positive integers in [1, 20] overriding the five duration-based retry budgets (for the 5s, 10s, 30s, 5m, and >5m buckets respectively). When unset or empty, the Early Flake Detection retry settings from the backend are used. Only takes effect when DD_CIVISIBILITY_DYNAMIC_ATR_ENABLED is enabled. (String)
+DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS # Comma-separated list of five integers in [1, 20]: the retry budgets for runs under 5s, under 10s, under 30s, under 5m and 5m or longer. Thresholds are strict upper bounds, like the ones in the backend timetable. When unset or empty, the retry timetable from the backend is used. Only takes effect when DD_CIVISIBILITY_DYNAMIC_ATR_ENABLED is enabled. (String)
 ```
 
 ## Custom tags

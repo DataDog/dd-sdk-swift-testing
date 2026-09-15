@@ -135,6 +135,7 @@ extension Telemetry {
         let knownTests: KnownTests
         let testManagementTests: TestManagementTests
         let impactedTests: ImpactedTests
+        let dynamicATR: DynamicATR
 
         init(_ f: Factory) {
             events = Events(f)
@@ -148,6 +149,7 @@ extension Telemetry {
             knownTests = KnownTests(f)
             testManagementTests = TestManagementTests(f)
             impactedTests = ImpactedTests(f)
+            dynamicATR = DynamicATR(f)
         }
     }
 }
@@ -378,6 +380,11 @@ extension Telemetry {
             ["expected_provider": expectedProvider, "discrepant_provider": discrepantProvider, "type": type]
         }
     }
+
+    struct DynamicATRMetricTags: TelemetryMetricTags {
+        var hasCustomBuckets: Bool
+        var tags: [String: any SpanAttributeConvertible] { ["has_custom_buckets": hasCustomBuckets] }
+    }
 }
 
 extension Telemetry.Counter where Tags == Telemetry.GitCommandMetricTags {
@@ -408,6 +415,12 @@ extension Telemetry.Counter where Tags == Telemetry.CommitShaDiscrepancyMetricTa
     func add(_ count: Int = 1, expectedProvider: Telemetry.ShaProvider,
              discrepantProvider: Telemetry.ShaProvider, type: Telemetry.ShaDiscrepancyType) {
         add(count, Tags(expectedProvider: expectedProvider, discrepantProvider: discrepantProvider, type: type))
+    }
+}
+
+extension Telemetry.Counter where Tags == Telemetry.DynamicATRMetricTags {
+    func add(_ count: Int = 1, hasCustomBuckets: Bool) {
+        add(count, Tags(hasCustomBuckets: hasCustomBuckets))
     }
 }
 
@@ -603,6 +616,14 @@ extension Telemetry.Metrics {
             responseBytes = f.distribution("impacted_tests_detection.response_bytes")
             responseFiles = f.distribution("impacted_tests_detection.response_files")
             isModified = f.counter("impacted_tests_detection.is_modified")
+        }
+    }
+
+    struct DynamicATR {
+        let enabled: Telemetry.Counter<Telemetry.DynamicATRMetricTags>
+
+        init(_ f: Telemetry.Factory) {
+            enabled = f.counter("dynamic_atr_retries.enabled")
         }
     }
 }

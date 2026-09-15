@@ -61,6 +61,10 @@ final class Config {
     var testRetriesEnabled: Bool = true
     var testRetriesTestRetryCount: UInt = 5
     var testRetriesTotalRetryCount: UInt = 1000
+
+    /// Dynamic Auto Test Retries (duration-based retry budgets)
+    var dynamicATREnabled: Bool = false
+    var dynamicATRBuckets: AutomaticTestRetries.RetryBuckets? = nil
     
     /// Test Management
     var testManagementEnabled: Bool = true
@@ -161,6 +165,11 @@ final class Config {
         testRetriesEnabled = env[.enableCiVisibilityFlakyRetries] ?? testRetriesEnabled
         testRetriesTestRetryCount = env[.ciVisibilityFlakyRetryCount] ?? testRetriesTestRetryCount
         testRetriesTotalRetryCount = env[.ciVisibilityTotalFlakyRetryCount] ?? testRetriesTotalRetryCount
+
+        /// Dynamic Auto Test Retries (duration-based retry budgets)
+        dynamicATREnabled = env[.enableCiVisibilityDynamicATR] ?? dynamicATREnabled
+        dynamicATRBuckets = Config.parseDynamicATRBuckets(env[.ciVisibilityDynamicATRBuckets, String.self])
+            ?? dynamicATRBuckets
         
         /// Test Managemennt
         testManagementEnabled = env[.testManagementEnabled] ?? testManagementEnabled
@@ -210,6 +219,22 @@ final class Config {
         isTestObserverNeeded = !isBinaryUnderUITesting || env.has("TEST_CLASS")
     }
     
+    private static func parseDynamicATRBuckets(_ raw: String?) -> AutomaticTestRetries.RetryBuckets? {
+        // An unset or an empty variable means "use the retry timetable from the backend"
+        guard let raw, !raw.isEmpty else { return nil }
+        guard let values = [UInt](configValue: raw), values.count == 5,
+              values.allSatisfy({ Config.dynamicATRBucketRange.contains($0) })
+        else {
+            Log.print("Invalid \(EnvironmentKey.ciVisibilityDynamicATRBuckets.rawValue) value \"\(raw)\": " +
+                      "expected five comma-separated integers in " +
+                      "[\(dynamicATRBucketRange.lowerBound), \(dynamicATRBucketRange.upperBound)]")
+            return nil
+        }
+        return (values[0], values[1], values[2], values[3], values[4])
+    }
+
+    private static let dynamicATRBucketRange: ClosedRange<UInt> = 1...20
+
     private static func expand(tags: [String: String], env: EnvironmentReader) -> [String: String] {
         tags.mapValues { value in
             guard value.hasPrefix("$") else { return value }
@@ -276,6 +301,8 @@ extension Config: CustomDebugStringConvertible {
         Test Retries Enabled: \(testRetriesEnabled)
         Test Retries Count: \(testRetriesTestRetryCount)
         Test Retries Total Count: \(testRetriesTotalRetryCount)
+        Dynamic ATR Enabled: \(dynamicATREnabled)
+        Dynamic ATR Buckets: \(dynamicATRBuckets.map { "\($0.0),\($0.1),\($0.2),\($0.3),\($0.4)" } ?? "nil")
         Code Coverage Priority: \(codeCoveragePriority)
         Disable Traces Exporting: \(disableTracesExporting)
         Report Hostname: \(reportHostname)

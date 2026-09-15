@@ -432,7 +432,9 @@ internal class DDTestMonitor {
                 Log.print("ATR: disabled")
                 return
             }
-            let factory = AutomaticTestRetriesFactory(config: DDTestMonitor.config)
+            let factory = AutomaticTestRetriesFactory(config: DDTestMonitor.config,
+                                                      efdSettings: remote.efd,
+                                                      telemetry: self.tracer.telemetry)
             self.atr = runFactory(factory)
         }
         automaticTestRetries.addDependency(updateTracerConfig)

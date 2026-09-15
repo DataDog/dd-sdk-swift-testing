@@ -145,4 +145,65 @@ class ConfigTests: XCTestCase {
     private func reader(env: [String: SpanAttributeConvertible] = [:], info: [String: String] = [:]) -> EnvironmentReader {
         ProcessEnvironmentReader(environment: env.mapValues { $0.spanAttribute }, infoDictionary: info)
     }
+
+    // MARK: - Dynamic ATR config parsing
+
+    func testDynamicATRDisabledByDefault() {
+        let config = Config(env: reader())
+        XCTAssertFalse(config.dynamicATREnabled)
+        XCTAssertNil(config.dynamicATRBuckets)
+    }
+
+    func testDynamicATREnabledParsing() {
+        for value in ["1", "true", "YES"] {
+            let config = Config(env: reader(env: ["DD_CIVISIBILITY_DYNAMIC_ATR_ENABLED": value]))
+            XCTAssertTrue(config.dynamicATREnabled, "\(value) should enable dynamic ATR")
+        }
+        for value in ["0", "false", "NO"] {
+            let config = Config(env: reader(env: ["DD_CIVISIBILITY_DYNAMIC_ATR_ENABLED": value]))
+            XCTAssertFalse(config.dynamicATREnabled, "\(value) should disable dynamic ATR")
+        }
+    }
+
+    func testDynamicATRBucketsParsing() {
+        // Valid buckets
+        let config = Config(env: reader(env: ["DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS": "10,4,1,1,1"]))
+        XCTAssertEqual(config.dynamicATRBuckets?.0, 10)
+        XCTAssertEqual(config.dynamicATRBuckets?.1, 4)
+        XCTAssertEqual(config.dynamicATRBuckets?.2, 1)
+        XCTAssertEqual(config.dynamicATRBuckets?.3, 1)
+        XCTAssertEqual(config.dynamicATRBuckets?.4, 1)
+    }
+
+    func testDynamicATRBucketsParsingWrongCount() {
+        let config = Config(env: reader(env: ["DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS": "10,4,1"]))
+        XCTAssertNil(config.dynamicATRBuckets)
+    }
+
+    func testDynamicATRBucketsParsingNonInteger() {
+        let config = Config(env: reader(env: ["DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS": "10,foo,1,1,1"]))
+        XCTAssertNil(config.dynamicATRBuckets)
+    }
+
+    func testDynamicATRBucketsParsingValueTooSmall() {
+        let config = Config(env: reader(env: ["DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS": "0,4,1,1,1"]))
+        XCTAssertNil(config.dynamicATRBuckets)
+    }
+
+    func testDynamicATRBucketsParsingValueTooLarge() {
+        let config = Config(env: reader(env: ["DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS": "21,4,1,1,1"]))
+        XCTAssertNil(config.dynamicATRBuckets)
+    }
+
+    func testDynamicATRBucketsEmptyString() {
+        let config = Config(env: reader(env: ["DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS": ""]))
+        XCTAssertNil(config.dynamicATRBuckets)
+    }
+
+    func testDynamicATRBucketsRejectEmptyFields() {
+        for value in [",1,1,1,1", "1,,1,1,1", "1,1,1,1,"] {
+            let config = Config(env: reader(env: ["DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS": value]))
+            XCTAssertNil(config.dynamicATRBuckets, "\(value) must be rejected")
+        }
+    }
 }

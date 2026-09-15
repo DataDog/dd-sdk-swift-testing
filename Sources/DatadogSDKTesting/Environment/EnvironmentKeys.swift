@@ -52,6 +52,8 @@ internal enum EnvironmentKey: String, CaseIterable {
     case enableCiVisibilityFlakyRetries = "DD_CIVISIBILITY_FLAKY_RETRY_ENABLED"
     case ciVisibilityFlakyRetryCount = "DD_CIVISIBILITY_FLAKY_RETRY_COUNT"
     case ciVisibilityTotalFlakyRetryCount = "DD_CIVISIBILITY_TOTAL_FLAKY_RETRY_COUNT"
+    case enableCiVisibilityDynamicATR = "DD_CIVISIBILITY_DYNAMIC_ATR_ENABLED"
+    case ciVisibilityDynamicATRBuckets = "DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS"
     case testManagementEnabled = "DD_TEST_MANAGEMENT_ENABLED"
     case instrumentationTelemetryEnabled = "DD_INSTRUMENTATION_TELEMETRY_ENABLED"
     case telemetryHeartbeatInterval = "DD_TELEMETRY_HEARTBEAT_INTERVAL"

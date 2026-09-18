@@ -60,6 +60,7 @@ enum RuntimeInfo {
 
     // Mapping for Xcode 26+, ordered descending so the first match wins.
     private static let xcodeSwiftMap: [(minDTXcode: Int, swiftVersion: String)] = [
+        (2720, "6.4"),   // Xcode 27.2
         (2700, "6.4"),   // Xcode 27.0
         (2660, "6.3.3"), // Xcode 26.6
         (2650, "6.3.2"), // Xcode 26.5

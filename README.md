@@ -7,9 +7,9 @@ A more comprehensive and updated documentation can be found at [Test Optimizatio
 
 - iOS 15+
 - tvOS 15+
-- macOS 11+
-- Mac Catalyst 14+
-- watchOS 8+
+- macOS 12+
+- Mac Catalyst 15+
+- watchOS 9+
 - visionOS 1+
 
 UI tests, code coverage post-processing, Test Impact Analysis, and dSYM symbolication require simulator or macOS host execution.

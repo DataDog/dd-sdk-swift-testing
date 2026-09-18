@@ -40,6 +40,12 @@ runs:
             watchos="Apple Watch Series 11 (46mm)"
             visionos="Apple Vision Pro"
             ;;
+          Xcode_27.0)
+            ios="iPhone 18 Pro"
+            tvos="Apple TV 4K (3rd generation)"
+            watchos="Apple Watch Series 12 (46mm)"
+            visionos="Apple Vision Pro"
+            ;;
           *)
             echo "::error::Unknown Xcode version '$XCODE_VERSION' — add it to .github/actions/setup-xcode/action.yml" >&2
             exit 1

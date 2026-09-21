@@ -133,7 +133,7 @@ internal final class DataUploadWorker: DataUploadWorkerType, @unchecked Sendable
     private func uploadNextBatch() async {
         // Skip this tick if a flush holds the slot — it is draining everything
         // anyway, and the loop must not read a batch out from under it.
-        guard uploadSlot.wait(timeout: .now()) == .success else { return }
+        guard uploadSlot.tryAcquire() else { return }
         defer { uploadSlot.signal() }
 
         guard let batch = nextBatch() else {
@@ -300,8 +300,7 @@ internal final class DataUploadWorker: DataUploadWorkerType, @unchecked Sendable
     /// Deliberately ignores `isStopped`: `stop()` is followed by a final `flush()`
     /// on the shutdown path, and that flush still has to drain everything.
     private func acquireUploadSlot(until deadline: Date) -> Bool {
-        let remaining = max(0, deadline.timeIntervalSinceNow)
-        guard uploadSlot.wait(timeout: .now() + remaining) == .success else {
+        guard uploadSlot.wait(until: deadline) else {
             log.print("[\(featureName)] flush timed out waiting for an in-flight upload; leaving batches on disk")
             return false
         }
@@ -310,12 +309,9 @@ internal final class DataUploadWorker: DataUploadWorkerType, @unchecked Sendable
 
     /// Suspending counterpart: polls rather than blocking a cooperative thread.
     private func acquireUploadSlot(until deadline: Date) async -> Bool {
-        while uploadSlot.wait(timeout: .now()) != .success {
-            guard deadline.timeIntervalSinceNow > 0 else {
-                log.print("[\(featureName)] flush timed out waiting for an in-flight upload; leaving batches on disk")
-                return false
-            }
-            try? await Task.sleep(nanoseconds: 10_000_000)
+        guard await uploadSlot.wait(until: deadline) else {
+            log.print("[\(featureName)] flush timed out waiting for an in-flight upload; leaving batches on disk")
+            return false
         }
         return true
     }

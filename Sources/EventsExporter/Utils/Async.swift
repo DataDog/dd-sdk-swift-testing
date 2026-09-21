@@ -25,3 +25,30 @@ public func waitForAsync<V, E: Error>(_ function: @Sendable @escaping () async t
     waiter.wait()
     return try result!.get()
 }
+
+public extension DispatchSemaphore {
+    func tryAcquire() -> Bool {
+        wait(timeout: .now()) == .success
+    }
+    
+    func wait(until deadline: Date) -> Bool {
+        let remaining = max(0, deadline.timeIntervalSinceNow)
+        return wait(timeout: .now() + remaining) == .success
+    }
+    
+    func wait(until deadline: Date = .distantFuture, sleep seconds: TimeInterval = 0.01) async -> Bool {
+        while !tryAcquire() {
+            let deadlineInterval = deadline.timeIntervalSinceNow
+            guard deadlineInterval > 0 else {
+                return false
+            }
+            let sleepNS = UInt64(min(seconds, deadlineInterval) * 1_000_000_000)
+            do {
+                try await Task.sleep(nanoseconds: sleepNS)
+            } catch {
+                return false
+            }
+        }
+        return true
+    }
+}

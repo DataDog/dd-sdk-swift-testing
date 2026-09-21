@@ -41,7 +41,9 @@ final class AdditionalTags: TestHooksFeature {
     let codeOwners: CodeOwners?
     let workspacePath: String?
     
-    struct SuiteOwners {
+    /// Code owners accumulated from the tests of a container (a suite or a
+    /// module), deduplicated and kept in test execution order.
+    struct ContainerOwners {
         private var _owners: [String: Int] = [:]
         
         var owners: [String] {
@@ -57,14 +59,15 @@ final class AdditionalTags: TestHooksFeature {
         }
     }
 
-    private let suiteOwners: Synced<[ObjectIdentifier: SuiteOwners]>
+    /// Keyed by the identity of the suite or module the owners belong to.
+    private let containerOwners: Synced<[ObjectIdentifier: ContainerOwners]>
 
     init(codeCoverage: Bool = false, bundleFunctions: FunctionMap = [:], codeOwners: CodeOwners? = nil, workspacePath: String? = nil) {
         self.codeCoverage = codeCoverage
         self.bundleFunctions = bundleFunctions
         self.codeOwners = codeOwners
         self.workspacePath = workspacePath
-        self.suiteOwners = .init([:])
+        self.containerOwners = .init([:])
     }
 
     func testSessionWillEnd(session: any TestSession) {
@@ -84,13 +87,11 @@ final class AdditionalTags: TestHooksFeature {
             module.set(metric: DDTestSessionTags.testCoverageLines, value: linesCovered)
             module.session.set(metric: DDTestSessionTags.testCoverageLines, value: linesCovered)
         }
+        setCodeowners(for: module)
     }
 
     func testSuiteWillEnd(suite: any TestSuite) {
-        let owners = suiteOwners.update { $0.removeValue(forKey: ObjectIdentifier(suite)) }
-        if let owners, !owners.isEmpty {
-            suite.set(tag: DDTestTags.testCodeowners, value: CodeOwners.format(owners.owners))
-        }
+        setCodeowners(for: suite)
     }
 
     func testWillStart(test: any TestRun, info: TestRunInfoStart) {
@@ -101,8 +102,9 @@ final class AdditionalTags: TestHooksFeature {
             test.set(tag: DDTestTags.testSourceEndLine, value: functionInfo.endLine)
             if let owners = codeOwners?.owners(forPath: filePath) {
                 test.set(tag: DDTestTags.testCodeowners, value: CodeOwners.format(owners))
-                suiteOwners.update { state in
+                containerOwners.update { state in
                     state[ObjectIdentifier(test.suite), default: .init()].add(owners: owners)
+                    state[ObjectIdentifier(test.module), default: .init()].add(owners: owners)
                 }
             }
         }
@@ -139,6 +141,15 @@ final class AdditionalTags: TestHooksFeature {
     }
 
     func stop() {}
+    
+    /// Sets the codeowners tag on a suite or module from the owners its tests
+    /// reported, and drops the accumulated state.
+    private func setCodeowners(for container: any TestContainer) {
+        let owners = containerOwners.update { $0.removeValue(forKey: ObjectIdentifier(container)) }
+        if let owners, !owners.isEmpty {
+            container.set(tag: DDTestTags.testCodeowners, value: CodeOwners.format(owners.owners))
+        }
+    }
     
     private func stripWorkspace(from path: String) -> String {
         guard let workspacePath,

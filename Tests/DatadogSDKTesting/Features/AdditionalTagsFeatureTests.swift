@@ -7,7 +7,7 @@
 import XCTest
 @testable import DatadogSDKTesting
 
-final class AdditionalTagsSuiteCodeownersTests: XCTestCase {
+final class AdditionalTagsCodeownersTests: XCTestCase {
     private let module = "MyModule"
 
     private let codeOwnersContent = """
@@ -121,6 +121,69 @@ final class AdditionalTagsSuiteCodeownersTests: XCTestCase {
         XCTAssertEqual(session[module]?["FooSuite"]?.get(tag: DDTestTags.testCodeowners), "[\"@foo-team\"]")
         XCTAssertEqual(session[module]?["BarSuite"]?.get(tag: DDTestTags.testCodeowners), "[\"@bar-team\"]")
         XCTAssertEqual(session[module]?["BazSuite"]?.get(tag: DDTestTags.testCodeowners), "[\"@baz-team\"]")
+    }
+
+    // MARK: module
+
+    func testModuleTagAggregatesOwnersAcrossSuites() async throws {
+        let codeOwners = try CodeOwners(parsing: codeOwnersContent)
+        let bundleFunctions: FunctionMap = [
+            "FooSuite.testA": .init(file: "/Sources/Foo/A.swift", startLine: 1, endLine: 5),
+            "BarSuite.testB": .init(file: "/Sources/Bar/B.swift", startLine: 1, endLine: 5),
+            "BazSuite.testC": .init(file: "/Sources/Baz/C.swift", startLine: 1, endLine: 5),
+        ]
+
+        let session = await runSession(bundleFunctions: bundleFunctions, codeOwners: codeOwners,
+                                       tests: [module: [
+                                           "FooSuite": ["testA": .pass()],
+                                           "BarSuite": ["testB": .pass()],
+                                           "BazSuite": ["testC": .pass()],
+                                       ]])
+
+        XCTAssertEqual(session[module]?.get(tag: DDTestTags.testCodeowners),
+                       "[\"@foo-team\",\"@bar-team\",\"@baz-team\"]")
+    }
+
+    func testModuleTagDedupesOwnersSharedBySuites() async throws {
+        let codeOwners = try CodeOwners(parsing: codeOwnersContent)
+        let bundleFunctions: FunctionMap = [
+            "FooSuite.testA": .init(file: "/Sources/Foo/A.swift", startLine: 1, endLine: 5),
+            "OtherFooSuite.testB": .init(file: "/Sources/Foo/B.swift", startLine: 1, endLine: 5),
+        ]
+
+        let session = await runSession(bundleFunctions: bundleFunctions, codeOwners: codeOwners,
+                                       tests: [module: [
+                                           "FooSuite": ["testA": .pass()],
+                                           "OtherFooSuite": ["testB": .pass()],
+                                       ]])
+
+        XCTAssertEqual(session[module]?.get(tag: DDTestTags.testCodeowners), "[\"@foo-team\"]")
+    }
+
+    func testModuleTagIsNilWhenNoTestHasOwners() async throws {
+        let codeOwners = try CodeOwners(parsing: codeOwnersContent)
+
+        let session = await runSession(bundleFunctions: [:], codeOwners: codeOwners,
+                                       tests: [module: ["MySuite": ["testA": .pass()]]])
+
+        XCTAssertNil(session[module]?.get(tag: DDTestTags.testCodeowners))
+    }
+
+    func testOwnersAreScopedPerModule() async throws {
+        let codeOwners = try CodeOwners(parsing: codeOwnersContent)
+        let bundleFunctions: FunctionMap = [
+            "FooSuite.testA": .init(file: "/Sources/Foo/A.swift", startLine: 1, endLine: 5),
+            "BarSuite.testB": .init(file: "/Sources/Bar/B.swift", startLine: 1, endLine: 5),
+        ]
+
+        let session = await runSession(bundleFunctions: bundleFunctions, codeOwners: codeOwners,
+                                       tests: [
+                                           "FooModule": ["FooSuite": ["testA": .pass()]],
+                                           "BarModule": ["BarSuite": ["testB": .pass()]],
+                                       ])
+
+        XCTAssertEqual(session["FooModule"]?.get(tag: DDTestTags.testCodeowners), "[\"@foo-team\"]")
+        XCTAssertEqual(session["BarModule"]?.get(tag: DDTestTags.testCodeowners), "[\"@bar-team\"]")
     }
 
     // MARK: helpers

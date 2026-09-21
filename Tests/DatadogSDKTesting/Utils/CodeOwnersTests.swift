@@ -8,15 +8,17 @@
 import XCTest
 
 class CodeOwnersTestsBase: XCTestCase {
-    /// expected: nil = expect nil result, [] = expect empty list (Swift may return nil if it doesn't store owner-less rules), [String] = expect that list
+    /// expected: nil = expect nil result (no owner, whether or not a rule matched),
+    /// [] = same as nil: a rule matched but resolves to no owner, so the tag is omitted,
+    /// [String] = expect that list.
     func expectOwners(_ result: String?, equals expected: [String]?) {
         guard let expected = expected else {
             XCTAssertNil(result, "Expected nil")
             return
         }
         if expected.isEmpty {
-            // Ruby returns [] for match-with-no-owners; Swift may return nil
-            XCTAssertTrue(result == "[]" || result == nil, "Expected [] or nil, got \(result ?? "nil")")
+            // A match that assigns no owner is reported as nil: the tag is not sent.
+            XCTAssertNil(result, "Expected nil for a rule that assigns no owner")
             return
         }
         let formatted = "[\"" + expected.joined(separator: "\",\"") + "\"]"
@@ -467,6 +469,30 @@ class CodeOwnersMatcherSpecTests: CodeOwnersTestsBase {
         expectOwners(codeOwners.ownersForPath("other/file.txt"), equals: ["@owner"])
     }
 
+    // MARK: - SDTEST-3943: ownerless override line clears ownership
+    // https://datadoghq.atlassian.net/browse/SDTEST-3943
+    func testMatcher_ownerlessOverride_clearsOwnership() throws {
+        let codeownersContent = """
+        # Broader rule
+        /src/ @team-alpha
+
+        # Override: these paths have no owner (intentional)
+        /src/shared/
+        /src/utils/
+        """
+        let codeOwners = try CodeOwners(parsing: codeownersContent)
+
+        // Broader rule still applies to paths not covered by the override.
+        expectOwners(codeOwners.ownersForPath("/src/main.swift"), equals: ["@team-alpha"])
+
+        // Overridden paths intentionally have no owner, so no tag is reported.
+        expectOwners(codeOwners.ownersForPath("/src/shared/helper.swift"), equals: [])
+        expectOwners(codeOwners.ownersForPath("/src/utils/utils.swift"), equals: [])
+
+        // A path with no matching rule at all must still resolve to nil.
+        expectOwners(codeOwners.ownersForPath("/other/file.swift"), equals: nil)
+    }
+
     // MARK: - Negated path support (! prefix, GitLab-style exclusions)
     func testMatcher_negatedPath_excludesMatchingPaths() throws {
         let codeownersContent = """
@@ -797,12 +823,76 @@ class CodeOwnersParserIssueTests: CodeOwnersTestsBase {
         expectOwners(codeOwners.ownersForPath("^test.txt"), equals: ["@owner"])
     }
 
-    func testRegression_emptyNegatedPattern_throwsInsteadOfCrash() throws {
+    /// An unparsable rule is skipped rather than discarding the whole file: aborting
+    /// the parse would strip `test.codeowners` from every test in the run.
+    func testRegression_emptyNegatedPattern_skipsLineAndKeepsFile() throws {
         let codeownersContent = """
         * @owner
         !
         """
-        XCTAssertThrowsError(try CodeOwners(parsing: codeownersContent))
+        let codeOwners = try CodeOwners(parsing: codeownersContent)
+        expectOwners(codeOwners.ownersForPath("/src/file.swift"), equals: ["@owner"])
+    }
+
+    /// A single malformed rule must not cost the valid rules their owners. Reported by a
+    /// customer whose named-owner rules resolved to no owner until they removed unrelated
+    /// ownerless lines elsewhere in the same file.
+    func testRegression_unparsableRule_doesNotDropOwnersOfOtherRules() throws {
+        let codeownersContent = """
+        * @global
+        /src/app/ @app-team
+        [
+        /tests/ @qa-team
+        """
+        let codeOwners = try CodeOwners(parsing: codeownersContent)
+        expectOwners(codeOwners.ownersForPath("/src/app/Feature.swift"), equals: ["@app-team"])
+        expectOwners(codeOwners.ownersForPath("/tests/FeatureTests.swift"), equals: ["@qa-team"])
+        expectOwners(codeOwners.ownersForPath("/other/file.swift"), equals: ["@global"])
+    }
+
+    /// Git treats consecutive asterisks not followed by `/` as regular asterisks, so
+    /// `**.swift` is a valid pattern. It used to abort the parse of the entire file.
+    func testRegression_doubleStarNotFollowedBySlash_parsesAsSingleStar() throws {
+        let codeownersContent = """
+        * @global
+        /src/app/ @app-team
+        /generated/**.swift
+        /a/**b/c.swift @odd-team
+        """
+        let codeOwners = try CodeOwners(parsing: codeownersContent)
+        // The whole file still parses, so unrelated named rules keep their owners.
+        expectOwners(codeOwners.ownersForPath("/src/app/Feature.swift"), equals: ["@app-team"])
+        // `**.swift` behaves like `*.swift` within the folder, and is ownerless.
+        expectOwners(codeOwners.ownersForPath("/generated/model.swift"), equals: [])
+        expectOwners(codeOwners.ownersForPath("/generated/nested/model.swift"), equals: ["@global"])
+        expectOwners(codeOwners.ownersForPath("/a/xxb/c.swift"), equals: ["@odd-team"])
+    }
+
+    /// A leading character range is a path, not a section header. Reading `[Gg]enerated/`
+    /// as a header swallowed the rule and regrouped every rule below it into a section
+    /// that does not exist, which combined owners instead of letting the last match win.
+    func testRegression_leadingCharacterRange_isPathNotSectionHeader() throws {
+        let codeownersContent = """
+        * @global
+        [Gg]enerated/
+        /src/app/ @app-team
+        """
+        let codeOwners = try CodeOwners(parsing: codeownersContent)
+        XCTAssertEqual(codeOwners.sections.map(\.name), ["[]"])
+        // Last match wins inside the single default section - owners are not combined.
+        expectOwners(codeOwners.ownersForPath("/src/app/Feature.swift"), equals: ["@app-team"])
+        expectOwners(codeOwners.ownersForPath("/generated/model.swift"), equals: [])
+        expectOwners(codeOwners.ownersForPath("/Generated/model.swift"), equals: [])
+    }
+
+    func testRegression_sectionHeaderWithApprovalCount_stillParsesAsHeader() throws {
+        let codeownersContent = """
+        [Config][2] @ops-team
+        /config/
+        """
+        let codeOwners = try CodeOwners(parsing: codeownersContent)
+        XCTAssertEqual(codeOwners.sections.map(\.name), ["config"])
+        expectOwners(codeOwners.ownersForPath("/config/settings.yml"), equals: ["@ops-team"])
     }
 
     func testRegression_tabSeparator_betweenPathAndOwners() throws {

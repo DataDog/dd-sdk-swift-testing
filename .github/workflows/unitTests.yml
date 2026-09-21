@@ -10,21 +10,27 @@ on:
 
 jobs:
   unit:
-    name: ${{ matrix.xcode }} / ${{ matrix.platform }}
+    name: ${{ matrix.xcode.name }} / ${{ matrix.platform }}
     strategy:
       fail-fast: false
       matrix:
-        xcode: ["Xcode_26.2", "Xcode_26.4"]
+        xcode:
+          - name: "Xcode_26.2"
+            os: macos-26
+          - name: "Xcode_26.4"
+            os: macos-26
+          - name: "Xcode_27.0"
+            os: xcode-27
         platform: ["macOS", "iOSsim", "tvOSsim", "watchOSsim", "visionOSsim"]
-    runs-on: macos-26
+    runs-on: ${{ matrix.xcode.os }}
     steps:
     - name: Checkout
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-    - name: Setup ${{ matrix.xcode }}
+    - name: Setup ${{ matrix.xcode.name }}
       id: xcode
       uses: ./.github/actions/setup-xcode
       with:
-        version: ${{ matrix.xcode }}
+        version: ${{ matrix.xcode.name }}
     - name: Unit tests
       run: >-
         make XC_LOG=unit
@@ -37,7 +43,7 @@ jobs:
       if: '!cancelled()'
       uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
       with:
-        name: ${{ matrix.xcode }}-${{ matrix.platform }}-unit-logs
+        name: ${{ matrix.xcode.name }}-${{ matrix.platform }}-unit-logs
         path: "*-unit.log"
     # The SDK can't instrument its own test run, so report unit-test results to
     # Datadog by uploading the JUnit reports xcbeautify produced. Runs on failure
@@ -54,6 +60,6 @@ jobs:
         npx --yes @datadog/datadog-ci junit upload \
           --service dd-sdk-swift-testing \
           --env ci \
-          --tags "test.xcode:${{ matrix.xcode }}" \
+          --tags "test.xcode:${{ matrix.xcode.name }}" \
           --tags "test.platform:${{ matrix.platform }}" \
           build/reports

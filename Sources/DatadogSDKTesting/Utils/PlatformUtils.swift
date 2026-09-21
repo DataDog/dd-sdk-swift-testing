@@ -202,6 +202,13 @@ struct PlatformUtils {
     }
     
     static var xcodeVersion: XcodeVersion {
-        .xcode26
+        guard let version = Int(getXcodeVersion(), radix: 10) else {
+            return .xcode27
+        }
+        switch version {
+        case 2600..<2700: return .xcode26
+        case 2700..<2800: return .xcode27
+        default: return .xcode27
+        }
     }
 }

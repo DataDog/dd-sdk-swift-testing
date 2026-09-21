@@ -811,12 +811,6 @@ extension Optional where Wrapped == SwiftTestingTestStatus.Errors {
     }
 }
 
-extension Array where Element == SwiftTestingIssue {
-    func recordAll(test location: SwiftTestingSourceLocation) {
-        forEach { $0.record(test: location) }
-    }
-}
-
 func doThrow<R>(_ body: @Sendable () async throws -> R, finally: @Sendable () async throws -> Void) async throws -> R {
     var catched: Error? = nil
     let value: R?

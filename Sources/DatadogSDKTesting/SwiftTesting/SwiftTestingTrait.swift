@@ -159,7 +159,7 @@ public struct DatadogSwiftTestingScopeProvider: TestScoping {
                 errors.update { $0 = nil }
                 // Restore errors if needed
                 if let restoredErrors {
-                    restoredErrors.recordAll(test: run.location)
+                    restoredErrors.recordAll(test: run.location, actions: _actions)
                 }
             } while group.info.retry.status.isRetry
         }
@@ -182,6 +182,7 @@ protocol DatadogSwiftTestingTestActions: Sendable {
     func cancel(reason: String, location: SwiftTestingSourceLocation) throws
     func fail(reason: String, location: SwiftTestingSourceLocation)
     func record(error: any Error, location: SwiftTestingSourceLocation)
+    func record(issue: any SwiftTestingIssue, location: SwiftTestingSourceLocation)
 }
 
 extension Testing.Trait where Self == DatadogSwiftTestingTrait {
@@ -255,6 +256,10 @@ extension DatadogSwiftTestingScopeProvider {
 
         func record(error: any Error, location: SwiftTestingSourceLocation) {
             Issue.record(error, sourceLocation: location.asSwift)
+        }
+
+        func record(issue: any SwiftTestingIssue, location: SwiftTestingSourceLocation) {
+            issue.record(test: location)
         }
     }
     
@@ -528,10 +533,17 @@ extension SwiftTestingSourceLocation {
 }
 
 extension SwiftTestingRetryGroupContext.Errors {
-    func recordAll(test location: SwiftTestingSourceLocation) {
-        self.issues.recordAll(test: location)
+    /// Replays errors that were suppressed on a previous retry attempt.
+    ///
+    /// Recording goes through `actions` rather than `Issue.record` directly
+    func recordAll(test location: SwiftTestingSourceLocation,
+                   actions: some DatadogSwiftTestingTestActions)
+    {
+        for issue in issues {
+            actions.record(issue: issue, location: location)
+        }
         if let catched {
-            Issue.record(catched, sourceLocation: location.asSwift)
+            actions.record(error: catched, location: location)
         }
     }
 }

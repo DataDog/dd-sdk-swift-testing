@@ -15,6 +15,7 @@ extension Mocks {
         }
         func fail(reason: String, location: SwiftTestingSourceLocation) {}
         func record(error: any Error, location: SwiftTestingSourceLocation) {}
+        func record(issue: any SwiftTestingIssue, location: SwiftTestingSourceLocation) {}
     }
     
     struct STSuite: SwiftTestingTestInfoType {

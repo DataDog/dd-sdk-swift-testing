@@ -285,6 +285,7 @@
 		B5B99DB192A4ED429998C7D3 /* SettingsApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1E3348865C204C942F4765C /* SettingsApi.swift */; };
 		C7A51F2CA4062849511FF2E8 /* TestOptimizationApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0B522400A21CABC6BB4F1CA /* TestOptimizationApi.swift */; };
 		CD1E9CDE6FE677BC07E66905 /* SpansApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1209EC18B790B00EFC90E52 /* SpansApi.swift */; };
+		CF01BFC0E242E316DAEBF627 /* TestImpactAnalysisApiTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F404AE4A4650852648C7A155 /* TestImpactAnalysisApiTests.swift */; };
 		DCCF75D22681A563B9E4CA1B /* TestManagementApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0083E7241E320B00198C0D71 /* TestManagementApi.swift */; };
 		E101EC71CC9E4715A40188FB /* AutoTestRetriesSwiftTestingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31F8747157604DB48FE692EB /* AutoTestRetriesSwiftTestingTests.swift */; };
 		E42959C85F3B9BAB313984F7 /* TelemetryTags.swift in Sources */ = {isa = PBXBuildFile; fileRef = E714A2777988AA4DA1AACB5C /* TelemetryTags.swift */; };
@@ -711,6 +712,7 @@
 		E1FB4844253891E70083B263 /* SimpleSpanSerializerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SimpleSpanSerializerTests.swift; sourceTree = "<group>"; };
 		E714A2777988AA4DA1AACB5C /* TelemetryTags.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TelemetryTags.swift; sourceTree = "<group>"; };
 		E85241CF97F1B6DAA49ECA23 /* APITypes.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = APITypes.swift; sourceTree = "<group>"; };
+		F404AE4A4650852648C7A155 /* TestImpactAnalysisApiTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestImpactAnalysisApiTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1085,6 +1087,7 @@
 				A7EE000000010000000000A1 /* LibraryConfigurationErrorsTests.swift */,
 				A7AB7C2026E7EB1100000008 /* CoverageExporterTests.swift */,
 				A7AB7C2026E7EB110000000A /* PipelineIntegrationTests.swift */,
+				F404AE4A4650852648C7A155 /* TestImpactAnalysisApiTests.swift */,
 			);
 			path = EventsExporter;
 			sourceTree = "<group>";
@@ -2264,6 +2267,7 @@
 				A7FC26832BA1F81D00067E26 /* CoreMocks.swift in Sources */,
 				A7FC26852BA1F81D00067E26 /* FoundationMocks.swift in Sources */,
 				A7FC268B2BA1F82300067E26 /* DataUploadWorkerTests.swift in Sources */,
+				CF01BFC0E242E316DAEBF627 /* TestImpactAnalysisApiTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -215,10 +215,13 @@ public final class MockBackend {
             return (.ok, "application/json", Data("{}".utf8))
 
         case "/api/v2/citestcov":
-            if let payload = parseCoveragePayload(headers: request.head.headers, rawBody: body) {
+            switch parseCoveragePayload(headers: request.head.headers, rawBody: body) {
+            case .success(let payload):
                 _lock.withLock { _requests.coverage.append(payload) }
+                return (.ok, "application/json", Data("{}".utf8))
+            case .failure(let error):
+                return (.badRequest, "application/json", error.body)
             }
-            return (.ok, "application/json", Data("{}".utf8))
 
         case "/api/v2/libraries/tests/services/setting":
             _lock.withLock { _requests.settings.append(body) }
@@ -368,12 +371,24 @@ public final class MockBackend {
 
     // MARK: - Coverage Multipart Parser
 
+    /// Intake rejection for a malformed `citestcov` request, rendered like the real intake's 400 body.
+    private struct CoverageRequestError: Error {
+        let detail: String
+
+        var body: Data {
+            Data(#"{"errors":[{"status":"400","title":"Bad Request","detail":"\#(detail)"}]}"#.utf8)
+        }
+    }
+
     /// Extracts the "coverage" field from a multipart/form-data request and decodes it.
-    private func parseCoveragePayload(headers: HTTPTestRequest.Headers, rawBody: Data) -> CoveragePayload? {
+    /// Mirrors the intake: both `coverage` and `event` must be sent as file parts (with `filename=`).
+    private func parseCoveragePayload(headers: HTTPTestRequest.Headers,
+                                      rawBody: Data) -> Result<CoveragePayload, CoverageRequestError>
+    {
         guard let contentType = headers.first(name: "content-type"),
               contentType.lowercased().contains("multipart/form-data"),
               let boundaryRange = contentType.range(of: "boundary=", options: .caseInsensitive)
-        else { return nil }
+        else { return .failure(CoverageRequestError(detail: "Request is not multipart/form-data")) }
 
         // Boundary may be quoted or unquoted; strip trailing parameters after ";"
         var boundary = String(contentType[boundaryRange.upperBound...])
@@ -382,16 +397,25 @@ public final class MockBackend {
         if boundary.hasPrefix("\"") && boundary.hasSuffix("\"") {
             boundary = String(boundary.dropFirst().dropLast())
         }
-        guard !boundary.isEmpty else { return nil }
+        guard !boundary.isEmpty else {
+            return .failure(CoverageRequestError(detail: "Multipart boundary not found"))
+        }
 
-        guard let json = extractMultipartField(named: "coverage", from: rawBody, boundary: boundary)
-        else { return nil }
-
-        return try? JSONDecoder().decode(CoveragePayload.self, from: json)
+        guard extractMultipartFile(named: "event", from: rawBody, boundary: boundary) != nil else {
+            return .failure(CoverageRequestError(detail: "File event not found in the request"))
+        }
+        guard let json = extractMultipartFile(named: "coverage", from: rawBody, boundary: boundary) else {
+            return .failure(CoverageRequestError(detail: "File coverage not found in the request"))
+        }
+        guard let payload = try? JSONDecoder().decode(CoveragePayload.self, from: json) else {
+            return .failure(CoverageRequestError(detail: "Invalid coverage payload"))
+        }
+        return .success(payload)
     }
 
-    /// Scans a raw multipart body and returns the data for the named field.
-    private func extractMultipartField(named fieldName: String, from body: Data, boundary: String) -> Data? {
+    /// Scans a raw multipart body and returns the data for the named file part.
+    /// Parts without a `filename=` in their `Content-Disposition` are plain form fields and are skipped.
+    private func extractMultipartFile(named fieldName: String, from body: Data, boundary: String) -> Data? {
         guard let partDelim = ("--" + boundary + "\r\n").data(using: .utf8),
               let headerBodySep = "\r\n\r\n".data(using: .utf8),
               let bodyEndMark = ("\r\n--" + boundary).data(using: .utf8)
@@ -411,7 +435,8 @@ public final class MockBackend {
 
             let isTarget = headerStr.components(separatedBy: "\r\n").contains { line in
                 let l = line.lowercased()
-                return l.contains("content-disposition") && l.contains("name=\"\(fieldName)\"")
+                return l.contains("content-disposition") && l.contains("; name=\"\(fieldName)\"")
+                    && l.contains("; filename=\"")
             }
 
             let bodyStart = sepRange.upperBound

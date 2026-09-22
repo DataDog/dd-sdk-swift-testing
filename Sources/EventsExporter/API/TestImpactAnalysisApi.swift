@@ -205,11 +205,15 @@ struct TestImpactAnalysisApiService: TestImpactAnalysisApi, APIServiceConstructi
         if compression {
             request.addHTTPHeader(.contentEncodingHeader(contentEncoding: .deflate))
         }
+        // The intake requires both parts to be file parts (`filename=` present),
+        // otherwise it rejects the request with "File event not found in the request".
         request.append(data: data,
                        withName: "coverage",
+                       fileName: "coverage.json",
                        contentType: .applicationJSON)
         request.append(data: Data(#"{"dummy": true}"#.utf8),
                        withName: "event",
+                       fileName: "event.json",
                        contentType: .applicationJSON)
         return request
     }

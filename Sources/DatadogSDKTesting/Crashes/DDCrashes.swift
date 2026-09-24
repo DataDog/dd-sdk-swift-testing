@@ -105,8 +105,11 @@ private let ddCrashIsWritingReportCallback: @convention(c) (
 /// The module/suite context we keep in the crash report's `user` section. Each field is a
 /// separate key in KSCrash's per-key user info store (mmap'd, so nothing is serialized at
 /// crash time). Values are stored flat because the store truncates strings to 1024 bytes,
-/// which a serialized span with all its attributes would easily exceed.
+/// which a serialized span with all its attributes would easily exceed. Names longer than
+/// that are split into chunks under `<key>`, `<key>.1`, `<key>.2`, ...
 private struct CrashUserInfo: Codable, Sendable {
+    static let maxStringBytes = 1024
+
     var spanId: String?
     var name: String?
     var sessionId: String?
@@ -116,7 +119,7 @@ private struct CrashUserInfo: Codable, Sendable {
     var moduleStartTime: Double?
     var suiteStartTime: Double?
 
-    enum CodingKeys: String, CodingKey, CaseIterable {
+    enum Key: String, CaseIterable {
         case spanId = "dd.span.id"
         case name = "dd.span.name"
         case sessionId = "dd.span.session_id"
@@ -125,6 +128,75 @@ private struct CrashUserInfo: Codable, Sendable {
         case sessionStartTime = "dd.span.session_start"
         case moduleStartTime = "dd.span.module_start"
         case suiteStartTime = "dd.span.suite_start"
+
+        func chunk(_ index: Int) -> String {
+            index == 0 ? rawValue : "\(rawValue).\(index)"
+        }
+    }
+
+    private struct AnyKey: CodingKey {
+        let stringValue: String
+        var intValue: Int? { nil }
+        init(_ string: String) { stringValue = string }
+        init?(stringValue: String) { self.stringValue = stringValue }
+        init?(intValue: Int) { nil }
+    }
+
+    static func chunks(of value: String) -> [String] {
+        var chunks: [String] = []
+        var current = String.UnicodeScalarView()
+        var bytes = 0
+        for scalar in value.unicodeScalars {
+            let size = UTF8.width(scalar)
+            if bytes + size > maxStringBytes {
+                chunks.append(String(current))
+                current = .init()
+                bytes = 0
+            }
+            current.append(scalar)
+            bytes += size
+        }
+        chunks.append(String(current))
+        return chunks
+    }
+
+    init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: AnyKey.self)
+        func string(_ key: Key) -> String? {
+            var parts: [String] = []
+            while let part = try? c.decodeIfPresent(String.self, forKey: AnyKey(key.chunk(parts.count))) {
+                parts.append(part)
+            }
+            return parts.isEmpty ? nil : parts.joined()
+        }
+        func double(_ key: Key) -> Double? {
+            try? c.decodeIfPresent(Double.self, forKey: AnyKey(key.rawValue))
+        }
+        spanId = string(.spanId)
+        name = string(.name)
+        sessionId = string(.sessionId)
+        moduleId = string(.moduleId)
+        moduleName = string(.moduleName)
+        sessionStartTime = double(.sessionStartTime)
+        moduleStartTime = double(.moduleStartTime)
+        suiteStartTime = double(.suiteStartTime)
+    }
+
+    func encode(to encoder: any Encoder) throws {
+        var c = encoder.container(keyedBy: AnyKey.self)
+        func put(_ value: String?, _ key: Key) throws {
+            for (index, part) in (value.map(Self.chunks) ?? []).enumerated() {
+                try c.encode(part, forKey: AnyKey(key.chunk(index)))
+            }
+        }
+        try put(spanId, .spanId)
+        try put(name, .name)
+        try put(sessionId, .sessionId)
+        try put(moduleId, .moduleId)
+        try put(moduleName, .moduleName)
+        try c.encodeIfPresent(sessionStartTime, forKey: AnyKey(Key.sessionStartTime.rawValue))
+        try c.encodeIfPresent(moduleStartTime, forKey: AnyKey(Key.moduleStartTime.rawValue))
+        try c.encodeIfPresent(suiteStartTime, forKey: AnyKey(Key.suiteStartTime.rawValue))
     }
 }
 
@@ -150,29 +222,47 @@ internal enum DDCrashes {
         return installKSCrashHandler(folder: folder, disableMach: disableMach, tracer: tracer)
     }
 
+    /// Chunk count last written per string key, so stale chunks of a longer
+    /// previous value can be removed. Also serializes concurrent `setCurrent` calls.
+    private static let userInfoChunks = Synced<[CrashUserInfo.Key: Int]>([:])
+
+    /// The fields are separate writes, so a crash can observe a half-updated context.
+    /// `spanId` is removed first and written last: the reader requires it, so a torn
+    /// context is dropped instead of being attributed to the wrong module or suite.
     static func setCurrent(spanData: SimpleSpanData?) {
-        typealias Key = CrashUserInfo.CodingKeys
+        typealias Key = CrashUserInfo.Key
         let crash = KSCrash.shared
-        guard let spanData else {
-            Key.allCases.forEach { crash.removeUserInfoValue(forKey: $0.rawValue) }
-            return
+        userInfoChunks.update { written in
+            func set(_ value: String?, _ key: Key) {
+                let chunks = value.map(CrashUserInfo.chunks) ?? []
+                for (index, chunk) in chunks.enumerated() {
+                    crash.setUserInfo(chunk, forKey: key.chunk(index))
+                }
+                // Unknown previous count (first write) still clears the base key.
+                for index in stride(from: chunks.count, to: written[key] ?? 1, by: 1) {
+                    crash.removeUserInfoValue(forKey: key.chunk(index))
+                }
+                written[key] = chunks.count
+            }
+            func set(_ value: Date?, _ key: Key) {
+                if let value { crash.setUserInfo(value.timeIntervalSince1970, forKey: key.rawValue) }
+                else { crash.removeUserInfoValue(forKey: key.rawValue) }
+                written[key] = value == nil ? 0 : 1
+            }
+            set(nil as String?, .spanId)
+            guard let spanData else {
+                Key.allCases.forEach { set(nil as String?, $0) }
+                return
+            }
+            set(spanData.name, .name)
+            set(spanData.stringAttributes[DDTestSuiteVisibilityTags.testSessionId], .sessionId)
+            set(spanData.stringAttributes[DDTestSuiteVisibilityTags.testModuleId], .moduleId)
+            set(spanData.stringAttributes[DDTestTags.testModule], .moduleName)
+            set(spanData.sessionStartTime, .sessionStartTime)
+            set(spanData.moduleStartTime, .moduleStartTime)
+            set(spanData.suiteStartTime, .suiteStartTime)
+            set(SpanId(id: spanData.spanId).hexString, .spanId)
         }
-        func set(_ value: String?, _ key: Key) {
-            if let value { crash.setUserInfo(value, forKey: key.rawValue) }
-            else { crash.removeUserInfoValue(forKey: key.rawValue) }
-        }
-        func set(_ value: Date?, _ key: Key) {
-            if let value { crash.setUserInfo(value.timeIntervalSince1970, forKey: key.rawValue) }
-            else { crash.removeUserInfoValue(forKey: key.rawValue) }
-        }
-        set(SpanId(id: spanData.spanId).hexString, .spanId)
-        set(spanData.name, .name)
-        set(spanData.stringAttributes[DDTestSuiteVisibilityTags.testSessionId], .sessionId)
-        set(spanData.stringAttributes[DDTestSuiteVisibilityTags.testModuleId], .moduleId)
-        set(spanData.stringAttributes[DDTestTags.testModule], .moduleName)
-        set(spanData.sessionStartTime, .sessionStartTime)
-        set(spanData.moduleStartTime, .moduleStartTime)
-        set(spanData.suiteStartTime, .suiteStartTime)
     }
 
     @discardableResult

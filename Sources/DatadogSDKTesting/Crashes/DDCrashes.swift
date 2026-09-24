@@ -105,8 +105,8 @@ private let ddCrashIsWritingReportCallback: @convention(c) (
 /// The module/suite context we keep in the crash report's `user` section. Each field is a
 /// separate key in KSCrash's per-key user info store (mmap'd, so nothing is serialized at
 /// crash time). Values are stored flat because the store truncates strings to 1024 bytes,
-/// which a serialized span with all its attributes would easily exceed. Names longer than
-/// that are split into chunks under `<key>`, `<key>.1`, `<key>.2`, ...
+/// which a serialized span with all its attributes would easily exceed. Longer values are
+/// split into `<key>`, `<key>.1`, ... with the chunk count in `<key>.count` (absent = 1).
 private struct CrashUserInfo: Codable, Sendable {
     static let maxStringBytes = 1024
 
@@ -128,6 +128,8 @@ private struct CrashUserInfo: Codable, Sendable {
         case sessionStartTime = "dd.span.session_start"
         case moduleStartTime = "dd.span.module_start"
         case suiteStartTime = "dd.span.suite_start"
+
+        var count: String { "\(rawValue).count" }
 
         func chunk(_ index: Int) -> String {
             index == 0 ? rawValue : "\(rawValue).\(index)"
@@ -163,11 +165,14 @@ private struct CrashUserInfo: Codable, Sendable {
     init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: AnyKey.self)
         func string(_ key: Key) -> String? {
+            let count = (try? c.decodeIfPresent(Int.self, forKey: AnyKey(key.count))) ?? 1
             var parts: [String] = []
-            while let part = try? c.decodeIfPresent(String.self, forKey: AnyKey(key.chunk(parts.count))) {
+            for index in 0..<max(count, 1) {
+                guard let part = try? c.decodeIfPresent(String.self, forKey: AnyKey(key.chunk(index)))
+                else { return nil }
                 parts.append(part)
             }
-            return parts.isEmpty ? nil : parts.joined()
+            return parts.joined()
         }
         func double(_ key: Key) -> Double? {
             try? c.decodeIfPresent(Double.self, forKey: AnyKey(key.rawValue))
@@ -185,9 +190,11 @@ private struct CrashUserInfo: Codable, Sendable {
     func encode(to encoder: any Encoder) throws {
         var c = encoder.container(keyedBy: AnyKey.self)
         func put(_ value: String?, _ key: Key) throws {
-            for (index, part) in (value.map(Self.chunks) ?? []).enumerated() {
+            guard let chunks = value.map(Self.chunks) else { return }
+            for (index, part) in chunks.enumerated() {
                 try c.encode(part, forKey: AnyKey(key.chunk(index)))
             }
+            if chunks.count > 1 { try c.encode(chunks.count, forKey: AnyKey(key.count)) }
         }
         try put(spanId, .spanId)
         try put(name, .name)
@@ -222,9 +229,7 @@ internal enum DDCrashes {
         return installKSCrashHandler(folder: folder, disableMach: disableMach, tracer: tracer)
     }
 
-    /// Chunk count last written per string key, so stale chunks of a longer
-    /// previous value can be removed. Also serializes concurrent `setCurrent` calls.
-    private static let userInfoChunks = Synced<[CrashUserInfo.Key: Int]>([:])
+    private static let userInfoLock = UnfairLock()
 
     /// The fields are separate writes, so a crash can observe a half-updated context.
     /// `spanId` is removed first and written last: the reader requires it, so a torn
@@ -232,26 +237,26 @@ internal enum DDCrashes {
     static func setCurrent(spanData: SimpleSpanData?) {
         typealias Key = CrashUserInfo.Key
         let crash = KSCrash.shared
-        userInfoChunks.update { written in
-            func set(_ value: String?, _ key: Key) {
-                let chunks = value.map(CrashUserInfo.chunks) ?? []
-                for (index, chunk) in chunks.enumerated() {
-                    crash.setUserInfo(chunk, forKey: key.chunk(index))
-                }
-                // Unknown previous count (first write) still clears the base key.
-                for index in stride(from: chunks.count, to: written[key] ?? 1, by: 1) {
-                    crash.removeUserInfoValue(forKey: key.chunk(index))
-                }
-                written[key] = chunks.count
+        // Stale chunks of a longer previous value are left in place: `<key>.count` bounds the read.
+        func set(_ value: String?, _ key: Key) {
+            guard let chunks = value.map(CrashUserInfo.chunks) else {
+                crash.removeUserInfoValue(forKey: key.rawValue)
+                return
             }
-            func set(_ value: Date?, _ key: Key) {
-                if let value { crash.setUserInfo(value.timeIntervalSince1970, forKey: key.rawValue) }
-                else { crash.removeUserInfoValue(forKey: key.rawValue) }
-                written[key] = value == nil ? 0 : 1
+            for (index, chunk) in chunks.enumerated() {
+                crash.setUserInfo(chunk, forKey: key.chunk(index))
             }
-            set(nil as String?, .spanId)
+            if chunks.count > 1 { crash.setUserInfo(chunks.count, forKey: key.count) }
+            else { crash.removeUserInfoValue(forKey: key.count) }
+        }
+        func set(_ value: Date?, _ key: Key) {
+            if let value { crash.setUserInfo(value.timeIntervalSince1970, forKey: key.rawValue) }
+            else { crash.removeUserInfoValue(forKey: key.rawValue) }
+        }
+        userInfoLock.whileLocked {
+            crash.removeUserInfoValue(forKey: Key.spanId.rawValue)
             guard let spanData else {
-                Key.allCases.forEach { set(nil as String?, $0) }
+                Key.allCases.forEach { crash.removeUserInfoValue(forKey: $0.rawValue) }
                 return
             }
             set(spanData.name, .name)

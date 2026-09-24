@@ -7,6 +7,7 @@
 internal import EventsExporter
 import Foundation
 internal import KSCrashRecording
+internal import KSCrashReportModel
 internal import OpenTelemetryApi
 
 
@@ -76,7 +77,13 @@ enum CrashInformation {
 /// described by `KSCrash_ExceptionHandlingPlan`). Mirrors the prior PLCrashReporter signal callback.
 private let ddCrashIsWritingReportCallback: @convention(c) (
     UnsafePointer<ExceptionHandlingPlan>, UnsafePointer<ReportWriter>
-) -> Void = { _, _ in
+) -> Void = { plan, _ in
+    // A crash inside this callback (or elsewhere in the handler) re-enters with
+    // `crashedDuringExceptionHandling` set; KSCrash asks callbacks to do nothing then.
+    // Non-fatal reports (e.g. a recovered hang) are not crashes of the current test.
+    // We deliberately ignore `requiresAsyncSafety`: signal/Mach crashes always set it,
+    // and the span snapshot below is the whole point of the callback.
+    guard !plan.pointee.crashedDuringExceptionHandling, plan.pointee.isFatal else { return }
     if let info = SanitizerHelper.getSaniziterInfo(), let url = DDCrashes.sanitizerURL {
         try? info.write(to: url, atomically: true, encoding: .utf8)
     }
@@ -95,9 +102,39 @@ private let ddCrashIsWritingReportCallback: @convention(c) (
 }
 
 
+/// The module/suite context we keep in the crash report's `user` section. Each field is a
+/// separate key in KSCrash's per-key user info store (mmap'd, so nothing is serialized at
+/// crash time). Values are stored flat because the store truncates strings to 1024 bytes,
+/// which a serialized span with all its attributes would easily exceed.
+private struct CrashUserInfo: Codable, Sendable {
+    var spanId: String?
+    var name: String?
+    var sessionId: String?
+    var moduleId: String?
+    var moduleName: String?
+    var sessionStartTime: Double?
+    var moduleStartTime: Double?
+    var suiteStartTime: Double?
+
+    enum CodingKeys: String, CodingKey, CaseIterable {
+        case spanId = "dd.span.id"
+        case name = "dd.span.name"
+        case sessionId = "dd.span.session_id"
+        case moduleId = "dd.span.module_id"
+        case moduleName = "dd.span.module_name"
+        case sessionStartTime = "dd.span.session_start"
+        case moduleStartTime = "dd.span.module_start"
+        case suiteStartTime = "dd.span.suite_start"
+    }
+}
+
+
+/// `KSCrashRecording` also exports a `CrashReport` (the ObjC `KSCrashReport` protocol).
+private typealias TypedCrashReport = KSCrashReportModel.CrashReport<CrashUserInfo>
+
+
 /// This class is our interface with the crash reporter, now backed by KSCrash.
 internal enum DDCrashes {
-    private static let userInfoSpanKey = "dd.span"
     private static var installed = false
     fileprivate static var sanitizerURL: URL?
     fileprivate static var spanURL: URL?
@@ -114,8 +151,28 @@ internal enum DDCrashes {
     }
 
     static func setCurrent(spanData: SimpleSpanData?) {
-        let bytes = spanData.map { SimpleSpanSerializer.serializeSpan(simpleSpan: $0) } ?? Data()
-        KSCrash.shared.userInfo = [userInfoSpanKey: bytes.base64EncodedString()]
+        typealias Key = CrashUserInfo.CodingKeys
+        let crash = KSCrash.shared
+        guard let spanData else {
+            Key.allCases.forEach { crash.removeUserInfoValue(forKey: $0.rawValue) }
+            return
+        }
+        func set(_ value: String?, _ key: Key) {
+            if let value { crash.setUserInfo(value, forKey: key.rawValue) }
+            else { crash.removeUserInfoValue(forKey: key.rawValue) }
+        }
+        func set(_ value: Date?, _ key: Key) {
+            if let value { crash.setUserInfo(value.timeIntervalSince1970, forKey: key.rawValue) }
+            else { crash.removeUserInfoValue(forKey: key.rawValue) }
+        }
+        set(SpanId(id: spanData.spanId).hexString, .spanId)
+        set(spanData.name, .name)
+        set(spanData.stringAttributes[DDTestSuiteVisibilityTags.testSessionId], .sessionId)
+        set(spanData.stringAttributes[DDTestSuiteVisibilityTags.testModuleId], .moduleId)
+        set(spanData.stringAttributes[DDTestTags.testModule], .moduleName)
+        set(spanData.sessionStartTime, .sessionStartTime)
+        set(spanData.moduleStartTime, .moduleStartTime)
+        set(spanData.suiteStartTime, .suiteStartTime)
     }
 
     @discardableResult
@@ -131,7 +188,12 @@ internal enum DDCrashes {
             monitors.insert(.machException)
         }
         config.monitors = monitors
-        config.deadlockWatchdogInterval = 0
+        // Stitch Swift async continuation frames into current-thread captures
+        // (C++/NSException throw sites), which covers `async` Swift Testing tests.
+        config.enableSwiftAsyncStackTraces = true
+        // Only keep binary images referenced by a backtrace. The full image list
+        // is several hundred entries in a test host and only bloats `error.stack`.
+        config.enableCompactBinaryImages = true
 
         // `isWritingReportCallback` is a `@convention(c)` function pointer — it cannot capture
         // locals. Everything below is a static property/function access, so the closure is
@@ -165,19 +227,12 @@ internal enum DDCrashes {
         }
 
         guard let store = KSCrash.shared.reportStore,
-              let firstID = store.reportIDs.first
+              let report = loadFatalReport(from: store)
         else {
             return nil
         }
-        let reportID = firstID.int64Value
-        defer {
-            store.deleteReport(with: reportID)
-            Log.debug("Crash report \(reportID) loaded and purged")
-        }
 
-        guard let report = store.report(for: reportID)?.value,
-              var crashLog = CrashLog(report: report)
-        else { return nil }
+        var crashLog = CrashLog(report: report)
 
         DDSymbolicator.symbolicate(&crashLog)
 
@@ -196,19 +251,40 @@ internal enum DDCrashes {
                                        crashDate: crashTimestamp,
                                        error: error)
             crashedInfo = makeTestCrashInfo(spanData: spanData, error: error)
-        } else if let userDict = report["user"] as? [String: Any],
-                  let base64 = userDict[userInfoSpanKey] as? String,
-                  !base64.isEmpty,
-                  let data = Data(base64Encoded: base64),
-                  let spanData = SimpleSpanSerializer.deserializeSpan(data: data)
-        {
-            crashedInfo = makeModuleOrSuiteCrashInfo(spanData: spanData, error: error)
+        } else if let userInfo = report.user {
+            crashedInfo = makeModuleOrSuiteCrashInfo(userInfo: userInfo, error: error)
         }
 
         if let info = crashedInfo {
             Log.debug("Loaded Crash Info: \(info)")
         }
         return crashedInfo
+    }
+
+    /// Returns the oldest fatal report in the store and purges every report up to and
+    /// including it. Non-fatal reports (resolved hangs, CPU warnings) are discarded: they
+    /// are never enabled here, but `KSCrashMonitorTypeRequired` monitors can emit them.
+    private static func loadFatalReport(from store: CrashReportStore) -> TypedCrashReport? {
+        defer { store.cleanupOrphanedRunSidecars() }
+        // Oldest first. Iterating a snapshot rather than polling `nextReportID`
+        // means a report that fails to delete can't loop forever.
+        for reportID in store.reportIDs.map(\.int64Value).sorted() {
+            defer {
+                store.deleteReport(with: reportID)
+                Log.debug("Crash report \(reportID) loaded and purged")
+            }
+            guard let data = store.reportData(for: reportID)?.value else { continue }
+            let report: TypedCrashReport
+            do {
+                report = try JSONDecoder().decode(TypedCrashReport.self, from: data)
+            } catch {
+                Log.debug("Failed decoding crash report \(reportID): \(error)")
+                continue
+            }
+            guard report.crash.error.isFatal != false else { continue }
+            return report
+        }
+        return nil
     }
 
     // MARK: - Crash info reconstruction
@@ -234,28 +310,33 @@ internal enum DDCrashes {
                                startTime: spanData.sessionStartTime))
     }
 
-    private static func makeModuleOrSuiteCrashInfo(spanData: SimpleSpanData, error: TestError) -> CrashInformation? {
-        guard let sessionID = spanData.stringAttributes[DDTestSuiteVisibilityTags.testSessionId] else { return nil }
-        if let suiteStart = spanData.suiteStartTime,
-           let moduleID = spanData.stringAttributes[DDTestSuiteVisibilityTags.testModuleId],
-           let moduleName = spanData.stringAttributes[DDTestTags.testModule]
+    private static func makeModuleOrSuiteCrashInfo(userInfo: CrashUserInfo, error: TestError) -> CrashInformation? {
+        guard let spanID = userInfo.spanId,
+              let name = userInfo.name,
+              let sessionID = userInfo.sessionId,
+              let sessionStart = userInfo.sessionStartTime,
+              let moduleStart = userInfo.moduleStartTime
+        else { return nil }
+        let session = (id: SpanId(fromHexString: sessionID),
+                       startTime: Date(timeIntervalSince1970: sessionStart))
+        if let suiteStart = userInfo.suiteStartTime,
+           let moduleID = userInfo.moduleId,
+           let moduleName = userInfo.moduleName
         {
-            return .suite(id: SpanId(id: spanData.spanId),
-                          name: spanData.name,
-                          startTime: suiteStart,
+            return .suite(id: SpanId(fromHexString: spanID),
+                          name: name,
+                          startTime: Date(timeIntervalSince1970: suiteStart),
                           error: error,
                           module: (id: SpanId(fromHexString: moduleID),
                                    name: moduleName,
-                                   startTime: spanData.moduleStartTime),
-                          session: (id: SpanId(fromHexString: sessionID),
-                                    startTime: spanData.sessionStartTime))
+                                   startTime: Date(timeIntervalSince1970: moduleStart)),
+                          session: session)
         }
-        return .module(id: SpanId(id: spanData.spanId),
-                       name: spanData.name,
-                       startTime: spanData.moduleStartTime,
+        return .module(id: SpanId(fromHexString: spanID),
+                       name: name,
+                       startTime: Date(timeIntervalSince1970: moduleStart),
                        error: error,
-                       session: (id: SpanId(fromHexString: sessionID),
-                                 startTime: spanData.sessionStartTime))
+                       session: session)
     }
 
 }

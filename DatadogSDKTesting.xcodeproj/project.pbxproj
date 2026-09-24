@@ -18,9 +18,8 @@
 		3B086A157E782A8DCA702976 /* LogsApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = D969899DDA68AF3C690F7FF8 /* LogsApi.swift */; };
 		476CBA69A1DF07E74A0E7311 /* KnownTestsApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1531A96019132E3E9E96A3A7 /* KnownTestsApi.swift */; };
 		4B08F62941D9EB26E5DF3837 /* TestImpactAnalysisApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1495758A45B516A2C584B845 /* TestImpactAnalysisApi.swift */; };
+		4CAE7FDB7577B361E9941DA2 /* Report in Frameworks */ = {isa = PBXBuildFile; productRef = DC3EFD79ABF787423BCEA337 /* Report */; };
 		4CCD47B30A3B513F26C8936E /* TelemetryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8BF04956AA1E2FADBB80244 /* TelemetryTests.swift */; };
-		D4A7A7100000000000000002 /* DynamicATRRetriesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4A7A7100000000000000012 /* DynamicATRRetriesTests.swift */; };
-		D4A7A7100000000000000003 /* DynamicATRRetriesSwiftTestingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4A7A7100000000000000013 /* DynamicATRRetriesSwiftTestingTests.swift */; };
 		56B58A2FC91F21D1ABB0155E /* TelemetryApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01EB970146040DD4967C7411 /* TelemetryApi.swift */; };
 		6CB9C5C6886840A5505A58CF /* RuntimeInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C8B6265EAF40604D5159055 /* RuntimeInfo.swift */; };
 		7972B04FB1DFA64DC20032AE /* Telemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E11F924F40C94461C2B6B27 /* Telemetry.swift */; };
@@ -286,6 +285,8 @@
 		C7A51F2CA4062849511FF2E8 /* TestOptimizationApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0B522400A21CABC6BB4F1CA /* TestOptimizationApi.swift */; };
 		CD1E9CDE6FE677BC07E66905 /* SpansApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1209EC18B790B00EFC90E52 /* SpansApi.swift */; };
 		CF01BFC0E242E316DAEBF627 /* TestImpactAnalysisApiTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F404AE4A4650852648C7A155 /* TestImpactAnalysisApiTests.swift */; };
+		D4A7A7100000000000000002 /* DynamicATRRetriesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4A7A7100000000000000012 /* DynamicATRRetriesTests.swift */; };
+		D4A7A7100000000000000003 /* DynamicATRRetriesSwiftTestingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4A7A7100000000000000013 /* DynamicATRRetriesSwiftTestingTests.swift */; };
 		DCCF75D22681A563B9E4CA1B /* TestManagementApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0083E7241E320B00198C0D71 /* TestManagementApi.swift */; };
 		E101EC71CC9E4715A40188FB /* AutoTestRetriesSwiftTestingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31F8747157604DB48FE692EB /* AutoTestRetriesSwiftTestingTests.swift */; };
 		E42959C85F3B9BAB313984F7 /* TelemetryTags.swift in Sources */ = {isa = PBXBuildFile; fileRef = E714A2777988AA4DA1AACB5C /* TelemetryTags.swift */; };
@@ -595,9 +596,9 @@
 		BC161A86B91745F4BDC88FF1 /* TelemetryExporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TelemetryExporter.swift; sourceTree = "<group>"; };
 		C1E3348865C204C942F4765C /* SettingsApi.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SettingsApi.swift; sourceTree = "<group>"; };
 		C8BF04956AA1E2FADBB80244 /* TelemetryTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TelemetryTests.swift; sourceTree = "<group>"; };
+		CC931D86ADB841B6969C7A7A /* EarlyFlakeDetectionSwiftTestingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EarlyFlakeDetectionSwiftTestingTests.swift; sourceTree = "<group>"; };
 		D4A7A7100000000000000012 /* DynamicATRRetriesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicATRRetriesTests.swift; sourceTree = "<group>"; };
 		D4A7A7100000000000000013 /* DynamicATRRetriesSwiftTestingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicATRRetriesSwiftTestingTests.swift; sourceTree = "<group>"; };
-		CC931D86ADB841B6969C7A7A /* EarlyFlakeDetectionSwiftTestingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EarlyFlakeDetectionSwiftTestingTests.swift; sourceTree = "<group>"; };
 		D969899DDA68AF3C690F7FF8 /* LogsApi.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LogsApi.swift; sourceTree = "<group>"; };
 		E0B522400A21CABC6BB4F1CA /* TestOptimizationApi.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TestOptimizationApi.swift; sourceTree = "<group>"; };
 		E10034D92703599D00439C9C /* DDModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DDModule.swift; sourceTree = "<group>"; };
@@ -774,6 +775,7 @@
 				A7FC26512BA1F1E600067E26 /* SigmaSwiftStatistics in Frameworks */,
 				A7FC26552BA1F1F900067E26 /* EventsExporter.framework in Frameworks */,
 				A7E233072BC6F46F0087D8F8 /* CDatadogSDKTesting.framework in Frameworks */,
+				4CAE7FDB7577B361E9941DA2 /* Report in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1699,6 +1701,7 @@
 				E157A71A256E9D1D00CBCA52 /* SigmaSwiftStatistics */,
 				A7E233302BC82CD10087D8F8 /* Kronos */,
 				A74EB8DF2D0AE8A600FAD9B8 /* CodeCoverage */,
+				DC3EFD79ABF787423BCEA337 /* Report */,
 			);
 			productName = DatadogSDKTesting;
 			productReference = A7FC25642BA1E83500067E26 /* DatadogSDKTesting.framework */;
@@ -2621,7 +2624,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
-				MARKETING_VERSION = "2.7.9";
+				MARKETING_VERSION = 2.7.9;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -3372,7 +3375,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
-				MARKETING_VERSION = "2.7.9";
+				MARKETING_VERSION = 2.7.9;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -3447,7 +3450,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LLVM_LTO = YES_THIN;
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
-				MARKETING_VERSION = "2.7.9";
+				MARKETING_VERSION = 2.7.9;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -3685,7 +3688,7 @@
 			repositoryURL = "https://github.com/kstenerud/KSCrash.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 2.5.1;
+				minimumVersion = 2.6.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -3725,6 +3728,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E17B7AA6253F02580081D7F3 /* XCRemoteSwiftPackageReference "SigmaSwiftStatistics" */;
 			productName = SigmaSwiftStatistics;
+		};
+		DC3EFD79ABF787423BCEA337 /* Report */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E1FB4839253891650083B263 /* XCRemoteSwiftPackageReference "KSCrash" */;
+			productName = Report;
 		};
 		E157A71A256E9D1D00CBCA52 /* SigmaSwiftStatistics */ = {
 			isa = XCSwiftPackageProductDependency;

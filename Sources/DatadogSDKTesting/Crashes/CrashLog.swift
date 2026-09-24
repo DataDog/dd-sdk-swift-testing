@@ -5,8 +5,10 @@
  */
 
 import Foundation
+internal import KSCrashRecordingCore
+internal import KSCrashReportModel
 
-/// Structured representation of a KSCrash JSON crash report. Symbolication operates on these
+/// Structured representation of a KSCrash crash report. Symbolication operates on these
 /// frames in place, and `render()` produces the human-readable text only when needed.
 internal struct CrashLog {
     var header: Header
@@ -50,77 +52,59 @@ internal struct CrashLog {
 }
 
 extension CrashLog {
-    /// Build a `CrashLog` from a KSCrash report dictionary (the value returned by
-    /// `KSCrashReportStore.report(for:)`). Returns `nil` if the report is structurally invalid.
-    init?(report: [String: Any]) {
-        let crash = report["crash"] as? [String: Any]
-        let errorDict = crash?["error"] as? [String: Any]
-
-        let signal = errorDict?["signal"] as? [String: Any]
-        let mach = errorDict?["mach"] as? [String: Any]
-        let nsex = errorDict?["nsexception"] as? [String: Any]
-        let cpp = errorDict?["cpp_exception"] as? [String: Any]
+    /// Build a `CrashLog` from a typed KSCrash report (`KSCrashReportModel.CrashReport`).
+    init<UserData>(report: CrashReport<UserData>) {
+        let crash = report.crash
+        let error = crash.error
 
         self.header = Header(
-            exceptionType: errorDict?["type"] as? String,
-            signalName: signal?["name"] as? String,
-            signalNumber: (signal?["signal"] as? NSNumber)?.intValue,
-            signalCodeName: signal?["code_name"] as? String,
-            machExceptionName: mach?["exception_name"] as? String,
-            machCodeName: mach?["code_name"] as? String,
-            nsExceptionName: nsex?["name"] as? String,
-            cppExceptionName: cpp?["name"] as? String,
-            reason: errorDict?["reason"] as? String
+            exceptionType: error.type.rawValue,
+            signalName: error.signal?.name,
+            signalNumber: error.signal.map { Int($0.signal) },
+            signalCodeName: error.signal?.codeName,
+            machExceptionName: error.mach?.exceptionName,
+            machCodeName: error.mach?.codeName,
+            nsExceptionName: error.nsexception?.name,
+            cppExceptionName: error.cppException?.name,
+            reason: error.reason ?? error.nsexception?.reason
         )
 
-        let rawThreads = (crash?["threads"] as? [[String: Any]]) ?? []
-        self.threads = rawThreads
-            .sorted { (($0["crashed"] as? Bool) ?? false ? 0 : 1) < (($1["crashed"] as? Bool) ?? false ? 0 : 1) }
-            .map { dict in
-                let frames = ((dict["backtrace"] as? [String: Any])?["contents"] as? [[String: Any]] ?? [])
+        self.threads = (crash.threads ?? [])
+            .sorted { ($0.crashed ? 0 : 1) < ($1.crashed ? 0 : 1) }
+            .map { thread in
+                let frames = (thread.backtrace?.contents ?? [])
                     .enumerated()
                     .map { (i, frame) in
                         Frame(
                             index: i,
-                            library: (frame["object_name"] as? String) ?? "???",
-                            instructionAddress: (frame["instruction_addr"] as? NSNumber)?.uint64Value ?? 0,
-                            objectAddress: (frame["object_addr"] as? NSNumber)?.uint64Value ?? 0,
+                            library: frame.objectName ?? "???",
+                            instructionAddress: frame.instructionAddr,
+                            objectAddress: frame.objectAddr ?? 0,
                             symbolicated: nil
                         )
                     }
-                return Thread(
-                    index: (dict["index"] as? NSNumber)?.intValue ?? 0,
-                    crashed: (dict["crashed"] as? Bool) ?? false,
-                    frames: frames
-                )
+                return Thread(index: thread.index, crashed: thread.crashed, frames: frames)
             }
 
-        self.binaryImages = ((report["binary_images"] as? [[String: Any]]) ?? []).map { img in
+        self.binaryImages = (report.binaryImages ?? []).map { img in
             BinaryImage(
-                address: (img["image_addr"] as? NSNumber)?.uint64Value ?? 0,
-                size: (img["image_size"] as? NSNumber)?.uint64Value ?? 0,
-                name: (img["name"] as? String) ?? "",
-                arch: (img["cpu_arch"] as? String) ?? "",
-                uuid: (img["uuid"] as? String) ?? ""
+                address: img.imageAddr,
+                size: img.imageSize,
+                name: img.name,
+                arch: Self.archName(cpuType: img.cpuType, cpuSubtype: img.cpuSubtype),
+                uuid: img.uuid ?? ""
             )
         }
 
-        self.timestamp = Self.parseTimestamp(report["timestamp"])
+        self.timestamp = report.report.timestamp
     }
 
-    private static func parseTimestamp(_ raw: Any?) -> Date? {
-        if let str = raw as? String {
-            let withFractional = ISO8601DateFormatter()
-            withFractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-            if let d = withFractional.date(from: str) { return d }
-            let plain = ISO8601DateFormatter()
-            plain.formatOptions = [.withInternetDateTime]
-            return plain.date(from: str)
-        }
-        if let micros = raw as? NSNumber {
-            return Date(timeIntervalSince1970: micros.doubleValue / 1_000_000)
-        }
-        return nil
+    /// KSCrash only records the raw Mach-O `cputype`/`cpusubtype` per image.
+    private static func archName(cpuType: Int, cpuSubtype: Int) -> String {
+        guard let name = kscpu_archForCPU(cpu_type_t(truncatingIfNeeded: cpuType),
+                                          cpu_subtype_t(truncatingIfNeeded: cpuSubtype))
+        else { return "" }
+        return String(cString: name)
     }
 }
 

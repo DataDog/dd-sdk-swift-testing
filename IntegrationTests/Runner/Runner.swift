@@ -59,6 +59,10 @@ struct XcodeTestRunner: Sendable {
                 let status = try await XcodeTestRunner.xcodebuild(module: module,
                                                                   action: ["-only-testing",
                                                                            "\(testBundle)/\(test)",
+                                                                           // Many inner tests fail on purpose; the default
+                                                                           // `on-failure` diagnostics collection can stall
+                                                                           // for ~10 minutes per failing run.
+                                                                           "-collect-test-diagnostics", "never",
                                                                            "test-without-building"],
                                                                   environment: config.environment,
                                                                   server: self.backend.baseURL)

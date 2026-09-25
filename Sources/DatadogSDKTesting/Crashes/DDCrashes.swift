@@ -289,9 +289,6 @@ internal enum DDCrashes {
         // Only keep binary images referenced by a backtrace. The full image list
         // is several hundred entries in a test host and only bloats `error.stack`.
         config.enableCompactBinaryImages = true
-        // Temporary workaround: enabling this hangs CI with KSCrash 2.6.0.
-        // Remove once fixed upstream.
-        config.enableSwapCxaThrow = false
 
         // `isWritingReportCallback` is a `@convention(c)` function pointer — it cannot capture
         // locals. Everything below is a static property/function access, so the closure is

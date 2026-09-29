@@ -320,6 +320,38 @@ internal class DDXCTestObserverTests: XCTestCase {
         XCTAssertNotNil(suiteSpan.toSpanData().attributes[DDTags.errorMessage])
     }
 
+    func testOnlySuccessfulCompletedZeroTestRunsAreSkipped() async throws {
+        let cases: [(executions: Int, succeeded: Bool, stopped: Bool, expected: TestStatus)] = [
+            (0, true, true, .skip),
+            (1, true, true, .pass), // The runner saw a test, even if the SDK missed its events.
+            (0, false, true, .fail),
+            (0, true, false, .pass),
+        ]
+        for testCase in cases {
+            testObserver = DDXCTestObserver(session: session, log: Mocks.CatchLogger())
+            let sdkSession = try await session.session
+            testObserver.testBundleWillStart(Bundle.main)
+            guard case .module(let module, _) = testObserver.state else {
+                XCTFail("Expected a module after bundle start")
+                await destroyObserver()
+                return
+            }
+            let suite = XCTestSuite(name: "EmptySuite")
+            testObserver.testSuiteWillStart(suite)
+            suite.setValue(MockSuiteRun(test: suite, executions: testCase.executions,
+                                       succeeded: testCase.succeeded, stopped: testCase.stopped), forKey: "testRun")
+            testObserver.testSuiteDidFinish(suite)
+            testObserver.testBundleDidFinish(Bundle.main)
+            await session.stop()
+
+            XCTAssertEqual(module.status, testCase.expected)
+            XCTAssertEqual(sdkSession.status, testCase.expected)
+            XCTAssertEqual(sdkSession.get(tag: DDTestSessionTags.testSessionEmptyReason),
+                           testCase.expected == .skip ? "zero_tests" : nil)
+        }
+        await destroyObserver()
+    }
+
     private func destroyObserver() async {
         await self.session.stop()
         testObserver = nil
@@ -327,6 +359,24 @@ internal class DDXCTestObserverTests: XCTestCase {
 }
 
 // MARK: - Mock test run
+
+private final class MockSuiteRun: XCTestRun {
+    private let executions: Int
+    private let succeeded: Bool
+    private let stopped: Bool
+
+    init(test: XCTest, executions: Int, succeeded: Bool, stopped: Bool) {
+        self.executions = executions
+        self.succeeded = succeeded
+        self.stopped = stopped
+        super.init(test: test)
+    }
+
+    override var executionCount: Int { executions }
+    override var hasSucceeded: Bool { succeeded }
+    override var hasBeenSkipped: Bool { false }
+    override var stopDate: Date? { stopped ? Date(timeIntervalSince1970: 1) : nil }
+}
 
 /// A lightweight XCTestRun subclass used in tests.
 /// Extends XCTestRun (not XCTestCaseRun) so start()/stop() don't notify XCTestObservationCenter.

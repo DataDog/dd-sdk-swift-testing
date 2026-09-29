@@ -239,6 +239,10 @@ final class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate
             // Set suite status based on it's test groups.
             // Features will setup proper skip and fail strategies for the groups.
             suite.set(status: testSuite.testRun?.status ?? .pass)
+            if let run = testSuite.testRun, run.stopDate != nil,
+               run.executionCount == 0, run.hasSucceeded {
+                suite.confirmEmpty()
+            }
             context.features.testSuiteWillEnd(suite: suite)
             suite.end()
             state = context.back(from: suite)

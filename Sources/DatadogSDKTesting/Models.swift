@@ -128,6 +128,8 @@ protocol TestSuite: TestContainer {
     var module: any TestModule { get }
     var localization: String { get }
     var testFramework: TestFramework { get }
+    /// Called only when the framework confirms successful completion with no tests.
+    func confirmEmpty()
 }
 
 protocol TestSuiteProvider: Sendable {

@@ -13,6 +13,7 @@ internal import EventsExporter
 public final class DDModule: NSObject {
     struct MutableState {
         var testFrameworks: Set<String> = []
+        var emptySuites: [SpanId: Bool] = [:]
     }
 
     public let name: String
@@ -76,6 +77,7 @@ public final class DDModule: NSObject {
 
         self._state = .init(state)
         super.init()
+        session.recordModuleStarted(id: id)
 
         if let crash = session.configuration.crash?.module,
            let error = crash.error, crash.name == name
@@ -86,6 +88,12 @@ public final class DDModule: NSObject {
 
     private func internalEnd(endTime: Date? = nil) {
         let endTime = endTime ?? configuration.clock.now
+        let confirmedEmpty = _state.use {
+            !$0.emptySuites.isEmpty && $0.emptySuites.values.allSatisfy { $0 }
+        } && status != .fail
+        if confirmedEmpty {
+            set(skipped: "No tests were executed.")
+        }
 
         let framework = _state.use { state -> String in
             state.testFrameworks.count == 1
@@ -100,6 +108,7 @@ public final class DDModule: NSObject {
         // get-status -> set-status round-trip (see DDSession).
         span.applyStatus(span.testStatus, errorDescription: "module failed")
         span.end(time: endTime)
+        _session.recordModuleEnded(id: id, status: status, confirmedEmpty: confirmedEmpty)
 
         configuration.log.debug("Exported module_end event moduleId: \(self.id)")
     }
@@ -107,6 +116,14 @@ public final class DDModule: NSObject {
     func addFramework(_ name: String) {
         let _ = _state.update { $0.testFrameworks.insert(name) }
         _session.addFramework(name)
+    }
+
+    func recordSuiteStarted(id: SpanId) {
+        _state.update { $0.emptySuites[id] = false }
+    }
+
+    func recordSuiteEnded(id: SpanId, confirmedEmpty: Bool) {
+        _state.update { $0.emptySuites[id] = confirmedEmpty }
     }
 }
 

@@ -13,6 +13,7 @@ internal import EventsExporter
 public final class DDSuite: NSObject {
     struct MutableState {
         var testsStarted: Int = 0
+        var confirmedEmpty: Bool = false
     }
 
     public let name: String
@@ -83,6 +84,7 @@ public final class DDSuite: NSObject {
         self._state = .init(state)
 
         super.init()
+        module.recordSuiteStarted(id: id)
 
         if let crash = module.configuration.crash?.suite,
            let error = crash.error, crash.name == name
@@ -93,7 +95,9 @@ public final class DDSuite: NSObject {
 
     private func internalEnd(endTime: Date? = nil) {
         let endTime = endTime ?? configuration.clock.now
-        let shouldExport = _state.use { $0.testsStarted > 0 }
+        let state = _state.value
+        let shouldExport = state.testsStarted > 0
+        _module.recordSuiteEnded(id: id, confirmedEmpty: state.confirmedEmpty && !shouldExport && status != .fail)
         // Don't emit a `test_suite_end` event for suites in which no tests
         // actually ran. This happens for container types that only enclose
         // nested @Suite types, and for XCTest's empty wrapper suites.
@@ -162,6 +166,10 @@ public final class DDSuite: NSObject {
 
 extension DDSuite: TestSuite {
     var attributes: [String: TestAttributeValue] { span.getAttributes().testAttributes }
+
+    func confirmEmpty() {
+        _state.update { $0.confirmedEmpty = true }
+    }
 
     func set(tag name: String, value: SpanAttributeConvertible) {
         span.setAttribute(key: name, value: .string(value.spanAttribute))

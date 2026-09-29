@@ -551,16 +551,25 @@ struct SwiftTestingSuiteContext: Sendable {
         try await _suite.withActiveTest(named: name, action)
     }
     
-    func end() async -> Bool {
+    func end(scopeError: (any Error)? = nil) async -> Bool {
+        if let scopeError, !scopeError.isSwiftTestingSkip {
+            _suite.set(failed: .init(type: "SuiteScopeFailed", message: String(describing: scopeError)))
+        }
         guard let statuses = await _state.statuses else {
             // we have more tests to run
             return false
         }
         // no more tests. we can end
-        if statuses.values.allSatisfy({ $0 == .skip }) {
-            _suite.set(skipped: nil)
-        } else if statuses.values.contains(where: { $0 == .fail }) {
+        if _suite.status == .fail || statuses.values.contains(where: { $0 == .fail }) {
             _suite.set(failed: nil)
+        } else if statuses.values.allSatisfy({ $0 == .skip }) {
+            _suite.set(skipped: nil)
+            // A completed suite scope with no test scopes is an empty selection,
+            // including suites whose children were all disabled by the framework.
+            // A started test scope without test-case events is not enough evidence.
+            if statuses.isEmpty, scopeError == nil {
+                _suite.confirmEmpty()
+            }
         }
         await observer.willFinish(suite: self)
         _suite.end()
@@ -761,8 +770,8 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
     {
         try await doThrow {
             try await function(context)
-        } finally: {
-            if await context.end() { // if suite ended (no tests left)
+        } finally: { error in
+            if await context.end(scopeError: error) { // if suite ended (no tests left)
                 let (modEnded, active) = try await _state.didEnded(suite: context.suite)
                 await observer.didFinish(suite: context, active: active)
                 if modEnded { // if module ended (no suites left)
@@ -811,7 +820,7 @@ extension Optional where Wrapped == SwiftTestingTestStatus.Errors {
     }
 }
 
-func doThrow<R>(_ body: @Sendable () async throws -> R, finally: @Sendable () async throws -> Void) async throws -> R {
+func doThrow<R>(_ body: @Sendable () async throws -> R, finally: @Sendable (Error?) async throws -> Void) async throws -> R {
     var catched: Error? = nil
     let value: R?
     do {
@@ -820,7 +829,7 @@ func doThrow<R>(_ body: @Sendable () async throws -> R, finally: @Sendable () as
         catched = error
         value = nil
     }
-    try await finally()
+    try await finally(catched)
     if let catched { throw catched }
     return value!
 }

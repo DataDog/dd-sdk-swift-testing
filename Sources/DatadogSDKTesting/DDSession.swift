@@ -14,6 +14,7 @@ public final class DDSession: NSObject {
     struct MutableState {
         var testRunsCount: UInt = 0
         var testFrameworks: Set<String> = []
+        var modules: [SpanId: (status: TestStatus, confirmedEmpty: Bool)] = [:]
     }
 
     public let name: String
@@ -95,6 +96,15 @@ public final class DDSession: NSObject {
             self.set(failed: .init(type: "Sanitizer Error", stack: sanitizerInfo))
         }
 
+        let modules = _state.value.modules.values
+        if status != .fail, !modules.isEmpty, modules.allSatisfy({ $0.status == .skip }) {
+            let confirmedEmpty = modules.allSatisfy { $0.confirmedEmpty }
+            set(skipped: confirmedEmpty ? "No tests were executed." : nil)
+            if confirmedEmpty {
+                set(tag: DDTestSessionTags.testSessionEmptyReason, value: "zero_tests")
+            }
+        }
+
         let framework = _state.use { state -> String in
             state.testFrameworks.count == 1
                 ? "\(state.testFrameworks.first!).session"
@@ -116,6 +126,14 @@ public final class DDSession: NSObject {
 
     func addFramework(_ name: String) {
         let _ = _state.update { $0.testFrameworks.insert(name) }
+    }
+
+    func recordModuleStarted(id: SpanId) {
+        _state.update { $0.modules[id] = (.pass, false) }
+    }
+
+    func recordModuleEnded(id: SpanId, status: TestStatus, confirmedEmpty: Bool) {
+        _state.update { $0.modules[id] = (status, confirmedEmpty) }
     }
 }
 

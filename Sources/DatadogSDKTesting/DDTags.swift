@@ -114,6 +114,7 @@ internal enum DDTestSessionTags {
     static let testToolchain = "test.toolchain"
     static let testTestManagementEnabled = "test.test_management.enabled"
     static let testSessionName = "test_session.name"
+    static let testSessionEmptyReason = "test.session.empty_reason"
 }
 
 internal enum DDGitTags {

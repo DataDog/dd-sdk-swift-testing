@@ -182,6 +182,157 @@ final class SessionManagerTests: XCTestCase {
         await manager.stop()
     }
 
+    // MARK: - Framework-confirmed empty executions
+
+    func testCompletedEmptySwiftTestingSuitesSkipModuleAndSession() async throws {
+        for registeredTests in [0, 2] {
+            let manager = lifecycleManager()
+            let session = try await manager.session
+            let module = session.module(named: "ExampleModule")
+            let provider = SwiftTestingSuiteProvider(session: manager, observer: SwiftTestingObserver())
+            let suite = Mocks.STSuite(name: "ExampleSuite", module: module.name, attachedTags: AttachedTags())
+            await provider.registry.register(test: suite)
+            for index in 0..<registeredTests {
+                await provider.registry.register(test: Mocks.STTest(name: "test\(index)", module: module.name,
+                                                                    suite: suite.name, attachedTags: AttachedTags()))
+            }
+
+            // The framework finishes the suite without entering any test scopes:
+            // either the suite is empty, or all registered children are disabled.
+            try await provider.with(suite: suite) { _ in }
+            await manager.stop()
+
+            XCTAssertEqual(module.status, .skip)
+            XCTAssertEqual(session.status, .skip)
+            XCTAssertEqual(module.get(tag: DDTestTags.testSkipReason), "No tests were executed.")
+            XCTAssertEqual(session.get(tag: DDTestTags.testSkipReason), "No tests were executed.")
+            XCTAssertEqual(session.get(tag: DDTestSessionTags.testSessionEmptyReason), "zero_tests")
+        }
+    }
+
+    func testSwiftTestingSuiteScopeFailureRemainsFailed() async throws {
+        let manager = lifecycleManager()
+        let session = try await manager.session
+        let module = session.module(named: "ExampleModule")
+        let provider = SwiftTestingSuiteProvider(session: manager, observer: SwiftTestingObserver())
+        let suite = Mocks.STSuite(name: "ExampleSuite", module: module.name, attachedTags: AttachedTags())
+        do {
+            try await provider.with(suite: suite) { _ in throw SuiteScopeError.setupFailed }
+            XCTFail("The scope error should be rethrown")
+        } catch SuiteScopeError.setupFailed {}
+        await manager.stop()
+
+        XCTAssertEqual(module.status, .fail)
+        XCTAssertEqual(session.status, .fail)
+        XCTAssertNil(session.get(tag: DDTestTags.testSkipReason))
+        XCTAssertNil(session.get(tag: DDTestSessionTags.testSessionEmptyReason))
+    }
+
+    func testStartedTestScopeWithoutTestCaseEventsIsNotConfirmedEmpty() async throws {
+        let manager = lifecycleManager()
+        let session = try await manager.session
+        let module = session.module(named: "ExampleModule")
+        let provider = SwiftTestingSuiteProvider(session: manager, observer: SwiftTestingObserver())
+        let suite = Mocks.STSuite(name: "ExampleSuite", module: module.name, attachedTags: AttachedTags())
+        let test = Mocks.STTest(name: "example", module: module.name, suite: suite.name, attachedTags: AttachedTags())
+        try await provider.with(suite: suite) { context in
+            try await context.with(test: test) { _ in }
+        }
+        await manager.stop()
+
+        XCTAssertEqual(module.status, .pass)
+        XCTAssertEqual(session.status, .pass)
+        XCTAssertNil(session.get(tag: DDTestSessionTags.testSessionEmptyReason))
+    }
+
+    func testEmptySuiteDoesNotHidePassingOrUnfinishedSibling() async throws {
+        for finishSibling in [false, true] {
+            let manager = lifecycleManager()
+            let session = try await manager.session
+            let module = session.module(named: "ExampleModule")
+            let empty = module.startSuite(named: "EmptySuite", at: nil, framework: .init(name: "Testing", version: "1"))
+            empty.confirmEmpty()
+            empty.end()
+            empty.end() // Duplicate completion must not count as two empty suites.
+            let sibling = module.startSuite(named: "SiblingSuite", at: nil, framework: .init(name: "Testing", version: "1"))
+            if finishSibling {
+                sibling.withActiveTest(named: "example") { _ in }
+                sibling.end()
+            }
+            await manager.stop()
+
+            XCTAssertEqual(module.status, .pass)
+            XCTAssertEqual(session.status, .pass)
+            XCTAssertNil(module.get(tag: DDTestTags.testSkipReason))
+            XCTAssertNil(session.get(tag: DDTestSessionTags.testSessionEmptyReason))
+        }
+    }
+
+    func testEmptyModuleDoesNotOverrideOtherModuleStatuses() async throws {
+        for otherStatus in [TestStatus.pass, .fail, .skip] {
+            let manager = lifecycleManager()
+            let session = try await manager.session
+            let emptyModule = session.module(named: "EmptyModule")
+            let suite = emptyModule.startSuite(named: "EmptySuite", at: nil, framework: .init(name: "Testing", version: "1"))
+            suite.confirmEmpty()
+            suite.end()
+            let otherModule = session.module(named: "OtherModule")
+            switch otherStatus {
+            case .pass: break
+            case .fail: otherModule.set(failed: nil)
+            case .skip: otherModule.set(skipped: "Explicitly skipped")
+            }
+            await manager.stop()
+
+            XCTAssertEqual(emptyModule.status, .skip)
+            XCTAssertEqual(session.status, otherStatus)
+            XCTAssertNil(session.get(tag: DDTestSessionTags.testSessionEmptyReason))
+        }
+    }
+
+    func testEmptyExecutionWithoutFrameworkConfirmationIsUnchanged() async throws {
+        let manager = lifecycleManager()
+        let session = try await manager.session
+        let module = session.module(named: "ExampleModule")
+        let suite = module.startSuite(named: "ExampleSuite", at: nil, framework: .init(name: "SwiftManual", version: "1"))
+        suite.end()
+        await manager.stop()
+
+        XCTAssertEqual(module.status, .pass)
+        XCTAssertEqual(session.status, .pass)
+        XCTAssertNil(session.get(tag: DDTestSessionTags.testSessionEmptyReason))
+    }
+
+    func testConfirmedEmptySuiteDoesNotClearModuleOrSessionFailure() async throws {
+        for failModule in [false, true] {
+            let manager = lifecycleManager()
+            let session = try await manager.session
+            let module = session.module(named: "ExampleModule")
+            let suite = module.startSuite(named: "EmptySuite", at: nil, framework: .init(name: "Testing", version: "1"))
+            suite.confirmEmpty()
+            suite.end()
+            if failModule {
+                module.set(failed: nil)
+            } else {
+                session.set(failed: nil)
+            }
+            await manager.stop()
+
+            XCTAssertEqual(module.status, failModule ? .fail : .skip)
+            XCTAssertEqual(session.status, .fail)
+            XCTAssertNil(session.get(tag: DDTestSessionTags.testSessionEmptyReason))
+        }
+    }
+
+    private enum SuiteScopeError: Error { case setupFailed }
+
+    private func lifecycleManager() -> Mocks.SessionManager {
+        Mocks.SessionManager(provider: DDSession.Provider(),
+                             config: .init(activeFeatures: [], env: DDTestMonitor.env, config: DDTestMonitor.config,
+                                           clock: DateClock(), crash: nil, command: "test", log: Mocks.CatchLogger(),
+                                           tracer: DDTracer()))
+    }
+
     /// Calls the *synchronous* `stop()`. Needed inside `async` tests, where the
     /// compiler would otherwise resolve `stop()` to the `async` overload.
     private func stopSynchronously(_ manager: SessionManager) {

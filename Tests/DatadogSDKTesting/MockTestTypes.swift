@@ -300,6 +300,8 @@ enum Mocks {
             set { _state.update { $0.attachedTags = newValue } }
         }
         var tests: [String: Group] { _state.value.tests }
+
+        func confirmEmpty() {}
         
         init(name: String, module: Module, framework: TestFramework,
              tags: AttachedTags, testTags: [String: AttachedTags], startTime: Date = Date())

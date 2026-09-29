@@ -190,11 +190,11 @@ final class SessionManagerTests: XCTestCase {
             let session = try await manager.session
             let module = session.module(named: "ExampleModule")
             let provider = SwiftTestingSuiteProvider(session: manager, observer: SwiftTestingObserver())
-            let suite = Mocks.STSuite(name: "ExampleSuite", module: module.name, attachedTags: AttachedTags())
+            let suite = Mocks.STSuite(name: "ExampleSuite", module: module.name, attachedTags: Mocks.AttachedTags())
             await provider.registry.register(test: suite)
             for index in 0..<registeredTests {
                 await provider.registry.register(test: Mocks.STTest(name: "test\(index)", module: module.name,
-                                                                    suite: suite.name, attachedTags: AttachedTags()))
+                                                                    suite: suite.name, attachedTags: Mocks.AttachedTags()))
             }
 
             // The framework finishes the suite without entering any test scopes:
@@ -215,7 +215,7 @@ final class SessionManagerTests: XCTestCase {
         let session = try await manager.session
         let module = session.module(named: "ExampleModule")
         let provider = SwiftTestingSuiteProvider(session: manager, observer: SwiftTestingObserver())
-        let suite = Mocks.STSuite(name: "ExampleSuite", module: module.name, attachedTags: AttachedTags())
+        let suite = Mocks.STSuite(name: "ExampleSuite", module: module.name, attachedTags: Mocks.AttachedTags())
         do {
             try await provider.with(suite: suite) { _ in throw SuiteScopeError.setupFailed }
             XCTFail("The scope error should be rethrown")
@@ -233,8 +233,8 @@ final class SessionManagerTests: XCTestCase {
         let session = try await manager.session
         let module = session.module(named: "ExampleModule")
         let provider = SwiftTestingSuiteProvider(session: manager, observer: SwiftTestingObserver())
-        let suite = Mocks.STSuite(name: "ExampleSuite", module: module.name, attachedTags: AttachedTags())
-        let test = Mocks.STTest(name: "example", module: module.name, suite: suite.name, attachedTags: AttachedTags())
+        let suite = Mocks.STSuite(name: "ExampleSuite", module: module.name, attachedTags: Mocks.AttachedTags())
+        let test = Mocks.STTest(name: "example", module: module.name, suite: suite.name, attachedTags: Mocks.AttachedTags())
         try await provider.with(suite: suite) { context in
             try await context.with(test: test) { _ in }
         }

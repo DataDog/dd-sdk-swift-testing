@@ -97,7 +97,8 @@ public final class DDSuite: NSObject {
         let endTime = endTime ?? configuration.clock.now
         let state = _state.value
         let shouldExport = state.testsStarted > 0
-        _module.recordSuiteEnded(id: id, confirmedEmpty: state.confirmedEmpty && !shouldExport && status != .fail)
+        _module.recordSuiteEnded(id: id,
+                                 confirmedEmpty: state.confirmedEmpty && !shouldExport && status != .fail)
         // Don't emit a `test_suite_end` event for suites in which no tests
         // actually ran. This happens for container types that only enclose
         // nested @Suite types, and for XCTest's empty wrapper suites.

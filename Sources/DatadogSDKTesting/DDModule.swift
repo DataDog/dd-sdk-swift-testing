@@ -13,7 +13,8 @@ internal import EventsExporter
 public final class DDModule: NSObject {
     struct MutableState {
         var testFrameworks: Set<String> = []
-        var emptySuites: [SpanId: Bool] = [:]
+        /// Suite id -> whether the framework confirmed it ran no tests.
+        var suites: [SpanId: Bool] = [:]
         var hasUnfinishedSuites: Bool = false
     }
 
@@ -89,20 +90,18 @@ public final class DDModule: NSObject {
 
     private func internalEnd(endTime: Date? = nil) {
         let endTime = endTime ?? configuration.clock.now
-        let confirmedEmpty = _state.use {
-            !$0.hasUnfinishedSuites && !$0.emptySuites.isEmpty && $0.emptySuites.values.allSatisfy { $0 }
-        } && status != .fail
+        let state = _state.value
+        let confirmedEmpty = status != .fail && !state.hasUnfinishedSuites
+            && !state.suites.isEmpty && state.suites.values.allSatisfy { $0 }
         if confirmedEmpty {
-            set(skipped: "No tests were executed.")
+            set(skipped: DDTagValues.skipReasonNoTestsExecuted)
         }
 
-        let framework = _state.use { state -> String in
-            state.testFrameworks.count == 1
-                ? "\(state.testFrameworks.first!).module"
-                : "Swift.module"
-        }
+        let framework = state.testFrameworks.count == 1
+            ? "\(state.testFrameworks.first!).module"
+            : "Swift.module"
 
-        if let tagValue = _state.value.testFrameworks.sorted().tagValue {
+        if let tagValue = state.testFrameworks.sorted().tagValue {
             span.setAttribute(key: DDTestTags.testFramework, value: .string(tagValue))
         }
         span.name = framework
@@ -120,11 +119,11 @@ public final class DDModule: NSObject {
     }
 
     func recordSuiteStarted(id: SpanId) {
-        _state.update { $0.emptySuites[id] = false }
+        _state.update { $0.suites[id] = false }
     }
 
     func recordSuiteEnded(id: SpanId, confirmedEmpty: Bool) {
-        _state.update { $0.emptySuites[id] = confirmedEmpty }
+        _state.update { $0.suites[id] = confirmedEmpty }
     }
 }
 

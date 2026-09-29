@@ -98,10 +98,11 @@ public final class DDSession: NSObject {
 
         let modules = _state.value.modules.values
         if status != .fail, !modules.isEmpty, modules.allSatisfy({ $0.status == .skip }) {
-            let confirmedEmpty = modules.allSatisfy { $0.confirmedEmpty }
-            set(skipped: confirmedEmpty ? "No tests were executed." : nil)
-            if confirmedEmpty {
-                set(tag: DDTestSessionTags.testSessionEmptyReason, value: "zero_tests")
+            if modules.allSatisfy(\.confirmedEmpty) {
+                set(skipped: DDTagValues.skipReasonNoTestsExecuted)
+                set(tag: DDTestSessionTags.testSessionEmptyReason, value: DDTagValues.sessionEmptyReasonZeroTests)
+            } else {
+                set(skipped: nil)
             }
         }
 

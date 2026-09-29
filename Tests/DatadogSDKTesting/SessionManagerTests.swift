@@ -190,11 +190,10 @@ final class SessionManagerTests: XCTestCase {
             let session = try await manager.session
             let module = session.module(named: "ExampleModule")
             let provider = SwiftTestingSuiteProvider(session: manager, observer: SwiftTestingObserver())
-            let suite = Mocks.STSuite(name: "ExampleSuite", module: module.name, attachedTags: Mocks.AttachedTags())
+            let suite = stSuite("ExampleSuite", module: module)
             await provider.registry.register(test: suite)
             for index in 0..<registeredTests {
-                await provider.registry.register(test: Mocks.STTest(name: "test\(index)", module: module.name,
-                                                                    suite: suite.name, attachedTags: Mocks.AttachedTags()))
+                await provider.registry.register(test: stTest("test\(index)", suite: suite))
             }
 
             // The framework finishes the suite without entering any test scopes:
@@ -204,9 +203,9 @@ final class SessionManagerTests: XCTestCase {
 
             XCTAssertEqual(module.status, .skip)
             XCTAssertEqual(session.status, .skip)
-            XCTAssertEqual(module.get(tag: DDTestTags.testSkipReason), "No tests were executed.")
-            XCTAssertEqual(session.get(tag: DDTestTags.testSkipReason), "No tests were executed.")
-            XCTAssertEqual(session.get(tag: DDTestSessionTags.testSessionEmptyReason), "zero_tests")
+            XCTAssertEqual(module.get(tag: DDTestTags.testSkipReason), noTests)
+            XCTAssertEqual(session.get(tag: DDTestTags.testSkipReason), noTests)
+            XCTAssertEqual(session.get(tag: DDTestSessionTags.testSessionEmptyReason), zeroTests)
         }
     }
 
@@ -215,7 +214,7 @@ final class SessionManagerTests: XCTestCase {
         let session = try await manager.session
         let module = session.module(named: "ExampleModule")
         let provider = SwiftTestingSuiteProvider(session: manager, observer: SwiftTestingObserver())
-        let suite = Mocks.STSuite(name: "ExampleSuite", module: module.name, attachedTags: Mocks.AttachedTags())
+        let suite = stSuite("ExampleSuite", module: module)
         do {
             try await provider.with(suite: suite) { _ in throw SuiteScopeError.setupFailed }
             XCTFail("The scope error should be rethrown")
@@ -234,8 +233,8 @@ final class SessionManagerTests: XCTestCase {
             let session = try await manager.session
             let module = session.module(named: "ExampleModule")
             let provider = SwiftTestingSuiteProvider(session: manager, observer: SwiftTestingObserver())
-            let empty = Mocks.STSuite(name: "EmptySuite", module: module.name, attachedTags: Mocks.AttachedTags())
-            let sibling = Mocks.STSuite(name: "SiblingSuite", module: module.name, attachedTags: Mocks.AttachedTags())
+            let empty = stSuite("EmptySuite", module: module)
+            let sibling = stSuite("SiblingSuite", module: module)
             await provider.registry.register(test: empty)
             await provider.registry.register(test: sibling)
 
@@ -247,9 +246,9 @@ final class SessionManagerTests: XCTestCase {
 
             XCTAssertEqual(module.status, completeSibling ? .skip : .pass)
             XCTAssertEqual(session.status, completeSibling ? .skip : .pass)
-            XCTAssertEqual(module.get(tag: DDTestTags.testSkipReason), completeSibling ? "No tests were executed." : nil)
-            XCTAssertEqual(session.get(tag: DDTestTags.testSkipReason), completeSibling ? "No tests were executed." : nil)
-            XCTAssertEqual(session.get(tag: DDTestSessionTags.testSessionEmptyReason), completeSibling ? "zero_tests" : nil)
+            XCTAssertEqual(module.get(tag: DDTestTags.testSkipReason), completeSibling ? noTests : nil)
+            XCTAssertEqual(session.get(tag: DDTestTags.testSkipReason), completeSibling ? noTests : nil)
+            XCTAssertEqual(session.get(tag: DDTestSessionTags.testSessionEmptyReason), completeSibling ? zeroTests : nil)
         }
     }
 
@@ -258,8 +257,8 @@ final class SessionManagerTests: XCTestCase {
         let session = try await manager.session
         let module = session.module(named: "ExampleModule")
         let provider = SwiftTestingSuiteProvider(session: manager, observer: SwiftTestingObserver())
-        let suite = Mocks.STSuite(name: "ExampleSuite", module: module.name, attachedTags: Mocks.AttachedTags())
-        let test = Mocks.STTest(name: "example", module: module.name, suite: suite.name, attachedTags: Mocks.AttachedTags())
+        let suite = stSuite("ExampleSuite", module: module)
+        let test = stTest("example", suite: suite)
         try await provider.with(suite: suite) { context in
             try await context.with(test: test) { _ in }
         }
@@ -275,11 +274,11 @@ final class SessionManagerTests: XCTestCase {
             let manager = lifecycleManager()
             let session = try await manager.session
             let module = session.module(named: "ExampleModule")
-            let empty = module.startSuite(named: "EmptySuite", at: nil, framework: .init(name: "Testing", version: "1"))
+            let empty = module.startSuite(named: "EmptySuite", at: nil, framework: testingFramework)
             empty.confirmEmpty()
             empty.end()
             empty.end() // Duplicate completion must not count as two empty suites.
-            let sibling = module.startSuite(named: "SiblingSuite", at: nil, framework: .init(name: "Testing", version: "1"))
+            let sibling = module.startSuite(named: "SiblingSuite", at: nil, framework: testingFramework)
             if finishSibling {
                 sibling.withActiveTest(named: "example") { _ in }
                 sibling.end()
@@ -298,7 +297,7 @@ final class SessionManagerTests: XCTestCase {
             let manager = lifecycleManager()
             let session = try await manager.session
             let emptyModule = session.module(named: "EmptyModule")
-            let suite = emptyModule.startSuite(named: "EmptySuite", at: nil, framework: .init(name: "Testing", version: "1"))
+            let suite = emptyModule.startSuite(named: "EmptySuite", at: nil, framework: testingFramework)
             suite.confirmEmpty()
             suite.end()
             let otherModule = session.module(named: "OtherModule")
@@ -333,7 +332,7 @@ final class SessionManagerTests: XCTestCase {
             let manager = lifecycleManager()
             let session = try await manager.session
             let module = session.module(named: "ExampleModule")
-            let suite = module.startSuite(named: "EmptySuite", at: nil, framework: .init(name: "Testing", version: "1"))
+            let suite = module.startSuite(named: "EmptySuite", at: nil, framework: testingFramework)
             suite.confirmEmpty()
             suite.end()
             if failModule {
@@ -350,6 +349,18 @@ final class SessionManagerTests: XCTestCase {
     }
 
     private enum SuiteScopeError: Error { case setupFailed }
+
+    private let noTests = DDTagValues.skipReasonNoTestsExecuted
+    private let zeroTests = DDTagValues.sessionEmptyReasonZeroTests
+    private let testingFramework = TestFramework(name: "Testing", version: "1")
+
+    private func stSuite(_ name: String, module: any TestModule) -> Mocks.STSuite {
+        Mocks.STSuite(name: name, module: module.name, attachedTags: Mocks.AttachedTags())
+    }
+
+    private func stTest(_ name: String, suite: Mocks.STSuite) -> Mocks.STTest {
+        Mocks.STTest(name: name, module: suite.module, suite: suite.name, attachedTags: Mocks.AttachedTags())
+    }
 
     private func lifecycleManager() -> Mocks.SessionManager {
         Mocks.SessionManager(provider: DDSession.Provider(),

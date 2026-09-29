@@ -228,6 +228,31 @@ final class SessionManagerTests: XCTestCase {
         XCTAssertNil(session.get(tag: DDTestSessionTags.testSessionEmptyReason))
     }
 
+    func testPendingSwiftTestingSuitePreventsEmptyClassification() async throws {
+        for completeSibling in [false, true] {
+            let manager = lifecycleManager()
+            let session = try await manager.session
+            let module = session.module(named: "ExampleModule")
+            let provider = SwiftTestingSuiteProvider(session: manager, observer: SwiftTestingObserver())
+            let empty = Mocks.STSuite(name: "EmptySuite", module: module.name, attachedTags: Mocks.AttachedTags())
+            let sibling = Mocks.STSuite(name: "SiblingSuite", module: module.name, attachedTags: Mocks.AttachedTags())
+            await provider.registry.register(test: empty)
+            await provider.registry.register(test: sibling)
+
+            try await provider.with(suite: empty) { _ in }
+            if completeSibling {
+                try await provider.with(suite: sibling) { _ in }
+            }
+            await manager.stop()
+
+            XCTAssertEqual(module.status, completeSibling ? .skip : .pass)
+            XCTAssertEqual(session.status, completeSibling ? .skip : .pass)
+            XCTAssertEqual(module.get(tag: DDTestTags.testSkipReason), completeSibling ? "No tests were executed." : nil)
+            XCTAssertEqual(session.get(tag: DDTestTags.testSkipReason), completeSibling ? "No tests were executed." : nil)
+            XCTAssertEqual(session.get(tag: DDTestSessionTags.testSessionEmptyReason), completeSibling ? "zero_tests" : nil)
+        }
+    }
+
     func testStartedTestScopeWithoutTestCaseEventsIsNotConfirmedEmpty() async throws {
         let manager = lifecycleManager()
         let session = try await manager.session

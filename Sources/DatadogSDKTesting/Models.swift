@@ -102,6 +102,8 @@ protocol TestModule: TestContainer {
     var session: any TestSession { get }
     var testFrameworks: Set<String> { get }
     var localization: String { get }
+    /// Includes framework-registered suites whose scopes have not started yet.
+    func set(hasUnfinishedSuites: Bool)
 }
 
 extension TestModule {

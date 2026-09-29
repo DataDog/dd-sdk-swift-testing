@@ -692,6 +692,9 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
                 return context
             }
             let module = session.module(named: name)
+            // Teardown must not infer emptiness from completed siblings while
+            // a registered suite is still waiting to enter its scope.
+            module.set(hasUnfinishedSuites: true)
             let context = ModuleContext(module: module, manager: session, left: suites)
             _modules[name] = .active(context)
             return context
@@ -717,6 +720,7 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
             }
             context.active.removeValue(forKey: suite.name)
             if context.left.isEmpty && context.active.isEmpty {
+                context.module.set(hasUnfinishedSuites: false)
                 _modules[suite.module.name] = .ended
                 return (true, nil)
             }

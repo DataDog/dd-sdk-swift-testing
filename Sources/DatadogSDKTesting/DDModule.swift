@@ -14,6 +14,7 @@ public final class DDModule: NSObject {
     struct MutableState {
         var testFrameworks: Set<String> = []
         var emptySuites: [SpanId: Bool] = [:]
+        var hasUnfinishedSuites: Bool = false
     }
 
     public let name: String
@@ -89,7 +90,7 @@ public final class DDModule: NSObject {
     private func internalEnd(endTime: Date? = nil) {
         let endTime = endTime ?? configuration.clock.now
         let confirmedEmpty = _state.use {
-            !$0.emptySuites.isEmpty && $0.emptySuites.values.allSatisfy { $0 }
+            !$0.hasUnfinishedSuites && !$0.emptySuites.isEmpty && $0.emptySuites.values.allSatisfy { $0 }
         } && status != .fail
         if confirmedEmpty {
             set(skipped: "No tests were executed.")
@@ -165,6 +166,10 @@ public extension DDModule {
 
 extension DDModule: TestModule {
     var attributes: [String: TestAttributeValue] { span.getAttributes().testAttributes }
+
+    func set(hasUnfinishedSuites: Bool) {
+        _state.update { $0.hasUnfinishedSuites = hasUnfinishedSuites }
+    }
 
     func set(tag name: String, value: SpanAttributeConvertible) {
         span.setAttribute(key: name, value: .string(value.spanAttribute))

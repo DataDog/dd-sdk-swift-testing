@@ -211,6 +211,7 @@ enum Mocks {
             var testFrameworks: Set<String> = []
             var suites: [String: Suite] = [:]
             var localization: String = ""
+            var hasUnfinishedSuites: Bool = false
         }
         
 #if compiler(>=6.3)
@@ -236,6 +237,10 @@ enum Mocks {
         
         subscript(_ suite: String) -> Suite? {
             _state.value.suites[suite]
+        }
+
+        func set(hasUnfinishedSuites: Bool) {
+            _state.update { $0.hasUnfinishedSuites = hasUnfinishedSuites }
         }
         
         var debugDescription: String {

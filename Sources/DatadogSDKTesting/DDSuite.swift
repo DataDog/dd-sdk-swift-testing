@@ -11,10 +11,6 @@ internal import EventsExporter
 
 @objc
 public final class DDSuite: NSObject {
-    struct MutableState {
-        var testsStarted: Int = 0
-    }
-
     public let name: String
     public let testFramework: TestFramework
     public let localization: String
@@ -30,7 +26,6 @@ public final class DDSuite: NSObject {
     var startTime: Date { span.startTime }
 
     private let _module: DDModule
-    private let _state: Synced<MutableState>
 
     init(name: String, module: DDModule, framework: TestFramework, startTime: Date? = nil) {
         self.name = name
@@ -38,7 +33,6 @@ public final class DDSuite: NSObject {
         self.testFramework = framework
         self.localization = PlatformUtils.getLocalization()
 
-        let state = MutableState()
         let id: SpanId
         let actualStartTime: Date
         let isCrashed: Bool
@@ -80,8 +74,6 @@ public final class DDSuite: NSObject {
         }
         self.span = span
 
-        self._state = .init(state)
-
         super.init()
 
         if let crash = module.configuration.crash?.suite,
@@ -93,23 +85,10 @@ public final class DDSuite: NSObject {
 
     private func internalEnd(endTime: Date? = nil) {
         let endTime = endTime ?? configuration.clock.now
-        let shouldExport = _state.use { $0.testsStarted > 0 }
-        // Don't emit a `test_suite_end` event for suites in which no tests
-        // actually ran. This happens for container types that only enclose
-        // nested @Suite types, and for XCTest's empty wrapper suites.
-        guard shouldExport else {
-            Log.debug("Skipped suite_end event for empty suite \(name) (id: \(self.id))")
-            return
-        }
-
         // get-status -> set-status round-trip (see DDSession).
         span.applyStatus(span.testStatus, errorDescription: "suite failed")
         span.end(time: endTime)
         Log.debug("Exported suite_end event suiteId: \(self.id)")
-    }
-
-    func recordTestStarted() {
-        _state.update { $0.testsStarted += 1 }
     }
 
     /// Ends the test suite

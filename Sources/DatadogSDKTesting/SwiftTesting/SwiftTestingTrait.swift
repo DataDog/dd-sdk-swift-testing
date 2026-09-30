@@ -82,6 +82,12 @@ public struct DatadogSwiftTestingScopeProvider: TestScoping {
     }
     
     func provideScope(suite: some SwiftTestingTestInfoType, performing function: @Sendable () async throws -> Void) async throws {
+        // Suites without their own tests (containers that only enclose nested
+        // `@Suite` types) don't get a `DDSuite`. The registry is complete here:
+        // `prepare(for:)` runs for every test in the plan before any scope.
+        guard await _provider.registry.count(for: suite) > 0 else {
+            return try await function()
+        }
         try await _provider.with(suite: suite) { suite in
             try await Self.$datadogSuite.withValue(suite, operation: function)
         }

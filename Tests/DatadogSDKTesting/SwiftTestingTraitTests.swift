@@ -349,6 +349,14 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
         // synthesized closure on older toolchains (tvOS 26.2 / Testing 1501).
         let resolvedSession = await Self.gate.session(for: suiteProvider)
         let session = try #require(resolvedSession)
+
+        // Container suites without their own tests (e.g. an outer type that only
+        // encloses nested `@Suite`s) must not produce a suite of their own.
+        if test.isSuite && suite.isEmpty {
+            #expect(session.modules[test.ddModule]?.suites[test.ddSuite] == nil)
+            return
+        }
+
         let statuses = try #require(session.modules[test.ddModule]?.suites[test.ddSuite])
 
         // check is module ended and if ended - stop the test session. The gate

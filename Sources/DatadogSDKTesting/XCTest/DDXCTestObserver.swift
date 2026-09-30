@@ -203,7 +203,9 @@ final class DDXCTestObserver: NSObject, XCTestObservation, DDXCTestRetryDelegate
             return
         }
 
-        guard let tests = testSuite.tests as? [XCTestCase] else {
+        // Suites without test cases are treated as containers so no empty
+        // `test_suite_end` event is emitted for them.
+        guard let tests = testSuite.tests as? [XCTestCase], !tests.isEmpty else {
             log.debug("testSuiteWillStart: container \(testSuite.name)")
             state = .container(suite: ContainerSuite(suite: testSuite, parent: parent), inside: module, context: context)
             return

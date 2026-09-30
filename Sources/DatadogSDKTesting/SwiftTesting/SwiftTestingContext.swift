@@ -625,10 +625,13 @@ struct SwiftTestingSuiteProvider: SwiftTestingSuiteProviderType {
             _tests[suite.module]?[suite.suite] ?? []
         }
 
-        /// Suites registered for a module. Returns the empty set when the
-        /// module hasn't been seen in this process; see `count(for:)`.
+        /// Non-empty suites registered for a module. Returns the empty set when
+        /// the module hasn't been seen in this process; see `count(for:)`.
+        /// Suites without their own tests (containers that only enclose nested
+        /// `@Suite` types) are excluded: no `DDSuite` is created for them, so
+        /// the module must not wait for them to end.
         func suites(for module: String) -> Set<String> {
-            Set(_tests[module]?.keys ?? [:].keys)
+            Set(_tests[module]?.compactMap { $0.value.isEmpty ? nil : $0.key } ?? [])
         }
     }
     

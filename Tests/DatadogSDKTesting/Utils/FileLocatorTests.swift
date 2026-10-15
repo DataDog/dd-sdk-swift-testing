@@ -47,16 +47,36 @@ internal class FileLocatorFixtureTests: XCTestCase {
         XCTAssertEqual(30, info.endLine)
     }
 
-    func testSDKFixtureSwiftInitWithParensStripped() throws {
+    func testSDKFixtureSwiftFunctionWithParensStripped() throws {
         let url = fixturesURL.appendingPathComponent("symbols-sdk.log")
         let map = try FileLocator.extractFunctions(url)
 
-        // Mocks.ModuleInfo.init() — trailing () must be stripped from function name
-        let info = try XCTUnwrap(map["Mocks.ModuleInfo.init"])
-        XCTAssertNil(map["Mocks.ModuleInfo.init()"], "Key with () suffix must not exist")
-        XCTAssertTrue(info.file.hasSuffix("MockTestTypes.swift"))
-        XCTAssertEqual(20, info.startLine)
-        XCTAssertEqual(24, info.endLine)
+        // Mocks.Runner.run() — trailing () must be stripped from function name
+        let info = try XCTUnwrap(map["Mocks.Runner.run"])
+        XCTAssertNil(map["Mocks.Runner.run()"], "Key with () suffix must not exist")
+        XCTAssertTrue(info.file.hasSuffix("MockTestRunner.swift"))
+        XCTAssertEqual(97, info.startLine)
+        XCTAssertEqual(103, info.endLine)
+    }
+
+    func testSDKFixtureAccessorsAndInitializersSkipped() throws {
+        let url = fixturesURL.appendingPathComponent("symbols-sdk.log")
+        let map = try FileLocator.extractFunctions(url)
+
+        // Both are EXT-tagged, but can never be a test function.
+        XCTAssertNil(map["Mocks.ModuleInfo.init"])
+        XCTAssertNil(map["Mocks.ModuleInfo.duration.getter"])
+    }
+
+    func testSDKFixtureOmitFramePointerFunction() throws {
+        let url = fixturesURL.appendingPathComponent("symbols-sdk.log")
+        let map = try FileLocator.extractFunctions(url)
+
+        // `[FUNC, OMIT-FP, EXT, ...]` — EXT is not the first flag (SDTEST-3914)
+        let info = try XCTUnwrap(map["TagsTests.TestInheritedClass.test12func"])
+        XCTAssertTrue(info.file.hasSuffix("TagsTests.swift"))
+        XCTAssertEqual(709, info.startLine)
+        XCTAssertEqual(709, info.endLine)
     }
 
     func testSDKFixtureSwiftFunctionMultipleLines() throws {
@@ -73,7 +93,7 @@ internal class FileLocatorFixtureTests: XCTestCase {
     func testSDKFixtureTotalFunctionCount() throws {
         let url = fixturesURL.appendingPathComponent("symbols-sdk.log")
         let map = try FileLocator.extractFunctions(url)
-        XCTAssertEqual(718, map.count)
+        XCTAssertEqual(334, map.count)
     }
 
     // MARK: symbols-swift-testing.log
@@ -104,7 +124,7 @@ internal class FileLocatorFixtureTests: XCTestCase {
     func testSwiftTestingFixtureTotalFunctionCount() throws {
         let url = fixturesURL.appendingPathComponent("symbols-swift-testing.log")
         let map = try FileLocator.extractFunctions(url)
-        XCTAssertEqual(23, map.count)
+        XCTAssertEqual(16, map.count)
     }
 
     // MARK: symbols-async-thunk.log (SDTEST-3944 regression)
@@ -242,6 +262,52 @@ internal class FileLocatorEdgeCaseTests: XCTestCase {
         let info = try XCTUnwrap(map["MyModule.func1"])
         XCTAssertEqual(5, info.startLine, "Start line must be first non-zero line")
         XCTAssertEqual(9, info.endLine,   "End line must be last non-zero line")
+    }
+
+    func testEXTAfterOtherFlags() throws {
+        // A function compiled without a frame pointer has `OMIT-FP` before `EXT`; a hyphenated
+        // flag after `EXT` must not break the match either.
+        // (FUNC lines must end with a trailing space; `\(" ")` keeps it lint-proof.)
+        let body = """
+                    0x0100 (0x0020) Suite.testAsync() [FUNC, OMIT-FP, EXT, LENGTH, NameNList, MangledNameNList, Merged, NList, DebugMap, FunctionStarts]\(" ")
+                        0x0100 (0x0010) /path/to/Suite.swift:10
+                    0x0120 (0x0020) Suite.testOther() [FUNC, EXT, OMIT-FP, LENGTH, NameNList, MangledNameNList, Merged, NList, DebugMap, FunctionStarts]\(" ")
+                        0x0120 (0x0010) /path/to/Suite.swift:20
+                    0x0140 (0x0020) specialized Suite.testAsync() [FUNC, OMIT-FP, PEXT, LENGTH, NameNList, MangledNameNList, Merged, NList, DebugMap, FunctionStarts]\(" ")
+                        0x0140 (0x0010) /path/to/Suite.swift:12
+        """
+        let url = try makeFixture(body)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let map = try FileLocator.extractFunctions(url)
+        XCTAssertEqual(2, map.count)
+        // PEXT is not EXT: the specialized clone only extends the tracked function.
+        let asyncInfo = try XCTUnwrap(map["Suite.testAsync"])
+        XCTAssertEqual(10, asyncInfo.startLine)
+        XCTAssertEqual(12, asyncInfo.endLine)
+        XCTAssertEqual(20, map["Suite.testOther"]?.startLine)
+    }
+
+    func testAccessorsAndInitializersIgnored() throws {
+        // Accessors, initializers and deinitializers can never be tests; a method that merely
+        // shares an accessor's name (it has a parameter list) is still a function.
+        let body = """
+                    0x0100 (0x0020) Suite.value.getter [FUNC, EXT, LENGTH, NameNList, MangledNameNList, Merged, NList, DebugMap, FunctionStarts]\(" ")
+                        0x0100 (0x0010) /path/to/Suite.swift:1
+                    0x0120 (0x0020) Suite.value.modify [FUNC, OMIT-FP, EXT, LENGTH, NameNList, MangledNameNList, Merged, NList, DebugMap, FunctionStarts]\(" ")
+                        0x0120 (0x0010) /path/to/Suite.swift:1
+                    0x0140 (0x0020) Suite.init(value:) [FUNC, EXT, LENGTH, NameNList, MangledNameNList, Merged, NList, DebugMap, FunctionStarts]\(" ")
+                        0x0140 (0x0010) /path/to/Suite.swift:2
+                    0x0160 (0x0020) Suite.__allocating_init() [FUNC, EXT, LENGTH, NameNList, MangledNameNList, Merged, NList, DebugMap, FunctionStarts]\(" ")
+                        0x0160 (0x0010) /path/to/Suite.swift:2
+                    0x0180 (0x0020) Suite.__deallocating_deinit [FUNC, EXT, LENGTH, NameNList, MangledNameNList, Merged, NList, DebugMap, FunctionStarts]\(" ")
+                        0x0180 (0x0010) /path/to/Suite.swift:3
+                    0x01A0 (0x0020) Suite.read() [FUNC, EXT, LENGTH, NameNList, MangledNameNList, Merged, NList, DebugMap, FunctionStarts]\(" ")
+                        0x01A0 (0x0010) /path/to/Suite.swift:5
+        """
+        let url = try makeFixture(body)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let map = try FileLocator.extractFunctions(url)
+        XCTAssertEqual(["Suite.read"], Array(map.keys))
     }
 
     func testNonEXTNonOBJCFunctionIgnored() throws {

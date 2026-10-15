@@ -57,7 +57,10 @@ enum FileLocator {
         // These stay regexes on purpose: `\w`/`\s` carry ICU's Unicode semantics, and Swift
         // (and ObjC) identifiers may be non-ASCII.
         let funcNamePattern = #"(?:-\[[\w \:\$#]+\])|(?:(?:`[^`]*`|[^\s`])+)"#
-        let funcRegex = try NSRegularExpression(pattern: #"^\s+[0-9a-fA-FxX]+\s+\([0-9a-fA-FxX\ ]+\)\s+(\#(funcNamePattern))\s+\[FUNC,\s+((?:EXT)|(?:OBJC))[\w\s,]+\] $"#)
+        // EXT/OBJC need not be the first flag: a function compiled without a frame pointer is
+        // printed as `[FUNC, OMIT-FP, EXT, ...]` (typical for the tiny entry stub of an async
+        // test method), and flags themselves may contain a hyphen.
+        let funcRegex = try NSRegularExpression(pattern: #"^\s+[0-9a-fA-FxX]+\s+\([0-9a-fA-FxX\ ]+\)\s+(\#(funcNamePattern))\s+\[FUNC,(?:\s+[\w-]+,)*?\s+(EXT|OBJC)(?:,[\w\s,-]*)?\] $"#)
         // Looser match used only to attribute a wrapper/continuation chunk (no EXT/OBJC tag)
         // back to an already-tracked function. Unlike `funcNamePattern`, it captures the whole
         // name verbatim — including any embedded spaces from a compiler-added prefix — so it
@@ -84,6 +87,7 @@ enum FileLocator {
                     let type = line[Range(match.range(at: 2), in: line)!]
                     switch type {
                     case "EXT":
+                        guard !Self.isNonTestMember(name) else { continue }
                         let info = Self.swiftTestName(function: String(name))
                         if let module = info.module {
                             let key = "\(module).\(info.test)"
@@ -232,6 +236,26 @@ enum FileLocator {
             function = String(function[..<function.index(function.endIndex, offsetBy: -2)])
         }
         return (test: function, module: module)
+    }
+
+    private static let accessorNames: Set<Substring> = [
+        "getter", "setter", "modify", "_modify", "read", "_read", "willset", "didset",
+        "unsafeAddressor", "unsafeMutableAddressor", "deinit", "__deallocating_deinit",
+    ]
+
+    /// Accessors (`Type.prop.getter`), initializers (`Type.init(...)`) and deinitializers can
+    /// never be test functions, so they are kept out of the map. Accessors and `deinit` are
+    /// printed without a parameter list, which keeps a method that happens to be called
+    /// `read()` or `modify()` from being mistaken for one.
+    private static func isNonTestMember(_ name: Substring) -> Bool {
+        let searchEnd = name.firstIndex(of: "`") ?? name.endIndex
+        guard let dotPos = name[..<searchEnd].lastIndex(of: ".") else { return false }
+        let member = name[name.index(after: dotPos)...]
+        if let paren = member.firstIndex(where: { $0 == "(" || $0 == "<" }) {
+            let base = member[..<paren]
+            return base == "init" || base == "__allocating_init"
+        }
+        return accessorNames.contains(member)
     }
 
     private static let wrapperPrefixes = ["partial apply for ", "@objc ", "specialized "]

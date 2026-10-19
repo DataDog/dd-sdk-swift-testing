@@ -12,12 +12,70 @@ internal import OpenTelemetryApi
 internal import OpenTelemetrySdk
 import os.log
 
+// Legacy (OTel v0) HTTP attribute keys. These keys do NOT exist in
+// the current `SemanticConventions.*` namespace — the upstream
+// generator emits only the new-spec replacements (e.g.
+// `http.request.method`, `http.response.status_code`,
+// `server.address`, `server.port`, `url.full`). For backward compatibility,
+// we declare them locally rather than depend on the deprecated enum.
+enum LegacyHTTPAttributes: String {
+  case method = "http.method"
+  case url = "http.url"
+  case target = "http.target"
+  case scheme = "http.scheme"
+  case statusCode = "http.status_code"
+  case netPeerName = "net.peer.name"
+  case netPeerPort = "net.peer.port"
+}
+
 class URLSessionLogger {
-  static var runningSpans = [String: Span]()
-  static var runningSpansQueue = DispatchQueue(label: "io.opentelemetry.URLSessionLogger")
+  nonisolated(unsafe) static var runningSpans = [String: Span]()
+  static let runningSpansQueue = DispatchQueue(label: "io.opentelemetry.URLSessionLogger")
+
+  /// Whether a request on this scheme is an HTTP call, and so describable by the HTTP semantic
+  /// conventions.
+  ///
+  /// `ws` and `wss` count: a WebSocket opening handshake is an HTTP request. It has to be listed
+  /// explicitly because `webSocketTask(with: URLRequest)` keeps the original scheme, unlike the URL
+  /// overload which Foundation rewrites to `http`/`https`.
+  static func isInstrumentableScheme(_ url: URL?) -> Bool {
+    guard let scheme = url?.scheme?.lowercased() else {
+      return false
+    }
+    return scheme == "http" || scheme == "https" || scheme == "ws" || scheme == "wss"
+  }
+
+  /// Task ids claimed by a caller that is about to start a span for them. Held only for the window
+  /// between deciding to instrument and the span landing in `runningSpans`, so that the decision and
+  /// the claim are one atomic step.
+  nonisolated(unsafe) private static var claimedTasks = Set<String>()
+
+  /// Atomically claims the right to start a span for `sessionTaskId`. Returns `false` when a span is
+  /// already running for it, or another caller has claimed it and not yet started one.
+  static func claimTaskForInstrumentation(_ sessionTaskId: String) -> Bool {
+    runningSpansQueue.sync {
+      guard runningSpans[sessionTaskId] == nil else {
+        return false
+      }
+      return claimedTasks.insert(sessionTaskId).inserted
+    }
+  }
+
+  /// Releases a claim taken by `claimTaskForInstrumentation`.
+  static func releaseTaskClaim(_ sessionTaskId: String) {
+    runningSpansQueue.sync {
+      _ = claimedTasks.remove(sessionTaskId)
+    }
+  }
 
   /// This methods creates a Span for a request, and optionally injects tracing headers, returns a  new request if it was needed to create a new one to add the tracing headers
   @discardableResult static func processAndLogRequest(_ request: URLRequest, sessionTaskId: String, instrumentation: URLSessionInstrumentation, shouldInjectHeaders: Bool) -> URLRequest? {
+    // Schemes such as file:, data: and app-specific URLProtocol schemes would otherwise get a span
+    // describing an HTTP call that never happened, and tracing headers no server will read.
+    guard isInstrumentableScheme(request.url) else {
+      return nil
+    }
+
     #if os(watchOS)
     // watchOS routes a single user-level URLSession call (e.g. `data(for:)`) through
     // two distinct URLSessionTask objects: an outer task whose `resume()` is intercepted
@@ -42,62 +100,67 @@ class URLSessionLogger {
 
     let method = request.httpMethod ?? "unknown_method"
     if useOld {
-      attributes[SemanticAttributes.httpMethod.rawValue] = AttributeValue.string(method)
+      attributes[LegacyHTTPAttributes.method.rawValue] = AttributeValue.string(method)
     }
     if useStable {
-      attributes[SemanticAttributes.httpRequestMethod.rawValue] = AttributeValue.string(method)
+      attributes[SemanticConventions.Http.requestMethod.rawValue] = AttributeValue.string(method)
     }
 
     if let requestURL = request.url {
       if useOld {
-        attributes[SemanticAttributes.httpUrl.rawValue] = AttributeValue.string(requestURL.absoluteString)
+        attributes[LegacyHTTPAttributes.url.rawValue] = AttributeValue.string(requestURL.absoluteString)
       }
       if useStable {
-        attributes[SemanticAttributes.urlFull.rawValue] = AttributeValue.string(requestURL.absoluteString)
+        attributes[SemanticConventions.Url.full.rawValue] = AttributeValue.string(requestURL.absoluteString)
       }
     }
 
     if let requestURLPath = request.url?.path {
       if useOld {
-        attributes[SemanticAttributes.httpTarget.rawValue] = AttributeValue.string(requestURLPath)
+        attributes[LegacyHTTPAttributes.target.rawValue] = AttributeValue.string(requestURLPath)
       }
       if useStable {
-        attributes[SemanticAttributes.urlPath.rawValue] = AttributeValue.string(requestURLPath)
+        attributes[SemanticConventions.Url.path.rawValue] = AttributeValue.string(requestURLPath)
       }
     }
 
     if let host = request.url?.host {
       if useOld {
-        attributes[SemanticAttributes.netPeerName.rawValue] = AttributeValue.string(host)
+        attributes[LegacyHTTPAttributes.netPeerName.rawValue] = AttributeValue.string(host)
       }
       if useStable {
-        attributes[SemanticAttributes.serverAddress.rawValue] = AttributeValue.string(host)
+        attributes[SemanticConventions.Server.address.rawValue] = AttributeValue.string(host)
       }
     }
 
     if let requestScheme = request.url?.scheme {
       if useOld {
-        attributes[SemanticAttributes.httpScheme.rawValue] = AttributeValue.string(requestScheme)
+        attributes[LegacyHTTPAttributes.scheme.rawValue] = AttributeValue.string(requestScheme)
       }
       if useStable {
-        attributes[SemanticAttributes.urlScheme.rawValue] = AttributeValue.string(requestScheme)
+        attributes[SemanticConventions.Url.scheme.rawValue] = AttributeValue.string(requestScheme)
       }
     }
 
     if let port = request.url?.port {
       if useOld {
-        attributes[SemanticAttributes.netPeerPort.rawValue] = AttributeValue.int(port)
+        attributes[LegacyHTTPAttributes.netPeerPort.rawValue] = AttributeValue.int(port)
       }
       if useStable {
-        attributes[SemanticAttributes.serverPort.rawValue] = AttributeValue.int(port)
+        attributes[SemanticConventions.Server.port.rawValue] = AttributeValue.int(port)
       }
     }
 
     if let bodySize = request.httpBody?.count {
-      attributes[SemanticAttributes.httpRequestBodySize.rawValue] = AttributeValue.int(bodySize)
+      attributes[SemanticConventions.Http.requestBodySize.rawValue] = AttributeValue.int(bodySize)
     }
 
-    var spanName = "HTTP " + (request.httpMethod ?? "")
+    var spanName: String
+    if instrumentation.configuration.semanticConvention == .stable {
+      spanName = request.httpMethod ?? "HTTP"
+    } else {
+      spanName = "HTTP " + (request.httpMethod ?? "")
+    }
     if let customSpanName = instrumentation.configuration.nameSpan?(request) {
       spanName = customSpanName
     }
@@ -140,18 +203,18 @@ class URLSessionLogger {
     let useStable = instrumentation.configuration.semanticConvention == .stable || instrumentation.configuration.semanticConvention == .httpDup
 
     if useOld {
-      span.setAttribute(key: SemanticAttributes.httpStatusCode.rawValue,
+      span.setAttribute(key: LegacyHTTPAttributes.statusCode.rawValue,
                         value: AttributeValue.int(statusCode))
     }
     if useStable {
-      span.setAttribute(key: SemanticAttributes.httpResponseStatusCode.rawValue,
+      span.setAttribute(key: SemanticConventions.Http.responseStatusCode.rawValue,
                         value: AttributeValue.int(statusCode))
     }
     span.status = statusForStatusCode(code: statusCode)
 
     if let contentLengthHeader = httpResponse.allHeaderFields["Content-Length"] as? String,
        let contentLength = Int(contentLengthHeader) {
-      span.setAttribute(key: SemanticAttributes.httpResponseBodySize.rawValue,
+      span.setAttribute(key: SemanticConventions.Http.responseBodySize.rawValue,
                         value: AttributeValue.int(contentLength))
     }
 
@@ -172,10 +235,10 @@ class URLSessionLogger {
     let useStable = instrumentation.configuration.semanticConvention == .stable || instrumentation.configuration.semanticConvention == .httpDup
 
     if useOld {
-      span.setAttribute(key: SemanticAttributes.httpStatusCode.rawValue, value: AttributeValue.int(statusCode))
+      span.setAttribute(key: LegacyHTTPAttributes.statusCode.rawValue, value: AttributeValue.int(statusCode))
     }
     if useStable {
-      span.setAttribute(key: SemanticAttributes.httpResponseStatusCode.rawValue, value: AttributeValue.int(statusCode))
+      span.setAttribute(key: SemanticConventions.Http.responseStatusCode.rawValue, value: AttributeValue.int(statusCode))
     }
     span.status = URLSessionLogger.statusForStatusCode(code: statusCode)
     instrumentation.configuration.receivedError?(error, dataOrFile, statusCode, span)
@@ -183,7 +246,7 @@ class URLSessionLogger {
     span.end()
   }
 
-#if os(watchOS)
+  #if os(watchOS)
   /// Returns true when the request already carries a `traceparent` whose trace id
   /// matches a currently running span. Used on watchOS to suppress duplicate spans
   /// when Foundation re-injects an already-instrumented request into the swizzled
@@ -200,8 +263,7 @@ class URLSessionLogger {
       runningSpans.values.contains { $0.context.traceId.hexString.lowercased() == incomingTraceId }
     }
   }
-#endif
-
+  #endif
 
   private static func statusForStatusCode(code: Int) -> Status {
     switch code {

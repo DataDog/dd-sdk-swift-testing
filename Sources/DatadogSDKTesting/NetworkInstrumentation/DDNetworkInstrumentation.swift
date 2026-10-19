@@ -10,6 +10,12 @@ internal import OpenTelemetryApi
 class DDNetworkInstrumentation {
     var urlSessionInstrumentation: URLSessionInstrumentation!
 
+    // URLSession swizzling is process-wide and URLSessionInstrumentation installs it only once,
+    // bound to the first instance. Share that instance so the most recently created
+    // DDNetworkInstrumentation provides the configuration the swizzled methods use.
+    nonisolated(unsafe) private static var sharedURLSessionInstrumentation: URLSessionInstrumentation?
+    private static let sharedURLSessionInstrumentationLock = NSLock()
+
     internal static let acceptableHeaders: Set<String> = {
         let headers: Set = ["CONTENT-TYPE", "CONTENT-LENGTH", "CONTENT-ENCODING", "CONTENT-LANGUAGE", "USER-AGENT", "REFERER", "ACCEPT", "ORIGIN", "ACCESS-CONTROL-ALLOW-ORIGIN", "ACCESS-CONTROL-ALLOW-CREDENTIALS", "ACCESS-CONTROL-ALLOW-HEADERS", "ACCESS-CONTROL-ALLOW-METHODS", "ACCESS-CONTROL-EXPOSE-HEADERS", "ACCESS-CONTROL-MAX-AGE", "ACCESS-CONTROL-REQUEST-HEADERS", "ACCESS-CONTROL-REQUEST-METHOD", "DATE", "EXPIRES", "CACHE-CONTROL", "ALLOW", "SERVER", "CONNECTION", "TRACEPARENT", "X-DATADOG-TRACE-ID", "X-DATADOG-PARENT-ID"]
         if let extraHeaders = DDTestMonitor.config.extraHTTPHeaders {
@@ -192,9 +198,9 @@ class DDNetworkInstrumentation {
         excludedURLs = tracer.endpointURLs()
 
         // Capture `self` weakly in the configuration callbacks. The configuration
-        // is retained by `urlSessionInstrumentation`, which this object owns, so
-        // passing the instance methods directly (a strong `self` capture) would
-        // form a retain cycle that leaks the instrumentation and its tracer.
+        // is retained by the shared `urlSessionInstrumentation`, which lives for the
+        // whole process, so passing the instance methods directly (a strong `self`
+        // capture) would leak this instrumentation and its tracer.
         let configuration = URLSessionInstrumentationConfiguration(
             shouldRecordPayload: { [weak self] session in self?.shouldRecordPayload(session: session) },
             shouldInstrument: { [weak self] request in self?.shouldInstrumentRequest(request: request) },
@@ -208,6 +214,14 @@ class DDNetworkInstrumentation {
                 self?.receivedError(error: error, dataOrFile: dataOrFile, status: status, span: span)
             })
 
-        urlSessionInstrumentation = URLSessionInstrumentation(configuration: configuration)
+        Self.sharedURLSessionInstrumentationLock.lock()
+        defer { Self.sharedURLSessionInstrumentationLock.unlock() }
+        if let shared = Self.sharedURLSessionInstrumentation {
+            shared.configuration = configuration
+            urlSessionInstrumentation = shared
+        } else {
+            urlSessionInstrumentation = URLSessionInstrumentation(configuration: configuration)
+            Self.sharedURLSessionInstrumentation = urlSessionInstrumentation
+        }
     }
 }

@@ -14,14 +14,29 @@ import OpenTelemetrySdk
 class SpySpanProcessor: SpanProcessor {
     var lastProcessedSpan: SpanSdk?
 
+    private let lock = NSLock()
+    private var _startedSpans: [ReadableSpan] = []
+    private var _endedSpans: [ReadableSpan] = []
+
+    /// Every span started since creation, including ones that never end.
+    var startedSpans: [ReadableSpan] { lock.lock(); defer { lock.unlock() }; return _startedSpans }
+    /// Every span ended since creation.
+    var endedSpans: [ReadableSpan] { lock.lock(); defer { lock.unlock() }; return _endedSpans }
+
     init() {}
 
-    let isStartRequired = false
+    let isStartRequired = true
     let isEndRequired = true
 
-    func onStart(parentContext: SpanContext?, span: ReadableSpan) {}
+    func onStart(parentContext: SpanContext?, span: ReadableSpan) {
+        lock.lock(); defer { lock.unlock() }
+        _startedSpans.append(span)
+    }
 
     func onEnd(span: ReadableSpan) {
+        lock.lock()
+        _endedSpans.append(span)
+        lock.unlock()
         lastProcessedSpan = span as? SpanSdk
     }
 

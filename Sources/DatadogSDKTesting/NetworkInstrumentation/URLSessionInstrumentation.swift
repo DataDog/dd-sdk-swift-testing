@@ -183,7 +183,9 @@ class URLSessionInstrumentation {
         OpenTelemetry.instance.feedbackHandler?("injectInto \(selector.description) failed")
         return
       }
-      var originalIMP: IMP?
+      // Read the original IMP before publishing the swizzled one (here and in all injections below):
+      // another thread may call the swizzled IMP as soon as method_setImplementation publishes it.
+      let originalIMP = method_getImplementation(original)
 
       let block: @convention(block) (URLSession, AnyObject) -> URLSessionTask = { session, argument in
         if let url = argument as? URL {
@@ -223,7 +225,7 @@ class URLSessionInstrumentation {
       }
       let swizzledIMP = imp_implementationWithBlock(
         unsafeBitCast(block, to: AnyObject.self))
-      originalIMP = method_setImplementation(original, swizzledIMP)
+      method_setImplementation(original, swizzledIMP)
     }
   }
 
@@ -308,7 +310,7 @@ class URLSessionInstrumentation {
         OpenTelemetry.instance.feedbackHandler?("injectInto \(selector.description) failed")
         return
       }
-      var originalIMP: IMP?
+      let originalIMP = method_getImplementation(original)
 
       let block:
         @convention(block) (URLSession, AnyObject, ((Any?, URLResponse?, Error?) -> Void)?) -> URLSessionTask = { session, argument, completion in
@@ -383,7 +385,7 @@ class URLSessionInstrumentation {
         }
       let swizzledIMP = imp_implementationWithBlock(
         unsafeBitCast(block, to: AnyObject.self))
-      originalIMP = method_setImplementation(original, swizzledIMP)
+      method_setImplementation(original, swizzledIMP)
     }
   }
 
@@ -398,7 +400,7 @@ class URLSessionInstrumentation {
         OpenTelemetry.instance.feedbackHandler?("injectInto \(selector.description) failed")
         return
       }
-      var originalIMP: IMP?
+      let originalIMP = method_getImplementation(original)
 
       let block:
         @convention(block) (URLSession, URLRequest, AnyObject,
@@ -443,7 +445,7 @@ class URLSessionInstrumentation {
         }
       let swizzledIMP = imp_implementationWithBlock(
         unsafeBitCast(block, to: AnyObject.self))
-      originalIMP = method_setImplementation(original, swizzledIMP)
+      method_setImplementation(original, swizzledIMP)
     }
   }
 
@@ -462,7 +464,7 @@ class URLSessionInstrumentation {
     methodsToSwizzle.forEach {
       let theMethod = $0
 
-      var originalIMP: IMP?
+      let originalIMP = method_getImplementation(theMethod)
       let block: @convention(block) (URLSessionTask) -> Void = { anyTask in
         guard anyTask.responds(to: #selector(getter: URLSessionTask.currentRequest)) else { return }
         self.urlSessionTaskWillResume(anyTask)
@@ -475,7 +477,7 @@ class URLSessionInstrumentation {
       }
       let swizzledIMP = imp_implementationWithBlock(
         unsafeBitCast(block, to: AnyObject.self))
-      originalIMP = method_setImplementation(theMethod, swizzledIMP)
+      method_setImplementation(theMethod, swizzledIMP)
     }
   }
 
@@ -486,7 +488,7 @@ class URLSessionInstrumentation {
     guard let original = class_getInstanceMethod(cls, selector) else {
       return
     }
-    var originalIMP: IMP?
+    let originalIMP = method_getImplementation(original)
     let block:
       @convention(block) (Any, URLSession, URLSessionDataTask, Data) -> Void = { object, session, dataTask, data in
         if objc_getAssociatedObject(session, &idKey) == nil {
@@ -501,7 +503,7 @@ class URLSessionInstrumentation {
       }
     let swizzledIMP = imp_implementationWithBlock(
       unsafeBitCast(block, to: AnyObject.self))
-    originalIMP = method_setImplementation(original, swizzledIMP)
+    method_setImplementation(original, swizzledIMP)
   }
 
   private func injectTaskDidReceiveResponseIntoDelegateClass(cls: AnyClass) {
@@ -511,7 +513,7 @@ class URLSessionInstrumentation {
     guard let original = class_getInstanceMethod(cls, selector) else {
       return
     }
-    var originalIMP: IMP?
+    let originalIMP = method_getImplementation(original)
     let block:
       @convention(block) (Any, URLSession, URLSessionDataTask, URLResponse,
                           @escaping (URLSession.ResponseDisposition) -> Void) -> Void = { object, session, dataTask, response, completion in
@@ -529,7 +531,7 @@ class URLSessionInstrumentation {
       }
     let swizzledIMP = imp_implementationWithBlock(
       unsafeBitCast(block, to: AnyObject.self))
-    originalIMP = method_setImplementation(original, swizzledIMP)
+    method_setImplementation(original, swizzledIMP)
   }
 
   private func injectTaskDidCompleteWithErrorIntoDelegateClass(cls: AnyClass) {
@@ -538,7 +540,7 @@ class URLSessionInstrumentation {
     guard let original = class_getInstanceMethod(cls, selector) else {
       return
     }
-    var originalIMP: IMP?
+    let originalIMP = method_getImplementation(original)
     let block:
       @convention(block) (Any, URLSession, URLSessionTask, Error?) -> Void = { object, session, task, error in
         if objc_getAssociatedObject(session, &idKey) == nil {
@@ -553,7 +555,7 @@ class URLSessionInstrumentation {
       }
     let swizzledIMP = imp_implementationWithBlock(
       unsafeBitCast(block, to: AnyObject.self))
-    originalIMP = method_setImplementation(original, swizzledIMP)
+    method_setImplementation(original, swizzledIMP)
   }
 
   private func injectTaskDidFinishCollectingMetricsIntoDelegateClass(
@@ -571,7 +573,7 @@ class URLSessionInstrumentation {
       class_addMethod(cls, selector, imp, "@@@")
       return
     }
-    var originalIMP: IMP?
+    let originalIMP = method_getImplementation(original)
     let block:
       @convention(block) (Any, URLSession, URLSessionTask, URLSessionTaskMetrics) -> Void = { object, session, task, metrics in
         if objc_getAssociatedObject(session, &idKey) == nil {
@@ -586,7 +588,7 @@ class URLSessionInstrumentation {
       }
     let swizzledIMP = imp_implementationWithBlock(
       unsafeBitCast(block, to: AnyObject.self))
-    originalIMP = method_setImplementation(original, swizzledIMP)
+    method_setImplementation(original, swizzledIMP)
   }
 
   func injectRespondsToSelectorIntoDelegateClass(cls: AnyClass) {
@@ -597,7 +599,7 @@ class URLSessionInstrumentation {
       return
     }
 
-    var originalIMP: IMP?
+    let originalIMP = method_getImplementation(original)
     let block: @convention(block) (Any, Selector) -> Bool = { object, respondsTo in
       if respondsTo == #selector(
         URLSessionDataDelegate.urlSession(
@@ -609,7 +611,7 @@ class URLSessionInstrumentation {
     }
     let swizzledIMP = imp_implementationWithBlock(
       unsafeBitCast(block, to: AnyObject.self))
-    originalIMP = method_setImplementation(original, swizzledIMP)
+    method_setImplementation(original, swizzledIMP)
   }
 
   private func injectDataTaskDidBecomeDownloadTaskIntoDelegateClass(
@@ -623,7 +625,7 @@ class URLSessionInstrumentation {
     guard let original = class_getInstanceMethod(cls, selector) else {
       return
     }
-    var originalIMP: IMP?
+    let originalIMP = method_getImplementation(original)
     let block:
       @convention(block) (Any, URLSession, URLSessionDataTask, URLSessionDownloadTask) -> Void = { object, session, dataTask, downloadTask in
         if objc_getAssociatedObject(session, &idKey) == nil {
@@ -639,7 +641,7 @@ class URLSessionInstrumentation {
       }
     let swizzledIMP = imp_implementationWithBlock(
       unsafeBitCast(block, to: AnyObject.self))
-    originalIMP = method_setImplementation(original, swizzledIMP)
+    method_setImplementation(original, swizzledIMP)
   }
 
   // URLSessionTask methods

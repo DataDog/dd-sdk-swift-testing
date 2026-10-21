@@ -215,6 +215,37 @@ class DDNetworkInstrumentationTests: XCTestCase {
         XCTAssertEqual(testSpanProcessor.endedSpans.filter(isRequestSpan).count, 1)
     }
 
+    func testItEndsSpanForTaskWithoutCompletionHandlerResumedInTask() async throws {
+        // The factory swizzle starts the span and resume must not start another one, but it still
+        // has to install the task delegate: without a completion handler or a session delegate,
+        // nothing else would report the completion and end the span.
+        guard #available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *) else {
+            throw XCTSkip("URLSessionTask.delegate is not available")
+        }
+        let server = try XCTUnwrap(self.server)
+        let url = server.baseURL.appendingPathComponent("success")
+        let tracer = try XCTUnwrap(DDTestMonitor.instance?.tracer)
+
+        let task = await tracer.withActiveSpan(name: "containerSpan", attributes: [:]) { _ in
+            let task = URLSession.shared.dataTask(with: url)
+            task.resume()
+            return task
+        }
+
+        let isRequestSpan = { (span: ReadableSpan) in
+            span.toSpanData().attributes["http.url"]?.description == url.absoluteString
+        }
+        let deadline = Date().addingTimeInterval(10)
+        while testSpanProcessor.endedSpans.filter(isRequestSpan).isEmpty, Date() < deadline {
+            try await Task.sleep(nanoseconds: 50_000_000)
+        }
+        XCTAssertEqual(task.state, .completed)
+        XCTAssertEqual(testSpanProcessor.startedSpans.filter(isRequestSpan).count, 1)
+        let ended = testSpanProcessor.endedSpans.filter(isRequestSpan)
+        XCTAssertEqual(ended.count, 1)
+        XCTAssertEqual(ended.first?.toSpanData().attributes["http.status_code"]?.description, "200")
+    }
+
     func testItInstrumentsInheritedDelegateMethodsOnce() throws {
         // `SubclassSessionDelegate` implements no delegate method of its own, so the startup scan
         // skips it and it is only discovered when its task resumes. Its methods resolve to the ones

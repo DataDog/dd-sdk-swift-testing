@@ -886,8 +886,13 @@ final class URLSessionInstrumentation: @unchecked Sendable {
       // runningSpans have to be one atomic step, or two threads resuming the same task both see
       // nothing and both start a span. The claim is released once this call has either started a
       // span or decided not to instrument.
-      guard URLSessionLogger.claimTaskForInstrumentation(taskId) else { return }
-      defer { URLSessionLogger.releaseTaskClaim(taskId) }
+      // Losing the claim only skips starting a span: the task delegate below must still be
+      // installed, since for a task without a completion handler or session delegate it is the
+      // only thing that reports completion and ends the span started elsewhere.
+      let claimed = URLSessionLogger.claimTaskForInstrumentation(taskId)
+      defer {
+        if claimed { URLSessionLogger.releaseTaskClaim(taskId) }
+      }
 
       // For iOS 15+/macOS 12+, handle async/await methods differently
       if #available(macOS 12.0, *) {
@@ -907,14 +912,16 @@ final class URLSessionInstrumentation: @unchecked Sendable {
 
         if isAsyncContext {
           // This is likely an async/await call
-          let instrumentedRequest = URLSessionLogger.processAndLogRequest(request,
-                                                                        sessionTaskId: taskId,
-                                                                        instrumentation: self,
-                                                                        shouldInjectHeaders: true)
-          if let instrumentedRequest {
-            task.setValue(instrumentedRequest, forKey: "currentRequest")
+          if claimed {
+            let instrumentedRequest = URLSessionLogger.processAndLogRequest(request,
+                                                                          sessionTaskId: taskId,
+                                                                          instrumentation: self,
+                                                                          shouldInjectHeaders: true)
+            if let instrumentedRequest {
+              task.setValue(instrumentedRequest, forKey: "currentRequest")
+            }
+            self.setIdKey(value: taskId, for: task)
           }
-          self.setIdKey(value: taskId, for: task)
 
           // For async/await methods, we need to ensure the delegate is set
           // to capture the completion, but only if there's no existing delegate
@@ -934,14 +941,16 @@ final class URLSessionInstrumentation: @unchecked Sendable {
           return
         }
 
-        let instrumentedRequest = URLSessionLogger.processAndLogRequest(request,
-                                                                        sessionTaskId: taskId,
-                                                                        instrumentation: self,
-                                                                        shouldInjectHeaders: true)
-        if let instrumentedRequest {
-          task.setValue(instrumentedRequest, forKey: "currentRequest")
+        if claimed {
+          let instrumentedRequest = URLSessionLogger.processAndLogRequest(request,
+                                                                          sessionTaskId: taskId,
+                                                                          instrumentation: self,
+                                                                          shouldInjectHeaders: true)
+          if let instrumentedRequest {
+            task.setValue(instrumentedRequest, forKey: "currentRequest")
+          }
+          self.setIdKey(value: taskId, for: task)
         }
-        self.setIdKey(value: taskId, for: task)
 
         if task.delegate == nil, task.state == .suspended, (task.value(forKey: "session") as? URLSession)?.delegate == nil {
           task.delegate = FakeDelegate()

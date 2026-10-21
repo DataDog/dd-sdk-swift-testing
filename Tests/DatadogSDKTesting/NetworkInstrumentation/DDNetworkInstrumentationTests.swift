@@ -185,4 +185,109 @@ class DDNetworkInstrumentationTests: XCTestCase {
             XCTAssertEqual(headers?.object(forKey: "x-datadog-trace-id") as? String, String(currentTraceId.rawLowerLong))
         }
     }
+
+    func testItCreatesOneSpanForAsyncDataRequest() async throws {
+        // On watchOS `data(from:)` re-enters the public `dataTask(with:)` factory from inside the
+        // outer task, so the request is seen both by the resume swizzle and by the factory
+        // swizzle. Only one span must be started for it, and it must be ended.
+        guard #available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *) else {
+            throw XCTSkip("async URLSession API is not available")
+        }
+        let server = try XCTUnwrap(self.server)
+        let url = server.baseURL.appendingPathComponent("success")
+        let tracer = try XCTUnwrap(DDTestMonitor.instance?.tracer)
+
+        let status = try await tracer.withActiveSpan(name: "containerSpan", attributes: [:]) { _ in
+            let (_, response) = try await URLSession.shared.data(from: url)
+            return (response as? HTTPURLResponse)?.statusCode
+        }
+        XCTAssertEqual(status, 200)
+
+        let isRequestSpan = { (span: ReadableSpan) in
+            span.toSpanData().attributes["http.url"]?.description == url.absoluteString
+        }
+        // The span may be ended by the task delegate slightly after `data(from:)` returns.
+        let deadline = Date().addingTimeInterval(10)
+        while testSpanProcessor.endedSpans.filter(isRequestSpan).isEmpty, Date() < deadline {
+            try await Task.sleep(nanoseconds: 50_000_000)
+        }
+        XCTAssertEqual(testSpanProcessor.startedSpans.filter(isRequestSpan).count, 1)
+        XCTAssertEqual(testSpanProcessor.endedSpans.filter(isRequestSpan).count, 1)
+    }
+
+    func testItEndsSpanForTaskWithoutCompletionHandlerResumedInTask() async throws {
+        // The factory swizzle starts the span and resume must not start another one, but it still
+        // has to install the task delegate: without a completion handler or a session delegate,
+        // nothing else would report the completion and end the span.
+        guard #available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *) else {
+            throw XCTSkip("URLSessionTask.delegate is not available")
+        }
+        let server = try XCTUnwrap(self.server)
+        let url = server.baseURL.appendingPathComponent("success")
+        let tracer = try XCTUnwrap(DDTestMonitor.instance?.tracer)
+
+        let task = await tracer.withActiveSpan(name: "containerSpan", attributes: [:]) { _ in
+            let task = URLSession.shared.dataTask(with: url)
+            task.resume()
+            return task
+        }
+
+        let isRequestSpan = { (span: ReadableSpan) in
+            span.toSpanData().attributes["http.url"]?.description == url.absoluteString
+        }
+        let deadline = Date().addingTimeInterval(10)
+        while testSpanProcessor.endedSpans.filter(isRequestSpan).isEmpty, Date() < deadline {
+            try await Task.sleep(nanoseconds: 50_000_000)
+        }
+        XCTAssertEqual(task.state, .completed)
+        XCTAssertEqual(testSpanProcessor.startedSpans.filter(isRequestSpan).count, 1)
+        let ended = testSpanProcessor.endedSpans.filter(isRequestSpan)
+        XCTAssertEqual(ended.count, 1)
+        XCTAssertEqual(ended.first?.toSpanData().attributes["http.status_code"]?.description, "200")
+    }
+
+    func testItInstrumentsInheritedDelegateMethodsOnce() throws {
+        // `SubclassSessionDelegate` implements no delegate method of its own, so the startup scan
+        // skips it and it is only discovered when its task resumes. Its methods resolve to the ones
+        // of `BaseSessionDelegate`, which must not be wrapped a second time.
+        try withContainerSpan { _ in
+            DDInstrumentationControl.startPayloadCapture()
+            defer { DDInstrumentationControl.stopPayloadCapture() }
+
+            let server = try XCTUnwrap(self.server)
+            let url = server.baseURL.appendingPathComponent("success")
+
+            for delegate in [BaseSessionDelegate(), SubclassSessionDelegate()] {
+                delegate.completed = expectation(description: "GET \(url) with \(type(of: delegate))")
+                let session = URLSession(configuration: .ephemeral, delegate: delegate, delegateQueue: nil)
+                defer { session.finishTasksAndInvalidate() }
+                let task = session.dataTask(with: url)
+                task.resume()
+                waitForExpectations(timeout: 30) { _ in
+                    task.cancel()
+                }
+
+                let spanData = try XCTUnwrap(testSpanProcessor.lastProcessedSpan).toSpanData()
+                XCTAssertEqual(spanData.attributes["http.status_code"]?.description, "200")
+                XCTAssertEqual(spanData.attributes["http.response.payload"]?.description,
+                               String(data: delegate.received, encoding: .ascii),
+                               "\(type(of: delegate))")
+            }
+        }
+    }
 }
+
+private class BaseSessionDelegate: NSObject, URLSessionDataDelegate {
+    var received = Data()
+    var completed: XCTestExpectation?
+
+    func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
+        received.append(data)
+    }
+
+    func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+        completed?.fulfill()
+    }
+}
+
+private final class SubclassSessionDelegate: BaseSessionDelegate {}

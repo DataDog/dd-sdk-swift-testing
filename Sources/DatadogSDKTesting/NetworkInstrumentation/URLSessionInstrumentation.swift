@@ -28,9 +28,9 @@ struct NetworkRequestState {
   }
 }
 
-private var idKey: Void?
+nonisolated(unsafe) private var idKey: Void?
 
-class URLSessionInstrumentation {
+final class URLSessionInstrumentation: @unchecked Sendable {
   private var requestMap = [String: NetworkRequestState]()
 
   private var _configuration: URLSessionInstrumentationConfiguration
@@ -48,7 +48,23 @@ class URLSessionInstrumentation {
   private let configurationQueue = DispatchQueue(
       label: "io.opentelemetry.configuration")
 
-  static var instrumentedKey = "io.opentelemetry.instrumentedCall"
+  /// Delegate classes already injected into, so that a class discovered by both the startup scan
+  /// and a resuming task is only instrumented once.
+  nonisolated(unsafe) private static var instrumentedDelegateClasses = Set<ObjectIdentifier>()
+  /// Delegate methods already swizzled or added. A class that inherits a delegate method resolves to
+  /// its superclass's Method, so tracking classes alone would wrap that Method once per subclass and
+  /// report each callback multiple times. Guarded by `instrumentedDelegateClassesLock`.
+  nonisolated(unsafe) private static var instrumentedDelegateMethods = Set<Method>()
+  private static let instrumentedDelegateClassesLock = NSLock()
+
+  /// Guards the one-time swizzling performed by `injectInNSURLClasses()`.
+  ///
+  /// Swizzling replaces implementations on `URLSession` and on delegate classes, which is a
+  /// process-wide effect rather than a per-instance one, so it must happen at most once.
+  nonisolated(unsafe) private static var hasInjectedIntoNSURLClasses = false
+  private static let injectionLock = NSLock()
+
+  static let instrumentedKey = "io.opentelemetry.instrumentedCall"
 
   static let excludeList: [String] = [
     "__NSCFURLProxySessionConnection"
@@ -69,8 +85,25 @@ class URLSessionInstrumentation {
     return spans
   }
 
+  /// Creates the instrumentation and installs it into `URLSession`.
+  ///
+  /// Installation happens once per process. If an instrumentation has already been created, this
+  /// instance is still usable but does not re-install itself, and the configuration of the first
+  /// instance remains the one applied to instrumented requests.
   public init(configuration: URLSessionInstrumentationConfiguration) {
     self._configuration = configuration
+
+    // The lock is held across the installation, not only across setting the flag. Each call to
+    // injectInNSURLClasses() captures the currently installed implementation as its original, so a
+    // second one would chain itself ahead of the first and every request would be reported twice.
+    // A later initializer therefore has to wait for the first installation to finish rather than
+    // return while it is still in progress, otherwise its caller starts issuing requests against a
+    // partially swizzled URLSession.
+    Self.injectionLock.lock()
+    defer { Self.injectionLock.unlock() }
+
+    guard !Self.hasInjectedIntoNSURLClasses else { return }
+    Self.hasInjectedIntoNSURLClasses = true
     injectInNSURLClasses()
   }
 
@@ -104,7 +137,8 @@ class URLSessionInstrumentation {
     // classes. Conformance is checked with `class_conformsToProtocol` rather than
     // a Swift `theClass is URLSessionDelegate.Type` cast, since the cast messages
     // the class.
-    let urlSessionDelegateProtocol = objc_getProtocol("NSURLSessionDelegate")
+    // Protocol objects are immutable runtime metadata, safe to share across threads.
+    nonisolated(unsafe) let urlSessionDelegateProtocol = objc_getProtocol("NSURLSessionDelegate")
     DispatchQueue.concurrentPerform(iterations: classes.count) { iteration in
       let theClass: AnyClass = classes[iteration]
       guard theClass != Self.self,
@@ -134,7 +168,7 @@ class URLSessionInstrumentation {
       }
 
       foundClasses.forEach { cls in
-        injectIntoDelegateClass(cls: cls)
+        instrumentDelegateClassIfNeeded(cls)
       }
     }
 
@@ -143,6 +177,25 @@ class URLSessionInstrumentation {
     injectIntoNSURLSessionAsyncDataAndDownloadTaskMethods()
     injectIntoNSURLSessionAsyncUploadTaskMethods()
     injectIntoNSURLSessionTaskResume()
+  }
+
+  /// Instruments `cls` unless it already has been. Injecting twice would report each task
+  /// completion once per installation.
+  ///
+  /// The lock is held across the injection, not just the bookkeeping: a caller that finds the class
+  /// already recorded must be able to rely on its callbacks being installed, otherwise a task
+  /// resuming concurrently could start before the delegate has been modified.
+  private func instrumentDelegateClassIfNeeded(_ cls: AnyClass) {
+    // Also reached from task resume, which bypasses the startup scan's exclude filtering.
+    guard !Self.excludeList.contains(NSStringFromClass(cls)) else { return }
+
+    Self.instrumentedDelegateClassesLock.lock()
+    defer { Self.instrumentedDelegateClassesLock.unlock() }
+
+    guard Self.instrumentedDelegateClasses.insert(ObjectIdentifier(cls)).inserted else {
+      return
+    }
+    injectIntoDelegateClass(cls: cls)
   }
 
   private func injectIntoDelegateClass(cls: AnyClass) {
@@ -293,16 +346,16 @@ class URLSessionInstrumentation {
     [
       #selector(
         URLSession.dataTask(with:completionHandler:)
-          as (URLSession) -> (URLRequest, @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask),
+          as (URLSession) -> (URLRequest, @escaping @Sendable (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask),
       #selector(
         URLSession.dataTask(with:completionHandler:)
-          as (URLSession) -> (URL, @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask),
+          as (URLSession) -> (URL, @escaping @Sendable (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask),
       #selector(
         URLSession.downloadTask(with:completionHandler:)
-          as (URLSession) -> (URLRequest, @escaping (URL?, URLResponse?, Error?) -> Void) -> URLSessionDownloadTask),
+          as (URLSession) -> (URLRequest, @escaping @Sendable (URL?, URLResponse?, Error?) -> Void) -> URLSessionDownloadTask),
       #selector(
         URLSession.downloadTask(with:completionHandler:)
-          as (URLSession) -> (URL, @escaping (URL?, URLResponse?, Error?) -> Void) -> URLSessionDownloadTask),
+          as (URLSession) -> (URL, @escaping @Sendable (URL?, URLResponse?, Error?) -> Void) -> URLSessionDownloadTask),
       #selector(URLSession.downloadTask(withResumeData:completionHandler:))
     ].forEach {
       let selector = $0
@@ -315,21 +368,39 @@ class URLSessionInstrumentation {
       let block:
         @convention(block) (URLSession, AnyObject, ((Any?, URLResponse?, Error?) -> Void)?) -> URLSessionTask = { session, argument, completion in
 
+          // `URLSession.dataTask(with:completionHandler:)` / `downloadTask(with:completionHandler:)`
+          // require `@Sendable` completion handlers. The ObjC-swizzled `completion`
+          // above is typed non-Sendable because it's an arbitrary block from the
+          // calling exporter. Bridge through `nonisolated(unsafe)`; the caller
+          // owns the synchronization of anything they capture in their handler.
+          nonisolated(unsafe) let completion = completion
+
           if let url = argument as? URL {
             let request = URLRequest(url: url)
 
             if self.configuration.shouldInjectTracingHeaders?(request) ?? true {
               if selector == #selector(
                 URLSession.dataTask(with:completionHandler:)
-                  as (URLSession) -> (URL, @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask) {
+                  as (URLSession) -> (URL, @escaping @Sendable (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask) {
                 if let completion {
-                  return session.dataTask(with: request, completionHandler: completion)
+                  // Wrap the non-Sendable caller-supplied handler in an
+                  // @Sendable adapter. The caller owns any synchronization
+                  // required by what they capture in their block.
+                  nonisolated(unsafe) let unsafeCompletion = completion
+                  let sendableCompletion: @Sendable (Data?, URLResponse?, Error?) -> Void = { data, response, error in
+                    unsafeCompletion(data, response, error)
+                  }
+                  return session.dataTask(with: request, completionHandler: sendableCompletion)
                 } else {
                   return session.dataTask(with: request)
                 }
               } else {
                 if let completion {
-                  return session.downloadTask(with: request, completionHandler: completion)
+                  nonisolated(unsafe) let unsafeCompletion = completion
+                  let sendableCompletion: @Sendable (URL?, URLResponse?, Error?) -> Void = { url, response, error in
+                    unsafeCompletion(url, response, error)
+                  }
+                  return session.downloadTask(with: request, completionHandler: sendableCompletion)
                 } else {
                   return session.downloadTask(with: request)
                 }
@@ -347,13 +418,14 @@ class URLSessionInstrumentation {
           if completionBlock != nil {
             if objc_getAssociatedObject(argument, &idKey) == nil {
               let completionWrapper: (Any?, URLResponse?, Error?) -> Void = { object, response, error in
+                let payload = self.shouldRecordPayload(for: session, response: response) ? object : nil
                 if error != nil {
                   let status = (response as? HTTPURLResponse)?.statusCode ?? 0
-                  URLSessionLogger.logError(error!, dataOrFile: object, statusCode: status,
+                  URLSessionLogger.logError(error!, dataOrFile: payload, statusCode: status,
                                             instrumentation: self, sessionTaskId: sessionTaskId)
                 } else {
                   if let response {
-                    URLSessionLogger.logResponse(response, dataOrFile: object, instrumentation: self,
+                    URLSessionLogger.logResponse(response, dataOrFile: payload, instrumentation: self,
                                                  sessionTaskId: sessionTaskId)
                   }
                 }
@@ -416,13 +488,14 @@ class URLSessionInstrumentation {
           var completionBlock = completion
           if objc_getAssociatedObject(argument, &idKey) == nil {
             let completionWrapper: (Any?, URLResponse?, Error?) -> Void = { object, response, error in
+              let payload = self.shouldRecordPayload(for: session, response: response) ? object : nil
               if error != nil {
                 let status = (response as? HTTPURLResponse)?.statusCode ?? 0
-                URLSessionLogger.logError(error!, dataOrFile: object, statusCode: status,
+                URLSessionLogger.logError(error!, dataOrFile: payload, statusCode: status,
                                           instrumentation: self, sessionTaskId: sessionTaskId)
               } else {
                 if let response {
-                  URLSessionLogger.logResponse(response, dataOrFile: object, instrumentation: self,
+                  URLSessionLogger.logResponse(response, dataOrFile: payload, instrumentation: self,
                                                sessionTaskId: sessionTaskId)
                 }
               }
@@ -467,6 +540,12 @@ class URLSessionInstrumentation {
       let originalIMP = method_getImplementation(theMethod)
       let block: @convention(block) (URLSessionTask) -> Void = { anyTask in
         guard anyTask.responds(to: #selector(getter: URLSessionTask.currentRequest)) else { return }
+        // Instrumenting may assign a task delegate, which Foundation rejects once the task has
+        // resumed. Without this, a concurrent resume that loses the instrumentation claim would run
+        // the real resume while the claim holder is still between its state check and that
+        // assignment.
+        objc_sync_enter(anyTask)
+        defer { objc_sync_exit(anyTask) }
         self.urlSessionTaskWillResume(anyTask)
         guard anyTask.currentRequest != nil else { return }
         let key = String(theMethod.hashValue)
@@ -488,6 +567,7 @@ class URLSessionInstrumentation {
     guard let original = class_getInstanceMethod(cls, selector) else {
       return
     }
+    guard Self.instrumentedDelegateMethods.insert(original).inserted else { return }
     let originalIMP = method_getImplementation(original)
     let block:
       @convention(block) (Any, URLSession, URLSessionDataTask, Data) -> Void = { object, session, dataTask, data in
@@ -513,6 +593,7 @@ class URLSessionInstrumentation {
     guard let original = class_getInstanceMethod(cls, selector) else {
       return
     }
+    guard Self.instrumentedDelegateMethods.insert(original).inserted else { return }
     let originalIMP = method_getImplementation(original)
     let block:
       @convention(block) (Any, URLSession, URLSessionDataTask, URLResponse,
@@ -538,8 +619,22 @@ class URLSessionInstrumentation {
     let selector = #selector(
       URLSessionDataDelegate.urlSession(_:task:didCompleteWithError:))
     guard let original = class_getInstanceMethod(cls, selector) else {
+      // The method is optional and the delegate omits it, so nothing would report completion for
+      // its tasks. Add it, as injectTaskDidFinishCollectingMetricsIntoDelegateClass already does —
+      // that fallback only exists on newer platforms, so this is the one that covers the rest.
+      let block:
+        @convention(block) (Any, URLSession, URLSessionTask, Error?) -> Void = { _, session, task, error in
+          self.urlSession(session, task: task, didCompleteWithError: error)
+        }
+      let imp = imp_implementationWithBlock(
+        unsafeBitCast(block, to: AnyObject.self))
+      class_addMethod(cls, selector, imp, "v@:@@@")
+      if let added = class_getInstanceMethod(cls, selector) {
+        Self.instrumentedDelegateMethods.insert(added)
+      }
       return
     }
+    guard Self.instrumentedDelegateMethods.insert(original).inserted else { return }
     let originalIMP = method_getImplementation(original)
     let block:
       @convention(block) (Any, URLSession, URLSessionTask, Error?) -> Void = { object, session, task, error in
@@ -571,8 +666,12 @@ class URLSessionInstrumentation {
       let imp = imp_implementationWithBlock(
         unsafeBitCast(block, to: AnyObject.self))
       class_addMethod(cls, selector, imp, "@@@")
+      if let added = class_getInstanceMethod(cls, selector) {
+        Self.instrumentedDelegateMethods.insert(added)
+      }
       return
     }
+    guard Self.instrumentedDelegateMethods.insert(original).inserted else { return }
     let originalIMP = method_getImplementation(original)
     let block:
       @convention(block) (Any, URLSession, URLSessionTask, URLSessionTaskMetrics) -> Void = { object, session, task, metrics in
@@ -598,6 +697,7 @@ class URLSessionInstrumentation {
     else {
       return
     }
+    guard Self.instrumentedDelegateMethods.insert(original).inserted else { return }
 
     let originalIMP = method_getImplementation(original)
     let block: @convention(block) (Any, Selector) -> Bool = { object, respondsTo in
@@ -625,6 +725,7 @@ class URLSessionInstrumentation {
     guard let original = class_getInstanceMethod(cls, selector) else {
       return
     }
+    guard Self.instrumentedDelegateMethods.insert(original).inserted else { return }
     let originalIMP = method_getImplementation(original)
     let block:
       @convention(block) (Any, URLSession, URLSessionDataTask, URLSessionDownloadTask) -> Void = { object, session, dataTask, downloadTask in
@@ -646,7 +747,7 @@ class URLSessionInstrumentation {
 
   // URLSessionTask methods
   private func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
-    guard configuration.shouldRecordPayload?(session) ?? false else { return }
+    guard shouldRecordPayload(for: session, response: dataTask.response) else { return }
     guard let taskId = objc_getAssociatedObject(dataTask, &idKey) as? String
     else {
       return
@@ -666,7 +767,7 @@ class URLSessionInstrumentation {
   private func urlSession(_ session: URLSession, dataTask: URLSessionDataTask,
                           didReceive response: URLResponse,
                           completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
-    guard configuration.shouldRecordPayload?(session) ?? false else { return }
+    guard shouldRecordPayload(for: session, response: response) else { return }
     guard let taskId = objc_getAssociatedObject(dataTask, &idKey) as? String
     else {
       return
@@ -757,6 +858,14 @@ class URLSessionInstrumentation {
     }
 
     let taskId = idKeyForTask(task)
+
+    // A session delegate that implements none of the selectors scanned in injectInNSURLClasses is
+    // never discovered there, so without this nothing would report this task's completion and the
+    // span started below would never be ended.
+    if let sessionDelegate = (task.value(forKey: "session") as? URLSession)?.delegate {
+      instrumentDelegateClassIfNeeded(type(of: sessionDelegate))
+    }
+
     if let request = task.currentRequest {
       queue.sync {
         if requestMap[taskId] == nil {
@@ -765,21 +874,25 @@ class URLSessionInstrumentation {
         requestMap[taskId]?.setRequest(request)
       }
 
-      #if os(watchOS)
-      // watchOS-only defensive guard: a span may have already been started for this
-      // task by a factory swizzle (e.g. dataTask(with:completionHandler:)) re-entered
-      // from data(for:), or by a previous resume (NSURLSession super-class chaining
-      // and redirect handling can both cause resume to fire more than once per logical
-      // request). Starting another one here would orphan the existing span:
-      // processAndLogRequest would overwrite runningSpans[taskId] and the first span
-      // would never be ended. Other platforms don't exhibit these re-entries in
-      // practice (verified via URLSessionInstrumentationTests), so this lookup is
-      // gated to watchOS to avoid the per-resume queue sync.
-      let alreadyTracked = URLSessionLogger.runningSpansQueue.sync {
-        URLSessionLogger.runningSpans[taskId] != nil
+      // A span may have already been started for this task by a factory swizzle
+      // (e.g. dataTask(with:completionHandler:)) re-entered from data(for:), or by a
+      // previous resume: suspend/resume, NSURLSession super-class chaining and redirect
+      // handling can all cause resume to fire more than once per logical request.
+      // Starting another one here would orphan the existing span, since
+      // processAndLogRequest overwrites runningSpans[taskId] and the first span would
+      // never be ended. It would also disagree with the wire, because the traceparent
+      // already sent to the server carries the first span's id.
+      // Claiming rather than merely checking: the lookup and the eventual insertion into
+      // runningSpans have to be one atomic step, or two threads resuming the same task both see
+      // nothing and both start a span. The claim is released once this call has either started a
+      // span or decided not to instrument.
+      // Losing the claim only skips starting a span: the task delegate below must still be
+      // installed, since for a task without a completion handler or session delegate it is the
+      // only thing that reports completion and ends the span started elsewhere.
+      let claimed = URLSessionLogger.claimTaskForInstrumentation(taskId)
+      defer {
+        if claimed { URLSessionLogger.releaseTaskClaim(taskId) }
       }
-      if alreadyTracked { return }
-      #endif
 
       // For iOS 15+/macOS 12+, handle async/await methods differently
       if #available(macOS 12.0, *) {
@@ -799,14 +912,16 @@ class URLSessionInstrumentation {
 
         if isAsyncContext {
           // This is likely an async/await call
-          let instrumentedRequest = URLSessionLogger.processAndLogRequest(request,
-                                                                        sessionTaskId: taskId,
-                                                                        instrumentation: self,
-                                                                        shouldInjectHeaders: true)
-          if let instrumentedRequest {
-            task.setValue(instrumentedRequest, forKey: "currentRequest")
+          if claimed {
+            let instrumentedRequest = URLSessionLogger.processAndLogRequest(request,
+                                                                          sessionTaskId: taskId,
+                                                                          instrumentation: self,
+                                                                          shouldInjectHeaders: true)
+            if let instrumentedRequest {
+              task.setValue(instrumentedRequest, forKey: "currentRequest")
+            }
+            self.setIdKey(value: taskId, for: task)
           }
-          self.setIdKey(value: taskId, for: task)
 
           // For async/await methods, we need to ensure the delegate is set
           // to capture the completion, but only if there's no existing delegate
@@ -826,14 +941,16 @@ class URLSessionInstrumentation {
           return
         }
 
-        let instrumentedRequest = URLSessionLogger.processAndLogRequest(request,
-                                                                        sessionTaskId: taskId,
-                                                                        instrumentation: self,
-                                                                        shouldInjectHeaders: true)
-        if let instrumentedRequest {
-          task.setValue(instrumentedRequest, forKey: "currentRequest")
+        if claimed {
+          let instrumentedRequest = URLSessionLogger.processAndLogRequest(request,
+                                                                          sessionTaskId: taskId,
+                                                                          instrumentation: self,
+                                                                          shouldInjectHeaders: true)
+          if let instrumentedRequest {
+            task.setValue(instrumentedRequest, forKey: "currentRequest")
+          }
+          self.setIdKey(value: taskId, for: task)
         }
-        self.setIdKey(value: taskId, for: task)
 
         if task.delegate == nil, task.state == .suspended, (task.value(forKey: "session") as? URLSession)?.delegate == nil {
           task.delegate = FakeDelegate()
@@ -843,13 +960,20 @@ class URLSessionInstrumentation {
   }
 
   // Helpers
+  /// The task's instrumentation id, assigning one if it does not have it yet.
+  ///
+  /// Synchronized on the task: reading and assigning have to be one step, or two threads resuming
+  /// the same task each generate their own id and it is then tracked as two separate requests.
   private func idKeyForTask(_ task: URLSessionTask) -> String {
-    var id = objc_getAssociatedObject(task, &idKey) as? String
-    if id == nil {
-      id = UUID().uuidString
-      objc_setAssociatedObject(task, &idKey, id, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+    objc_sync_enter(task)
+    defer { objc_sync_exit(task) }
+
+    if let id = objc_getAssociatedObject(task, &idKey) as? String {
+      return id
     }
-    return id!
+    let id = UUID().uuidString
+    objc_setAssociatedObject(task, &idKey, id, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+    return id
   }
 
   private func setIdKey(value: String, for task: URLSessionTask) {
@@ -863,15 +987,21 @@ class URLSessionInstrumentation {
       requestMap[id] = state
     }
   }
+
+  private func shouldRecordPayload(for session: URLSession, response: URLResponse?) -> Bool {
+    let configuration = configuration
+    guard configuration.shouldRecordPayload?(session) ?? false else { return false }
+    return configuration.responsePayloadRecordingMode.shouldRecordPayload(for: response)
+  }
 }
 
-class FakeDelegate: NSObject, URLSessionTaskDelegate {
+final class FakeDelegate: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
   func urlSession(_ session: URLSession, task: URLSessionTask,
                   didCompleteWithError error: Error?) {}
 }
 
 @available(macOS 12.0, *)
-class AsyncTaskDelegate: NSObject, URLSessionTaskDelegate {
+final class AsyncTaskDelegate: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
   private weak var instrumentation: URLSessionInstrumentation?
   private let sessionTaskId: String
 

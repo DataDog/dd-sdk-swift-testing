@@ -12,9 +12,9 @@ import CodeCoverage
 import XCTest
 
 final class EarlyFlakeDetectionLogicTests: XCTestCase {
-    func testNoAutoRetryStillDiscoversNewTestWithoutRetryingOrSuppressingIt() async throws {
+    func testNonRetriableStillDiscoversNewTestWithoutRetryingOrSuppressingIt() async throws {
         let (runner, efd) = efdAndAtrRunner(known: [], tests: [
-            "newTest": .fail("Blocking failure", duration: 0.1, tags: .init(noAutoRetry: true))
+            "newTest": .fail("Blocking failure", duration: 0.1, tags: .init(retriable: false))
         ])
         let tests = try await extractTests(runner.run())
         let test = try XCTUnwrap(tests["newTest"])

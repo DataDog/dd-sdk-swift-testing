@@ -91,40 +91,43 @@ extension RetriableTag: XCTestTag {
     }
 }
 
-// Test automation exclusions apply to individual test declarations.
+// Prevent failure suppression tag
 public extension InstanceMethodTag where T: NSObject, V == Bool {
-    /// Excludes this test from Datadog retries, including EFD and Attempt to Fix.
-    static var noAutoRetry: Self { "dd.no_auto_retry" }
-    /// Prevents Datadog quarantine and disabling from hiding this test's failures.
+    static var preventFailureSuppression: Self { "dd.prevent_failure_suppression" }
+}
+
+public extension TypeTag where T: NSObject, V == Bool {
     static var preventFailureSuppression: Self { "dd.prevent_failure_suppression" }
 }
 
 public extension DynamicTag where V == Bool {
-    static var noAutoRetryInstanceMethod: Self { Self(name: "dd.no_auto_retry", tagType: .instanceMethod) }
+    static var preventFailureSuppressionType: Self {
+        Self(name: "dd.prevent_failure_suppression", tagType: .forType)
+    }
     static var preventFailureSuppressionInstanceMethod: Self {
         Self(name: "dd.prevent_failure_suppression", tagType: .instanceMethod)
     }
 }
 
 @objc public extension DDTag {
-    @objc static var noAutoRetryInstanceMethod: DDTag { DDTag(tag: .noAutoRetryInstanceMethod) }
+    @objc static var preventFailureSuppressionType: DDTag { DDTag(tag: .preventFailureSuppressionType) }
     @objc static var preventFailureSuppressionInstanceMethod: DDTag {
         DDTag(tag: .preventFailureSuppressionInstanceMethod)
     }
 }
 
-extension NoAutoRetryTag: XCTestTag {
-    func parse(tags: borrowing TypeTags, test: String) -> Bool? {
-        guard let declaration = tags.tagged(dynamic: .noAutoRetryInstanceMethod, prefixed: test)
-            .first(where: { $0.to == test }) else { return nil }
-        return tags[declaration]
-    }
-}
-
 extension PreventFailureSuppressionTag: XCTestTag {
     func parse(tags: borrowing TypeTags, test: String) -> Bool? {
-        guard let declaration = tags.tagged(dynamic: .preventFailureSuppressionInstanceMethod, prefixed: test)
-            .first(where: { $0.to == test }) else { return nil }
-        return tags[declaration]
+        var isSuiteProtected: Bool? = nil
+        var isTestProtected: Bool? = nil
+        if let tag = tags.tagged(dynamic: .preventFailureSuppressionType).first {
+            isSuiteProtected = tags[tag]
+        }
+        if let tag = tags.tagged(dynamic: .preventFailureSuppressionInstanceMethod, prefixed: test)
+            .first(where: { $0.to == test })
+        {
+            isTestProtected = tags[tag]
+        }
+        return isTestProtected ?? isSuiteProtected
     }
 }

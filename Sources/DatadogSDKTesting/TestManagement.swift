@@ -25,10 +25,9 @@ final class TestManagement: TestHooksFeature {
                                 in suite: any TestSuite,
                                 configuration: RetryGroupConfiguration.Iterator) -> RetryGroupConfiguration.Iterator
     {
-        guard let assigned = module.suites[suite.name]?.tests[test] else {
+        guard let testInfo = policy(for: test, in: suite.name, tags: tags) else {
             return configuration.next()
         }
-        let testInfo = assigned.effectivePolicy(tags: tags)
         if testInfo.attemptToFix {
             return configuration.retry(strategy: .allSucceeded)
         }
@@ -46,6 +45,7 @@ final class TestManagement: TestHooksFeature {
     }
     
     func testWillStart(test: any TestRun, info: TestRunInfoStart) {
+        // Report backend assignments even when annotations override their behavior
         if let testInfo = module.suites[test.suite.name]?.tests[test.name] {
             if testInfo.quarantined {
                 test.set(tag: DDTestManagementTags.testIsQuarantined, value: "true")
@@ -68,14 +68,13 @@ final class TestManagement: TestHooksFeature {
             // mark test with final skip status (disabled)
             test.set(tag: DDTestTags.testFinalStatus, value: status)
         }
-        // An excluded Attempt to Fix assignment is still reported, but has no completion result.
-        guard !info.tags.excludesAutomaticRetries else { return }
         // Retry logic (ATF)
         // Check that was retried by us
         guard info.retry.feature == id else { return }
         // Check that we have config for that test (we should if it was retried by us)
-        guard let testInfo = module.suites[test.suite.name]?.tests[test.name] else { return }
-        // Check that ATF is enabled for that test
+        guard let testInfo = policy(for: test.name, in: test.suite.name, tags: info.tags) else { return }
+        // Check that ATF is enabled for that test.
+        // An excluded Attempt to Fix assignment has no completion result.
         if testInfo.attemptToFix {
             // Check that all executions passed
             let atfPassed = info.executions.failed == 0 && status != .fail
@@ -89,14 +88,11 @@ final class TestManagement: TestHooksFeature {
                         withStatus status: TestStatus, retryStatus: RetryStatus.Iterator,
                         andInfo info: TestRunInfoStart) -> RetryStatus.Iterator
     {
-        guard let assigned = module.suites[test.suite.name]?.tests[test.name] else {
+        guard let testInfo = policy(for: test.name, in: test.suite.name, tags: info.tags) else {
             return retryStatus.next()
         }
 
-        let testInfo = assigned.effectivePolicy(tags: info.tags)
         if testInfo.attemptToFix {
-            // ATF retries and suppression are skipped for non-retriable tests
-            guard info.tags.get(tag: .retriable) ?? true else { return retryStatus.next() }
             // if test isn't failed retry till max retries
             if status != .fail, info.executions.total < attemptToFixRetries - 1 {
                 return retryStatus.retry(reason: DDTagValues.retryReasonAttemptToFix,
@@ -126,21 +122,23 @@ final class TestManagement: TestHooksFeature {
     }
 
     func shouldSuppressError(test: any TestRun, info: TestRunInfoStart) -> Bool {
-        guard let assigned = module.suites[test.suite.name]?.tests[test.name] else {
+        guard let testInfo = policy(for: test.name, in: test.suite.name, tags: info.tags) else {
             return false
         }
-        let testInfo = assigned.effectivePolicy(tags: info.tags)
         if testInfo.attemptToFix {
-            // ATF suppression is skipped for non-retriable tests
-            guard info.tags.get(tag: .retriable) ?? true else { return false }
             return info.executions.total < attemptToFixRetries
         }
-        // Disabled/quarantined always suppress errors regardless of retriable tag
+        // Disabled/quarantined suppress errors unless prevented by the test annotation
         if testInfo.disabled || testInfo.quarantined { return true }
         return false
     }
 
     func stop() {}
+    
+    /// Backend-assigned management properties with test annotations applied.
+    private func policy(for test: String, in suite: String, tags: any TestTags) -> Test? {
+        module.suites[suite]?.tests[test]?.applying(tags: tags)
+    }
 }
 
 extension TestManagement {
@@ -176,17 +174,30 @@ extension TestManagement {
         let quarantined: Bool
         let attemptToFix: Bool
         
-        func effectivePolicy(tags: any TestTags) -> (disabled: Bool, quarantined: Bool, attemptToFix: Bool) {
-            (disabled: disabled && !tags.preventsFailureSuppression,
-             quarantined: quarantined && !tags.preventsFailureSuppression,
-             attemptToFix: attemptToFix && !tags.excludesAutomaticRetries)
-        }
-
-        init(name: String, test: TestManagementTestsInfo.Test) {
+        init(name: String, disabled: Bool, quarantined: Bool, attemptToFix: Bool) {
             self.name = name
-            self.disabled = test.properties.disabled
-            self.quarantined = test.properties.quarantined
-            self.attemptToFix = test.properties.attemptToFix
+            self.disabled = disabled
+            self.quarantined = quarantined
+            self.attemptToFix = attemptToFix
+        }
+        
+        init(name: String, test: TestManagementTestsInfo.Test) {
+            self.init(name: name,
+                      disabled: test.properties.disabled,
+                      quarantined: test.properties.quarantined,
+                      attemptToFix: test.properties.attemptToFix)
+        }
+        
+        /// Applies test annotations to the backend assignment:
+        /// - non-retriable tests (`no_auto_retry`) are excluded from Attempt to Fix,
+        ///   remaining disabled/quarantined properties still apply;
+        /// - `prevent_failure_suppression` excludes the test from disabling and quarantine.
+        func applying(tags: any TestTags) -> Self {
+            let protected = tags.preventsFailureSuppression
+            return .init(name: name,
+                         disabled: disabled && !protected,
+                         quarantined: quarantined && !protected,
+                         attemptToFix: attemptToFix && tags.isRetriable)
         }
     }
 }

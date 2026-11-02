@@ -90,47 +90,67 @@ DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS # Comma-separated list of five integers in [
 
 ## Test automation exclusions
 
-Use per-test declarations to exclude a test from Datadog automation. `noAutoRetry`
-excludes Datadog Auto Test Retries, Early Flake Detection, and Attempt to Fix.
-`preventFailureSuppression` prevents quarantine and disabling from hiding a failure.
-Both can be applied together. Explicit framework skips, test selection, Test Impact
-Analysis, and framework-native retries keep their normal behavior.
+Tests can be excluded from Datadog automation with declarations in the test source code:
 
-For Swift Testing, add tags to the test declaration alongside your existing
-`.datadogTesting` instrumentation:
+- **Non-retriable** tests (`no_auto_retry`) are excluded from Datadog Auto Test Retries, Early Flake Detection
+  and Attempt to Fix. Backend-assigned quarantine and disabling still apply to them.
+- **Prevent failure suppression** (`prevent_failure_suppression`) stops Datadog quarantine and disabling from
+  controlling the test: a disabled test runs and a failure stays blocking. Retries remain available.
+
+Both can be applied together. They can be declared on a suite (type) and overridden for a single test.
+Explicit framework skips, test selection, Test Impact Analysis, and framework-native retries keep their normal behavior.
+
+### Swift Testing
+
+Use tags alongside the `.datadogTesting` trait. The most specific declaration wins: test tags override suite tags,
+nested suite tags override parent suite tags.
 
 ```swift
-@Test(.tags(.dd.noAutoRetry, .dd.preventFailureSuppression))
-func criticalOperation() throws {
-    // Test code
+@Suite(.datadogTesting, .tags(.dd.nonretriable, .dd.preventFailureSuppression))
+struct CriticalTests {
+    @Test
+    func criticalOperation() throws {
+        // Not retried by Datadog, failure is never suppressed
+    }
+
+    @Test(.tags(.dd.retriable, .dd.allowFailureSuppression))
+    func flakyOperation() throws {
+        // Overrides the suite: can be retried, quarantined and disabled
+    }
 }
 ```
 
-For XCTest, use the SDK's method tag declarations:
+### XCTest
+
+Use the SDK type and method tag declarations. A method tag overrides the type tag.
 
 ```swift
 final class CriticalTests: XCTestCase, FinalTaggedType {
     static var finalTypeTags: FinalTypeTags<CriticalTests> {
         withTagger { tagger in
-            tagger.set(instance: .noAutoRetry, to: true, method: #selector(testCriticalOperation))
-            tagger.set(instance: .preventFailureSuppression, to: true, method: #selector(testCriticalOperation))
+            // all tests of the type
+            tagger.set(type: .retriable, to: false)
+            tagger.set(type: .preventFailureSuppression, to: true)
+            // override for a single test
+            tagger.set(instance: .retriable, to: true, method: "testFlakyOperation")
+            tagger.set(instance: .preventFailureSuppression, to: false, method: "testFlakyOperation")
         }
     }
 
-    func testCriticalOperation() throws {
-        // Test code
-    }
+    func testCriticalOperation() throws {}
+    func testFlakyOperation() throws {}
 }
 ```
 
-Objective-C test classes implement `DDTaggedType` and use
-`DDTag.noAutoRetryInstanceMethod` and `DDTag.preventFailureSuppressionInstanceMethod`
-with `DDTypeTagger` for the test selector.
+Objective-C test classes implement `DDTaggedType` and use `DDTag.retriableType`, `DDTag.retriableInstanceMethod`,
+`DDTag.preventFailureSuppressionType` and `DDTag.preventFailureSuppressionInstanceMethod` with `DDTypeTagger`.
 
-Emitted test events include `test.test_management.no_auto_retry: true` and/or
-`test.test_management.prevent_failure_suppression: true` when the corresponding
-declaration is enabled. Backend-assigned quarantine, disabled, and Attempt to Fix
-tags remain visible even when an exclusion overrides the execution policy.
+### Reported tags
+
+Test events include `test.test_management.no_auto_retry: true` for non-retriable tests and
+`test.test_management.prevent_failure_suppression: true` for tests with failure suppression prevented.
+Backend-assigned quarantine, disabled, and Attempt to Fix tags remain visible even when a declaration
+overrides the execution policy.
 
 ## Custom tags
 

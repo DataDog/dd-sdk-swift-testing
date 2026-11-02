@@ -22,18 +22,11 @@ extension TestTag where Self == RetriableTag {
     static var retriable: Self { .init() }
 }
 
-/// A declaration excludes Datadog retries without changing framework-native retries.
-struct NoAutoRetryTag: TestTag {
-    typealias Value = Bool
-}
-
-/// A declaration prevents Datadog quarantine and disabling from hiding a failure.
+/// Prevents Datadog quarantine and disabling from hiding a test's failure
+/// (`prevent_failure_suppression` annotation). Can be declared on a suite and
+/// overridden on a test, the same way as `RetriableTag`.
 struct PreventFailureSuppressionTag: TestTag {
     typealias Value = Bool
-}
-
-extension TestTag where Self == NoAutoRetryTag {
-    static var noAutoRetry: Self { .init() }
 }
 
 extension TestTag where Self == PreventFailureSuppressionTag {
@@ -41,6 +34,9 @@ extension TestTag where Self == PreventFailureSuppressionTag {
 }
 
 extension TestTags {
-    var excludesAutomaticRetries: Bool { self.get(tag: .noAutoRetry) == true }
-    var preventsFailureSuppression: Bool { self.get(tag: .preventFailureSuppression) == true }
+    /// `false` excludes the test from Datadog Auto Test Retries, Early Flake Detection
+    /// and Attempt to Fix (`no_auto_retry` annotation). Framework-native retries are not affected.
+    var isRetriable: Bool { self.get(tag: .retriable) ?? true }
+    /// `true` prevents Datadog quarantine and disabling from controlling the test.
+    var preventsFailureSuppression: Bool { self.get(tag: .preventFailureSuppression) ?? false }
 }

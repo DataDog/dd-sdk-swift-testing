@@ -27,7 +27,7 @@ class TestManagementTests: XCTestCase {
     func testBothExclusionsOverrideAllAssignedPoliciesButPreserveAssignmentTags() async throws {
         let runner = tmAndAtrRunner(fix: ["critical"], disabled: ["critical"], quarantined: ["critical"],
                                     tests: ["critical": .fail("Blocking failure", tags: .init(
-                                        noAutoRetry: true, preventFailureSuppression: true))])
+                                        retriable: false, preventFailureSuppression: true))])
         let tests = try await extractTests(runner.run())
         let test = try XCTUnwrap(tests["critical"])
         XCTAssertEqual(test.runs.count, 1)
@@ -45,9 +45,9 @@ class TestManagementTests: XCTestCase {
         XCTAssertNil(run.tags[DDTestTags.testFailureSuppressionReason])
     }
 
-    func testNoAutoRetryReevaluatesDisabledPolicyAfterExcludingAttemptToFix() async throws {
+    func testNonRetriableReevaluatesDisabledPolicyAfterExcludingAttemptToFix() async throws {
         let runner = tmRunner(fix: ["disabled"], disabled: ["disabled"],
-                              tests: ["disabled": .fail("Must not execute", tags: .init(noAutoRetry: true))])
+                              tests: ["disabled": .fail("Must not execute", tags: .init(retriable: false))])
         let tests = try await extractTests(runner.run())
         let test = try XCTUnwrap(tests["disabled"])
         XCTAssertEqual(test.runs.count, 1)
@@ -60,9 +60,9 @@ class TestManagementTests: XCTestCase {
         XCTAssertNil(run.tags[DDTestManagementTags.testAttemptToFixPassed])
     }
 
-    func testNoAutoRetryRetainsQuarantineAfterExcludingAttemptToFix() async throws {
+    func testNonRetriableRetainsQuarantineAfterExcludingAttemptToFix() async throws {
         let runner = tmAndAtrRunner(fix: ["quarantined"], quarantined: ["quarantined"],
-                                    tests: ["quarantined": .fail("Suppressed failure", tags: .init(noAutoRetry: true))])
+                                    tests: ["quarantined": .fail("Suppressed failure", tags: .init(retriable: false))])
         let tests = try await extractTests(runner.run())
         let test = try XCTUnwrap(tests["quarantined"])
         XCTAssertEqual(test.runs.count, 1)
@@ -102,8 +102,8 @@ class TestManagementTests: XCTestCase {
 
     func testExclusionsDoNotOverrideTiaOrExplicitSkips() async throws {
         let runner = tmAndTiaRunner(disabled: ["tia"], quarantined: ["tia"], skip: ["tia"], tests: [
-            "tia": .fail("Must not execute", tags: .init(noAutoRetry: true, preventFailureSuppression: true)),
-            "explicit": .skip("Developer skip", tags: .init(noAutoRetry: true, preventFailureSuppression: true))
+            "tia": .fail("Must not execute", tags: .init(retriable: false, preventFailureSuppression: true)),
+            "explicit": .skip("Developer skip", tags: .init(retriable: false, preventFailureSuppression: true))
         ])
         let tests = try await extractTests(runner.run())
         for name in ["tia", "explicit"] {
@@ -118,7 +118,7 @@ class TestManagementTests: XCTestCase {
 
     func testExcludedAndOrdinaryDeclarationsHaveIndependentPolicies() async throws {
         let runner = tmAndAtrRunner(disabled: ["excluded", "ordinary"], quarantined: ["excluded", "ordinary"], tests: [
-            "excluded": .fail("Blocking", tags: .init(noAutoRetry: true, preventFailureSuppression: true)),
+            "excluded": .fail("Blocking", tags: .init(retriable: false, preventFailureSuppression: true)),
             "ordinary": .fail("Disabled"),
             "ordinarySibling": .fail(first: 1)
         ])
@@ -131,6 +131,32 @@ class TestManagementTests: XCTestCase {
                 XCTAssertNil(run.tags[DDTestManagementTags.testNoAutoRetry])
                 XCTAssertNil(run.tags[DDTestManagementTags.testPreventFailureSuppression])
             }
+        }
+    }
+
+    func testAllowedFailureSuppressionKeepsQuarantineAndDisabling() async throws {
+        // `preventFailureSuppression: false` is the test-level override of a protected suite
+        let runner = tmRunner(disabled: ["disabled"], quarantined: ["quarantined"], tests: [
+            "disabled": .fail("Must not execute", tags: .init(preventFailureSuppression: false)),
+            "quarantined": .fail("Suppressed failure", tags: .init(preventFailureSuppression: false))
+        ])
+        let tests = try await extractTests(runner.run())
+        XCTAssertEqual(tests["disabled"]?.isSkipped, true)
+        XCTAssertEqual(tests["quarantined"]?.isSucceeded, true)
+        XCTAssertEqual(tests["quarantined"]?.runs.first?.tags[DDTestTags.testFailureSuppressionReason],
+                       DDTagValues.failureSuppressionReasonQuarantine)
+        for name in ["disabled", "quarantined"] {
+            XCTAssertNil(tests[name]?.runs.first?.tags[DDTestManagementTags.testPreventFailureSuppression])
+        }
+    }
+    
+    func testRetriableTagDoesNotEmitNoAutoRetryTag() async throws {
+        let runner = tmAndAtrRunner(fix: ["fix"], tests: ["fix": .pass(tags: .init(retriable: true))])
+        let tests = try await extractTests(runner.run())
+        let test = try XCTUnwrap(tests["fix"])
+        XCTAssertGreaterThan(test.runs.count, 1)
+        for run in test.runs {
+            XCTAssertNil(run.tags[DDTestManagementTags.testNoAutoRetry])
         }
     }
 

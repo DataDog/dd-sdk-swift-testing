@@ -9,6 +9,36 @@ import XCTest
 @testable import EventsExporter
 
 final class TestManagementSwiftTestingTests: XCTestCase {
+    func testBothExclusionsOverrideAllAssignedPolicies() async throws {
+        let runner = tmAndAtrRunner(fix: ["critical"], disabled: ["critical"], quarantined: ["critical"],
+                                    tests: ["critical": .fail("Blocking failure", tags: .init(
+                                        retriable: false, preventFailureSuppression: true))])
+        let tests = try extractTests(try await runner.run())
+        let test = try XCTUnwrap(tests["critical"])
+        XCTAssertEqual(test.runs.count, 1)
+        XCTAssertFalse(test.isSucceeded)
+        XCTAssertFalse(test.isSkipped)
+        let run = try XCTUnwrap(test.runs.first)
+        XCTAssertEqual(run.xcStatus, .fail)
+        XCTAssertEqual(run.tags[DDTestManagementTags.testNoAutoRetry], "true")
+        XCTAssertEqual(run.tags[DDTestManagementTags.testPreventFailureSuppression], "true")
+        XCTAssertEqual(run.tags[DDTestManagementTags.testIsQuarantined], "true")
+        XCTAssertEqual(run.tags[DDTestManagementTags.testIsTestDisabled], "true")
+        XCTAssertEqual(run.tags[DDTestManagementTags.testIsAttemptToFix], "true")
+        XCTAssertNil(run.tags[DDTestManagementTags.testAttemptToFixPassed])
+        XCTAssertNil(run.tags[DDTestTags.testFailureSuppressionReason])
+    }
+    
+    func testNonRetriableKeepsDisabledPolicyAfterExcludingAttemptToFix() async throws {
+        let runner = tmRunner(fix: ["disabled"], disabled: ["disabled"],
+                              tests: ["disabled": .fail("Must not execute", tags: .init(retriable: false))])
+        let tests = try extractTests(try await runner.run())
+        let test = try XCTUnwrap(tests["disabled"])
+        XCTAssertEqual(test.runs.count, 1)
+        XCTAssertTrue(test.isSkipped)
+        XCTAssertNil(test.runs.first?.tags[DDTestManagementTags.testAttemptToFixPassed])
+    }
+
     func testTMSkipsDisabledTest() async throws {
         let runner = tmRunner(disabled: ["disabledTest"],
                               tests: ["someTest": .fail("Always fails"),

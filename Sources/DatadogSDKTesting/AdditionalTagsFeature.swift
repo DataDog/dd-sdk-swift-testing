@@ -95,7 +95,8 @@ final class AdditionalTags: TestHooksFeature {
     }
 
     func testWillStart(test: any TestRun, info: TestRunInfoStart) {
-        if info.tags.excludesAutomaticRetries {
+        // `no_auto_retry` annotation is declared with the non-retriable tag
+        if !info.tags.isRetriable {
             test.set(tag: DDTestManagementTags.testNoAutoRetry, value: "true")
         }
         if info.tags.preventsFailureSuppression {

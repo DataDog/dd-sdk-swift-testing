@@ -91,7 +91,7 @@ final class AutomaticTestRetries: TestHooksFeature {
                                 in suite: any TestSuite,
                                 configuration: RetryGroupConfiguration.Iterator) -> RetryGroupConfiguration.Iterator
     {
-        guard !tags.excludesAutomaticRetries else { return configuration.next() }
+        guard tags.isRetriable else { return configuration.next() }
         // Retry but allow softer successStrategy
         return configuration.retry(softer: .atLeastOneSucceeded)
     }
@@ -100,8 +100,7 @@ final class AutomaticTestRetries: TestHooksFeature {
                         withStatus status: TestStatus, retryStatus: RetryStatus.Iterator,
                         andInfo info: TestRunInfoStart) -> RetryStatus.Iterator
     {
-        guard !info.tags.excludesAutomaticRetries,
-              info.tags.get(tag: .retriable) ?? true else { return retryStatus.next() }
+        guard info.tags.isRetriable else { return retryStatus.next() }
         if case .fail = status {
             // Retry budget of the dynamic ATR depends on how long the run took
             if info.executions.total < budget.retries(for: duration) // we can retry more
@@ -119,8 +118,7 @@ final class AutomaticTestRetries: TestHooksFeature {
     }
 
     func shouldSuppressError(test: any TestRun, info: TestRunInfoStart) -> Bool {
-        guard !info.tags.excludesAutomaticRetries,
-              info.tags.get(tag: .retriable) ?? true else { return false }
+        guard info.tags.isRetriable else { return false }
         // The run isn't finished yet, so its duration is unknown and we can't tell the exact
         // budget of the dynamic ATR. We suppress the error while any retry is still possible.
         // `testGroupRetry` restores it if the duration leaves us no retries.

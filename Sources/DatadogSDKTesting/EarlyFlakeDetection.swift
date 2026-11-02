@@ -95,7 +95,7 @@ final class EarlyFlakeDetection: TestHooksFeature {
                                 in suite: any TestSuite,
                                 configuration: RetryGroupConfiguration.Iterator) -> RetryGroupConfiguration.Iterator
     {
-        guard !tags.excludesAutomaticRetries else { return configuration.next() }
+        guard tags.isRetriable else { return configuration.next() }
         // If we can retry this test - setup test group for retries.
         // Allow softer retry strategy
         return checkStatus(for: test, in: suite)
@@ -107,8 +107,7 @@ final class EarlyFlakeDetection: TestHooksFeature {
                         withStatus status: TestStatus, retryStatus: RetryStatus.Iterator,
                         andInfo info: TestRunInfoStart) -> RetryStatus.Iterator
     {
-        guard !info.tags.excludesAutomaticRetries,
-              info.tags.get(tag: .retriable) ?? true else { return retryStatus.next() }
+        guard info.tags.isRetriable else { return retryStatus.next() }
         // EFD should be enabled for this test
         guard checkStatus(for: test) else { return retryStatus.next() }
 
@@ -148,8 +147,7 @@ final class EarlyFlakeDetection: TestHooksFeature {
     }
     
     func shouldSuppressError(test: any TestRun, info: TestRunInfoStart) -> Bool {
-        guard !info.tags.excludesAutomaticRetries,
-              info.tags.get(tag: .retriable) ?? true else { return false }
+        guard info.tags.isRetriable else { return false }
         // if EFD enabled for this test suppress the error for now. We will handle it after in testGroupRetry
         return checkStatus(for: test)
     }

@@ -8,9 +8,9 @@ import XCTest
 @testable import DatadogSDKTesting
 
 final class AutoTestRetriesLogicTests: XCTestCase {
-    func testNoAutoRetryPreservesFailureAndDoesNotConsumeRetryBudget() async throws {
+    func testNonRetriablePreservesFailureAndDoesNotConsumeRetryBudget() async throws {
         let (runner, atr) = runner(tests: [
-            "excluded": .fail("Blocking failure", tags: .init(noAutoRetry: true)),
+            "excluded": .fail("Blocking failure", tags: .init(retriable: false)),
             "ordinary": .fail(first: 1)
         ])
         let tests = try await extractTests(runner.run())
@@ -25,9 +25,9 @@ final class AutoTestRetriesLogicTests: XCTestCase {
         XCTAssertEqual(atr.failedTestTotalRetries, 1)
     }
 
-    func testRemovingNoAutoRetryRestoresOrdinaryPolicy() async throws {
+    func testRemovingNonRetriableRestoresOrdinaryPolicy() async throws {
         for excluded in [true, false] {
-            let (runner, _) = runner(tests: ["sameDeclaration": .fail(first: 1, tags: .init(noAutoRetry: excluded))])
+            let (runner, _) = runner(tests: ["sameDeclaration": .fail(first: 1, tags: .init(retriable: excluded ? false : nil))])
             let tests = try await extractTests(runner.run())
             let test = try XCTUnwrap(tests["sameDeclaration"])
             XCTAssertEqual(test.runs.count, excluded ? 1 : 2)

@@ -191,7 +191,7 @@ extension TestManagement {
         /// Applies test annotations to the backend assignment:
         /// - non-retriable tests are excluded from Attempt to Fix,
         ///   remaining disabled/quarantined properties still apply;
-        /// - `prevent_failure_suppression` excludes the test from disabling and quarantine.
+        /// - tests with failure suppression prevented are excluded from disabling and quarantine.
         func applying(tags: any TestTags) -> Self {
             let protected = tags.preventsFailureSuppression
             return .init(name: name,

@@ -22,9 +22,8 @@ extension TestTag where Self == RetriableTag {
     static var retriable: Self { .init() }
 }
 
-/// Prevents Datadog quarantine and disabling from hiding a test's failure
-/// (`prevent_failure_suppression` annotation). Can be declared on a suite and
-/// overridden on a test, the same way as `RetriableTag`.
+/// Prevents Datadog quarantine and disabling from hiding a test's failure.
+/// Can be declared on a suite and overridden on a test, the same way as `RetriableTag`.
 struct PreventFailureSuppressionTag: TestTag {
     typealias Value = Bool
 }

@@ -94,7 +94,7 @@ Tests can be excluded from Datadog automation with declarations in the test sour
 
 - **Non-retriable** tests are excluded from Datadog Auto Test Retries, Early Flake Detection
   and Attempt to Fix. Backend-assigned quarantine and disabling still apply to them.
-- **Prevent failure suppression** (`prevent_failure_suppression`) stops Datadog quarantine and disabling from
+- **Prevent failure suppression** stops Datadog quarantine and disabling from
   controlling the test: a disabled test runs and a failure stays blocking. Retries remain available.
 
 Both can be applied together. They can be declared on a suite (type) and overridden for a single test.

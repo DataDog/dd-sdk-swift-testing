@@ -90,3 +90,39 @@ extension RetriableTag: XCTestTag {
         return isTestRetriable ?? isSuiteRetriable
     }
 }
+
+// Test automation exclusions apply to individual test declarations.
+public extension InstanceMethodTag where T: NSObject, V == Bool {
+    /// Excludes this test from Datadog retries, including EFD and Attempt to Fix.
+    static var noAutoRetry: Self { "dd.no_auto_retry" }
+    /// Prevents Datadog quarantine and disabling from hiding this test's failures.
+    static var preventFailureSuppression: Self { "dd.prevent_failure_suppression" }
+}
+
+public extension DynamicTag where V == Bool {
+    static var noAutoRetryInstanceMethod: Self { Self(name: "dd.no_auto_retry", tagType: .instanceMethod) }
+    static var preventFailureSuppressionInstanceMethod: Self {
+        Self(name: "dd.prevent_failure_suppression", tagType: .instanceMethod)
+    }
+}
+
+@objc public extension DDTag {
+    @objc static var noAutoRetryInstanceMethod: DDTag { DDTag(tag: .noAutoRetryInstanceMethod) }
+    @objc static var preventFailureSuppressionInstanceMethod: DDTag {
+        DDTag(tag: .preventFailureSuppressionInstanceMethod)
+    }
+}
+
+extension NoAutoRetryTag: XCTestTag {
+    func parse(tags: borrowing TypeTags, test: String) -> Bool? {
+        tags.tagged(dynamic: .noAutoRetryInstanceMethod, prefixed: test)
+            .first(where: { $0.to == test }).flatMap { tags[$0] }
+    }
+}
+
+extension PreventFailureSuppressionTag: XCTestTag {
+    func parse(tags: borrowing TypeTags, test: String) -> Bool? {
+        tags.tagged(dynamic: .preventFailureSuppressionInstanceMethod, prefixed: test)
+            .first(where: { $0.to == test }).flatMap { tags[$0] }
+    }
+}

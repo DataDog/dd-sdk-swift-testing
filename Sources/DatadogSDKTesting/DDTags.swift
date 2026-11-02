@@ -247,6 +247,8 @@ internal enum DDEfdTags {
 }
 
 internal enum DDTestManagementTags {
+    static let testNoAutoRetry = "test.test_management.no_auto_retry"
+    static let testPreventFailureSuppression = "test.test_management.prevent_failure_suppression"
     static let testAttemptToFixPassed = "test.test_management.attempt_to_fix_passed"
     static let testIsQuarantined = "test.test_management.is_quarantined"
     static let testIsTestDisabled = "test.test_management.is_test_disabled"

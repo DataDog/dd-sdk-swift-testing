@@ -88,6 +88,50 @@ DD_CIVISIBILITY_DYNAMIC_ATR_ENABLED # Enables dynamic, duration-based Auto Test 
 DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS # Comma-separated list of five integers in [1, 20]: the retry budgets for runs under 5s, under 10s, under 30s, under 5m and 5m or longer. Thresholds are strict upper bounds, like the ones in the backend timetable. When unset or empty, the retry timetable from the backend is used. Only takes effect when DD_CIVISIBILITY_DYNAMIC_ATR_ENABLED is enabled. (String)
 ```
 
+## Test automation exclusions
+
+Use per-test declarations to exclude a test from Datadog automation. `noAutoRetry`
+excludes Datadog Auto Test Retries, Early Flake Detection, and Attempt to Fix.
+`preventFailureSuppression` prevents quarantine and disabling from hiding a failure.
+Both can be applied together. Explicit framework skips, test selection, Test Impact
+Analysis, and framework-native retries keep their normal behavior.
+
+For Swift Testing, add tags to the test declaration alongside your existing
+`.datadogTesting` instrumentation:
+
+```swift
+@Test(.tags(.dd.noAutoRetry, .dd.preventFailureSuppression))
+func criticalOperation() throws {
+    // Test code
+}
+```
+
+For XCTest, use the SDK's method tag declarations:
+
+```swift
+final class CriticalTests: XCTestCase, FinalTaggedType {
+    static var finalTypeTags: FinalTypeTags<CriticalTests> {
+        withTagger { tagger in
+            tagger.set(instance: .noAutoRetry, to: true, method: #selector(testCriticalOperation))
+            tagger.set(instance: .preventFailureSuppression, to: true, method: #selector(testCriticalOperation))
+        }
+    }
+
+    func testCriticalOperation() throws {
+        // Test code
+    }
+}
+```
+
+Objective-C test classes implement `DDTaggedType` and use
+`DDTag.noAutoRetryInstanceMethod` and `DDTag.preventFailureSuppressionInstanceMethod`
+with `DDTypeTagger` for the test selector.
+
+Emitted test events include `test.test_management.no_auto_retry: true` and/or
+`test.test_management.prevent_failure_suppression: true` when the corresponding
+declaration is enabled. Backend-assigned quarantine, disabled, and Attempt to Fix
+tags remain visible even when an exclusion overrides the execution policy.
+
 ## Custom tags
 
 ### Environment variables

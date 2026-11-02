@@ -25,9 +25,10 @@ final class TestManagement: TestHooksFeature {
                                 in suite: any TestSuite,
                                 configuration: RetryGroupConfiguration.Iterator) -> RetryGroupConfiguration.Iterator
     {
-        guard let testInfo = module.suites[suite.name]?.tests[test] else {
+        guard let assigned = module.suites[suite.name]?.tests[test] else {
             return configuration.next()
         }
+        let testInfo = assigned.effectivePolicy(tags: tags)
         if testInfo.attemptToFix {
             return configuration.retry(strategy: .allSucceeded)
         }
@@ -67,6 +68,8 @@ final class TestManagement: TestHooksFeature {
             // mark test with final skip status (disabled)
             test.set(tag: DDTestTags.testFinalStatus, value: status)
         }
+        // An excluded Attempt to Fix assignment is still reported, but has no completion result.
+        guard !info.tags.excludesAutomaticRetries else { return }
         // Retry logic (ATF)
         // Check that was retried by us
         guard info.retry.feature == id else { return }
@@ -86,10 +89,11 @@ final class TestManagement: TestHooksFeature {
                         withStatus status: TestStatus, retryStatus: RetryStatus.Iterator,
                         andInfo info: TestRunInfoStart) -> RetryStatus.Iterator
     {
-        guard let testInfo = module.suites[test.suite.name]?.tests[test.name] else {
+        guard let assigned = module.suites[test.suite.name]?.tests[test.name] else {
             return retryStatus.next()
         }
 
+        let testInfo = assigned.effectivePolicy(tags: info.tags)
         if testInfo.attemptToFix {
             // ATF retries and suppression are skipped for non-retriable tests
             guard info.tags.get(tag: .retriable) ?? true else { return retryStatus.next() }
@@ -122,9 +126,10 @@ final class TestManagement: TestHooksFeature {
     }
 
     func shouldSuppressError(test: any TestRun, info: TestRunInfoStart) -> Bool {
-        guard let testInfo = module.suites[test.suite.name]?.tests[test.name] else {
+        guard let assigned = module.suites[test.suite.name]?.tests[test.name] else {
             return false
         }
+        let testInfo = assigned.effectivePolicy(tags: info.tags)
         if testInfo.attemptToFix {
             // ATF suppression is skipped for non-retriable tests
             guard info.tags.get(tag: .retriable) ?? true else { return false }
@@ -171,6 +176,12 @@ extension TestManagement {
         let quarantined: Bool
         let attemptToFix: Bool
         
+        func effectivePolicy(tags: any TestTags) -> (disabled: Bool, quarantined: Bool, attemptToFix: Bool) {
+            (disabled: disabled && !tags.preventsFailureSuppression,
+             quarantined: quarantined && !tags.preventsFailureSuppression,
+             attemptToFix: attemptToFix && !tags.excludesAutomaticRetries)
+        }
+
         init(name: String, test: TestManagementTestsInfo.Test) {
             self.name = name
             self.disabled = test.properties.disabled

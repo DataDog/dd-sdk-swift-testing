@@ -5,9 +5,42 @@
  */
 
 import XCTest
-import DatadogSDKTesting
+@testable import DatadogSDKTesting
 
 final class TagsTests: XCTestCase {
+    func testExclusionsAreResolvedForOnlyTheExactXCTestDeclaration() {
+        let tags = XCTestSuiteTags(for: ExclusionDeclarations.self)
+        XCTAssertTrue(tags.tags(for: "critical").excludesAutomaticRetries)
+        XCTAssertTrue(tags.tags(for: "critical").preventsFailureSuppression)
+        XCTAssertFalse(tags.tags(for: "criticalSibling").excludesAutomaticRetries)
+        XCTAssertFalse(tags.tags(for: "criticalSibling").preventsFailureSuppression)
+        XCTAssertFalse(tags.tags(for: "other").excludesAutomaticRetries)
+    }
+
+    func testObjCExclusionTagsUseTheSamePolicyNames() {
+        let tagger = DDTypeTagger(for: ObjCExclusionDeclarations.self)
+        XCTAssertTrue(tagger.set(tag: .noAutoRetryInstanceMethod, toValue: NSNumber(value: true), forMember: "critical"))
+        XCTAssertTrue(tagger.set(tag: .preventFailureSuppressionInstanceMethod, toValue: NSNumber(value: true), forMember: "critical"))
+        let tags = tagger.tags()
+        XCTAssertEqual(NoAutoRetryTag().parse(tags: tags, test: "critical"), true)
+        XCTAssertEqual(PreventFailureSuppressionTag().parse(tags: tags, test: "critical"), true)
+        XCTAssertNil(NoAutoRetryTag().parse(tags: tags, test: "criticalSibling"))
+    }
+
+    private final class ExclusionDeclarations: XCTestCase, FinalTaggedType {
+        static var finalTypeTags: FinalTypeTags<ExclusionDeclarations> {
+            withTagger { tagger in
+                tagger.set(instance: .noAutoRetry, to: true, method: "critical")
+                tagger.set(instance: .preventFailureSuppression, to: true, method: "critical")
+                tagger.set(instance: .noAutoRetry, to: false, method: "criticalSibling")
+            }
+        }
+    }
+
+    private final class ObjCExclusionDeclarations: NSObject, DDTaggedType {
+        static func attachedTypeTags() -> DDTypeTags { DDTypeTags(tags: [:]) }
+    }
+
     func testCanFetchAndFilterStructTags() {
         checkFinalTags(tags: TestStruct.finalTypeTags)
         checkTags(tags: TestStruct.typeTags)

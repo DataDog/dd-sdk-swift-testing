@@ -12,6 +12,22 @@ import CodeCoverage
 import XCTest
 
 final class EarlyFlakeDetectionLogicTests: XCTestCase {
+    func testNoAutoRetryStillDiscoversNewTestWithoutRetryingOrSuppressingIt() async throws {
+        let (runner, efd) = efdAndAtrRunner(known: [], tests: [
+            "newTest": .fail("Blocking failure", duration: 0.1, tags: .init(noAutoRetry: true))
+        ])
+        let tests = try await extractTests(runner.run())
+        let test = try XCTUnwrap(tests["newTest"])
+        XCTAssertEqual(test.runs.count, 1)
+        XCTAssertFalse(test.isSucceeded)
+        XCTAssertEqual(test.runs.first?.xcStatus, .fail)
+        XCTAssertEqual(test.runs.first?.tags[DDTestTags.testIsNew], "true")
+        XCTAssertEqual(test.runs.first?.tags[DDTestManagementTags.testNoAutoRetry], "true")
+        XCTAssertNil(test.runs.first?.tags[DDEfdTags.testIsRetry])
+        XCTAssertNil(test.runs.first?.tags[DDTestTags.testFailureSuppressionReason])
+        XCTAssertEqual(efd.testCounters.newTests, 1)
+    }
+
     func testEfdRetriesNewTest() async throws {
         let (runner, efd) = efdRunner(known: [],
                                       tests: ["newTest": .fail(first: 4, 1.0)])

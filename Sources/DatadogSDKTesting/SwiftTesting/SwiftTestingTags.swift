@@ -13,6 +13,10 @@ public extension Tag {
     enum dd {
         @Tag public static var retriable: Tag
         @Tag public static var nonretriable: Tag
+        /// Excludes annotated tests from Datadog retries; native retries remain available.
+        @Tag public static var noAutoRetry: Tag
+        /// Prevents Datadog quarantine and disabling from hiding annotated failures.
+        @Tag public static var preventFailureSuppression: Tag
     }
 }
 
@@ -50,6 +54,18 @@ extension RetriableTag: STTestTag {
             return false
         }
         return nil
+    }
+}
+
+extension NoAutoRetryTag: STTestTag {
+    func parse(tags: borrowing Set<Tag>) -> Bool? {
+        tags.contains(.dd.noAutoRetry) ? true : nil
+    }
+}
+
+extension PreventFailureSuppressionTag: STTestTag {
+    func parse(tags: borrowing Set<Tag>) -> Bool? {
+        tags.contains(.dd.preventFailureSuppression) ? true : nil
     }
 }
 #endif

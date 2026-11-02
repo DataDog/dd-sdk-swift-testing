@@ -422,4 +422,23 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
 private extension Testing.Trait where Self == ObserverTesterTrait {
     static var observerTester: Self { Self() }
 }
+
+@Suite
+struct TestAutomationExclusionTagsTests {
+    @Test(.tags(.dd.noAutoRetry, .dd.preventFailureSuppression), arguments: [1, 2, 3])
+    func generatedCasesRetainExclusions(_ value: Int) throws {
+        let tags = try #require(Testing.Test.current).attachedTags
+        #expect(tags.excludesAutomaticRetries)
+        #expect(tags.preventsFailureSuppression)
+        #expect(value > 0)
+    }
+
+    @Test
+    func unannotatedDeclarationHasNoExclusions() throws {
+        let tags = try #require(Testing.Test.current).attachedTags
+        #expect(tags.get(tag: .noAutoRetry) == nil)
+        #expect(tags.get(tag: .preventFailureSuppression) == nil)
+    }
+}
+
 #endif

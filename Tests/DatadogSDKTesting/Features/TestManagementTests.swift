@@ -9,6 +9,21 @@ import XCTest
 @testable import EventsExporter
 
 class TestManagementTests: XCTestCase {
+    func testMutableSpanTagsDoNotActivateExclusionPolicy() async throws {
+        let runner = tmAndAtrRunner(quarantined: ["ordinary"], tests: [
+            "ordinary": .init {
+                Mocks.Test.active?.set(tag: DDTestManagementTags.testNoAutoRetry, value: "true")
+                Mocks.Test.active?.set(tag: DDTestManagementTags.testPreventFailureSuppression, value: "true")
+                return .fail(.init(type: "Still governed by Datadog automation"))
+            }
+        ])
+        let tests = try await extractTests(runner.run())
+        let test = try XCTUnwrap(tests["ordinary"])
+        XCTAssertEqual(test.runs.count, 6)
+        XCTAssertTrue(test.isSucceeded)
+        XCTAssertEqual(test.runs.last?.tags[DDTestTags.testFailureSuppressionReason], DDTagValues.failureSuppressionReasonQuarantine)
+    }
+
     func testBothExclusionsOverrideAllAssignedPoliciesButPreserveAssignmentTags() async throws {
         let runner = tmAndAtrRunner(fix: ["critical"], disabled: ["critical"], quarantined: ["critical"],
                                     tests: ["critical": .fail("Blocking failure", tags: .init(

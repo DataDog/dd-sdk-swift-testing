@@ -115,14 +115,16 @@ public extension DynamicTag where V == Bool {
 
 extension NoAutoRetryTag: XCTestTag {
     func parse(tags: borrowing TypeTags, test: String) -> Bool? {
-        tags.tagged(dynamic: .noAutoRetryInstanceMethod, prefixed: test)
-            .first(where: { $0.to == test }).flatMap { tags[$0] }
+        guard let declaration = tags.tagged(dynamic: .noAutoRetryInstanceMethod, prefixed: test)
+            .first(where: { $0.to == test }) else { return nil }
+        return tags[declaration]
     }
 }
 
 extension PreventFailureSuppressionTag: XCTestTag {
     func parse(tags: borrowing TypeTags, test: String) -> Bool? {
-        tags.tagged(dynamic: .preventFailureSuppressionInstanceMethod, prefixed: test)
-            .first(where: { $0.to == test }).flatMap { tags[$0] }
+        guard let declaration = tags.tagged(dynamic: .preventFailureSuppressionInstanceMethod, prefixed: test)
+            .first(where: { $0.to == test }) else { return nil }
+        return tags[declaration]
     }
 }

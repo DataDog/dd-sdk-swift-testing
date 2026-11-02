@@ -35,7 +35,7 @@ extension TestTag where Self == PreventFailureSuppressionTag {
 
 extension TestTags {
     /// `false` excludes the test from Datadog Auto Test Retries, Early Flake Detection
-    /// and Attempt to Fix (`no_auto_retry` annotation). Framework-native retries are not affected.
+    /// and Attempt to Fix. Framework-native retries are not affected.
     var isRetriable: Bool { self.get(tag: .retriable) ?? true }
     /// `true` prevents Datadog quarantine and disabling from controlling the test.
     var preventsFailureSuppression: Bool { self.get(tag: .preventFailureSuppression) ?? false }

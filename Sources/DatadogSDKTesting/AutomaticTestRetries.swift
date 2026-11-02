@@ -93,7 +93,7 @@ final class AutomaticTestRetries: TestHooksFeature {
     {
         guard !tags.excludesAutomaticRetries else { return configuration.next() }
         // Retry but allow softer successStrategy
-        configuration.retry(softer: .atLeastOneSucceeded)
+        return configuration.retry(softer: .atLeastOneSucceeded)
     }
 
     func testGroupRetry(test: any TestRun, duration: TimeInterval,

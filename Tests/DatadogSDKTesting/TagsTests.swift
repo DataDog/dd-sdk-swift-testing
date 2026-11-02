@@ -5,9 +5,72 @@
  */
 
 import XCTest
-import DatadogSDKTesting
+@testable import DatadogSDKTesting
 
 final class TagsTests: XCTestCase {
+    func testExclusionsAreResolvedForOnlyTheExactXCTestDeclaration() {
+        let tags = XCTestSuiteTags(for: ExclusionDeclarations.self)
+        XCTAssertFalse(tags.tags(for: "critical").isRetriable)
+        XCTAssertTrue(tags.tags(for: "critical").preventsFailureSuppression)
+        XCTAssertEqual(tags.tags(for: "critical").get(tag: .preventFailureSuppression), true)
+        XCTAssertTrue(tags.tags(for: "criticalSibling").isRetriable)
+        XCTAssertFalse(tags.tags(for: "criticalSibling").preventsFailureSuppression)
+        XCTAssertTrue(tags.tags(for: "other").isRetriable)
+        XCTAssertNil(tags.tags(for: "other").get(tag: .preventFailureSuppression))
+    }
+    
+    func testTypeLevelExclusionsApplyToAllTestsAndCanBeOverridden() {
+        let tags = XCTestSuiteTags(for: TypeExclusionDeclarations.self)
+        // inherited from the type
+        XCTAssertFalse(tags.tags(for: "inherited").isRetriable)
+        XCTAssertTrue(tags.tags(for: "inherited").preventsFailureSuppression)
+        // overridden on the test method
+        XCTAssertTrue(tags.tags(for: "overridden").isRetriable)
+        XCTAssertFalse(tags.tags(for: "overridden").preventsFailureSuppression)
+        XCTAssertEqual(tags.tags(for: "overridden").get(tag: .preventFailureSuppression), false)
+    }
+    
+    func testObjCExclusionTags() {
+        let tagger = DDTypeTagger(for: ObjCExclusionDeclarations.self)
+        XCTAssertTrue(tagger.set(typeTag: .preventFailureSuppressionType, toValue: NSNumber(value: true)))
+        XCTAssertTrue(tagger.set(typeTag: .retriableType, toValue: NSNumber(value: false)))
+        XCTAssertTrue(tagger.set(tag: .preventFailureSuppressionInstanceMethod,
+                                 toValue: NSNumber(value: false), forMember: "allowed"))
+        XCTAssertTrue(tagger.set(tag: .retriableInstanceMethod, toValue: NSNumber(value: true), forMember: "allowed"))
+        let tags = tagger.tags()
+        XCTAssertEqual(PreventFailureSuppressionTag().parse(tags: tags, test: "critical"), true)
+        XCTAssertEqual(RetriableTag().parse(tags: tags, test: "critical"), false)
+        XCTAssertEqual(PreventFailureSuppressionTag().parse(tags: tags, test: "allowed"), false)
+        XCTAssertEqual(RetriableTag().parse(tags: tags, test: "allowed"), true)
+        // TIA tags are separate from retriable tags
+        XCTAssertNil(tags.tagged(dynamic: .tiaSkippableType).first)
+    }
+    
+    private final class ExclusionDeclarations: XCTestCase, FinalTaggedType {
+        static var finalTypeTags: FinalTypeTags<ExclusionDeclarations> {
+            withTagger { tagger in
+                tagger.set(instance: .retriable, to: false, method: "critical")
+                tagger.set(instance: .preventFailureSuppression, to: true, method: "critical")
+                tagger.set(instance: .preventFailureSuppression, to: false, method: "criticalSibling")
+            }
+        }
+    }
+    
+    private final class TypeExclusionDeclarations: XCTestCase, FinalTaggedType {
+        static var finalTypeTags: FinalTypeTags<TypeExclusionDeclarations> {
+            withTagger { tagger in
+                tagger.set(type: .retriable, to: false)
+                tagger.set(type: .preventFailureSuppression, to: true)
+                tagger.set(instance: .retriable, to: true, method: "overridden")
+                tagger.set(instance: .preventFailureSuppression, to: false, method: "overridden")
+            }
+        }
+    }
+
+    private final class ObjCExclusionDeclarations: NSObject, DDTaggedType {
+        static func attachedTypeTags() -> DDTypeTags { DDTypeTags(tags: [:]) }
+    }
+
     func testCanFetchAndFilterStructTags() {
         checkFinalTags(tags: TestStruct.finalTypeTags)
         checkTags(tags: TestStruct.typeTags)

@@ -95,6 +95,13 @@ final class AdditionalTags: TestHooksFeature {
     }
 
     func testWillStart(test: any TestRun, info: TestRunInfoStart) {
+        // Report non-retriable tests as excluded from automatic retries
+        if !info.tags.isRetriable {
+            test.set(tag: DDTestManagementTags.testNoAutoRetry, value: "true")
+        }
+        if info.tags.preventsFailureSuppression {
+            test.set(tag: DDTestManagementTags.testPreventFailureSuppression, value: "true")
+        }
         if let functionInfo = bundleFunctions["\(test.suite.name).\(test.name)"] {
             let filePath = stripWorkspace(from: functionInfo.file)
             test.set(tag: DDTestTags.testSourceFile, value: filePath)

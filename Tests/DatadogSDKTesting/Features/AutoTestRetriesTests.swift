@@ -8,6 +8,36 @@ import XCTest
 @testable import DatadogSDKTesting
 
 final class AutoTestRetriesLogicTests: XCTestCase {
+    func testNonRetriablePreservesFailureAndDoesNotConsumeRetryBudget() async throws {
+        let (runner, atr) = runner(tests: [
+            "excluded": .fail("Blocking failure", tags: .init(retriable: false)),
+            "ordinary": .fail(first: 1)
+        ])
+        let tests = try await extractTests(runner.run())
+        let excluded = try XCTUnwrap(tests["excluded"])
+        XCTAssertEqual(excluded.runs.count, 1)
+        XCTAssertFalse(excluded.isSucceeded)
+        XCTAssertEqual(excluded.runs.first?.xcStatus, .fail)
+        XCTAssertEqual(excluded.runs.first?.tags[DDTestManagementTags.testNoAutoRetry], "true")
+        XCTAssertNil(excluded.runs.first?.tags[DDEfdTags.testIsRetry])
+        XCTAssertNil(excluded.runs.first?.tags[DDTestTags.testFailureSuppressionReason])
+        XCTAssertEqual(tests["ordinary"]?.runs.count, 2)
+        XCTAssertEqual(atr.failedTestTotalRetries, 1)
+    }
+
+    func testRemovingNonRetriableRestoresOrdinaryPolicy() async throws {
+        for excluded in [true, false] {
+            let (runner, _) = runner(tests: ["sameDeclaration": .fail(first: 1, tags: .init(retriable: excluded ? false : nil))])
+            let tests = try await extractTests(runner.run())
+            let test = try XCTUnwrap(tests["sameDeclaration"])
+            XCTAssertEqual(test.runs.count, excluded ? 1 : 2)
+            XCTAssertEqual(test.isSucceeded, !excluded)
+            for run in test.runs {
+                XCTAssertEqual(run.tags[DDTestManagementTags.testNoAutoRetry], excluded ? "true" : nil)
+            }
+        }
+    }
+
     func testAtrRetriesFailedTest() async throws {
         let (runner, atr) = runner(tests: ["someTest": .fail(first: 4)])
         

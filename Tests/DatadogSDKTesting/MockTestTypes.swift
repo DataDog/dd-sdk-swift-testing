@@ -26,16 +26,20 @@ enum Mocks {
     struct AttachedTags: TestTags {
         let skippable: Bool?
         let retriable: Bool?
+        let preventFailureSuppression: Bool?
         
-        init(skippable: Bool? = nil, retriable: Bool? = nil) {
+        init(skippable: Bool? = nil, retriable: Bool? = nil,
+             preventFailureSuppression: Bool? = nil) {
             self.skippable = skippable
             self.retriable = retriable
+            self.preventFailureSuppression = preventFailureSuppression
         }
         
         func get<T: TestTag>(tag: T) -> T.Value? {
             switch tag {
             case is TIASkippableTag: return skippable as? T.Value
             case is RetriableTag: return retriable as? T.Value
+            case is PreventFailureSuppressionTag: return preventFailureSuppression as? T.Value
             default: return nil
             }
         }

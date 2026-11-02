@@ -73,8 +73,8 @@ public extension DynamicTag where V == Bool {
 }
 
 @objc public extension DDTag {
-    @objc static var retriableType: DDTag { DDTag(tag: .tiaSkippableType) }
-    @objc static var retriableInstanceMethod: DDTag { DDTag(tag: .tiaSkippableInstanceMethod) }
+    @objc static var retriableType: DDTag { DDTag(tag: .retriableType) }
+    @objc static var retriableInstanceMethod: DDTag { DDTag(tag: .retriableInstanceMethod) }
 }
 
 extension RetriableTag: XCTestTag {
@@ -88,5 +88,46 @@ extension RetriableTag: XCTestTag {
             isTestRetriable = tags[tag]
         }
         return isTestRetriable ?? isSuiteRetriable
+    }
+}
+
+// Prevent failure suppression tag
+public extension InstanceMethodTag where T: NSObject, V == Bool {
+    static var preventFailureSuppression: Self { "dd.prevent_failure_suppression" }
+}
+
+public extension TypeTag where T: NSObject, V == Bool {
+    static var preventFailureSuppression: Self { "dd.prevent_failure_suppression" }
+}
+
+public extension DynamicTag where V == Bool {
+    static var preventFailureSuppressionType: Self {
+        Self(name: "dd.prevent_failure_suppression", tagType: .forType)
+    }
+    static var preventFailureSuppressionInstanceMethod: Self {
+        Self(name: "dd.prevent_failure_suppression", tagType: .instanceMethod)
+    }
+}
+
+@objc public extension DDTag {
+    @objc static var preventFailureSuppressionType: DDTag { DDTag(tag: .preventFailureSuppressionType) }
+    @objc static var preventFailureSuppressionInstanceMethod: DDTag {
+        DDTag(tag: .preventFailureSuppressionInstanceMethod)
+    }
+}
+
+extension PreventFailureSuppressionTag: XCTestTag {
+    func parse(tags: borrowing TypeTags, test: String) -> Bool? {
+        var isSuiteProtected: Bool? = nil
+        var isTestProtected: Bool? = nil
+        if let tag = tags.tagged(dynamic: .preventFailureSuppressionType).first {
+            isSuiteProtected = tags[tag]
+        }
+        if let tag = tags.tagged(dynamic: .preventFailureSuppressionInstanceMethod, prefixed: test)
+            .first(where: { $0.to == test })
+        {
+            isTestProtected = tags[tag]
+        }
+        return isTestProtected ?? isSuiteProtected
     }
 }

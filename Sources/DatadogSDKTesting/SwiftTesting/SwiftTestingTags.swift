@@ -13,18 +13,26 @@ public extension Tag {
     enum dd {
         @Tag public static var retriable: Tag
         @Tag public static var nonretriable: Tag
+        /// Prevents Datadog quarantine and disabling from hiding annotated failures.
+        @Tag public static var preventFailureSuppression: Tag
+        /// Allows Datadog quarantine and disabling again. Overrides `preventFailureSuppression` of the parent suite.
+        @Tag public static var allowFailureSuppression: Tag
     }
 }
 
 protocol STTestTag: TestTag {
-    func parse(tags: borrowing Set<Tag>) -> Value?
+    /// `tags` are ordered by declaration: tags of the outermost suite come first,
+    /// tags of the test itself come last. Parse from the end so the most specific
+    /// declaration wins.
+    func parse(tags: borrowing [Tag]) -> Value?
 }
 
 struct STTestTags: TestTags {
-    let tags: Set<Tag>
+    let tags: [Tag]
     
     init(test: borrowing Testing.Test) {
-        self.tags = test.tags
+        // Swift Testing prepends recursive traits of the parent suites to the test traits.
+        self.tags = test.traits.flatMap { ($0 as? Tag.List)?.tags ?? [] }
     }
     
     func get<T: TestTag>(tag: T) -> T.Value? {
@@ -40,16 +48,25 @@ extension Testing.Test {
     var attachedTags: STTestTags { .init(test: self) }
 }
 
+extension Array where Element == Tag {
+    /// Returns `true` for the `positive` tag, `false` for the `negative` tag
+    /// and `nil` if none is declared. The last declared tag wins.
+    func resolve(positive: Tag, negative: Tag) -> Bool? {
+        last { $0 == positive || $0 == negative }.map { $0 == positive }
+    }
+}
+
 // Retriable tag
 extension RetriableTag: STTestTag {
-    func parse(tags: borrowing Set<Tag>) -> Bool? {
-        if tags.contains(.dd.retriable) {
-            return true
-        }
-        if tags.contains(.dd.nonretriable) {
-            return false
-        }
-        return nil
+    func parse(tags: borrowing [Tag]) -> Bool? {
+        tags.resolve(positive: .dd.retriable, negative: .dd.nonretriable)
+    }
+}
+
+// Prevent failure suppression tag
+extension PreventFailureSuppressionTag: STTestTag {
+    func parse(tags: borrowing [Tag]) -> Bool? {
+        tags.resolve(positive: .dd.preventFailureSuppression, negative: .dd.allowFailureSuppression)
     }
 }
 #endif

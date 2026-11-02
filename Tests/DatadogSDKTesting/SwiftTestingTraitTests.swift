@@ -422,4 +422,66 @@ private struct ObserverTesterTrait: SuiteTrait, TestTrait, TestScoping {
 private extension Testing.Trait where Self == ObserverTesterTrait {
     static var observerTester: Self { Self() }
 }
+
+@Suite
+struct TestAutomationExclusionTagsTests {
+    @Test(.tags(.dd.nonretriable, .dd.preventFailureSuppression), arguments: [1, 2, 3])
+    func generatedCasesRetainExclusions(_ value: Int) throws {
+        let tags = try #require(Testing.Test.current).attachedTags
+        #expect(!tags.isRetriable)
+        #expect(tags.preventsFailureSuppression)
+        #expect(value > 0)
+    }
+
+    @Test
+    func unannotatedDeclarationHasNoExclusions() throws {
+        let tags = try #require(Testing.Test.current).attachedTags
+        #expect(tags.get(tag: .retriable) == nil)
+        #expect(tags.get(tag: .preventFailureSuppression) == nil)
+    }
+    
+    @Test(.tags(.dd.preventFailureSuppression, .dd.allowFailureSuppression))
+    func lastDeclaredTagWins() throws {
+        let tags = try #require(Testing.Test.current).attachedTags
+        #expect(tags.get(tag: .preventFailureSuppression) == false)
+    }
+}
+
+@Suite(.tags(.dd.retriable, .dd.preventFailureSuppression, .dd.tia.skippable))
+struct TestAutomationExclusionSuiteTagsTests {
+    @Test
+    func suiteTagsAreInherited() throws {
+        let tags = try #require(Testing.Test.current).attachedTags
+        #expect(tags.isRetriable)
+        #expect(tags.preventsFailureSuppression)
+        #expect(tags.get(tag: .tiaSkippable) == true)
+    }
+    
+    @Test(.tags(.dd.nonretriable, .dd.allowFailureSuppression, .dd.tia.unskippable))
+    func testTagsOverrideSuiteTags() throws {
+        let tags = try #require(Testing.Test.current).attachedTags
+        #expect(!tags.isRetriable)
+        #expect(!tags.preventsFailureSuppression)
+        #expect(tags.get(tag: .preventFailureSuppression) == false)
+        #expect(tags.get(tag: .tiaSkippable) == false)
+    }
+    
+    @Suite(.tags(.dd.allowFailureSuppression))
+    struct Nested {
+        @Test
+        func nestedSuiteOverridesParentSuite() throws {
+            let tags = try #require(Testing.Test.current).attachedTags
+            #expect(!tags.preventsFailureSuppression)
+            #expect(tags.isRetriable)
+        }
+        
+        @Test(.tags(.dd.preventFailureSuppression), arguments: [1, 2])
+        func parameterizedTestOverridesNestedSuite(_ value: Int) throws {
+            let tags = try #require(Testing.Test.current).attachedTags
+            #expect(tags.preventsFailureSuppression)
+            #expect(value > 0)
+        }
+    }
+}
+
 #endif

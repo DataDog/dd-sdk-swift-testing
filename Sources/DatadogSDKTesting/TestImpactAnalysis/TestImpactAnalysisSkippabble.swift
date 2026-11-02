@@ -60,14 +60,8 @@ public extension Tag.dd {
 }
 
 extension TIASkippableTag: STTestTag {
-    func parse(tags: borrowing Set<Tag>) -> Bool? {
-        if tags.contains(.dd.tia.skippable) {
-            return true
-        }
-        if tags.contains(.dd.tia.unskippable) {
-            return false
-        }
-        return nil
+    func parse(tags: borrowing [Tag]) -> Bool? {
+        tags.resolve(positive: .dd.tia.skippable, negative: .dd.tia.unskippable)
     }
 }
 #endif

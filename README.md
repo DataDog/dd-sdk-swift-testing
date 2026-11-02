@@ -88,6 +88,70 @@ DD_CIVISIBILITY_DYNAMIC_ATR_ENABLED # Enables dynamic, duration-based Auto Test 
 DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS # Comma-separated list of five integers in [1, 20]: the retry budgets for runs under 5s, under 10s, under 30s, under 5m and 5m or longer. Thresholds are strict upper bounds, like the ones in the backend timetable. When unset or empty, the retry timetable from the backend is used. Only takes effect when DD_CIVISIBILITY_DYNAMIC_ATR_ENABLED is enabled. (String)
 ```
 
+## Test automation exclusions
+
+Tests can be excluded from Datadog automation with declarations in the test source code:
+
+- **Non-retriable** tests are excluded from Datadog Auto Test Retries, Early Flake Detection
+  and Attempt to Fix. Backend-assigned quarantine and disabling still apply to them.
+- **Prevent failure suppression** stops Datadog quarantine and disabling from
+  controlling the test: a disabled test runs and a failure stays blocking. Retries remain available.
+
+Both can be applied together. They can be declared on a suite (type) and overridden for a single test.
+Explicit framework skips, test selection, Test Impact Analysis, and framework-native retries keep their normal behavior.
+
+### Swift Testing
+
+Use tags alongside the `.datadogTesting` trait. The most specific declaration wins: test tags override suite tags,
+nested suite tags override parent suite tags.
+
+```swift
+@Suite(.datadogTesting, .tags(.dd.nonretriable, .dd.preventFailureSuppression))
+struct CriticalTests {
+    @Test
+    func criticalOperation() throws {
+        // Not retried by Datadog, failure is never suppressed
+    }
+
+    @Test(.tags(.dd.retriable, .dd.allowFailureSuppression))
+    func flakyOperation() throws {
+        // Overrides the suite: can be retried, quarantined and disabled
+    }
+}
+```
+
+### XCTest
+
+Use the SDK type and method tag declarations. A method tag overrides the type tag.
+
+```swift
+final class CriticalTests: XCTestCase, FinalTaggedType {
+    static var finalTypeTags: FinalTypeTags<CriticalTests> {
+        withTagger { tagger in
+            // all tests of the type
+            tagger.set(type: .retriable, to: false)
+            tagger.set(type: .preventFailureSuppression, to: true)
+            // override for a single test
+            tagger.set(instance: .retriable, to: true, method: "testFlakyOperation")
+            tagger.set(instance: .preventFailureSuppression, to: false, method: "testFlakyOperation")
+        }
+    }
+
+    func testCriticalOperation() throws {}
+    func testFlakyOperation() throws {}
+}
+```
+
+Objective-C test classes implement `DDTaggedType` and use `DDTag.retriableType`, `DDTag.retriableInstanceMethod`,
+`DDTag.preventFailureSuppressionType` and `DDTag.preventFailureSuppressionInstanceMethod` with `DDTypeTagger`.
+
+### Reported tags
+
+Test events include `test.test_management.no_auto_retry: true` for non-retriable tests and
+`test.test_management.prevent_failure_suppression: true` for tests with failure suppression prevented.
+Backend-assigned quarantine, disabled, and Attempt to Fix tags remain visible even when a declaration
+overrides the execution policy.
+
 ## Custom tags
 
 ### Environment variables

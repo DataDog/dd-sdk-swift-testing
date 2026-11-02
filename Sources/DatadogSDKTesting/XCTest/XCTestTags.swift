@@ -73,8 +73,8 @@ public extension DynamicTag where V == Bool {
 }
 
 @objc public extension DDTag {
-    @objc static var retriableType: DDTag { DDTag(tag: .tiaSkippableType) }
-    @objc static var retriableInstanceMethod: DDTag { DDTag(tag: .tiaSkippableInstanceMethod) }
+    @objc static var retriableType: DDTag { DDTag(tag: .retriableType) }
+    @objc static var retriableInstanceMethod: DDTag { DDTag(tag: .retriableInstanceMethod) }
 }
 
 extension RetriableTag: XCTestTag {

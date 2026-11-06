@@ -28,7 +28,7 @@ struct GitInfo {
         }
         guard let sha = git("rev-parse --verify HEAD"), !sha.isEmpty,
               let root = git("rev-parse --show-toplevel"),
-              let metadata = git("show -s --format='%an%x00%ae%x00%aI%x00%cn%x00%ce%x00%cI%x00%B' HEAD") else {
+              let metadata = git("log -1 --format='%an%x00%ae%x00%aI%x00%cn%x00%ce%x00%cI%x00%B' HEAD") else {
             return nil
         }
         let fields = metadata.components(separatedBy: "\0")

@@ -416,6 +416,13 @@ class EnvironmentTests: XCTestCase {
         XCTAssertEqual(env.git.branch, "provider-branch")
     }
 
+    func testCommitOverrideOnlyRetainsAnExplicitTagOrTheSameCommitsTag() {
+        let original = Environment.Git(tag: "local-tag", commit: .maybe(sha: "local-sha"))
+        XCTAssertNil(original.updated(with: .init(commit: .maybe(sha: "other-sha"))).tag)
+        XCTAssertEqual(original.updated(with: .init(commit: .maybe(sha: "local-sha"))).tag, "local-tag")
+        XCTAssertEqual(original.updated(with: .init(tag: "user-tag", commit: .maybe(sha: "other-sha"))).tag, "user-tag")
+    }
+
     private func createEnv(_ env: [String: SpanAttributeConvertible]) -> Environment {
         let reader = ProcessEnvironmentReader(environment: env.mapValues { $0.spanAttribute }, infoDictionary: [:])
         let config = Config(env: reader)

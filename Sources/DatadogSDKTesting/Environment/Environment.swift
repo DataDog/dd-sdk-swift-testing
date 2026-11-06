@@ -731,7 +731,7 @@ internal extension Environment {
                 directory: info.directory ?? directory,
                 repositoryURL: info.repositoryURL ?? repositoryURL,
                 branch: info.branch ?? branch,
-                tag: info.tag ?? tag,
+                tag: info.tag ?? (commitChanged ? nil : tag),
                 commit: commitChanged ? info.commit : (commit?.updated(with: info.commit) ?? info.commit),
                 commitHead: commitHead?.updated(with: info.commitHead) ?? info.commitHead,
                 pullRequestBaseBranch: pullRequestBaseBranch?.updated(with: info.pullRequestBaseBranch) ?? info.pullRequestBaseBranch,

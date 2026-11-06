@@ -5,6 +5,7 @@
  */
 
 @testable import DatadogSDKTesting
+import EventsExporter
 import XCTest
 
 class GitInfoTests: XCTestCase {

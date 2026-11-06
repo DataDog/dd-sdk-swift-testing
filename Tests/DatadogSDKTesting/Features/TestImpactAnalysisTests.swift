@@ -9,6 +9,22 @@ import XCTest
 @testable import EventsExporter
 
 class TestImpactAnalysisTests: XCTestCase {
+    func testEnablementSupportsDetachedCheckoutsAndPreservesBranchExclusions() {
+        var config = Config()
+        config.excludedBranches = ["main", "release/*"]
+        let env = Environment(config: config,
+                              env: ProcessEnvironmentReader(environment: [:], infoDictionary: [:]), log: Log.instance)
+        let remote = TracerSettings(itr: .init(itrEnabled: true), efd: .init(),
+                                    flakyTestRetriesEnabled: false, knownTestsEnabled: false, testManagement: .init())
+        for (branch, expected) in [(nil, true), ("feature", true), ("main", false), ("release/1.0", false)] as [(String?, Bool)] {
+            env.git = .init(branch: branch)
+            XCTAssertEqual(TestImpactAnalysisFactory.isEnabled(config: config, env: env, remote: remote), expected)
+        }
+        config.tiaEnabled = false
+        env.git = .init()
+        XCTAssertFalse(TestImpactAnalysisFactory.isEnabled(config: config, env: env, remote: remote))
+    }
+
     func testTestImpactAnalysisSkipsTest() async throws {
         let (runner, tia, collector) = tiaRunner(skip: ["skipTest"],
                                                  tests: ["someTest": .fail("Always fails"),

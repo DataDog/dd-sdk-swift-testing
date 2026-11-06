@@ -52,12 +52,18 @@ class GitInfoTests: XCTestCase {
         [remote "origin"]
         url = https://example.com/fork.git
         [remote "upstream"]
-        url = https://example.com/upstream.git
+        url = reviewalias:upstream.git
+        [url "https://example.com/"]
+        insteadOf = reviewalias:
         [branch "\(branch)"]
         remote = upstream
         merge = refs/heads/\(branch)
         """
         try config.write(to: git.appendingPathComponent("config"), atomically: true, encoding: .utf8)
+
+        let tags = git.appendingPathComponent("refs/tags")
+        try FileManager.default.createDirectory(at: tags, withIntermediateDirectories: true)
+        try "0797c248e019314fc1d91a483e859b32f4509953\n".write(to: tags.appendingPathComponent(branch), atomically: true, encoding: .utf8)
 
         let info = try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance))
         XCTAssertEqual(info.branch, branch)

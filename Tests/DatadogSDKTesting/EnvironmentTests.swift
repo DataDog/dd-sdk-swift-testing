@@ -395,6 +395,17 @@ class EnvironmentTests: XCTestCase {
         XCTAssertEqual(env.git.commit?.committer?.email, "user-committer@example.com")
     }
 
+    func testShaOnlyOverrideDoesNotInheritAnotherCommitsAuthorOrMessage() {
+        let env = createEnv([
+            "SRCROOT": URL(fileURLWithPath: #file).deletingLastPathComponent().path,
+            "GITHUB_ACTION": "run", "GITHUB_SHA": "provider-sha", "DD_GIT_COMMIT_SHA": "user-sha"
+        ])
+        XCTAssertEqual(env.git.commit?.sha, "user-sha")
+        XCTAssertNil(env.git.commit?.message)
+        XCTAssertNil(env.git.commit?.author)
+        XCTAssertNil(env.git.commit?.committer)
+    }
+
     func testProviderGitMetadataIsUsedWhenCheckoutCannotBeRead() {
         let env = createEnv([
             "SRCROOT": "/Users", "GITHUB_ACTION": "run", "GITHUB_SHA": "provider-sha",

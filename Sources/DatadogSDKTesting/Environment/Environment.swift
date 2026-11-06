@@ -727,12 +727,13 @@ internal extension Environment {
         }
 
         func updated(with info: Git) -> Git {
-            Git(
+            let commitChanged = info.commit?.sha != nil && info.commit?.sha != commit?.sha
+            return Git(
                 directory: info.directory ?? directory,
                 repositoryURL: info.repositoryURL ?? repositoryURL,
                 branch: info.branch ?? branch,
                 tag: info.tag ?? tag,
-                commit: commit?.updated(with: info.commit) ?? info.commit,
+                commit: commitChanged ? info.commit : (commit?.updated(with: info.commit) ?? info.commit),
                 commitHead: commitHead?.updated(with: info.commitHead) ?? info.commitHead,
                 pullRequestBaseBranch: pullRequestBaseBranch?.updated(with: info.pullRequestBaseBranch) ?? info.pullRequestBaseBranch,
                 discrepancies: discrepancies

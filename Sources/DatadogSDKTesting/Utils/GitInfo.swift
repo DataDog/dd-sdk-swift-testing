@@ -38,13 +38,15 @@ struct GitInfo {
         guard fields.count == 7 else { return nil }
         commit = sha
         workspacePath = root
-        var localBranch = git("symbolic-ref --quiet --short HEAD")
+        var localBranch = git("symbolic-ref --quiet HEAD").flatMap {
+            $0.hasPrefix("refs/heads/") ? String($0.dropFirst("refs/heads/".count)) : nil
+        }
         if localBranch == nil, let gitDirectory = git("rev-parse --absolute-git-dir"),
            let records = FetchHeadRecord.from(file: URL(fileURLWithPath: gitDirectory).appendingPathComponent("FETCH_HEAD")) {
             localBranch = records.first(where: { $0.commit == sha && $0.type == "branch" })?.ref
         }
         let remote = localBranch.flatMap { git("config --get " + quote("branch.\($0).remote")) } ?? "origin"
-        repository = git("config --get " + quote("remote.\(remote).url"))
+        repository = git("remote get-url " + quote(remote))
         branch = localBranch
         if localBranch == nil {
             let tags = git("tag --points-at HEAD")?.components(separatedBy: .newlines).filter { !$0.isEmpty } ?? []

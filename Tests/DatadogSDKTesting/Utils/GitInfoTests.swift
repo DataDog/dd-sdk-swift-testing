@@ -103,6 +103,21 @@ class GitInfoTests: XCTestCase {
         }
     }
 
+    func testExecutableFallsBackWhenTheTrackingRemoteIsLocalOrUnavailable() throws {
+        for remote in [".", "missing"] {
+            let checkout = try makeExecutableCheckout()
+            defer { try? FileManager.default.removeItem(at: checkout) }
+            try "[remote \"origin\"]\nurl = https://example.com/origin.git\n[branch \"master\"]\nremote = \(remote)\nmerge = refs/heads/main\n"
+                .write(to: checkout.appendingPathComponent(".git/config"), atomically: true, encoding: .utf8)
+            try "0797c248e019314fc1d91a483e859b32f4509953\n"
+                .write(to: checkout.appendingPathComponent(".git/refs/heads/main"), atomically: true, encoding: .utf8)
+
+            let info = try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance))
+            XCTAssertEqual(info.branch, "master")
+            XCTAssertEqual(info.repository, "https://example.com/origin.git")
+        }
+    }
+
     func testAssemblyPreservesLiteralLocalBranchNames() throws {
         let checkout = try makeExecutableCheckout()
         defer { try? FileManager.default.removeItem(at: checkout) }

@@ -47,12 +47,13 @@ struct GitInfo {
             let branches = Set(records.filter { $0.commit == sha && $0.type == "branch" }.map(\.ref))
             localBranch = branches.count == 1 ? branches.first : nil
         }
-        var remote = localBranch.flatMap { git("config --get " + quote("branch.\($0).remote")) }
-        if remote == nil {
+        let trackingRemote = localBranch.flatMap { git("config --get " + quote("branch.\($0).remote")) }
+        repository = trackingRemote.flatMap { $0 == "." ? nil : git("remote get-url " + quote($0)) }
+        if repository == nil {
             let remotes = git("remote")?.components(separatedBy: .newlines).filter { !$0.isEmpty } ?? []
-            remote = remotes.contains("origin") ? "origin" : (remotes.count == 1 ? remotes[0] : nil)
+            let remote = remotes.contains("origin") ? "origin" : (remotes.count == 1 ? remotes[0] : nil)
+            repository = remote.flatMap { git("remote get-url " + quote($0)) }
         }
-        repository = remote.flatMap { git("remote get-url " + quote($0)) }
         branch = localBranch
         if isDetached {
             let tags = git("tag --points-at HEAD")?.components(separatedBy: .newlines).filter { !$0.isEmpty } ?? []

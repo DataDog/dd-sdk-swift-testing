@@ -87,6 +87,22 @@ class GitInfoTests: XCTestCase {
         XCTAssertNil(try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance)).tag)
     }
 
+    func testExecutableUsesTheOnlyAvailableRemoteWithoutTrackingConfiguration() throws {
+        let checkout = try makeExecutableCheckout()
+        defer { try? FileManager.default.removeItem(at: checkout) }
+        try "[remote \"upstream\"]\nurl = https://example.com/upstream.git\n"
+            .write(to: checkout.appendingPathComponent(".git/config"), atomically: true, encoding: .utf8)
+
+        for detached in [false, true] {
+            if detached {
+                try "0797c248e019314fc1d91a483e859b32f4509953\n"
+                    .write(to: checkout.appendingPathComponent(".git/HEAD"), atomically: true, encoding: .utf8)
+            }
+            let info = try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance))
+            XCTAssertEqual(info.repository, "https://example.com/upstream.git")
+        }
+    }
+
     func testAssemblyPreservesLiteralLocalBranchNames() throws {
         let checkout = try makeExecutableCheckout()
         defer { try? FileManager.default.removeItem(at: checkout) }
@@ -108,21 +124,22 @@ class GitInfoTests: XCTestCase {
         let configPath = git.appendingPathComponent("config")
         let config = try String(contentsOf: configPath) + "\n[i18n]\nlogOutputEncoding = ISO-8859-1\n"
         try config.write(to: configPath, atomically: true, encoding: .utf8)
-        let tree = try XCTUnwrap(Spawn.output(try: "git -C '\(checkout.path)' rev-parse HEAD^{tree}", log: Log.instance))
+        let command = "git -c safe.directory='\(checkout.path)' -C '\(checkout.path)' "
+        let tree = try Spawn.output(command + "log --no-show-signature -1 --format=%T HEAD")
         let object = checkout.appendingPathComponent("commit.txt")
         try "tree \(tree)\nauthor André <author@example.com> 1 +0000\ncommitter Zoë <committer@example.com> 2 +0000\n\nRésumé\n"
             .write(to: object, atomically: true, encoding: .utf8)
-        let sha = try XCTUnwrap(Spawn.output(try: "git -C '\(checkout.path)' hash-object -w -t commit '\(object.path)'", log: Log.instance))
+        let sha = try Spawn.output(command + "hash-object -w -t commit '\(object.path)'")
         try "\(sha)\n".write(to: git.appendingPathComponent("HEAD"), atomically: true, encoding: .utf8)
 
         let info = try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance))
         XCTAssertEqual(info.commit, sha)
         XCTAssertEqual(info.authorName, "André")
         XCTAssertEqual(info.authorEmail, "author@example.com")
-        XCTAssertEqual(info.authorDate, "1970-01-01T00:00:01+00:00")
+        XCTAssertEqual(ISO8601DateFormatter().date(from: try XCTUnwrap(info.authorDate)), Date(timeIntervalSince1970: 1))
         XCTAssertEqual(info.committerName, "Zoë")
         XCTAssertEqual(info.committerEmail, "committer@example.com")
-        XCTAssertEqual(info.committerDate, "1970-01-01T00:00:02+00:00")
+        XCTAssertEqual(ISO8601DateFormatter().date(from: try XCTUnwrap(info.committerDate)), Date(timeIntervalSince1970: 2))
         XCTAssertEqual(info.commitMessage, "Résumé")
     }
 
@@ -133,9 +150,18 @@ class GitInfoTests: XCTestCase {
         let sha = "0797c248e019314fc1d91a483e859b32f4509953"
         try "\(sha)\n".write(to: git.appendingPathComponent("HEAD"), atomically: true, encoding: .utf8)
         try "\(sha)\t\tbranch 'feature'branch' of https://example.com/repo.git\n".write(to: git.appendingPathComponent("FETCH_HEAD"), atomically: true, encoding: .utf8)
+        try FileManager.default.createDirectory(at: git.appendingPathComponent("refs/tags"), withIntermediateDirectories: true)
+        try "\(sha)\n".write(to: git.appendingPathComponent("refs/tags/v1"), atomically: true, encoding: .utf8)
 
         let info = try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance))
         XCTAssertEqual(info.branch, "feature'branch")
+        XCTAssertEqual(info.tag, "v1")
+        let record = "\(sha)\t\tbranch 'feature'branch' of https://example.com/repo.git\n"
+        try (record + record).write(to: git.appendingPathComponent("FETCH_HEAD"), atomically: true, encoding: .utf8)
+        XCTAssertEqual(try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance)).branch, "feature'branch")
+        try (record + "\(sha)\t\tbranch 'main' of https://example.com/repo.git\n")
+            .write(to: git.appendingPathComponent("FETCH_HEAD"), atomically: true, encoding: .utf8)
+        XCTAssertNil(try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance)).branch)
     }
 
     func testNoCommits() throws {

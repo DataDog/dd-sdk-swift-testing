@@ -41,14 +41,20 @@ struct GitInfo {
         var localBranch = git("symbolic-ref --quiet HEAD").flatMap {
             $0.hasPrefix("refs/heads/") ? String($0.dropFirst("refs/heads/".count)) : nil
         }
-        if localBranch == nil, let gitDirectory = git("rev-parse --absolute-git-dir"),
+        let isDetached = localBranch == nil
+        if isDetached, let gitDirectory = git("rev-parse --absolute-git-dir"),
            let records = FetchHeadRecord.from(file: URL(fileURLWithPath: gitDirectory).appendingPathComponent("FETCH_HEAD")) {
-            localBranch = records.first(where: { $0.commit == sha && $0.type == "branch" })?.ref
+            let branches = Set(records.filter { $0.commit == sha && $0.type == "branch" }.map(\.ref))
+            localBranch = branches.count == 1 ? branches.first : nil
         }
-        let remote = localBranch.flatMap { git("config --get " + quote("branch.\($0).remote")) } ?? "origin"
-        repository = git("remote get-url " + quote(remote))
+        var remote = localBranch.flatMap { git("config --get " + quote("branch.\($0).remote")) }
+        if remote == nil {
+            let remotes = git("remote")?.components(separatedBy: .newlines).filter { !$0.isEmpty } ?? []
+            remote = remotes.contains("origin") ? "origin" : (remotes.count == 1 ? remotes[0] : nil)
+        }
+        repository = remote.flatMap { git("remote get-url " + quote($0)) }
         branch = localBranch
-        if localBranch == nil {
+        if isDetached {
             let tags = git("tag --points-at HEAD")?.components(separatedBy: .newlines).filter { !$0.isEmpty } ?? []
             tag = tags.count == 1 ? tags[0] : nil
         }

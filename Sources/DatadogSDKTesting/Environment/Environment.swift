@@ -707,7 +707,6 @@ internal extension Environment {
         }
 
         func extended(from info: GitInfo) -> Git {
-            let (_branch, isTag) = Self.normalize(branchOrTag: info.branch)
             let infoCommit = CommitInfo(
                 sha: info.commit,
                 message: info.commitMessage,
@@ -717,8 +716,8 @@ internal extension Environment {
             return Git(
                 directory: info.workspacePath,
                 repositoryURL: info.repository.flatMap { URL(string: $0) },
-                branch: isTag ? nil : _branch,
-                tag: info.tag ?? (isTag ? _branch : nil),
+                branch: info.branch,
+                tag: info.tag,
                 commit: infoCommit,
                 commitHead: commitHead,
                 pullRequestBaseBranch: pullRequestBaseBranch,

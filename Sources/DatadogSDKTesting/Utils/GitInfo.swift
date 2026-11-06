@@ -31,7 +31,7 @@ struct GitInfo {
         }
         guard let sha = git("rev-parse --verify HEAD"), !sha.isEmpty,
               let root = git("rev-parse --show-toplevel"),
-              let metadata = git("log --no-show-signature -1 --format='%an%x00%ae%x00%aI%x00%cn%x00%ce%x00%cI%x00%B' HEAD") else {
+              let metadata = git("log --no-show-signature --encoding=UTF-8 -1 --format='%an%x00%ae%x00%aI%x00%cn%x00%ce%x00%cI%x00%B' HEAD") else {
             return nil
         }
         let fields = metadata.components(separatedBy: "\0")
@@ -471,7 +471,7 @@ extension GitInfo {
             guard parts.count == 3 else { return nil }
             let refInfo = parts[2]
             guard let refStart = refInfo.firstIndex(of: "'"),
-                  let refEnd = refInfo[refInfo.index(after: refStart)...].firstIndex(of: "'") else { return nil }
+                  let refEnd = refInfo.range(of: "' of ", range: refInfo.index(after: refStart)..<refInfo.endIndex)?.lowerBound else { return nil }
             commit = parts[0]
             modifier = parts[1].count > 0 ? parts[1] : nil
             type = refStart > refInfo.startIndex ?

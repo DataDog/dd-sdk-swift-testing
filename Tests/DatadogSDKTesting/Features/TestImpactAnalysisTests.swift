@@ -16,12 +16,14 @@ class TestImpactAnalysisTests: XCTestCase {
                               env: ProcessEnvironmentReader(environment: [:], infoDictionary: [:]), log: Log.instance)
         let remote = TracerSettings(itr: .init(itrEnabled: true), efd: .init(),
                                     flakyTestRetriesEnabled: false, knownTestsEnabled: false, testManagement: .init())
-        for (branch, expected) in [(nil, true), ("feature", true), ("main", false), ("release/1.0", false)] as [(String?, Bool)] {
+        for (branch, expected) in [(nil, false), ("feature", true), ("main", false), ("release/1.0", false)] as [(String?, Bool)] {
             env.git = .init(branch: branch)
             XCTAssertEqual(TestImpactAnalysisFactory.isEnabled(config: config, env: env, remote: remote), expected)
         }
-        config.tiaEnabled = false
         env.git = .init()
+        config.excludedBranches = []
+        XCTAssertTrue(TestImpactAnalysisFactory.isEnabled(config: config, env: env, remote: remote))
+        config.tiaEnabled = false
         XCTAssertFalse(TestImpactAnalysisFactory.isEnabled(config: config, env: env, remote: remote))
     }
 

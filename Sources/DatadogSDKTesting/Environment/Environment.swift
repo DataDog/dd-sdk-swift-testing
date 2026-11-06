@@ -103,20 +103,19 @@ internal final class Environment {
         #endif
 
         if let info = gitInfo {
-            if git.commit?.sha == nil || git.commit?.sha == info.commit {
-                git = git.extended(from: info)
-            } else {
-                git = git.appending(discrepancy: .init(expectedProvider: .ciProvider,
-                                                        discrepantProvider: .localGit,
+            if let ciSha = git.commit?.sha, ciSha != info.commit {
+                git = git.appending(discrepancy: .init(expectedProvider: .localGit,
+                                                        discrepantProvider: .ciProvider,
                                                         type: .commit))
             }
             if let ciRepo = git.repositoryURL, let localRepo = info.repository.flatMap({ URL(string: $0) }),
                ciRepo.absoluteString != localRepo.absoluteString
             {
-                git = git.appending(discrepancy: .init(expectedProvider: .ciProvider,
-                                                        discrepantProvider: .localGit,
+                git = git.appending(discrepancy: .init(expectedProvider: .localGit,
+                                                        discrepantProvider: .ciProvider,
                                                         type: .repository))
             }
+            git = git.extended(from: info)
             workspace = workspace ?? CI.expand(path: info.workspacePath, home: env.get(env: "HOME"))
         }
         workspacePath = workspace ?? sourceRoot
@@ -127,18 +126,18 @@ internal final class Environment {
         }
 
         let overrides = Environment.gitOverrides(env: env)
-        let assembledProvider: Telemetry.ShaProvider = ciInfo?.git.commit?.sha != nil ? .ciProvider : .localGit
+        let assembledProvider: Telemetry.ShaProvider = gitInfo != nil ? .localGit : .ciProvider
         if let userSha = overrides.commit?.sha, let assembled = git.commit?.sha, userSha != assembled {
-            git = git.appending(discrepancy: .init(expectedProvider: assembledProvider,
-                                                    discrepantProvider: .userSupplied,
+            git = git.appending(discrepancy: .init(expectedProvider: .userSupplied,
+                                                    discrepantProvider: assembledProvider,
                                                     type: .commit))
         }
-        let assembledRepoProvider: Telemetry.ShaProvider = ciInfo?.git.repositoryURL != nil ? .ciProvider : .localGit
+        let assembledRepoProvider: Telemetry.ShaProvider = gitInfo != nil ? .localGit : .ciProvider
         if let userRepo = overrides.repositoryURL, let assembled = git.repositoryURL,
            userRepo.absoluteString != assembled.absoluteString
         {
-            git = git.appending(discrepancy: .init(expectedProvider: assembledRepoProvider,
-                                                    discrepantProvider: .userSupplied,
+            git = git.appending(discrepancy: .init(expectedProvider: .userSupplied,
+                                                    discrepantProvider: assembledRepoProvider,
                                                     type: .repository))
         }
         self.git = git.updated(with: overrides)
@@ -300,7 +299,7 @@ internal final class Environment {
             rootFolder = rootFolder.deletingLastPathComponent as NSString
         }
         let rootDirectory = URL(fileURLWithPath: rootFolder as String, isDirectory: true)
-        let gitInfo = try? GitInfo(gitFolder: rootDirectory.appendingPathComponent(".git"))
+        let gitInfo = GitInfo(workingDirectory: rootDirectory.path, log: Log.instance)
         return gitInfo
     }
     
@@ -716,11 +715,11 @@ internal extension Environment {
                 committer: .maybe(name: info.committerName, email: info.committerEmail, date: info.committerDate)
             )
             return Git(
-                directory: directory ?? info.workspacePath,
-                repositoryURL: repositoryURL ?? info.repository.flatMap { URL(string: $0) },
-                branch: branch ?? (isTag ? nil : _branch),
-                tag: tag ?? (isTag ? branch : nil),
-                commit: commit?.extended(from: infoCommit) ?? infoCommit,
+                directory: info.workspacePath,
+                repositoryURL: info.repository.flatMap { URL(string: $0) },
+                branch: isTag ? nil : _branch,
+                tag: info.tag ?? (isTag ? _branch : nil),
+                commit: infoCommit,
                 commitHead: commitHead,
                 pullRequestBaseBranch: pullRequestBaseBranch,
                 discrepancies: discrepancies

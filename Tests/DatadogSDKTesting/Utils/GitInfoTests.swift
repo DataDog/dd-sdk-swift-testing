@@ -13,6 +13,26 @@ class GitInfoTests: XCTestCase {
         return bundle.resourceURL!.appendingPathComponent("fixtures")
     }()
     
+    func testExecutableReadsDetachedCheckoutWithoutRemote() throws {
+        let checkout = FileManager.default.temporaryDirectory.appendingPathComponent("git checkout's \(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: checkout, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: checkout) }
+        let fixture = fixturesURL.appendingPathComponent("git/with_commits/git")
+        let gitDirectory = checkout.appendingPathComponent(".git")
+        try FileManager.default.copyItem(at: fixture, to: gitDirectory)
+        try "0797c248e019314fc1d91a483e859b32f4509953\n".write(to: gitDirectory.appendingPathComponent("HEAD"), atomically: true, encoding: .utf8)
+        try FileManager.default.removeItem(at: gitDirectory.appendingPathComponent("config"))
+
+        let info = try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance))
+        XCTAssertEqual(info.commit, "0797c248e019314fc1d91a483e859b32f4509953")
+        XCTAssertEqual(info.commitMessage, "This is a commit message")
+        XCTAssertEqual(info.authorName, "John Doe")
+        XCTAssertEqual(info.committerName, "Jane Doe")
+        XCTAssertNil(info.repository)
+        XCTAssertNil(info.branch)
+        XCTAssertNil(info.tag)
+    }
+
     func testNoCommits() throws {
         let noCommitsFolder = fixturesURL.appendingPathComponent("git")
             .appendingPathComponent("no_commits").appendingPathComponent("git")

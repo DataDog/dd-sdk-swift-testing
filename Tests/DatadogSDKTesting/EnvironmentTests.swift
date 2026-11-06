@@ -138,15 +138,28 @@ class EnvironmentTests: XCTestCase {
         XCTAssertNotNil(env.git.commit?.message)
     }
 
-    func testIfCommitHashFromEnvironmentIsSetAndDifferentFromGitFolderThenGitFolderIsNotEvaluated() {
+    func testGitExecutablePrecedesConflictingProviderMetadata() {
         var testEnvironment = [String: SpanAttributeConvertible]()
         testEnvironment["GITHUB_ACTION"] = "run"
         testEnvironment["GITHUB_SHA"] = "environmentSHA"
+        testEnvironment["SRCROOT"] = URL(fileURLWithPath: #file).deletingLastPathComponent().path
+        testEnvironment["GITHUB_REPOSITORY"] = "provider/repository"
+        testEnvironment["GITHUB_HEAD_REF"] = "provider-branch"
 
+        let local = Environment.gitInfoAt(startingPath: #file)
         let env = createEnv(testEnvironment)
 
-        XCTAssertNil(env.git.commit?.message)
-        XCTAssertEqual(env.git.commit?.sha, "environmentSHA")
+        XCTAssertNotNil(local)
+        XCTAssertEqual(env.git.commit?.sha, local?.commit)
+        XCTAssertEqual(env.git.commit?.message, local?.commitMessage)
+        XCTAssertEqual(env.git.commit?.author?.name, local?.authorName)
+        XCTAssertEqual(env.git.commit?.author?.email, local?.authorEmail)
+        XCTAssertEqual(env.git.commit?.committer?.name, local?.committerName)
+        XCTAssertEqual(env.git.commit?.committer?.email, local?.committerEmail)
+        XCTAssertEqual(env.git.branch, local?.branch)
+        XCTAssertEqual(env.git.tag, local?.tag)
+        XCTAssertEqual(env.git.repositoryURL?.absoluteString, local?.repository)
+        XCTAssertEqual(env.ci?.provider, "github")
     }
 
     func testIfCommitHashFromEnvironmentIsSetAndEqualsFromGitFolderThenGitFolderIsEvaluated() {
@@ -361,6 +374,37 @@ class EnvironmentTests: XCTestCase {
         XCTAssertGreaterThan(numTestedFiles, 0)
     }
     
+    func testExplicitGitOverridesPrecedeReadableCheckout() {
+        let env = createEnv([
+            "SRCROOT": URL(fileURLWithPath: #file).deletingLastPathComponent().path,
+            "GITHUB_ACTION": "run", "GITHUB_SHA": "provider-sha",
+            "DD_GIT_COMMIT_SHA": "user-sha", "DD_GIT_REPOSITORY_URL": "https://example.com/user.git",
+            "DD_GIT_BRANCH": "user-branch", "DD_GIT_TAG": "user-tag",
+            "DD_GIT_COMMIT_MESSAGE": "user-message",
+            "DD_GIT_COMMIT_AUTHOR_NAME": "user-author", "DD_GIT_COMMIT_AUTHOR_EMAIL": "user-author@example.com",
+            "DD_GIT_COMMIT_COMMITTER_NAME": "user-committer", "DD_GIT_COMMIT_COMMITTER_EMAIL": "user-committer@example.com"
+        ])
+        XCTAssertEqual(env.git.commit?.sha, "user-sha")
+        XCTAssertEqual(env.git.repositoryURL?.absoluteString, "https://example.com/user.git")
+        XCTAssertEqual(env.git.branch, "user-branch")
+        XCTAssertEqual(env.git.tag, "user-tag")
+        XCTAssertEqual(env.git.commit?.message, "user-message")
+        XCTAssertEqual(env.git.commit?.author?.name, "user-author")
+        XCTAssertEqual(env.git.commit?.author?.email, "user-author@example.com")
+        XCTAssertEqual(env.git.commit?.committer?.name, "user-committer")
+        XCTAssertEqual(env.git.commit?.committer?.email, "user-committer@example.com")
+    }
+
+    func testProviderGitMetadataIsUsedWhenCheckoutCannotBeRead() {
+        let env = createEnv([
+            "SRCROOT": "/Users", "GITHUB_ACTION": "run", "GITHUB_SHA": "provider-sha",
+            "GITHUB_REPOSITORY": "provider/repository", "GITHUB_HEAD_REF": "provider-branch"
+        ])
+        XCTAssertEqual(env.git.commit?.sha, "provider-sha")
+        XCTAssertEqual(env.git.repositoryURL?.absoluteString, "https://github.com/provider/repository.git")
+        XCTAssertEqual(env.git.branch, "provider-branch")
+    }
+
     private func createEnv(_ env: [String: SpanAttributeConvertible]) -> Environment {
         let reader = ProcessEnvironmentReader(environment: env.mapValues { $0.spanAttribute }, infoDictionary: [:])
         let config = Config(env: reader)

@@ -5,12 +5,14 @@
  */
 
 import Foundation
+internal import EventsExporter
 
 struct GitInfo {
     private(set) var commit: String
     private(set) var workspacePath: String
     private(set) var repository: String?
     private(set) var branch: String?
+    private(set) var tag: String?
     private(set) var commitMessage: String?
     private(set) var authorName: String?
     private(set) var authorEmail: String?
@@ -18,6 +20,32 @@ struct GitInfo {
     private(set) var committerName: String?
     private(set) var committerEmail: String?
     private(set) var committerDate: String?
+
+    init?(workingDirectory: String, log: Logger) {
+        let directory = "'" + workingDirectory.replacingOccurrences(of: "'", with: "'\\''") + "'"
+        let git = { (arguments: String) -> String? in
+            Spawn.output(try: "git -c safe.directory=\(directory) -C \(directory) \(arguments)", log: log)
+        }
+        guard let sha = git("rev-parse --verify HEAD"), !sha.isEmpty,
+              let root = git("rev-parse --show-toplevel"),
+              let metadata = git("show -s --format='%an%x00%ae%x00%aI%x00%cn%x00%ce%x00%cI%x00%B' HEAD") else {
+            return nil
+        }
+        let fields = metadata.components(separatedBy: "\0")
+        guard fields.count == 7 else { return nil }
+        commit = sha
+        workspacePath = root
+        repository = git("ls-remote --get-url")
+        branch = git("symbolic-ref --quiet --short HEAD")
+        tag = git("tag --points-at HEAD")?.components(separatedBy: .newlines).first.flatMap { $0.isEmpty ? nil : $0 }
+        authorName = fields[0]
+        authorEmail = fields[1]
+        authorDate = fields[2]
+        committerName = fields[3]
+        committerEmail = fields[4]
+        committerDate = fields[5]
+        commitMessage = fields[6].trimmingCharacters(in: .whitespacesAndNewlines)
+    }
 
     init(gitFolder: URL) throws {
         workspacePath = gitFolder.deletingLastPathComponent().path

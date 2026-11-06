@@ -195,3 +195,5 @@ Pull requests are welcome. First, open an issue to discuss what you would like t
 
 [Apache License, v2.0](LICENSE)
 
+
+Git metadata uses explicit `DD_GIT_*` overrides first, then the readable local Git checkout. CI-provider Git metadata is used only when Git or the checkout cannot be read. This applies to SHA, repository URL, branch/tag, author, committer, and message. CI job and pull-request relationship metadata are preserved.

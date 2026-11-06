@@ -56,7 +56,7 @@ struct GitInfo {
         }
         branch = localBranch
         if isDetached {
-            let tags = git("tag --points-at HEAD")?.components(separatedBy: .newlines).filter { !$0.isEmpty } ?? []
+            let tags = git("tag --no-column --points-at HEAD")?.components(separatedBy: .newlines).filter { !$0.isEmpty } ?? []
             tag = tags.count == 1 ? tags[0] : nil
         }
         authorName = fields[0]

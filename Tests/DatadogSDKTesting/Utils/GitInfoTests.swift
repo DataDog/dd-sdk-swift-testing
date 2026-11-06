@@ -75,6 +75,9 @@ class GitInfoTests: XCTestCase {
         let checkout = try makeExecutableCheckout()
         defer { try? FileManager.default.removeItem(at: checkout) }
         let git = checkout.appendingPathComponent(".git")
+        let config = git.appendingPathComponent("config")
+        let contents = (try? String(contentsOf: config, encoding: .utf8)) ?? ""
+        try (contents + "\n[column]\nui = always\ntag = always\n").write(to: config, atomically: true, encoding: .utf8)
         let sha = "0797c248e019314fc1d91a483e859b32f4509953\n"
         let tags = git.appendingPathComponent("refs/tags")
         try FileManager.default.createDirectory(at: tags, withIntermediateDirectories: true)

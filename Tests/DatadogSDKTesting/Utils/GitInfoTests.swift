@@ -33,6 +33,65 @@ class GitInfoTests: XCTestCase {
         XCTAssertNil(info.tag)
     }
 
+    private func makeExecutableCheckout() throws -> URL {
+        let checkout = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: checkout, withIntermediateDirectories: true)
+        try FileManager.default.copyItem(at: fixturesURL.appendingPathComponent("git/with_commits/git"),
+                                        to: checkout.appendingPathComponent(".git"))
+        return checkout
+    }
+
+    func testExecutableUsesTheBranchTrackingRemote() throws {
+        let checkout = try makeExecutableCheckout()
+        defer { try? FileManager.default.removeItem(at: checkout) }
+        let git = checkout.appendingPathComponent(".git")
+        let branch = "feature'branch"
+        try "ref: refs/heads/\(branch)\n".write(to: git.appendingPathComponent("HEAD"), atomically: true, encoding: .utf8)
+        try "0797c248e019314fc1d91a483e859b32f4509953\n".write(to: git.appendingPathComponent("refs/heads/\(branch)"), atomically: true, encoding: .utf8)
+        let config = """
+        [remote "origin"]
+        url = https://example.com/fork.git
+        [remote "upstream"]
+        url = https://example.com/upstream.git
+        [branch "\(branch)"]
+        remote = upstream
+        merge = refs/heads/\(branch)
+        """
+        try config.write(to: git.appendingPathComponent("config"), atomically: true, encoding: .utf8)
+
+        let info = try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance))
+        XCTAssertEqual(info.branch, branch)
+        XCTAssertEqual(info.repository, "https://example.com/upstream.git")
+    }
+
+    func testExecutableOmitsAttachedOrAmbiguousTags() throws {
+        let checkout = try makeExecutableCheckout()
+        defer { try? FileManager.default.removeItem(at: checkout) }
+        let git = checkout.appendingPathComponent(".git")
+        let sha = "0797c248e019314fc1d91a483e859b32f4509953\n"
+        let tags = git.appendingPathComponent("refs/tags")
+        try FileManager.default.createDirectory(at: tags, withIntermediateDirectories: true)
+        try sha.write(to: tags.appendingPathComponent("v1.0"), atomically: true, encoding: .utf8)
+        XCTAssertNil(try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance)).tag)
+
+        try sha.write(to: git.appendingPathComponent("HEAD"), atomically: true, encoding: .utf8)
+        XCTAssertEqual(try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance)).tag, "v1.0")
+        try sha.write(to: tags.appendingPathComponent("stable"), atomically: true, encoding: .utf8)
+        XCTAssertNil(try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance)).tag)
+    }
+
+    func testExecutableRecoversMatchingFetchHeadBranch() throws {
+        let checkout = try makeExecutableCheckout()
+        defer { try? FileManager.default.removeItem(at: checkout) }
+        let git = checkout.appendingPathComponent(".git")
+        let sha = "0797c248e019314fc1d91a483e859b32f4509953"
+        try "\(sha)\n".write(to: git.appendingPathComponent("HEAD"), atomically: true, encoding: .utf8)
+        try "\(sha)\t\tbranch 'feature' of https://example.com/repo.git\n".write(to: git.appendingPathComponent("FETCH_HEAD"), atomically: true, encoding: .utf8)
+
+        let info = try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance))
+        XCTAssertEqual(info.branch, "feature")
+    }
+
     func testNoCommits() throws {
         let noCommitsFolder = fixturesURL.appendingPathComponent("git")
             .appendingPathComponent("no_commits").appendingPathComponent("git")

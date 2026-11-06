@@ -22,22 +22,34 @@ struct GitInfo {
     private(set) var committerDate: String?
 
     init?(workingDirectory: String, log: Logger) {
-        let directory = "'" + workingDirectory.replacingOccurrences(of: "'", with: "'\\''") + "'"
+        let quote = { (value: String) -> String in
+            "'" + value.replacingOccurrences(of: "'", with: "'\\''") + "'"
+        }
+        let directory = quote(workingDirectory)
         let git = { (arguments: String) -> String? in
             Spawn.output(try: "git -c safe.directory=\(directory) -C \(directory) \(arguments)", log: log)
         }
         guard let sha = git("rev-parse --verify HEAD"), !sha.isEmpty,
               let root = git("rev-parse --show-toplevel"),
-              let metadata = git("log -1 --format='%an%x00%ae%x00%aI%x00%cn%x00%ce%x00%cI%x00%B' HEAD") else {
+              let metadata = git("log --no-show-signature -1 --format='%an%x00%ae%x00%aI%x00%cn%x00%ce%x00%cI%x00%B' HEAD") else {
             return nil
         }
         let fields = metadata.components(separatedBy: "\0")
         guard fields.count == 7 else { return nil }
         commit = sha
         workspacePath = root
-        repository = git("ls-remote --get-url")
-        branch = git("symbolic-ref --quiet --short HEAD")
-        tag = git("tag --points-at HEAD")?.components(separatedBy: .newlines).first.flatMap { $0.isEmpty ? nil : $0 }
+        var localBranch = git("symbolic-ref --quiet --short HEAD")
+        if localBranch == nil, let gitDirectory = git("rev-parse --absolute-git-dir"),
+           let records = FetchHeadRecord.from(file: URL(fileURLWithPath: gitDirectory).appendingPathComponent("FETCH_HEAD")) {
+            localBranch = records.first(where: { $0.commit == sha && $0.type == "branch" })?.ref
+        }
+        let remote = localBranch.flatMap { git("config --get " + quote("branch.\($0).remote")) } ?? "origin"
+        repository = git("config --get " + quote("remote.\(remote).url"))
+        branch = localBranch
+        if localBranch == nil {
+            let tags = git("tag --points-at HEAD")?.components(separatedBy: .newlines).filter { !$0.isEmpty } ?? []
+            tag = tags.count == 1 ? tags[0] : nil
+        }
         authorName = fields[0]
         authorEmail = fields[1]
         authorDate = fields[2]

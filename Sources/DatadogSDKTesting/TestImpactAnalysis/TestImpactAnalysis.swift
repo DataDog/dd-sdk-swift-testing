@@ -235,8 +235,8 @@ struct TestImpactAnalysisFactory: FeatureFactory {
             return false
         }
 
-        guard let branch = DDTestMonitor.env.git.branch else {
-            return false
+        guard let branch = env.git.branch else {
+            return config.excludedBranches.isEmpty
         }
 
         return !isExcluded(branch)

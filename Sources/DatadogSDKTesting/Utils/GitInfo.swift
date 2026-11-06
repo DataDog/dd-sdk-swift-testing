@@ -5,12 +5,14 @@
  */
 
 import Foundation
+internal import EventsExporter
 
 struct GitInfo {
     private(set) var commit: String
     private(set) var workspacePath: String
     private(set) var repository: String?
     private(set) var branch: String?
+    private(set) var tag: String?
     private(set) var commitMessage: String?
     private(set) var authorName: String?
     private(set) var authorEmail: String?
@@ -18,6 +20,53 @@ struct GitInfo {
     private(set) var committerName: String?
     private(set) var committerEmail: String?
     private(set) var committerDate: String?
+
+    init?(workingDirectory: String, log: Logger) {
+        let quote = { (value: String) -> String in
+            "'" + value.replacingOccurrences(of: "'", with: "'\\''") + "'"
+        }
+        let directory = quote(workingDirectory)
+        let git = { (arguments: String) -> String? in
+            Spawn.output(try: "git -c safe.directory=\(directory) -C \(directory) \(arguments)", log: log)
+        }
+        guard let sha = git("rev-parse --verify HEAD"), !sha.isEmpty,
+              let root = git("rev-parse --show-toplevel"),
+              let metadata = git("log --no-show-signature --encoding=UTF-8 -1 --format='%an%x00%ae%x00%aI%x00%cn%x00%ce%x00%cI%x00%B' HEAD") else {
+            return nil
+        }
+        let fields = metadata.components(separatedBy: "\0")
+        guard fields.count == 7 else { return nil }
+        commit = sha
+        workspacePath = root
+        var localBranch = git("symbolic-ref --quiet HEAD").flatMap {
+            $0.hasPrefix("refs/heads/") ? String($0.dropFirst("refs/heads/".count)) : nil
+        }
+        let isDetached = localBranch == nil
+        if isDetached, let gitDirectory = git("rev-parse --absolute-git-dir"),
+           let records = FetchHeadRecord.from(file: URL(fileURLWithPath: gitDirectory).appendingPathComponent("FETCH_HEAD")) {
+            let branches = Set(records.filter { $0.commit == sha && $0.type == "branch" }.map(\.ref))
+            localBranch = branches.count == 1 ? branches.first : nil
+        }
+        let trackingRemote = localBranch.flatMap { git("config --get " + quote("branch.\($0).remote")) }
+        repository = trackingRemote.flatMap { $0 == "." ? nil : git("remote get-url " + quote($0)) }
+        if repository == nil {
+            let remotes = git("remote")?.components(separatedBy: .newlines).filter { !$0.isEmpty } ?? []
+            let remote = remotes.contains("origin") ? "origin" : (remotes.count == 1 ? remotes[0] : nil)
+            repository = remote.flatMap { git("remote get-url " + quote($0)) }
+        }
+        branch = localBranch
+        if isDetached {
+            let tags = git("tag --no-column --points-at HEAD")?.components(separatedBy: .newlines).filter { !$0.isEmpty } ?? []
+            tag = tags.count == 1 ? tags[0] : nil
+        }
+        authorName = fields[0]
+        authorEmail = fields[1]
+        authorDate = fields[2]
+        committerName = fields[3]
+        committerEmail = fields[4]
+        committerDate = fields[5]
+        commitMessage = fields[6].trimmingCharacters(in: .whitespacesAndNewlines)
+    }
 
     init(gitFolder: URL) throws {
         workspacePath = gitFolder.deletingLastPathComponent().path
@@ -429,7 +478,7 @@ extension GitInfo {
             guard parts.count == 3 else { return nil }
             let refInfo = parts[2]
             guard let refStart = refInfo.firstIndex(of: "'"),
-                  let refEnd = refInfo[refInfo.index(after: refStart)...].firstIndex(of: "'") else { return nil }
+                  let refEnd = refInfo.range(of: "' of ", range: refInfo.index(after: refStart)..<refInfo.endIndex)?.lowerBound else { return nil }
             commit = parts[0]
             modifier = parts[1].count > 0 ? parts[1] : nil
             type = refStart > refInfo.startIndex ?

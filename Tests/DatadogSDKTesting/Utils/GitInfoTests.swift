@@ -5,6 +5,7 @@
  */
 
 @testable import DatadogSDKTesting
+import EventsExporter
 import XCTest
 
 class GitInfoTests: XCTestCase {
@@ -13,6 +14,174 @@ class GitInfoTests: XCTestCase {
         return bundle.resourceURL!.appendingPathComponent("fixtures")
     }()
     
+    func testExecutableReadsDetachedCheckoutWithoutRemote() throws {
+        let checkout = FileManager.default.temporaryDirectory.appendingPathComponent("git checkout's \(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: checkout, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: checkout) }
+        let fixture = fixturesURL.appendingPathComponent("git/with_commits/git")
+        let gitDirectory = checkout.appendingPathComponent(".git")
+        try FileManager.default.copyItem(at: fixture, to: gitDirectory)
+        try "0797c248e019314fc1d91a483e859b32f4509953\n".write(to: gitDirectory.appendingPathComponent("HEAD"), atomically: true, encoding: .utf8)
+        try FileManager.default.removeItem(at: gitDirectory.appendingPathComponent("config"))
+
+        let info = try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance))
+        XCTAssertEqual(info.commit, "0797c248e019314fc1d91a483e859b32f4509953")
+        XCTAssertEqual(info.commitMessage, "This is a commit message")
+        XCTAssertEqual(info.authorName, "John Doe")
+        XCTAssertEqual(info.committerName, "Jane Doe")
+        XCTAssertNil(info.repository)
+        XCTAssertNil(info.branch)
+        XCTAssertNil(info.tag)
+    }
+
+    private func makeExecutableCheckout() throws -> URL {
+        let checkout = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: checkout, withIntermediateDirectories: true)
+        try FileManager.default.copyItem(at: fixturesURL.appendingPathComponent("git/with_commits/git"),
+                                        to: checkout.appendingPathComponent(".git"))
+        return checkout
+    }
+
+    func testExecutableUsesTheBranchTrackingRemote() throws {
+        let checkout = try makeExecutableCheckout()
+        defer { try? FileManager.default.removeItem(at: checkout) }
+        let git = checkout.appendingPathComponent(".git")
+        let branch = "feature'branch"
+        try "ref: refs/heads/\(branch)\n".write(to: git.appendingPathComponent("HEAD"), atomically: true, encoding: .utf8)
+        try "0797c248e019314fc1d91a483e859b32f4509953\n".write(to: git.appendingPathComponent("refs/heads/\(branch)"), atomically: true, encoding: .utf8)
+        let config = """
+        [remote "origin"]
+        url = https://example.com/fork.git
+        [remote "upstream"]
+        url = reviewalias:upstream.git
+        [url "https://example.com/"]
+        insteadOf = reviewalias:
+        [branch "\(branch)"]
+        remote = upstream
+        merge = refs/heads/\(branch)
+        """
+        try config.write(to: git.appendingPathComponent("config"), atomically: true, encoding: .utf8)
+
+        let tags = git.appendingPathComponent("refs/tags")
+        try FileManager.default.createDirectory(at: tags, withIntermediateDirectories: true)
+        try "0797c248e019314fc1d91a483e859b32f4509953\n".write(to: tags.appendingPathComponent(branch), atomically: true, encoding: .utf8)
+
+        let info = try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance))
+        XCTAssertEqual(info.branch, branch)
+        XCTAssertEqual(info.repository, "https://example.com/upstream.git")
+    }
+
+    func testExecutableOmitsAttachedOrAmbiguousTags() throws {
+        let checkout = try makeExecutableCheckout()
+        defer { try? FileManager.default.removeItem(at: checkout) }
+        let git = checkout.appendingPathComponent(".git")
+        let config = git.appendingPathComponent("config")
+        let contents = (try? String(contentsOf: config, encoding: .utf8)) ?? ""
+        try (contents + "\n[column]\nui = always\ntag = always\n").write(to: config, atomically: true, encoding: .utf8)
+        let sha = "0797c248e019314fc1d91a483e859b32f4509953\n"
+        let tags = git.appendingPathComponent("refs/tags")
+        try FileManager.default.createDirectory(at: tags, withIntermediateDirectories: true)
+        try sha.write(to: tags.appendingPathComponent("v1.0"), atomically: true, encoding: .utf8)
+        XCTAssertNil(try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance)).tag)
+
+        try sha.write(to: git.appendingPathComponent("HEAD"), atomically: true, encoding: .utf8)
+        XCTAssertEqual(try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance)).tag, "v1.0")
+        try sha.write(to: tags.appendingPathComponent("stable"), atomically: true, encoding: .utf8)
+        XCTAssertNil(try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance)).tag)
+    }
+
+    func testExecutableUsesTheOnlyAvailableRemoteWithoutTrackingConfiguration() throws {
+        let checkout = try makeExecutableCheckout()
+        defer { try? FileManager.default.removeItem(at: checkout) }
+        try "[remote \"upstream\"]\nurl = https://example.com/upstream.git\n"
+            .write(to: checkout.appendingPathComponent(".git/config"), atomically: true, encoding: .utf8)
+
+        for detached in [false, true] {
+            if detached {
+                try "0797c248e019314fc1d91a483e859b32f4509953\n"
+                    .write(to: checkout.appendingPathComponent(".git/HEAD"), atomically: true, encoding: .utf8)
+            }
+            let info = try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance))
+            XCTAssertEqual(info.repository, "https://example.com/upstream.git")
+        }
+    }
+
+    func testExecutableFallsBackWhenTheTrackingRemoteIsLocalOrUnavailable() throws {
+        for remote in [".", "missing"] {
+            let checkout = try makeExecutableCheckout()
+            defer { try? FileManager.default.removeItem(at: checkout) }
+            try "[remote \"origin\"]\nurl = https://example.com/origin.git\n[branch \"master\"]\nremote = \(remote)\nmerge = refs/heads/main\n"
+                .write(to: checkout.appendingPathComponent(".git/config"), atomically: true, encoding: .utf8)
+            try "0797c248e019314fc1d91a483e859b32f4509953\n"
+                .write(to: checkout.appendingPathComponent(".git/refs/heads/main"), atomically: true, encoding: .utf8)
+
+            let info = try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance))
+            XCTAssertEqual(info.branch, "master")
+            XCTAssertEqual(info.repository, "https://example.com/origin.git")
+        }
+    }
+
+    func testAssemblyPreservesLiteralLocalBranchNames() throws {
+        let checkout = try makeExecutableCheckout()
+        defer { try? FileManager.default.removeItem(at: checkout) }
+        let git = checkout.appendingPathComponent(".git")
+        let branch = "heads/feature"
+        try FileManager.default.createDirectory(at: git.appendingPathComponent("refs/heads/heads"), withIntermediateDirectories: true)
+        try "ref: refs/heads/\(branch)\n".write(to: git.appendingPathComponent("HEAD"), atomically: true, encoding: .utf8)
+        try "0797c248e019314fc1d91a483e859b32f4509953\n".write(to: git.appendingPathComponent("refs/heads/\(branch)"), atomically: true, encoding: .utf8)
+
+        let info = try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance))
+        XCTAssertEqual(info.branch, branch)
+        XCTAssertEqual(Environment.Git().extended(from: info).branch, branch)
+    }
+
+    func testExecutableUsesUtf8RegardlessOfLogOutputEncoding() throws {
+        let checkout = try makeExecutableCheckout()
+        defer { try? FileManager.default.removeItem(at: checkout) }
+        let git = checkout.appendingPathComponent(".git")
+        let configPath = git.appendingPathComponent("config")
+        let config = try String(contentsOf: configPath) + "\n[i18n]\nlogOutputEncoding = ISO-8859-1\n"
+        try config.write(to: configPath, atomically: true, encoding: .utf8)
+        let command = "git -c safe.directory='\(checkout.path)' -C '\(checkout.path)' "
+        let tree = try Spawn.output(command + "log --no-show-signature -1 --format=%T HEAD")
+        let object = checkout.appendingPathComponent("commit.txt")
+        try "tree \(tree)\nauthor André <author@example.com> 1 +0000\ncommitter Zoë <committer@example.com> 2 +0000\n\nRésumé\n"
+            .write(to: object, atomically: true, encoding: .utf8)
+        let sha = try Spawn.output(command + "hash-object -w -t commit '\(object.path)'")
+        try "\(sha)\n".write(to: git.appendingPathComponent("HEAD"), atomically: true, encoding: .utf8)
+
+        let info = try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance))
+        XCTAssertEqual(info.commit, sha)
+        XCTAssertEqual(info.authorName, "André")
+        XCTAssertEqual(info.authorEmail, "author@example.com")
+        XCTAssertEqual(ISO8601DateFormatter().date(from: try XCTUnwrap(info.authorDate)), Date(timeIntervalSince1970: 1))
+        XCTAssertEqual(info.committerName, "Zoë")
+        XCTAssertEqual(info.committerEmail, "committer@example.com")
+        XCTAssertEqual(ISO8601DateFormatter().date(from: try XCTUnwrap(info.committerDate)), Date(timeIntervalSince1970: 2))
+        XCTAssertEqual(info.commitMessage, "Résumé")
+    }
+
+    func testExecutableRecoversMatchingFetchHeadBranch() throws {
+        let checkout = try makeExecutableCheckout()
+        defer { try? FileManager.default.removeItem(at: checkout) }
+        let git = checkout.appendingPathComponent(".git")
+        let sha = "0797c248e019314fc1d91a483e859b32f4509953"
+        try "\(sha)\n".write(to: git.appendingPathComponent("HEAD"), atomically: true, encoding: .utf8)
+        try "\(sha)\t\tbranch 'feature'branch' of https://example.com/repo.git\n".write(to: git.appendingPathComponent("FETCH_HEAD"), atomically: true, encoding: .utf8)
+        try FileManager.default.createDirectory(at: git.appendingPathComponent("refs/tags"), withIntermediateDirectories: true)
+        try "\(sha)\n".write(to: git.appendingPathComponent("refs/tags/v1"), atomically: true, encoding: .utf8)
+
+        let info = try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance))
+        XCTAssertEqual(info.branch, "feature'branch")
+        XCTAssertEqual(info.tag, "v1")
+        let record = "\(sha)\t\tbranch 'feature'branch' of https://example.com/repo.git\n"
+        try (record + record).write(to: git.appendingPathComponent("FETCH_HEAD"), atomically: true, encoding: .utf8)
+        XCTAssertEqual(try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance)).branch, "feature'branch")
+        try (record + "\(sha)\t\tbranch 'main' of https://example.com/repo.git\n")
+            .write(to: git.appendingPathComponent("FETCH_HEAD"), atomically: true, encoding: .utf8)
+        XCTAssertNil(try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance)).branch)
+    }
+
     func testNoCommits() throws {
         let noCommitsFolder = fixturesURL.appendingPathComponent("git")
             .appendingPathComponent("no_commits").appendingPathComponent("git")

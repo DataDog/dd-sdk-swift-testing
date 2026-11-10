@@ -332,7 +332,10 @@ internal final class Environment {
     func fetchMergeHeadInfo(log: Logger) {
 #if targetEnvironment(simulator) || os(macOS)
         guard let gitDirectory = git.directory, let head = git.commitHead?.sha else { return }
-        if let commit = git.commit, head == commit.sha {
+        if let commit = git.commit, head == commit.sha,
+           commit.message != nil,
+           commit.author?.name != nil, commit.author?.email != nil, commit.author?.date != nil,
+           commit.committer?.name != nil, commit.committer?.email != nil, commit.committer?.date != nil {
             git = git.updated(with: Git(commitHead: commit))
             return
         }

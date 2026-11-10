@@ -230,6 +230,41 @@ class EnvironmentTests: XCTestCase {
         XCTAssertEqual(env.git.commitHead?.author?.name, "John Doe")
     }
 
+    func testMatchingPullRequestHeadLoadsDetailsAfterShaOnlyOverride() throws {
+        let checkout = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: checkout, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: checkout) }
+        let command = "git -c safe.directory='\(checkout.path)' -C '\(checkout.path)' "
+        _ = try Spawn.output(command + "init --quiet")
+        let tree = try Spawn.output(command + "hash-object -w -t tree --stdin < /dev/null")
+        let object = checkout.appendingPathComponent("commit.txt")
+        func writeCommit(name: String, message: String, parent: String? = nil) throws -> String {
+            let parentLine = parent.map { "parent \($0)\n" } ?? ""
+            try "tree \(tree)\n\(parentLine)author \(name) <author@example.com> 1750000000 +0000\ncommitter \(name) <committer@example.com> 1750000001 +0000\n\n\(message)\n"
+                .write(to: object, atomically: true, encoding: .utf8)
+            return try Spawn.output(command + "hash-object -w -t commit '\(object.path)'")
+        }
+        let selected = try writeCommit(name: "PR Author", message: "Selected PR commit")
+        let merge = try writeCommit(name: "Merge User", message: "Merge checkout", parent: selected)
+        _ = try Spawn.output(command + "update-ref refs/heads/main \(merge)")
+        _ = try Spawn.output(command + "symbolic-ref HEAD refs/heads/main")
+        _ = try Spawn.output(command + "config remote.origin.url '\(checkout.path)'")
+        _ = try Spawn.output(command + "config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'")
+
+        let env = createEnv(["SRCROOT": checkout.path, "DD_GIT_COMMIT_SHA": selected,
+                             "DD_GIT_COMMIT_HEAD_SHA": selected])
+        XCTAssertNil(env.git.commit?.message)
+        env.fetchMergeHeadInfo(log: Log.instance)
+        XCTAssertEqual(env.git.commitHead?.sha, selected)
+        XCTAssertEqual(env.git.commitHead?.message, "Selected PR commit")
+        XCTAssertEqual(env.git.commitHead?.author?.name, "PR Author")
+        XCTAssertEqual(env.git.commitHead?.author?.email, "author@example.com")
+        XCTAssertNotNil(env.git.commitHead?.author?.date)
+        XCTAssertEqual(env.git.commitHead?.committer?.name, "PR Author")
+        XCTAssertEqual(env.git.commitHead?.committer?.email, "committer@example.com")
+        XCTAssertNotNil(env.git.commitHead?.committer?.date)
+    }
+
     func testGitHubCIMissingEventPathFile() {
         var testEnvironment = [String: SpanAttributeConvertible]()
         testEnvironment["GITHUB_ACTIONS"] = "true"

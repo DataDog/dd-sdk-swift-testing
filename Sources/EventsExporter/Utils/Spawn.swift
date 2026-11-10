@@ -52,9 +52,16 @@ public enum Spawn {
         }
     }
     
+    /// Runs `command` through `/bin/sh -c`.
+    ///
+    /// - Parameter environment: Environment for the child process. When `nil` (the default),
+    ///   the child gets no environment variables at all: `posix_spawn` is called with a null
+    ///   `envp`, and on Darwin that does **not** inherit the parent's environment.
+    ///   Pass `ProcessInfo.processInfo.environment` (optionally modified) to inherit it.
     @discardableResult
     public static func command(
-        _ command: String, output: URL? = nil, error: URL? = nil
+        _ command: String, output: URL? = nil, error: URL? = nil,
+        environment: [String: String]? = nil
     ) throws -> (output: String?, error: String?) {
         let arguments = ["/bin/sh", "-c", command]
         let command = "/bin/sh"
@@ -97,7 +104,13 @@ public enum Spawn {
         
         var pid: pid_t = 0
         let ret = arguments.withCStringsNilTerminatedArray { argv in
-            dd_posix_spawn(&pid, command, &childActions, nil, argv, nil)
+            guard let environment else {
+                return dd_posix_spawn(&pid, command, &childActions, nil, argv, nil)
+            }
+            let envp = environment.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }
+            return envp.withCStringsNilTerminatedArray { envp in
+                dd_posix_spawn(&pid, command, &childActions, nil, argv, envp)
+            }
         }
         
         dd_posix_spawn_file_actions_destroy(&childActions)
@@ -133,11 +146,11 @@ public enum Spawn {
 
 
 extension Spawn {
-    public static func combined(_ command: String) throws -> String {
+    public static func combined(_ command: String, environment: [String: String]? = nil) throws -> String {
         let file = Self.tempDir.appendingPathComponent(UUID().uuidString, isDirectory: false)
         defer { try? FileManager.default.removeItem(at: file) }
         do {
-            try combined(command, file: file)
+            try combined(command, file: file, environment: environment)
         } catch let e as RunError {
             let data = try String(contentsOf: file)
             switch e {
@@ -149,13 +162,15 @@ extension Spawn {
     }
     
     @inlinable
-    public static func combined(_ command: String, file: URL) throws {
-        try Self.command(command, output: file, error: file)
+    public static func combined(_ command: String, file: URL, environment: [String: String]? = nil) throws {
+        try Self.command(command, output: file, error: file, environment: environment)
     }
     
-    public static func combined(try command: String, log: any Logger, debug: Bool = true) -> String? {
+    public static func combined(try command: String, log: any Logger, debug: Bool = true,
+                                environment: [String: String]? = nil) -> String?
+    {
         do {
-            return try combined(command)
+            return try combined(command, environment: environment)
         } catch {
             if debug {
                 log.debug("Command \(command) failed with error \(error)")
@@ -166,17 +181,19 @@ extension Spawn {
         }
     }
     
-    public static func output(_ command: String) throws -> String {
-        try Self.command(command).output!.trimmingCharacters(in: .whitespacesAndNewlines)
+    public static func output(_ command: String, environment: [String: String]? = nil) throws -> String {
+        try Self.command(command, environment: environment).output!.trimmingCharacters(in: .whitespacesAndNewlines)
     }
     
-    public static func output(_ command: String, file: URL) throws {
-        try Self.command(command, output: file)
+    public static func output(_ command: String, file: URL, environment: [String: String]? = nil) throws {
+        try Self.command(command, output: file, environment: environment)
     }
     
-    public static func output(try command: String, log: any Logger, debug: Bool = true) -> String? {
+    public static func output(try command: String, log: any Logger, debug: Bool = true,
+                              environment: [String: String]? = nil) -> String?
+    {
         do {
-            return try output(command)
+            return try output(command, environment: environment)
         } catch {
             if debug {
                 log.debug("Command \(command) failed with error \(error)")
@@ -188,10 +205,11 @@ extension Spawn {
     }
     
     public static func command(
-        try command: String, log: any Logger, debug: Bool = true
+        try command: String, log: any Logger, debug: Bool = true,
+        environment: [String: String]? = nil
     ) -> (output: String, error: String)? {
         do {
-            let (out, err) = try Self.command(command)
+            let (out, err) = try Self.command(command, environment: environment)
             return (out!.trimmingCharacters(in: .whitespacesAndNewlines),
                     err!.trimmingCharacters(in: .whitespacesAndNewlines))
         } catch {

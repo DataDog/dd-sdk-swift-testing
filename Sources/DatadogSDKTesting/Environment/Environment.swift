@@ -13,6 +13,8 @@ internal final class Environment {
 
     let platform: Platform
     let ci: CI?
+    /// Retained for branch exclusion policy, independently of the selected Git metadata source.
+    let ciBranch: String?
     var git: Git
 
     let sessionName: String
@@ -85,6 +87,7 @@ internal final class Environment {
             }
         }
         ci = ciInfo?.ci
+        ciBranch = ciInfo?.git.branch
 
         var workspace = ciInfo?.ci.workspacePath
         var git: Git = ciInfo?.git ?? Git()

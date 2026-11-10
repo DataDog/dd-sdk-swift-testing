@@ -9,6 +9,30 @@ import XCTest
 @testable import EventsExporter
 
 class TestImpactAnalysisTests: XCTestCase {
+    func testProviderBranchExclusionsSurviveCheckoutAndExplicitBranchOverrides() throws {
+        let checkout = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: checkout, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: checkout) }
+        let fixture = Bundle(for: type(of: self)).resourceURL!.appendingPathComponent("fixtures/git/with_commits/git")
+        try FileManager.default.copyItem(at: fixture, to: checkout.appendingPathComponent(".git"))
+        var config = Config()
+        config.excludedBranches = ["main", "release/*"]
+        let remote = TracerSettings(itr: .init(itrEnabled: true), efd: .init(),
+                                    flakyTestRetriesEnabled: false, knownTestsEnabled: false, testManagement: .init())
+        for (branch, enabled) in [("main", false), ("release/1.0", false), ("feature", true)] {
+            for explicit in [false, true] {
+                var values = ["SRCROOT": checkout.path, "GITHUB_ACTIONS": "true",
+                              "GITHUB_REPOSITORY": "test/repo", "GITHUB_REF": "refs/heads/\(branch)"]
+                if explicit { values["DD_GIT_BRANCH"] = "override" }
+                let env = Environment(config: config,
+                                      env: ProcessEnvironmentReader(environment: values, infoDictionary: [:]),
+                                      log: Log.instance, ciReaders: [GithubCIEnvironmentReader(diagnosticDirs: [])])
+                XCTAssertEqual(env.git.branch, explicit ? "override" : "master")
+                XCTAssertEqual(TestImpactAnalysisFactory.isEnabled(config: config, env: env, remote: remote), enabled)
+            }
+        }
+    }
+
     func testEnablementSupportsDetachedCheckoutsAndPreservesBranchExclusions() {
         var config = Config()
         config.excludedBranches = ["main", "release/*"]

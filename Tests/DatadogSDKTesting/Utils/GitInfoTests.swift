@@ -72,7 +72,10 @@ class GitInfoTests: XCTestCase {
 
         let info = try XCTUnwrap(GitInfo(workingDirectory: nested.path, log: Log.instance))
         XCTAssertEqual(info.commit, "0797c248e019314fc1d91a483e859b32f4509953")
-        XCTAssertEqual(info.workspacePath, checkout.resolvingSymlinksInPath().path)
+        let actualRoot = try FileManager.default.attributesOfItem(atPath: info.workspacePath)
+        let expectedRoot = try FileManager.default.attributesOfItem(atPath: checkout.path)
+        XCTAssertEqual(actualRoot[.systemFileNumber] as? NSNumber, expectedRoot[.systemFileNumber] as? NSNumber)
+        XCTAssertEqual(actualRoot[.systemNumber] as? NSNumber, expectedRoot[.systemNumber] as? NSNumber)
         XCTAssertEqual(info.authorName, "John Doe")
     }
 

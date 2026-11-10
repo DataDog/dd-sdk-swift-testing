@@ -306,7 +306,7 @@ internal final class Environment {
         guard let message = git("log -n 1 --format=%B \(headSha)") else {
             return nil
         }
-        guard let info = git("show -s --format=%an\t%ae\t%at\t%cn\t%ce\t%ct \(headSha)") else {
+        guard let info = git("show -s --format='%an%x09%ae%x09%at%x09%cn%x09%ce%x09%ct' \(headSha)") else {
             return nil
         }
         let fields = info.components(separatedBy: "\t")

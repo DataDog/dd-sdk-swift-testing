@@ -42,7 +42,7 @@ runs:
             ;;
           Xcode_27.0)
             ios="iPhone 18 Pro"
-            tvos="Apple TV 4K (3rd generation)"
+            tvos="Apple TV 4K (4th generation)"
             watchos="Apple Watch Series 12 (46mm)"
             visionos="Apple Vision Pro"
             ;;

@@ -60,17 +60,17 @@ class GitInfoTests: XCTestCase {
         defer { try? FileManager.default.removeItem(at: checkout) }
         let nested = checkout.appendingPathComponent("Sources/nested")
         try FileManager.default.createDirectory(at: nested, withIntermediateDirectories: true)
-        let previous = getenv("GIT_TEST_ASSUME_DIFFERENT_OWNER").map { String(cString: $0) }
-        setenv("GIT_TEST_ASSUME_DIFFERENT_OWNER", "1", 1)
-        defer {
-            if let previous {
-                setenv("GIT_TEST_ASSUME_DIFFERENT_OWNER", previous, 1)
-            } else {
-                unsetenv("GIT_TEST_ASSUME_DIFFERENT_OWNER")
+        let environment = ["GIT_TEST_ASSUME_DIFFERENT_OWNER": "1"]
+        let baseline = "git -c safe.directory='\(nested.path)' -C '\(nested.path)' rev-parse --show-toplevel"
+        XCTAssertThrowsError(try Spawn.output(baseline, environment: environment)) { error in
+            guard let spawnError = error as? Spawn.RunError else {
+                XCTFail("Unexpected command error: \(error)")
+                return
             }
+            XCTAssertTrue(spawnError.debugDescription.contains("dubious ownership"))
         }
 
-        let info = try XCTUnwrap(GitInfo(workingDirectory: nested.path, log: Log.instance))
+        let info = try XCTUnwrap(GitInfo(workingDirectory: nested.path, log: Log.instance, environment: environment))
         XCTAssertEqual(info.commit, "0797c248e019314fc1d91a483e859b32f4509953")
         let actualRoot = try FileManager.default.attributesOfItem(atPath: info.workspacePath)
         let expectedRoot = try FileManager.default.attributesOfItem(atPath: checkout.path)

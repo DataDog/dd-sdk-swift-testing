@@ -21,16 +21,16 @@ struct GitInfo {
     private(set) var committerEmail: String?
     private(set) var committerDate: String?
 
-    init?(workingDirectory: String, log: Logger) {
+    init?(workingDirectory: String, log: Logger, environment: [String: String]? = nil) {
         let quote = { (value: String) -> String in
             "'" + value.replacingOccurrences(of: "'", with: "'\\''") + "'"
         }
         let directory = quote(workingDirectory)
-        guard let root = Spawn.output(try: "git -c safe.directory='*' -C \(directory) rev-parse --show-toplevel", log: log) else {
+        guard let root = Spawn.output(try: "git -c safe.directory='*' -C \(directory) rev-parse --show-toplevel", log: log, environment: environment) else {
             return nil
         }
         let git = { (arguments: String) -> String? in
-            Spawn.output(try: "git -c safe.directory=\(quote(root)) -C \(directory) \(arguments)", log: log)
+            Spawn.output(try: "git -c safe.directory=\(quote(root)) -C \(directory) \(arguments)", log: log, environment: environment)
         }
         guard let metadata = git("log --no-show-signature --encoding=UTF-8 -1 --format='%H%x00%an%x00%ae%x00%aI%x00%cn%x00%ce%x00%cI%x00%B' HEAD") else {
             return nil

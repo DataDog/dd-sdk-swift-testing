@@ -15,20 +15,28 @@ class TestImpactAnalysisTests: XCTestCase {
         defer { try? FileManager.default.removeItem(at: checkout) }
         let fixture = Bundle(for: type(of: self)).resourceURL!.appendingPathComponent("fixtures/git/with_commits/git")
         try FileManager.default.copyItem(at: fixture, to: checkout.appendingPathComponent(".git"))
+        let head = checkout.appendingPathComponent(".git/HEAD")
+        let attachedHead = try String(contentsOf: head)
+        let commit = try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance)).commit
+        try? FileManager.default.removeItem(at: checkout.appendingPathComponent(".git/FETCH_HEAD"))
         var config = Config()
         config.excludedBranches = ["main", "release/*"]
         let remote = TracerSettings(itr: .init(itrEnabled: true), efd: .init(),
                                     flakyTestRetriesEnabled: false, knownTestsEnabled: false, testManagement: .init())
-        for (branch, enabled) in [("main", false), ("release/1.0", false), ("feature", true)] {
-            for explicit in [false, true] {
-                var values = ["SRCROOT": checkout.path, "GITHUB_ACTIONS": "true",
-                              "GITHUB_REPOSITORY": "test/repo", "GITHUB_REF": "refs/heads/\(branch)"]
-                if explicit { values["DD_GIT_BRANCH"] = "override" }
-                let env = Environment(config: config,
-                                      env: ProcessEnvironmentReader(environment: values, infoDictionary: [:]),
-                                      log: Log.instance, ciReaders: [GithubCIEnvironmentReader(diagnosticDirs: [])])
-                XCTAssertEqual(env.git.branch, explicit ? "override" : "master")
-                XCTAssertEqual(TestImpactAnalysisFactory.isEnabled(config: config, env: env, remote: remote), enabled)
+        for detached in [false, true] {
+            try (detached ? commit : attachedHead).write(to: head, atomically: true, encoding: .utf8)
+            for (branch, enabled) in [("main", false), ("release/1.0", false), ("feature", true)] {
+                for explicit in [false, true] {
+                    var values = ["SRCROOT": checkout.path, "GITHUB_ACTIONS": "true",
+                                  "GITHUB_REPOSITORY": "test/repo", "GITHUB_REF": "refs/heads/\(branch)"]
+                    if explicit { values["DD_GIT_BRANCH"] = "override" }
+                    let env = Environment(config: config,
+                                          env: ProcessEnvironmentReader(environment: values, infoDictionary: [:]),
+                                          log: Log.instance, ciReaders: [GithubCIEnvironmentReader(diagnosticDirs: [])])
+                    XCTAssertEqual(env.git.branch, explicit ? "override" : (detached ? nil : "master"))
+                    XCTAssertEqual(env.ciBranch, branch)
+                    XCTAssertEqual(TestImpactAnalysisFactory.isEnabled(config: config, env: env, remote: remote), enabled)
+                }
             }
         }
     }

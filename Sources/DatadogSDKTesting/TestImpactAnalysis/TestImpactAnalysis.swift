@@ -238,7 +238,7 @@ struct TestImpactAnalysisFactory: FeatureFactory {
         if let branch = env.ciBranch, isExcluded(branch) {
             return false
         }
-        guard let branch = env.git.branch else {
+        guard let branch = env.git.branch ?? env.ciBranch else {
             return config.excludedBranches.isEmpty
         }
 

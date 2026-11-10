@@ -26,11 +26,13 @@ struct GitInfo {
             "'" + value.replacingOccurrences(of: "'", with: "'\\''") + "'"
         }
         let directory = quote(workingDirectory)
-        let git = { (arguments: String) -> String? in
-            Spawn.output(try: "git -c safe.directory=\(directory) -C \(directory) \(arguments)", log: log)
+        guard let root = Spawn.output(try: "git -c safe.directory='*' -C \(directory) rev-parse --show-toplevel", log: log) else {
+            return nil
         }
-        guard let root = git("rev-parse --show-toplevel"),
-              let metadata = git("log --no-show-signature --encoding=UTF-8 -1 --format='%H%x00%an%x00%ae%x00%aI%x00%cn%x00%ce%x00%cI%x00%B' HEAD") else {
+        let git = { (arguments: String) -> String? in
+            Spawn.output(try: "git -c safe.directory=\(quote(root)) -C \(directory) \(arguments)", log: log)
+        }
+        guard let metadata = git("log --no-show-signature --encoding=UTF-8 -1 --format='%H%x00%an%x00%ae%x00%aI%x00%cn%x00%ce%x00%cI%x00%B' HEAD") else {
             return nil
         }
         let fields = metadata.components(separatedBy: "\0")

@@ -55,6 +55,27 @@ class GitInfoTests: XCTestCase {
         XCTAssertNil(Environment.gitInfoAt(startingPath: nested.appendingPathComponent("missing").path))
     }
 
+    func testExecutableReadsNestedCheckoutWithDifferentOwner() throws {
+        let checkout = try makeExecutableCheckout()
+        defer { try? FileManager.default.removeItem(at: checkout) }
+        let nested = checkout.appendingPathComponent("Sources/nested")
+        try FileManager.default.createDirectory(at: nested, withIntermediateDirectories: true)
+        let previous = getenv("GIT_TEST_ASSUME_DIFFERENT_OWNER").map { String(cString: $0) }
+        setenv("GIT_TEST_ASSUME_DIFFERENT_OWNER", "1", 1)
+        defer {
+            if let previous {
+                setenv("GIT_TEST_ASSUME_DIFFERENT_OWNER", previous, 1)
+            } else {
+                unsetenv("GIT_TEST_ASSUME_DIFFERENT_OWNER")
+            }
+        }
+
+        let info = try XCTUnwrap(GitInfo(workingDirectory: nested.path, log: Log.instance))
+        XCTAssertEqual(info.commit, "0797c248e019314fc1d91a483e859b32f4509953")
+        XCTAssertEqual(info.workspacePath, checkout.resolvingSymlinksInPath().path)
+        XCTAssertEqual(info.authorName, "John Doe")
+    }
+
     func testExecutableUsesTheBranchTrackingRemote() throws {
         let checkout = try makeExecutableCheckout()
         defer { try? FileManager.default.removeItem(at: checkout) }

@@ -289,18 +289,10 @@ internal final class Environment {
     }
     
     static func gitInfoAt(startingPath: String) -> GitInfo? {
-        var rootFolder = NSString(string: URL(fileURLWithPath: startingPath, isDirectory: true).path)
-        while !FileManager.default.fileExists(atPath: rootFolder.appendingPathComponent(".git")) {
-            if rootFolder.isEqual(to: rootFolder.deletingLastPathComponent) {
-                // We reached to the top
-                // Log.print("could not find .git folder at \(rootFolder)")
-                break
-            }
-            rootFolder = rootFolder.deletingLastPathComponent as NSString
-        }
-        let rootDirectory = URL(fileURLWithPath: rootFolder as String, isDirectory: true)
-        let gitInfo = GitInfo(workingDirectory: rootDirectory.path, log: Log.instance)
-        return gitInfo
+        var isDirectory: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: startingPath, isDirectory: &isDirectory) else { return nil }
+        let directory = isDirectory.boolValue ? startingPath : URL(fileURLWithPath: startingPath).deletingLastPathComponent().path
+        return GitInfo(workingDirectory: directory, log: Log.instance)
     }
     
     static func mergeHeadInfo(headSha: String, gitDirectory: String, log: Logger) -> Git? {
@@ -340,6 +332,10 @@ internal final class Environment {
     func fetchMergeHeadInfo(log: Logger) {
 #if targetEnvironment(simulator) || os(macOS)
         guard let gitDirectory = git.directory, let head = git.commitHead?.sha else { return }
+        if let commit = git.commit, head == commit.sha {
+            git = git.updated(with: Git(commitHead: commit))
+            return
+        }
         let info = Log.measure(name: "mergeHeadInfo") {
             Self.mergeHeadInfo(headSha: head, gitDirectory: gitDirectory, log: log)
         }

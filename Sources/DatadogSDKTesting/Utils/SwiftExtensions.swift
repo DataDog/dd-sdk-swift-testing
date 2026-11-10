@@ -4,7 +4,6 @@
  * Copyright 2020-Present Datadog, Inc.
  */
 
-import Compression
 import Foundation
 internal import EventsExporter
 #if canImport(UIKit)
@@ -97,17 +96,6 @@ extension String {
 }
 
 extension Data {
-    func zlibDecompress(expectedSize: Int? = nil) -> Data {
-        let size = expectedSize ?? (count * 30) // zlib compresses 3-5 times normally
-        return withUnsafeTemporaryAllocation(of: UInt8.self, capacity: size) { buffer in
-            self.subdata(in: 2 ..< self.count).withUnsafeBytes {
-                let read = compression_decode_buffer(buffer.baseAddress!, buffer.count,
-                                                     $0.baseAddress!, $0.count, nil, COMPRESSION_ZLIB)
-                return Data(buffer[..<read])
-            }
-        }
-    }
-    
     init?(hex: String) {
         let utf8 = hex.utf8
         guard utf8.count % 2 == 0 else { return nil }

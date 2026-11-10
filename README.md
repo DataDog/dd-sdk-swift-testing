@@ -36,6 +36,12 @@ DD_SITE=<The Datadog site to upload results to>
 
 Depending on your CI service, you must also set the environment variables to be read from the test executions. See [CI Providers Environment Variables](https://docs.datadoghq.com/tests/setup/swift/#ci-provider-environment-variables) for details of your specific CI.
 
+### Git metadata
+
+Git metadata uses explicit `DD_GIT_*` overrides first, then the readable local Git checkout. CI-provider Git metadata is used only when Git or the checkout cannot be read. This applies to SHA, repository URL, branch/tag, author, committer, and message. CI job and pull-request relationship metadata are preserved.
+
+Use `DD_GIT_BRANCH`, `DD_GIT_TAG` or `DD_GIT_REPOSITORY_URL` to supply a value absent from a readable checkout.
+
 ## UI Tests
 
 For UI Tests, this SDK will automatically integrate with the RUM SDK in your application. Environment variables only need to be set in the test target, since the framework automatically injects these values to the application.
@@ -194,6 +200,3 @@ Pull requests are welcome. First, open an issue to discuss what you would like t
 ## License
 
 [Apache License, v2.0](LICENSE)
-
-
-Git metadata uses explicit `DD_GIT_*` overrides first, then the readable local Git checkout. CI-provider Git metadata is used only when Git or the checkout cannot be read. This applies to SHA, repository URL, branch/tag, author, committer, and message. CI job and pull-request relationship metadata are preserved.

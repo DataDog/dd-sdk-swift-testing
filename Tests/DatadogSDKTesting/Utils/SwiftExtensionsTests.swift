@@ -7,7 +7,6 @@
 @testable import DatadogSDKTesting
 import Foundation
 import XCTest
-import Compression
 
 internal class SwiftExtensionsTests: XCTestCase {
     func testAverageInEmptyArray_returnsZero() {
@@ -96,21 +95,4 @@ class DataExtensionsTests: XCTestCase {
         XCTAssertEqual(Data(repeating: 0xf0, count: 5).hex(prefix: false), Array(repeating: "f0", count: 5).joined())
     }
     
-    func testZlibDecompress() {
-        for pos in 1...10 {
-            let bytes = Data((0..<pos*1000).map { _ in UInt8.random(in: 0...255) })
-            let compressed = withUnsafeTemporaryAllocation(of: UInt8.self, capacity: bytes.count + 8) { buffer in
-                buffer[0] = 0x78
-                buffer[1] = 0x9c
-                let size = bytes.withUnsafeBytes {
-                    compression_encode_buffer(buffer.baseAddress! + 2, buffer.count - 2,
-                                              $0.baseAddress!, $0.count, nil, COMPRESSION_ZLIB)
-                }
-                return Data(bytes: buffer.baseAddress!, count: 2 + size)
-            }
-            XCTAssertEqual(bytes, compressed.zlibDecompress(expectedSize: bytes.count))
-            XCTAssertEqual(bytes, compressed.zlibDecompress())
-            XCTAssertEqual(bytes[0..<bytes.count-1], compressed.zlibDecompress(expectedSize: bytes.count-1))
-        }
-    }
 }

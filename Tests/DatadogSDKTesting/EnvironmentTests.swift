@@ -215,6 +215,21 @@ class EnvironmentTests: XCTestCase {
         XCTAssertEqual(metadata[string: .allTest, DDGitTags.gitPullRequestBaseBranchSha], "52e0974c74d41160a03d59ddc73bb9f5adab054b")
     }
     
+    func testMatchingPullRequestHeadUsesSelectedCommitDetailsWithoutFetch() throws {
+        let checkout = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: checkout, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: checkout) }
+        let fixture = Bundle(for: type(of: self)).resourceURL!.appendingPathComponent("fixtures/git/with_commits/git")
+        try FileManager.default.copyItem(at: fixture, to: checkout.appendingPathComponent(".git"))
+        try FileManager.default.removeItem(at: checkout.appendingPathComponent(".git/config"))
+        let env = createEnv(["SRCROOT": checkout.path,
+                             "DD_GIT_COMMIT_HEAD_SHA": "0797c248e019314fc1d91a483e859b32f4509953"])
+        XCTAssertNil(env.git.commitHead?.message)
+        env.fetchMergeHeadInfo(log: Log.instance)
+        XCTAssertEqual(env.git.commitHead?.message, env.git.commit?.message)
+        XCTAssertEqual(env.git.commitHead?.author?.name, "John Doe")
+    }
+
     func testGitHubCIMissingEventPathFile() {
         var testEnvironment = [String: SpanAttributeConvertible]()
         testEnvironment["GITHUB_ACTIONS"] = "true"

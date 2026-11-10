@@ -13,6 +13,8 @@ internal final class Environment {
 
     let platform: Platform
     let ci: CI?
+    /// Retained for branch exclusion policy, independently of the selected Git metadata source.
+    let ciBranch: String?
     var git: Git
 
     let sessionName: String
@@ -85,6 +87,7 @@ internal final class Environment {
             }
         }
         ci = ciInfo?.ci
+        ciBranch = ciInfo?.git.branch
 
         var workspace = ciInfo?.ci.workspacePath
         var git: Git = ciInfo?.git ?? Git()
@@ -103,20 +106,19 @@ internal final class Environment {
         #endif
 
         if let info = gitInfo {
-            if git.commit?.sha == nil || git.commit?.sha == info.commit {
-                git = git.extended(from: info)
-            } else {
-                git = git.appending(discrepancy: .init(expectedProvider: .ciProvider,
-                                                        discrepantProvider: .localGit,
+            if let ciSha = git.commit?.sha, ciSha != info.commit {
+                git = git.appending(discrepancy: .init(expectedProvider: .localGit,
+                                                        discrepantProvider: .ciProvider,
                                                         type: .commit))
             }
             if let ciRepo = git.repositoryURL, let localRepo = info.repository.flatMap({ URL(string: $0) }),
                ciRepo.absoluteString != localRepo.absoluteString
             {
-                git = git.appending(discrepancy: .init(expectedProvider: .ciProvider,
-                                                        discrepantProvider: .localGit,
+                git = git.appending(discrepancy: .init(expectedProvider: .localGit,
+                                                        discrepantProvider: .ciProvider,
                                                         type: .repository))
             }
+            git = git.extended(from: info)
             workspace = workspace ?? CI.expand(path: info.workspacePath, home: env.get(env: "HOME"))
         }
         workspacePath = workspace ?? sourceRoot
@@ -127,18 +129,18 @@ internal final class Environment {
         }
 
         let overrides = Environment.gitOverrides(env: env)
-        let assembledProvider: Telemetry.ShaProvider = ciInfo?.git.commit?.sha != nil ? .ciProvider : .localGit
+        let assembledProvider: Telemetry.ShaProvider = gitInfo != nil ? .localGit : .ciProvider
         if let userSha = overrides.commit?.sha, let assembled = git.commit?.sha, userSha != assembled {
-            git = git.appending(discrepancy: .init(expectedProvider: assembledProvider,
-                                                    discrepantProvider: .userSupplied,
+            git = git.appending(discrepancy: .init(expectedProvider: .userSupplied,
+                                                    discrepantProvider: assembledProvider,
                                                     type: .commit))
         }
-        let assembledRepoProvider: Telemetry.ShaProvider = ciInfo?.git.repositoryURL != nil ? .ciProvider : .localGit
+        let assembledRepoProvider: Telemetry.ShaProvider = gitInfo != nil ? .localGit : .ciProvider
         if let userRepo = overrides.repositoryURL, let assembled = git.repositoryURL,
            userRepo.absoluteString != assembled.absoluteString
         {
-            git = git.appending(discrepancy: .init(expectedProvider: assembledRepoProvider,
-                                                    discrepantProvider: .userSupplied,
+            git = git.appending(discrepancy: .init(expectedProvider: .userSupplied,
+                                                    discrepantProvider: assembledRepoProvider,
                                                     type: .repository))
         }
         self.git = git.updated(with: overrides)
@@ -290,18 +292,10 @@ internal final class Environment {
     }
     
     static func gitInfoAt(startingPath: String) -> GitInfo? {
-        var rootFolder = NSString(string: URL(fileURLWithPath: startingPath, isDirectory: true).path)
-        while !FileManager.default.fileExists(atPath: rootFolder.appendingPathComponent(".git")) {
-            if rootFolder.isEqual(to: rootFolder.deletingLastPathComponent) {
-                // We reached to the top
-                // Log.print("could not find .git folder at \(rootFolder)")
-                break
-            }
-            rootFolder = rootFolder.deletingLastPathComponent as NSString
-        }
-        let rootDirectory = URL(fileURLWithPath: rootFolder as String, isDirectory: true)
-        let gitInfo = try? GitInfo(gitFolder: rootDirectory.appendingPathComponent(".git"))
-        return gitInfo
+        var isDirectory: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: startingPath, isDirectory: &isDirectory) else { return nil }
+        let directory = isDirectory.boolValue ? startingPath : URL(fileURLWithPath: startingPath).deletingLastPathComponent().path
+        return GitInfo(workingDirectory: directory, log: Log.instance)
     }
     
     static func mergeHeadInfo(headSha: String, gitDirectory: String, log: Logger) -> Git? {
@@ -315,7 +309,7 @@ internal final class Environment {
         guard let message = git("log -n 1 --format=%B \(headSha)") else {
             return nil
         }
-        guard let info = git("show -s --format=%an\t%ae\t%at\t%cn\t%ce\t%ct \(headSha)") else {
+        guard let info = git("show -s --format='%an%x09%ae%x09%at%x09%cn%x09%ce%x09%ct' \(headSha)") else {
             return nil
         }
         let fields = info.components(separatedBy: "\t")
@@ -341,6 +335,13 @@ internal final class Environment {
     func fetchMergeHeadInfo(log: Logger) {
 #if targetEnvironment(simulator) || os(macOS)
         guard let gitDirectory = git.directory, let head = git.commitHead?.sha else { return }
+        if let commit = git.commit, head == commit.sha,
+           commit.message != nil,
+           commit.author?.name != nil, commit.author?.email != nil, commit.author?.date != nil,
+           commit.committer?.name != nil, commit.committer?.email != nil, commit.committer?.date != nil {
+            git = git.updated(with: Git(commitHead: commit))
+            return
+        }
         let info = Log.measure(name: "mergeHeadInfo") {
             Self.mergeHeadInfo(headSha: head, gitDirectory: gitDirectory, log: log)
         }
@@ -708,7 +709,6 @@ internal extension Environment {
         }
 
         func extended(from info: GitInfo) -> Git {
-            let (_branch, isTag) = Self.normalize(branchOrTag: info.branch)
             let infoCommit = CommitInfo(
                 sha: info.commit,
                 message: info.commitMessage,
@@ -716,11 +716,11 @@ internal extension Environment {
                 committer: .maybe(name: info.committerName, email: info.committerEmail, date: info.committerDate)
             )
             return Git(
-                directory: directory ?? info.workspacePath,
-                repositoryURL: repositoryURL ?? info.repository.flatMap { URL(string: $0) },
-                branch: branch ?? (isTag ? nil : _branch),
-                tag: tag ?? (isTag ? branch : nil),
-                commit: commit?.extended(from: infoCommit) ?? infoCommit,
+                directory: info.workspacePath,
+                repositoryURL: info.repository.flatMap { URL(string: $0) },
+                branch: info.branch,
+                tag: info.tag,
+                commit: infoCommit,
                 commitHead: commitHead,
                 pullRequestBaseBranch: pullRequestBaseBranch,
                 discrepancies: discrepancies
@@ -728,12 +728,13 @@ internal extension Environment {
         }
 
         func updated(with info: Git) -> Git {
-            Git(
+            let commitChanged = info.commit?.sha != nil && info.commit?.sha != commit?.sha
+            return Git(
                 directory: info.directory ?? directory,
                 repositoryURL: info.repositoryURL ?? repositoryURL,
                 branch: info.branch ?? branch,
-                tag: info.tag ?? tag,
-                commit: commit?.updated(with: info.commit) ?? info.commit,
+                tag: info.tag ?? (commitChanged ? nil : tag),
+                commit: commitChanged ? info.commit : (commit?.updated(with: info.commit) ?? info.commit),
                 commitHead: commitHead?.updated(with: info.commitHead) ?? info.commitHead,
                 pullRequestBaseBranch: pullRequestBaseBranch?.updated(with: info.pullRequestBaseBranch) ?? info.pullRequestBaseBranch,
                 discrepancies: discrepancies

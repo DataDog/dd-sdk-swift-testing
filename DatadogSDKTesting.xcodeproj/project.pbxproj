@@ -194,7 +194,6 @@
 		A7FC260C2BA1EC0500067E26 /* GitInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14405A225D6A80800FE3D3C /* GitInfo.swift */; };
 		A7FC260D2BA1EC0500067E26 /* SignalUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E13D0BC92546E29C00C37D56 /* SignalUtils.swift */; };
 		A7FC260E2BA1EC0500067E26 /* PlatformUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E141CF5F256FD513008B6B70 /* PlatformUtils.swift */; };
-		A7FC260F2BA1EC0500067E26 /* BinaryParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1D476A525DD369F00832592 /* BinaryParser.swift */; };
 		A7FC26102BA1EC0500067E26 /* SanitizerHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1293F8828DB515F00D31DD6 /* SanitizerHelper.swift */; };
 		A7FC26112BA1EC0500067E26 /* DDFileReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81AA244A2978589600DE8F8A /* DDFileReader.swift */; };
 		A7FC26122BA1EC0500067E26 /* SwiftExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E116D7DA25248C390022779D /* SwiftExtensions.swift */; };
@@ -699,7 +698,6 @@
 		E1C189B8270F193F00188C0E /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
 		E1C8DEF4268363EC005B5411 /* CodeCoverageProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeCoverageProvider.swift; sourceTree = "<group>"; };
 		E1C8DEF7268367AB005B5411 /* BinaryImages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinaryImages.swift; sourceTree = "<group>"; };
-		E1D476A525DD369F00832592 /* BinaryParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinaryParser.swift; sourceTree = "<group>"; };
 		E1EBBD4627F1FFE70059BC3E /* SpanSanitizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpanSanitizer.swift; sourceTree = "<group>"; };
 		E1EBBD4A27F200210059BC3E /* AttributesSanitizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AttributesSanitizer.swift; sourceTree = "<group>"; };
 		E1EBBD4E27F200A50059BC3E /* SpanSanitizerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpanSanitizerTests.swift; sourceTree = "<group>"; };
@@ -1032,7 +1030,6 @@
 				A7B012162F364D00000270A4 /* NoopSpanExporter.swift */,
 				E1293F8828DB515F00D31DD6 /* SanitizerHelper.swift */,
 				E1AD07A8252F5CB8003705C1 /* InternalError.swift */,
-				E1D476A525DD369F00832592 /* BinaryParser.swift */,
 				E14405A225D6A80800FE3D3C /* GitInfo.swift */,
 				E141CF5F256FD513008B6B70 /* PlatformUtils.swift */,
 				E13D0BC92546E29C00C37D56 /* SignalUtils.swift */,
@@ -2088,7 +2085,6 @@
 				A7FC25D02BA1EB2900067E26 /* SimpleSpanData.swift in Sources */,
 				A7FC25BE2BA1EADF00067E26 /* DDTest.swift in Sources */,
 				A7AB7C2026E7EB110000001F /* SpanSdk+TestStatus.swift in Sources */,
-				A7FC260F2BA1EC0500067E26 /* BinaryParser.swift in Sources */,
 				A7FC25E02BA1EBF300067E26 /* StderrCapture.swift in Sources */,
 				A71E64732BAA0AA100F2ACA5 /* BitriseCI.swift in Sources */,
 				A7B012172F364D04000270A4 /* NoopSpanExporter.swift in Sources */,

@@ -25,6 +25,10 @@ final class Config {
     var endpoint: Endpoint = .us1
     /// Session name
     var sessionName: String? = nil
+    /// OS and runtime tag values that replace the detected ones, keyed by tag name
+    var runtimeTags: [String: String] = [:]
+    /// Raw runtime tags value that could not be parsed as a JSON object
+    var invalidRuntimeTags: String? = nil
     
     /// Instrumentation configuration values
     var disableNetworkInstrumentation: Bool = false
@@ -128,6 +132,12 @@ final class Config {
         customConfigurations = Dictionary(uniqueKeysWithValues: customConf)
         
         sessionName = env[.sessionName]
+        let rawRuntimeTags: String? = env[.runtimeTags, String.self]
+        if let parsedRuntimeTags = Config.parseRuntimeTags(rawRuntimeTags) {
+            runtimeTags = parsedRuntimeTags
+        } else {
+            invalidRuntimeTags = rawRuntimeTags
+        }
         
         /// Instrumentation configuration values
         disableNetworkInstrumentation = env[.disableNetworkInstrumentation] ?? false
@@ -219,6 +229,25 @@ final class Config {
         isTestObserverNeeded = !isBinaryUnderUITesting || env.has("TEST_CLASS")
     }
     
+    private static let overridableRuntimeTags: Set<String> = [
+        DDOSTags.osPlatform, DDOSTags.osArchitecture, DDOSTags.osVersion,
+        DDRuntimeTags.runtimeName, DDRuntimeTags.runtimeVersion
+    ]
+
+    /// Returns nil when the value is not a JSON object. Config can't log here: `Log` reads the config being created.
+    private static func parseRuntimeTags(_ raw: String?) -> [String: String]? {
+        // An unset or an empty variable sets no override
+        guard let raw, !raw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return [:] }
+        guard let overrides = (try? JSONSerialization.jsonObject(with: Data(raw.utf8))) as? [String: Any] else {
+            return nil
+        }
+        return overrides.reduce(into: [:]) { tags, override in
+            guard overridableRuntimeTags.contains(override.key), let value = override.value as? String else { return }
+            let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty { tags[override.key] = trimmed }
+        }
+    }
+
     private static func parseDynamicATRBuckets(_ raw: String?) -> AutomaticTestRetries.RetryBuckets? {
         // An unset or an empty variable means "use the retry timetable from the backend"
         guard let raw, !raw.isEmpty else { return nil }

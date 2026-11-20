@@ -148,6 +148,36 @@ class ConfigTests: XCTestCase {
 
     // MARK: - Dynamic ATR config parsing
 
+    func testRuntimeTagsParsing() {
+        let config = Config(env: reader(env: [
+            "DD_TEST_OPTIMIZATION_RUNTIME_TAGS": #"{"os.platform":"iOS","os.architecture":"arm64","os.version":" 26.0 ","runtime.name":"Xcode","runtime.version":"26.1","runtime.vendor":"ignored","device.model":"ignored"}"#
+        ]))
+        XCTAssertEqual(config.runtimeTags, [
+            "os.platform": "iOS", "os.architecture": "arm64", "os.version": "26.0",
+            "runtime.name": "Xcode", "runtime.version": "26.1"
+        ])
+    }
+
+    func testRuntimeTagsIgnoresUnusableValues() {
+        let config = Config(env: reader(env: [
+            "DD_TEST_OPTIMIZATION_RUNTIME_TAGS": #"{"os.version":"26.0","runtime.version":"  ","os.platform":null,"os.architecture":64}"#
+        ]))
+        XCTAssertEqual(config.runtimeTags, ["os.version": "26.0"])
+    }
+
+    func testRuntimeTagsInvalidValues() {
+        for value in ["", "  "] {
+            let config = Config(env: reader(env: ["DD_TEST_OPTIMIZATION_RUNTIME_TAGS": value]))
+            XCTAssertEqual(config.runtimeTags, [:], "\(value) should set no override")
+            XCTAssertNil(config.invalidRuntimeTags)
+        }
+        for value in ["{invalid json}", #"["os.version"]"#, #""26.0""#, "null"] {
+            let config = Config(env: reader(env: ["DD_TEST_OPTIMIZATION_RUNTIME_TAGS": value]))
+            XCTAssertEqual(config.runtimeTags, [:], "\(value) should set no override")
+            XCTAssertEqual(config.invalidRuntimeTags, value)
+        }
+    }
+
     func testDynamicATRDisabledByDefault() {
         let config = Config(env: reader())
         XCTAssertFalse(config.dynamicATREnabled)

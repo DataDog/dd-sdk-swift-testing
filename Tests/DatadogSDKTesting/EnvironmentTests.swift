@@ -89,6 +89,19 @@ class EnvironmentTests: XCTestCase {
         XCTAssertEqual(metadata3[string: .allTest, DDTestSessionTags.testSessionName], emptyEnv.testCommand)
     }
     
+    func testRuntimeTagsOverrideBaseConfigurations() {
+        let detected = createEnv([:]).baseConfigurations
+        let env = createEnv([EnvironmentKey.runtimeTags.rawValue: #"{"os.version":"6.12.0","runtime.version":"5.9.0"}"#])
+        let metadata = SpanMetadata(libraryVersion: "1.0", env: env, capabilities: .libraryCapabilities)
+
+        XCTAssertEqual(env.baseConfigurations[DDOSTags.osVersion], "6.12.0")
+        XCTAssertEqual(env.baseConfigurations[DDRuntimeTags.runtimeVersion], "5.9.0")
+        XCTAssertEqual(env.baseConfigurations[DDOSTags.osPlatform], detected[DDOSTags.osPlatform])
+        XCTAssertEqual(env.baseConfigurations[DDDeviceTags.deviceModel], detected[DDDeviceTags.deviceModel])
+        XCTAssertEqual(metadata[string: .allTest, DDOSTags.osVersion], "6.12.0")
+        XCTAssertEqual(metadata[string: .allTest, DDRuntimeTags.runtimeVersion], "5.9.0")
+    }
+
     func testService() {
         let emptyEnv = createEnv([:])
         let metadata1 = SpanMetadata(libraryVersion: "1.0",

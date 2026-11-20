@@ -223,6 +223,7 @@ internal final class Environment {
          DDRuntimeTags.runtimeName: platform.runtimeName,
          DDRuntimeTags.runtimeVersion: platform.runtimeVersion,
          DDUISettingsTags.uiSettingsLocalization: platform.localization]
+            .merging(config.runtimeTags) { _, override in override }
     }
     
     var baseMetrics: [String: Double] {
@@ -230,6 +231,9 @@ internal final class Environment {
     }
     
     private func validate(log: Logger) {
+        if let invalid = config.invalidRuntimeTags {
+            log.print("Invalid \(EnvironmentKey.runtimeTags.rawValue) value \"\(invalid)\": expected a JSON object. Using the detected OS and runtime tags.")
+        }
         // Warn on needed git onformation when not present
         if git.commit?.sha == nil {
             log.print("could not find git commit information")

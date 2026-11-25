@@ -58,7 +58,8 @@ internal struct GitlabCIEnvironmentReader: CIEnvironmentReader {
                                author: .maybe(name: authorName,
                                               email: authorEmail,
                                               date: env["CI_COMMIT_TIMESTAMP"])),
-                pullRequestBaseBranch: .maybe(name: env["CI_MERGE_REQUEST_TARGET_BRANCH_NAME"],
+                commitHead: .maybe(sha: env["CI_MERGE_REQUEST_SOURCE_BRANCH_SHA"]),
+                pullRequestBaseBranch: .maybe(name: normalize(branch: env["CI_MERGE_REQUEST_TARGET_BRANCH_NAME"]),
                                               sha: env["CI_MERGE_REQUEST_DIFF_BASE_SHA"],
                                               headSha: env["CI_MERGE_REQUEST_TARGET_BRANCH_SHA"])
             )

@@ -329,6 +329,47 @@ class EnvironmentTests: XCTestCase {
         XCTAssertEqual(env.ci.jobURL?.absoluteString, "https://github.com/test-owner/test-repo/actions/runs/123456789/job/5411116365")
     }
 
+    func testNormalizeGitObjectIDs() {
+        let cases = [
+            (String(repeating: "A", count: 40), String(repeating: "a", count: 40)),
+            (String(repeating: "B", count: 64), String(repeating: "b", count: 64)),
+            ("ABCDEF", "ABCDEF"),
+            (String(repeating: "Z", count: 40), String(repeating: "Z", count: 40))
+        ]
+        for (value, expected) in cases {
+            XCTAssertEqual(Environment.Git.CommitInfo(sha: value).sha, expected)
+            let base = Environment.Git.BaseBranchInfo(sha: value, headSha: value)
+            XCTAssertEqual(base.sha, expected)
+            XCTAssertEqual(base.headSha, expected)
+        }
+        XCTAssertNil(Environment.Git.CommitInfo().sha)
+    }
+
+    func testGitlabMergeRequiresRequestId() {
+        let env = createEnv(["GITLAB_CI": "true", "CI_MERGE_REQUEST_EVENT_TYPE": "merged_result",
+                             "CI_MERGE_REQUEST_IID": "", "CI_COMMIT_SHA": String(repeating: "a", count: 40)])
+        XCTAssertNil(env.ciAttributes[DDCITags.ciGitMergeCommitSha])
+    }
+
+    func testAppveyorMergeEvidence() {
+        let build = String(repeating: "a", count: 40)
+        let base = ["APPVEYOR": "true", "APPVEYOR_REPO_PROVIDER": "github",
+                    "APPVEYOR_REPO_COMMIT": build, "APPVEYOR_PULL_REQUEST_NUMBER": "42",
+                    "APPVEYOR_PULL_REQUEST_HEAD_COMMIT": String(repeating: "b", count: 40)]
+        for override in [
+            ["APPVEYOR_PULL_REQUEST_NUMBER": "not-a-number"],
+            ["APPVEYOR_PULL_REQUEST_NUMBER": ""],
+            ["APPVEYOR_PULL_REQUEST_HEAD_COMMIT": build.uppercased()],
+            ["APPVEYOR_PULL_REQUEST_HEAD_COMMIT": "invalid"],
+            ["APPVEYOR_REPO_COMMIT": "invalid"],
+            ["APPVEYOR_REPO_PROVIDER": "bitbucket"]
+        ] {
+            let values = base.merging(override, uniquingKeysWith: { _, new in new })
+            let env = createEnv(values.mapValues { $0 as SpanAttributeConvertible })
+            XCTAssertNil(env.ciAttributes[DDCITags.ciGitMergeCommitSha])
+        }
+    }
+
     func testSpecs() throws {
         let fixturesURL = Bundle(for: type(of: self)).resourceURL!
             .appendingPathComponent("fixtures")
@@ -385,6 +426,8 @@ class EnvironmentTests: XCTestCase {
             }
             
             let metadata = SpanMetadata(libraryVersion: "1.0", env: createEnv(spec[0]), capabilities: .libraryCapabilities)
+
+            XCTAssertEqual(metadata[string: .allTest, "ci.git.merge_commit_sha"], spec[1]["ci.git.merge_commit_sha"])
 
             spec[1].forEach {
                 let data = metadata[string: .allTest, $0.key]

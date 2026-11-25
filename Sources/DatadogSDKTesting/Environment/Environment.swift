@@ -13,6 +13,7 @@ internal final class Environment {
 
     let platform: Platform
     let ci: CI?
+    let ciMergeCommit: String?
     var git: Git
 
     let sessionName: String
@@ -85,6 +86,7 @@ internal final class Environment {
             }
         }
         ci = ciInfo?.ci
+        ciMergeCommit = ciInfo.flatMap { Self.mergeCommit(env: env, provider: $0.ci.provider) }
 
         var workspace = ciInfo?.ci.workspacePath
         var git: Git = ciInfo?.git ?? Git()
@@ -169,6 +171,7 @@ internal final class Environment {
         ciAttributes[DDCITags.ciWorkspacePath] = workspacePath
         guard let ci = self.ci else { return ciAttributes }
         ciAttributes[DDCITags.ciProvider] = ci.provider
+        ciAttributes[DDCITags.ciGitMergeCommitSha] = ciMergeCommit
         ciAttributes[DDCITags.ciPipelineId] = ci.pipelineId
         ciAttributes[DDCITags.ciPipelineNumber] = ci.pipelineNumber
         ciAttributes[DDCITags.ciPipelineURL] = ci.pipelineURL?.spanAttribute
@@ -270,6 +273,35 @@ internal final class Environment {
         }
     }
     
+    private static func mergeCommit(env: EnvironmentReader, provider: String) -> String? {
+        func isMergeRef(_ ref: String?) -> Bool {
+            ref?.range(of: "^refs/pull/[0-9]+/merge$", options: .regularExpression) != nil
+        }
+        func isNumber(_ value: String?) -> Bool {
+            guard let value, !value.isEmpty else { return false }
+            return value.utf8.allSatisfy { $0 >= 48 && $0 <= 57 }
+        }
+        let candidate: String?
+        switch provider {
+        case "github" where isMergeRef(env["GITHUB_REF"]):
+            candidate = env["GITHUB_SHA"]
+        case "gitlab" where !(env["CI_MERGE_REQUEST_IID", String.self] ?? "").isEmpty &&
+            ["merged_result", "merge_train"].contains(env["CI_MERGE_REQUEST_EVENT_TYPE"] ?? ""):
+            candidate = env["CI_COMMIT_SHA"]
+        case "azurepipelines" where env["BUILD_REASON"] == "PullRequest" && isMergeRef(env["BUILD_SOURCEBRANCH"]):
+            candidate = env["BUILD_SOURCEVERSION"]
+        case "travisci" where env["TRAVIS_EVENT_TYPE"] == "pull_request" && isNumber(env["TRAVIS_PULL_REQUEST"]):
+            candidate = env["TRAVIS_COMMIT"]
+        case "appveyor" where env["APPVEYOR_REPO_PROVIDER"] == "github" && isNumber(env["APPVEYOR_PULL_REQUEST_NUMBER"]) &&
+            Git.isFullSHA(env["APPVEYOR_PULL_REQUEST_HEAD_COMMIT"]) &&
+            env["APPVEYOR_REPO_COMMIT", String.self]?.lowercased() != env["APPVEYOR_PULL_REQUEST_HEAD_COMMIT", String.self]?.lowercased():
+            candidate = env["APPVEYOR_REPO_COMMIT"]
+        default:
+            candidate = nil
+        }
+        return Git.isFullSHA(candidate) ? candidate?.lowercased() : nil
+    }
+
     private static func gitOverrides(env: EnvironmentReader) -> Git {
         let (branch, isTag) = Git.normalize(branchOrTag: env["DD_GIT_BRANCH"])
         return .init(
@@ -505,6 +537,15 @@ internal extension Environment {
 
 internal extension Environment {
     struct Git: CustomDebugStringConvertible {
+        static func isFullSHA(_ value: String?) -> Bool {
+            guard let value, value.utf8.count == 40 || value.utf8.count == 64 else { return false }
+            return value.utf8.allSatisfy { (48...57).contains($0) || (65...70).contains($0) || (97...102).contains($0) }
+        }
+
+        static func normalize(sha: String?) -> String? {
+            isFullSHA(sha) ? sha?.lowercased() : sha
+        }
+
         struct AuthorInfo: CustomDebugStringConvertible {
             let name: String?
             let email: String?
@@ -551,7 +592,7 @@ internal extension Environment {
             let committer: AuthorInfo?
             
             init(sha: String? = nil, message: String? = nil, author: AuthorInfo? = nil, committer: AuthorInfo? = nil) {
-                self.sha = sha
+                self.sha = Git.normalize(sha: sha)
                 self.message = message
                 self.author = author
                 self.committer = committer
@@ -606,8 +647,8 @@ internal extension Environment {
             
             init(name: String? = nil, sha: String? = nil, headSha: String? = nil) {
                 self.name = name
-                self.sha = sha
-                self.headSha = headSha
+                self.sha = Git.normalize(sha: sha)
+                self.headSha = Git.normalize(sha: headSha)
             }
             
             func updated(name: String? = nil, sha: String? = nil, headSha: String? = nil) -> Self {

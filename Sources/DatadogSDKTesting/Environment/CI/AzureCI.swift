@@ -47,6 +47,7 @@ internal struct AzureCIEnvironmentReader: CIEnvironmentReader {
                                message: env["BUILD_SOURCEVERSIONMESSAGE"],
                                author: .maybe(name: env["BUILD_REQUESTEDFORID"],
                                               email: env["BUILD_REQUESTEDFOREMAIL"])),
+                commitHead: .maybe(sha: env["SYSTEM_PULLREQUEST_SOURCECOMMITID"]),
                 pullRequestBaseBranch: .maybe(name: normalize(branch: env["SYSTEM_PULLREQUEST_TARGETBRANCH"]))
             )
         )

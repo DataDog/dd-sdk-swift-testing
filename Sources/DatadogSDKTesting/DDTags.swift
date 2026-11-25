@@ -142,6 +142,7 @@ internal enum DDGitTags {
 }
 
 internal enum DDCITags {
+    static let ciGitMergeCommitSha = "ci.git.merge_commit_sha"
     static let ciProvider = "ci.provider.name"
     static let ciPipelineId = "ci.pipeline.id"
     static let ciPipelineName = "ci.pipeline.name"

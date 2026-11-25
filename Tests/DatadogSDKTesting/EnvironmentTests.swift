@@ -102,6 +102,18 @@ class EnvironmentTests: XCTestCase {
         XCTAssertEqual(metadata[string: .allTest, DDRuntimeTags.runtimeVersion], "5.9.0")
     }
 
+    func testRuntimeTagsOverrideDDTags() {
+        let env = createEnv([
+            EnvironmentKey.runtimeTags.rawValue: #"{"os.version":"6.12.0"}"#,
+            EnvironmentKey.tags.rawValue: "os.version:from-dd-tags custom:value"
+        ])
+        let metadata = SpanMetadata(libraryVersion: "1.0", env: env, capabilities: .libraryCapabilities)
+
+        XCTAssertEqual(metadata[string: .allTest, DDOSTags.osVersion], "6.12.0")
+        XCTAssertNil(metadata[string: .test, DDOSTags.osVersion])
+        XCTAssertEqual(metadata[string: .test, "custom"], "value")
+    }
+
     func testService() {
         let emptyEnv = createEnv([:])
         let metadata1 = SpanMetadata(libraryVersion: "1.0",

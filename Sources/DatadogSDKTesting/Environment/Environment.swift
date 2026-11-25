@@ -25,7 +25,8 @@ internal final class Environment {
         config.environment ?? (ci != nil ? "ci" : "none")
     }
     
-    var tags: [String: String] { config.tags }
+    /// DD_TAGS values, without the tags that DD_TEST_OPTIMIZATION_RUNTIME_TAGS overrides
+    var tags: [String: String] { config.tags.filter { config.runtimeTags[$0.key] == nil } }
     var isCI: Bool { ci != nil }
     
     let env: EnvironmentReader

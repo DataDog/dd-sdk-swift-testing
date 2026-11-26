@@ -315,6 +315,7 @@ extension Config: CustomDebugStringConvertible {
         Endpoint: \(endpoint.exporterEndpoint)
         Tags: \(tags.map { "\n  \($0.key): \($0.value)" }.joined())
         Custom Configurations: \(customConfigurations.map { "\n  \($0.key): \($0.value)" }.joined())
+        Runtime Tags: \(runtimeTags.map { "\n  \($0.key): \($0.value)" }.joined())
         Disable Network Instrumentation: \(disableNetworkInstrumentation)
         Disable Headers Injection: \(disableHeadersInjection)
         Enable Record Payload: \(enableRecordPayload)

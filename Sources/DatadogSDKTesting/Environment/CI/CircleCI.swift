@@ -33,6 +33,7 @@ internal struct CircleCIEnvironmentReader: CIEnvironmentReader {
                 repositoryURL: env["CIRCLE_REPOSITORY_URL"],
                 branch: normalize(branch: env["CIRCLE_BRANCH"]),
                 tag: normalize(tag: env["CIRCLE_TAG"]),
+                ciBranch: normalize(branch: env["CIRCLE_BRANCH"]),
                 commit: .maybe(sha: env["CIRCLE_SHA1"])
             )
         )

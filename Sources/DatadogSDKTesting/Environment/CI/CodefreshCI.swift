@@ -26,6 +26,7 @@ internal struct CodefreshCIEnvironmentReader: CIEnvironmentReader {
             git: .init(
                 branch: normalize(branch: env["CF_BRANCH"]),
                 tag: normalize(tag: env["CF_BRANCH"]),
+                ciBranch: normalize(branch: env["CF_BRANCH"]),
                 pullRequestBaseBranch: .maybe(name: env["CF_PULL_REQUEST_TARGET"])
             )
         )

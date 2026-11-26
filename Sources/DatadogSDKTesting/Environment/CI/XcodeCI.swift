@@ -21,6 +21,7 @@ internal struct XcodeCIEnvironmentReader: CIEnvironmentReader {
             git: .init(
                 branch: normalize(branch: env["CI_BRANCH"] ?? env["CI_GIT_REF"]),
                 tag: normalize(tag: env["CI_TAG"] ?? env["CI_GIT_REF"]),
+                ciBranch: normalize(branch: env["CI_BRANCH"] ?? env["CI_GIT_REF"]),
                 commit: .maybe(sha: env["CI_COMMIT"])
             )
         )

@@ -13,8 +13,6 @@ internal final class Environment {
 
     let platform: Platform
     let ci: CI?
-    /// Retained for branch exclusion policy, independently of the selected Git metadata source.
-    let ciBranch: String?
     var git: Git
 
     let sessionName: String
@@ -87,7 +85,6 @@ internal final class Environment {
             }
         }
         ci = ciInfo?.ci
-        ciBranch = ciInfo?.git.branch
 
         var workspace = ciInfo?.ci.workspacePath
         var git: Git = ciInfo?.git ?? Git()
@@ -641,6 +638,10 @@ internal extension Environment {
         let branch: String?
         let tag: String?
 
+        /// Branch reported by the CI provider. Retained for branch exclusion policy,
+        /// independently of the selected Git metadata source (not reported as a tag).
+        let ciBranch: String?
+
         // git.commit.*
         let commit: CommitInfo?
 
@@ -668,7 +669,7 @@ internal extension Environment {
         }
 
         init(directory: String? = nil,
-             repositoryURL: URL? = nil, branch: String? = nil, tag: String? = nil,
+             repositoryURL: URL? = nil, branch: String? = nil, tag: String? = nil, ciBranch: String? = nil,
              commit: CommitInfo? = nil, commitHead: CommitInfo? = nil,
              pullRequestBaseBranch: BaseBranchInfo? = nil,
              discrepancies: [ShaDiscrepancy] = [])
@@ -677,6 +678,7 @@ internal extension Environment {
             self.repositoryURL = repositoryURL
             self.branch = branch
             self.tag = tag
+            self.ciBranch = ciBranch
             self.commit = commit
             self.commitHead = commitHead
             self.pullRequestBaseBranch = pullRequestBaseBranch
@@ -689,6 +691,7 @@ internal extension Environment {
                 repositoryURL: repositoryURL,
                 branch: branch,
                 tag: tag,
+                ciBranch: ciBranch,
                 commit: commit,
                 commitHead: commitHead,
                 pullRequestBaseBranch: pullRequestBaseBranch,
@@ -702,6 +705,7 @@ internal extension Environment {
                 repositoryURL: repositoryURL,
                 branch: branch,
                 tag: tag,
+                ciBranch: ciBranch,
                 commit: commit,
                 commitHead: commitHead,
                 pullRequestBaseBranch: pullRequestBaseBranch,
@@ -721,6 +725,7 @@ internal extension Environment {
                 repositoryURL: info.repository.flatMap { URL(string: $0) },
                 branch: info.branch,
                 tag: info.tag,
+                ciBranch: ciBranch,
                 commit: infoCommit,
                 commitHead: commitHead,
                 pullRequestBaseBranch: pullRequestBaseBranch,
@@ -735,6 +740,7 @@ internal extension Environment {
                 repositoryURL: info.repositoryURL ?? repositoryURL,
                 branch: info.branch ?? branch,
                 tag: info.tag ?? (commitChanged ? nil : tag),
+                ciBranch: info.ciBranch ?? ciBranch,
                 commit: commitChanged ? info.commit : (commit?.updated(with: info.commit) ?? info.commit),
                 commitHead: commitHead?.updated(with: info.commitHead) ?? info.commitHead,
                 pullRequestBaseBranch: pullRequestBaseBranch?.updated(with: info.pullRequestBaseBranch) ?? info.pullRequestBaseBranch,
@@ -774,6 +780,7 @@ internal extension Environment {
               Repository URL: \(repositoryURL?.spanAttribute ?? "")
               Branch: \(branch ?? "")
               Tag: \(tag ?? "")
+              CI Branch: \(ciBranch ?? "")
               Commit: \(commit?.debugDescription ?? "")
               CommitHead: \(commitHead?.debugDescription ?? "")
               Pull Request Base Branch: \(pullRequestBaseBranch?.debugDescription ?? "")

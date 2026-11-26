@@ -27,6 +27,7 @@ internal struct BuddyCIEnvironmentReader: CIEnvironmentReader {
                 repositoryURL: env["BUDDY_SCM_URL"],
                 branch: normalize(branch: env["BUDDY_EXECUTION_BRANCH"]),
                 tag: normalize(branchOrTag: env["BUDDY_EXECUTION_TAG"]).0,
+                ciBranch: normalize(branch: env["BUDDY_EXECUTION_BRANCH"]),
                 commit: .maybe(sha: env["BUDDY_EXECUTION_REVISION"],
                                message: env["BUDDY_EXECUTION_REVISION_MESSAGE"],
                                committer: .maybe(name: env["BUDDY_EXECUTION_REVISION_COMMITTER_NAME"],

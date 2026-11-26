@@ -43,6 +43,7 @@ internal struct BuildkiteCIEnvironmentReader: CIEnvironmentReader {
                 repositoryURL: env["BUILDKITE_REPO"],
                 branch: normalize(branch: env["BUILDKITE_BRANCH"]),
                 tag: normalize(branchOrTag: env["BUILDKITE_TAG"]).0,
+                ciBranch: normalize(branch: env["BUILDKITE_BRANCH"]),
                 commit: .maybe(sha: env["BUILDKITE_COMMIT"],
                                message: env["BUILDKITE_MESSAGE"],
                                author: .maybe(name: env["BUILDKITE_BUILD_AUTHOR"],

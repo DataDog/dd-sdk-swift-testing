@@ -38,6 +38,7 @@ internal struct AppveyorCIEnvironmentReader: CIEnvironmentReader {
                 repositoryURL: URL(string: "https://github.com/\(repoName).git"),
                 branch: branch,
                 tag: normalize(tag: env["APPVEYOR_REPO_TAG_NAME"]),
+                ciBranch: branch,
                 commit: .maybe(sha: env["APPVEYOR_REPO_COMMIT"],
                                message: env["APPVEYOR_REPO_COMMIT_MESSAGE"].map { message in
                                    env["APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED"].map { message + "\n" + $0 } ?? message

@@ -28,6 +28,7 @@ internal struct BitriseCIEnvironmentReader: CIEnvironmentReader {
                 repositoryURL: env["GIT_REPOSITORY_URL"],
                 branch: normalize(branch: env["BITRISE_GIT_BRANCH"]),
                 tag: normalize(tag: env["BITRISE_GIT_TAG"]),
+                ciBranch: normalize(branch: env["BITRISE_GIT_BRANCH"]),
                 commit: .maybe(sha: env["BITRISE_GIT_COMMIT"] ?? env["GIT_CLONE_COMMIT_HASH"],
                                message: commitMessage,
                                author: .maybe(name: env["GIT_CLONE_COMMIT_AUTHOR_NAME"],

@@ -34,7 +34,7 @@ class TestImpactAnalysisTests: XCTestCase {
                                           env: ProcessEnvironmentReader(environment: values, infoDictionary: [:]),
                                           log: Log.instance, ciReaders: [GithubCIEnvironmentReader(diagnosticDirs: [])])
                     XCTAssertEqual(env.git.branch, explicit ? "override" : (detached ? nil : "master"))
-                    XCTAssertEqual(env.ciBranch, branch)
+                    XCTAssertEqual(env.git.ciBranch, branch)
                     XCTAssertEqual(TestImpactAnalysisFactory.isEnabled(config: config, env: env, remote: remote), enabled)
                 }
             }

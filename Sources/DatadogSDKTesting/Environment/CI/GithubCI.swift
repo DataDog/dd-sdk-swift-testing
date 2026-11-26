@@ -79,6 +79,7 @@ internal struct GithubCIEnvironmentReader: CIEnvironmentReader {
                 repositoryURL: URL(string: "\(githubServerEnv)/\(repositoryEnv).git"),
                 branch: normalize(branch: branch),
                 tag: normalize(tag: branch),
+                ciBranch: normalize(branch: branch),
                 commit: .maybe(sha: commit),
                 commitHead: .maybe(sha: prHeadSha),
                 pullRequestBaseBranch: .maybe(name: baseBranch, sha: prBaseSha)

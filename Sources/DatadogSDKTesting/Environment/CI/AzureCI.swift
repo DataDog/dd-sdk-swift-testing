@@ -43,6 +43,7 @@ internal struct AzureCIEnvironmentReader: CIEnvironmentReader {
                 repositoryURL: env["SYSTEM_PULLREQUEST_SOURCEREPOSITORYURI"] ?? env["BUILD_REPOSITORY_URI"],
                 branch: normalize(branch: branch),
                 tag: normalize(tag: branch),
+                ciBranch: normalize(branch: branch),
                 commit: .maybe(sha: env["SYSTEM_PULLREQUEST_SOURCECOMMITID"] ?? env["BUILD_SOURCEVERSION"],
                                message: env["BUILD_SOURCEVERSIONMESSAGE"],
                                author: .maybe(name: env["BUILD_REQUESTEDFORID"],

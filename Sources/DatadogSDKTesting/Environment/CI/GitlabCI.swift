@@ -53,6 +53,7 @@ internal struct GitlabCIEnvironmentReader: CIEnvironmentReader {
                 repositoryURL: env["CI_REPOSITORY_URL"],
                 branch: normalize(branch: env["CI_COMMIT_REF_NAME"] ?? env["CI_COMMIT_BRANCH"]),
                 tag: normalize(branchOrTag: env["CI_COMMIT_TAG"]).0,
+                ciBranch: normalize(branch: env["CI_COMMIT_REF_NAME"] ?? env["CI_COMMIT_BRANCH"]),
                 commit: .maybe(sha: env["CI_COMMIT_SHA"],
                                message: env["CI_COMMIT_MESSAGE"],
                                author: .maybe(name: authorName,

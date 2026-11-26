@@ -25,6 +25,8 @@ final class Config {
     var endpoint: Endpoint = .us1
     /// Session name
     var sessionName: String? = nil
+    /// OS and runtime tag values that replace the detected ones, keyed by tag name
+    var runtimeTags: [String: String] = [:]
     
     /// Instrumentation configuration values
     var disableNetworkInstrumentation: Bool = false
@@ -104,9 +106,9 @@ final class Config {
     var extraDebugCodeCoverage: Bool = false
     var extraDebugCallStack: Bool = false
     
-    init(env: EnvironmentReader? = nil) {
-        guard let env = env else { return }
-        
+    init() {}
+    
+    init(env: EnvironmentReader, log: Logger) {
         isEnabled = env.has(.isEnabled) ? env[.isEnabled] ?? false : nil
         
         apiKey = env[.apiKey] ?? env.get(info: "DatadogApiKey")
@@ -119,7 +121,8 @@ final class Config {
             tracerUnderTesting ? $0 + "-internal-tests" : $0
         }
         
-        tags = Config.expand(tags: env[.tags] ?? [:], env: env)
+        runtimeTags = Config.parseRuntimeTags(env[.runtimeTags, String.self], log: log)
+        tags = Config.parseTags(env: env, runtimeTags: runtimeTags, log: log)
         let customConf = tags.compactMap {
             $0.key.hasPrefix("test.configuration.")
                 ? (String($0.key.dropFirst("test.configuration.".count)), $0.value)
@@ -168,7 +171,7 @@ final class Config {
 
         /// Dynamic Auto Test Retries (duration-based retry budgets)
         dynamicATREnabled = env[.enableCiVisibilityDynamicATR] ?? dynamicATREnabled
-        dynamicATRBuckets = Config.parseDynamicATRBuckets(env[.ciVisibilityDynamicATRBuckets, String.self])
+        dynamicATRBuckets = Config.parseDynamicATRBuckets(env[.ciVisibilityDynamicATRBuckets, String.self], log: log)
             ?? dynamicATRBuckets
         
         /// Test Managemennt
@@ -219,13 +222,56 @@ final class Config {
         isTestObserverNeeded = !isBinaryUnderUITesting || env.has("TEST_CLASS")
     }
     
-    private static func parseDynamicATRBuckets(_ raw: String?) -> AutomaticTestRetries.RetryBuckets? {
+    private static let overridableRuntimeTags: Set<String> = [
+        DDOSTags.osPlatform, DDOSTags.osArchitecture, DDOSTags.osVersion,
+        DDRuntimeTags.runtimeName, DDRuntimeTags.runtimeVersion
+    ]
+
+    private static func parseRuntimeTags(_ raw: String?, log: Logger) -> [String: String] {
+        // An unset or an empty variable sets no override
+        guard let raw else { return [:] }
+        let key = EnvironmentKey.runtimeTags.rawValue
+        let overrides: [String: String]
+        do {
+            overrides = try JSONDecoder().decode([String: String].self, from: Data(raw.utf8))
+        } catch {
+            log.print("Invalid \(key) value \"\(raw)\": expected a JSON object with string values (\(error)). " +
+                      "Using the detected OS and runtime tags.")
+            return [:]
+        }
+        return overrides.reduce(into: [:]) { tags, override in
+            guard overridableRuntimeTags.contains(override.key) else {
+                log.print("\(key): ignoring unsupported tag \"\(override.key)\". " +
+                          "Supported tags: \(overridableRuntimeTags.sorted().joined(separator: ", "))")
+                return
+            }
+            let value = override.value.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !value.isEmpty else {
+                log.print("\(key): ignoring empty value for tag \"\(override.key)\"")
+                return
+            }
+            tags[override.key] = value
+        }
+    }
+
+    /// DD_TAGS without the tags overridden by DD_TEST_OPTIMIZATION_RUNTIME_TAGS
+    private static func parseTags(env: EnvironmentReader, runtimeTags: [String: String], log: Logger) -> [String: String] {
+        let tags = expand(tags: env[.tags] ?? [:], env: env)
+        return tags.filter { tag in
+            guard let override = runtimeTags[tag.key] else { return true }
+            log.print("\(EnvironmentKey.tags.rawValue): ignoring tag \"\(tag.key):\(tag.value)\", " +
+                      "it is overridden by \(EnvironmentKey.runtimeTags.rawValue) value \"\(override)\"")
+            return false
+        }
+    }
+
+    private static func parseDynamicATRBuckets(_ raw: String?, log: Logger) -> AutomaticTestRetries.RetryBuckets? {
         // An unset or an empty variable means "use the retry timetable from the backend"
         guard let raw, !raw.isEmpty else { return nil }
         guard let values = [UInt](configValue: raw), values.count == 5,
               values.allSatisfy({ Config.dynamicATRBucketRange.contains($0) })
         else {
-            Log.print("Invalid \(EnvironmentKey.ciVisibilityDynamicATRBuckets.rawValue) value \"\(raw)\": " +
+            log.print("Invalid \(EnvironmentKey.ciVisibilityDynamicATRBuckets.rawValue) value \"\(raw)\": " +
                       "expected five comma-separated integers in " +
                       "[\(dynamicATRBucketRange.lowerBound), \(dynamicATRBucketRange.upperBound)]")
             return nil
@@ -269,6 +315,7 @@ extension Config: CustomDebugStringConvertible {
         Endpoint: \(endpoint.exporterEndpoint)
         Tags: \(tags.map { "\n  \($0.key): \($0.value)" }.joined())
         Custom Configurations: \(customConfigurations.map { "\n  \($0.key): \($0.value)" }.joined())
+        Runtime Tags: \(runtimeTags.map { "\n  \($0.key): \($0.value)" }.joined())
         Disable Network Instrumentation: \(disableNetworkInstrumentation)
         Disable Headers Injection: \(disableHeadersInjection)
         Enable Record Payload: \(enableRecordPayload)

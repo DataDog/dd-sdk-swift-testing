@@ -365,7 +365,7 @@ class DDTracerTests: XCTestCase {
 
     /// `DD_VERSION` flows from configuration into the resolved tracer version.
     func testProductUnderTest_ddVersionFromConfig() {
-        let config = Config(env: ProcessEnvironmentReader(environment: ["DD_VERSION": "12.3.4"]))
+        let config = Config(env: ProcessEnvironmentReader(environment: ["DD_VERSION": "12.3.4"]), log: Log.instance)
         XCTAssertEqual(config.applicationVersion, "12.3.4")
     }
 

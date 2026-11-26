@@ -225,6 +225,7 @@ internal final class Environment {
          DDRuntimeTags.runtimeName: platform.runtimeName,
          DDRuntimeTags.runtimeVersion: platform.runtimeVersion,
          DDUISettingsTags.uiSettingsLocalization: platform.localization]
+            .merging(config.runtimeTags) { _, override in override }
     }
     
     var baseMetrics: [String: Double] {

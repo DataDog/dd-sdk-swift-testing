@@ -89,6 +89,31 @@ class EnvironmentTests: XCTestCase {
         XCTAssertEqual(metadata3[string: .allTest, DDTestSessionTags.testSessionName], emptyEnv.testCommand)
     }
     
+    func testRuntimeTagsOverrideBaseConfigurations() {
+        let detected = createEnv([:]).baseConfigurations
+        let env = createEnv([EnvironmentKey.runtimeTags.rawValue: #"{"os.version":"6.12.0","runtime.version":"5.9.0"}"#])
+        let metadata = SpanMetadata(libraryVersion: "1.0", env: env, capabilities: .libraryCapabilities)
+
+        XCTAssertEqual(env.baseConfigurations[DDOSTags.osVersion], "6.12.0")
+        XCTAssertEqual(env.baseConfigurations[DDRuntimeTags.runtimeVersion], "5.9.0")
+        XCTAssertEqual(env.baseConfigurations[DDOSTags.osPlatform], detected[DDOSTags.osPlatform])
+        XCTAssertEqual(env.baseConfigurations[DDDeviceTags.deviceModel], detected[DDDeviceTags.deviceModel])
+        XCTAssertEqual(metadata[string: .allTest, DDOSTags.osVersion], "6.12.0")
+        XCTAssertEqual(metadata[string: .allTest, DDRuntimeTags.runtimeVersion], "5.9.0")
+    }
+
+    func testRuntimeTagsOverrideDDTags() {
+        let env = createEnv([
+            EnvironmentKey.runtimeTags.rawValue: #"{"os.version":"6.12.0"}"#,
+            EnvironmentKey.tags.rawValue: "os.version:from-dd-tags custom:value"
+        ])
+        let metadata = SpanMetadata(libraryVersion: "1.0", env: env, capabilities: .libraryCapabilities)
+
+        XCTAssertEqual(metadata[string: .allTest, DDOSTags.osVersion], "6.12.0")
+        XCTAssertNil(metadata[string: .test, DDOSTags.osVersion])
+        XCTAssertEqual(metadata[string: .test, "custom"], "value")
+    }
+
     func testService() {
         let emptyEnv = createEnv([:])
         let metadata1 = SpanMetadata(libraryVersion: "1.0",
@@ -475,7 +500,7 @@ class EnvironmentTests: XCTestCase {
 
     private func createEnv(_ env: [String: SpanAttributeConvertible]) -> Environment {
         let reader = ProcessEnvironmentReader(environment: env.mapValues { $0.spanAttribute }, infoDictionary: [:])
-        let config = Config(env: reader)
+        let config = Config(env: reader, log: Log(env: reader))
         // Replace the default GithubCIEnvironmentReader with one that has no diagnostic dirs,
         // so it can't pick up a real GitHub runner's job ID when tests run on GitHub Actions.
         let ciReaders: [CIEnvironmentReader] = Environment.ciReaders.map { reader in
@@ -536,7 +561,7 @@ extension DDTestMonitor {
             penv = env
         }
         envReader = ProcessEnvironmentReader(environment: penv)
-        config = Config(env: envReader)
+        config = Config(env: envReader, log: Log(env: envReader))
         DDTestMonitor.env = Environment(config: config, env: envReader, log: Log.instance)
     }
 }

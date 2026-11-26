@@ -8,13 +8,15 @@ import XCTest
 @testable import DatadogSDKTesting
 
 class ConfigTests: XCTestCase {
+    let log = Mocks.CatchLogger(isDebug: false)
+
     func testWhenDatadogSettingsAreSetInEnvironment_TheyAreStoredCorrectly() {
         var testEnvironment = [String: SpanAttributeConvertible]()
         testEnvironment["DD_API_KEY"] = "token5a101f16"
         testEnvironment["DD_SERVICE"] = "testService"
         testEnvironment["DD_ENV"] = "testEnv"
 
-        let config = Config(env: reader(env: testEnvironment))
+        let config = Config(env: reader(env: testEnvironment), log: log)
         
         XCTAssertEqual(config.apiKey, "token5a101f16")
         XCTAssertEqual(config.environment, "testEnv")
@@ -28,7 +30,7 @@ class ConfigTests: XCTestCase {
         testInfoDictionary["DD_SERVICE"] = "testService"
         testInfoDictionary["DD_ENV"] = "testEnv"
 
-        let config = Config(env: reader(info: testInfoDictionary))
+        let config = Config(env: reader(info: testInfoDictionary), log: log)
         
         XCTAssertEqual(config.apiKey, "token5a101f16")
         XCTAssertEqual(config.environment, "testEnv")
@@ -46,14 +48,14 @@ class ConfigTests: XCTestCase {
         testInfoDictionary["DD_SERVICE"] = "testService2"
         testInfoDictionary["DD_ENV"] = "testEnv2"
 
-        let config = Config(env: reader(env: testEnvironment, info: testInfoDictionary))
+        let config = Config(env: reader(env: testEnvironment, info: testInfoDictionary), log: log)
         XCTAssertEqual(config.apiKey, "token5a101f16")
         XCTAssertEqual(config.environment, "testEnv")
         XCTAssertEqual(config.service, "testService")
     }
 
     func testWhenNoConfigurationEnvironmentAreSet_DefaultValuesAreUsed() {
-        let config = Config(env: reader())
+        let config = Config(env: reader(), log: log)
         XCTAssertEqual(config.disableNetworkInstrumentation, false)
         XCTAssertEqual(config.enableStdoutInstrumentation, false)
         XCTAssertEqual(config.enableStderrInstrumentation, false)
@@ -75,7 +77,7 @@ class ConfigTests: XCTestCase {
         testEnvironment["DD_ENABLE_RECORD_PAYLOAD"] = "true"
         testEnvironment["DD_DISABLE_CRASH_HANDLER"] = "true"
         
-        let config = Config(env: reader(env: testEnvironment))
+        let config = Config(env: reader(env: testEnvironment), log: log)
 
         XCTAssertEqual(config.disableNetworkInstrumentation, true)
         XCTAssertEqual(config.enableStdoutInstrumentation, true)
@@ -98,7 +100,7 @@ class ConfigTests: XCTestCase {
         testInfoDictionary["DD_ENABLE_RECORD_PAYLOAD"] = "true"
         testInfoDictionary["DD_DISABLE_CRASH_HANDLER"] = "true"
         
-        let config = Config(env: reader(info: testInfoDictionary))
+        let config = Config(env: reader(info: testInfoDictionary), log: log)
 
         XCTAssertEqual(config.disableNetworkInstrumentation, true)
         XCTAssertEqual(config.enableStdoutInstrumentation, true)
@@ -131,7 +133,7 @@ class ConfigTests: XCTestCase {
         testInfoDictionary["DD_ENABLE_RECORD_PAYLOAD"] = "false"
         testInfoDictionary["DD_DISABLE_CRASH_HANDLER"] = "false"
 
-        let config = Config(env: reader(env: testEnvironment, info: testInfoDictionary))
+        let config = Config(env: reader(env: testEnvironment, info: testInfoDictionary), log: log)
         XCTAssertEqual(config.disableNetworkInstrumentation, true)
         XCTAssertEqual(config.enableStdoutInstrumentation, true)
         XCTAssertEqual(config.enableStderrInstrumentation, true)
@@ -146,28 +148,85 @@ class ConfigTests: XCTestCase {
         ProcessEnvironmentReader(environment: env.mapValues { $0.spanAttribute }, infoDictionary: info)
     }
 
+    // MARK: - Runtime tags config parsing
+
+    func testRuntimeTagsParsing() {
+        let config = Config(env: reader(env: [
+            "DD_TEST_OPTIMIZATION_RUNTIME_TAGS": #"{"os.platform":"iOS","os.architecture":"arm64","os.version":" 26.0 ","runtime.name":"Xcode","runtime.version":"26.1","runtime.vendor":"ignored","device.model":"ignored"}"#
+        ]), log: log)
+        XCTAssertEqual(config.runtimeTags, [
+            "os.platform": "iOS", "os.architecture": "arm64", "os.version": "26.0",
+            "runtime.name": "Xcode", "runtime.version": "26.1"
+        ])
+        let logs = log.logs.value
+        XCTAssertEqual(logs.count, 2)
+        XCTAssertTrue(logs.contains { $0.contains("\"runtime.vendor\"") })
+        XCTAssertTrue(logs.contains { $0.contains("\"device.model\"") })
+    }
+
+    func testRuntimeTagsIgnoresEmptyValues() {
+        let config = Config(env: reader(env: [
+            "DD_TEST_OPTIMIZATION_RUNTIME_TAGS": #"{"os.version":"26.0","runtime.version":"  "}"#
+        ]), log: log)
+        XCTAssertEqual(config.runtimeTags, ["os.version": "26.0"])
+        XCTAssertEqual(log.logs.value.count, 1)
+        XCTAssertTrue(log.logs.value[0].contains("\"runtime.version\""))
+    }
+
+    func testRuntimeTagsUnsetOrBlank() {
+        for value in ["", "  "] {
+            log.clear()
+            let config = Config(env: reader(env: ["DD_TEST_OPTIMIZATION_RUNTIME_TAGS": value]), log: log)
+            XCTAssertEqual(config.runtimeTags, [:], "\(value) should set no override")
+            XCTAssertEqual(log.logs.value, [], "\(value) should not log")
+        }
+    }
+
+    func testRuntimeTagsInvalidValues() {
+        let values = ["{invalid json}", #"["os.version"]"#, #""26.0""#, "null",
+                      #"{"os.version":"26.0","os.platform":null}"#, #"{"os.architecture":64}"#]
+        for value in values {
+            log.clear()
+            let config = Config(env: reader(env: ["DD_TEST_OPTIMIZATION_RUNTIME_TAGS": value]), log: log)
+            XCTAssertEqual(config.runtimeTags, [:], "\(value) should set no override")
+            XCTAssertEqual(log.logs.value.count, 1, "\(value) should log an error")
+            XCTAssertTrue(log.logs.value.first?.contains("Invalid DD_TEST_OPTIMIZATION_RUNTIME_TAGS") ?? false)
+        }
+    }
+
+    func testRuntimeTagsRemovedFromDDTags() {
+        let config = Config(env: reader(env: [
+            "DD_TEST_OPTIMIZATION_RUNTIME_TAGS": #"{"os.version":"26.0"}"#,
+            "DD_TAGS": "os.version:from-dd-tags os.platform:from-dd-tags custom:value"
+        ]), log: log)
+        XCTAssertEqual(config.runtimeTags, ["os.version": "26.0"])
+        XCTAssertEqual(config.tags, ["os.platform": "from-dd-tags", "custom": "value"])
+        XCTAssertEqual(log.logs.value.count, 1)
+        XCTAssertTrue(log.logs.value[0].contains("os.version:from-dd-tags"))
+    }
+
     // MARK: - Dynamic ATR config parsing
 
     func testDynamicATRDisabledByDefault() {
-        let config = Config(env: reader())
+        let config = Config(env: reader(), log: log)
         XCTAssertFalse(config.dynamicATREnabled)
         XCTAssertNil(config.dynamicATRBuckets)
     }
 
     func testDynamicATREnabledParsing() {
         for value in ["1", "true", "YES"] {
-            let config = Config(env: reader(env: ["DD_CIVISIBILITY_DYNAMIC_ATR_ENABLED": value]))
+            let config = Config(env: reader(env: ["DD_CIVISIBILITY_DYNAMIC_ATR_ENABLED": value]), log: log)
             XCTAssertTrue(config.dynamicATREnabled, "\(value) should enable dynamic ATR")
         }
         for value in ["0", "false", "NO"] {
-            let config = Config(env: reader(env: ["DD_CIVISIBILITY_DYNAMIC_ATR_ENABLED": value]))
+            let config = Config(env: reader(env: ["DD_CIVISIBILITY_DYNAMIC_ATR_ENABLED": value]), log: log)
             XCTAssertFalse(config.dynamicATREnabled, "\(value) should disable dynamic ATR")
         }
     }
 
     func testDynamicATRBucketsParsing() {
         // Valid buckets
-        let config = Config(env: reader(env: ["DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS": "10,4,1,1,1"]))
+        let config = Config(env: reader(env: ["DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS": "10,4,1,1,1"]), log: log)
         XCTAssertEqual(config.dynamicATRBuckets?.0, 10)
         XCTAssertEqual(config.dynamicATRBuckets?.1, 4)
         XCTAssertEqual(config.dynamicATRBuckets?.2, 1)
@@ -176,33 +235,33 @@ class ConfigTests: XCTestCase {
     }
 
     func testDynamicATRBucketsParsingWrongCount() {
-        let config = Config(env: reader(env: ["DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS": "10,4,1"]))
+        let config = Config(env: reader(env: ["DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS": "10,4,1"]), log: log)
         XCTAssertNil(config.dynamicATRBuckets)
     }
 
     func testDynamicATRBucketsParsingNonInteger() {
-        let config = Config(env: reader(env: ["DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS": "10,foo,1,1,1"]))
+        let config = Config(env: reader(env: ["DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS": "10,foo,1,1,1"]), log: log)
         XCTAssertNil(config.dynamicATRBuckets)
     }
 
     func testDynamicATRBucketsParsingValueTooSmall() {
-        let config = Config(env: reader(env: ["DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS": "0,4,1,1,1"]))
+        let config = Config(env: reader(env: ["DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS": "0,4,1,1,1"]), log: log)
         XCTAssertNil(config.dynamicATRBuckets)
     }
 
     func testDynamicATRBucketsParsingValueTooLarge() {
-        let config = Config(env: reader(env: ["DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS": "21,4,1,1,1"]))
+        let config = Config(env: reader(env: ["DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS": "21,4,1,1,1"]), log: log)
         XCTAssertNil(config.dynamicATRBuckets)
     }
 
     func testDynamicATRBucketsEmptyString() {
-        let config = Config(env: reader(env: ["DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS": ""]))
+        let config = Config(env: reader(env: ["DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS": ""]), log: log)
         XCTAssertNil(config.dynamicATRBuckets)
     }
 
     func testDynamicATRBucketsRejectEmptyFields() {
         for value in [",1,1,1,1", "1,,1,1,1", "1,1,1,1,"] {
-            let config = Config(env: reader(env: ["DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS": value]))
+            let config = Config(env: reader(env: ["DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS": value]), log: log)
             XCTAssertNil(config.dynamicATRBuckets, "\(value) must be rejected")
         }
     }

@@ -374,7 +374,7 @@ final class ParallelTestRunnerDetectorTests: XCTestCase {
 
     func testConfigStoresNilWhenEnvVarNotSet() {
         let env = ProcessEnvironmentReader(environment: [:], infoDictionary: [:])
-        let config = Config(env: env)
+        let config = Config(env: env, log: Mocks.CatchLogger(isDebug: false))
         XCTAssertNil(config.tiaSwiftTestingEnabled)
     }
 
@@ -382,7 +382,7 @@ final class ParallelTestRunnerDetectorTests: XCTestCase {
         let env = ProcessEnvironmentReader(
             environment: ["DD_SWIFT_TESTING_TEST_IMPACT_ANALYSIS_ENABLED": "1"],
             infoDictionary: [:])
-        let config = Config(env: env)
+        let config = Config(env: env, log: Mocks.CatchLogger(isDebug: false))
         XCTAssertEqual(config.tiaSwiftTestingEnabled, true)
     }
 
@@ -390,7 +390,7 @@ final class ParallelTestRunnerDetectorTests: XCTestCase {
         let env = ProcessEnvironmentReader(
             environment: ["DD_SWIFT_TESTING_TEST_IMPACT_ANALYSIS_ENABLED": "0"],
             infoDictionary: [:])
-        let config = Config(env: env)
+        let config = Config(env: env, log: Mocks.CatchLogger(isDebug: false))
         XCTAssertEqual(config.tiaSwiftTestingEnabled, false)
     }
 

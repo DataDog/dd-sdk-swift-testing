@@ -25,8 +25,7 @@ internal final class Environment {
         config.environment ?? (ci != nil ? "ci" : "none")
     }
     
-    /// DD_TAGS values, without the tags that DD_TEST_OPTIMIZATION_RUNTIME_TAGS overrides
-    var tags: [String: String] { config.tags.filter { config.runtimeTags[$0.key] == nil } }
+    var tags: [String: String] { config.tags }
     var isCI: Bool { ci != nil }
     
     let env: EnvironmentReader
@@ -232,9 +231,6 @@ internal final class Environment {
     }
     
     private func validate(log: Logger) {
-        if let invalid = config.invalidRuntimeTags {
-            log.print("Invalid \(EnvironmentKey.runtimeTags.rawValue) value \"\(invalid)\": expected a JSON object. Using the detected OS and runtime tags.")
-        }
         // Warn on needed git onformation when not present
         if git.commit?.sha == nil {
             log.print("could not find git commit information")

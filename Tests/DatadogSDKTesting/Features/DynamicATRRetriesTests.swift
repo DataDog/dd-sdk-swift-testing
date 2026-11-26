@@ -264,7 +264,7 @@ final class DynamicATRRetriesLogicTests: XCTestCase {
         if let buckets {
             env["DD_CIVISIBILITY_DYNAMIC_ATR_BUCKETS"] = buckets
         }
-        return Config(env: ProcessEnvironmentReader(environment: env, infoDictionary: [:]))
+        return Config(env: ProcessEnvironmentReader(environment: env, infoDictionary: [:]), log: Mocks.CatchLogger(isDebug: false))
     }
 
     private func settings(flakyTestRetriesEnabled: Bool) -> TracerSettings {

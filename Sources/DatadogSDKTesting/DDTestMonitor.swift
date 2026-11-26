@@ -35,7 +35,7 @@ internal class DDTestMonitor {
     }()
 
     static var env = Environment(config: config, env: envReader, log: Log.instance)
-    static var config: Config = Config(env: envReader)
+    static var config: Config = Config(env: envReader, log: Log(env: envReader))
     
     static var envReader: EnvironmentReader = ProcessEnvironmentReader()
     

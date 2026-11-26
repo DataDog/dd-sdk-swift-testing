@@ -558,7 +558,6 @@
 		A7B70E3B2C5CDE8B00E4AE09 /* Endpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Endpoint.swift; sourceTree = "<group>"; };
 		A7B747BF2C60E1E7009B4B93 /* SwiftUtilsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUtilsTests.swift; sourceTree = "<group>"; };
 		A7C292122B9B2B39009C2979 /* fixtures */ = {isa = PBXFileReference; lastKnownFileType = folder; path = fixtures; sourceTree = "<group>"; };
-		A7C292162B9B2DE0009C2979 /* DatadogSDKTesting.podspec */ = {isa = PBXFileReference; lastKnownFileType = text; path = DatadogSDKTesting.podspec; sourceTree = "<group>"; };
 		A7CC6D852C07D624003C13BC /* Tags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tags.swift; sourceTree = "<group>"; };
 		A7CC6D872C0F3F83003C13BC /* Tags+ObjC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Tags+ObjC.swift"; sourceTree = "<group>"; };
 		A7D23AF72C9B10A8006AB41D /* SpanMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpanMetadata.swift; sourceTree = "<group>"; };
@@ -1353,7 +1352,6 @@
 			children = (
 				E17B7AA5253F010C0081D7F3 /* LICENSE-3rdparty.csv */,
 				E160A11125275CC1003121A5 /* Package.swift */,
-				A7C292162B9B2DE0009C2979 /* DatadogSDKTesting.podspec */,
 				E1ABA04C25231E2500ED8AEF /* Sources */,
 				E1ABA05725231E2500ED8AEF /* Tests */,
 				E1224A42264ABCCE00305968 /* IntegrationTests */,

@@ -315,9 +315,9 @@ internal class DDTestMonitor {
         efd = nil
         let service = DDTestMonitor.env.service
         
-        guard let branchOrTag = (DDTestMonitor.env.git.branch ?? DDTestMonitor.env.git.tag),
-              let commit = DDTestMonitor.env.git.commit?.sha else {
-            Log.print("Unknown branch/tag and commit. Test Optimization can't be started")
+        let branchOrTag = DDTestMonitor.env.git.branch ?? DDTestMonitor.env.git.tag ?? "auto:git-detached-head"
+        guard let commit = DDTestMonitor.env.git.commit?.sha else {
+            Log.print("Unknown commit. Test Optimization can't be started")
             return
         }
         

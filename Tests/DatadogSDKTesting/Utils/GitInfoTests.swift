@@ -5,6 +5,7 @@
  */
 
 @testable import DatadogSDKTesting
+import EventsExporter
 import XCTest
 
 class GitInfoTests: XCTestCase {
@@ -13,82 +14,211 @@ class GitInfoTests: XCTestCase {
         return bundle.resourceURL!.appendingPathComponent("fixtures")
     }()
     
-    func testNoCommits() throws {
-        let noCommitsFolder = fixturesURL.appendingPathComponent("git")
-            .appendingPathComponent("no_commits").appendingPathComponent("git")
+    func testExecutableReadsDetachedCheckoutWithoutRemote() throws {
+        let checkout = FileManager.default.temporaryDirectory.appendingPathComponent("git checkout's \(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: checkout, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: checkout) }
+        let fixture = fixturesURL.appendingPathComponent("git/with_commits/git")
+        let gitDirectory = checkout.appendingPathComponent(".git")
+        try FileManager.default.copyItem(at: fixture, to: gitDirectory)
+        try "0797c248e019314fc1d91a483e859b32f4509953\n".write(to: gitDirectory.appendingPathComponent("HEAD"), atomically: true, encoding: .utf8)
+        try FileManager.default.removeItem(at: gitDirectory.appendingPathComponent("config"))
 
-        XCTAssertTrue(try noCommitsFolder.checkPromisedItemIsReachable())
-        XCTAssertThrowsError(try GitInfo(gitFolder: noCommitsFolder))
+        let info = try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance))
+        XCTAssertEqual(info.commit, "0797c248e019314fc1d91a483e859b32f4509953")
+        XCTAssertEqual(info.commitMessage, "This is a commit message")
+        XCTAssertEqual(info.authorName, "John Doe")
+        XCTAssertEqual(info.committerName, "Jane Doe")
+        XCTAssertNil(info.repository)
+        XCTAssertNil(info.branch)
+        XCTAssertNil(info.tag)
     }
 
-    func testNoObjects() throws {
-        let withCommitsFolder = fixturesURL.appendingPathComponent("git")
-            .appendingPathComponent("no_objects").appendingPathComponent("git")
-
-        XCTAssertTrue(try withCommitsFolder.checkPromisedItemIsReachable())
-        _ = try GitInfo(gitFolder: withCommitsFolder)
+    private func makeExecutableCheckout() throws -> URL {
+        let checkout = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: checkout, withIntermediateDirectories: true)
+        try FileManager.default.copyItem(at: fixturesURL.appendingPathComponent("git/with_commits/git"),
+                                        to: checkout.appendingPathComponent(".git"))
+        return checkout
     }
 
-    func testWithCommits() throws {
-        let withCommitsFolder = fixturesURL.appendingPathComponent("git")
-            .appendingPathComponent("with_commits").appendingPathComponent("git")
-
-        XCTAssertTrue(try withCommitsFolder.checkPromisedItemIsReachable())
-        let gitInfo = try GitInfo(gitFolder: withCommitsFolder)
-        XCTAssertEqual(gitInfo.commit, "0797c248e019314fc1d91a483e859b32f4509953")
-        XCTAssertEqual(gitInfo.repository, "git@github.com:DataDog/dd-sdk-swift-testing.git")
-        XCTAssertEqual(gitInfo.branch, "refs/heads/master")
-        XCTAssertEqual(gitInfo.commitMessage, "This is a commit message")
-        XCTAssertEqual(gitInfo.authorName, "John Doe")
-        XCTAssertEqual(gitInfo.authorEmail, "john@doe.com")
-        XCTAssertEqual(gitInfo.committerName, "Jane Doe")
-        XCTAssertEqual(gitInfo.committerEmail, "jane@doe.com")
+    func testEnvironmentResolvesNestedDirectoriesAndFiles() throws {
+        let checkout = try makeExecutableCheckout()
+        defer { try? FileManager.default.removeItem(at: checkout) }
+        let nested = checkout.appendingPathComponent("Sources/nested")
+        try FileManager.default.createDirectory(at: nested, withIntermediateDirectories: true)
+        let file = nested.appendingPathComponent("example.swift")
+        try "".write(to: file, atomically: true, encoding: .utf8)
+        for path in [checkout.path, nested.path, file.path] {
+            XCTAssertEqual(Environment.gitInfoAt(startingPath: path)?.commit, "0797c248e019314fc1d91a483e859b32f4509953")
+        }
+        XCTAssertNil(Environment.gitInfoAt(startingPath: nested.appendingPathComponent("missing").path))
     }
 
-    func testWithCommitsNoRefs() throws {
-        let withCommitsFolder = fixturesURL.appendingPathComponent("git")
-            .appendingPathComponent("with_commits_no_refs").appendingPathComponent("git")
+    func testExecutableReadsNestedCheckoutWithDifferentOwner() throws {
+        let checkout = try makeExecutableCheckout()
+        defer { try? FileManager.default.removeItem(at: checkout) }
+        let nested = checkout.appendingPathComponent("Sources/nested")
+        try FileManager.default.createDirectory(at: nested, withIntermediateDirectories: true)
+        let environment = ["GIT_TEST_ASSUME_DIFFERENT_OWNER": "1"]
+        let baseline = "git -c safe.directory='\(nested.path)' -C '\(nested.path)' rev-parse --show-toplevel"
+        XCTAssertThrowsError(try Spawn.output(baseline, environment: environment)) { error in
+            guard let spawnError = error as? Spawn.RunError else {
+                XCTFail("Unexpected command error: \(error)")
+                return
+            }
+            XCTAssertTrue(spawnError.debugDescription.contains("dubious ownership"))
+        }
 
-        XCTAssertTrue(try withCommitsFolder.checkPromisedItemIsReachable())
-        let gitInfo = try GitInfo(gitFolder: withCommitsFolder)
-        XCTAssertEqual(gitInfo.commitMessage, "This is a commit message")
-        XCTAssertEqual(gitInfo.authorName, "John Doe")
-        XCTAssertEqual(gitInfo.authorEmail, "john@doe.com")
-        XCTAssertEqual(gitInfo.committerName, "Jane Doe")
-        XCTAssertEqual(gitInfo.committerEmail, "jane@doe.com")
+        let info = try XCTUnwrap(GitInfo(workingDirectory: nested.path, log: Log.instance, environment: environment))
+        XCTAssertEqual(info.commit, "0797c248e019314fc1d91a483e859b32f4509953")
+        let actualRoot = try FileManager.default.attributesOfItem(atPath: info.workspacePath)
+        let expectedRoot = try FileManager.default.attributesOfItem(atPath: checkout.path)
+        XCTAssertEqual(actualRoot[.systemFileNumber] as? NSNumber, expectedRoot[.systemFileNumber] as? NSNumber)
+        XCTAssertEqual(actualRoot[.systemNumber] as? NSNumber, expectedRoot[.systemNumber] as? NSNumber)
+        XCTAssertEqual(info.authorName, "John Doe")
     }
 
-    func testWithTag() throws {
-        let withCommitsFolder = fixturesURL.appendingPathComponent("git")
-            .appendingPathComponent("with_tag").appendingPathComponent("git")
+    func testExecutableUsesTheBranchTrackingRemote() throws {
+        let checkout = try makeExecutableCheckout()
+        defer { try? FileManager.default.removeItem(at: checkout) }
+        let git = checkout.appendingPathComponent(".git")
+        let branch = "feature'branch"
+        try "ref: refs/heads/\(branch)\n".write(to: git.appendingPathComponent("HEAD"), atomically: true, encoding: .utf8)
+        try "0797c248e019314fc1d91a483e859b32f4509953\n".write(to: git.appendingPathComponent("refs/heads/\(branch)"), atomically: true, encoding: .utf8)
+        let config = """
+        [remote "origin"]
+        url = https://example.com/fork.git
+        [remote "upstream"]
+        url = reviewalias:upstream.git
+        [url "https://example.com/"]
+        insteadOf = reviewalias:
+        [branch "\(branch)"]
+        remote = upstream
+        merge = refs/heads/\(branch)
+        """
+        try config.write(to: git.appendingPathComponent("config"), atomically: true, encoding: .utf8)
 
-        XCTAssertTrue(try withCommitsFolder.checkPromisedItemIsReachable())
-        let gitInfo = try GitInfo(gitFolder: withCommitsFolder)
-        XCTAssertEqual(gitInfo.commitMessage, "This is a commit message")
-        XCTAssertEqual(gitInfo.authorName, "John Doe")
-        XCTAssertEqual(gitInfo.authorEmail, "john@doe.com")
-        XCTAssertEqual(gitInfo.committerName, "Jane Doe")
-        XCTAssertEqual(gitInfo.committerEmail, "jane@doe.com")
+        let tags = git.appendingPathComponent("refs/tags")
+        try FileManager.default.createDirectory(at: tags, withIntermediateDirectories: true)
+        try "0797c248e019314fc1d91a483e859b32f4509953\n".write(to: tags.appendingPathComponent(branch), atomically: true, encoding: .utf8)
+
+        let info = try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance))
+        XCTAssertEqual(info.branch, branch)
+        XCTAssertEqual(info.repository, "https://example.com/upstream.git")
     }
 
-    func testWithPackFiles() throws {
-        let packFilesFolder = fixturesURL.appendingPathComponent("git")
-            .appendingPathComponent("pack_files").appendingPathComponent("git")
+    func testExecutableOmitsAttachedOrAmbiguousTags() throws {
+        let checkout = try makeExecutableCheckout()
+        defer { try? FileManager.default.removeItem(at: checkout) }
+        let git = checkout.appendingPathComponent(".git")
+        let config = git.appendingPathComponent("config")
+        let contents = (try? String(contentsOf: config, encoding: .utf8)) ?? ""
+        try (contents + "\n[column]\nui = always\ntag = always\n").write(to: config, atomically: true, encoding: .utf8)
+        let sha = "0797c248e019314fc1d91a483e859b32f4509953\n"
+        let tags = git.appendingPathComponent("refs/tags")
+        try FileManager.default.createDirectory(at: tags, withIntermediateDirectories: true)
+        try sha.write(to: tags.appendingPathComponent("v1.0"), atomically: true, encoding: .utf8)
+        XCTAssertNil(try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance)).tag)
 
-        XCTAssertTrue(try packFilesFolder.checkPromisedItemIsReachable())
-        let gitInfo = try GitInfo(gitFolder: packFilesFolder)
-        XCTAssertEqual(gitInfo.commit, "63902373bbe01489ae104f5fc5561eb578dec196")
-        XCTAssertEqual(gitInfo.repository, "git@github.com:DataDog/dd-sdk-swift-testing.git")
-        XCTAssertEqual(gitInfo.branch, "refs/heads/main")
-        XCTAssertEqual(gitInfo.commitMessage, "Add possibility to change endpoint, they use `DD_ENDPOINT` environment variable: \"us\", \"eu\", \"gov\"\nMove ENVIRONMENT_TRACER handling to DDEnvironmentValues\nAdd InMemoryExporter when usinf DD_DONT_EXPORT variable (used in testing) so all the Opentelemetry code runs but dont export to backend")
-        XCTAssertEqual(gitInfo.authorName, "Ignacio Bonafonte")
-        XCTAssertEqual(gitInfo.authorEmail, "nacho.bonafontearruga@datadoghq.com")
-        XCTAssertEqual(gitInfo.authorDate, "2021-05-06T08:03:32Z")
-        XCTAssertEqual(gitInfo.committerName, "Ignacio Bonafonte")
-        XCTAssertEqual(gitInfo.committerEmail, "nacho.bonafontearruga@datadoghq.com")
-        XCTAssertEqual(gitInfo.committerDate, "2021-05-06T08:03:32Z")
+        try sha.write(to: git.appendingPathComponent("HEAD"), atomically: true, encoding: .utf8)
+        XCTAssertEqual(try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance)).tag, "v1.0")
+        try sha.write(to: tags.appendingPathComponent("stable"), atomically: true, encoding: .utf8)
+        XCTAssertNil(try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance)).tag)
     }
-    
+
+    func testExecutableUsesTheOnlyAvailableRemoteWithoutTrackingConfiguration() throws {
+        let checkout = try makeExecutableCheckout()
+        defer { try? FileManager.default.removeItem(at: checkout) }
+        try "[remote \"upstream\"]\nurl = https://example.com/upstream.git\n"
+            .write(to: checkout.appendingPathComponent(".git/config"), atomically: true, encoding: .utf8)
+
+        for detached in [false, true] {
+            if detached {
+                try "0797c248e019314fc1d91a483e859b32f4509953\n"
+                    .write(to: checkout.appendingPathComponent(".git/HEAD"), atomically: true, encoding: .utf8)
+            }
+            let info = try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance))
+            XCTAssertEqual(info.repository, "https://example.com/upstream.git")
+        }
+    }
+
+    func testExecutableFallsBackWhenTheTrackingRemoteIsLocalOrUnavailable() throws {
+        for remote in [".", "missing"] {
+            let checkout = try makeExecutableCheckout()
+            defer { try? FileManager.default.removeItem(at: checkout) }
+            try "[remote \"origin\"]\nurl = https://example.com/origin.git\n[branch \"master\"]\nremote = \(remote)\nmerge = refs/heads/main\n"
+                .write(to: checkout.appendingPathComponent(".git/config"), atomically: true, encoding: .utf8)
+            try "0797c248e019314fc1d91a483e859b32f4509953\n"
+                .write(to: checkout.appendingPathComponent(".git/refs/heads/main"), atomically: true, encoding: .utf8)
+
+            let info = try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance))
+            XCTAssertEqual(info.branch, "master")
+            XCTAssertEqual(info.repository, "https://example.com/origin.git")
+        }
+    }
+
+    func testAssemblyPreservesLiteralLocalBranchNames() throws {
+        let checkout = try makeExecutableCheckout()
+        defer { try? FileManager.default.removeItem(at: checkout) }
+        let git = checkout.appendingPathComponent(".git")
+        let branch = "heads/feature"
+        try FileManager.default.createDirectory(at: git.appendingPathComponent("refs/heads/heads"), withIntermediateDirectories: true)
+        try "ref: refs/heads/\(branch)\n".write(to: git.appendingPathComponent("HEAD"), atomically: true, encoding: .utf8)
+        try "0797c248e019314fc1d91a483e859b32f4509953\n".write(to: git.appendingPathComponent("refs/heads/\(branch)"), atomically: true, encoding: .utf8)
+
+        let info = try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance))
+        XCTAssertEqual(info.branch, branch)
+        XCTAssertEqual(Environment.Git().extended(from: info).branch, branch)
+    }
+
+    func testExecutableUsesUtf8RegardlessOfLogOutputEncoding() throws {
+        let checkout = try makeExecutableCheckout()
+        defer { try? FileManager.default.removeItem(at: checkout) }
+        let git = checkout.appendingPathComponent(".git")
+        let configPath = git.appendingPathComponent("config")
+        let config = try String(contentsOf: configPath) + "\n[i18n]\nlogOutputEncoding = ISO-8859-1\n"
+        try config.write(to: configPath, atomically: true, encoding: .utf8)
+        let command = "git -c safe.directory='\(checkout.path)' -C '\(checkout.path)' "
+        let tree = try Spawn.output(command + "log --no-show-signature -1 --format=%T HEAD")
+        let object = checkout.appendingPathComponent("commit.txt")
+        try "tree \(tree)\nauthor André <author@example.com> 1 +0000\ncommitter Zoë <committer@example.com> 2 +0000\n\nRésumé\n"
+            .write(to: object, atomically: true, encoding: .utf8)
+        let sha = try Spawn.output(command + "hash-object -w -t commit '\(object.path)'")
+        try "\(sha)\n".write(to: git.appendingPathComponent("HEAD"), atomically: true, encoding: .utf8)
+
+        let info = try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance))
+        XCTAssertEqual(info.commit, sha)
+        XCTAssertEqual(info.authorName, "André")
+        XCTAssertEqual(info.authorEmail, "author@example.com")
+        XCTAssertEqual(ISO8601DateFormatter().date(from: try XCTUnwrap(info.authorDate)), Date(timeIntervalSince1970: 1))
+        XCTAssertEqual(info.committerName, "Zoë")
+        XCTAssertEqual(info.committerEmail, "committer@example.com")
+        XCTAssertEqual(ISO8601DateFormatter().date(from: try XCTUnwrap(info.committerDate)), Date(timeIntervalSince1970: 2))
+        XCTAssertEqual(info.commitMessage, "Résumé")
+    }
+
+    func testExecutableRecoversMatchingFetchHeadBranch() throws {
+        let checkout = try makeExecutableCheckout()
+        defer { try? FileManager.default.removeItem(at: checkout) }
+        let git = checkout.appendingPathComponent(".git")
+        let sha = "0797c248e019314fc1d91a483e859b32f4509953"
+        try "\(sha)\n".write(to: git.appendingPathComponent("HEAD"), atomically: true, encoding: .utf8)
+        try "\(sha)\t\tbranch 'feature'branch' of https://example.com/repo.git\n".write(to: git.appendingPathComponent("FETCH_HEAD"), atomically: true, encoding: .utf8)
+        try FileManager.default.createDirectory(at: git.appendingPathComponent("refs/tags"), withIntermediateDirectories: true)
+        try "\(sha)\n".write(to: git.appendingPathComponent("refs/tags/v1"), atomically: true, encoding: .utf8)
+
+        let info = try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance))
+        XCTAssertEqual(info.branch, "feature'branch")
+        XCTAssertEqual(info.tag, "v1")
+        let record = "\(sha)\t\tbranch 'feature'branch' of https://example.com/repo.git\n"
+        try (record + record).write(to: git.appendingPathComponent("FETCH_HEAD"), atomically: true, encoding: .utf8)
+        XCTAssertEqual(try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance)).branch, "feature'branch")
+        try (record + "\(sha)\t\tbranch 'main' of https://example.com/repo.git\n")
+            .write(to: git.appendingPathComponent("FETCH_HEAD"), atomically: true, encoding: .utf8)
+        XCTAssertNil(try XCTUnwrap(GitInfo(workingDirectory: checkout.path, log: Log.instance)).branch)
+    }
+
     func testFetchHeadParsing() {
         let git = fixturesURL.appendingPathComponent("git")
         let records1 = GitInfo.FetchHeadRecord.from(file: git.appendingPathComponent("fetch_head_1"))

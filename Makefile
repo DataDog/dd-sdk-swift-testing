@@ -102,12 +102,10 @@ build: build/xcframework/DatadogSDKTesting.zip build/symbols/DatadogSDKTesting.z
 set_version:
 	@:$(call check_defined, version, release version)
 	sed -i "" "s|MARKETING_VERSION =.*|MARKETING_VERSION = \"$(version)\";|g" DatadogSDKTesting.xcodeproj/project.pbxproj
-	sed -i "" "s|s\.version\([[:blank:]]*\)=.*|s.version\1= '$(version)'|g" DatadogSDKTesting.podspec
 	sed -i "" "s|let[[:blank:]]*releaseVersion.*|let releaseVersion = \"$(version)\"|g" Package.swift
 
 set_hash:
 	$(eval HASH := $(shell swift package compute-checksum ./build/xcframework/DatadogSDKTesting.zip))
-	sed -i "" "s|:sha256 =>.*|:sha256 => '$(HASH)'|g" DatadogSDKTesting.podspec
 	sed -i "" "s|let[[:blank:]]*relaseChecksum.*|let relaseChecksum = \"$(HASH)\"|g" Package.swift
 
 release:
@@ -127,7 +125,7 @@ github_release: release
 	@git push -f -u origin release-$(version)
 	# Get changes back
 	@git stash pop
-	# Commit updated xcodeproj, podspec and Package.swift
+	# Commit updated xcodeproj and Package.swift
 	# We will use GH API to do that, because we need a signed commit
 	@gh api graphql \
   		-F githubRepository="$(GITHUB_REPOSITORY)" \
@@ -135,7 +133,6 @@ github_release: release
   		-F expectedHeadOid=$$(git rev-parse HEAD) \
   		-F commitMessage="Updated binary package version to $(version)" \
   		-F files[][path]="Package.swift" -F files[][contents]=$$(base64 -i Package.swift) \
-  		-F files[][path]="DatadogSDKTesting.podspec" -F files[][contents]=$$(base64 -i DatadogSDKTesting.podspec) \
 		-F files[][path]="DatadogSDKTesting.xcodeproj/project.pbxproj" -F files[][contents]=$$(base64 -i DatadogSDKTesting.xcodeproj/project.pbxproj) \
   		-F 'query=@.github/api/createCommitOnBranch.gql'
 	# Pull new commit
@@ -156,10 +153,6 @@ github_release: release
 	# make github release
 	@gh release create $(version) --prerelease --verify-tag --generate-notes \
 		build/xcframework/DatadogSDKTesting.zip build/symbols/DatadogSDKTesting.symbols.zip
-
-publish_pod:
-	@:$(call check_defined, COCOAPODS_TRUNK_TOKEN, CocoaPods trunk token)
-	@pod trunk push --allow-warnings DatadogSDKTesting.podspec
 
 clean:
 	rm -rf ./build

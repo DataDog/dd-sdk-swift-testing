@@ -1,6 +1,6 @@
 ---
 name: Compilation Issue
-about: Having a Cocoapods / Carthage / SPM problem when linking the SDK?
+about: Having a Carthage / SPM problem when linking the SDK?
 title: ''
 labels: compilation issue
 assignees: ''
@@ -23,7 +23,7 @@ _What is the last Datadog SDK version where this problem didn't occur? e.g. `1.1
 
 #### Dependency Manager:
 
-_Which dependency manager do you use? e.g. Cocoapods / Carthage / SPM / ..._
+_Which dependency manager do you use? e.g. Carthage / SPM / ..._
 
 #### Other toolset:
 
